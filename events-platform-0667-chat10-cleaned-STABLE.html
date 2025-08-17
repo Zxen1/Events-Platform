@@ -1921,12 +1921,24 @@ function makePosts(){
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); });
 
-      ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
+      ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart']
+        .forEach(ev => map.on(ev, stopSpin));
       map.on('moveend', () => { if(mode==='map') applyFilters(); });
     }
 
-    function startSpin(){ spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
-    function stopSpin(){ spinning = false; }
+    function startSpin() {
+      spinning = true;
+      function step() {
+        if (!spinning || !map) return;
+        map.setBearing(map.getBearing() + 0.03);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function stopSpin() {
+      spinning = false;
+    }
 
     $('#btnGeo').addEventListener('click', ()=>{
       stopSpin();
