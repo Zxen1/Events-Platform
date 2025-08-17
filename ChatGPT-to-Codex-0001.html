@@ -2202,7 +2202,12 @@ function makePosts(){
         </button>
       `;
       el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(p.id); });
-      el.querySelector('.fav').addEventListener('click', (e)=>{ p.fav = !p.fav; e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false'); });
+      el.querySelector('.fav').addEventListener('click', (e)=>{
+        p.fav = !p.fav;
+        e.currentTarget.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+        const detailFav = postsWideEl.querySelector(`.detail-inline[data-id="${p.id}"] [data-act="fav"]`);
+        if(detailFav) detailFav.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
+      });
       return el;
     }
 
