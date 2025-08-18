@@ -105,6 +105,17 @@ body{
   opacity: .9;
 }
 
+.auth button{
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
 .gear{
   width: 36px;
   height: 36px;
@@ -122,6 +133,65 @@ body{
   height: 18px;
   opacity: .9;
 }
+
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
+}
+.modal.show{display:flex;}
+.modal-content{
+  background:#fff;
+  padding:20px;
+  border-radius:8px;
+  width:90%;
+  max-width:600px;
+  max-height:90%;
+  overflow:auto;
+}
+.modal-field{
+  margin:8px 0;
+  display:flex;
+  flex-direction:column;
+}
+.modal-field input,
+.modal-field textarea,
+.modal-field select{
+  padding:8px;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+.modal-actions{
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+}
+.palette{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+.field-item,
+.field-instance{
+  padding:6px 10px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  background:#f9f9f9;
+  cursor:move;
+}
+.builder-zone{
+  min-height:100px;
+  border:2px dashed #ccc;
+  padding:10px;
+}
+.field-instance{margin:4px 0;}
 
 .main{
   height: calc(100% - var(--header-h) - var(--footer-h));
@@ -1416,10 +1486,9 @@ footer .foot-row .foot-item img {
         </div>
       </nav>
       <div class="auth">
+        <button id="memberBtn" aria-label="Open members area">Members</button>
+        <button id="adminBtn" aria-label="Open admin area">Admin</button>
         <a href="#" aria-label="Sign in">Sign In</a><span class="muted">|</span><a href="#" aria-label="Register">Register</a>
-        <div class="gear" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"/><path d="m19.4 15-.9 1.6-1.8-.2-.9 1.6-1.7-.7-1.3 1.3-1.3-1.3-1.7.7-.9-1.6-1.8.2-.9-1.6-1.6-.9.7-1.7L3.7 12l.7-1.7-1.6-.9.9-1.6 1.8.2.9-1.6 1.7.7 1.3-1.3 1.3 1.3 1.7-.7.9 1.6 1.8-.2.9 1.6 1.6.9-.7 1.7.7 1.7Z"/></svg>
-        </div>
       </div>
     </div>
   </header>
@@ -1535,6 +1604,74 @@ footer .foot-row .foot-item img {
     <div class="foot-title" id="footTitle">Last viewed:</div>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
   </footer>
+
+  <div id="memberModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <h2>Create Post</h2>
+      <form id="memberForm">
+        <div class="modal-field">
+          <label for="mTitle">Title</label>
+          <input type="text" id="mTitle" required />
+        </div>
+        <div class="modal-field">
+          <label for="mImage">Image</label>
+          <input type="file" id="mImage" accept="image/*" />
+        </div>
+        <div class="modal-field">
+          <label for="mDate">Date</label>
+          <input type="date" id="mDate" />
+        </div>
+        <div class="modal-field">
+          <label for="mLocation">Location</label>
+          <input type="text" id="mLocation" />
+        </div>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" class="close-modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <h2>Admin Settings</h2>
+      <form id="adminForm">
+        <div class="modal-field">
+          <label for="siteColor">Site Color</label>
+          <input type="color" id="siteColor" value="#ffffff" />
+        </div>
+        <div class="modal-field">
+          <label for="siteBrightness">Brightness</label>
+          <input type="range" id="siteBrightness" min="50" max="150" value="100" />
+        </div>
+        <div class="modal-field">
+          <label for="siteOpacity">Opacity</label>
+          <input type="range" id="siteOpacity" min="0.5" max="1" step="0.05" value="1" />
+        </div>
+        <div class="modal-field">
+          <label for="catList">Categories</label>
+          <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
+        </div>
+        <div class="modal-field">
+          <label for="subList">Subcategories</label>
+          <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
+        </div>
+        <h3>Subcategory Form Builder</h3>
+        <div class="palette" id="fieldPalette">
+          <div class="field-item" draggable="true" data-type="text">Text</div>
+          <div class="field-item" draggable="true" data-type="date">Date</div>
+          <div class="field-item" draggable="true" data-type="image">Image</div>
+          <div class="field-item" draggable="true" data-type="location">Location</div>
+        </div>
+        <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" class="close-modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>const __USED_STARTERS = new Set();
 
@@ -2403,6 +2540,78 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     ov.className = 'main-bg-overlay';
     wrap.appendChild(ov);
   }
+})();
+
+// Modals and admin/member interactions
+(function(){
+  const memberBtn = document.getElementById('memberBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const memberModal = document.getElementById('memberModal');
+  const adminModal = document.getElementById('adminModal');
+
+  function openModal(m){ m.classList.add('show'); m.removeAttribute('aria-hidden'); }
+  function closeModal(m){ m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+
+  memberBtn && memberBtn.addEventListener('click', ()=> openModal(memberModal));
+  adminBtn && adminBtn.addEventListener('click', ()=> openModal(adminModal));
+  document.querySelectorAll('.modal .close-modal').forEach(btn=>{
+    btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
+  });
+
+  function applyAdmin(){
+    const color = document.getElementById('siteColor').value;
+    const brightness = document.getElementById('siteBrightness').value;
+    const opacity = document.getElementById('siteOpacity').value;
+    document.body.style.backgroundColor = color;
+    document.body.style.filter = `brightness(${brightness}%)`;
+    document.body.style.opacity = opacity;
+  }
+  const adminForm = document.getElementById('adminForm');
+  if(adminForm){
+    adminForm.addEventListener('input', applyAdmin);
+    adminForm.addEventListener('change', applyAdmin);
+  }
+
+  const palette = document.getElementById('fieldPalette');
+  const builder = document.getElementById('formBuilder');
+  let dragType = null;
+
+  palette && palette.addEventListener('dragstart', e=>{
+    if(e.target.classList.contains('field-item')){
+      dragType = e.target.dataset.type;
+    }
+  });
+
+  builder && builder.addEventListener('dragover', e=> e.preventDefault());
+
+  builder && builder.addEventListener('drop', e=>{
+    e.preventDefault();
+    if(dragType){
+      const item = document.createElement('div');
+      item.className = 'field-instance';
+      item.textContent = dragType.charAt(0).toUpperCase()+dragType.slice(1);
+      item.setAttribute('draggable','true');
+      builder.appendChild(item);
+      dragType = null;
+    }
+  });
+
+  let dragEl = null;
+  builder && builder.addEventListener('dragstart', e=>{
+    if(e.target.classList.contains('field-instance')){
+      dragEl = e.target;
+    }
+  });
+
+  builder && builder.addEventListener('drop', e=>{
+    if(dragEl && e.target.classList.contains('field-instance')){
+      e.preventDefault();
+      const rect = e.target.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height/2;
+      builder.insertBefore(dragEl, after ? e.target.nextSibling : e.target);
+    }
+    dragEl = null;
+  });
 })();
 </script>
 </body>
