@@ -183,6 +183,14 @@ body{
 #adminModal .control-row label{min-width:60px;font-size:12px;}
 #adminModal .control-row input[type=range]{flex:1;}
 #adminModal .control-row input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;}
+#adminModal .tab-bar{display:flex;gap:6px;margin:10px 0;}
+#adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
+#adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
+#adminModal .tab-panel{display:none;}
+#adminModal .tab-panel.active{display:block;}
+#adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
+#adminModal .preset-actions input{flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;}
+#adminModal .preset-actions button{padding:6px 10px;}
 .modal-field{
   margin:8px 0;
   display:flex;
@@ -1689,24 +1697,40 @@ footer .foot-row .foot-item img {
             <button type="button" class="close-modal">Close</button>
           </div>
         </div>
-        <h3>Theme Customization</h3>
-        <div id="styleControls"></div>
-        <div class="modal-field">
-          <label for="catList">Categories</label>
-          <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
+        <div class="tab-bar">
+          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
-        <div class="modal-field">
-          <label for="subList">Subcategories</label>
-          <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
+        <div id="tab-theme" class="tab-panel active">
+          <div class="modal-field">
+            <label for="themePreset">Preset</label>
+            <select id="themePreset"></select>
+          </div>
+          <div class="preset-actions">
+            <input id="newPresetName" type="text" placeholder="Preset name" />
+            <button type="button" id="savePreset">Save Preset</button>
+          </div>
+          <h3>Theme Customization</h3>
+          <div id="styleControls"></div>
         </div>
-        <h3>Subcategory Form Builder</h3>
-        <div class="palette" id="fieldPalette">
-          <div class="field-item" draggable="true" data-type="text">Text</div>
-          <div class="field-item" draggable="true" data-type="date">Date</div>
-          <div class="field-item" draggable="true" data-type="image">Image</div>
-          <div class="field-item" draggable="true" data-type="location">Location</div>
+        <div id="tab-settings" class="tab-panel">
+          <div class="modal-field">
+            <label for="catList">Categories</label>
+            <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
+          </div>
+          <div class="modal-field">
+            <label for="subList">Subcategories</label>
+            <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
+          </div>
+          <h3>Subcategory Form Builder</h3>
+          <div class="palette" id="fieldPalette">
+            <div class="field-item" draggable="true" data-type="text">Text</div>
+            <div class="field-item" draggable="true" data-type="date">Date</div>
+            <div class="field-item" draggable="true" data-type="image">Image</div>
+            <div class="field-item" draggable="true" data-type="location">Location</div>
+          </div>
+          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
         </div>
-        <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
       </form>
     </div>
   </div>
@@ -2618,6 +2642,8 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       const rect = content.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
+      content.style.left = `${rect.left}px`;
+      content.style.top = `${rect.top}px`;
       content.style.transform = 'none';
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
@@ -2633,6 +2659,18 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
+  });
+
+  const adminTabs = document.querySelectorAll('#adminModal .tab-bar button');
+  const adminPanels = document.querySelectorAll('#adminModal .tab-panel');
+  adminTabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      adminTabs.forEach(b=>b.setAttribute('aria-selected','false'));
+      adminPanels.forEach(p=>p.classList.remove('active'));
+      btn.setAttribute('aria-selected','true');
+      const panel = document.getElementById(`tab-${btn.dataset.tab}`);
+      panel && panel.classList.add('active');
+    });
   });
 
   const colorAreas = [
@@ -2727,12 +2765,102 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     });
   }
 
+  function collectThemeValues(){
+    const data = {};
+    colorAreas.forEach(area=>{
+      ['bg','text','btn'].forEach(type=>{
+        const c = document.getElementById(`${area.key}-${type}-c`);
+        const o = document.getElementById(`${area.key}-${type}-o`);
+        if(c && o){
+          data[`${area.key}-${type}`] = {color:c.value, opacity:o.value};
+        }
+      });
+    });
+    return data;
+  }
+
+  let presets = [];
+  let defaultTheme = {};
+  const builtInPresets = [];
+
+  function initBuiltInPresets(){
+    const dark = {};
+    colorAreas.forEach(area=>{
+      dark[`${area.key}-bg`] = {color:'#222222', opacity:'1'};
+      dark[`${area.key}-text`] = {color:'#eeeeee', opacity:'1'};
+      dark[`${area.key}-btn`] = {color:'#444444', opacity:'1'};
+    });
+    builtInPresets.push({name:'Dark', data: dark});
+    const ocean = {};
+    colorAreas.forEach(area=>{
+      ocean[`${area.key}-bg`] = {color:'#e0f7fa', opacity:'1'};
+      ocean[`${area.key}-text`] = {color:'#006064', opacity:'1'};
+      ocean[`${area.key}-btn`] = {color:'#00838f', opacity:'1'};
+    });
+    builtInPresets.push({name:'Ocean', data: ocean});
+  }
+
+  function updatePresetOptions(){
+    const sel = document.getElementById('themePreset');
+    if(!sel) return;
+    sel.innerHTML = '';
+    presets.forEach((p,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function loadPresets(){
+    const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
+    presets = [{name:'Default', data: defaultTheme}, ...builtInPresets, ...stored];
+    updatePresetOptions();
+  }
+
+  function applyPresetData(data){
+    Object.entries(data).forEach(([key,val])=>{
+      const [areaKey,type] = key.split('-');
+      const c = document.getElementById(`${areaKey}-${type}-c`);
+      const o = document.getElementById(`${areaKey}-${type}-o`);
+      if(c && o){
+        c.value = val.color;
+        o.value = val.opacity;
+      }
+    });
+    applyAdmin();
+  }
+
+  function savePreset(name){
+    const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
+    stored.push({name,data: collectThemeValues()});
+    localStorage.setItem('themePresets', JSON.stringify(stored));
+    loadPresets();
+  }
+
   buildStyleControls();
+  syncAdminControls();
+  defaultTheme = collectThemeValues();
+  initBuiltInPresets();
+  loadPresets();
   const adminForm = document.getElementById('adminForm');
   if(adminForm){
     adminForm.addEventListener('input', applyAdmin);
     adminForm.addEventListener('change', applyAdmin);
   }
+  const presetSelect = document.getElementById('themePreset');
+  presetSelect && presetSelect.addEventListener('change', e=>{
+    const p = presets[e.target.value];
+    if(p) applyPresetData(p.data);
+  });
+  const savePresetBtn = document.getElementById('savePreset');
+  savePresetBtn && savePresetBtn.addEventListener('click', ()=>{
+    const name = document.getElementById('newPresetName').value.trim();
+    if(name){
+      savePreset(name);
+      document.getElementById('newPresetName').value = '';
+    }
+  });
 
   const palette = document.getElementById('fieldPalette');
   const builder = document.getElementById('formBuilder');
