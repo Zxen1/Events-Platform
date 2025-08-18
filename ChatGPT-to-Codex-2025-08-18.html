@@ -157,7 +157,27 @@ body{
   overflow:auto;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
-#adminModal .modal-content{background:linear-gradient(180deg,#fff,#f7f7f7);border:2px solid #ffecb3;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+#adminModal .modal-content{
+  background:linear-gradient(180deg,#fff,#f7f7f7);
+  border:2px solid #ffecb3;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+  width:90%;
+  max-width:1200px;
+  max-height:90%;
+}
+#memberModal .modal-content{
+  width:90%;
+  max-width:1200px;
+  max-height:90%;
+}
+@media (max-width:600px){
+  #adminModal .modal-content,
+  #memberModal .modal-content{
+    width:95%;
+    max-width:95%;
+    max-height:95%;
+  }
+}
 #adminModal legend{font-weight:600;padding:0 6px;}
 #adminModal .control-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;}
 #adminModal .control-row label{min-width:60px;font-size:12px;}
