@@ -46,8 +46,9 @@ body{
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: var(--main-background);
-  border-bottom: 1px solid rgba(0,0,0,.05);
+  background: linear-gradient(90deg,#4ade80,#22d3ee,#60a5fa);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
 }
 
 .logo{
@@ -59,26 +60,15 @@ body{
   user-select: none;
 }
 
-.logo .ball{
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%,#67e8f9 0%,#34d399 45%,#22c55e 60%,#1d4ed8 100%);
-  box-shadow: inset -8px -10px 14px rgba(0,0,0,.35),0 0 12px rgba(99,233,222,.25);
-}
-
-.logo .text{
-  font-size: 24px;
-  background: linear-gradient(90deg,#4ade80,#22d3ee,#60a5fa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.logo img{
+  height: 48px;
+  display: block;
 }
 
 .top-actions{
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
 }
 
 .seg{
@@ -88,19 +78,19 @@ body{
 }
 
 .seg button{
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
   padding: 10px 14px;
-  background: var(--btn);
-  color: var(--ink);
+  background: rgba(255,255,255,0.2);
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow);
-  transition: background .2s, box-shadow .2s;
+  transition: background .2s;
 }
 
 .seg button[aria-current="page"]{
-  background: var(--btn-2);
+  background: rgba(255,255,255,0.35);
 }
 
 .auth{
@@ -111,7 +101,7 @@ body{
 
 .auth a{
   text-decoration: none;
-  color: var(--ink);
+  color: #fff;
   opacity: .9;
 }
 
@@ -119,11 +109,12 @@ body{
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #e0e0e0;
+  background: rgba(255,255,255,0.2);
   display: grid;
   place-items: center;
   box-shadow: var(--shadow);
-  border:1px solid #ccc;
+  border:1px solid rgba(255,255,255,0.4);
+  color: #fff;
 }
 
 .gear svg{
@@ -1072,20 +1063,16 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
-    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:
-      radial-gradient(120% 140% at 0% -20%, #7a5cff, transparent 60%),
-      radial-gradient(120% 140% at 100% 0%, #39a7ff, transparent 60%),
-      var(--bg-grad);border-bottom:1px solid rgba(255,255,255,.08)}
+    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:linear-gradient(90deg,#4ade80,#22d3ee,#60a5fa);color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1)}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
-    .logo .ball{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#67e8f9 0%,#34d399 45%,#22c55e 60%,#1d4ed8 100%);box-shadow:inset -8px -10px 14px rgba(0,0,0,.35),0 0 12px rgba(99,233,222,.25)}
-    .logo .text{font-size:24px;background:linear-gradient(90deg,#4ade80,#22d3ee,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .top-actions{display:flex;align-items:center;gap:10px}
+    .logo img{height:48px;display:block}
+    .top-actions{display:flex;align-items:center;gap:20px}
     .seg{display:flex;gap:8px;margin-right:10px}
-    .seg button{border:0;border-radius:999px;padding:10px 14px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
-    .seg button[aria-current="page"]{background:var(--btn-2)}
+    .seg button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:#fff;font-weight:600;cursor:pointer;box-shadow:var(--shadow);transition:background .2s}
+    .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
     .auth{display:flex;align-items:center;gap:10px}
-    .auth a{text-decoration:none;color:var(--ink);opacity:.9}
-    .gear{width:36px;height:36px;border-radius:10px;background:#0c2a45;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .auth a{text-decoration:none;color:#fff;opacity:.9}
+    .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.4);color:#fff}
     .gear svg{width:18px;height:18px;opacity:.9}
 
     .main{height:calc(100% - var(--header-h) - var(--footer-h));display:grid;grid-template-columns:var(--panel-w) var(--results-w) 1fr;gap:var(--gap);padding:14px}
@@ -1418,10 +1405,9 @@ footer .foot-row .foot-item img {
 <body class="mode-map">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
-      <div class="ball" aria-hidden="true"></div>
-      <div class="text">FUN<span style="opacity:.85">MAP</span><span style="opacity:.8">.com</span></div>
+      <img src="assets/logo.svg" alt="FunMap.com logo" />
     </div>
-    <div class="top-actions"></div>
+    <div class="top-actions">
       <nav aria-label="Primary">
         <div class="seg" role="tablist" aria-label="Top navigation">
           <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
