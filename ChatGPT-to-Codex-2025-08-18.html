@@ -222,6 +222,13 @@ body{
   display:flex;
   gap:10px;
 }
+.unsaved-confirm .modal-content{
+  max-width:300px;
+  text-align:center;
+}
+.unsaved-confirm .modal-actions{
+  justify-content:center;
+}
 .modal-header{
   position:sticky;
   top:0;
@@ -1793,6 +1800,7 @@ function buildClusterListHTML(items){
       // Place popup at the pointer, then adjust to keep fully in view by moving the lngLat
       const lngLat = map.unproject(point);
       hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop hover-multi-list', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
+      registerPopup(hoverPopup);
       // Prevent the browser contextmenu while locked
       map.getCanvas().addEventListener('contextmenu', ev => ev.preventDefault(), {once:true});
       // Stop events inside from bubbling to map
@@ -2327,6 +2335,7 @@ function makePosts(){
           if(hoverPopup) hoverPopup.remove();
           hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop'})
             .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
+          registerPopup(hoverPopup);
 
         (function(){
           function consume(ev){ try{ ev.preventDefault(); }catch{} try{ ev.stopPropagation(); }catch{} }
@@ -2369,6 +2378,7 @@ function makePosts(){
         if(hoverPopup) hoverPopup.remove();
         hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop'})
           .setLngLat(e.lngLat).setHTML(`<div class='hover-card'><div class='t'>${count} nearby posts</div></div>`).addTo(map);
+        registerPopup(hoverPopup);
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
@@ -2574,6 +2584,99 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   }
 })();
 
+const modalStack = [];
+function bringToTop(item){
+  const idx = modalStack.indexOf(item);
+  if(idx!==-1) modalStack.splice(idx,1);
+  modalStack.push(item);
+}
+function registerPopup(p){
+  bringToTop(p);
+  if(typeof p.on==='function'){
+    p.on('close',()=>{
+      const i = modalStack.indexOf(p);
+      if(i!==-1) modalStack.splice(i,1);
+    });
+  }
+  const el = p.getElement && p.getElement();
+  if(el){
+    el.addEventListener('mousedown', ()=> bringToTop(p));
+  }
+}
+function openModal(m){
+  const content = m.querySelector('.modal-content');
+  if(content){
+    content.style.width = '';
+    content.style.height = '';
+    content.style.left = '50%';
+    content.style.top = '50%';
+    content.style.transform = 'translate(-50%, -50%)';
+  }
+  m.classList.add('show');
+  m.removeAttribute('aria-hidden');
+  if(!m.__bringToTopAdded){
+    m.addEventListener('mousedown', ()=> bringToTop(m));
+    m.__bringToTopAdded = true;
+  }
+  bringToTop(m);
+}
+function closeModal(m){
+  m.classList.remove('show');
+  m.setAttribute('aria-hidden','true');
+  const idx = modalStack.indexOf(m);
+  if(idx!==-1) modalStack.splice(idx,1);
+}
+function modalNeedsSaving(m){
+  return m.hasAttribute('data-needs-save');
+}
+function showUnsavedConfirm(cb){
+  const dlg = document.createElement('div');
+  dlg.className = 'modal unsaved-confirm';
+  dlg.innerHTML = `<div class="modal-content"><p>Discard unsaved changes?</p><div class="modal-actions"><button class="cancel" autofocus>Cancel</button><button class="discard">Close without saving</button></div></div>`;
+  document.body.appendChild(dlg);
+  openModal(dlg);
+  const cleanup = ()=>{ closeModal(dlg); dlg.remove(); };
+  dlg._cancel = ()=>{ cleanup(); cb(false); };
+  const discard = ()=>{ cleanup(); cb(true); };
+  dlg.querySelector('.cancel').addEventListener('click', dlg._cancel);
+  dlg.querySelector('.discard').addEventListener('click', discard);
+}
+function requestCloseModal(m){
+  if(modalNeedsSaving(m)){
+    showUnsavedConfirm(ok=>{
+      if(ok){
+        m.removeAttribute('data-needs-save');
+        closeModal(m);
+      }
+    });
+  } else {
+    closeModal(m);
+  }
+}
+function toggleModal(m){
+  if(m.classList.contains('show')){
+    requestCloseModal(m);
+  } else {
+    openModal(m);
+  }
+}
+function handleEsc(){
+  const top = modalStack[modalStack.length-1];
+  if(!top) return;
+  if(top instanceof Element){
+    if(top.classList && top.classList.contains('unsaved-confirm')){
+      if(typeof top._cancel === 'function') top._cancel();
+      else { closeModal(top); top.remove(); }
+    } else {
+      requestCloseModal(top);
+    }
+  } else if(typeof top.remove==='function'){
+    modalStack.pop();
+    top.remove();
+  }
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
+
 // Modals and admin/member interactions
 (function(){
   const memberBtn = document.getElementById('memberBtn');
@@ -2583,25 +2686,11 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   const adminModal = document.getElementById('adminModal');
   const filterModal = document.getElementById('filterModal');
 
-  function openModal(m){
-    const content = m.querySelector('.modal-content');
-    if(content){
-      content.style.width = '';
-      content.style.height = '';
-      content.style.left = '50%';
-      content.style.top = '50%';
-      content.style.transform = 'translate(-50%, -50%)';
-    }
-    m.classList.add('show');
-    m.removeAttribute('aria-hidden');
-  }
-  function closeModal(m){ m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
-
-  memberBtn && memberBtn.addEventListener('click', ()=> openModal(memberModal));
-  adminBtn && adminBtn.addEventListener('click', ()=>{ syncAdminControls(); openModal(adminModal); });
-  filterBtn && filterBtn.addEventListener('click', ()=> openModal(filterModal));
+  memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
+  adminBtn && adminBtn.addEventListener('click', ()=>{ syncAdminControls(); toggleModal(adminModal); });
+  filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
-    btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
+    btn.addEventListener('click', ()=> requestCloseModal(btn.closest('.modal')));
   });
 
   document.querySelectorAll('.modal').forEach(modal=>{
@@ -2815,11 +2904,12 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   loadPresets();
   const adminForm = document.getElementById('adminForm');
   if(adminForm){
-    adminForm.addEventListener('input', applyAdmin);
-    adminForm.addEventListener('change', applyAdmin);
+    adminForm.addEventListener('input', e=>{ applyAdmin(); adminModal.setAttribute('data-needs-save','true'); });
+    adminForm.addEventListener('change', e=>{ applyAdmin(); adminModal.setAttribute('data-needs-save','true'); });
     adminForm.addEventListener('submit', e=>{
       e.preventDefault();
       applyAdmin();
+      adminModal.removeAttribute('data-needs-save');
       closeModal(adminModal);
     });
   }
