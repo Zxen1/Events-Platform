@@ -157,6 +157,8 @@ body{
   resize:both;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
+#adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;}
+#adminModal .admin-fieldset{flex:1 1 180px;min-width:160px;}
 #adminModal .modal-content{
   background:linear-gradient(180deg,#fff,#f7f7f7);
   border:2px solid #ffecb3;
@@ -179,11 +181,13 @@ body{
   }
 }
 #adminModal legend{font-weight:600;padding:0 6px;}
-#adminModal .control-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;}
-#adminModal .control-row label{min-width:60px;font-size:12px;}
-#adminModal .control-row input[type=range]{flex:1;}
-#adminModal .control-row input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;}
-#adminModal .tab-bar{display:flex;gap:6px;margin:10px 0;}
+#adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+#adminModal .control-row label{min-width:40px;font-size:12px;}
+#adminModal .color-group{display:flex;flex-direction:column;align-items:center;}
+#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:60px;height:40px;}
+#adminModal .color-group input[type=range]{width:60px;}
+#adminModal .modal-subheader{position:sticky;background:#fff;z-index:1;}
+#adminModal .tab-bar{display:flex;gap:6px;margin:0 0 10px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
@@ -1697,9 +1701,11 @@ footer .foot-row .foot-item img {
             <button type="button" class="close-modal">Close</button>
           </div>
         </div>
-        <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+        <div class="modal-subheader">
+          <div class="tab-bar">
+            <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+          </div>
         </div>
         <div id="tab-theme" class="tab-panel active">
           <div class="modal-field">
@@ -2620,6 +2626,11 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
+    const header = m.querySelector('.modal-header');
+    const subheader = m.querySelector('.modal-subheader');
+    if(subheader && header){
+      subheader.style.top = header.offsetHeight + 'px';
+    }
     m.classList.add('show');
     m.removeAttribute('aria-hidden');
   }
@@ -2634,6 +2645,10 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   document.querySelectorAll('.modal').forEach(modal=>{
     const content = modal.querySelector('.modal-content');
     const header = modal.querySelector('.modal-header');
+    const subheader = modal.querySelector('.modal-subheader');
+    if(subheader && header){
+      subheader.style.top = header.offsetHeight + 'px';
+    }
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
@@ -2736,8 +2751,11 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         const row = document.createElement('div');
         row.className = 'control-row';
         row.innerHTML = `
-          <label>${type} color</label><input id="${area.key}-${type}-c" type="color" />
-          <label>opacity</label><input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+          <label>${type} color</label>
+          <div class="color-group">
+            <input id="${area.key}-${type}-c" type="color" />
+            <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+          </div>
         `;
         fs.appendChild(row);
       });
