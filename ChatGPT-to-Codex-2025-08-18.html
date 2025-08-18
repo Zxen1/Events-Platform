@@ -2847,6 +2847,11 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   if(adminForm){
     adminForm.addEventListener('input', applyAdmin);
     adminForm.addEventListener('change', applyAdmin);
+    adminForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      applyAdmin();
+      closeModal(adminModal);
+    });
   }
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
