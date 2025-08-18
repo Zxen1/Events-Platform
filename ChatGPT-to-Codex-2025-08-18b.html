@@ -9,19 +9,19 @@
   --panel-w: 260px;
   --results-w: 520px;
   --gap: 12px;
-  --ink: #e8eff7;
-  --ink-d: #bcd0e6;
+  --ink: #333;
+  --ink-d: #555;
   --gold: #ffc107;
-  --muted: #87a2c2;
-  --btn: #204261;
-  --btn-2: #1a3853;
-  --shadow: 0 8px 20px rgba(0,0,0,.35);
+  --muted: #777;
+  --btn: #fff;
+  --btn-2: #e0e0e0;
+  --shadow: 0 4px 12px rgba(0,0,0,.1);
   --footer-h: 70px;
   */
-      
-  --main-background: rgba(0,0,0,0.8);
-  --filter-background: linear-gradient(180deg,#0f1b2a,#0b1623);
-  --list-background: rgba(15,29,45,0.8);
+
+  --main-background: rgba(255,255,255,0.8);
+  --filter-background: linear-gradient(180deg,#ffffff,#f7f7f7);
+  --list-background: rgba(255,255,255,0.8);
 }
 
 *{
@@ -34,8 +34,8 @@ html,body{
 
 body{
   margin: 0;
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
-  background: #071422;
+  font-family: 'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
+  background: #f5f5f5;
   color: var(--ink);
   overflow: hidden;
 }
@@ -46,9 +46,8 @@ body{
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: radial-gradient(120% 140% at 0% -20%, #7a5cff, transparent 60%),
-      radial-gradient(120% 140% at 100% 0%, #39a7ff, transparent 60%), var(--main-background);
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: var(--main-background);
+  border-bottom: 1px solid rgba(0,0,0,.05);
 }
 
 .logo{
@@ -89,7 +88,7 @@ body{
 }
 
 .seg button{
-  border: 0;
+  border: 1px solid #ccc;
   border-radius: 999px;
   padding: 10px 14px;
   background: var(--btn);
@@ -97,6 +96,7 @@ body{
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow);
+  transition: background .2s, box-shadow .2s;
 }
 
 .seg button[aria-current="page"]{
@@ -119,10 +119,11 @@ body{
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #0c2a45;
+  background: #e0e0e0;
   display: grid;
   place-items: center;
   box-shadow: var(--shadow);
+  border:1px solid #ccc;
 }
 
 .gear svg{
@@ -156,11 +157,11 @@ body{
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #0c2238;
+  background: #e0e0e0;
   display: grid;
   place-items: center;
   box-shadow: var(--shadow);
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid #ccc;
 }
 
 .sq svg{
@@ -173,7 +174,8 @@ body{
   border-radius: 16px;
   padding: 10px;
   box-shadow: var(--shadow);
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(0,0,0,.1);
+  background: var(--list-background);
   overflow: auto;
   flex: 1;
   min-height: 0;
@@ -203,8 +205,8 @@ body{
   width: 100%;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.1);
-  background: #0b1a29;
+  border: 1px solid #ccc;
+  background: rgba(255,255,255,0.9);
   color: var(--ink);
   padding: 0 38px 0 12px;
   outline: 0;
@@ -220,9 +222,9 @@ body{
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: #0e2238;
+  background: #e0e0e0;
   cursor: pointer;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid #ccc;
 }
 
 .tiny{
@@ -231,9 +233,9 @@ body{
   width: 38px;
   height: 40px;
   border-radius: 12px;
-  background: #1e6d48;
+  background: #e0e0e0;
   cursor: pointer;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid #ccc;
 }
 
 .tiny svg{
@@ -1005,7 +1007,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 .mode-posts #postsWide.panel{
-  background: transparent;
+  background: rgba(30,30,30,0.6);
+  border: none;
+  backdrop-filter: blur(4px);
+  color: #fff;
 }
 
 .mode-posts #postsWide .res-list{
