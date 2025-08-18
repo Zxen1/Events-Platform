@@ -143,6 +143,7 @@ body{
   background:transparent;
   display:none;
   z-index:2000;
+  pointer-events:none;
 }
 .modal.show{display:block;}
 .modal-content{
@@ -155,6 +156,7 @@ body{
   max-height:90%;
   overflow:auto;
   resize:both;
+  pointer-events:auto;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
@@ -195,10 +197,6 @@ body{
 #adminModal .control-row label{min-width:40px;font-size:12px;}
 #adminModal .color-group{width:120px;display:flex;flex-direction:column;position:relative;}
 #adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;}
-#adminModal .opacity-pop{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;padding:4px;border:1px solid #ccc;border-radius:0 0 4px 4px;background:#fff;align-items:center;gap:6px;z-index:10;}
-#adminModal .color-group.show-opacity .opacity-pop{display:flex;}
-#adminModal .opacity-pop input[type=range]{flex:1;}
-#adminModal .opacity-pop span{width:30px;text-align:right;font-size:12px;}
 #adminModal .tab-bar{display:flex;gap:6px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
@@ -1602,31 +1600,13 @@ footer .foot-row .foot-item img {
         </div>
       </div>
       <section class="filters-col" aria-label="Filters">
-        <div class="left-tools">
-          <div class="sq" title="Full screen" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
-            </svg>
-          </div>
-          <div class="sq" title="Search" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>
-            </svg>
-          </div>
-        </div>
         <div class="panel">
           <h3>Location</h3>
           <div class="field" role="search">
             <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
-              <div class="x" role="button" aria-label="Clear location">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-              </div>
+              <div class="x" role="button" aria-label="Clear location">X</div>
             </div>
-            <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="2.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3 4.9 19.1"/>
-              </svg>
-            </div>
+            <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
           </div>
 
           <h3>Sort</h3>
@@ -1638,36 +1618,20 @@ footer .foot-row .foot-item img {
                 <option value="nearest">Closest</option>
                 <option value="soon">Soonest</option>
               </select>
-              <div class="down" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
-            <div class="tiny" role="button" aria-label="More sort filters">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
             </div>
           </div>
 
           <h3>Keywords</h3>
           <div class="field">
             <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
-              <div class="x" role="button" aria-label="Clear keywords">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-              </div>
-            </div>
-            <div class="tiny" role="button" aria-label="Keyword filters">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+              <div class="x" role="button" aria-label="Clear keywords">X</div>
             </div>
           </div>
 
           <h3>Date Range</h3>
           <div class="field">
             <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
-              <div class="x" role="button" aria-label="Clear date">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-              </div>
-            </div>
-            <div class="tiny" role="button" aria-label="Open date picker">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+              <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
 
@@ -1676,11 +1640,7 @@ footer .foot-row .foot-item img {
 
           <div class="reset-box">
             <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4v7h7M20 20v-7h-7"/><path d="M20 4 4 20"/></svg>
               Reset All Filters
-            </div>
-            <div class="arr" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 6 6 6-6 6"/></svg>
             </div>
           </div>
         </div>
@@ -2732,17 +2692,12 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
   }
 
-  function hexToRgb(hex){
-    const int = parseInt(hex.slice(1),16);
-    return [(int>>16)&255,(int>>8)&255,int&255];
-  }
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
-        const oInput = document.getElementById(`${area.key}-${type}-o`);
-        if(!(cInput && oInput)) return;
+        if(!cInput) return;
         const selectors = area.selectors[type] || [];
         let col = null;
         selectors.some(sel=>{
@@ -2759,11 +2714,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         const r = parseInt(match[1],10);
         const g = parseInt(match[2],10);
         const bVal = parseInt(match[3],10);
-        const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
         cInput.value = rgbToHex(r,g,bVal);
-        oInput.value = a;
-        const span = oInput.nextElementSibling;
-        if(span) span.textContent = a;
       });
     });
   }
@@ -2784,10 +2735,6 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
             <label>${type} color</label>
             <div class="color-group">
               <input id="${area.key}-${type}-c" type="color" />
-              <div class="opacity-pop">
-                <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
-                <span class="opacity-val">1</span>
-              </div>
             </div>
           `;
           fs.appendChild(row);
@@ -2796,31 +2743,12 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     });
   }
 
-  function initColorGroupEvents(){
-    document.querySelectorAll('#adminModal .color-group').forEach(g=>{
-      const colorInput = g.querySelector('input[type=color]');
-      const range = g.querySelector('.opacity-pop input[type=range]');
-      const val = g.querySelector('.opacity-pop span');
-      if(range && val){
-        function update(){ val.textContent = range.value; }
-        range.addEventListener('input', update);
-        update();
-      }
-      if(colorInput){
-        colorInput.addEventListener('focus', ()=> g.classList.add('show-opacity'));
-        colorInput.addEventListener('blur', ()=> g.classList.remove('show-opacity'));
-      }
-    });
-  }
-
   function applyAdmin(){
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
-        const o = document.getElementById(`${area.key}-${type}-o`);
-        if(!(c && o)) return;
-        const [r,g,b] = hexToRgb(c.value);
-        const color = `rgba(${r},${g},${b},${o.value})`;
+        if(!c) return;
+        const color = c.value;
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
@@ -2838,9 +2766,8 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
-        const o = document.getElementById(`${area.key}-${type}-o`);
-        if(c && o){
-          data[`${area.key}-${type}`] = {color:c.value, opacity:o.value};
+        if(c){
+          data[`${area.key}-${type}`] = {color:c.value, opacity:'1'};
         }
       });
     });
@@ -2890,12 +2817,8 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       Object.entries(data).forEach(([key,val])=>{
         const [areaKey,type] = key.split('-');
         const c = document.getElementById(`${areaKey}-${type}-c`);
-        const o = document.getElementById(`${areaKey}-${type}-o`);
-        if(c && o){
+        if(c){
           c.value = val.color;
-          o.value = val.opacity;
-          const span = o.nextElementSibling;
-          if(span) span.textContent = val.opacity;
         }
       });
       applyAdmin();
@@ -2909,7 +2832,6 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   }
 
   buildStyleControls();
-  initColorGroupEvents();
   syncAdminControls();
   defaultTheme = collectThemeValues();
   initBuiltInPresets();
