@@ -157,8 +157,8 @@ body{
   resize:both;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
-#adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;}
-#adminModal .admin-fieldset{flex:1 1 180px;min-width:160px;}
+#adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
+#adminModal .admin-fieldset{flex:0 0 180px;min-width:180px;}
 #adminModal .modal-content{
   background:linear-gradient(180deg,#fff,#f7f7f7);
   border:2px solid #ffecb3;
@@ -183,11 +183,11 @@ body{
 #adminModal legend{font-weight:600;padding:0 6px;}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:40px;font-size:12px;}
-#adminModal .color-group{position:relative;width:60px;height:40px;display:block;}
-#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:100%;display:block;}
-#adminModal .opacity-pop{position:absolute;top:100%;left:0;background:#fff;border:1px solid #ccc;border-radius:4px;padding:4px;margin-top:4px;display:none;width:160px;}
-#adminModal .opacity-pop input[type=range]{width:100%;}
-#adminModal .color-group.show .opacity-pop{display:block;}
+#adminModal .color-group{width:120px;display:flex;flex-direction:column;}
+#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;}
+#adminModal .opacity-pop{margin-top:4px;display:flex;align-items:center;gap:6px;}
+#adminModal .opacity-pop input[type=range]{flex:1;}
+#adminModal .opacity-pop span{width:30px;text-align:right;font-size:12px;}
 #adminModal .tab-bar{display:flex;gap:6px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
@@ -2649,28 +2649,35 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
-    header.addEventListener('mousedown', e=>{
-      dragging = true;
-      const rect = content.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-      content.style.left = `${rect.left}px`;
-      content.style.top = `${rect.top}px`;
-      content.style.transform = 'none';
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-      e.preventDefault();
-    });
-    function onMouseMove(e){
-      if(!dragging) return;
-      content.style.left = `${e.clientX - offsetX}px`;
-      content.style.top = `${e.clientY - offsetY}px`;
-    }
-    function onMouseUp(){
-      dragging = false;
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    }
+      header.addEventListener('mousedown', e=>{
+        dragging = true;
+        const rect = content.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        content.style.left = `${rect.left}px`;
+        content.style.top = `${rect.top}px`;
+        content.style.transform = 'none';
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+      });
+      function onMouseMove(e){
+        if(!dragging) return;
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+        const rect = content.getBoundingClientRect();
+        const maxLeft = window.innerWidth - rect.width;
+        const maxTop = window.innerHeight - header.offsetHeight;
+        newLeft = Math.min(Math.max(newLeft, 0), Math.max(maxLeft, 0));
+        newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
+        content.style.left = `${newLeft}px`;
+        content.style.top = `${newTop}px`;
+      }
+      function onMouseUp(){
+        dragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
   });
 
   const adminTabs = document.querySelectorAll('#adminModal .tab-bar button');
@@ -2731,6 +2738,8 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
         cInput.value = rgbToHex(r,g,bVal);
         oInput.value = a;
+        const span = oInput.nextElementSibling;
+        if(span) span.textContent = a;
       });
     });
   }
@@ -2744,37 +2753,31 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       const lg = document.createElement('legend');
       lg.textContent = area.label;
       fs.appendChild(lg);
-      ['bg','text','btn'].forEach(type=>{
-        const row = document.createElement('div');
-        row.className = 'control-row';
-        row.innerHTML = `
-          <label>${type} color</label>
-          <div class="color-group">
-            <input id="${area.key}-${type}-c" type="color" />
-            <div class="opacity-pop">
-              <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+        ['bg','text','btn'].forEach(type=>{
+          const row = document.createElement('div');
+          row.className = 'control-row';
+          row.innerHTML = `
+            <label>${type} color</label>
+            <div class="color-group">
+              <input id="${area.key}-${type}-c" type="color" />
+              <div class="opacity-pop">
+                <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+                <span class="opacity-val">1</span>
+              </div>
             </div>
-          </div>
-        `;
-        fs.appendChild(row);
-      });
+          `;
+          fs.appendChild(row);
+        });
       wrap.appendChild(fs);
     });
   }
 
   function initColorGroupEvents(){
-    const colors = document.querySelectorAll('#adminModal .color-group input[type=color]');
-    colors.forEach(c=>{
-      const group = c.closest('.color-group');
-      c.addEventListener('click', e=>{
-        e.stopPropagation();
-        group.classList.toggle('show');
-      });
-    });
-    document.addEventListener('click', e=>{
-      document.querySelectorAll('#adminModal .color-group').forEach(g=>{
-        if(!g.contains(e.target)) g.classList.remove('show');
-      });
+    document.querySelectorAll('#adminModal .opacity-pop input[type=range]').forEach(r=>{
+      const val = r.nextElementSibling;
+      function update(){ val.textContent = r.value; }
+      r.addEventListener('input', update);
+      update();
     });
   }
 
@@ -2852,17 +2855,19 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   }
 
   function applyPresetData(data){
-    Object.entries(data).forEach(([key,val])=>{
-      const [areaKey,type] = key.split('-');
-      const c = document.getElementById(`${areaKey}-${type}-c`);
-      const o = document.getElementById(`${areaKey}-${type}-o`);
-      if(c && o){
-        c.value = val.color;
-        o.value = val.opacity;
-      }
-    });
-    applyAdmin();
-  }
+      Object.entries(data).forEach(([key,val])=>{
+        const [areaKey,type] = key.split('-');
+        const c = document.getElementById(`${areaKey}-${type}-c`);
+        const o = document.getElementById(`${areaKey}-${type}-o`);
+        if(c && o){
+          c.value = val.color;
+          o.value = val.opacity;
+          const span = o.nextElementSibling;
+          if(span) span.textContent = val.opacity;
+        }
+      });
+      applyAdmin();
+    }
 
   function savePreset(name){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
