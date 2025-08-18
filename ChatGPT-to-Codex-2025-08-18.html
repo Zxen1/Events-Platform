@@ -302,23 +302,6 @@ body{
   opacity: .9;
 }
 
-.panel{
-  border-radius: 16px;
-  padding: 10px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(0,0,0,.1);
-  overflow: auto;
-  flex: 1;
-  min-height: 0;
-}
-
-.panel h3{
-  margin: 0 0 10px 8px;
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 600;
-  letter-spacing: .3px;
-}
 
 .field{
   display: grid;
@@ -1114,7 +1097,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: var(--main-background);
 }
 
-.results-col .panel .res-list{
+.results-col .res-list{
   border-radius: inherit;
 }
 
@@ -1136,7 +1119,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   z-index: 1;
 }
 
-.mode-posts #postsWide.panel{
+.mode-posts #postsWide{
   background: rgba(30,30,30,0.6);
   border: none;
   backdrop-filter: blur(4px);
@@ -1219,8 +1202,6 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .left-tools{display:flex;gap:8px;margin-bottom:8px;padding-left:2px}
     .sq{width:30px;height:30px;border-radius:8px;background:#0c2238;display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.08)}
     .sq svg{width:14px;height:14px;opacity:.9}
-    .panel{border-radius:16px;padding:10px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.08);overflow:auto;flex:1;min-height:0}
-    .panel h3{margin:0 0 10px 8px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.3px}
     .field{display:grid;grid-template-columns:1fr 38px;gap:8px;align-items:center;margin:8px 0}
     .field .input{position:relative}
     .input input,.input select{width:100%;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0b1a29;color:var(--ink);padding:0 38px 0 12px;outline:0}
@@ -1536,9 +1517,6 @@ footer .foot-row .foot-item img {
     background: var(--list-background);
     border-color: #ffcc80;
   }
-  .panel {
-    border-color: #ffcc80;
-  }
 </style>
 
 </head>
@@ -1570,7 +1548,7 @@ footer .foot-row .foot-item img {
         <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
         <div class="muted">Map area filter active in Map mode</div>
       </div>
-      <div class="panel res-list" id="results"></div>
+      <div class="res-list" id="results"></div>
     </section>
 
     <section class="map-wrap" aria-label="Map">
@@ -1578,7 +1556,7 @@ footer .foot-row .foot-item img {
       <div class="map-overlay">Loading Map…</div>
     </section>
     <section class="posts-mode" aria-label="Posts">
-      <div class="panel res-list" id="postsWide"></div>
+      <div class="res-list" id="postsWide"></div>
     </section>
     <section class="calendar" aria-label="Calendar">
       Calendar (placeholder)
@@ -1599,7 +1577,7 @@ footer .foot-row .foot-item img {
         </div>
       </div>
       <section class="filters-col" aria-label="Filters">
-        <div class="panel">
+        <div>
           <h3>Location</h3>
           <div class="field" role="search">
             <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
@@ -2679,8 +2657,8 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a']}},
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], text:['body'], btn:['body button']}},
-    {key:'filter', label:'Filter Panel', selectors:{bg:['.filters-col .panel'], text:['.filters-col'], btn:['.filters-col button','.filters-col .sq','.filters-col .tiny','.filters-col .btn']}},
-    {key:'list', label:'List Panel', selectors:{bg:['.results-col .panel'], text:['.results-col'], btn:['.results-col button']}},
+    {key:'filter', label:'Filter Panel', selectors:{bg:['.filters-col'], text:['.filters-col'], btn:['.filters-col button','.filters-col .sq','.filters-col .tiny','.filters-col .btn']}},
+    {key:'list', label:'List Panel', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col button']}},
     {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
     {key:'posts', label:'Posts Area', selectors:{bg:['.posts-mode'], text:['.posts-mode'], btn:['.posts-mode button']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
