@@ -1355,6 +1355,60 @@ footer .foot-row .foot-item img {
 }
 </style>
 
+<style>
+  :root {
+    --ink: #333;
+    --ink-d: #555;
+    --muted: #666;
+    --btn: #ffb74d;
+    --btn-2: #ff9800;
+    --panel-grad: linear-gradient(180deg, #ffecb3, #ffe0b2);
+    --bg-grad: linear-gradient(0deg, #fff8e1, #ffe0b2);
+    --main-background: rgba(255, 255, 255, 0.8);
+    --filter-background: linear-gradient(180deg, #fff3e0, #ffe0b2);
+    --list-background: rgba(255, 248, 225, 0.8);
+  }
+  body {
+    background: #fff8e1;
+    color: #333;
+  }
+  .seg button {
+    background: var(--btn);
+    color: #333;
+  }
+  .seg button[aria-current="page"] {
+    background: var(--btn-2);
+  }
+  .sq,
+  .tiny,
+  .input .x,
+  .input .down,
+  .cat .cfg,
+  .reset-box .arr,
+  .reset-box .btn,
+  .pill,
+  .close {
+    background: var(--btn);
+    border-color: #ffcc80;
+    color: #333;
+  }
+  .input input,
+  .input select,
+  .cat .bar,
+  .sub .chip {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    color: #333;
+  }
+  .panel,
+  .card,
+  .detail-inline,
+  .map-wrap {
+    background: var(--list-background);
+    border-color: #ffcc80;
+  }
+</style>
+
 </head>
 <body class="mode-map">
   <header class="header" role="banner">
