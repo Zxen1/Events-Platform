@@ -183,10 +183,10 @@ body{
 #adminModal legend{font-weight:600;padding:0 6px;}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:40px;font-size:12px;}
-#adminModal .color-group{display:flex;flex-direction:column;align-items:center;}
-#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:60px;height:40px;}
-#adminModal .color-group input[type=range]{width:60px;}
-#adminModal .modal-subheader{position:sticky;background:#fff;z-index:1;}
+#adminModal .color-group{position:relative;width:60px;height:40px;display:block;}
+#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:100%;display:block;}
+#adminModal .color-group input[type=range]{position:absolute;bottom:0;left:0;width:100%;height:10px;margin:0;z-index:1;}
+#adminModal .modal-subheader{position:sticky;top:var(--subheader-top,0);background:#fff;z-index:1;}
 #adminModal .tab-bar{display:flex;gap:6px;margin:0 0 10px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
@@ -2629,7 +2629,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     const header = m.querySelector('.modal-header');
     const subheader = m.querySelector('.modal-subheader');
     if(subheader && header){
-      subheader.style.top = header.offsetHeight + 'px';
+      subheader.style.setProperty('--subheader-top', header.offsetHeight + 'px');
     }
     m.classList.add('show');
     m.removeAttribute('aria-hidden');
@@ -2647,7 +2647,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     const header = modal.querySelector('.modal-header');
     const subheader = modal.querySelector('.modal-subheader');
     if(subheader && header){
-      subheader.style.top = header.offsetHeight + 'px';
+      subheader.style.setProperty('--subheader-top', header.offsetHeight + 'px');
     }
     if(!content || !header) return;
     let dragging = false;
@@ -2674,6 +2674,15 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
+  });
+
+  window.addEventListener('resize', ()=>{
+    document.querySelectorAll('#adminModal .modal-subheader').forEach(sub=>{
+      const header = sub.closest('.modal').querySelector('.modal-header');
+      if(header){
+        sub.style.setProperty('--subheader-top', header.offsetHeight + 'px');
+      }
+    });
   });
 
   const adminTabs = document.querySelectorAll('#adminModal .tab-bar button');
