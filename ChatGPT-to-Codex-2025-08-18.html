@@ -140,14 +140,13 @@ body{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,0.5);
+  background:transparent;
   display:none;
-  align-items:center;
-  justify-content:center;
   z-index:2000;
 }
-.modal.show{display:flex;}
+.modal.show{display:block;}
 .modal-content{
+  position:absolute;
   background:#fff;
   padding:20px;
   border-radius:8px;
@@ -155,6 +154,7 @@ body{
   max-width:600px;
   max-height:90%;
   overflow:auto;
+  resize:both;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
 #adminModal .modal-content{
@@ -208,6 +208,7 @@ body{
   background:#fff;
   padding-bottom:10px;
   z-index:1;
+  cursor:move;
 }
 .modal-header .modal-actions{
   margin-top:0;
@@ -2582,13 +2583,52 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   const memberModal = document.getElementById('memberModal');
   const adminModal = document.getElementById('adminModal');
 
-  function openModal(m){ m.classList.add('show'); m.removeAttribute('aria-hidden'); }
+  function openModal(m){
+    const content = m.querySelector('.modal-content');
+    if(content){
+      content.style.width = '';
+      content.style.height = '';
+      content.style.left = '50%';
+      content.style.top = '50%';
+      content.style.transform = 'translate(-50%, -50%)';
+    }
+    m.classList.add('show');
+    m.removeAttribute('aria-hidden');
+  }
   function closeModal(m){ m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
 
   memberBtn && memberBtn.addEventListener('click', ()=> openModal(memberModal));
   adminBtn && adminBtn.addEventListener('click', ()=>{ syncAdminControls(); openModal(adminModal); });
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
+  });
+
+  document.querySelectorAll('.modal').forEach(modal=>{
+    const content = modal.querySelector('.modal-content');
+    const header = modal.querySelector('.modal-header');
+    if(!content || !header) return;
+    let dragging = false;
+    let offsetX = 0, offsetY = 0;
+    header.addEventListener('mousedown', e=>{
+      dragging = true;
+      const rect = content.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      content.style.transform = 'none';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      e.preventDefault();
+    });
+    function onMouseMove(e){
+      if(!dragging) return;
+      content.style.left = `${e.clientX - offsetX}px`;
+      content.style.top = `${e.clientY - offsetY}px`;
+    }
+    function onMouseUp(){
+      dragging = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
   });
 
   const colorAreas = [
