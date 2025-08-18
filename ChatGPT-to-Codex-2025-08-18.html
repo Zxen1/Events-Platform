@@ -185,9 +185,10 @@ body{
 #adminModal .control-row label{min-width:40px;font-size:12px;}
 #adminModal .color-group{position:relative;width:60px;height:40px;display:block;}
 #adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:100%;display:block;}
-#adminModal .color-group input[type=range]{position:absolute;bottom:0;left:0;width:100%;height:10px;margin:0;z-index:1;}
-#adminModal .modal-subheader{position:sticky;top:var(--subheader-top,0);background:#fff;z-index:1;}
-#adminModal .tab-bar{display:flex;gap:6px;margin:0 0 10px;}
+#adminModal .opacity-pop{position:absolute;top:100%;left:0;background:#fff;border:1px solid #ccc;border-radius:4px;padding:4px;margin-top:4px;display:none;width:160px;}
+#adminModal .opacity-pop input[type=range]{width:100%;}
+#adminModal .color-group.show .opacity-pop{display:block;}
+#adminModal .tab-bar{display:flex;gap:6px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
@@ -215,13 +216,18 @@ body{
 .modal-header{
   position:sticky;
   top:0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   background:#fff;
   padding:10px 0;
   z-index:1;
   cursor:move;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.modal-header .header-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 .modal-header .modal-actions{
   margin-top:0;
@@ -1695,13 +1701,13 @@ footer .foot-row .foot-item img {
     <div class="modal-content">
       <form id="adminForm">
         <div class="modal-header">
-          <h2>Admin Settings</h2>
-          <div class="modal-actions">
-            <button type="submit">Save</button>
-            <button type="button" class="close-modal">Close</button>
+          <div class="header-top">
+            <h2>Admin Settings</h2>
+            <div class="modal-actions">
+              <button type="submit">Save</button>
+              <button type="button" class="close-modal">Close</button>
+            </div>
           </div>
-        </div>
-        <div class="modal-subheader">
           <div class="tab-bar">
             <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
             <button type="button" class="tab-btn" data-tab="settings">Settings</button>
@@ -2626,11 +2632,6 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    const header = m.querySelector('.modal-header');
-    const subheader = m.querySelector('.modal-subheader');
-    if(subheader && header){
-      subheader.style.setProperty('--subheader-top', header.offsetHeight + 'px');
-    }
     m.classList.add('show');
     m.removeAttribute('aria-hidden');
   }
@@ -2645,10 +2646,6 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   document.querySelectorAll('.modal').forEach(modal=>{
     const content = modal.querySelector('.modal-content');
     const header = modal.querySelector('.modal-header');
-    const subheader = modal.querySelector('.modal-subheader');
-    if(subheader && header){
-      subheader.style.setProperty('--subheader-top', header.offsetHeight + 'px');
-    }
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
@@ -2674,15 +2671,6 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     }
-  });
-
-  window.addEventListener('resize', ()=>{
-    document.querySelectorAll('#adminModal .modal-subheader').forEach(sub=>{
-      const header = sub.closest('.modal').querySelector('.modal-header');
-      if(header){
-        sub.style.setProperty('--subheader-top', header.offsetHeight + 'px');
-      }
-    });
   });
 
   const adminTabs = document.querySelectorAll('#adminModal .tab-bar button');
@@ -2763,12 +2751,30 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
           <label>${type} color</label>
           <div class="color-group">
             <input id="${area.key}-${type}-c" type="color" />
-            <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+            <div class="opacity-pop">
+              <input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
           </div>
         `;
         fs.appendChild(row);
       });
       wrap.appendChild(fs);
+    });
+  }
+
+  function initColorGroupEvents(){
+    const colors = document.querySelectorAll('#adminModal .color-group input[type=color]');
+    colors.forEach(c=>{
+      const group = c.closest('.color-group');
+      c.addEventListener('click', e=>{
+        e.stopPropagation();
+        group.classList.toggle('show');
+      });
+    });
+    document.addEventListener('click', e=>{
+      document.querySelectorAll('#adminModal .color-group').forEach(g=>{
+        if(!g.contains(e.target)) g.classList.remove('show');
+      });
     });
   }
 
@@ -2866,6 +2872,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   }
 
   buildStyleControls();
+  initColorGroupEvents();
   syncAdminControls();
   defaultTheme = collectThemeValues();
   initBuiltInPresets();
