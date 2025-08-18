@@ -1160,6 +1160,8 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .chip-small{flex:0 0 auto;max-width:240px;display:flex;align-items:center;gap:8px;background:#10253c;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px 10px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
     .chip-small img.mini{width:26px;height:20px;border-radius:6px;object-fit:cover;flex:0 0 auto;display:block;background:#0b2239}
     .chip-small .t{overflow:hidden;text-overflow:ellipsis}
+    footer .foot-row .fav{width:28px;height:28px;border-radius:8px;}
+    footer .foot-row .fav svg{width:16px;height:16px;}
   
 /* === 0512 Clean fix: prevent text/image overlap in closed cards without !important === */
 .card{display:flex;gap:12px;align-items:flex-start}
@@ -2206,6 +2208,7 @@ function makePosts(){
         p.fav = !p.fav;
         e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false');
         renderLists(filtered);
+        renderFooter();
       });
       return el;
     }
@@ -2220,9 +2223,12 @@ function makePosts(){
       // render oldest -> newest so newest appears at the far right
       const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
       for(const v of items){
+        const p = posts.find(x=>x.id===v.id);
         const el = document.createElement('div'); el.className='chip-small foot-item'; el.title=v.title+' — '+v.city;
-        el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>`;
-        el.addEventListener('click', ()=> openPost(v.id) );
+        el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div><button class="fav" aria-pressed="${p && p.fav?'true':'false'}" aria-label="Toggle favourite"><svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>`;
+        el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(v.id); });
+        const favBtn = el.querySelector('.fav');
+        favBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
         footRow.appendChild(el);
       }
       // scroll to the far right to reveal the newest
