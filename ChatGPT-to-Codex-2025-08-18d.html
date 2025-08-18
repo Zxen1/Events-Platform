@@ -156,6 +156,12 @@ body{
   max-height:90%;
   overflow:auto;
 }
+.admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
+#adminModal .modal-content{background:linear-gradient(180deg,#fff,#f7f7f7);border:2px solid #ffecb3;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
+#adminModal legend{font-weight:600;padding:0 6px;}
+#adminModal .control-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;}
+#adminModal .control-row label{min-width:60px;font-size:12px;}
+#adminModal .control-row input[type=range]{flex:1;}
 .modal-field{
   margin:8px 0;
   display:flex;
@@ -1637,18 +1643,8 @@ footer .foot-row .foot-item img {
     <div class="modal-content">
       <h2>Admin Settings</h2>
       <form id="adminForm">
-        <div class="modal-field">
-          <label for="siteColor">Site Color</label>
-          <input type="color" id="siteColor" value="#ffffff" />
-        </div>
-        <div class="modal-field">
-          <label for="siteBrightness">Brightness</label>
-          <input type="range" id="siteBrightness" min="50" max="150" value="100" />
-        </div>
-        <div class="modal-field">
-          <label for="siteOpacity">Opacity</label>
-          <input type="range" id="siteOpacity" min="0.5" max="1" step="0.05" value="1" />
-        </div>
+        <h3>Theme Customization</h3>
+        <div id="styleControls"></div>
         <div class="modal-field">
           <label for="catList">Categories</label>
           <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
@@ -2558,14 +2554,62 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
   });
 
-  function applyAdmin(){
-    const color = document.getElementById('siteColor').value;
-    const brightness = document.getElementById('siteBrightness').value;
-    const opacity = document.getElementById('siteOpacity').value;
-    document.body.style.backgroundColor = color;
-    document.body.style.filter = `brightness(${brightness}%)`;
-    document.body.style.opacity = opacity;
+  const colorAreas = [
+    {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a']}},
+    {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button']}},
+    {key:'body', label:'Body', selectors:{bg:['body'], text:['body'], btn:['body button']}},
+    {key:'filter', label:'Filter Panel', selectors:{bg:['.filters-col .panel'], text:['.filters-col'], btn:['.filters-col button','.filters-col .sq','.filters-col .tiny','.filters-col .btn']}},
+    {key:'list', label:'List Panel', selectors:{bg:['.results-col .panel'], text:['.results-col'], btn:['.results-col button']}},
+    {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
+    {key:'posts', label:'Posts Area', selectors:{bg:['.posts-mode'], text:['.posts-mode'], btn:['.posts-mode button']}},
+    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
+    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button']}}
+  ];
+
+  function buildStyleControls(){
+    const wrap = document.getElementById('styleControls');
+    if(!wrap) return;
+    colorAreas.forEach(area=>{
+      const fs = document.createElement('fieldset');
+      fs.className = 'admin-fieldset';
+      const lg = document.createElement('legend');
+      lg.textContent = area.label;
+      fs.appendChild(lg);
+      ['bg','text','btn'].forEach(type=>{
+        const row = document.createElement('div');
+        row.className = 'control-row';
+        row.innerHTML = `
+          <label>${type} hue</label><input id="${area.key}-${type}-h" type="range" min="0" max="360" value="0" />
+          <label>brightness</label><input id="${area.key}-${type}-b" type="range" min="0" max="100" value="50" />
+          <label>opacity</label><input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
+        `;
+        fs.appendChild(row);
+      });
+      wrap.appendChild(fs);
+    });
   }
+
+  function applyAdmin(){
+    colorAreas.forEach(area=>{
+      ['bg','text','btn'].forEach(type=>{
+        const h = document.getElementById(`${area.key}-${type}-h`);
+        const b = document.getElementById(`${area.key}-${type}-b`);
+        const o = document.getElementById(`${area.key}-${type}-o`);
+        if(!(h&&b&&o)) return;
+        const color = `hsla(${h.value},100%,${b.value}%,${o.value})`;
+        const targets = area.selectors[type] || [];
+        targets.forEach(sel=>{
+          document.querySelectorAll(sel).forEach(el=>{
+            if(type==='bg') el.style.backgroundColor = color;
+            else if(type==='text') el.style.color = color;
+            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+          });
+        });
+      });
+    });
+  }
+
+  buildStyleControls();
   const adminForm = document.getElementById('adminForm');
   if(adminForm){
     adminForm.addEventListener('input', applyAdmin);
