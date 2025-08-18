@@ -1716,6 +1716,7 @@ footer .foot-row .foot-item img {
           <div class="tab-bar">
             <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
             <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+            <button type="button" class="tab-btn" data-tab="mapbox">Mapbox</button>
           </div>
         </div>
         <div id="tab-theme" class="tab-panel active">
@@ -1748,6 +1749,38 @@ footer .foot-row .foot-item img {
           </div>
           <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
         </div>
+        <div id="tab-mapbox" class="tab-panel">
+          <div class="modal-field">
+            <label for="mapStyle">Style</label>
+            <select id="mapStyle">
+              <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
+              <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
+              <option value="mapbox://styles/mapbox/light-v11">Light</option>
+              <option value="mapbox://styles/mapbox/dark-v11">Dark</option>
+              <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label for="mapPitch">Pitch</label>
+            <input id="mapPitch" type="range" min="0" max="85" />
+          </div>
+          <div class="modal-field">
+            <label for="mapBearing">Bearing</label>
+            <input id="mapBearing" type="range" min="-180" max="180" />
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="showNav" checked /> Navigation</label>
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="showGeo" checked /> Geolocate</label>
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="showFull" checked /> Fullscreen</label>
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="showScale" checked /> Scale</label>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -1759,6 +1792,8 @@ footer .foot-row .foot-item img {
 
     let mode = 'map';
     let map, spinning = true;
+    let navControl, geoControl, fullControl, scaleControl;
+    let currentStyle = 'mapbox://styles/mapbox/outdoors-v12';
     let posts = [], filtered = [];
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -2178,6 +2213,14 @@ function makePosts(){
         pitch:0,
         attributionControl:true
       });
+      navControl = new mapboxgl.NavigationControl();
+      geoControl = new mapboxgl.GeolocateControl();
+      fullControl = new mapboxgl.FullscreenControl();
+      scaleControl = new mapboxgl.ScaleControl();
+      map.addControl(navControl);
+      map.addControl(geoControl);
+      map.addControl(fullControl);
+      map.addControl(scaleControl);
       map.on('style.load', () => {
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
@@ -2747,6 +2790,20 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         if(span) span.textContent = a;
       });
     });
+    const styleSel = document.getElementById('mapStyle');
+    if(styleSel) styleSel.value = currentStyle;
+    const pitchInput = document.getElementById('mapPitch');
+    if(pitchInput) pitchInput.value = map ? map.getPitch() : 0;
+    const bearingInput = document.getElementById('mapBearing');
+    if(bearingInput) bearingInput.value = map ? map.getBearing() : 0;
+    const navChk = document.getElementById('showNav');
+    if(navChk) navChk.checked = !!navControl;
+    const geoChk = document.getElementById('showGeo');
+    if(geoChk) geoChk.checked = !!geoControl;
+    const fullChk = document.getElementById('showFull');
+    if(fullChk) fullChk.checked = !!fullControl;
+    const scaleChk = document.getElementById('showScale');
+    if(scaleChk) scaleChk.checked = !!scaleControl;
   }
 
   function buildStyleControls(){
@@ -2812,6 +2869,38 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         });
       });
     });
+    if(map){
+      const styleSel = document.getElementById('mapStyle');
+      if(styleSel && styleSel.value && styleSel.value !== currentStyle){
+        currentStyle = styleSel.value;
+        map.setStyle(currentStyle);
+        map.once('style.load', () => { addPostSource(); applyFilters(); });
+      }
+      const pitch = document.getElementById('mapPitch');
+      pitch && map.setPitch(+pitch.value);
+      const bearing = document.getElementById('mapBearing');
+      bearing && map.setBearing(+bearing.value);
+      const navChk = document.getElementById('showNav');
+      if(navChk){
+        if(navChk.checked && !navControl){ navControl = new mapboxgl.NavigationControl(); map.addControl(navControl); }
+        else if(!navChk.checked && navControl){ map.removeControl(navControl); navControl = null; }
+      }
+      const geoChk = document.getElementById('showGeo');
+      if(geoChk){
+        if(geoChk.checked && !geoControl){ geoControl = new mapboxgl.GeolocateControl(); map.addControl(geoControl); }
+        else if(!geoChk.checked && geoControl){ map.removeControl(geoControl); geoControl = null; }
+      }
+      const fullChk = document.getElementById('showFull');
+      if(fullChk){
+        if(fullChk.checked && !fullControl){ fullControl = new mapboxgl.FullscreenControl(); map.addControl(fullControl); }
+        else if(!fullChk.checked && fullControl){ map.removeControl(fullControl); fullControl = null; }
+      }
+      const scaleChk = document.getElementById('showScale');
+      if(scaleChk){
+        if(scaleChk.checked && !scaleControl){ scaleControl = new mapboxgl.ScaleControl(); map.addControl(scaleControl); }
+        else if(!scaleChk.checked && scaleControl){ map.removeControl(scaleControl); scaleControl = null; }
+      }
+    }
   }
 
   function collectThemeValues(){
