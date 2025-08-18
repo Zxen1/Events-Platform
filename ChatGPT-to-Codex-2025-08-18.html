@@ -298,7 +298,6 @@ body{
   padding: 10px;
   box-shadow: var(--shadow);
   border: 1px solid rgba(0,0,0,.1);
-  background: var(--list-background);
   overflow: auto;
   flex: 1;
   min-height: 0;
@@ -1102,12 +1101,11 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   z-index: 0;
 }
 
-.results-col .panel .res-list, .map-wrap{
+.map-wrap{
   background: var(--main-background);
 }
 
 .results-col .panel .res-list{
-  background: var(--list-background);
   border-radius: inherit;
 }
 
@@ -1524,11 +1522,13 @@ footer .foot-row .foot-item img {
     border: 1px solid #ffcc80;
     color: #333;
   }
-  .panel,
   .card,
   .detail-inline,
   .map-wrap {
     background: var(--list-background);
+    border-color: #ffcc80;
+  }
+  .panel {
     border-color: #ffcc80;
   }
 </style>
