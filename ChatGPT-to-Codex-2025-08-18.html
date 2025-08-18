@@ -148,7 +148,7 @@ body{
 .modal-content{
   position:absolute;
   background:#fff;
-  padding:20px;
+  padding:0 20px 20px;
   border-radius:8px;
   width:90%;
   max-width:600px;
@@ -182,6 +182,7 @@ body{
 #adminModal .control-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px;}
 #adminModal .control-row label{min-width:60px;font-size:12px;}
 #adminModal .control-row input[type=range]{flex:1;}
+#adminModal .control-row input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;}
 .modal-field{
   margin:8px 0;
   display:flex;
@@ -206,12 +207,15 @@ body{
   justify-content:space-between;
   align-items:center;
   background:#fff;
-  padding-bottom:10px;
+  padding:10px 0;
   z-index:1;
   cursor:move;
 }
 .modal-header .modal-actions{
   margin-top:0;
+}
+.modal-header h2{
+  margin:0;
 }
 .palette{
   display:flex;
@@ -2643,31 +2647,21 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button']}}
   ];
 
-  function rgbToHsl(r,g,b){
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r,g,b), min = Math.min(r,g,b);
-    let h, l = (max + min) / 2;
-    if(max === min){
-      h = 0;
-    }else{
-      const d = max - min;
-      switch(max){
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      h *= 60;
-    }
-    return [Math.round(h), Math.round(l * 100)];
+  function rgbToHex(r,g,b){
+    return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+
+  function hexToRgb(hex){
+    const int = parseInt(hex.slice(1),16);
+    return [(int>>16)&255,(int>>8)&255,int&255];
   }
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
-        const hInput = document.getElementById(`${area.key}-${type}-h`);
-        const bInput = document.getElementById(`${area.key}-${type}-b`);
+        const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
-        if(!(hInput && bInput && oInput)) return;
+        if(!(cInput && oInput)) return;
         const selectors = area.selectors[type] || [];
         let col = null;
         selectors.some(sel=>{
@@ -2685,9 +2679,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         const g = parseInt(match[2],10);
         const bVal = parseInt(match[3],10);
         const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
-        const [hVal, lVal] = rgbToHsl(r,g,bVal);
-        hInput.value = hVal;
-        bInput.value = lVal;
+        cInput.value = rgbToHex(r,g,bVal);
         oInput.value = a;
       });
     });
@@ -2706,8 +2698,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
         const row = document.createElement('div');
         row.className = 'control-row';
         row.innerHTML = `
-          <label>${type} hue</label><input id="${area.key}-${type}-h" type="range" min="0" max="360" value="0" />
-          <label>brightness</label><input id="${area.key}-${type}-b" type="range" min="0" max="100" value="50" />
+          <label>${type} color</label><input id="${area.key}-${type}-c" type="color" />
           <label>opacity</label><input id="${area.key}-${type}-o" type="range" min="0" max="1" step="0.01" value="1" />
         `;
         fs.appendChild(row);
@@ -2719,11 +2710,11 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   function applyAdmin(){
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
-        const h = document.getElementById(`${area.key}-${type}-h`);
-        const b = document.getElementById(`${area.key}-${type}-b`);
+        const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
-        if(!(h&&b&&o)) return;
-        const color = `hsla(${h.value},100%,${b.value}%,${o.value})`;
+        if(!(c && o)) return;
+        const [r,g,b] = hexToRgb(c.value);
+        const color = `rgba(${r},${g},${b},${o.value})`;
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
