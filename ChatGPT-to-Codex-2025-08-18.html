@@ -158,7 +158,11 @@ body{
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
-#adminModal .admin-fieldset{flex:0 0 180px;min-width:180px;}
+#adminModal .admin-fieldset{
+  flex:1 1 180px;
+  min-width:180px;
+  max-width:260px;
+}
 #adminModal .modal-content{
   background:linear-gradient(180deg,#fff,#f7f7f7);
   border:2px solid #ffecb3;
@@ -183,9 +187,10 @@ body{
 #adminModal legend{font-weight:600;padding:0 6px;}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:40px;font-size:12px;}
-#adminModal .color-group{width:120px;display:flex;flex-direction:column;}
+#adminModal .color-group{width:120px;display:flex;flex-direction:column;position:relative;}
 #adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;}
-#adminModal .opacity-pop{margin-top:4px;display:flex;align-items:center;gap:6px;}
+#adminModal .opacity-pop{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;padding:4px;border:1px solid #ccc;border-radius:0 0 4px 4px;background:#fff;align-items:center;gap:6px;z-index:10;}
+#adminModal .color-group.show-opacity .opacity-pop{display:flex;}
 #adminModal .opacity-pop input[type=range]{flex:1;}
 #adminModal .opacity-pop span{width:30px;text-align:right;font-size:12px;}
 #adminModal .tab-bar{display:flex;gap:6px;}
@@ -2773,11 +2778,19 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   }
 
   function initColorGroupEvents(){
-    document.querySelectorAll('#adminModal .opacity-pop input[type=range]').forEach(r=>{
-      const val = r.nextElementSibling;
-      function update(){ val.textContent = r.value; }
-      r.addEventListener('input', update);
-      update();
+    document.querySelectorAll('#adminModal .color-group').forEach(g=>{
+      const colorInput = g.querySelector('input[type=color]');
+      const range = g.querySelector('.opacity-pop input[type=range]');
+      const val = g.querySelector('.opacity-pop span');
+      if(range && val){
+        function update(){ val.textContent = range.value; }
+        range.addEventListener('input', update);
+        update();
+      }
+      if(colorInput){
+        colorInput.addEventListener('focus', ()=> g.classList.add('show-opacity'));
+        colorInput.addEventListener('blur', ()=> g.classList.remove('show-opacity'));
+      }
     });
   }
 
