@@ -2586,7 +2586,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
   function closeModal(m){ m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
 
   memberBtn && memberBtn.addEventListener('click', ()=> openModal(memberModal));
-  adminBtn && adminBtn.addEventListener('click', ()=> openModal(adminModal));
+  adminBtn && adminBtn.addEventListener('click', ()=>{ syncAdminControls(); openModal(adminModal); });
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
   });
@@ -2602,6 +2602,56 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button']}}
   ];
+
+  function rgbToHsl(r,g,b){
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    let h, l = (max + min) / 2;
+    if(max === min){
+      h = 0;
+    }else{
+      const d = max - min;
+      switch(max){
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h *= 60;
+    }
+    return [Math.round(h), Math.round(l * 100)];
+  }
+
+  function syncAdminControls(){
+    colorAreas.forEach(area=>{
+      ['bg','text','btn'].forEach(type=>{
+        const hInput = document.getElementById(`${area.key}-${type}-h`);
+        const bInput = document.getElementById(`${area.key}-${type}-b`);
+        const oInput = document.getElementById(`${area.key}-${type}-o`);
+        if(!(hInput && bInput && oInput)) return;
+        const selectors = area.selectors[type] || [];
+        let col = null;
+        selectors.some(sel=>{
+          const el = document.querySelector(sel);
+          if(!el) return false;
+          const cs = getComputedStyle(el);
+          if(type === 'bg' || type === 'btn') col = cs.backgroundColor;
+          else if(type === 'text') col = cs.color;
+          return col;
+        });
+        if(!col) return;
+        const match = col.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+        if(!match) return;
+        const r = parseInt(match[1],10);
+        const g = parseInt(match[2],10);
+        const bVal = parseInt(match[3],10);
+        const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
+        const [hVal, lVal] = rgbToHsl(r,g,bVal);
+        hInput.value = hVal;
+        bInput.value = lVal;
+        oInput.value = a;
+      });
+    });
+  }
 
   function buildStyleControls(){
     const wrap = document.getElementById('styleControls');
