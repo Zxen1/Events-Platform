@@ -143,6 +143,7 @@ body{
   background:transparent;
   display:none;
   z-index:2000;
+  pointer-events:none;
 }
 .modal.show{display:block;}
 .modal-content{
@@ -155,6 +156,7 @@ body{
   max-height:90%;
   overflow:auto;
   resize:both;
+  pointer-events:auto;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
@@ -176,15 +178,9 @@ body{
   max-width:1200px;
   max-height:90%;
 }
-#filterModal .modal-content{
-  width:90%;
-  max-width:340px;
-  max-height:90%;
-}
 @media (max-width:600px){
   #adminModal .modal-content,
-  #memberModal .modal-content,
-  #filterModal .modal-content{
+  #memberModal .modal-content{
     width:95%;
     max-width:95%;
     max-height:95%;
@@ -1541,6 +1537,32 @@ footer .foot-row .foot-item img {
   }
   .panel {
     border-color: #ffcc80;
+  }
+</style>
+
+<style>
+  #filterModal .modal-content,
+  #filterModal .filters-col,
+  #filterModal .left-tools,
+  #filterModal .sq,
+  #filterModal .panel,
+  #filterModal .field,
+  #filterModal .input,
+  #filterModal .x,
+  #filterModal .tiny,
+  #filterModal .cats,
+  #filterModal .cat,
+  #filterModal .sub,
+  #filterModal .chip,
+  #filterModal .reset-box,
+  #filterModal .btn,
+  #filterModal .arr,
+  #filterModal .down {
+    all: unset;
+    display: revert;
+  }
+  #filterModal .modal-content {
+    position: absolute;
   }
 </style>
 
