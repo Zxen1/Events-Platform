@@ -176,9 +176,15 @@ body{
   max-width:1200px;
   max-height:90%;
 }
+#filterModal .modal-content{
+  width:90%;
+  max-width:340px;
+  max-height:90%;
+}
 @media (max-width:600px){
   #adminModal .modal-content,
-  #memberModal .modal-content{
+  #memberModal .modal-content,
+  #filterModal .modal-content{
     width:95%;
     max-width:95%;
     max-height:95%;
@@ -263,7 +269,7 @@ body{
 .main{
   height: calc(100% - var(--header-h) - var(--footer-h));
   display: grid;
-  grid-template-columns: var(--panel-w) var(--results-w) 1fr;
+  grid-template-columns: var(--results-w) 1fr;
   gap: var(--gap);
   padding: 14px;
 }
@@ -620,7 +626,7 @@ body{
 
 .mode-posts .posts-mode{
   display: block;
-  grid-column: 3/4;
+  grid-column: 2/3;
   grid-row: 1;
   z-index: 1;
 }
@@ -1094,14 +1100,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .mode-posts .map-wrap{
   display: block;
-  grid-column: 3/4;
+  grid-column: 2/3;
   grid-row: 1;
   z-index: 0;
 }
 
 .mode-posts .mode-posts .map-wrap{
   display: block;
-  grid-column: 3 / 4;
+  grid-column: 2 / 3;
   grid-row: 1;
   z-index: 0;
 }
@@ -1119,14 +1125,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 .main .posts-mode{
-  grid-column: 3/4;
+  grid-column: 2/3;
   grid-row: 1;
   position: relative;
   z-index: 1;
 }
 
 .main .calendar{
-  grid-column: 3/4;
+  grid-column: 2/3;
   grid-row: 1;
   position: relative;
   z-index: 1;
@@ -1210,7 +1216,7 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.4);color:#fff}
     .gear svg{width:18px;height:18px;opacity:.9}
 
-    .main{height:calc(100% - var(--header-h) - var(--footer-h));display:grid;grid-template-columns:var(--panel-w) var(--results-w) 1fr;gap:var(--gap);padding:14px}
+    .main{height:calc(100% - var(--header-h) - var(--footer-h));display:grid;grid-template-columns:var(--results-w) 1fr;gap:var(--gap);padding:14px}
     .filters-col{display:flex;flex-direction:column;min-height:0}
     .left-tools{display:flex;gap:8px;margin-bottom:8px;padding-left:2px}
     .sq{width:30px;height:30px;border-radius:8px;background:#0c2238;display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.08)}
@@ -1553,6 +1559,7 @@ footer .foot-row .foot-item img {
         </div>
       </nav>
       <div class="auth">
+        <button id="filterBtn" aria-label="Open filters panel">Filters</button>
         <button id="memberBtn" aria-label="Open members area">Members</button>
         <button id="adminBtn" aria-label="Open admin area">Admin</button>
         <a href="#" aria-label="Sign in">Sign In</a><span class="muted">|</span><a href="#" aria-label="Register">Register</a>
@@ -1561,92 +1568,6 @@ footer .foot-row .foot-item img {
   </header>
 
   <main class="main">
-    
-    <section class="filters-col" aria-label="Filters">
-      <div class="left-tools">
-        <div class="sq" title="Full screen" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
-          </svg>
-        </div>
-        <div class="sq" title="Search" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>
-          </svg>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Location</h3>
-        <div class="field" role="search">
-          <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
-            <div class="x" role="button" aria-label="Clear location">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-            </div>
-          </div>
-          <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="2.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3 4.9 19.1"/>
-            </svg>
-          </div>
-        </div>
-
-        <h3>Sort</h3>
-        <div class="field">
-          <div class="input">
-            <select id="sortSelect" aria-label="Sort options">
-              <option value="favaz">Favourites, A - Z</option>
-              <option value="az">Title A - Z</option>
-              <option value="nearest">Closest</option>
-              <option value="soon">Soonest</option>
-            </select>
-            <div class="down" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 9 6 6 6-6"/></svg>
-            </div>
-          </div>
-          <div class="tiny" role="button" aria-label="More sort filters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-          </div>
-        </div>
-
-        <h3>Keywords</h3>
-        <div class="field">
-          <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
-            <div class="x" role="button" aria-label="Clear keywords">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-            </div>
-          </div>
-          <div class="tiny" role="button" aria-label="Keyword filters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
-          </div>
-        </div>
-
-        <h3>Date Range</h3>
-        <div class="field">
-          <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
-            <div class="x" role="button" aria-label="Clear date">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
-            </div>
-          </div>
-          <div class="tiny" role="button" aria-label="Open date picker">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
-          </div>
-        </div>
-
-        <h3>Categories</h3>
-        <div class="cats" id="cats"></div>
-
-        <div class="reset-box">
-          <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4v7h7M20 20v-7h-7"/><path d="M20 4 4 20"/></svg>
-            Reset All Filters
-          </div>
-          <div class="arr" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 6 6 6-6 6"/></svg>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="results-col" aria-label="Results">
       <div class="res-head">
         <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
@@ -1671,6 +1592,101 @@ footer .foot-row .foot-item img {
     <div class="foot-title" id="footTitle">Last viewed:</div>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
   </footer>
+
+  <div id="filterModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Filters</h2>
+        <div class="modal-actions">
+          <button type="button" class="close-modal">Close</button>
+        </div>
+      </div>
+      <section class="filters-col" aria-label="Filters">
+        <div class="left-tools">
+          <div class="sq" title="Full screen" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+            </svg>
+          </div>
+          <div class="sq" title="Search" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Location</h3>
+          <div class="field" role="search">
+            <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
+              <div class="x" role="button" aria-label="Clear location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
+              </div>
+            </div>
+            <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="2.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3 4.9 19.1"/>
+              </svg>
+            </div>
+          </div>
+
+          <h3>Sort</h3>
+          <div class="field">
+            <div class="input">
+              <select id="sortSelect" aria-label="Sort options">
+                <option value="favaz">Favourites, A - Z</option>
+                <option value="az">Title A - Z</option>
+                <option value="nearest">Closest</option>
+                <option value="soon">Soonest</option>
+              </select>
+              <div class="down" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+            <div class="tiny" role="button" aria-label="More sort filters">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+            </div>
+          </div>
+
+          <h3>Keywords</h3>
+          <div class="field">
+            <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
+              <div class="x" role="button" aria-label="Clear keywords">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
+              </div>
+            </div>
+            <div class="tiny" role="button" aria-label="Keyword filters">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+            </div>
+          </div>
+
+          <h3>Date Range</h3>
+          <div class="field">
+            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
+              <div class="x" role="button" aria-label="Clear date">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17"/></svg>
+              </div>
+            </div>
+            <div class="tiny" role="button" aria-label="Open date picker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+            </div>
+          </div>
+
+          <h3>Categories</h3>
+          <div class="cats" id="cats"></div>
+
+          <div class="reset-box">
+            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4v7h7M20 20v-7h-7"/><path d="M20 4 4 20"/></svg>
+              Reset All Filters
+            </div>
+            <div class="arr" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 6 6 6-6 6"/></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <div id="memberModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-content">
@@ -2625,8 +2641,10 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
 (function(){
   const memberBtn = document.getElementById('memberBtn');
   const adminBtn = document.getElementById('adminBtn');
+  const filterBtn = document.getElementById('filterBtn');
   const memberModal = document.getElementById('memberModal');
   const adminModal = document.getElementById('adminModal');
+  const filterModal = document.getElementById('filterModal');
 
   function openModal(m){
     const content = m.querySelector('.modal-content');
@@ -2644,6 +2662,7 @@ function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https:
 
   memberBtn && memberBtn.addEventListener('click', ()=> openModal(memberModal));
   adminBtn && adminBtn.addEventListener('click', ()=>{ syncAdminControls(); openModal(adminModal); });
+  filterBtn && filterBtn.addEventListener('click', ()=> openModal(filterModal));
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=> closeModal(btn.closest('.modal')));
   });
