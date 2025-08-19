@@ -2095,6 +2095,7 @@ function makePosts(){
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
+    $('#dateInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
 
@@ -2123,8 +2124,8 @@ function makePosts(){
       updateOverlayColor();
       if((m==='map' || m==='calendar') && map){
         map.resize();
-        if(m==='map') applyFilters();
       }
+      applyFilters();
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
     $('#tab-map').addEventListener('click',()=> setMode('map'));
@@ -2158,7 +2159,7 @@ function makePosts(){
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
-      map.on('moveend', () => { if(mode==='map') applyFilters(); });
+      map.on('moveend', () => { applyFilters(); });
     }
 
     function startSpin(){ spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
@@ -2593,12 +2594,31 @@ function makePosts(){
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
 
-    function inBounds(p){ if(!map || mode!=='map') return true; const b = map.getBounds(); return p.lng >= b.getWest() && p.lng <= b.getEast() && p.lat >= b.getSouth() && p.lat <= b.getNorth(); }
+    function inBounds(p){ if(!map) return true; const b = map.getBounds(); return p.lng >= b.getWest() && p.lng <= b.getEast() && p.lat >= b.getSouth() && p.lat <= b.getNorth(); }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
+    function dateMatch(p){
+      const val = $('#dateInput').value.trim();
+      let start, end;
+      if(!val || val.toLowerCase() === 'this month'){
+        const now = new Date();
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth()+1, 0);
+      } else {
+        const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        if(parts[0]) start = new Date(parts[0]);
+        if(parts[1]) end = new Date(parts[1]);
+      }
+      return p.dates.some(d => {
+        const dt = new Date(d);
+        if(start && dt < start) return false;
+        if(end && dt > end) return false;
+        return true;
+      });
+    }
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
     function applyFilters(){
-      filtered = posts.filter(p => inBounds(p) && kwMatch(p) && catMatch(p));
+      filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
     }
