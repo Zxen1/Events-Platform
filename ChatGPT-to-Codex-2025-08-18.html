@@ -231,14 +231,6 @@ body{
   display:flex;
   gap:10px;
 }
-.unsaved-confirm .modal-content{
-  padding:20px;
-  max-width:300px;
-  text-align:center;
-}
-.unsaved-confirm .modal-actions{
-  justify-content:center;
-}
 .modal-header{
   position:sticky;
   top:0;
@@ -2645,32 +2637,8 @@ function closeModal(m){
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
 }
-function modalNeedsSaving(m){
-  return m.hasAttribute('data-needs-save');
-}
-function showUnsavedConfirm(cb){
-  const dlg = document.createElement('div');
-  dlg.className = 'modal unsaved-confirm';
-  dlg.innerHTML = `<div class="modal-content"><p>Discard unsaved changes?</p><div class="modal-actions"><button class="cancel" autofocus>Cancel</button><button class="discard">Close without saving</button></div></div>`;
-  document.body.appendChild(dlg);
-  openModal(dlg);
-  const cleanup = ()=>{ closeModal(dlg); dlg.remove(); };
-  dlg._cancel = ()=>{ cleanup(); cb(false); };
-  const discard = ()=>{ cleanup(); cb(true); };
-  dlg.querySelector('.cancel').addEventListener('click', dlg._cancel);
-  dlg.querySelector('.discard').addEventListener('click', discard);
-}
 function requestCloseModal(m){
-  if(modalNeedsSaving(m)){
-    showUnsavedConfirm(ok=>{
-      if(ok){
-        m.removeAttribute('data-needs-save');
-        closeModal(m);
-      }
-    });
-  } else {
-    closeModal(m);
-  }
+  closeModal(m);
 }
 function toggleModal(m){
   if(m.classList.contains('show')){
@@ -2683,12 +2651,7 @@ function handleEsc(){
   const top = modalStack[modalStack.length-1];
   if(!top) return;
   if(top instanceof Element){
-    if(top.classList && top.classList.contains('unsaved-confirm')){
-      if(typeof top._cancel === 'function') top._cancel();
-      else { closeModal(top); top.remove(); }
-    } else {
-      requestCloseModal(top);
-    }
+    requestCloseModal(top);
   } else if(typeof top.remove==='function'){
     modalStack.pop();
     top.remove();
