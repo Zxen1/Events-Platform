@@ -1136,7 +1136,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .mode-posts #postsWide{
   border: none;
-  backdrop-filter: blur(4px);
   color: #fff;
   background: transparent;
 }
@@ -2117,6 +2116,18 @@ function makePosts(){
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
 
+    function updateOverlayColor(){
+      let bg = 'rgba(0,0,0,0)';
+      if(mode==='posts'){
+        const el = document.querySelector('.posts-mode');
+        if(el) bg = getComputedStyle(el).backgroundColor;
+      } else if(mode==='calendar'){
+        const el = document.querySelector('.calendar');
+        if(el) bg = getComputedStyle(el).backgroundColor;
+      }
+      document.documentElement.style.setProperty('--main-background', bg);
+    }
+
     function setMode(m){
       mode = m;
       document.body.classList.remove('mode-map','mode-posts','mode-calendar');
@@ -2127,6 +2138,7 @@ function makePosts(){
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
       $('#tab-map').setAttribute('aria-selected', m==='map');
       $('#tab-calendar').setAttribute('aria-selected', m==='calendar');
+      updateOverlayColor();
       if(m==='map' && map){ map.resize(); applyFilters(); }
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
@@ -2837,6 +2849,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           });
         });
       }
+      updateOverlayColor();
       return;
     }
     colorAreas.forEach(area=>{
@@ -2856,6 +2869,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       });
     });
+    updateOverlayColor();
   }
 
   function collectThemeValues(){
