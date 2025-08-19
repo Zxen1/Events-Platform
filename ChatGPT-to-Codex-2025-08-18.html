@@ -2824,7 +2824,22 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
   }
 
-  function applyAdmin(){
+  function applyAdmin(targetInput){
+    if(targetInput && targetInput.id){
+      const [areaKey, type] = targetInput.id.split('-');
+      const area = colorAreas.find(a=>a.key===areaKey);
+      if(area){
+        const color = targetInput.value;
+        (area.selectors[type]||[]).forEach(sel=>{
+          document.querySelectorAll(sel).forEach(el=>{
+            if(type==='bg') el.style.backgroundColor = color;
+            else if(type==='text') el.style.color = color;
+            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+          });
+        });
+      }
+      return;
+    }
     colorAreas.forEach(area=>{
       ['bg','text','btn'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
@@ -2927,8 +2942,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         adminModal.removeAttribute('data-needs-save');
       }
     };
-    adminForm.addEventListener('input', e=>{ applyAdmin(); updateSaveState(); });
-    adminForm.addEventListener('change', e=>{ applyAdmin(); updateSaveState(); });
+    adminForm.addEventListener('input', e=>{ applyAdmin(e.target); updateSaveState(); });
+    adminForm.addEventListener('change', e=>{ applyAdmin(e.target); updateSaveState(); });
     adminForm.addEventListener('submit', e=>{
       e.preventDefault();
       applyAdmin();
