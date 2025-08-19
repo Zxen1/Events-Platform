@@ -274,7 +274,6 @@ body{
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--list-background);
 }
 
 .left-tools{
@@ -2636,8 +2635,10 @@ function openModal(m){
     content.style.width = '';
     content.style.height = '';
     if(m.id==='filterModal'){
+      const subHead = document.querySelector('.res-head');
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
       content.style.left = '0';
-      content.style.top = 'var(--header-h)';
+      content.style.top = `${topPos}px`;
       content.style.transform = '';
     } else {
       content.style.left = '50%';
@@ -2756,11 +2757,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], text:['body'], btn:['body button']}},
     {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
-    {key:'list', label:'List Panel', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col button'], card:['.results-col .card']}},
-    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode'], btn:['.posts-mode button'], card:['.posts-mode .card']}},
+    {key:'list', label:'List Panel', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
+    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], btn:['.posts-mode button'], card:['.posts-mode .card']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
     {key:'mapCards', label:'Map Cards', selectors:{bg:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content'], text:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content'], btn:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content button'], card:['.mapboxgl-popup.hover-pop .hover-card']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['.filters-col'], text:['.filters-col'], btn:['.filters-col button','.filters-col .sq','.filters-col .tiny','.filters-col .btn']}},
+    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], btn:['#adminModal button']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], btn:['#memberModal button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button'], card:['footer .foot-row .foot-item']}}
