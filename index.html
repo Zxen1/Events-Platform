@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Events Platform Map Filters</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2mkpYlEmA76uH92lfmP8myYFQjVyKyzlH06S2gc="
+    crossorigin=""
+  />
+  <style>
+    #map { height: 400px; }
+    #controls { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input id="keyword" type="text" placeholder="Keyword" />
+    <input id="start" type="date" />
+    <input id="end" type="date" />
+    <select id="category">
+      <option value="">All Categories</option>
+      <option value="Music">Music</option>
+      <option value="Art">Art</option>
+      <option value="Food">Food</option>
+    </select>
+    <button id="apply">Apply Filters</button>
+  </div>
+  <div id="map"></div>
+  <ul id="results"></ul>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-V9A+4YOg8Wxg4+ZhG/HEdBDEzlWe/hG1IsfRSAxE1/Q=" crossorigin=""></script>
+  <script>
+    // Sample data
+    const events = [
+      { id: 1, name: "Music Festival", category: "Music", date: "2023-09-15", lat: 40.7128, lng: -74.0060, keywords: ["music", "festival"] },
+      { id: 2, name: "Art Expo", category: "Art", date: "2023-10-01", lat: 34.0522, lng: -118.2437, keywords: ["art", "expo"] },
+      { id: 3, name: "Food Fair", category: "Food", date: "2023-09-20", lat: 41.8781, lng: -87.6298, keywords: ["food", "fair"] }
+    ];
+
+    const map = L.map('map').setView([39.8283, -98.5795], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markers = [];
+
+    function withinBounds(event) {
+      const bounds = map.getBounds();
+      return bounds.contains([event.lat, event.lng]);
+    }
+
+    function matchesFilters(event) {
+      const keyword = document.getElementById('keyword').value.toLowerCase();
+      const start = document.getElementById('start').value;
+      const end = document.getElementById('end').value;
+      const category = document.getElementById('category').value;
+
+      const inKeyword = !keyword || event.keywords.some(k => k.includes(keyword));
+      const inCategory = !category || event.category === category;
+      const inStart = !start || event.date >= start;
+      const inEnd = !end || event.date <= end;
+
+      return inKeyword && inCategory && inStart && inEnd;
+    }
+
+    function clearMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers.length = 0;
+    }
+
+    function render() {
+      clearMarkers();
+      const list = document.getElementById('results');
+      list.innerHTML = '';
+
+      events.filter(e => withinBounds(e) && matchesFilters(e)).forEach(event => {
+        const marker = L.marker([event.lat, event.lng]).addTo(map);
+        marker.bindPopup(event.name);
+        markers.push(marker);
+
+        const item = document.createElement('li');
+        item.textContent = `${event.name} (${event.category}) - ${event.date}`;
+        list.appendChild(item);
+      });
+    }
+
+    document.getElementById('apply').addEventListener('click', render);
+    map.on('moveend', render);
+
+    render();
+  </script>
+</body>
+</html>
