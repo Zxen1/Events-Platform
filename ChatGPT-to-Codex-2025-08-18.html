@@ -156,6 +156,7 @@ body{
   overflow:auto;
   resize:both;
   pointer-events:auto;
+  overscroll-behavior:contain;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
@@ -235,7 +236,10 @@ body{
   position:sticky;
   top:0;
   background:#fff;
-  padding:10px 0;
+  margin:0 -20px;
+  padding:10px 20px;
+  border-top-left-radius:8px;
+  border-top-right-radius:8px;
   z-index:1;
   cursor:move;
   display:flex;
