@@ -1238,8 +1238,11 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .reset-box .arr{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;background:#0d2237;border:1px solid rgba(255,255,255,.08)}
 
     .results-col{display:flex;flex-direction:column;min-width:0;min-height:0}
-    .res-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0;color:var(--ink-d)}
-    .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
+      .res-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0;color:var(--ink-d)}
+      .res-actions{display:flex;align-items:center;gap:8px}
+      .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+      .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
+      .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
     .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:linear-gradient(180deg,#0f1d2d,#0b1623);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:#0b2239}
     .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -1545,23 +1548,33 @@ footer .foot-row .foot-item img {
           <button id="tab-calendar" role="tab" aria-selected="false">Calendar</button>
         </div>
       </nav>
-      <div class="auth">
-        <button id="filterBtn" aria-label="Open filters panel">Filters</button>
-        <button id="memberBtn" aria-label="Open members area">Members</button>
-        <button id="adminBtn" aria-label="Open admin area">Admin</button>
-        <a href="#" aria-label="Sign in">Sign In</a><span class="muted">|</span><a href="#" aria-label="Register">Register</a>
-      </div>
+        <div class="auth">
+          <button id="memberBtn" aria-label="Open members area">Members</button>
+          <button id="adminBtn" aria-label="Open admin area">Admin</button>
+          <a href="#" aria-label="Sign in">Sign In</a><span class="muted">|</span><a href="#" aria-label="Register">Register</a>
+        </div>
     </div>
   </header>
 
   <main class="main">
-    <section class="results-col" aria-label="Results">
-      <div class="res-head">
-        <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
-        <div class="muted">Map area filter active in Map mode</div>
-      </div>
-      <div class="res-list" id="results"></div>
-    </section>
+      <section class="results-col" aria-label="Results">
+        <div class="res-head">
+          <div class="res-info">
+            <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
+            <div class="muted">Map area filter active in Map mode</div>
+          </div>
+          <div class="res-actions">
+            <button id="filterBtn" aria-label="Open filters panel">Filters</button>
+            <select id="sortSelect" aria-label="Sort order">
+              <option value="favaz">Favourites, A - Z</option>
+              <option value="az">Title A - Z</option>
+              <option value="nearest">Closest</option>
+              <option value="soon">Soonest</option>
+            </select>
+          </div>
+        </div>
+        <div class="res-list" id="results"></div>
+      </section>
 
     <section class="map-wrap" aria-label="Map">
       <div id="map"></div>
@@ -1601,24 +1614,12 @@ footer .foot-row .foot-item img {
               <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
             </div>
 
-          <h3>Sort</h3>
-          <div class="field">
-            <div class="input">
-              <select id="sortSelect" aria-label="Sort options">
-                <option value="favaz">Favourites, A - Z</option>
-                <option value="az">Title A - Z</option>
-                <option value="nearest">Closest</option>
-                <option value="soon">Soonest</option>
-              </select>
+            <h3>Keywords</h3>
+            <div class="field">
+              <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
+                <div class="x" role="button" aria-label="Clear keywords">X</div>
+              </div>
             </div>
-          </div>
-
-          <h3>Keywords</h3>
-          <div class="field">
-            <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
-              <div class="x" role="button" aria-label="Clear keywords">X</div>
-            </div>
-          </div>
 
           <h3>Date Range</h3>
           <div class="field">
