@@ -165,21 +165,18 @@ body{
   min-width:180px;
   max-width:260px;
 }
-#adminModal .modal-content{
-  width:90%;
+#adminModal .modal-content,
+#memberModal .modal-content{
+  width:600px;
   max-width:1200px;
   max-height:90%;
+  background:#fff;
 }
-  #memberModal .modal-content{
-    width:90%;
-    max-width:1200px;
-    max-height:90%;
-  }
-  #filterModal .modal-content{
-    width:90%;
-    max-width:1200px;
-    max-height:90%;
-  }
+#filterModal .modal-content{
+  width:350px;
+  max-width:600px;
+  max-height:90%;
+}
   @media (max-width:600px){
   #adminModal .modal-content,
   #memberModal .modal-content,
@@ -485,9 +482,16 @@ body{
 .res-head{
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 8px;
   margin: 0 0 8px 0;
   color: var(--ink-d);
+}
+.res-actions{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .res-list{
@@ -770,6 +774,11 @@ footer{
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+}
+
+footer .foot-row .foot-item{
+  background:#FFF8E1;
+  border:1px solid rgba(0,0,0,0.1);
 }
 
 .chip-small img.mini{
@@ -1224,8 +1233,8 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .reset-box .arr{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;background:#0d2237;border:1px solid rgba(255,255,255,.08)}
 
     .results-col{display:flex;flex-direction:column;min-width:0;min-height:0}
-      .res-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0;color:var(--ink-d)}
-      .res-actions{display:flex;align-items:center;gap:8px}
+      .res-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;color:var(--ink-d)}
+      .res-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
@@ -1543,12 +1552,12 @@ footer .foot-row .foot-item img {
   <main class="main">
       <section class="results-col" aria-label="Results">
         <div class="res-head">
+          <button id="filterBtn" aria-label="Open filters modal">Filters</button>
           <div class="res-info">
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
             <div class="muted">Map area filter active in Map mode</div>
           </div>
           <div class="res-actions">
-            <button id="filterBtn" aria-label="Open filters modal">Filters</button>
             <select id="sortSelect" aria-label="Sort order">
               <option value="favaz">Favourites, A - Z</option>
               <option value="az">Title A - Z</option>
@@ -2625,9 +2634,15 @@ function openModal(m){
   if(content){
     content.style.width = '';
     content.style.height = '';
-    content.style.left = '50%';
-    content.style.top = '50%';
-    content.style.transform = 'translate(-50%, -50%)';
+    if(m.id==='filterModal'){
+      content.style.left = '0';
+      content.style.top = 'var(--header-h)';
+      content.style.transform = '';
+    } else {
+      content.style.left = '50%';
+      content.style.top = '50%';
+      content.style.transform = 'translate(-50%, -50%)';
+    }
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
