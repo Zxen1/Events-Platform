@@ -185,7 +185,8 @@ body{
     max-height:95%;
   }
 }
-#adminModal legend{font-weight:600;padding:0 6px;}
+#adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:space-between;}
+#adminModal legend button.same-btn{margin-left:8px}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:40px;font-size:12px;}
   #adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
@@ -600,13 +601,19 @@ body{
 }
 
 .posts-mode{
-  display: none;
-  height: 100%;
-  overflow: auto;
-  min-height: 0;
-  padding-right: 6px;
-  background: transparent;
+  display:none;
+  height:100%;
+  overflow:auto;
+  min-height:0;
+  padding:6px;
+  padding-bottom:50vh;
+  color:#000;
+  background:rgba(0,0,0,0.7);
 }
+.posts-mode .res-list{overflow:visible;padding:0}
+.posts-mode,.posts-mode *{color:#000!important}
+.posts-mode .card{background:rgba(0,0,0,0.7)}
+.posts-mode .detail-inline{margin-top:6px}
 
 .mode-posts .posts-mode{
   display: block;
@@ -1235,7 +1242,11 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
 
-    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding-right:6px}
+    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:6px;padding-bottom:50vh;color:#000;background:rgba(0,0,0,0.7)}
+    .posts-mode .res-list{overflow:visible;padding:0}
+    .posts-mode,.posts-mode *{color:#000!important}
+    .posts-mode .card{background:rgba(0,0,0,0.7)}
+    .posts-mode .detail-inline{margin-top:6px}
     .mode-posts .posts-mode{display:block}
     
     .mode-map .posts-mode{display:none}
@@ -2465,7 +2476,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(p.id); });
+      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(p.id, wide); });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
         e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false');
@@ -2541,18 +2552,18 @@ function makePosts(){
   return wrap;
     }
 
-    async function openPost(id){
+    async function openPost(id, fromPosts=false){
       const p = posts.find(x=>x.id===id); if(!p) return;
       setMode('posts');
       await nextFrame(); await nextFrame();
 
       if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
 
-      (function(){ 
-        const ex = postsWideEl.querySelector('.detail-inline'); 
-        if(ex){ 
-          const exId = ex.dataset && ex.dataset.id; 
-          const prev = posts.find(x=> x.id===exId); 
+      (function(){
+        const ex = postsWideEl.querySelector('.detail-inline');
+        if(ex){
+          const exId = ex.dataset && ex.dataset.id;
+          const prev = posts.find(x=> x.id===exId);
           if(prev){ ex.replaceWith(card(prev, true)); } else { ex.remove(); }
         }
       })();
@@ -2561,7 +2572,14 @@ function makePosts(){
       if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
 
-      target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      const container = target.closest('.posts-mode');
+      if(fromPosts && container){
+        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
+        container.scrollTo({top, behavior:'smooth'});
+        await sleep(300);
+      } else {
+        target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      }
 
       const detail = buildDetail(p);
       target.replaceWith(detail);
@@ -2792,15 +2810,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], text:['body'], btn:['body button']}},
     {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
-    {key:'list', label:'List Panel', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
+    {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], btn:['.posts-mode button'], card:['.posts-mode .card']}},
-    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
+    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button'], card:['.calendar .card']}},
+    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button'], card:['footer .foot-row .foot-item']}},
     {key:'mapCards', label:'Map Cards', selectors:{bg:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content'], text:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content'], btn:['.mapboxgl-popup.hover-pop .mapboxgl-popup-content button'], card:['.mapboxgl-popup.hover-pop .hover-card']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], btn:['#adminModal button']}},
-    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], btn:['#memberModal button']}},
-    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button'], card:['footer .foot-row .foot-item']}}
+    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], btn:['#memberModal button']}}
   ];
+
+  const copyableKeys = new Set(['list','posts','calendar','mapCards','footer']);
+  let lastFieldsetKey = null;
 
   const COLOR_PICKER_MODE = 'hex';
 
@@ -2851,8 +2872,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
       fs.className = 'admin-fieldset';
+      fs.dataset.key = area.key;
       const lg = document.createElement('legend');
       lg.textContent = area.label;
+      if(copyableKeys.has(area.key)){
+        const sameBtn = document.createElement('button');
+        sameBtn.type = 'button';
+        sameBtn.textContent = 'Same';
+        sameBtn.className = 'same-btn';
+        sameBtn.addEventListener('click', ()=>{
+          if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
+          ['bg','text','btn','card'].forEach(type=>{
+            const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
+            const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
+            const toC = document.getElementById(`${area.key}-${type}-c`);
+            const toO = document.getElementById(`${area.key}-${type}-o`);
+            if(fromC && toC){ toC.value = fromC.value; }
+            if(fromO && toO){ toO.value = fromO.value; }
+          });
+          applyAdmin();
+          lastFieldsetKey = area.key;
+        });
+        lg.appendChild(sameBtn);
+      }
       fs.appendChild(lg);
       const types = ['bg','text','btn'];
       if(area.selectors.card) types.push('card');
@@ -2886,6 +2928,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const [areaKey, type] = targetInput.id.split('-');
       const area = colorAreas.find(a=>a.key===areaKey);
       if(area){
+        lastFieldsetKey = areaKey;
         const colorInput = document.getElementById(`${areaKey}-${type}-c`);
         const opacityInput = document.getElementById(`${areaKey}-${type}-o`);
         const color = colorInput ? colorInput.value : '#ffffff';
