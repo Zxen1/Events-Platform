@@ -142,7 +142,6 @@ body{
 .modal.show{display:block;}
 .modal-content{
   position:absolute;
-  background:#fff;
   border-radius:8px;
   width:90%;
   max-width:600px;
@@ -167,8 +166,6 @@ body{
   max-width:260px;
 }
 #adminModal .modal-content{
-  background:linear-gradient(180deg,#fff,#f7f7f7);
-  border:2px solid #ffecb3;
   width:90%;
   max-width:1200px;
   max-height:90%;
@@ -179,8 +176,6 @@ body{
     max-height:90%;
   }
   #filterModal .modal-content{
-    background:linear-gradient(180deg,#fff,#f7f7f7);
-    border:2px solid #ffecb3;
     width:90%;
     max-width:1200px;
     max-height:90%;
@@ -228,7 +223,6 @@ body{
 .modal-header{
   position:sticky;
   top:0;
-  background:#fff;
   padding:10px 20px;
   border-top-left-radius:8px;
   border-top-right-radius:8px;
@@ -2750,6 +2744,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
     {key:'posts', label:'Posts Area', selectors:{bg:['.posts-mode'], text:['.posts-mode'], btn:['.posts-mode button'], card:['.posts-mode .card']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button']}},
+    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], btn:['#adminModal button']}},
+    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], btn:['#memberModal button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], btn:['footer button'], card:['footer .foot-row .foot-item']}}
   ];
 
