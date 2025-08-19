@@ -148,14 +148,20 @@ body{
 .modal-content{
   position:absolute;
   background:#fff;
-  padding:0 20px 20px;
   border-radius:8px;
   width:90%;
   max-width:600px;
   max-height:90%;
-  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
   resize:both;
   pointer-events:auto;
+}
+.modal-body{
+  flex:1 1 auto;
+  overflow:auto;
+  padding:0 20px 20px;
   overscroll-behavior:contain;
 }
 .admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
@@ -226,6 +232,7 @@ body{
   gap:10px;
 }
 .unsaved-confirm .modal-content{
+  padding:20px;
   max-width:300px;
   text-align:center;
 }
@@ -236,7 +243,6 @@ body{
   position:sticky;
   top:0;
   background:#fff;
-  margin:0 -20px;
   padding:10px 20px;
   border-top-left-radius:8px;
   border-top-right-radius:8px;
@@ -245,6 +251,7 @@ body{
   display:flex;
   flex-direction:column;
   gap:10px;
+  flex-shrink:0;
 }
 .modal-header .header-top{
   display:flex;
@@ -1591,15 +1598,16 @@ footer .foot-row .foot-item img {
           </div>
         </div>
       </div>
-      <section class="filters-col" aria-label="Filters">
-        <div>
-          <h3>Location</h3>
-          <div class="field" role="search">
-            <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
-              <div class="x" role="button" aria-label="Clear location">X</div>
+      <div class="modal-body">
+        <section class="filters-col" aria-label="Filters">
+          <div>
+            <h3>Location</h3>
+            <div class="field" role="search">
+              <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
+                <div class="x" role="button" aria-label="Clear location">X</div>
+              </div>
+              <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
             </div>
-            <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
-          </div>
 
           <h3>Sort</h3>
           <div class="field">
@@ -1630,28 +1638,29 @@ footer .foot-row .foot-item img {
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
 
-          <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
+            <div class="reset-box">
+              <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+                Reset All Filters
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   </div>
 
   <div id="memberModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-content">
-      <form id="memberForm">
-        <div class="modal-header">
-          <div class="header-top">
-            <h2>Create Post</h2>
-            <div class="modal-actions">
-              <button type="submit">Save</button>
-              <button type="button" class="close-modal">Close</button>
-            </div>
+      <div class="modal-header">
+        <div class="header-top">
+          <h2>Create Post</h2>
+          <div class="modal-actions">
+            <button type="submit" form="memberForm">Save</button>
+            <button type="button" class="close-modal">Close</button>
           </div>
         </div>
+      </div>
+      <form id="memberForm" class="modal-body">
         <div class="modal-field">
           <label for="mTitle">Title</label>
           <input type="text" id="mTitle" required />
@@ -1674,20 +1683,20 @@ footer .foot-row .foot-item img {
 
   <div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-content">
-      <form id="adminForm">
-        <div class="modal-header">
-          <div class="header-top">
-            <h2>Admin Settings</h2>
-            <div class="modal-actions">
-              <button type="submit">Save</button>
-              <button type="button" class="close-modal">Close</button>
-            </div>
-          </div>
-          <div class="tab-bar">
-            <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
-            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+      <div class="modal-header">
+        <div class="header-top">
+          <h2>Admin Settings</h2>
+          <div class="modal-actions">
+            <button type="submit" form="adminForm">Save</button>
+            <button type="button" class="close-modal">Close</button>
           </div>
         </div>
+        <div class="tab-bar">
+          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+      </div>
+      <form id="adminForm" class="modal-body">
         <div id="tab-theme" class="tab-panel active">
           <div class="modal-field">
             <label for="themePreset">Preset</label>
