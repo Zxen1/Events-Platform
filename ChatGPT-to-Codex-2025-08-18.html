@@ -44,7 +44,7 @@ body{
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: #ffecb3;
+  background: #A3956c;
   color: #fff;
 }
 
@@ -74,12 +74,13 @@ body{
   margin-right: 10px;
 }
 
-.seg button{
+.seg button,
+.auth button{
   border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
   padding: 10px 14px;
   background: rgba(255,255,255,0.2);
-  color: #fff;
+  color: inherit;
   font-weight: 600;
   cursor: pointer;
   transition: background .2s;
@@ -93,22 +94,6 @@ body{
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.auth a{
-  text-decoration: none;
-  color: #fff;
-  opacity: .9;
-}
-
-.auth button{
-  border: 1px solid rgba(255,255,255,.6);
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .gear{
@@ -170,13 +155,26 @@ body{
   width:600px;
   max-width:1200px;
   max-height:90%;
-  background:#fff;
+  background:rgba(0,0,0,0.7);
+  color:#fff;
 }
 #filterModal .modal-content{
   width:350px;
   max-width:600px;
   max-height:90%;
+  background:rgba(0,0,0,0.7);
+  color:#fff;
+}
+
+#filterModal button,
+#filterModal .sq,
+#filterModal .tiny,
+#filterModal .btn,
+#adminModal button,
+#memberModal button{
   background:#fff;
+  border-color:#fff;
+  color:#000;
 }
   @media (max-width:600px){
   #adminModal .modal-content,
@@ -734,13 +732,6 @@ footer{
   background: var(--list-background);
 }
 
-.foot-title{
-  font-size: 12px;
-  color: var(--muted);
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
 .foot-row{
   overflow-x: auto;
   overflow-y: hidden;
@@ -1192,15 +1183,14 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
-    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#ffecb3;color:#fff}
+    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
     .logo img{height:48px;display:block}
     .top-actions{display:flex;align-items:center;gap:20px}
     .seg{display:flex;gap:8px;margin-right:10px}
-    .seg button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:#fff;font-weight:600;cursor:pointer}
+    .seg button,.auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
     .auth{display:flex;align-items:center;gap:10px}
-    .auth a{text-decoration:none;color:#fff;opacity:.9}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
     .gear svg{width:18px;height:18px;opacity:.9}
 
@@ -1275,7 +1265,6 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .desc{color:var(--ink-d);margin-top:8px}
 
     footer{height:var(--footer-h);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;padding:10px 14px}
-    .foot-title{font-size:12px;color:var(--muted);margin-right:6px;white-space:nowrap}
     .foot-row{overflow-x:auto;overflow-y:hidden;white-space:nowrap;display:flex;gap:8px;width:100%}
     .foot-row::-webkit-scrollbar{height:10px}
     .foot-row::-webkit-scrollbar-thumb{background:#0d2a44;border-radius:8px}
@@ -1491,9 +1480,10 @@ footer .foot-row .foot-item img {
     background: #fff8e1;
     color: #333;
   }
-  .seg button {
+  .seg button,
+  .auth button {
     background: var(--btn);
-    color: #333;
+    color: inherit;
   }
   .seg button[aria-current="page"] {
     background: var(--btn-2);
@@ -1544,7 +1534,6 @@ footer .foot-row .foot-item img {
         <div class="auth">
           <button id="memberBtn" aria-label="Open members area">Members</button>
           <button id="adminBtn" aria-label="Open admin area">Admin</button>
-          <a href="#" aria-label="Sign in">Sign In</a><span class="muted">|</span><a href="#" aria-label="Register">Register</a>
         </div>
     </div>
   </header>
@@ -1582,7 +1571,6 @@ footer .foot-row .foot-item img {
   </main>
 
   <footer>
-    <div class="foot-title" id="footTitle">Last viewed:</div>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
   </footer>
 
@@ -2464,12 +2452,12 @@ function makePosts(){
     }
 
     // Footer history
-    const footRow = $('#footRow'); const footTitle = $('#footTitle');
+    const footRow = $('#footRow');
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
     function renderFooter(){
       footRow.innerHTML='';
-      if(!viewHistory.length){ footTitle.style.display='none'; return; } else { footTitle.style.display=''; }
+      if(!viewHistory.length){ return; }
       // render oldest -> newest so newest appears at the far right
       const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
       for(const v of items){
@@ -2637,8 +2625,11 @@ function openModal(m){
     if(m.id==='filterModal'){
       const subHead = document.querySelector('.res-head');
       const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+      const availableHeight = window.innerHeight - footerH - topPos;
       content.style.left = '0';
       content.style.top = `${topPos}px`;
+      content.style.maxHeight = `${availableHeight}px`;
       content.style.transform = '';
     } else {
       content.style.left = '50%';
