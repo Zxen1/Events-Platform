@@ -626,6 +626,9 @@ body{
 .mode-calendar .posts-mode{
   display: none;
 }
+.mode-calendar .results-col{
+  display: none;
+}
 
 .calendar{
   display: none;
@@ -1079,16 +1082,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   display: -webkit-box;
 }
 
-.mode-posts .map-wrap{
+.mode-posts .map-wrap,
+.mode-calendar .map-wrap{
   display: block;
   grid-column: 2/3;
-  grid-row: 1;
-  z-index: 0;
-}
-
-.mode-posts .mode-posts .map-wrap{
-  display: block;
-  grid-column: 2 / 3;
   grid-row: 1;
   z-index: 0;
 }
@@ -1113,7 +1110,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 .main .calendar{
-  grid-column: 2/3;
+  grid-column: 1/2;
   grid-row: 1;
   position: relative;
   z-index: 1;
@@ -1127,10 +1124,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .mode-posts #postsWide .res-list{
   background: transparent;
-}
-
-.mode-posts .map-wrap, .mode-calendar .map-wrap{
-  display: block;
 }
 
 .main .posts-mode, .main .calendar{
@@ -1160,7 +1153,7 @@ body.mode-posts .main .map-wrap .main-bg-overlay{
 }
 
 body.mode-calendar .main .map-wrap .main-bg-overlay{
-  opacity: 1;
+  opacity: 0;
 }</style>
 
 
@@ -1247,7 +1240,9 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     
     .mode-map .posts-mode{display:none}
     .mode-map .map-wrap{display:block}
+    .mode-posts .map-wrap, .mode-calendar .map-wrap{display:block;grid-column:2/3;grid-row:1;z-index:0}
     .mode-calendar .posts-mode{display:none}
+    .mode-calendar .results-col{display:none}
     .calendar{display:none;height:100%;align-items:center;justify-content:center;color:var(--muted);min-height:0}
     .mode-calendar .calendar{display:flex}
 
@@ -2126,7 +2121,10 @@ function makePosts(){
       $('#tab-map').setAttribute('aria-selected', m==='map');
       $('#tab-calendar').setAttribute('aria-selected', m==='calendar');
       updateOverlayColor();
-      if(m==='map' && map){ map.resize(); applyFilters(); }
+      if((m==='map' || m==='calendar') && map){
+        map.resize();
+        if(m==='map') applyFilters();
+      }
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
     $('#tab-map').addEventListener('click',()=> setMode('map'));
@@ -2417,9 +2415,34 @@ function makePosts(){
       postsWideEl.innerHTML = '';
       arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
       updateResultCount(arr.length);
+      prioritizeVisibleImages();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+
+    function prioritizeVisibleImages(){
+      const roots = [resultsEl, postsWideEl];
+      roots.forEach(root => {
+        if(!root) return;
+        const imgs = root.querySelectorAll('img.thumb');
+        if(!imgs.length) return;
+        if('IntersectionObserver' in window){
+          const obs = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+              if(entry.isIntersecting){
+                const img = entry.target;
+                img.loading = 'eager';
+                img.fetchPriority = 'high';
+                obs.unobserve(img);
+              }
+            });
+          }, {root});
+          imgs.forEach(img => obs.observe(img));
+        } else {
+          imgs.forEach(img => img.loading = 'eager');
+        }
+      });
+    }
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -2478,7 +2501,7 @@ function makePosts(){
       wrap.className = 'detail-inline';
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
-        <div class="hero"><img id="hero-img" class="lqip" id="hero-img" class="lqip"   src="${thumbUrl(p)}" data-full="${heroUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
+        <div class="hero"><img id="hero-img" class="lqip"   src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
         <div class="body">
           <div>
             <h2>${p.title}</h2>
@@ -2504,6 +2527,7 @@ function makePosts(){
       const full = img.getAttribute('data-full');
       const hi = new Image();
       hi.referrerPolicy = 'no-referrer';
+      hi.fetchPriority = 'high';
       hi.onload = ()=>{
         // decode for nicer paint if available
         const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
