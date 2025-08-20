@@ -1622,7 +1622,7 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
+            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -2692,9 +2692,9 @@ function makePosts(){
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         end = new Date(now.getFullYear(), now.getMonth()+1, 0);
       } else {
-        const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        if(parts[0]) start = new Date(parts[0]);
-        if(parts[1]) end = new Date(parts[1]);
+        const parts = val.split(/\s+to\s+|\s+-\s+/i).map(s=>s.trim()).filter(Boolean);
+        if(parts[0]){ const s = new Date(parts[0]); if(!isNaN(s)) start = s; }
+        if(parts[1]){ const e = new Date(parts[1]); if(!isNaN(e)) end = e; }
       }
       return p.dates.some(d => {
         const dt = new Date(d);
