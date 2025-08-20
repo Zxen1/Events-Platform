@@ -2599,10 +2599,10 @@ function makePosts(){
       if(!target){ return; }
 
       const container = target.closest('.posts-mode');
-      if(container){
+      if(container && !fromPosts){
         const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
         container.scrollTop = top;
-      } else {
+      } else if(!container){
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -2610,10 +2610,10 @@ function makePosts(){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
 
-      if(container){
+      if(container && !fromPosts){
         const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
         container.scrollTop = top;
-      } else {
+      } else if(!container){
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -2637,7 +2637,7 @@ function makePosts(){
         p.fav=!p.fav;
         e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
         renderLists(filtered);
-        openPost(p.id);
+        openPost(p.id, !!el.closest('.posts-mode'));
       });
     }
 
