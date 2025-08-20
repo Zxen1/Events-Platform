@@ -1725,6 +1725,15 @@ footer .foot-row .foot-item img {
             <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
             <span id="spinSpeedVal"></span>
           </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="spinLoadAll"> Spin on load (everyone)</label>
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="spinLoadNew"> Spin on load (new users)</label>
+          </div>
+          <div class="modal-field">
+            <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
+          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -1758,12 +1767,19 @@ footer .foot-row .foot-item img {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    const DEFAULT_SPIN_SPEED = 360 / (10 * 60); // one revolution per 10s at ~60fps
+    const DEFAULT_SPIN_SPEED = 0.3;
+    const firstVisit = !localStorage.getItem('hasVisited');
+    localStorage.setItem('hasVisited','1');
     let map, spinning = false,
-        spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true'),
-        spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED));
+        spinLoadAll = JSON.parse(localStorage.getItem('spinLoadAll') || 'true'),
+        spinLoadNew = JSON.parse(localStorage.getItem('spinLoadNew') || 'false'),
+        spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
+        spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
+        spinEnabled = spinLoadAll || (spinLoadNew && firstVisit);
+    localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
     const logoEl = document.querySelector('.logo');
     logoEl?.addEventListener('click', () => {
+      if(!spinLogoClick) return;
       spinEnabled = true;
       localStorage.setItem('spinGlobe', 'true');
       if(map){
@@ -2275,6 +2291,15 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
+    }
+
+    function updateSpinState(){
+      const shouldSpin = spinLoadAll || (spinLoadNew && firstVisit);
+      if(shouldSpin !== spinEnabled){
+        spinEnabled = shouldSpin;
+        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        if(spinEnabled) startSpin(); else stopSpin();
+      }
     }
 
     $('#btnGeo').addEventListener('click', ()=>{
@@ -3233,6 +3258,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(adminForm){
       const speedInput = document.getElementById("spinSpeed");
       const speedVal = document.getElementById("spinSpeedVal");
+      const loadAllInput = document.getElementById("spinLoadAll");
+      const loadNewInput = document.getElementById("spinLoadNew");
+      const logoClickInput = document.getElementById("spinLogoClick");
       if(speedInput && speedVal){
         speedInput.value = spinEnabled ? spinSpeed : 0;
         speedVal.textContent = spinEnabled ? speedInput.value : "Off";
@@ -3244,6 +3272,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           localStorage.setItem("spinGlobe", JSON.stringify(spinEnabled));
           localStorage.setItem("spinSpeed", String(spinSpeed));
           if(spinEnabled) startSpin(); else stopSpin();
+        });
+      }
+      if(loadAllInput){
+        loadAllInput.checked = spinLoadAll;
+        loadAllInput.addEventListener("change", ()=>{
+          spinLoadAll = loadAllInput.checked;
+          localStorage.setItem("spinLoadAll", JSON.stringify(spinLoadAll));
+          updateSpinState();
+        });
+      }
+      if(loadNewInput){
+        loadNewInput.checked = spinLoadNew;
+        loadNewInput.addEventListener("change", ()=>{
+          spinLoadNew = loadNewInput.checked;
+          localStorage.setItem("spinLoadNew", JSON.stringify(spinLoadNew));
+          updateSpinState();
+        });
+      }
+      if(logoClickInput){
+        logoClickInput.checked = spinLogoClick;
+        logoClickInput.addEventListener("change", ()=>{
+          spinLogoClick = logoClickInput.checked;
+          localStorage.setItem("spinLogoClick", JSON.stringify(spinLogoClick));
         });
       }
       adminForm.addEventListener("input", e=>{
