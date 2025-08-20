@@ -1534,8 +1534,8 @@ footer .foot-row .foot-item img {
         </div>
       </nav>
         <div class="auth">
-          <button id="memberBtn" aria-label="Open members area">Members</button>
-          <button id="adminBtn" aria-label="Open admin area">Admin</button>
+          <button id="memberBtn" data-modal="memberModal" aria-label="Open members area">Members</button>
+          <button id="adminBtn" data-modal="adminModal" aria-label="Open admin area">Admin</button>
         </div>
     </div>
   </header>
@@ -1543,7 +1543,7 @@ footer .foot-row .foot-item img {
   <main class="main">
       <section class="results-col" aria-label="Results">
         <div class="res-head">
-          <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+          <button id="filterBtn" data-modal="filterModal" aria-label="Open filters modal">Filters</button>
           <div class="res-info">
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
             <div class="muted">Map area filter active in Map mode</div>
@@ -2736,19 +2736,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
 // Modals and admin/member interactions
 (function(){
-  const memberBtn = document.getElementById('memberBtn');
-  const adminBtn = document.getElementById('adminBtn');
-  const filterBtn = document.getElementById('filterBtn');
-  const memberModal = document.getElementById('memberModal');
-  const adminModal = document.getElementById('adminModal');
-  const filterModal = document.getElementById('filterModal');
-
-  memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
-    adminBtn && adminBtn.addEventListener('click', ()=>{
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-modal]');
+    if(!btn) return;
+    const targetId = btn.getAttribute('data-modal');
+    const modal = document.getElementById(targetId);
+    if(!modal) return;
+    if(targetId === 'adminModal') {
       syncAdminControls();
-      toggleModal(adminModal);
-    });
-  filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
+    }
+    toggleModal(modal);
+  });
+
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=> requestCloseModal(btn.closest('.modal')));
   });
