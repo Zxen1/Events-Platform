@@ -2424,6 +2424,7 @@ function makePosts(){
       arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
       updateResultCount(arr.length);
       prioritizeVisibleImages();
+      applyAdmin();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
@@ -2591,12 +2592,14 @@ function makePosts(){
       viewHistory.unshift({id:p.id, title:p.title, city:p.city});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
+      applyAdmin();
     }
 
     function hookDetailActions(el, p){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
+        applyAdmin();
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
