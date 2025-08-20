@@ -1756,6 +1756,17 @@ footer .foot-row .foot-item img {
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
 
+    // Ensure result lists occupy space between the subheader and footer
+    function adjustListHeight(){
+      const subHead = document.querySelector('.res-head');
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+      const availableHeight = window.innerHeight - footerH - topPos;
+      document.querySelectorAll('.res-list').forEach(list=>{
+        list.style.maxHeight = `${availableHeight}px`;
+      });
+    }
+
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
@@ -3164,6 +3175,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     }
     dragEl = null;
   });
+
+  window.addEventListener('resize', adjustListHeight);
+  adjustListHeight();
 })();
 </script>
 </body>
