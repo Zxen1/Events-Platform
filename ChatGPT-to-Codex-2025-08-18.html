@@ -38,17 +38,18 @@ body{
   overflow: hidden;
 }
 
-.header{
-  height: var(--header-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  background: #A3956c;
-  color: #fff;
-}
+  .header{
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: #A3956c;
+    color: #fff;
+    position: relative;
+  }
 
-.logo{
+  .logo{
   display: flex;
   align-items: center;
   gap: 10px;
@@ -62,19 +63,45 @@ body{
   display: block;
 }
 
-.top-actions{
+  .view-toggle{
+  position: absolute;
+  left: calc(var(--results-w) + var(--gap) - 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.view-toggle .seg{
+  display: flex;
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-toggle .seg button{
+  border: none;
+  border-right: 1px solid rgba(255,255,255,.6);
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.2);
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.view-toggle .seg button:last-child{
+  border-right: none;
+}
+
+.view-toggle .seg button[aria-current="page"]{
+  background: rgba(255,255,255,0.35);
+}
+
+.auth{
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 }
 
-.seg{
-  display: flex;
-  gap: 8px;
-  margin-right: 10px;
-}
-
-.seg button,
 .auth button{
   border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
@@ -84,16 +111,6 @@ body{
   font-weight: 600;
   cursor: pointer;
   transition: background .2s;
-}
-
-.seg button[aria-current="page"]{
-  background: rgba(255,255,255,0.35);
-}
-
-.auth{
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .gear{
@@ -1179,14 +1196,16 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
-    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff}
+    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff;position:relative}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
     .logo img{height:48px;display:block}
-    .top-actions{display:flex;align-items:center;gap:20px}
-    .seg{display:flex;gap:8px;margin-right:10px}
-    .seg button,.auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
-    .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
+    .view-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%)}
+    .view-toggle .seg{display:flex;border:1px solid rgba(255,255,255,.6);border-radius:999px;overflow:hidden}
+    .view-toggle .seg button{border:none;border-right:1px solid rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
+    .view-toggle .seg button:last-child{border-right:none}
+    .view-toggle .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
     .auth{display:flex;align-items:center;gap:10px}
+    .auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
     .gear svg{width:18px;height:18px;opacity:.9}
 
@@ -1483,12 +1502,12 @@ footer .foot-row .foot-item img {
     background: #fff8e1;
     color: #333;
   }
-  .seg button,
+  .view-toggle .seg button,
   .auth button {
     background: var(--btn);
     color: inherit;
   }
-  .seg button[aria-current="page"] {
+  .view-toggle .seg button[aria-current="page"] {
     background: var(--btn-2);
   }
   .sq,
@@ -1526,18 +1545,16 @@ footer .foot-row .foot-item img {
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2011-09-30g.png" alt="FunMap.com logo" />
     </div>
-    <div class="top-actions">
-      <nav aria-label="Primary">
-        <div class="seg" role="tablist" aria-label="Top navigation">
-          <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-          <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
-          <button id="tab-calendar" role="tab" aria-selected="false">Calendar</button>
-        </div>
-      </nav>
-        <div class="auth">
-          <button id="memberBtn" aria-label="Open members area">Members</button>
-          <button id="adminBtn" aria-label="Open admin area">Admin</button>
-        </div>
+    <nav class="view-toggle" aria-label="Primary">
+      <div class="seg" role="tablist" aria-label="Top navigation">
+        <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
+        <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+        <button id="tab-calendar" role="tab" aria-selected="false">Calendar</button>
+      </div>
+    </nav>
+    <div class="auth">
+      <button id="memberBtn" aria-label="Open members area">Members</button>
+      <button id="adminBtn" aria-label="Open admin area">Admin</button>
     </div>
   </header>
 
@@ -1722,6 +1739,8 @@ footer .foot-row .foot-item img {
 
     let mode = 'map';
     let map, spinning = true;
+    // 'Post Panel' is defined as the current map bounds
+    let postPanel = null;
     let posts = [], filtered = [];
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -1734,6 +1753,8 @@ footer .foot-row .foot-item img {
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
+
+    function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
     let listLocked = false;
@@ -2138,6 +2159,13 @@ function makePosts(){
     $('#tab-map').addEventListener('click',()=> setMode('map'));
     $('#tab-calendar').addEventListener('click',()=> setMode('calendar'));
 
+    $('.posts-mode').addEventListener('click', (e)=>{
+      if(!e.target.closest('.card')) setMode('map');
+    });
+    $('.calendar').addEventListener('click', (e)=>{
+      if(!e.target.closest('.card')) setMode('map');
+    });
+
     // Mapbox
     function loadMapbox(cb){
       if(window.mapboxgl) return cb();
@@ -2163,10 +2191,10 @@ function makePosts(){
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); });
+      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
-      map.on('moveend', () => { applyFilters(); });
+      map.on('moveend', () => { applyFilters(); updatePostPanel(); });
     }
 
     function startSpin(){ spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
