@@ -2571,7 +2571,7 @@ function makePosts(){
       if(!target){ return; }
 
       const container = target.closest('.posts-mode');
-      if(fromPosts && container){
+      if(container){
         const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
         container.scrollTop = top;
       } else {
@@ -2581,7 +2581,13 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
-      detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+
+      if(container){
+        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
+        container.scrollTop = top;
+      } else {
+        detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      }
 
       const favBtn = detail.querySelector('[data-act="fav"]');
       favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
