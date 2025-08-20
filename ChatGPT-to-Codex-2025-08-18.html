@@ -1751,6 +1751,7 @@ footer .foot-row .foot-item img {
 
     let mode = 'map';
     let map, spinning = true;
+    let pendingMapStyle = null;
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
@@ -2205,21 +2206,25 @@ function makePosts(){
 
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      const style = localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
-      map = new mapboxgl.Map({
-        container:'map',
-        style,
-        projection:'globe',
-        center:[144.9695,-37.8178],
-        zoom:14,
-        pitch:0,
-        attributionControl:true
-      });
-      map.on('style.load', () => {
-        map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
-        map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
-      });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); applyFilters(); });
+        const style = pendingMapStyle || localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
+        pendingMapStyle = null;
+        map = new mapboxgl.Map({
+          container:'map',
+          style,
+          projection:'globe',
+          center:[144.9695,-37.8178],
+          zoom:14,
+          pitch:0,
+          attributionControl:true
+        });
+        map.on('style.load', () => {
+          map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
+          map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+          addPostSource();
+          applyFilters();
+          updatePostPanel();
+        });
+        map.on('load', ()=>{ $('.map-overlay').style.display='none'; startSpin(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
       map.on('moveend', () => { applyFilters(); updatePostPanel(); });
@@ -3154,23 +3159,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     }
   });
 
-  const mapStyleSelect = document.getElementById('mapboxStyleSelect');
-  if(mapStyleSelect){
-    const savedStyle = localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
-    mapStyleSelect.value = savedStyle;
-    mapStyleSelect.addEventListener('change', e=>{
-      const styleUrl = e.target.value;
-      localStorage.setItem('mapboxStyle', styleUrl);
-      if(map){
-        map.once('style.load', () => {
-          addPostSource();
-          applyFilters();
-          updatePostPanel();
-        });
-        map.setStyle(styleUrl);
+    function applyMapStyle(styleUrl){
+      if(!map){
+        pendingMapStyle = styleUrl;
+        return;
       }
-    });
-  }
+      map.setStyle(styleUrl);
+    }
+
+    const mapStyleSelect = document.getElementById('mapboxStyleSelect');
+    if(mapStyleSelect){
+      const savedStyle = localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
+      mapStyleSelect.value = savedStyle;
+      mapStyleSelect.addEventListener('change', e=>{
+        const styleUrl = e.target.value;
+        localStorage.setItem('mapboxStyle', styleUrl);
+        applyMapStyle(styleUrl);
+      });
+    }
 
   const palette = document.getElementById('fieldPalette');
   const builder = document.getElementById('formBuilder');
