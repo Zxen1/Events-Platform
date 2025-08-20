@@ -16,8 +16,6 @@
   --btn: #fff;
   --btn-2: #e0e0e0;
   --footer-h: 70px;
-  */
-
   --main-background: rgba(255,255,255,0.8);
   --list-background: rgba(255,255,255,1);
 }
@@ -279,12 +277,12 @@ body{
 .field-instance{margin:4px 0;}
 
 .main{
-  height: calc(100% - var(--header-h) - var(--footer-h));
-  display: grid;
-  grid-template-columns: var(--results-w) 1fr;
-  gap: var(--gap);
-  padding: 14px;
-}
+    height: calc(100vh - var(--header-h) - var(--footer-h));
+    display: grid;
+    grid-template-columns: var(--results-w) 1fr;
+    gap: var(--gap);
+    padding: 14px;
+  }
 
 .filters-col{
   display: flex;
