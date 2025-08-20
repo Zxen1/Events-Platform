@@ -2178,10 +2178,8 @@ function makePosts(){
       if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
 
-      const container = target.closest('.posts-mode');
-      if(fromPosts && container){
-        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
-        container.scrollTop = top;
+      if(fromPosts){
+        target.scrollIntoView({block:'nearest', inline:'nearest', behavior:'auto'});
       } else {
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
@@ -2190,7 +2188,7 @@ function makePosts(){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
       if(window.applyAdmin){ window.applyAdmin(); }
-      detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      detail.scrollIntoView({block:fromPosts?'nearest':'start', inline:'nearest', behavior:'auto'});
 
       const favBtn = detail.querySelector('[data-act="fav"]');
       favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
