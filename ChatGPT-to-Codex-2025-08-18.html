@@ -754,6 +754,8 @@ footer{
   gap: 10px;
   padding: 10px 14px;
   background: var(--list-background);
+  position: relative;
+  z-index: 10;
 }
 
 .foot-row{
@@ -1286,7 +1288,7 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .date{background:#10253c;border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:6px 10px;font-size:12px}
     .desc{margin-top:8px}
 
-    footer{height:var(--footer-h);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;padding:10px 14px}
+    footer{height:var(--footer-h);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;padding:10px 14px;position:relative;z-index:10}
     .foot-row{overflow-x:auto;overflow-y:hidden;white-space:nowrap;display:flex;gap:8px;width:100%}
     .foot-row::-webkit-scrollbar{height:10px}
     .foot-row::-webkit-scrollbar-thumb{background:#0d2a44;border-radius:8px}
