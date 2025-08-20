@@ -2191,6 +2191,7 @@ function makePosts(){
       hookDetailActions(detail, p);
       if(window.applyAdmin){ window.applyAdmin(); }
       detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      if(container){ container.scrollTop = Math.max(container.scrollTop - 6, 0); }
 
       const favBtn = detail.querySelector('[data-act="fav"]');
       favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
