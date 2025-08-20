@@ -233,6 +233,7 @@ body{
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
 #adminModal .tab-panel.active{display:block;}
+#adminModal input[type=range]{width:100%;}
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
 #adminModal .preset-actions input{flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;}
 #adminModal .preset-actions button{padding:6px 10px;}
@@ -1720,14 +1721,9 @@ footer .foot-row .foot-item img {
         </div>
         <div id="tab-mapbox" class="tab-panel">
           <div class="modal-field">
-            <label>
-              <input type="checkbox" id="spinGlobe" checked />
-              Spin globe on load & logo
-            </label>
-          </div>
-          <div class="modal-field">
             <label for="spinSpeed">Spin speed</label>
-            <input type="number" id="spinSpeed" min="0" step="0.01" value="0.6" />
+            <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
+            <span id="spinSpeedVal"></span>
           </div>
         </div>
         <div id="tab-settings" class="tab-panel">
@@ -2279,7 +2275,6 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
-      if(map) map.stop();
     }
 
     $('#btnGeo').addEventListener('click', ()=>{
@@ -3236,29 +3231,27 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
-      const spinInput = document.getElementById('spinGlobe');
-      if(spinInput){
-        spinInput.checked = spinEnabled;
-        spinInput.addEventListener('change', ()=>{
-          spinEnabled = spinInput.checked;
-          localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+      const speedInput = document.getElementById("spinSpeed");
+      const speedVal = document.getElementById("spinSpeedVal");
+      if(speedInput && speedVal){
+        speedInput.value = spinEnabled ? spinSpeed : 0;
+        speedVal.textContent = spinEnabled ? speedInput.value : "Off";
+        speedInput.addEventListener("input", ()=>{
+          const val = Math.max(0, parseFloat(speedInput.value) || 0);
+          spinEnabled = val > 0;
+          spinSpeed = val;
+          speedVal.textContent = spinEnabled ? val.toFixed(2) : "Off";
+          localStorage.setItem("spinGlobe", JSON.stringify(spinEnabled));
+          localStorage.setItem("spinSpeed", String(spinSpeed));
           if(spinEnabled) startSpin(); else stopSpin();
         });
       }
-      const speedInput = document.getElementById('spinSpeed');
-      if(speedInput){
-        speedInput.value = spinSpeed;
-        speedInput.addEventListener('input', ()=>{
-          spinSpeed = Math.max(0, parseFloat(speedInput.value) || 0);
-          localStorage.setItem('spinSpeed', String(spinSpeed));
-        });
-      }
-      adminForm.addEventListener('input', e=>{
-        if(e.target.id === 'spinGlobe' || e.target.id === 'spinSpeed') return;
+      adminForm.addEventListener("input", e=>{
+        if(e.target.id === "spinSpeed") return;
         applyAdmin(e.target);
       });
-      adminForm.addEventListener('change', e=>{
-        if(e.target.id === 'spinGlobe' || e.target.id === 'spinSpeed') return;
+      adminForm.addEventListener("change", e=>{
+        if(e.target.id === "spinSpeed") return;
         applyAdmin(e.target);
       });
     }
