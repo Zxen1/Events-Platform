@@ -16,7 +16,7 @@
   --btn: #fff;
   --btn-2: #e0e0e0;
   --footer-h: 70px;
-  */
+  
 
   --main-background: rgba(255,255,255,0.8);
   --list-background: rgba(255,255,255,1);
@@ -42,10 +42,10 @@ body{
   height: var(--header-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 20px;
   background: #A3956c;
   color: #fff;
+  position: relative;
 }
 
 .logo{
@@ -62,22 +62,20 @@ body{
   display: block;
 }
 
-.top-actions{
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.seg{
-  display: flex;
-  gap: 8px;
-  margin-right: 10px;
-}
-
-.seg button,
-.auth button{
+.mode-toggle{
+  position: absolute;
+  left: calc(var(--results-w) + var(--gap) - 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
   border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
+  overflow: hidden;
+}
+.mode-toggle button,
+.auth button{
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: 0;
   padding: 10px 14px;
   background: rgba(255,255,255,0.2);
   color: inherit;
@@ -85,15 +83,17 @@ body{
   cursor: pointer;
   transition: background .2s;
 }
-
-.seg button[aria-current="page"]{
+.mode-toggle button + button{
+  border-left: 1px solid rgba(255,255,255,.6);
+}
+.mode-toggle button[aria-selected="true"]{
   background: rgba(255,255,255,0.35);
 }
-
 .auth{
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
 }
 
 .gear{
@@ -1179,14 +1179,14 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
-    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff}
+    .header{height:var(--header-h);display:flex;align-items:center;padding:0 20px;background:#A3956c;color:#fff;position:relative}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
     .logo img{height:48px;display:block}
-    .top-actions{display:flex;align-items:center;gap:20px}
-    .seg{display:flex;gap:8px;margin-right:10px}
-    .seg button,.auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
-    .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
-    .auth{display:flex;align-items:center;gap:10px}
+    .mode-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%);display:inline-flex;border:1px solid rgba(255,255,255,.6);border-radius:999px;overflow:hidden}
+    .mode-toggle button,.auth button{border:1px solid rgba(255,255,255,.6);border-radius:0;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
+    .mode-toggle button + button{border-left:1px solid rgba(255,255,255,.6)}
+    .mode-toggle button[aria-selected="true"]{background:rgba(255,255,255,0.35)}
+    .auth{display:flex;align-items:center;gap:10px;margin-left:auto}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
     .gear svg{width:18px;height:18px;opacity:.9}
 
@@ -1483,12 +1483,12 @@ footer .foot-row .foot-item img {
     background: #fff8e1;
     color: #333;
   }
-  .seg button,
+  .mode-toggle button,
   .auth button {
     background: var(--btn);
     color: inherit;
   }
-  .seg button[aria-current="page"] {
+  .mode-toggle button[aria-selected="true"] {
     background: var(--btn-2);
   }
   .sq,
@@ -1526,18 +1526,14 @@ footer .foot-row .foot-item img {
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2011-09-30g.png" alt="FunMap.com logo" />
     </div>
-    <div class="top-actions">
-      <nav aria-label="Primary">
-        <div class="seg" role="tablist" aria-label="Top navigation">
-          <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-          <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
-          <button id="tab-calendar" role="tab" aria-selected="false">Calendar</button>
-        </div>
-      </nav>
-        <div class="auth">
-          <button id="memberBtn" aria-label="Open members area">Members</button>
-          <button id="adminBtn" aria-label="Open admin area">Admin</button>
-        </div>
+    <nav aria-label="View mode" class="mode-toggle" role="tablist">
+      <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
+      <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+      <button id="tab-calendar" role="tab" aria-selected="false">Calendar</button>
+    </nav>
+    <div class="auth">
+      <button id="memberBtn" aria-label="Open members area">Members</button>
+      <button id="adminBtn" aria-label="Open admin area">Admin</button>
     </div>
   </header>
 
@@ -1724,6 +1720,7 @@ footer .foot-row .foot-item img {
     let mode = 'map';
     let map, spinning = true;
     let posts = [], filtered = [];
+    const heroLoaded = new Set();
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
@@ -2425,6 +2422,7 @@ function makePosts(){
       arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
       updateResultCount(arr.length);
       prioritizeVisibleImages();
+      applyAdmin();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
@@ -2509,8 +2507,9 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'detail-inline';
       wrap.dataset.id = p.id;
+      const loaded = heroLoaded.has(p.id);
       wrap.innerHTML = `
-        <div class="hero"><img id="hero-img" class="lqip"   src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
+        <div class="hero"><img id="hero-img" class="${loaded?'ready':'lqip'}" src="${loaded?heroUrl(p):thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" ${loaded?'':'loading="eager" fetchpriority="high"'} referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
         <div class="body">
           <div>
             <h2>${p.title}</h2>
@@ -2530,22 +2529,24 @@ function makePosts(){
           </div>
         </div>`;
         // 0577 progressive hero swap
-  (function(){
-    const img = wrap.querySelector('#hero-img');
-    if(img){
-      const full = img.getAttribute('data-full');
-      const hi = new Image();
-      hi.referrerPolicy = 'no-referrer';
-      hi.fetchPriority = 'high';
-      hi.onload = ()=>{
-        // decode for nicer paint if available
-        const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-        if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-      };
-      hi.onerror = ()=>{ /* keep thumb */ };
-      hi.src = full;
-    }
-  })();
+  if(!loaded){
+    (function(){
+      const img = wrap.querySelector('#hero-img');
+      if(img){
+        const full = img.getAttribute('data-full');
+        const hi = new Image();
+        hi.referrerPolicy = 'no-referrer';
+        hi.fetchPriority = 'high';
+        hi.onload = ()=>{
+          const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
+          if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
+          heroLoaded.add(p.id);
+        };
+        hi.onerror = ()=>{ /* keep thumb */ };
+        hi.src = full;
+      }
+    })();
+  }
   return wrap;
     }
 
@@ -2582,6 +2583,7 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
+      applyAdmin();
       detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
 
       const favBtn = detail.querySelector('[data-act="fav"]');
@@ -2598,6 +2600,7 @@ function makePosts(){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
+        applyAdmin();
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
@@ -2807,7 +2810,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a']}},
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], text:['body'], btn:['body button']}},
-    {key:'main', label:'Main Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
+    {key:'main', label:'Posts Panel', selectors:{bg:['.main'], text:['.main'], btn:['.main button']}},
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], btn:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], btn:['.calendar button'], card:['.calendar .card']}},
