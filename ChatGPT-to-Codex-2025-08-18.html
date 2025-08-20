@@ -2249,8 +2249,21 @@ function makePosts(){
       });
     }
 
-    function startSpin(){ if(!spinEnabled || spinning || !map) return; spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
-    function stopSpin(){ spinning = false; }
+    function startSpin(){
+      if(!spinEnabled || spinning || !map) return;
+      spinning = true;
+      function step(){
+        if(!spinning || !map) return;
+        const c = map.getCenter();
+        map.setCenter([c.lng + 0.03, c.lat]);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    function stopSpin(){
+      spinning = false;
+      if(map) map.stop();
+    }
 
     $('#btnGeo').addEventListener('click', ()=>{
       stopSpin();
