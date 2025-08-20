@@ -2633,8 +2633,9 @@ function makePosts(){
     }
 
     function ensureGap(container, el){
-      const gap = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
-      if(gap < 12){ container.scrollTop += gap - 12; }
+      const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
+      const desired = el.offsetTop - pad - 12;
+      if(container.scrollTop > desired){ container.scrollTop = Math.max(desired, 0); }
     }
 
     function hookDetailActions(el, p){
