@@ -2203,7 +2203,11 @@ function makePosts(){
       });
       map.on('style.load', () => {
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
-        map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+        if (typeof map.setSky === 'function') {
+          map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+        } else {
+          console.warn('map.setSky is not available in this Mapbox GL JS version.');
+        }
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); applyFilters(); });
 
