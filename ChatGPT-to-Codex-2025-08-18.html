@@ -619,7 +619,7 @@ body{
   height:100%;
   overflow:auto;
   min-height:0;
-  padding:0 6px 1000px;
+  padding:0 6px;
   color:#000;
   background:rgba(0,0,0,0.7);
 }
@@ -1257,7 +1257,7 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
 
-    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px 1000px;color:#000;background:rgba(0,0,0,0.7)}
+    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px;color:#000;background:rgba(0,0,0,0.7)}
     .posts-mode .res-list{overflow:visible;padding:12px 0 0}
     .posts-mode,.posts-mode *{color:#000}
     .posts-mode .card,.posts-mode .detail-inline{background:#FFF8E1}
@@ -2161,8 +2161,11 @@ function makePosts(){
       $('#tab-map').setAttribute('aria-selected', m==='map');
       $('#tab-calendar').setAttribute('aria-selected', m==='calendar');
       updateOverlayColor();
-      if((m==='map' || m==='calendar') && map){
-        map.resize();
+      if(map){
+        if(m==='map' || m==='calendar'){
+          map.resize();
+        }
+        updatePostPanel();
       }
       applyFilters();
     }
@@ -2202,7 +2205,7 @@ function makePosts(){
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); });
+      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); applyFilters(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
       map.on('moveend', () => { applyFilters(); updatePostPanel(); });
@@ -2676,7 +2679,11 @@ function makePosts(){
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
 
-    function inBounds(p){ if(!map) return true; const b = map.getBounds(); return p.lng >= b.getWest() && p.lng <= b.getEast() && p.lat >= b.getSouth() && p.lat <= b.getNorth(); }
+    function inBounds(p){
+      if(!postPanel) return true;
+      return p.lng >= postPanel.getWest() && p.lng <= postPanel.getEast() &&
+             p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
+    }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const val = $('#dateInput').value.trim();
