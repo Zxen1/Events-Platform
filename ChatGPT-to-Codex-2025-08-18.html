@@ -1668,7 +1668,6 @@ footer .foot-row .foot-item img {
         <div class="header-top">
           <h2>Admin Settings</h2>
           <div class="modal-actions">
-            <button type="submit" form="adminForm">Save</button>
             <button type="button" class="close-modal">Close</button>
           </div>
         </div>
@@ -2743,12 +2742,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const filterModal = document.getElementById('filterModal');
 
   memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
-  adminBtn && adminBtn.addEventListener('click', ()=>{
-    syncAdminControls();
-    adminModal.dataset.originalValues = JSON.stringify(collectThemeValues());
-    adminModal.removeAttribute('data-needs-save');
-    toggleModal(adminModal);
-  });
+    adminBtn && adminBtn.addEventListener('click', ()=>{
+      syncAdminControls();
+      toggleModal(adminModal);
+    });
   filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=> requestCloseModal(btn.closest('.modal')));
@@ -2940,14 +2937,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       }
       updateOverlayColor();
-      const themeStr = JSON.stringify(collectThemeValues());
-      localStorage.setItem('currentTheme', themeStr);
-      if (typeof adminModal !== 'undefined' && adminModal) {
-        adminModal.dataset.originalValues = themeStr;
-        adminModal.removeAttribute('data-needs-save');
+        const themeStr = JSON.stringify(collectThemeValues());
+        localStorage.setItem('currentTheme', themeStr);
+        return;
       }
-      return;
-    }
     colorAreas.forEach(area=>{
       ['bg','text','btn','card'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
@@ -2968,10 +2961,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     updateOverlayColor();
     const themeStr = JSON.stringify(collectThemeValues());
     localStorage.setItem('currentTheme', themeStr);
-    if (typeof adminModal !== 'undefined' && adminModal) {
-      adminModal.dataset.originalValues = themeStr;
-      adminModal.removeAttribute('data-needs-save');
-    }
   }
 
   function collectThemeValues(){
@@ -3058,26 +3047,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   initBuiltInPresets();
   loadPresets();
   loadSavedTheme();
-  const adminForm = document.getElementById('adminForm');
-  if(adminForm){
-    const updateSaveState = ()=>{
-      const current = JSON.stringify(collectThemeValues());
-      if(current !== adminModal.dataset.originalValues){
-        adminModal.setAttribute('data-needs-save','true');
-      } else {
-        adminModal.removeAttribute('data-needs-save');
-      }
-    };
-    adminForm.addEventListener('input', e=>{ applyAdmin(e.target); updateSaveState(); });
-    adminForm.addEventListener('change', e=>{ applyAdmin(e.target); updateSaveState(); });
-    adminForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      applyAdmin();
-      adminModal.dataset.originalValues = JSON.stringify(collectThemeValues());
-      adminModal.removeAttribute('data-needs-save');
-      closeModal(adminModal);
-    });
-  }
+    const adminForm = document.getElementById('adminForm');
+    if(adminForm){
+      adminForm.addEventListener('input', e=>{ applyAdmin(e.target); });
+      adminForm.addEventListener('change', e=>{ applyAdmin(e.target); });
+    }
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
     const p = presets[e.target.value];
