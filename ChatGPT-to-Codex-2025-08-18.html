@@ -2599,10 +2599,12 @@ function makePosts(){
       if(!target){ return; }
 
       const container = target.closest('.posts-mode');
-      if(container && !fromPosts){
-        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-        container.scrollTop = Math.max(top, 0);
-      } else if(!container){
+      if(container){
+        if(!fromPosts){
+          const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
+          container.scrollTop = Math.max(top, 0);
+        }
+      } else {
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -2610,10 +2612,13 @@ function makePosts(){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
 
-      if(container && !fromPosts){
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-        container.scrollTop = Math.max(top, 0);
-      } else if(!container){
+      if(container){
+        if(!fromPosts){
+          const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
+          container.scrollTop = Math.max(top, 0);
+        }
+        ensureGap(container, detail);
+      } else {
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -2627,10 +2632,17 @@ function makePosts(){
       saveHistory(); renderFooter();
     }
 
+    function ensureGap(container, el){
+      const gap = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      if(gap < 12){ container.scrollTop += gap - 12; }
+    }
+
     function hookDetailActions(el, p){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
+        const container = el.closest('.posts-mode');
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
+        if(container){ ensureGap(container, replacedCard); }
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
