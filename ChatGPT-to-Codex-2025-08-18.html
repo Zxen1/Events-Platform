@@ -64,7 +64,7 @@ body{
 
 .mode-toggle{
   position: absolute;
-  left: calc(var(--results-w) + var(--gap) - 6px);
+  left: calc(var(--results-w) + var(--gap));
   top: 50%;
   transform: translateY(-50%);
   display: inline-flex;
@@ -124,7 +124,7 @@ body{
   z-index:2000;
   pointer-events:none;
 }
-.modal.show{display:block;}
+.modal.show{display:block;pointer-events:auto;}
 .modal-content{
   position:absolute;
   border-radius:8px;
@@ -2584,7 +2584,13 @@ function makePosts(){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
       applyAdmin();
-      detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+
+      if(container){
+        const pad = parseInt(getComputedStyle(container).paddingTop,10);
+        container.scrollTop = detail.offsetTop - pad;
+      } else {
+        detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      }
 
       const favBtn = detail.querySelector('[data-act="fav"]');
       favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
