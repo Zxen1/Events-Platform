@@ -3162,12 +3162,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const styleUrl = e.target.value;
       localStorage.setItem('mapboxStyle', styleUrl);
       if(map){
-        map.setStyle(styleUrl);
         map.once('style.load', () => {
           addPostSource();
           applyFilters();
           updatePostPanel();
         });
+        map.setStyle(styleUrl);
       }
     });
   }
