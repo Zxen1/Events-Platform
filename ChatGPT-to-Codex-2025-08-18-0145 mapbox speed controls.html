@@ -125,23 +125,30 @@ body{
   min-width:40px;
   text-align:right;
 }
-#spinType{
-  display:flex;
-  border:1px solid #ccc;
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:6px;
-}
-#spinType button{
-  border:none;
-  border-right:1px solid #ccc;
-  padding:6px 10px;
-  background:#e0e0e0;
-  font-weight:600;
-  cursor:pointer;
-}
-#spinType button:last-child{border-right:none;}
-#spinType button[aria-pressed="true"]{background:#ccc;}
+  #spinType{
+    display:flex;
+    border:1px solid #ccc;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:6px;
+  }
+  #spinType label{
+    flex:1;
+    border-right:1px solid #ccc;
+  }
+  #spinType label:last-child{border-right:none;}
+  #spinType input{
+    display:none;
+  }
+  #spinType span{
+    display:block;
+    padding:6px 10px;
+    background:#e0e0e0;
+    font-weight:600;
+    cursor:pointer;
+    text-align:center;
+  }
+  #spinType input:checked + span{background:#ccc;}
 
 .auth{
   display: flex;
@@ -1757,10 +1764,16 @@ footer .foot-row .foot-item img {
           </div>
           <div class="modal-field">
             <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
-            <div id="spinType" class="seg">
-              <button type="button" data-type="all" aria-pressed="true">Everyone</button>
-              <button type="button" data-type="new" aria-pressed="false">New Users</button>
-            </div>
+              <div id="spinType" class="seg">
+                <label>
+                  <input type="radio" name="spinType" value="all" />
+                  <span>Everyone</span>
+                </label>
+                <label>
+                  <input type="radio" name="spinType" value="new" />
+                  <span>New Users</span>
+                </label>
+              </div>
           </div>
           <div class="modal-field">
             <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
@@ -1812,19 +1825,26 @@ footer .foot-row .foot-item img {
         spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
         spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
     localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-    const logoEl = document.querySelector('.logo');
-    logoEl?.addEventListener('click', () => {
-      if(!spinLogoClick) return;
-      spinEnabled = true;
-      localStorage.setItem('spinGlobe', 'true');
-      if(map){
-        stopSpin();
-        map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch});
-        map.once('moveend', startSpin);
-      }else{
-        startSpin();
+      const logoEl = document.querySelector('.logo');
+      function updateLogoClickState(){
+        if(logoEl){
+          logoEl.style.cursor = spinLogoClick ? 'pointer' : 'default';
+          logoEl.style.pointerEvents = spinLogoClick ? 'auto' : 'none';
+        }
       }
-    });
+      updateLogoClickState();
+      logoEl?.addEventListener('click', () => {
+        if(!spinLogoClick) return;
+        spinEnabled = true;
+        localStorage.setItem('spinGlobe', 'true');
+        if(map){
+          stopSpin();
+          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch});
+          map.once('moveend', startSpin);
+        }else{
+          startSpin();
+        }
+      });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
@@ -3293,7 +3313,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const speedInput = document.getElementById("spinSpeed");
       const speedVal = document.getElementById("spinSpeedVal");
       const loadStartInput = document.getElementById("spinLoadStart");
-      const typeBtns = document.querySelectorAll("#spinType button");
+        const typeRadios = document.querySelectorAll("#spinType input");
       const logoClickInput = document.getElementById("spinLogoClick");
       if(speedInput && speedVal){
         speedInput.value = spinEnabled ? spinSpeed : 0;
@@ -3316,24 +3336,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           updateSpinState();
         });
       }
-      if(typeBtns.length){
-        typeBtns.forEach(btn=>{
-          btn.setAttribute("aria-pressed", btn.dataset.type === spinLoadType ? "true" : "false");
-          btn.addEventListener("click", ()=>{
-            spinLoadType = btn.dataset.type;
-            typeBtns.forEach(b=> b.setAttribute("aria-pressed", b===btn ? "true" : "false"));
-            localStorage.setItem("spinLoadType", spinLoadType);
-            updateSpinState();
+        if(typeRadios.length){
+          typeRadios.forEach(radio=>{
+            radio.checked = radio.value === spinLoadType;
+            radio.addEventListener("change", ()=>{
+              if(!radio.checked) return;
+              spinLoadType = radio.value;
+              localStorage.setItem("spinLoadType", spinLoadType);
+              updateSpinState();
+            });
           });
-        });
-      }
-      if(logoClickInput){
-        logoClickInput.checked = spinLogoClick;
-        logoClickInput.addEventListener("change", ()=>{
-          spinLogoClick = logoClickInput.checked;
-          localStorage.setItem("spinLogoClick", JSON.stringify(spinLogoClick));
-        });
-      }
+        }
+        if(logoClickInput){
+          logoClickInput.checked = spinLogoClick;
+          logoClickInput.addEventListener("change", ()=>{
+            spinLogoClick = logoClickInput.checked;
+            localStorage.setItem("spinLogoClick", JSON.stringify(spinLogoClick));
+            updateLogoClickState();
+          });
+        }
       adminForm.addEventListener("input", e=>{
         if(e.target.id === "spinSpeed") return;
         applyAdmin(e.target);
