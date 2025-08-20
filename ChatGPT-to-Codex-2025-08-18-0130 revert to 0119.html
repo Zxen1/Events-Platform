@@ -2201,8 +2201,12 @@ function makePosts(){
         attributionControl:true
       });
       map.on('style.load', () => {
-        map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
-        map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+        if (typeof map.setFog === 'function') {
+          map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
+        }
+        if (typeof map.setSky === 'function') {
+          map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+        }
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); applyFilters(); });
 
