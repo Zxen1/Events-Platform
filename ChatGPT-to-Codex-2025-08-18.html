@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Events Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <style>:root{
   --header-h: 72px;
   --panel-w: 260px;
@@ -1215,8 +1216,10 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .sq svg{width:14px;height:14px;opacity:.9}
     .field{display:grid;grid-template-columns:1fr 38px;gap:8px;align-items:center;margin:8px 0}
     .field .input{position:relative}
-    .input input,.input select{width:100%;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0b1a29;color:var(--ink);padding:0 38px 0 12px;outline:0}
-    .input .x,.input .down{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#0e2238;cursor:pointer;border:1px solid rgba(255,255,255,.08)}
+    .input input,.input select{width:100%;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0b1a29;color:var(--ink);padding:0 70px 0 12px;outline:0}
+    .input .x,.input .down,.input .picker{position:absolute;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#0e2238;cursor:pointer;border:1px solid rgba(255,255,255,.08)}
+    .input .x,.input .down{right:6px}
+    .input .picker{right:38px}
     .tiny{display:grid;place-items:center;width:38px;height:40px;border-radius:12px;background:#1e6d48;cursor:pointer;border:1px solid rgba(255,255,255,.08)}
     .tiny svg{width:18px;height:18px}
 
@@ -1622,7 +1625,8 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
+            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
+              <div id="dateIcon" class="picker" role="button" aria-label="Open date picker">📅</div>
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -1730,6 +1734,7 @@ footer .foot-row .foot-item img {
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
   <script>const __USED_STARTERS = new Set();
 
   (function(){
@@ -1743,6 +1748,7 @@ footer .foot-row .foot-item img {
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
+    let picker;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2127,12 +2133,24 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value='This month'; $('#locationInput').value='';
+      $('#kwInput').value=''; $('#dateInput').value=''; $('#locationInput').value='';
+      picker && picker.clearSelection();
       applyFilters();
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#dateInput').addEventListener('input', applyFilters);
+    picker = new Litepicker({
+      element: $('#dateInput'),
+      singleMode: false,
+      format: 'YYYY-MM-DD',
+      position: 'bottom-left',
+      minDate: new Date(),
+      maxDate: new Date(new Date().getFullYear(), new Date().getMonth()+12, 31),
+      scrollMonths: true
+    });
+    picker.on('selected', () => applyFilters());
+    $('#dateIcon').addEventListener('click', () => picker.show());
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
 
@@ -2686,16 +2704,11 @@ function makePosts(){
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const val = $('#dateInput').value.trim();
+      if(!val) return true;
       let start, end;
-      if(!val || val.toLowerCase() === 'this month'){
-        const now = new Date();
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date(now.getFullYear(), now.getMonth()+1, 0);
-      } else {
-        const parts = val.split(/\s+to\s+|\s+-\s+/i).map(s=>s.trim()).filter(Boolean);
-        if(parts[0]){ const s = new Date(parts[0]); if(!isNaN(s)) start = s; }
-        if(parts[1]){ const e = new Date(parts[1]); if(!isNaN(e)) end = e; }
-      }
+      const parts = val.split(/\s+to\s+|\s+-\s+/i).map(s=>s.trim()).filter(Boolean);
+      if(parts[0]){ const s = new Date(parts[0]); if(!isNaN(s)) start = s; }
+      if(parts[1]){ const e = new Date(parts[1]); if(!isNaN(e)) end = e; }
       return p.dates.some(d => {
         const dt = new Date(d);
         if(start && dt < start) return false;
