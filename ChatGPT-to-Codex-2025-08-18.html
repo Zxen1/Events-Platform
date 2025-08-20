@@ -2537,6 +2537,40 @@ function makePosts(){
     const footRow = $('#footRow');
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
+
+    function captureState(){
+      return {
+        bounds: map ? map.getBounds().toArray() : null,
+        kw: $('#kwInput').value,
+        date: $('#dateInput').value,
+        cats: [...selection.cats],
+        subs: [...selection.subs]
+      };
+    }
+
+    function restoreState(st){
+      if(!st) return;
+      $('#kwInput').value = st.kw || '';
+      $('#dateInput').value = st.date || 'This month';
+      selection.cats = new Set(st.cats || []);
+      selection.subs = new Set(st.subs || []);
+      $$('.cat').forEach(el=>{
+        const label = el.querySelector('.label').textContent;
+        const expanded = selection.cats.has(label);
+        el.setAttribute('aria-expanded', expanded?'true':'false');
+        el.querySelectorAll('.sub .chip').forEach(ch=>{
+          const subName = ch.textContent.trim();
+          const key = label+'::'+subName;
+          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
+        });
+      });
+      if(map && st.bounds){
+        const bounds = new mapboxgl.LngLatBounds(st.bounds);
+        map.fitBounds(bounds, {duration:0});
+        postPanel = bounds;
+      }
+      applyFilters();
+    }
     function renderFooter(){
       footRow.innerHTML='';
       if(!viewHistory.length){ return; }
@@ -2546,7 +2580,7 @@ function makePosts(){
         const p = posts.find(x=>x.id===v.id);
         const el = document.createElement('div'); el.className='chip-small foot-item'; el.title=v.title+' — '+v.city;
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div><button class="fav" aria-pressed="${p && p.fav?'true':'false'}" aria-label="Toggle favourite"><svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>`;
-        el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(v.id); });
+        el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; if(v.state) restoreState(v.state); openPost(v.id); });
         const favBtn = el.querySelector('.fav');
         favBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
         footRow.appendChild(el);
@@ -2650,7 +2684,7 @@ function makePosts(){
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, city:p.city});
+      viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
     }
