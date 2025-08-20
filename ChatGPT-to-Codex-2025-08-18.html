@@ -187,9 +187,9 @@ body{
 #filterModal .btn,
 #adminModal button,
 #memberModal button{
-  background:#fff;
-  border-color:#fff;
-  color:#000;
+  background:var(--btn);
+  border-color:var(--btn);
+  color:inherit;
 }
   @media (max-width:600px){
   #adminModal .modal-content,
@@ -620,14 +620,14 @@ body{
   overflow:auto;
   min-height:0;
   padding:0 6px;
-  color:#000;
+  color:var(--ink);
   background:rgba(0,0,0,0.7);
 }
 .posts-mode .res-list{overflow:visible;padding:12px 0 0;}
-.posts-mode, .posts-mode *{color:#000;}
+.posts-mode, .posts-mode *{color:var(--ink);}
 .posts-mode .card,
-.posts-mode .detail-inline{background:#FFF8E1;}
-.posts-mode button{background:#2a345b;border-color:#2a345b;color:#fff;}
+.posts-mode .detail-inline{background:var(--list-background);}
+.posts-mode button{background:var(--btn);border-color:var(--btn);color:inherit;}
 .posts-mode .detail-inline{margin-top:6px}
 
 .mode-posts .posts-mode{
@@ -1257,12 +1257,12 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
 
-    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px;color:#000;background:rgba(0,0,0,0.7)}
-    .posts-mode .res-list{overflow:visible;padding:12px 0 0}
-    .posts-mode,.posts-mode *{color:#000}
-    .posts-mode .card,.posts-mode .detail-inline{background:#FFF8E1}
-    .posts-mode button{background:#2a345b;border-color:#2a345b;color:#fff}
-    .posts-mode .detail-inline{margin-top:6px}
+      .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px;color:var(--ink);background:rgba(0,0,0,0.7)}
+      .posts-mode .res-list{overflow:visible;padding:12px 0 0}
+      .posts-mode,.posts-mode *{color:var(--ink)}
+      .posts-mode .card,.posts-mode .detail-inline{background:var(--list-background)}
+      .posts-mode button{background:var(--btn);border-color:var(--btn);color:inherit}
+      .posts-mode .detail-inline{margin-top:6px}
     .mode-posts .posts-mode{display:block}
     
     .mode-map .posts-mode{display:none}
