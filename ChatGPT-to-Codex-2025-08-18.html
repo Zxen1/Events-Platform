@@ -608,7 +608,8 @@ body{
   width:100%;
   overflow:auto;
   min-height:0;
-  padding:0 6px;
+  padding:0;
+  /* Posts panel overlays the map area exactly */
   background:rgba(0,0,0,0.7);
   color:#000;
 }
@@ -643,6 +644,7 @@ body{
 .calendar{
   display: none;
   height: 100%;
+  width: 100%;
   align-items: center;
   justify-content: center;
   color: var(--muted);
@@ -2021,6 +2023,8 @@ function makePosts(){
 
     const resultsEl = $('#results');
     const postsWideEl = $('#postsWide');
+    // Posts panel shares the exact size and position as the map
+    const postsPanel = document.querySelector('.posts-mode');
 
     function renderLists(list){
       const sort = $('#sortSelect').value;
@@ -2163,9 +2167,9 @@ function makePosts(){
     }
 
     function scrollPostIntoPanel(el){
-      const container = el.closest('.posts-mode');
-      if(container){
-        container.scrollTop = Math.max(el.offsetTop - 6, 0);
+      // ensure the selected post appears 6px below the panel's top edge
+      if(postsPanel){
+        postsPanel.scrollTop = Math.max(el.offsetTop - 6, 0);
       }
     }
 
