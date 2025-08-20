@@ -2160,10 +2160,10 @@ function makePosts(){
     $('#tab-calendar').addEventListener('click',()=> setMode('calendar'));
 
     $('.posts-mode').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card')) setMode('map');
+      if(!e.target.closest('.card, .detail-inline')) setMode('map');
     });
     $('.calendar').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card')) setMode('map');
+      if(!e.target.closest('.card, .detail-inline')) setMode('map');
     });
 
     // Mapbox
