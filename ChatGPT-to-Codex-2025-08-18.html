@@ -237,6 +237,9 @@ body{
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
 #adminModal .preset-actions input{flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;}
 #adminModal .preset-actions button{padding:6px 10px;}
+#adminModal .toggle{display:flex;border:1px solid #ccc;border-radius:6px;overflow:hidden;}
+#adminModal .toggle button{flex:1;padding:6px 10px;border:0;background:#eee;cursor:pointer;}
+#adminModal .toggle button.active{background:#ddd;font-weight:600;}
 .modal-field{
   margin:8px 0;
   display:flex;
@@ -1726,10 +1729,14 @@ footer .foot-row .foot-item img {
             <span id="spinSpeedVal"></span>
           </div>
           <div class="modal-field">
-            <label><input type="checkbox" id="spinLoadAll"> Spin on load (everyone)</label>
+            <label><input type="checkbox" id="spinStartLoad"> Start on load</label>
           </div>
           <div class="modal-field">
-            <label><input type="checkbox" id="spinLoadNew"> Spin on load (new users)</label>
+            <label>Type</label>
+            <div class="toggle" id="spinTypeToggle">
+              <button type="button" data-type="all">Everyone</button>
+              <button type="button" data-type="new">New Users</button>
+            </div>
           </div>
           <div class="modal-field">
             <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
@@ -1768,14 +1775,17 @@ footer .foot-row .foot-item img {
 
     let mode = 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
+    const DEFAULT_ZOOM = 1.5;
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
+    let savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
+    const initialZoom = savedView?.zoom || DEFAULT_ZOOM;
     let map, spinning = false,
-        spinLoadAll = JSON.parse(localStorage.getItem('spinLoadAll') || 'true'),
-        spinLoadNew = JSON.parse(localStorage.getItem('spinLoadNew') || 'false'),
+        spinLoadType = localStorage.getItem('spinLoadType') || 'all',
+        spinStartLoad = JSON.parse(localStorage.getItem('spinStartLoad') || 'true'),
         spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
         spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
-        spinEnabled = spinLoadAll || (spinLoadNew && firstVisit);
+        spinEnabled = spinStartLoad && spinSpeed > 0 && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
     localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
     const logoEl = document.querySelector('.logo');
     logoEl?.addEventListener('click', () => {
@@ -1784,7 +1794,7 @@ footer .foot-row .foot-item img {
       localStorage.setItem('spinGlobe', 'true');
       if(map){
         stopSpin();
-        map.flyTo({center:[0,0], zoom:0, pitch:0});
+        map.flyTo({center:[0,0], zoom:initialZoom, pitch:0});
         map.once('moveend', startSpin);
       }else{
         startSpin();
@@ -2243,13 +2253,12 @@ function makePosts(){
 
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
       map = new mapboxgl.Map({
         container:'map',
         style:'mapbox://styles/mapbox/outdoors-v12',
         projection:'globe',
         center: savedView?.center || [0,0],
-        zoom: savedView?.zoom || 1.5,
+        zoom: initialZoom,
         pitch: savedView?.pitch || 0,
         attributionControl:true
       });
@@ -2275,6 +2284,7 @@ function makePosts(){
         const zoom = map.getZoom();
         const pitch = map.getPitch();
         localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch}));
+        savedView = {center, zoom, pitch};
       });
     }
 
@@ -2294,7 +2304,7 @@ function makePosts(){
     }
 
     function updateSpinState(){
-      const shouldSpin = spinLoadAll || (spinLoadNew && firstVisit);
+      const shouldSpin = spinStartLoad && spinSpeed > 0 && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
@@ -2950,6 +2960,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
     adminBtn && adminBtn.addEventListener('click', ()=>{
       syncAdminControls();
+      syncSpinControls();
       toggleModal(adminModal);
     });
   filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
@@ -3065,6 +3076,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if((type==='bg' || type==='card') && oInput) oInput.value = alpha;
       });
     });
+  }
+
+  function syncSpinControls(){
+    const speedInput = document.getElementById("spinSpeed");
+    const speedVal = document.getElementById("spinSpeedVal");
+    const startLoadInput = document.getElementById("spinStartLoad");
+    const typeToggle = document.getElementById("spinTypeToggle");
+    const logoClickInput = document.getElementById("spinLogoClick");
+    if(speedInput && speedVal){
+      speedInput.value = spinSpeed;
+      speedVal.textContent = spinSpeed.toFixed(2);
+    }
+    if(startLoadInput) startLoadInput.checked = spinStartLoad;
+    if(typeToggle) typeToggle.querySelectorAll("button").forEach(btn=> btn.classList.toggle("active", btn.dataset.type === spinLoadType));
+    if(logoClickInput) logoClickInput.checked = spinLogoClick;
   }
 
   function buildStyleControls(){
@@ -3258,51 +3284,52 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(adminForm){
       const speedInput = document.getElementById("spinSpeed");
       const speedVal = document.getElementById("spinSpeedVal");
-      const loadAllInput = document.getElementById("spinLoadAll");
-      const loadNewInput = document.getElementById("spinLoadNew");
+      const startLoadInput = document.getElementById("spinStartLoad");
+      const typeToggle = document.getElementById("spinTypeToggle");
       const logoClickInput = document.getElementById("spinLogoClick");
+
+      syncSpinControls();
+
       if(speedInput && speedVal){
-        speedInput.value = spinEnabled ? spinSpeed : 0;
-        speedVal.textContent = spinEnabled ? speedInput.value : "Off";
         speedInput.addEventListener("input", ()=>{
           const val = Math.max(0, parseFloat(speedInput.value) || 0);
-          spinEnabled = val > 0;
           spinSpeed = val;
-          speedVal.textContent = spinEnabled ? val.toFixed(2) : "Off";
-          localStorage.setItem("spinGlobe", JSON.stringify(spinEnabled));
+          speedVal.textContent = val.toFixed(2);
           localStorage.setItem("spinSpeed", String(spinSpeed));
+          spinEnabled = val > 0;
+          localStorage.setItem("spinGlobe", JSON.stringify(spinEnabled));
           if(spinEnabled) startSpin(); else stopSpin();
         });
       }
-      if(loadAllInput){
-        loadAllInput.checked = spinLoadAll;
-        loadAllInput.addEventListener("change", ()=>{
-          spinLoadAll = loadAllInput.checked;
-          localStorage.setItem("spinLoadAll", JSON.stringify(spinLoadAll));
+      if(startLoadInput){
+        startLoadInput.addEventListener("change", ()=>{
+          spinStartLoad = startLoadInput.checked;
+          localStorage.setItem("spinStartLoad", JSON.stringify(spinStartLoad));
           updateSpinState();
         });
       }
-      if(loadNewInput){
-        loadNewInput.checked = spinLoadNew;
-        loadNewInput.addEventListener("change", ()=>{
-          spinLoadNew = loadNewInput.checked;
-          localStorage.setItem("spinLoadNew", JSON.stringify(spinLoadNew));
-          updateSpinState();
+      if(typeToggle){
+        typeToggle.querySelectorAll("button").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            spinLoadType = btn.dataset.type;
+            localStorage.setItem("spinLoadType", spinLoadType);
+            typeToggle.querySelectorAll("button").forEach(b=> b.classList.toggle("active", b===btn));
+            updateSpinState();
+          });
         });
       }
       if(logoClickInput){
-        logoClickInput.checked = spinLogoClick;
         logoClickInput.addEventListener("change", ()=>{
           spinLogoClick = logoClickInput.checked;
           localStorage.setItem("spinLogoClick", JSON.stringify(spinLogoClick));
         });
       }
       adminForm.addEventListener("input", e=>{
-        if(e.target.id === "spinSpeed") return;
+        if(["spinSpeed","spinStartLoad","spinLogoClick"].includes(e.target.id) || e.target.closest('#spinTypeToggle')) return;
         applyAdmin(e.target);
       });
       adminForm.addEventListener("change", e=>{
-        if(e.target.id === "spinSpeed") return;
+        if(["spinSpeed","spinStartLoad","spinLogoClick"].includes(e.target.id) || e.target.closest('#spinTypeToggle')) return;
         applyAdmin(e.target);
       });
     }
