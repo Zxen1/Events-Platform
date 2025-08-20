@@ -493,7 +493,7 @@ body{
 
 .res-list{
   overflow: auto;
-  padding-right: 6px;
+  padding: 0 6px;
   flex: 1;
   min-height: 0;
 }
@@ -606,7 +606,7 @@ body{
   color:#000;
   background:rgba(0,0,0,0.7);
 }
-.posts-mode .res-list{overflow:visible;padding:12px 0 0;}
+.posts-mode .res-list{overflow:visible;padding:12px 6px 0;}
 .posts-mode, .posts-mode *{color:#000;}
 .posts-mode .card,
 .posts-mode .detail-inline{background:#FFF8E1;}
@@ -2195,6 +2195,7 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
+      applyAdmin();
       detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
 
       const favBtn = detail.querySelector('[data-act="fav"]');
@@ -2211,6 +2212,7 @@ function makePosts(){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
+        applyAdmin();
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
