@@ -1770,7 +1770,13 @@ footer .foot-row .foot-item img {
     logoEl?.addEventListener('click', () => {
       spinEnabled = true;
       localStorage.setItem('spinGlobe', 'true');
-      startSpin();
+      if(map){
+        stopSpin();
+        map.flyTo({center:[0,0], zoom:0, pitch:0});
+        map.once('moveend', startSpin);
+      }else{
+        startSpin();
+      }
     });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
@@ -2235,6 +2241,10 @@ function makePosts(){
         pitch: savedView?.pitch || 0,
         attributionControl:true
       });
+      try{
+        map.scrollZoom.setWheelZoomRate(1/240);
+        map.scrollZoom.setZoomRate(1/240);
+      }catch{}
       map.on('style.load', () => {
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         if (typeof map.setSky === 'function') {
