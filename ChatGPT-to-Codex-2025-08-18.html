@@ -1625,11 +1625,11 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="YYYY-MM-DD to YYYY-MM-DD" />
-              <div id="dateIcon" class="picker" role="button" aria-label="Open date picker">📅</div>
-              <div class="x" role="button" aria-label="Clear date">X</div>
+              <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="YYYY-MM-DD to YYYY-MM-DD" readonly />
+                <div id="dateIcon" class="picker" role="button" aria-label="Open date picker">📅</div>
+                <div class="x" role="button" aria-label="Clear date">X</div>
+              </div>
             </div>
-          </div>
 
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
@@ -2139,7 +2139,6 @@ function makePosts(){
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
-    $('#dateInput').addEventListener('input', applyFilters);
     picker = new Litepicker({
       element: $('#dateInput'),
       singleMode: false,
@@ -2147,12 +2146,22 @@ function makePosts(){
       position: 'bottom-left',
       minDate: new Date(),
       maxDate: new Date(new Date().getFullYear(), new Date().getMonth()+12, 31),
-      scrollMonths: true
+      scrollMonths: true,
+      delimiter: ' to '
     });
     picker.on('selected', () => applyFilters());
     $('#dateIcon').addEventListener('click', () => picker.show());
+    $('#dateInput').addEventListener('click', () => picker.show());
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
+      const input = x.parentElement.querySelector('input');
+      if(input){
+        input.value='';
+        if(input.id==='dateInput' && picker){ picker.clearSelection(); }
+        input.focus();
+        applyFilters();
+      }
+    }));
 
     function updateOverlayColor(){
       let bg = 'rgba(0,0,0,0)';
