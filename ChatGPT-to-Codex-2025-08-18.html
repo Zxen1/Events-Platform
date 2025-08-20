@@ -2180,10 +2180,11 @@ function makePosts(){
 
       const container = target.closest('.posts-mode');
       if(fromPosts && container){
-        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10);
-        container.scrollTop = top;
+        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 6;
+        container.scrollTop = Math.max(top, 0);
       } else {
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+        if(container){ container.scrollTop = Math.max(container.scrollTop - 6, 0); }
       }
 
       const detail = buildDetail(p);
