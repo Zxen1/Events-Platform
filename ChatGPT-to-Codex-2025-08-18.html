@@ -2440,9 +2440,19 @@ function makePosts(){
     postsModeEl.addEventListener('scroll', () => {
       const last = postsWideEl.lastElementChild;
       if(!last) return;
-      const limit = postsModeEl.getBoundingClientRect().top + 12;
-      const lastTop = last.getBoundingClientRect().top;
-      if(lastTop < limit){ postsModeEl.scrollTop -= (limit - lastTop); }
+      const postsTop = postsModeEl.getBoundingClientRect().top;
+      const limitTop = postsTop + 12;
+      const rect = last.getBoundingClientRect();
+      const lastTop = rect.top;
+      const lastBottom = rect.bottom;
+      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+      const footerTop = window.innerHeight - footerH;
+      const desiredBottom = footerTop - 12;
+      if(lastBottom > desiredBottom){
+        postsModeEl.scrollTop -= (lastBottom - desiredBottom);
+      } else if(lastTop < limitTop){
+        postsModeEl.scrollTop -= (limitTop - lastTop);
+      }
     });
 
     function renderLists(list){
