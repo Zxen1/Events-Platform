@@ -2695,6 +2695,7 @@ function makePosts(){
     }
 
     async function openPost(id, fromPosts=false){
+      stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
       if(mode !== 'posts'){
         setMode('posts');
@@ -3223,41 +3224,34 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   loadPresets();
   loadSavedTheme();
 
-  const adminForm = document.getElementById('adminForm');
-  if(adminForm){
-    const spinInput = document.getElementById('spinGlobe');
-    if(spinInput) spinInput.checked = spinEnabled;
-    const speedInput = document.getElementById('spinSpeed');
-    if(speedInput) speedInput.value = spinSpeed;
-    adminForm.addEventListener('input', e=>{
-      if(e.target.id === 'spinGlobe'){
-        spinEnabled = e.target.checked;
-        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-        if(spinEnabled) startSpin(); else stopSpin();
-        return;
+    const adminForm = document.getElementById('adminForm');
+    if(adminForm){
+      const spinInput = document.getElementById('spinGlobe');
+      if(spinInput){
+        spinInput.checked = spinEnabled;
+        spinInput.addEventListener('change', ()=>{
+          spinEnabled = spinInput.checked;
+          localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+          if(spinEnabled) startSpin(); else stopSpin();
+        });
       }
-      if(e.target.id === 'spinSpeed'){
-        spinSpeed = Math.max(0, parseFloat(e.target.value) || 0);
-        localStorage.setItem('spinSpeed', String(spinSpeed));
-        return;
+      const speedInput = document.getElementById('spinSpeed');
+      if(speedInput){
+        speedInput.value = spinSpeed;
+        speedInput.addEventListener('input', ()=>{
+          spinSpeed = Math.max(0, parseFloat(speedInput.value) || 0);
+          localStorage.setItem('spinSpeed', String(spinSpeed));
+        });
       }
-      applyAdmin(e.target);
-    });
-    adminForm.addEventListener('change', e=>{
-      if(e.target.id === 'spinGlobe'){
-        spinEnabled = e.target.checked;
-        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-        if(spinEnabled) startSpin(); else stopSpin();
-        return;
-      }
-      if(e.target.id === 'spinSpeed'){
-        spinSpeed = Math.max(0, parseFloat(e.target.value) || 0);
-        localStorage.setItem('spinSpeed', String(spinSpeed));
-        return;
-      }
-      applyAdmin(e.target);
-    });
-  }
+      adminForm.addEventListener('input', e=>{
+        if(e.target.id === 'spinGlobe' || e.target.id === 'spinSpeed') return;
+        applyAdmin(e.target);
+      });
+      adminForm.addEventListener('change', e=>{
+        if(e.target.id === 'spinGlobe' || e.target.id === 'spinSpeed') return;
+        applyAdmin(e.target);
+      });
+    }
 
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
