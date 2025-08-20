@@ -2189,7 +2189,7 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
-      applyAdmin();
+      if(window.applyAdmin){ window.applyAdmin(); }
       detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
 
       const favBtn = detail.querySelector('[data-act="fav"]');
@@ -2206,7 +2206,7 @@ function makePosts(){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
-        applyAdmin();
+        if(window.applyAdmin){ window.applyAdmin(); }
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
@@ -2572,6 +2572,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const themeStr = JSON.stringify(collectThemeValues());
     localStorage.setItem('currentTheme', themeStr);
   }
+  window.applyAdmin = applyAdmin;
 
   function collectThemeValues(){
     const data = {};
