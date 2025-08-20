@@ -1610,10 +1610,7 @@ footer .foot-row .foot-item img {
           <div>
             <h3>Location</h3>
             <div class="field" role="search">
-              <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
-                <div class="x" role="button" aria-label="Clear location">X</div>
-              </div>
-              <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
+              <div id="geocoder" class="input" aria-label="Location"></div>
             </div>
 
             <h3>Keywords</h3>
@@ -1741,7 +1738,7 @@ footer .foot-row .foot-item img {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    let map, spinning = true;
+    let map, geocoder, spinning = true;
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
@@ -2133,7 +2130,7 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value=''; $('#locationInput').value='';
+      $('#kwInput').value=''; $('#dateInput').value=''; geocoder && geocoder.clear();
       picker && picker.clearSelection();
       applyFilters();
     });
@@ -2208,11 +2205,18 @@ function makePosts(){
 
     // Mapbox
     function loadMapbox(cb){
-      if(window.mapboxgl) return cb();
+      if(window.mapboxgl && window.MapboxGeocoder) return cb();
       const link = document.createElement('link'); link.rel='stylesheet'; link.href='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
       document.head.appendChild(link);
+      const link2 = document.createElement('link'); link2.rel='stylesheet'; link2.href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css';
+      document.head.appendChild(link2);
       const s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
-      s.onload = cb; document.head.appendChild(s);
+      s.onload = () => {
+        const s2 = document.createElement('script');
+        s2.src = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
+        s2.onload = cb; document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
     }
     loadMapbox(initMap);
 
@@ -2227,6 +2231,21 @@ function makePosts(){
         pitch:0,
         attributionControl:true
       });
+      const geoControl = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true } });
+      geoControl.on('geolocate', stopSpin);
+      map.addControl(geoControl, 'top-left');
+      geocoder = new MapboxGeocoder({
+        accessToken: MAPBOX_TOKEN,
+        mapboxgl: mapboxgl,
+        marker: false,
+        placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
+      });
+      geocoder.on('result', async (e)=>{
+        stopSpin();
+        map.flyTo({ center: e.result.center, zoom: Math.max(8, map.getZoom()) });
+        await sleep(500); applyFilters();
+      });
+      $('#geocoder').appendChild(geocoder.onAdd(map));
       map.on('style.load', () => {
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
@@ -2240,35 +2259,7 @@ function makePosts(){
     function startSpin(){ spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
     function stopSpin(){ spinning = false; }
 
-    $('#btnGeo').addEventListener('click', ()=>{
-      stopSpin();
-      if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos=>{
-          const {longitude:lng, latitude:lat} = pos.coords;
-          if(map) map.flyTo({center:[lng,lat], zoom:10});
-        });
-      }
-    });
-
-    // Geocode
-    const locInput = $('#locationInput');
-    locInput.placeholder = 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia';
-    locInput.addEventListener('keydown', async (e)=>{
-      if(e.key !== 'Enter') return;
-      const q = locInput.value.trim(); if(!q) return;
-      try{
-        locInput.disabled = true;
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const f = data.features && data.features[0];
-        if(f && f.center){
-          stopSpin(); map.flyTo({center:f.center, zoom: Math.max(8, map.getZoom())});
-          await sleep(500); applyFilters(); locInput.style.borderColor = '#1ee6a1';
-        } else { locInput.style.borderColor = '#ff6b6b'; }
-      }catch(err){ console.error(err); locInput.style.borderColor = '#ff6b6b'; }
-      finally{ setTimeout(()=>{locInput.style.borderColor=''; locInput.disabled=false;}, 900); }
-    });
+    // Geocode handled by MapboxGeocoder
 
     // Map layers
     function postsToGeoJSON(list){
