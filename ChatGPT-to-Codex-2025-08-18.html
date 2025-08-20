@@ -2204,6 +2204,14 @@ function makePosts(){
     }
     loadMapbox(initMap);
 
+    function handleStyleLoad(){
+      map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
+      map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
+      addPostSource();
+      applyFilters();
+      updatePostPanel();
+    }
+
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
         const style = pendingMapStyle || localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
@@ -2217,13 +2225,7 @@ function makePosts(){
           pitch:0,
           attributionControl:true
         });
-        map.on('style.load', () => {
-          map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
-          map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
-          addPostSource();
-          applyFilters();
-          updatePostPanel();
-        });
+        map.once('style.load', handleStyleLoad);
         map.on('load', ()=>{ $('.map-overlay').style.display='none'; startSpin(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
@@ -3164,6 +3166,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         pendingMapStyle = styleUrl;
         return;
       }
+      map.once('style.load', handleStyleLoad);
       map.setStyle(styleUrl);
     }
 
