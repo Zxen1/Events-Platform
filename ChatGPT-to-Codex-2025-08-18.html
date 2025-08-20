@@ -633,6 +633,9 @@ body{
 .mode-calendar .results-col{
   display: none;
 }
+.mode-calendar .calendar{
+  display: flex;
+}
 
 .calendar{
   display: none;
@@ -1057,11 +1060,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .mode-posts .map-wrap,
 .mode-calendar .map-wrap{
-  display: block;
-  grid-column: 2/3;
-  grid-row: 1;
-  z-index: 0;
-}
+    display: block;
+    z-index: 0;
+  }
 
 .map-wrap{
   background: var(--main-background);
@@ -1075,24 +1076,20 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   position: relative;
 }
 
-.main .posts-mode{
+/* Post Panel (map area): Map, Posts, and Calendar share identical size and position */
+.main .map-wrap,
+.main .posts-mode,
+.main .calendar{
   grid-column: 2/3;
   grid-row: 1;
-  position: relative;
-  z-index: 1;
-}
-
-.main .calendar{
-  grid-column: 1/2;
-  grid-row: 1;
-  position: relative;
-  z-index: 1;
+  width: 100%;
+  height: 100%;
 }
 
 .mode-posts #postsWide{
-  border: none;
-  background: transparent;
-}
+    border: none;
+    background: transparent;
+  }
 
 .mode-posts #postsWide .res-list{
   background: transparent;
@@ -1169,14 +1166,15 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
         <div class="res-list" id="results"></div>
       </section>
 
-    <section class="map-wrap" aria-label="Map">
+      <!-- Post Panel: Map, Posts, and Calendar occupy this exact area -->
+      <section class="map-wrap" aria-label="Map">
       <div id="map"></div>
       <div class="map-overlay">Loading Map…</div>
     </section>
-    <section class="posts-mode" aria-label="Posts">
+      <section class="posts-mode" aria-label="Posts">
       <div class="res-list" id="postsWide"></div>
     </section>
-    <section class="calendar" aria-label="Calendar">
+      <section class="calendar" aria-label="Calendar">
       Calendar (placeholder)
     </section>
   </main>
@@ -1328,7 +1326,8 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
-    let mode = 'map';
+      // Post Panel: map-sized area shared by Map, Posts, and Calendar views
+      let mode = 'map';
     let map, spinning = true;
     let posts = [], filtered = [];
     let selection = { cats: new Set(), subs: new Set() };
