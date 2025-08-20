@@ -2272,10 +2272,10 @@ function makePosts(){
         openListPopupAtPoint(e.point, buildClusterListHTML(items));
 
         (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch{} try{ ev.stopPropagation(); }catch{} }
+          function consume(ev){ try{ ev.stopPropagation(); }catch{} }
           const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            ['pointerdown','mousedown','mouseup','click','wheel'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
           }
         })();
     
@@ -2350,10 +2350,10 @@ function makePosts(){
           openListPopupAtPoint(e.point, buildClusterListHTML(multi));
 
         (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch{} try{ ev.stopPropagation(); }catch{} }
+          function consume(ev){ try{ ev.stopPropagation(); }catch{} }
           const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            ['pointerdown','mousedown','mouseup','click','wheel'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
           }
         })();
     
@@ -2386,10 +2386,10 @@ function makePosts(){
           registerPopup(hoverPopup);
 
         (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch{} try{ ev.stopPropagation(); }catch{} }
+          function consume(ev){ try{ ev.stopPropagation(); }catch{} }
           const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            ['pointerdown','mousedown','mouseup','click','wheel'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
           }
         })();
     
