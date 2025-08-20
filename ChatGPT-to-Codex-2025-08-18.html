@@ -1727,7 +1727,7 @@ footer .foot-row .foot-item img {
           </div>
           <div class="modal-field">
             <label for="spinSpeed">Spin speed</label>
-            <input type="number" id="spinSpeed" min="0" step="0.01" value="0.03" />
+            <input type="number" id="spinSpeed" min="0" step="0.01" value="0.6" />
           </div>
         </div>
         <div id="tab-settings" class="tab-panel">
@@ -1762,7 +1762,10 @@ footer .foot-row .foot-item img {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    let map, spinning = false, spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true'), spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || '0.03');
+    const DEFAULT_SPIN_SPEED = 360 / (10 * 60); // one revolution per 10s at ~60fps
+    let map, spinning = false,
+        spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true'),
+        spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED));
     const logoEl = document.querySelector('.logo');
     logoEl?.addEventListener('click', () => {
       spinEnabled = true;
@@ -2360,12 +2363,14 @@ function makePosts(){
       });
 
       map.on('click','clusters', (e)=>{
+        stopSpin();
         const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         const clusterId = features[0].properties.cluster_id;
         map.getSource('posts').getClusterExpansionZoom(clusterId, (err, zoom) => { if (err) return; map.easeTo({ center: features[0].geometry.coordinates, zoom }); });
       });
       
       map.on('click','unclustered', (e)=>{
+        stopSpin();
         const f = e.features && e.features[0]; if(!f) return;
         const coords = f.geometry && f.geometry.coordinates;
         if(coords && coords.length>=2){
@@ -2620,6 +2625,7 @@ function makePosts(){
         });
       });
       if(map && st.bounds){
+        stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
         map.fitBounds(bounds, {duration:0});
         postPanel = bounds;
@@ -2757,7 +2763,13 @@ function makePosts(){
         el.replaceWith(replacedCard);
         if(container){ ensureGap(container, replacedCard); }
       });
-      el.querySelector('[data-act="center"]').addEventListener('click', ()=>{ if(map){ map.flyTo({center:[p.lng,p.lat], zoom:10}); } setMode('map'); });
+      el.querySelector('[data-act="center"]').addEventListener('click', ()=>{
+        if(map){
+          stopSpin();
+          map.flyTo({center:[p.lng,p.lat], zoom:10});
+        }
+        setMode('map');
+      });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
         p.fav=!p.fav;
         e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
