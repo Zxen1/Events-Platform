@@ -2440,7 +2440,7 @@ function makePosts(){
         const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
         root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
         root.querySelectorAll('.multi-item').forEach(n => n.addEventListener('click', ()=>{
-          const id = n.getAttribute('data-id'); close(); openPost(id);
+          const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id);
         }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
@@ -2466,7 +2466,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item').forEach(n => n.addEventListener('click', ()=>{ const id = n.getAttribute('data-id'); close(); openPost(id); }));
+            root.querySelectorAll('.multi-item').forEach(n => n.addEventListener('click', ()=>{ const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -2477,7 +2477,7 @@ function makePosts(){
                   var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item') : null;
                   if(row){
                     var pid = row.getAttribute('data-id');
-                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); openPost(pid); return; }
+                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid); return; }
                   }
                 }, {capture:true});
               }
@@ -2524,7 +2524,7 @@ function makePosts(){
               var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item') : null;
               if(row){
                 var pid = row.getAttribute('data-id');
-                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } openPost(pid); return; }
+                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid); return; }
               }
             }, {capture:true});
           }
@@ -2557,7 +2557,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
-              try{ openPost(id); }catch(e){ console.warn('openPost id missing', e); }
+              try{ stopSpin(); openPost(id); }catch(e){ console.warn('openPost id missing', e); }
             }, {capture:true});
           }
         })();
@@ -2667,7 +2667,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; openPost(p.id, wide); });
+      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); openPost(p.id, wide); });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
         e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false');
@@ -2725,7 +2725,7 @@ function makePosts(){
         const p = posts.find(x=>x.id===v.id);
         const el = document.createElement('div'); el.className='chip-small foot-item'; el.title=v.title+' — '+v.city;
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div><button class="fav" aria-pressed="${p && p.fav?'true':'false'}" aria-label="Toggle favourite"><svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>`;
-        el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; if(v.state) restoreState(v.state); openPost(v.id); });
+        el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
         const favBtn = el.querySelector('.fav');
         favBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
         footRow.appendChild(el);
@@ -2859,6 +2859,7 @@ function makePosts(){
         p.fav=!p.fav;
         e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
         renderLists(filtered);
+        stopSpin();
         openPost(p.id, !!el.closest('.posts-mode'));
       });
     }
