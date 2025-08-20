@@ -1688,6 +1688,7 @@ footer .foot-row .foot-item img {
         </div>
         <div class="tab-bar">
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+          <button type="button" class="tab-btn" data-tab="mapbox">Mapbox</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
@@ -1703,6 +1704,18 @@ footer .foot-row .foot-item img {
           </div>
           <h3>Theme Customization</h3>
           <div id="styleControls"></div>
+        </div>
+        <div id="tab-mapbox" class="tab-panel">
+          <div class="modal-field">
+            <label for="mapboxStyleSelect">Map style</label>
+            <select id="mapboxStyleSelect">
+              <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
+              <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
+              <option value="mapbox://styles/mapbox/light-v11">Light</option>
+              <option value="mapbox://styles/mapbox/dark-v11">Dark</option>
+              <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite Streets</option>
+            </select>
+          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -1734,6 +1747,7 @@ footer .foot-row .foot-item img {
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
+    const DEFAULT_MAP_STYLE = 'mapbox://styles/mapbox/outdoors-v12';
 
     let mode = 'map';
     let map, spinning = true;
@@ -2191,9 +2205,10 @@ function makePosts(){
 
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
+      const style = localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
       map = new mapboxgl.Map({
         container:'map',
-        style:'mapbox://styles/mapbox/outdoors-v12',
+        style,
         projection:'globe',
         center:[144.9695,-37.8178],
         zoom:14,
@@ -3138,6 +3153,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       document.getElementById('newPresetName').value = '';
     }
   });
+
+  const mapStyleSelect = document.getElementById('mapboxStyleSelect');
+  if(mapStyleSelect){
+    const savedStyle = localStorage.getItem('mapboxStyle') || DEFAULT_MAP_STYLE;
+    mapStyleSelect.value = savedStyle;
+    mapStyleSelect.addEventListener('change', e=>{
+      const styleUrl = e.target.value;
+      localStorage.setItem('mapboxStyle', styleUrl);
+      if(map){
+        map.setStyle(styleUrl);
+        map.once('style.load', () => {
+          addPostSource();
+          applyFilters();
+          updatePostPanel();
+        });
+      }
+    });
+  }
 
   const palette = document.getElementById('fieldPalette');
   const builder = document.getElementById('formBuilder');
