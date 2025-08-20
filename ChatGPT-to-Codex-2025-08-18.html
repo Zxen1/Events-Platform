@@ -1725,6 +1725,10 @@ footer .foot-row .foot-item img {
               Spin globe on load & logo
             </label>
           </div>
+          <div class="modal-field">
+            <label for="spinSpeed">Spin speed</label>
+            <input type="number" id="spinSpeed" min="0" step="0.01" value="0.03" />
+          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -1758,7 +1762,7 @@ footer .foot-row .foot-item img {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    let map, spinning = false, spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true');
+    let map, spinning = false, spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true'), spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || '0.03');
     const logoEl = document.querySelector('.logo');
     logoEl?.addEventListener('click', () => {
       spinEnabled = true;
@@ -2255,7 +2259,7 @@ function makePosts(){
       function step(){
         if(!spinning || !map) return;
         const c = map.getCenter();
-        map.setCenter([c.lng + 0.03, c.lat]);
+        map.setCenter([c.lng + spinSpeed, c.lat]);
         requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
@@ -3211,11 +3215,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   if(adminForm){
     const spinInput = document.getElementById('spinGlobe');
     if(spinInput) spinInput.checked = spinEnabled;
+    const speedInput = document.getElementById('spinSpeed');
+    if(speedInput) speedInput.value = spinSpeed;
     adminForm.addEventListener('input', e=>{
       if(e.target.id === 'spinGlobe'){
         spinEnabled = e.target.checked;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) startSpin(); else stopSpin();
+        return;
+      }
+      if(e.target.id === 'spinSpeed'){
+        spinSpeed = Math.max(0, parseFloat(e.target.value) || 0);
+        localStorage.setItem('spinSpeed', String(spinSpeed));
         return;
       }
       applyAdmin(e.target);
@@ -3225,6 +3236,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         spinEnabled = e.target.checked;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) startSpin(); else stopSpin();
+        return;
+      }
+      if(e.target.id === 'spinSpeed'){
+        spinSpeed = Math.max(0, parseFloat(e.target.value) || 0);
+        localStorage.setItem('spinSpeed', String(spinSpeed));
         return;
       }
       applyAdmin(e.target);
