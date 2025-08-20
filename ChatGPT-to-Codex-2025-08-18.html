@@ -74,6 +74,7 @@ body{
   font-weight: 800;
   letter-spacing: .4px;
   user-select: none;
+  cursor: pointer;
 }
 
 .logo img{
@@ -1720,7 +1721,7 @@ footer .foot-row .foot-item img {
         <div id="tab-mapbox" class="tab-panel">
           <div class="modal-field">
             <label>
-              <input type="checkbox" id="spinGlobe" />
+              <input type="checkbox" id="spinGlobe" checked />
               Spin globe on load & logo
             </label>
           </div>
@@ -1758,7 +1759,12 @@ footer .foot-row .foot-item img {
 
     let mode = 'map';
     let map, spinning = false, spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true');
-    document.querySelector('.logo')?.addEventListener('click', () => { if(spinEnabled) startSpin(); });
+    const logoEl = document.querySelector('.logo');
+    logoEl?.addEventListener('click', () => {
+      spinEnabled = true;
+      localStorage.setItem('spinGlobe', 'true');
+      startSpin();
+    });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
@@ -2212,13 +2218,14 @@ function makePosts(){
 
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
+      const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
       map = new mapboxgl.Map({
         container:'map',
         style:'mapbox://styles/mapbox/outdoors-v12',
         projection:'globe',
-        center:[144.9695,-37.8178],
-        zoom:14,
-        pitch:0,
+        center: savedView?.center || [0,0],
+        zoom: savedView?.zoom || 1.5,
+        pitch: savedView?.pitch || 0,
         attributionControl:true
       });
       map.on('style.load', () => {
@@ -2232,7 +2239,14 @@ function makePosts(){
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
-      map.on('moveend', () => { applyFilters(); updatePostPanel(); });
+      map.on('moveend', () => {
+        applyFilters();
+        updatePostPanel();
+        const center = map.getCenter().toArray();
+        const zoom = map.getZoom();
+        const pitch = map.getPitch();
+        localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch}));
+      });
     }
 
     function startSpin(){ if(!spinEnabled || spinning || !map) return; spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
