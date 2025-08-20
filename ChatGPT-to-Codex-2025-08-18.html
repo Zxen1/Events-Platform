@@ -1700,6 +1700,7 @@ footer .foot-row .foot-item img {
         </div>
         <div class="tab-bar">
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+          <button type="button" class="tab-btn" data-tab="mapbox">Mapbox</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
@@ -1715,6 +1716,14 @@ footer .foot-row .foot-item img {
           </div>
           <h3>Theme Customization</h3>
           <div id="styleControls"></div>
+        </div>
+        <div id="tab-mapbox" class="tab-panel">
+          <div class="modal-field">
+            <label>
+              <input type="checkbox" id="spinGlobe" />
+              Spin globe on load & logo
+            </label>
+          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -1748,7 +1757,8 @@ footer .foot-row .foot-item img {
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    let map, spinning = true;
+    let map, spinning = false, spinEnabled = JSON.parse(localStorage.getItem('spinGlobe') || 'true');
+    document.querySelector('.logo')?.addEventListener('click', () => { if(spinEnabled) startSpin(); });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
@@ -2219,13 +2229,13 @@ function makePosts(){
           console.warn('map.setSky is not available in this Mapbox GL JS version.');
         }
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); startSpin(); updatePostPanel(); applyFilters(); });
+      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
 
       ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
       map.on('moveend', () => { applyFilters(); updatePostPanel(); });
     }
 
-    function startSpin(){ spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
+    function startSpin(){ if(!spinEnabled || spinning || !map) return; spinning = true; function step(){ if(!spinning || !map) return; map.setBearing(map.getBearing() + 0.03); requestAnimationFrame(step); } requestAnimationFrame(step); }
     function stopSpin(){ spinning = false; }
 
     $('#btnGeo').addEventListener('click', ()=>{
@@ -3169,11 +3179,31 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   initBuiltInPresets();
   loadPresets();
   loadSavedTheme();
-    const adminForm = document.getElementById('adminForm');
-    if(adminForm){
-      adminForm.addEventListener('input', e=>{ applyAdmin(e.target); });
-      adminForm.addEventListener('change', e=>{ applyAdmin(e.target); });
-    }
+
+  const adminForm = document.getElementById('adminForm');
+  if(adminForm){
+    const spinInput = document.getElementById('spinGlobe');
+    if(spinInput) spinInput.checked = spinEnabled;
+    adminForm.addEventListener('input', e=>{
+      if(e.target.id === 'spinGlobe'){
+        spinEnabled = e.target.checked;
+        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        if(spinEnabled) startSpin(); else stopSpin();
+        return;
+      }
+      applyAdmin(e.target);
+    });
+    adminForm.addEventListener('change', e=>{
+      if(e.target.id === 'spinGlobe'){
+        spinEnabled = e.target.checked;
+        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        if(spinEnabled) startSpin(); else stopSpin();
+        return;
+      }
+      applyAdmin(e.target);
+    });
+  }
+
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
     const p = presets[e.target.value];
