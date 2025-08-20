@@ -2905,6 +2905,50 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
+  function shadeColor(hex, amt){
+    hex = hex.replace('#','');
+    if(hex.length === 3){
+      hex = hex.split('').map(c=>c+c).join('');
+    }
+    let num = parseInt(hex,16);
+    let r = (num >> 16) + amt;
+    let g = (num >> 8 & 0x00FF) + amt;
+    let b = (num & 0x0000FF) + amt;
+    r = Math.max(Math.min(255,r),0);
+    g = Math.max(Math.min(255,g),0);
+    b = Math.max(Math.min(255,b),0);
+    return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+
+  function setupBtnStates(el, color){
+    el.dataset.baseColor = color;
+    if(!el.dataset.stateBound){
+      el.addEventListener('mouseenter', e=>{
+        const c = shadeColor(e.currentTarget.dataset.baseColor,20);
+        e.currentTarget.style.backgroundColor = c;
+        e.currentTarget.style.borderColor = c;
+      });
+      el.addEventListener('mouseleave', e=>{
+        const c = e.currentTarget.dataset.baseColor;
+        e.currentTarget.style.backgroundColor = c;
+        e.currentTarget.style.borderColor = c;
+      });
+      el.addEventListener('mousedown', e=>{
+        const c = shadeColor(e.currentTarget.dataset.baseColor,-20);
+        e.currentTarget.style.backgroundColor = c;
+        e.currentTarget.style.borderColor = c;
+      });
+      el.addEventListener('mouseup', e=>{
+        const c = shadeColor(e.currentTarget.dataset.baseColor,20);
+        e.currentTarget.style.backgroundColor = c;
+        e.currentTarget.style.borderColor = c;
+      });
+      el.dataset.stateBound = 'true';
+    }
+    el.style.backgroundColor = color;
+    el.style.borderColor = color;
+  }
+
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
@@ -3004,9 +3048,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const opacity = opacityInput ? opacityInput.value : 1;
         (area.selectors[type]||[]).forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text') el.style.color = color;
-            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+              if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
+              else if(type==='text') el.style.color = color;
+              else if(type==='btn'){ setupBtnStates(el, color); }
           });
         });
       }
@@ -3027,7 +3071,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
             else if(type==='text') el.style.color = color;
-            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+            else if(type==='btn'){ setupBtnStates(el, color); }
           });
         });
       });
@@ -3072,6 +3116,46 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.card) ocean[`${area.key}-card`] = {color:'#e0f7fa', opacity:'1'};
     });
     builtInPresets.push({name:'Ocean', data: ocean});
+    const forest = {};
+    colorAreas.forEach(area=>{
+      forest[`${area.key}-bg`] = {color:'#e8f5e9', opacity:'1'};
+      forest[`${area.key}-text`] = {color:'#1b5e20', opacity:'1'};
+      forest[`${area.key}-btn`] = {color:'#2e7d32', opacity:'1'};
+      if(area.selectors.card) forest[`${area.key}-card`] = {color:'#e8f5e9', opacity:'1'};
+    });
+    builtInPresets.push({name:'Forest', data: forest});
+    const sunset = {};
+    colorAreas.forEach(area=>{
+      sunset[`${area.key}-bg`] = {color:'#fff3e0', opacity:'1'};
+      sunset[`${area.key}-text`] = {color:'#e65100', opacity:'1'};
+      sunset[`${area.key}-btn`] = {color:'#ef6c00', opacity:'1'};
+      if(area.selectors.card) sunset[`${area.key}-card`] = {color:'#fff3e0', opacity:'1'};
+    });
+    builtInPresets.push({name:'Sunset', data: sunset});
+    const lavender = {};
+    colorAreas.forEach(area=>{
+      lavender[`${area.key}-bg`] = {color:'#f3e5f5', opacity:'1'};
+      lavender[`${area.key}-text`] = {color:'#4a148c', opacity:'1'};
+      lavender[`${area.key}-btn`] = {color:'#6a1b9a', opacity:'1'};
+      if(area.selectors.card) lavender[`${area.key}-card`] = {color:'#f3e5f5', opacity:'1'};
+    });
+    builtInPresets.push({name:'Lavender', data: lavender});
+    const steel = {};
+    colorAreas.forEach(area=>{
+      steel[`${area.key}-bg`] = {color:'#eceff1', opacity:'1'};
+      steel[`${area.key}-text`] = {color:'#37474f', opacity:'1'};
+      steel[`${area.key}-btn`] = {color:'#607d8b', opacity:'1'};
+      if(area.selectors.card) steel[`${area.key}-card`] = {color:'#eceff1', opacity:'1'};
+    });
+    builtInPresets.push({name:'Steel', data: steel});
+    const candy = {};
+    colorAreas.forEach(area=>{
+      candy[`${area.key}-bg`] = {color:'#fce4ec', opacity:'1'};
+      candy[`${area.key}-text`] = {color:'#ad1457', opacity:'1'};
+      candy[`${area.key}-btn`] = {color:'#d81b60', opacity:'1'};
+      if(area.selectors.card) candy[`${area.key}-card`] = {color:'#fce4ec', opacity:'1'};
+    });
+    builtInPresets.push({name:'Candy', data: candy});
   }
 
   function updatePresetOptions(){
