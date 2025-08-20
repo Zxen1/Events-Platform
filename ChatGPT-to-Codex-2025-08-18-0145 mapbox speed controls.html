@@ -115,6 +115,34 @@ body{
   background: rgba(255,255,255,0.35);
 }
 
+/* Spin controls */
+.range-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+#spinSpeedVal{
+  min-width:40px;
+  text-align:right;
+}
+#spinType{
+  display:flex;
+  border:1px solid #ccc;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:6px;
+}
+#spinType button{
+  border:none;
+  border-right:1px solid #ccc;
+  padding:6px 10px;
+  background:#e0e0e0;
+  font-weight:600;
+  cursor:pointer;
+}
+#spinType button:last-child{border-right:none;}
+#spinType button[aria-pressed="true"]{background:#ccc;}
+
 .auth{
   display: flex;
   align-items: center;
@@ -1722,14 +1750,17 @@ footer .foot-row .foot-item img {
         <div id="tab-mapbox" class="tab-panel">
           <div class="modal-field">
             <label for="spinSpeed">Spin speed</label>
-            <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
-            <span id="spinSpeedVal"></span>
+            <div class="range-wrap">
+              <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
+              <span id="spinSpeedVal"></span>
+            </div>
           </div>
           <div class="modal-field">
-            <label><input type="checkbox" id="spinLoadAll"> Spin on load (everyone)</label>
-          </div>
-          <div class="modal-field">
-            <label><input type="checkbox" id="spinLoadNew"> Spin on load (new users)</label>
+            <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
+            <div id="spinType" class="seg">
+              <button type="button" data-type="all" aria-pressed="true">Everyone</button>
+              <button type="button" data-type="new" aria-pressed="false">New Users</button>
+            </div>
           </div>
           <div class="modal-field">
             <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
@@ -1770,12 +1801,16 @@ footer .foot-row .foot-item img {
     const DEFAULT_SPIN_SPEED = 0.3;
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
+    const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
+    const startCenter = savedView?.center || [0,0];
+    const startZoom = savedView?.zoom || 1.5;
+    const startPitch = savedView?.pitch || 0;
     let map, spinning = false,
-        spinLoadAll = JSON.parse(localStorage.getItem('spinLoadAll') || 'true'),
-        spinLoadNew = JSON.parse(localStorage.getItem('spinLoadNew') || 'false'),
+        spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
+        spinLoadType = localStorage.getItem('spinLoadType') || 'all',
         spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
         spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
-        spinEnabled = spinLoadAll || (spinLoadNew && firstVisit);
+        spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
     localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
     const logoEl = document.querySelector('.logo');
     logoEl?.addEventListener('click', () => {
@@ -1784,7 +1819,7 @@ footer .foot-row .foot-item img {
       localStorage.setItem('spinGlobe', 'true');
       if(map){
         stopSpin();
-        map.flyTo({center:[0,0], zoom:0, pitch:0});
+        map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch});
         map.once('moveend', startSpin);
       }else{
         startSpin();
@@ -2243,14 +2278,13 @@ function makePosts(){
 
     function initMap(){
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
       map = new mapboxgl.Map({
         container:'map',
         style:'mapbox://styles/mapbox/outdoors-v12',
         projection:'globe',
-        center: savedView?.center || [0,0],
-        zoom: savedView?.zoom || 1.5,
-        pitch: savedView?.pitch || 0,
+        center: startCenter,
+        zoom: startZoom,
+        pitch: startPitch,
         attributionControl:true
       });
       try{
@@ -2294,7 +2328,7 @@ function makePosts(){
     }
 
     function updateSpinState(){
-      const shouldSpin = spinLoadAll || (spinLoadNew && firstVisit);
+      const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
@@ -3258,12 +3292,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(adminForm){
       const speedInput = document.getElementById("spinSpeed");
       const speedVal = document.getElementById("spinSpeedVal");
-      const loadAllInput = document.getElementById("spinLoadAll");
-      const loadNewInput = document.getElementById("spinLoadNew");
+      const loadStartInput = document.getElementById("spinLoadStart");
+      const typeBtns = document.querySelectorAll("#spinType button");
       const logoClickInput = document.getElementById("spinLogoClick");
       if(speedInput && speedVal){
         speedInput.value = spinEnabled ? spinSpeed : 0;
-        speedVal.textContent = spinEnabled ? speedInput.value : "Off";
+        speedVal.textContent = spinEnabled ? spinSpeed.toFixed(2) : "Off";
         speedInput.addEventListener("input", ()=>{
           const val = Math.max(0, parseFloat(speedInput.value) || 0);
           spinEnabled = val > 0;
@@ -3274,20 +3308,23 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(spinEnabled) startSpin(); else stopSpin();
         });
       }
-      if(loadAllInput){
-        loadAllInput.checked = spinLoadAll;
-        loadAllInput.addEventListener("change", ()=>{
-          spinLoadAll = loadAllInput.checked;
-          localStorage.setItem("spinLoadAll", JSON.stringify(spinLoadAll));
+      if(loadStartInput){
+        loadStartInput.checked = spinLoadStart;
+        loadStartInput.addEventListener("change", ()=>{
+          spinLoadStart = loadStartInput.checked;
+          localStorage.setItem("spinLoadStart", JSON.stringify(spinLoadStart));
           updateSpinState();
         });
       }
-      if(loadNewInput){
-        loadNewInput.checked = spinLoadNew;
-        loadNewInput.addEventListener("change", ()=>{
-          spinLoadNew = loadNewInput.checked;
-          localStorage.setItem("spinLoadNew", JSON.stringify(spinLoadNew));
-          updateSpinState();
+      if(typeBtns.length){
+        typeBtns.forEach(btn=>{
+          btn.setAttribute("aria-pressed", btn.dataset.type === spinLoadType ? "true" : "false");
+          btn.addEventListener("click", ()=>{
+            spinLoadType = btn.dataset.type;
+            typeBtns.forEach(b=> b.setAttribute("aria-pressed", b===btn ? "true" : "false"));
+            localStorage.setItem("spinLoadType", spinLoadType);
+            updateSpinState();
+          });
         });
       }
       if(logoClickInput){
