@@ -2600,7 +2600,7 @@ function makePosts(){
 
       const container = target.closest('.posts-mode');
       if(container && !fromPosts){
-        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 6;
+        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
         container.scrollTop = Math.max(top, 0);
       } else if(!container){
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
@@ -2611,7 +2611,7 @@ function makePosts(){
       hookDetailActions(detail, p);
 
       if(container && !fromPosts){
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 6;
+        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
         container.scrollTop = Math.max(top, 0);
       } else if(!container){
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
