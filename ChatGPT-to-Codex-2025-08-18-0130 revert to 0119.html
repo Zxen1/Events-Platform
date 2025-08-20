@@ -1730,7 +1730,19 @@ footer .foot-row .foot-item img {
     </div>
   </div>
 
-  <script>const __USED_STARTERS = new Set();
+  <script>
+  // Ensure result lists occupy space between the subheader and footer
+  function adjustListHeight(){
+    const subHead = document.querySelector('.res-head');
+    const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+    const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+    const availableHeight = window.innerHeight - footerH - topPos;
+    document.querySelectorAll('.res-list').forEach(list=>{
+      list.style.maxHeight = `${availableHeight}px`;
+    });
+  }
+
+  const __USED_STARTERS = new Set();
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -1751,17 +1763,6 @@ footer .foot-row .foot-item img {
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
-
-    // Ensure result lists occupy space between the subheader and footer
-    function adjustListHeight(){
-      const subHead = document.querySelector('.res-head');
-      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
-      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
-      const availableHeight = window.innerHeight - footerH - topPos;
-      document.querySelectorAll('.res-list').forEach(list=>{
-        list.style.maxHeight = `${availableHeight}px`;
-      });
-    }
 
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
