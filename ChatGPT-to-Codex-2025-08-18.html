@@ -2162,6 +2162,13 @@ function makePosts(){
   return wrap;
     }
 
+    function scrollPostIntoPanel(el){
+      const container = el.closest('.posts-mode');
+      if(container){
+        container.scrollTop = Math.max(el.offsetTop - 6, 0);
+      }
+    }
+
     async function openPost(id, fromPosts=false){
       const p = posts.find(x=>x.id===id); if(!p) return;
       if(mode !== 'posts'){
@@ -2184,21 +2191,13 @@ function makePosts(){
       if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
 
-      const container = target.closest('.posts-mode');
-      if(fromPosts && container){
-        const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 6;
-        container.scrollTop = Math.max(top, 0);
-      } else {
-        target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-        if(container){ container.scrollTop = Math.max(container.scrollTop - 6, 0); }
-      }
+      scrollPostIntoPanel(target);
 
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
       if(window.applyAdmin){ window.applyAdmin(); }
-      detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      if(container){ container.scrollTop = Math.max(container.scrollTop - 6, 0); }
+      scrollPostIntoPanel(detail);
 
       const favBtn = detail.querySelector('[data-act="fav"]');
       favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
