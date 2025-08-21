@@ -556,10 +556,19 @@ body{
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  margin: 0 -14px;
   padding: 0 14px;
+  margin: 0 0 8px 0;
   color: var(--ink-d);
   grid-column: 1 / -1;
+  position: relative;
+  background: transparent;
+}
+.res-head::before{
+  content: "";
+  position: absolute;
+  inset: 0 -14px;
+  background: inherit;
+  z-index: -1;
 }
 .res-actions{
   display: flex;
@@ -1290,7 +1299,8 @@ body.mode-calendar .main .map-wrap .main-bg-overlay{
     .reset-box .arr{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;background:#0d2237;border:1px solid rgba(255,255,255,.08)}
 
     .results-col{display:flex;flex-direction:column;min-width:0;min-height:0}
-      .res-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;color:var(--ink-d)}
+      .res-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;padding:0 14px;color:var(--ink-d);position:relative;background:transparent}
+      .res-head::before{content:"";position:absolute;inset:0 -14px;background:inherit;z-index:-1}
       .res-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
