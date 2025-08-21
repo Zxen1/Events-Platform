@@ -242,7 +242,7 @@ button:focus-visible,
 }
   #adminModal .modal-content,
   #memberModal .modal-content{
-    width:600px;
+    width:100%;
     max-width:1200px;
     max-height:90%;
   }
@@ -283,6 +283,7 @@ button:focus-visible,
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
   #adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
+#adminModal .admin-fieldset input,#adminModal .admin-fieldset select{width:120px;max-width:120px;}
 #adminModal .control-row select{width:120px;margin-left:auto;border-radius:4px;padding:4px;}
 #adminModal .color-group input[type=color]{border-radius:4px;padding:0;width:100%;height:40px;display:block;cursor:pointer;pointer-events:auto;}
 #adminModal .color-group input[type=range]{width:100%;}
@@ -3089,6 +3090,31 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button'], border:['#memberModal button'], hoverBorder:['#memberModal button:hover'], activeBorder:['#memberModal button:active','#memberModal button[aria-pressed="true"]','#memberModal button[aria-current="page"]','#memberModal button[aria-selected="true"]']}}
   ];
 
+  function storeTitleDefaults(){
+    colorAreas.forEach(area=>{
+      (area.selectors.title||[]).forEach(sel=>{
+        document.querySelectorAll(sel).forEach(el=>{
+          const cs = getComputedStyle(el);
+          el.dataset.titleDefaultColor = cs.color;
+          el.dataset.titleDefaultFont = cs.fontFamily;
+          el.dataset.titleDefaultSize = cs.fontSize;
+        });
+      });
+    });
+  }
+
+  function restoreTitleDefaults(area){
+    (area.selectors.title||[]).forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{
+        if(el.dataset.titleDefaultColor) el.style.color = el.dataset.titleDefaultColor;
+        if(el.dataset.titleDefaultFont) el.style.fontFamily = el.dataset.titleDefaultFont;
+        if(el.dataset.titleDefaultSize) el.style.fontSize = el.dataset.titleDefaultSize;
+      });
+    });
+  }
+
+  storeTitleDefaults();
+
   let lastFieldsetKey = null;
 
   const COLOR_PICKER_MODE = 'hex';
@@ -3318,9 +3344,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             }
           });
         });
+        if(type==='text'){
+          restoreTitleDefaults(area);
+        }
       }
       const themeStr = JSON.stringify(collectThemeValues());
       localStorage.setItem('currentTheme', themeStr);
+      if(type==='text'){
+        applyAdmin();
+        return;
+      }
       return;
     }
     colorAreas.forEach(area=>{
@@ -3353,6 +3386,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             }
           });
         });
+        if(type==='text'){
+          restoreTitleDefaults(area);
+        }
       });
     });
     let css = '';
