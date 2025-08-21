@@ -282,12 +282,41 @@ button:focus-visible,
 #adminModal legend button.same-btn{margin-left:8px}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
-#adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
-#adminModal .admin-fieldset input,#adminModal .admin-fieldset select{width:120px;max-width:120px;}
-#adminModal .control-row select{width:120px;margin-left:auto;border-radius:4px;padding:4px;}
+#adminModal .color-group{
+  flex:1 1 120px;
+  width:100%;
+  max-width:120px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  position:relative;
+  margin-left:auto;
+}
+#adminModal .admin-fieldset input,
+#adminModal .admin-fieldset select{
+  width:100%;
+  max-width:120px;
+}
+#adminModal .control-row select{
+  flex:1 1 120px;
+  width:100%;
+  max-width:120px;
+  margin-left:auto;
+  border-radius:4px;
+  padding:4px;
+}
 #adminModal .color-group input[type=color],
-#adminModal .color-group input[type=range]{width:120px;}
-#adminModal .color-group input[type=color]{border-radius:4px;padding:0;height:40px;display:block;cursor:pointer;pointer-events:auto;}
+#adminModal .color-group input[type=range]{
+  width:100%;
+}
+#adminModal .color-group input[type=color]{
+  border-radius:4px;
+  padding:0;
+  height:40px;
+  display:block;
+  cursor:pointer;
+  pointer-events:auto;
+}
 #adminModal .tab-bar{display:flex;gap:6px;}
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
@@ -308,6 +337,8 @@ button:focus-visible,
   padding:8px;
   border-radius:4px;
   border:none;
+  width:100%;
+  max-width:100%;
 }
 .modal-actions{
   margin-top:10px;
