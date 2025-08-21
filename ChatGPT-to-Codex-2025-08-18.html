@@ -272,7 +272,7 @@ button:focus-visible,
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
-.admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;}
+#adminModal .admin-fieldset,.admin-fieldset{margin:10px 0;border:1px solid var(--border);border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
   flex:1 1 180px;
@@ -318,9 +318,9 @@ button:focus-visible,
   }
 }
 #adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
-#adminModal .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
+#adminModal .fieldset-actions{display:flex;gap:4px;margin:0 0 10px 0;}
 #adminModal .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+#adminModal .control-row{display:flex;align-items:center;gap:6px;margin:0 0 10px 0;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 #adminModal .color-group{
   flex:1 1 220px;
@@ -740,6 +740,12 @@ button:focus-visible,
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--list-background);
+  cursor: pointer;
 }
 
 .thumb{
@@ -876,7 +882,7 @@ button:focus-visible,
 
 .detail-inline{
   background: var(--list-background);
-  border: 1px solid var(--btn);
+  border: 1px solid var(--border);
   border-radius: 18px;
   margin: 0 0 12px 0;
   overflow: hidden;
@@ -995,6 +1001,14 @@ footer{
 
 footer .foot-row .foot-item{
   background:var(--list-background);
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.mapboxgl-popup .mapboxgl-popup-content,
+.mapboxgl-popup.hover-pop .hover-card{
+  border:1px solid var(--border);
+  border-radius:12px;
 }
 
 .chip-small img.mini{
@@ -1433,7 +1447,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
-    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
+    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
     .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
     .title{font-weight:900;line-height:1.2}
@@ -1443,7 +1457,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .fav svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.5}
     .fav[aria-pressed="true"] svg{fill:var(--gold);stroke:var(--gold)}
 
-    .map-wrap{position:relative;background:var(--btn);border-radius:16px;overflow:hidden;border:1px solid var(--btn)}
+    .map-wrap{position:relative;background:var(--btn);border-radius:16px;overflow:hidden;border:1px solid var(--border)}
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
 
@@ -1458,7 +1472,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .mode-map .posts-mode{display:none}
     .mode-map .map-wrap{display:block}
 
-    .detail-inline{background:var(--list-background);border:1px solid var(--btn);border-radius:18px}
+    .detail-inline{background:var(--list-background);border:1px solid var(--border);border-radius:18px}
     .detail-inline .hero{height:160px;overflow:hidden}
     .detail-inline .hero img{width:100%;height:160px;object-fit:cover;display:block}
     .detail-inline .body{padding:14px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
@@ -2551,11 +2565,17 @@ function makePosts(){
       map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
+      const cBg = document.getElementById('map-clusterBg-c');
+      const cBgO = document.getElementById('map-clusterBg-o');
+      const cText = document.getElementById('map-clusterText-c');
+      const cTextO = document.getElementById('map-clusterText-o');
+      const clusterColor = (cBg && cBg.value && cBg.value !== '#000000') ? hexToRgba(cBg.value, cBgO ? cBgO.value : 1) : '#24c6dc';
+      const clusterTextColor = (cText && cText.value && cText.value !== '#000000') ? hexToRgba(cText.value, cTextO ? cTextO.value : 1) : '#fff';
       map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
-        'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
+        'circle-color': clusterColor,
         'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
-        'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-      map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
+      map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color': clusterTextColor} });
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -3233,7 +3253,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
+    {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card','.mapboxgl-popup.hover-pop .multi-hover .multi-item'], text:['.mapboxgl-popup.hover-pop .hover-card','.mapboxgl-popup.hover-pop .multi-hover .multi-item'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title','.mapboxgl-popup.hover-pop .multi-hover .multi-item .t'], clusterBg:[], clusterText:[]}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
@@ -3391,7 +3411,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','clusterBg','clusterText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -3403,6 +3423,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const shB = document.getElementById(`${area.key}-${type}-shadow-blur`);
         if(!cInput && !fontSel && !sizeSel && !weightSel && !shColor) return;
         let selectors = area.selectors[type] || [];
+        if(selectors.length===0){
+          const st = currentState[`${area.key}-${type}`];
+          if(st){
+            if(cInput && st.color) cInput.value = st.color;
+            if(oInput && st.opacity!==undefined) oInput.value = st.opacity;
+          }
+          return;
+        }
         if(area.key==='body' && ['border','hoverBorder','activeBorder'].includes(type)){
           const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
           const val = getComputedStyle(document.documentElement).getPropertyValue(varMap[type]).trim();
@@ -3570,6 +3598,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.border) types.push('border');
       if(area.selectors.hoverBorder) types.push('hoverAdjust','hoverBorder');
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
+      if(area.key==='map') types.push('clusterBg','clusterText');
       types.forEach(type=>{
         const labelMap = {
           bg: 'Background',
@@ -3582,7 +3611,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           hoverBorder: 'Hover Border',
           activeBorder: 'Active Border',
           hoverAdjust: 'Hover Brightness',
-          activeAdjust: 'Active Brightness'
+          activeAdjust: 'Active Brightness',
+          clusterBg: 'Cluster Background',
+          clusterText: 'Cluster Text'
         };
         const label = labelMap[type] || type;
         if(type === 'text' || type === 'title' || type === 'btnText'){
@@ -3649,7 +3680,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'clusterBg' || type === 'clusterText'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -3687,6 +3718,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
       wrap.appendChild(fs);
+      if(area.key==='map'){
+        const dBg = document.getElementById('map-clusterBg-c');
+        const dBgO = document.getElementById('map-clusterBg-o');
+        const dTxt = document.getElementById('map-clusterText-c');
+        if(dBg){ dBg.value = '#24c6dc'; if(dBgO) dBgO.value = '0.85'; }
+        if(dTxt) dTxt.value = '#ffffff';
+      }
     });
   }
 
@@ -3722,7 +3760,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','clusterBg','clusterText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3738,17 +3776,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const font = f ? f.value : null;
         const size = s ? s.value : null;
         const weight = w ? w.value : null;
+        if(area.key==='map' && type==='clusterBg' && color && typeof map!=='undefined' && map){
+          map.setPaintProperty('clusters','circle-color', hexToRgba(color, opacity));
+          return;
+        }
+        if(area.key==='map' && type==='clusterText' && color && typeof map!=='undefined' && map){
+          map.setPaintProperty('cluster-count','text-color', hexToRgba(color, opacity));
+          return;
+        }
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card'){
+            if(type==='bg' || type==='card' || type==='clusterBg'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
-              if(type==='card'){
+              if(type==='card' || type==='clusterBg'){
                 const shadowColor = sc ? sc.value : null;
                 const blur = sb ? sb.value : 0;
                 if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
               }
-            } else if(type==='text' || type==='btnText' || type==='title'){
+            } else if(type==='text' || type==='btnText' || type==='title' || type==='clusterText'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -3785,7 +3831,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','clusterBg','clusterText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3799,7 +3845,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(c || f || s || v || w || sc){
           const entry = {};
           if(c){ entry.color = c.value; }
-          if((['bg','card','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
+          if((['bg','card','clusterBg','clusterText','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
           if(v){ entry.value = v.value; }
           if(f){ entry.font = f.value; }
           if(s){ entry.size = s.value; }
