@@ -1993,7 +1993,7 @@ footer .foot-row .foot-item img {
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12';
+          mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
@@ -4062,9 +4062,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
-            mapStyle = themeSelect.value;
+            mapStyle = window.mapStyle = themeSelect.value;
             localStorage.setItem("mapStyle", mapStyle);
-            if(map) map.setStyle(mapStyle);
+            if(window.map) window.map.setStyle(mapStyle);
           });
         }
         if(speedInput && speedVal){
