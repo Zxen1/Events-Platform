@@ -2419,13 +2419,18 @@ function makePosts(){
       const s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
       s.onload = ()=>{
         const g = document.createElement('script'); g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
-        g.onload = cb; document.head.appendChild(g);
+        g.onload = g.onerror = cb; document.head.appendChild(g);
       };
+      s.onerror = cb;
       document.head.appendChild(s);
     }
     loadMapbox(initMap);
 
     function initMap(){
+      if(typeof mapboxgl === 'undefined'){
+        console.error('Mapbox GL failed to load');
+        return;
+      }
       mapboxgl.accessToken = MAPBOX_TOKEN;
       map = new mapboxgl.Map({
         container:'map',
@@ -2436,14 +2441,16 @@ function makePosts(){
         pitch: startPitch,
         attributionControl:true
       });
-      geocoder = new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        mapboxgl,
-        marker: false,
-        placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
-      });
-      geocoder.on('result', ()=>{ stopSpin(); applyFilters(); });
-      map.addControl(geocoder, 'top-left');
+      if(typeof MapboxGeocoder !== 'undefined'){
+        geocoder = new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl,
+          marker: false,
+          placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
+        });
+        geocoder.on('result', ()=>{ stopSpin(); applyFilters(); });
+        map.addControl(geocoder, 'top-left');
+      }
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', stopSpin);
       map.addControl(geolocate, 'top-left');
