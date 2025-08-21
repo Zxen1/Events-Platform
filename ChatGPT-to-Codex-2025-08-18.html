@@ -1525,7 +1525,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .hover-card .s{font-size:12px;opacity:.8}
 
 /* restore triangular popup tip */
-.mapboxgl-popup-tip{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent}
+.mapboxgl-popup-tip{width:0!important;height:0!important;border-left:10px solid transparent;border-right:10px solid transparent}
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip{border-bottom:10px solid var(--modal-bg)}
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip{border-top:10px solid var(--modal-bg)}
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip{border-right:10px solid var(--modal-bg)}
@@ -1934,6 +1934,12 @@ footer .foot-row .foot-item img {
                 <option value="mapbox://styles/mapbox/navigation-night-v1">Navigation Night</option>
                 <option value="mapbox://styles/mapbox/standard">Standard</option>
                 <option value="mapbox://styles/mapbox/standard-satellite">Standard Satellite</option>
+                <option value="mapbox://styles/mapbox/traffic-day-v2">Traffic Day</option>
+                <option value="mapbox://styles/mapbox/traffic-night-v2">Traffic Night</option>
+                <option value="mapbox://styles/mapbox/bright-v10">Bright</option>
+                <option value="mapbox://styles/mapbox/emerald-v8">Emerald</option>
+                <option value="mapbox://styles/mapbox/monochrome">Monochrome</option>
+                <option value="mapbox://styles/mapbox/blueprint-v2">Blueprint</option>
               </select>
             </div>
             <div class="modal-field">
@@ -1943,6 +1949,11 @@ footer .foot-row .foot-item img {
                 <option value="sunset">Sunset</option>
                 <option value="night">Night</option>
                 <option value="aurora">Aurora</option>
+                <option value="dawn">Dawn</option>
+                <option value="dusk">Dusk</option>
+                <option value="space">Space</option>
+                <option value="cloudy">Cloudy</option>
+                <option value="storm">Storm</option>
               </select>
             </div>
             <div class="modal-field">
@@ -2027,17 +2038,22 @@ footer .foot-row .foot-item img {
       updateLogoClickState();
 
       function applySky(theme){
-        if(!window.map || typeof map.setSky !== 'function'){
-          console.warn('map.setSky is not available in this Mapbox GL JS version.');
+        if(!window.map || typeof map.setFog !== 'function'){
+          console.warn('map.setFog is not available in this Mapbox GL JS version.');
           return;
         }
         const skyThemes = {
-          default:{ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0,90.0], 'sky-atmosphere-sun-intensity':10 },
-          sunset:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#ffcf70', 'sky-atmosphere-halo-color':'#ff8f70', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':15 },
-          night:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#0b1d51', 'sky-atmosphere-halo-color':'#1a2849', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':0.05 },
-          aurora:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#03172f', 'sky-atmosphere-halo-color':'#5dd9c1', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':0.5 }
+          default:{ 'color':'rgb(186,210,255)','high-color':'rgb(64,152,255)','space-color':'rgb(4,7,22)','horizon-blend':0.3 },
+          sunset:{ 'color':'#ffcf70','high-color':'#ff8f70','space-color':'#020014','horizon-blend':0.5 },
+          night:{ 'color':'#0b1d51','high-color':'#1a2849','space-color':'#000000','horizon-blend':0.1,'star-intensity':0.8 },
+          aurora:{ 'color':'#03172f','high-color':'#5dd9c1','space-color':'#000000','horizon-blend':0.2,'star-intensity':0.6 },
+          dawn:{ 'color':'#ffd1a1','high-color':'#ff9f85','space-color':'#4a1a74','horizon-blend':0.4 },
+          dusk:{ 'color':'#8e4e9e','high-color':'#3b1a69','space-color':'#020024','horizon-blend':0.3 },
+          space:{ 'color':'#000000','high-color':'#000000','space-color':'#000000','horizon-blend':0,'star-intensity':0.0 },
+          cloudy:{ 'color':'#cdd2d7','high-color':'#e4e7eb','space-color':'#adb5bd','horizon-blend':0.2 },
+          storm:{ 'color':'#5e5e5e','high-color':'#2a2a2a','space-color':'#000000','horizon-blend':0.1 }
         };
-        map.setSky(skyThemes[theme] || skyThemes.default);
+        map.setFog(skyThemes[theme] || skyThemes.default);
       }
 
       logoEl?.addEventListener('click', () => {
@@ -2568,7 +2584,6 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch{}
       map.on('style.load', () => {
-        map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
         applySky(skyStyle);
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
