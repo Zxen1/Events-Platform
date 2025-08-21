@@ -2414,19 +2414,60 @@ function makePosts(){
     // Mapbox
     function loadMapbox(cb){
       if(window.mapboxgl && window.MapboxGeocoder) return cb();
-      const link = document.createElement('link'); link.rel='stylesheet'; link.href='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
+      const link = document.createElement('link');
+      link.rel='stylesheet';
+      link.href='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
       document.head.appendChild(link);
-      const gLink = document.createElement('link'); gLink.rel='stylesheet'; gLink.href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css';
+      const gLink = document.createElement('link');
+      gLink.rel='stylesheet';
+      gLink.href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css';
+      gLink.onerror = ()=>{
+        const alt = document.createElement('link');
+        alt.rel='stylesheet';
+        alt.href='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.css';
+        document.head.appendChild(alt);
+      };
       document.head.appendChild(gLink);
-      const s = document.createElement('script'); s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
+      const s = document.createElement('script');
+      s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
       s.onload = ()=>{
-        const g = document.createElement('script'); g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
-        g.onload = g.onerror = cb; document.head.appendChild(g);
+        const g = document.createElement('script');
+        g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
+        g.onload = cb;
+        g.onerror = ()=>{
+          console.warn('Mapbox Geocoder failed to load, using fallback');
+          const gf = document.createElement('script');
+          gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.min.js';
+          gf.onload = cb;
+          gf.onerror = cb;
+          document.head.appendChild(gf);
+        };
+        document.head.appendChild(g);
       };
       s.onerror = cb;
       document.head.appendChild(s);
     }
     loadMapbox(initMap);
+
+    function addGeocoder(){
+      if(typeof MapboxGeocoder !== 'undefined'){
+        geocoder = new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl,
+          marker: false,
+          placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
+        });
+        geocoder.on('result', ()=>{ stopSpin(); applyFilters(); });
+        const gc = document.getElementById('geocoder');
+        if(gc) gc.appendChild(geocoder.onAdd(map));
+      } else {
+        const script = document.createElement('script');
+        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
+        script.onload = addGeocoder;
+        script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
+        document.head.appendChild(script);
+      }
+    }
 
     function initMap(){
       if(typeof mapboxgl === 'undefined'){
@@ -2443,17 +2484,7 @@ function makePosts(){
         pitch: startPitch,
         attributionControl:true
       });
-      if(typeof MapboxGeocoder !== 'undefined'){
-        geocoder = new MapboxGeocoder({
-          accessToken: mapboxgl.accessToken,
-          mapboxgl,
-          marker: false,
-          placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
-        });
-        geocoder.on('result', ()=>{ stopSpin(); applyFilters(); });
-        const gc = document.getElementById('geocoder');
-        if(gc) gc.appendChild(geocoder.onAdd(map));
-      }
+      addGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', stopSpin);
       map.addControl(geolocate, 'top-right');
