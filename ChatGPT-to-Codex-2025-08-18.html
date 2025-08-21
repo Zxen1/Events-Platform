@@ -1912,14 +1912,24 @@ footer .foot-row .foot-item img {
           <h3>Theme Builder</h3>
           <div id="styleControls"></div>
         </div>
-        <div id="tab-mapbox" class="tab-panel">
-          <div class="modal-field">
-            <label for="spinSpeed">Spin speed</label>
-            <div class="range-wrap">
-              <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
-              <span id="spinSpeedVal"></span>
+          <div id="tab-mapbox" class="tab-panel">
+            <div class="modal-field">
+              <label for="mapTheme">Theme</label>
+              <select id="mapTheme">
+                <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
+                <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
+                <option value="mapbox://styles/mapbox/light-v11">Light</option>
+                <option value="mapbox://styles/mapbox/dark-v11">Dark</option>
+                <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite</option>
+              </select>
             </div>
-          </div>
+            <div class="modal-field">
+              <label for="spinSpeed">Spin speed</label>
+              <div class="range-wrap">
+                <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
+                <span id="spinSpeedVal"></span>
+              </div>
+            </div>
           <div class="modal-field">
             <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
               <div id="spinType" class="seg">
@@ -1976,13 +1986,14 @@ footer .foot-row .foot-item img {
     const startCenter = savedView?.center || [0,0];
     const startZoom = savedView?.zoom || 1.5;
     const startPitch = savedView?.pitch || 0;
-    let map, geocoder, spinning = false,
-        spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
-        spinLoadType = localStorage.getItem('spinLoadType') || 'all',
-        spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
-        spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
-        spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
-    localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+      let map, geocoder, spinning = false,
+          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
+          spinLoadType = localStorage.getItem('spinLoadType') || 'all',
+          spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
+          spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
+          spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
+          mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12';
+      localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
         if(logoEl){
@@ -2499,16 +2510,16 @@ function makePosts(){
         console.error('Mapbox GL failed to load');
         return;
       }
-      mapboxgl.accessToken = MAPBOX_TOKEN;
-      map = new mapboxgl.Map({
-        container:'map',
-        style:'mapbox://styles/mapbox/outdoors-v12',
-        projection:'globe',
-        center: startCenter,
-        zoom: startZoom,
-        pitch: startPitch,
-        attributionControl:true
-      });
+        mapboxgl.accessToken = MAPBOX_TOKEN;
+        map = new mapboxgl.Map({
+          container:'map',
+          style: mapStyle,
+          projection:'globe',
+          center: startCenter,
+          zoom: startZoom,
+          pitch: startPitch,
+          attributionControl:true
+        });
       addGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
@@ -3491,6 +3502,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
 
   function syncAdminControls(){
+    const themeSelect = document.getElementById('mapTheme');
+    if(themeSelect) themeSelect.value = mapStyle;
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
@@ -4039,12 +4052,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
-      const speedInput = document.getElementById("spinSpeed");
-      const speedVal = document.getElementById("spinSpeedVal");
-      const loadStartInput = document.getElementById("spinLoadStart");
-      const typeRadios = document.querySelectorAll("#spinType input");
-      const logoClickInput = document.getElementById("spinLogoClick");
-      if(speedInput && speedVal){
+        const speedInput = document.getElementById("spinSpeed");
+        const speedVal = document.getElementById("spinSpeedVal");
+        const loadStartInput = document.getElementById("spinLoadStart");
+        const typeRadios = document.querySelectorAll("#spinType input");
+        const logoClickInput = document.getElementById("spinLogoClick");
+        const themeSelect = document.getElementById("mapTheme");
+        if(themeSelect){
+          themeSelect.value = mapStyle;
+          themeSelect.addEventListener("change", ()=>{
+            mapStyle = themeSelect.value;
+            localStorage.setItem("mapStyle", mapStyle);
+            if(map) map.setStyle(mapStyle);
+          });
+        }
+        if(speedInput && speedVal){
         speedInput.value = sg.spinEnabled ? sg.spinSpeed : 0;
         speedVal.textContent = sg.spinEnabled ? sg.spinSpeed.toFixed(2) : "Off";
         speedInput.addEventListener("input", ()=>{
@@ -4084,14 +4106,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           sg.updateLogoClickState();
         });
       }
-      adminForm.addEventListener("input", e=>{
-        if(e.target.id === "spinSpeed") return;
-        applyAdmin(e.target);
-      });
-      adminForm.addEventListener("change", e=>{
-        if(e.target.id === "spinSpeed") return;
-        applyAdmin(e.target);
-      });
+        adminForm.addEventListener("input", e=>{
+          if(e.target.id === "spinSpeed" || e.target.id === "mapTheme") return;
+          applyAdmin(e.target);
+        });
+        adminForm.addEventListener("change", e=>{
+          if(e.target.id === "spinSpeed" || e.target.id === "mapTheme") return;
+          applyAdmin(e.target);
+        });
     }
 
   const presetSelect = document.getElementById('themePreset');
