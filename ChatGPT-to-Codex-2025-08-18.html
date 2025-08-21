@@ -316,11 +316,9 @@ button:focus-visible,
 #adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
 #adminModal legend button.same-btn{margin-left:8px}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
-#adminModal .control-row label{min-width:40px;font-size:12px;cursor:pointer;user-select:none;}
+#adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
   #adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
-  #adminModal .font-group{display:flex;gap:6px;margin-left:auto;}
-  #adminModal .font-group select{flex:1;}
-  #adminModal .font-group .font-size-select{width:80px;}
+  #adminModal .control-row select{width:120px;margin-left:auto;border:1px solid #ccc;border-radius:4px;padding:4px;}
 #adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;cursor:pointer;pointer-events:auto;}
 #adminModal .color-group input[type=range]{width:100%;}
 #adminModal .tab-bar{display:flex;gap:6px;}
@@ -3254,8 +3252,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       types.forEach(type=>{
         const row = document.createElement('div');
         row.className = 'control-row';
+        const labelMap = {
+          bg: 'Background',
+          card: 'Card',
+          text: 'Text',
+          headerText: 'Header Text',
+          btn: 'Button',
+          btnText: 'Button Text'
+        };
+        const label = labelMap[type] || type;
         if(type === 'bg' || type === 'card'){
-          const label = type === 'bg' ? 'background color' : 'card color';
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -3264,7 +3270,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
               </div>
             `;
         } else {
-          const label = type === 'btnText' ? 'button text color' : type === 'headerText' ? 'header text color' : `${type} color`;
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -3277,9 +3282,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const fontRow = document.createElement('div');
           fontRow.className = 'control-row';
           const fontLabel = document.createElement('label');
-          fontLabel.textContent = 'font';
-          const fontGroup = document.createElement('div');
-          fontGroup.className = 'font-group';
+          fontLabel.textContent = 'Font';
           const fontSelect = document.createElement('select');
           fontSelect.className = 'font-select';
           fontSelect.id = `${area.key}-${type}-font`;
@@ -3289,6 +3292,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             opt.textContent = f;
             fontSelect.appendChild(opt);
           });
+          fontRow.appendChild(fontLabel);
+          fontRow.appendChild(fontSelect);
+          fs.appendChild(fontRow);
+
+          const sizeRow = document.createElement('div');
+          sizeRow.className = 'control-row';
+          const sizeLabel = document.createElement('label');
+          sizeLabel.textContent = 'Font Size';
           const sizeSelect = document.createElement('select');
           sizeSelect.className = 'font-size-select';
           sizeSelect.id = `${area.key}-${type}-size`;
@@ -3298,11 +3309,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             opt.textContent = `${sz}px`;
             sizeSelect.appendChild(opt);
           });
-          fontGroup.appendChild(fontSelect);
-          fontGroup.appendChild(sizeSelect);
-          fontRow.appendChild(fontLabel);
-          fontRow.appendChild(fontGroup);
-          fs.appendChild(fontRow);
+          sizeRow.appendChild(sizeLabel);
+          sizeRow.appendChild(sizeSelect);
+          fs.appendChild(sizeRow);
         }
       });
       wrap.appendChild(fs);
