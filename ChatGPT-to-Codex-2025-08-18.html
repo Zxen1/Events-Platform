@@ -292,8 +292,8 @@ button:focus-visible,
 #adminModal button,
 #memberModal button{
   background: var(--btn);
-  border-color: var(--btn);
   color: var(--ink);
+  border: none;
 }
   @media (max-width:600px){
   #adminModal .modal-content,
@@ -309,17 +309,17 @@ button:focus-visible,
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
   #adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
-  #adminModal .control-row select{width:120px;margin-left:auto;border:1px solid #ccc;border-radius:4px;padding:4px;}
-#adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;cursor:pointer;pointer-events:auto;}
+#adminModal .control-row select{width:120px;margin-left:auto;border-radius:4px;padding:4px;}
+#adminModal .color-group input[type=color]{border-radius:4px;padding:0;width:100%;height:40px;display:block;cursor:pointer;pointer-events:auto;}
 #adminModal .color-group input[type=range]{width:100%;}
 #adminModal .tab-bar{display:flex;gap:6px;}
-#adminModal .tab-bar button{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#eee;cursor:pointer;}
+#adminModal .tab-bar button{flex:1;padding:6px 10px;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
 #adminModal .tab-panel.active{display:block;}
 #adminModal input[type=range]{width:100%;}
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
-#adminModal .preset-actions input{flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;}
+#adminModal .preset-actions input{flex:1;padding:6px;border-radius:4px;}
 #adminModal .preset-actions button{padding:6px 10px;}
 .modal-field{
   margin:8px 0;
@@ -330,8 +330,8 @@ button:focus-visible,
 .modal-field textarea,
 .modal-field select{
   padding:8px;
-  border:1px solid #ccc;
   border-radius:4px;
+  border:none;
 }
 .modal-actions{
   margin-top:10px;
@@ -436,7 +436,7 @@ button:focus-visible,
   width: 100%;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid #ccc;
+  border: none;
   background: rgba(255,255,255,0.9);
   color: var(--ink);
   padding: 0 38px 0 12px;
@@ -633,7 +633,7 @@ button:focus-visible,
   border-radius: 12px;
   object-fit: cover;
   display: block;
-  background: #0b2239;
+  background: var(--modal-bg);
 }
 
 .meta{
@@ -704,6 +704,15 @@ button:focus-visible,
 #map{
   position: absolute;
   inset: 0;
+}
+
+#mapControls{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:1;
+  padding:10px;
+  margin:0;
 }
 
 .map-overlay{
@@ -954,7 +963,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   flex: 0 0 auto;
   display: block;
-  background: #0b2239;
+  background: var(--modal-bg);
 }
 
 .hover-card .t{
@@ -1024,7 +1033,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   object-fit: cover;
   display: block;
-  background: #0b2239;
+  background: var(--modal-bg);
   flex: 0 0 auto;
 }
 
@@ -1114,7 +1123,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   flex: 0 0 auto;
   display: block;
-  background: #0b2239;
+  background: var(--modal-bg);
 }
 
 .foot-item img{
@@ -1177,9 +1186,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 .mapboxgl-popup.hover-pop .mapboxgl-popup-content{
-  background: var(--list-background);
-  color: var(--ink);
-  border: 1px solid var(--btn);
   border-radius: 12px;
   padding: 6px 10px 6px 8px;
 }
@@ -1292,13 +1298,13 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .main{height:calc(100% - var(--header-h) - var(--footer-h));display:grid;grid-template-columns:var(--results-w) 1fr;gap:var(--gap);padding:14px}
     .filters-col{display:flex;flex-direction:column;min-height:0}
     .left-tools{display:flex;gap:8px;margin-bottom:8px;padding-left:2px}
-    .sq{width:30px;height:30px;border-radius:8px;background:var(--btn);display:grid;place-items:center;border:1px solid var(--btn)}
+    .sq{width:30px;height:30px;border-radius:8px;background:var(--btn);display:grid;place-items:center;border:none}
     .sq svg{width:14px;height:14px;opacity:.9}
     .field{display:grid;grid-template-columns:1fr 38px;gap:8px;align-items:center;margin:8px 0}
     .field .input{position:relative}
-    .input input,.input select{width:100%;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0b1a29;color:var(--ink);padding:0 38px 0 12px;outline:0}
-    .input .x,.input .down{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--btn);cursor:pointer;border:1px solid var(--btn)}
-    .tiny{display:grid;place-items:center;width:38px;height:40px;border-radius:12px;background:var(--btn);cursor:pointer;border:1px solid var(--btn)}
+    .input input,.input select{width:100%;height:40px;border-radius:12px;border:none;background:#0b1a29;color:var(--ink);padding:0 38px 0 12px;outline:0}
+    .input .x,.input .down{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--btn);cursor:pointer;border:none}
+    .tiny{display:grid;place-items:center;width:38px;height:40px;border-radius:12px;background:var(--btn);cursor:pointer;border:none}
     .tiny svg{width:18px;height:18px}
 
     .cats{margin-top:10px}
@@ -1324,7 +1330,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
     .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--btn);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
-    .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:#0b2239}
+    .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
     .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
     .title{font-weight:900;line-height:1.2}
     .info{display:flex;gap:16px;align-items:center;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -1382,15 +1388,11 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .mapboxgl-popup.hover-pop .mapboxgl-popup-content{
   max-width: 640px; /* allow a bit more width so content + scrollbar fit */
   overflow: hidden; /* no horizontal scroll on the container */
-
-  background: var(--list-background);
-  color: var(--ink);
-  border: 1px solid var(--btn);
   border-radius: 12px;
   padding: 6px 10px 6px 8px;
 }
 .hover-card{display:flex;gap:10px;align-items:center;max-width:280px}
-.hover-card img{width:64px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto;display:block;background:#0b2239}
+.hover-card img{width:64px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto;display:block;background:var(--modal-bg)}
 .hover-card .t{font-weight:800;font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .hover-card .s{font-size:12px;opacity:.8}
 
@@ -1403,7 +1405,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   padding: 6px 10px 6px 8px;
 }
 .hover-card{display:flex;gap:10px;align-items:flex-start;max-width:300px}
-.hover-card img{width:64px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto;display:block;background:#0b2239}
+.hover-card img{width:64px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto;display:block;background:var(--modal-bg)}
 .hover-card .t{
   font-weight:800;font-size:13px;line-height:1.25;
   white-space:normal;word-break:break-word;overflow-wrap:anywhere;
@@ -1419,9 +1421,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 /* === 0528: Cluster contextmenu list (robust) === */
 .mapboxgl-popup.hover-pop { pointer-events: auto; }
 .mapboxgl-popup.hover-pop .mapboxgl-popup-content{
-  background: var(--list-background);
-  color: var(--ink);
-  border: 1px solid var(--btn);
   border-radius: 12px;
   padding: 6px 10px 6px 8px;
   max-width: 640px;
@@ -1445,8 +1444,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   cursor:pointer;
   min-width:0;               /* allow shrinking within container */
 }
-.multi-item:hover{background:#0f243a}
-.multi-item img{width:64px;height:44px;border-radius:8px;object-fit:cover;display:block;background:#0b2239;flex:0 0 auto}
+.multi-item:hover{background:var(--btn-hover)}
+.multi-item img{width:64px;height:44px;border-radius:8px;object-fit:cover;display:block;background:var(--modal-bg);flex:0 0 auto}
 .multi-item .t{
   font-weight:800;
   font-size:13px;
@@ -1461,7 +1460,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .multi-item .s{font-size:12px;opacity:.8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .multi-ctrls{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
 .multi-ctrls .hint{font-size:12px;color:var(--ink-d)}
-.multi-ctrls .close{border:0;background:#16283f;border-radius:10px;padding:6px 10px;cursor:pointer}
+.multi-ctrls .close{border:0;background:var(--btn);border-radius:10px;padding:6px 10px;cursor:pointer}
 
 .multi-item > div{ min-width:0; }
 .multi-item .hover-card{ max-width:100%; }
@@ -1665,6 +1664,13 @@ footer .foot-row .foot-item img {
 
     <section class="map-wrap" aria-label="Map">
       <div id="map"></div>
+      <div id="mapControls" class="field" role="search">
+        <div class="input">
+          <input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
+          <div class="x" role="button" aria-label="Clear location">X</div>
+        </div>
+        <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
+      </div>
       <div class="map-overlay">Loading Map…</div>
     </section>
     <section class="posts-mode" aria-label="Posts">
@@ -1689,14 +1695,6 @@ footer .foot-row .foot-item img {
       <div class="modal-body">
         <section class="filters-col" aria-label="Filters">
           <div>
-            <h3>Location</h3>
-            <div class="field" role="search">
-              <div class="input"><input id="locationInput" type="text" placeholder="Enter a city or address and press Enter" aria-label="Location" />
-                <div class="x" role="button" aria-label="Clear location">X</div>
-              </div>
-              <div id="btnGeo" class="tiny" role="button" aria-label="Find my location">Locate</div>
-            </div>
-
             <h3>Keywords</h3>
             <div class="field">
               <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
