@@ -3152,7 +3152,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
-      ['bg','text','btn','btnText','card'].forEach(type=>{
+      ['bg','card','text','btn','btnText'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         if(!cInput) return;
@@ -3196,7 +3196,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       sameBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','text','btn','btnText','card'].forEach(type=>{
+        ['bg','card','text','btn','btnText'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -3209,9 +3209,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       lg.appendChild(sameBtn);
       fs.appendChild(lg);
       const types = ['bg'];
+      if(area.selectors.card) types.push('card');
       if(area.selectors.text) types.push('text');
       if(area.selectors.btn) types.push('btn','btnText');
-      if(area.selectors.card) types.push('card');
       types.forEach(type=>{
         const row = document.createElement('div');
         row.className = 'control-row';
@@ -3250,7 +3250,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         (area.selectors[type]||[]).forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text') el.style.color = color;
+            else if(type==='text' || type==='btnText') el.style.color = color;
             else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
           });
         });
@@ -3260,7 +3260,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         return;
       }
     colorAreas.forEach(area=>{
-      ['bg','text','btn','btnText','card'].forEach(type=>{
+      ['bg','card','text','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         if(!c) return;
@@ -3283,7 +3283,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','text','btn','btnText','card'].forEach(type=>{
+      ['bg','card','text','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         if(c){
