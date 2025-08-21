@@ -2787,6 +2787,8 @@ function makePosts(){
     }
 
     async function openPost(id, fromPosts=false){
+      spinEnabled = false;
+      localStorage.setItem('spinGlobe', 'false');
       stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
       if(mode !== 'posts'){
