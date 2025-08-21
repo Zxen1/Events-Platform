@@ -309,6 +309,21 @@ button:focus-visible,
   position:relative;
   margin-left:auto;
 }
+#adminModal .shadow-group{
+  flex:1 1 auto;
+  display:flex;
+  gap:4px;
+  align-items:center;
+}
+#adminModal .shadow-group input[type=color]{
+  width:40px;
+  height:40px;
+  padding:0;
+  border-radius:4px;
+}
+#adminModal .shadow-group input[type=number]{
+  width:50px;
+}
 #adminModal .admin-fieldset input,
 #adminModal .admin-fieldset select{
   width:100%;
@@ -3143,6 +3158,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           el.dataset.titleDefaultColor = cs.color;
           el.dataset.titleDefaultFont = cs.fontFamily;
           el.dataset.titleDefaultSize = cs.fontSize;
+          el.dataset.titleDefaultWeight = cs.fontWeight;
+          el.dataset.titleDefaultShadow = cs.textShadow;
         });
       });
     });
@@ -3154,6 +3171,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(el.dataset.titleDefaultColor) el.style.color = el.dataset.titleDefaultColor;
         if(el.dataset.titleDefaultFont) el.style.fontFamily = el.dataset.titleDefaultFont;
         if(el.dataset.titleDefaultSize) el.style.fontSize = el.dataset.titleDefaultSize;
+        if(el.dataset.titleDefaultWeight) el.style.fontWeight = el.dataset.titleDefaultWeight;
+        if(el.dataset.titleDefaultShadow) el.style.textShadow = el.dataset.titleDefaultShadow;
       });
     });
   }
@@ -3185,7 +3204,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
         const sizeSel = document.getElementById(`${area.key}-${type}-size`);
-        if(!cInput && !fontSel && !sizeSel) return;
+        const weightSel = document.getElementById(`${area.key}-${type}-weight`);
+        const shColor = document.getElementById(`${area.key}-${type}-shadow-color`);
+        const shX = document.getElementById(`${area.key}-${type}-shadow-x`);
+        const shY = document.getElementById(`${area.key}-${type}-shadow-y`);
+        const shB = document.getElementById(`${area.key}-${type}-shadow-blur`);
+        if(!cInput && !fontSel && !sizeSel && !weightSel && !shColor) return;
         let selectors = area.selectors[type] || [];
         if(area.key==='body' && ['border','hoverBorder','activeBorder'].includes(type)){
           const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
@@ -3206,7 +3230,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if((type==='hoverBorder' || type==='activeBorder') && selectors.length===0){
           selectors = area.selectors.border || [];
         }
-        let col = null, font = null, size = null;
+        let col = null, font = null, size = null, weight = null, shadow = null;
         selectors.some(sel=>{
           const cleanSel = sel.replace(/:hover|:active|\[.*?\]/g,'');
           const el = document.querySelector(cleanSel);
@@ -3219,6 +3243,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
+          if(weightSel) weight = cs.fontWeight;
+          if(shColor){
+            if(type==='text' || type==='title' || type==='btnText') shadow = cs.textShadow;
+            else if(type==='card' || type==='btn') shadow = cs.boxShadow;
+          }
           return true;
         });
         if(cInput && col){
@@ -3237,6 +3266,26 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         if(sizeSel && size){
           sizeSel.value = String(size);
+        }
+        if(weightSel && weight){
+          weightSel.value = parseInt(weight,10) >= 600 ? 'bold' : 'normal';
+        }
+        if(shColor && shadow && shadow !== 'none'){
+          if(type==='text' || type==='title' || type==='btnText'){
+            const m = shadow.match(/(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+            if(m){
+              shX.value = m[1];
+              shY.value = m[2];
+              shB.value = m[3];
+              shColor.value = rgbToHex(parseInt(m[4],10),parseInt(m[5],10),parseInt(m[6],10));
+            }
+          } else {
+            const m = shadow.match(/0px\s+0px\s+(\d+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+            if(m){
+              shB.value = m[1];
+              shColor.value = rgbToHex(parseInt(m[2],10),parseInt(m[3],10),parseInt(m[4],10));
+            }
+          }
         }
       });
     });
@@ -3274,6 +3323,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const fromS = document.getElementById(`${lastFieldsetKey}-${type}-size`);
           const toS = document.getElementById(`${area.key}-${type}-size`);
           if(fromS && toS){ toS.value = fromS.value; }
+          const fromW = document.getElementById(`${lastFieldsetKey}-${type}-weight`);
+          const toW = document.getElementById(`${area.key}-${type}-weight`);
+          if(fromW && toW){ toW.value = fromW.value; }
+          const fromSC = document.getElementById(`${lastFieldsetKey}-${type}-shadow-color`);
+          const toSC = document.getElementById(`${area.key}-${type}-shadow-color`);
+          if(fromSC && toSC){ toSC.value = fromSC.value; }
+          const fromSX = document.getElementById(`${lastFieldsetKey}-${type}-shadow-x`);
+          const toSX = document.getElementById(`${area.key}-${type}-shadow-x`);
+          if(fromSX && toSX){ toSX.value = fromSX.value; }
+          const fromSY = document.getElementById(`${lastFieldsetKey}-${type}-shadow-y`);
+          const toSY = document.getElementById(`${area.key}-${type}-shadow-y`);
+          if(fromSY && toSY){ toSY.value = fromSY.value; }
+          const fromSB = document.getElementById(`${lastFieldsetKey}-${type}-shadow-blur`);
+          const toSB = document.getElementById(`${area.key}-${type}-shadow-blur`);
+          if(fromSB && toSB){ toSB.value = fromSB.value; }
         });
         ['hoverAdjust','activeAdjust'].forEach(type=>{
           const fromV = document.getElementById(`${lastFieldsetKey}-${type}`);
@@ -3333,6 +3397,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             `;
         }
         fs.appendChild(row);
+        if(type === 'card' || type === 'btn'){
+          const shadowRow = document.createElement('div');
+          shadowRow.className = 'control-row';
+          shadowRow.innerHTML = `
+              <label>Shadow</label>
+              <div class="color-group">
+                <input id="${area.key}-${type}-shadow-color" type="color" data-mode="${COLOR_PICKER_MODE}" />
+                <input id="${area.key}-${type}-shadow-blur" type="range" min="0" max="50" step="1" value="0" />
+              </div>
+            `;
+          fs.appendChild(shadowRow);
+        }
         if(type === 'text' || type === 'title' || type === 'btnText'){
           const fontRow = document.createElement('div');
           fontRow.className = 'control-row';
@@ -3367,6 +3443,36 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           sizeRow.appendChild(sizeLabel);
           sizeRow.appendChild(sizeSelect);
           fs.appendChild(sizeRow);
+
+          const weightRow = document.createElement('div');
+          weightRow.className = 'control-row';
+          const weightLabel = document.createElement('label');
+          weightLabel.textContent = 'Font Weight';
+          const weightSelect = document.createElement('select');
+          weightSelect.className = 'font-weight-select';
+          weightSelect.id = `${area.key}-${type}-weight`;
+          ['normal','bold'].forEach(w=>{
+            const opt = document.createElement('option');
+            opt.value = w;
+            opt.textContent = w.charAt(0).toUpperCase()+w.slice(1);
+            weightSelect.appendChild(opt);
+          });
+          weightRow.appendChild(weightLabel);
+          weightRow.appendChild(weightSelect);
+          fs.appendChild(weightRow);
+
+          const shadowRow = document.createElement('div');
+          shadowRow.className = 'control-row';
+          shadowRow.innerHTML = `
+              <label>Text Shadow</label>
+              <div class="shadow-group">
+                <input id="${area.key}-${type}-shadow-color" type="color" data-mode="${COLOR_PICKER_MODE}" />
+                <input id="${area.key}-${type}-shadow-x" type="number" value="0" step="1" />
+                <input id="${area.key}-${type}-shadow-y" type="number" value="0" step="1" />
+                <input id="${area.key}-${type}-shadow-blur" type="number" value="0" step="1" />
+              </div>
+            `;
+          fs.appendChild(shadowRow);
         }
       });
       wrap.appendChild(fs);
@@ -3403,25 +3509,46 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
         const s = document.getElementById(`${area.key}-${type}-size`);
-        if(!c && !f && !s) return;
+        const w = document.getElementById(`${area.key}-${type}-weight`);
+        const sc = document.getElementById(`${area.key}-${type}-shadow-color`);
+        const sx = document.getElementById(`${area.key}-${type}-shadow-x`);
+        const sy = document.getElementById(`${area.key}-${type}-shadow-y`);
+        const sb = document.getElementById(`${area.key}-${type}-shadow-blur`);
+        if(!c && !f && !s && !w && !sc) return;
         const color = c ? c.value : null;
         const opacity = o ? o.value : 1;
         const font = f ? f.value : null;
         const size = s ? s.value : null;
+        const weight = w ? w.value : null;
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
+              if(type==='card'){
+                const shadowColor = sc ? sc.value : null;
+                const blur = sb ? sb.value : 0;
+                if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
+              }
             } else if(type==='text' || type==='btnText' || type==='title'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
+              if(weight) el.style.fontWeight = weight;
+              if(sc){
+                const x = sx ? sx.value : 0;
+                const y = sy ? sy.value : 0;
+                const blur = sb ? sb.value : 0;
+                el.style.textShadow = `${x}px ${y}px ${blur}px ${sc.value}`;
+              }
             } else if(type==='btn'){
               if(color){
                 el.style.backgroundColor = color;
                 el.style.borderColor = color;
               }
+              const shadowColor = sc ? sc.value : null;
+              const blur = sb ? sb.value : 0;
+              if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
             }
           });
         });
@@ -3442,14 +3569,26 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
         const s = document.getElementById(`${area.key}-${type}-size`);
+        const w = document.getElementById(`${area.key}-${type}-weight`);
+        const sc = document.getElementById(`${area.key}-${type}-shadow-color`);
+        const sx = document.getElementById(`${area.key}-${type}-shadow-x`);
+        const sy = document.getElementById(`${area.key}-${type}-shadow-y`);
+        const sb = document.getElementById(`${area.key}-${type}-shadow-blur`);
         const v = document.getElementById(`${area.key}-${type}`);
-        if(c || f || s || v){
+        if(c || f || s || v || w || sc){
           const entry = {};
           if(c){ entry.color = c.value; }
           if((['bg','card','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
           if(v){ entry.value = v.value; }
           if(f){ entry.font = f.value; }
           if(s){ entry.size = s.value; }
+          if(w){ entry.weight = w.value; }
+          if(sc){
+            entry.shadow = { color: sc.value };
+            if(sx) entry.shadow.x = sx.value;
+            if(sy) entry.shadow.y = sy.value;
+            if(sb) entry.shadow.blur = sb.value;
+          }
           data[`${area.key}-${type}`] = entry;
         }
       });
@@ -3513,12 +3652,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const o = document.getElementById(`${areaKey}-${type}-o`);
         const f = document.getElementById(`${areaKey}-${type}-font`);
         const s = document.getElementById(`${areaKey}-${type}-size`);
+        const w = document.getElementById(`${areaKey}-${type}-weight`);
+        const sc = document.getElementById(`${areaKey}-${type}-shadow-color`);
+        const sx = document.getElementById(`${areaKey}-${type}-shadow-x`);
+        const sy = document.getElementById(`${areaKey}-${type}-shadow-y`);
+        const sb = document.getElementById(`${areaKey}-${type}-shadow-blur`);
         const v = document.getElementById(`${areaKey}-${type}`);
         if(c && val.color){ c.value = val.color; }
         if((['bg','card','border','hoverBorder','activeBorder'].includes(type)) && o && val.opacity!==undefined){ o.value = val.opacity; }
         if(v && val.value!==undefined){ v.value = val.value; }
         if(f && val.font){ f.value = val.font; }
         if(s && val.size){ s.value = val.size; }
+        if(w && val.weight){ w.value = val.weight; }
+        if(sc && val.shadow){
+          if(val.shadow.color) sc.value = val.shadow.color;
+          if(sx && val.shadow.x!==undefined) sx.value = val.shadow.x;
+          if(sy && val.shadow.y!==undefined) sy.value = val.shadow.y;
+          if(sb && val.shadow.blur!==undefined) sb.value = val.shadow.blur;
+        }
       });
       applyAdmin();
     }
