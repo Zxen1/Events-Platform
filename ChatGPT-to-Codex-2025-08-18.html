@@ -1524,6 +1524,13 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .hover-card .t{font-weight:800;font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .hover-card .s{font-size:12px;opacity:.8}
 
+/* restore triangular popup tip */
+.mapboxgl-popup-tip{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent}
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip{border-bottom:10px solid var(--modal-bg)}
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip{border-top:10px solid var(--modal-bg)}
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip{border-right:10px solid var(--modal-bg)}
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip{border-left:10px solid var(--modal-bg)}
+
 
 /* === 0515: Robust wrapping/clamping for hover popups === */
 .mapboxgl-popup.hover-pop{max-width:320px}
@@ -1921,7 +1928,21 @@ footer .foot-row .foot-item img {
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
                 <option value="mapbox://styles/mapbox/light-v11">Light</option>
                 <option value="mapbox://styles/mapbox/dark-v11">Dark</option>
-                <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite</option>
+                <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite Streets</option>
+                <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
+                <option value="mapbox://styles/mapbox/navigation-day-v1">Navigation Day</option>
+                <option value="mapbox://styles/mapbox/navigation-night-v1">Navigation Night</option>
+                <option value="mapbox://styles/mapbox/standard">Standard</option>
+                <option value="mapbox://styles/mapbox/standard-satellite">Standard Satellite</option>
+              </select>
+            </div>
+            <div class="modal-field">
+              <label for="skyTheme">Sky</label>
+              <select id="skyTheme">
+                <option value="default">Default</option>
+                <option value="sunset">Sunset</option>
+                <option value="night">Night</option>
+                <option value="aurora">Aurora</option>
               </select>
             </div>
             <div class="modal-field">
@@ -1993,7 +2014,8 @@ footer .foot-row .foot-item img {
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12';
+          mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12',
+          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
@@ -2003,6 +2025,21 @@ footer .foot-row .foot-item img {
         }
       }
       updateLogoClickState();
+
+      function applySky(theme){
+        if(!window.map || typeof map.setSky !== 'function'){
+          console.warn('map.setSky is not available in this Mapbox GL JS version.');
+          return;
+        }
+        const skyThemes = {
+          default:{ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0,90.0], 'sky-atmosphere-sun-intensity':10 },
+          sunset:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#ffcf70', 'sky-atmosphere-halo-color':'#ff8f70', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':15 },
+          night:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#0b1d51', 'sky-atmosphere-halo-color':'#1a2849', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':0.05 },
+          aurora:{ 'sky-type':'atmosphere', 'sky-atmosphere-color':'#03172f', 'sky-atmosphere-halo-color':'#5dd9c1', 'sky-atmosphere-sun':[0.0,0.0], 'sky-atmosphere-sun-intensity':0.5 }
+        };
+        map.setSky(skyThemes[theme] || skyThemes.default);
+      }
+
       logoEl?.addEventListener('click', () => {
         if(!spinLogoClick) return;
         spinEnabled = true;
@@ -2532,11 +2569,7 @@ function makePosts(){
       }catch{}
       map.on('style.load', () => {
         map.setFog({ color: 'rgb(186, 210, 255)', 'high-color': 'rgb(64, 152, 255)', 'space-color':'rgb(4,7,22)', 'horizon-blend': 0.3 });
-        if (typeof map.setSky === 'function') {
-          map.setSky({ 'sky-type':'atmosphere', 'sky-atmosphere-sun':[0.0, 90.0], 'sky-atmosphere-sun-intensity': 10 });
-        } else {
-          console.warn('map.setSky is not available in this Mapbox GL JS version.');
-        }
+        applySky(skyStyle);
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
 
@@ -3505,6 +3538,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function syncAdminControls(){
     const themeSelect = document.getElementById('mapTheme');
     if(themeSelect) themeSelect.value = mapStyle;
+    const skySelect = document.getElementById('skyTheme');
+    if(skySelect) skySelect.value = skyStyle;
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
@@ -4067,6 +4102,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             if(window.map) window.map.setStyle(mapStyle);
           });
         }
+        const skySelect = document.getElementById("skyTheme");
+        if(skySelect){
+          skySelect.value = skyStyle;
+          skySelect.addEventListener("change", ()=>{
+            skyStyle = window.skyStyle = skySelect.value;
+            localStorage.setItem("skyStyle", skyStyle);
+            if(window.map) applySky(skyStyle);
+          });
+        }
         if(speedInput && speedVal){
         speedInput.value = sg.spinEnabled ? sg.spinSpeed : 0;
         speedVal.textContent = sg.spinEnabled ? sg.spinSpeed.toFixed(2) : "Off";
@@ -4108,11 +4152,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(e.target.id === "spinSpeed" || e.target.id === "mapTheme") return;
+          if(["spinSpeed","mapTheme","skyTheme"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(e.target.id === "spinSpeed" || e.target.id === "mapTheme") return;
+          if(["spinSpeed","mapTheme","skyTheme"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
     }
