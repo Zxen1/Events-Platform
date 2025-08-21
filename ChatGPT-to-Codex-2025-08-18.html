@@ -864,7 +864,6 @@ button:focus-visible,
 
 footer{
   height: var(--footer-h);
-  border-top: 1px solid var(--btn);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -891,7 +890,6 @@ footer{
   align-items: center;
   gap: 8px;
   background: var(--btn);
-  border: 1px solid var(--btn);
   border-radius: 12px;
   padding: 6px 10px;
   font-size: 12px;
@@ -903,7 +901,6 @@ footer{
 
 footer .foot-row .foot-item{
   background:var(--list-background);
-  border:1px solid var(--btn);
 }
 
 .chip-small img.mini{
@@ -940,7 +937,6 @@ footer .foot-row .foot-item[aria-selected="true"],
 .mapboxgl-popup.hover-pop .hover-card.selected,
 .mapboxgl-popup.hover-pop .hover-card[aria-selected="true"]{
   filter: brightness(0.95);
-  box-shadow: 0 0 0 2px var(--ink-d) inset;
 }
 
 .card .thumb{
@@ -1343,7 +1339,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
-    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--btn);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
+    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
     .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
     .title{font-weight:900;line-height:1.2}
@@ -1381,9 +1377,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .date{background:var(--btn);border:1px solid var(--btn);border-radius:999px;padding:6px 10px;font-size:12px}
     .desc{margin-top:8px}
 
-    footer{height:var(--footer-h);border-top:1px solid var(--btn);display:flex;align-items:center;gap:10px;padding:10px 14px;position:relative;z-index:10}
+    footer{height:var(--footer-h);display:flex;align-items:center;gap:10px;padding:10px 14px;position:relative;z-index:10}
     .foot-row{overflow-x:auto;overflow-y:hidden;white-space:nowrap;display:flex;gap:8px;width:100%}
-    .chip-small{flex:0 0 auto;max-width:240px;display:flex;align-items:center;gap:8px;background:var(--btn);border:1px solid var(--btn);border-radius:12px;padding:6px 10px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .chip-small{flex:0 0 auto;max-width:240px;display:flex;align-items:center;gap:8px;background:var(--btn);border-radius:12px;padding:6px 10px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
     .chip-small img.mini{width:26px;height:20px;border-radius:6px;object-fit:cover;flex:0 0 auto;display:block;background:var(--btn)}
     .chip-small .t{overflow:hidden;text-overflow:ellipsis}
       footer .foot-row .fav-star{color:var(--gold);flex:0 0 auto;}
