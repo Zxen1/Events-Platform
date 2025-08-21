@@ -435,7 +435,7 @@ button:focus-visible,
 #adminModal .tab-bar button{flex:1;padding:6px 10px;border-radius:6px;background:#eee;cursor:pointer;}
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
-#adminModal .tab-panel.active{display:block;}
+#adminModal .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
 #adminModal input[type=range]{width:100%;}
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
 #adminModal .preset-actions input{flex:1;padding:6px;border-radius:4px;}
@@ -445,6 +445,7 @@ button:focus-visible,
   display:flex;
   flex-direction:column;
 }
+#adminModal .modal-field{margin:0;max-width:320px;}
 #baseColorRow{
   flex-direction:row;
   align-items:center;
@@ -1525,7 +1526,15 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .hover-card .s{font-size:12px;opacity:.8}
 
 /* restore triangular popup tip */
-.mapboxgl-popup-tip{width:0!important;height:0!important;border-left:10px solid transparent;border-right:10px solid transparent}
+.mapboxgl-popup-tip{
+  width:0!important;
+  height:0!important;
+  background:transparent!important;
+  border:0 solid transparent;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  transform:none!important;
+}
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip{border-bottom:10px solid var(--modal-bg)}
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip{border-top:10px solid var(--modal-bg)}
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip{border-right:10px solid var(--modal-bg)}
@@ -1936,10 +1945,14 @@ footer .foot-row .foot-item img {
                 <option value="mapbox://styles/mapbox/standard-satellite">Standard Satellite</option>
                 <option value="mapbox://styles/mapbox/traffic-day-v2">Traffic Day</option>
                 <option value="mapbox://styles/mapbox/traffic-night-v2">Traffic Night</option>
-                <option value="mapbox://styles/mapbox/bright-v10">Bright</option>
+                <option value="mapbox://styles/mapbox/terrain-v2">Terrain</option>
+                <option value="mapbox://styles/mapbox/standard-light">Standard Light</option>
+                <option value="mapbox://styles/mapbox/standard-dark">Standard Dark</option>
+                <option value="mapbox://styles/mapbox/streets-v8">Streets Classic</option>
                 <option value="mapbox://styles/mapbox/emerald-v8">Emerald</option>
-                <option value="mapbox://styles/mapbox/monochrome">Monochrome</option>
-                <option value="mapbox://styles/mapbox/blueprint-v2">Blueprint</option>
+                <option value="mapbox://styles/mapbox/wheatpaste-v9">Wheatpaste</option>
+                <option value="mapbox://styles/mapbox/pencil-v2">Pencil</option>
+                <option value="mapbox://styles/mapbox/vintage-v10">Vintage</option>
               </select>
             </div>
             <div class="modal-field">
@@ -1954,6 +1967,9 @@ footer .foot-row .foot-item img {
                 <option value="space">Space</option>
                 <option value="cloudy">Cloudy</option>
                 <option value="storm">Storm</option>
+                <option value="twilight">Twilight</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="rainbow">Rainbow</option>
               </select>
             </div>
             <div class="modal-field">
@@ -2016,7 +2032,8 @@ footer .foot-row .foot-item img {
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
-    const startCenter = savedView?.center || [0,0];
+    const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
+    const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
     const startPitch = savedView?.pitch || 0;
       let map, geocoder, spinning = false,
@@ -2051,7 +2068,10 @@ footer .foot-row .foot-item img {
           dusk:{ 'color':'#8e4e9e','high-color':'#3b1a69','space-color':'#020024','horizon-blend':0.3 },
           space:{ 'color':'#000000','high-color':'#000000','space-color':'#000000','horizon-blend':0,'star-intensity':0.0 },
           cloudy:{ 'color':'#cdd2d7','high-color':'#e4e7eb','space-color':'#adb5bd','horizon-blend':0.2 },
-          storm:{ 'color':'#5e5e5e','high-color':'#2a2a2a','space-color':'#000000','horizon-blend':0.1 }
+          storm:{ 'color':'#5e5e5e','high-color':'#2a2a2a','space-color':'#000000','horizon-blend':0.1 },
+          twilight:{ 'color':'#2e3358','high-color':'#75517d','space-color':'#141429','horizon-blend':0.3 },
+          sunrise:{ 'color':'#ffd28c','high-color':'#ff6e7f','space-color':'#2c1055','horizon-blend':0.4 },
+          rainbow:{ 'color':'#ffe29f','high-color':'#ffa99f','space-color':'#667eea','horizon-blend':0.3 }
         };
         map.setFog(skyThemes[theme] || skyThemes.default);
       }
