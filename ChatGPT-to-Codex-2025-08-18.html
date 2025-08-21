@@ -1450,6 +1450,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
     .geocoder{position:absolute;top:10px;left:10px;z-index:10;min-width:240px;display:flex;gap:4px}
     .geocoder .mapboxgl-ctrl-geocoder{flex:1}
+    .geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none}
+    .geocoder .mapboxgl-ctrl-geolocate{width:100%;height:100%;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px}
 
     .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px;color:#000;background:rgba(0,0,0,0.7)}
     .posts-mode .res-list{overflow:visible;padding:12px 0 0}
@@ -2458,7 +2460,12 @@ function makePosts(){
           marker: false,
           placeholder: 'Search Location'
         });
-        geocoder.on('result', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); applyFilters(); });
+        geocoder.on('result', ()=>{
+          spinEnabled = false;
+          localStorage.setItem('spinGlobe','false');
+          stopSpin();
+          if(map) map.once('moveend', () => { applyFilters(); updatePostPanel(); });
+        });
         const gc = document.getElementById('geocoder');
         if(gc) gc.appendChild(geocoder.onAdd(map));
       } else {
@@ -2519,13 +2526,14 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
+      map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
         const c = map.getCenter();
         map.setCenter([c.lng + spinSpeed, c.lat]);
         requestAnimationFrame(step);
       }
-      requestAnimationFrame(step);
+      map.once('moveend', () => requestAnimationFrame(step));
     }
     function stopSpin(){
       spinning = false;
