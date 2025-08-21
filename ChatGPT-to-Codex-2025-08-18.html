@@ -24,12 +24,29 @@
     --scrollbar-track: transparent;
     --scrollbar-thumb: rgba(0,0,0,0.3);
     --scrollbar-thumb-hover: rgba(0,0,0,0.5);
+    --border: rgba(255,255,255,1);
+    --border-hover: rgba(224,224,224,1);
+    --border-active: rgba(213,213,213,1);
 }
 
 *{
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  border-color: var(--border) !important;
+}
+
+*:active,
+*[aria-pressed="true"],
+*[aria-current="page"],
+*[aria-selected="true"],
+.selected,
+.on{
+  border-color: var(--border-active) !important;
+}
+
+*:hover{
+  border-color: var(--border-hover) !important;
 }
 
 html,body{
@@ -3112,7 +3129,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button'], btnText:['.res-head button']}},
-    {key:'body', label:'Body', selectors:{bg:['body'], border:['button','[role="button"]','.card','.chip'], hoverBorder:['button:hover','[role="button"]:hover','.card:hover','.chip:hover'], activeBorder:['button:active','[role="button"]:active','button[aria-pressed="true"]','button[aria-current="page"]','button[aria-selected="true"]','[role="button"][aria-pressed="true"]','[role="button"][aria-current="page"]','[role="button"][aria-selected="true"]','.card.selected','.card[aria-selected="true"]','.chip.on']}},
+    {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
@@ -3174,6 +3191,22 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const sizeSel = document.getElementById(`${area.key}-${type}-size`);
         if(!cInput && !fontSel && !sizeSel) return;
         let selectors = area.selectors[type] || [];
+        if(area.key==='body' && ['border','hoverBorder','activeBorder'].includes(type)){
+          const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+          const val = getComputedStyle(document.documentElement).getPropertyValue(varMap[type]).trim();
+          if(cInput && val){
+            const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+            if(match){
+              const r = parseInt(match[1],10);
+              const g = parseInt(match[2],10);
+              const bVal = parseInt(match[3],10);
+              const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
+              cInput.value = rgbToHex(r,g,bVal);
+              if(oInput) oInput.value = alpha;
+            }
+          }
+          return;
+        }
         if((type==='hoverBorder' || type==='activeBorder') && selectors.length===0){
           selectors = area.selectors.border || [];
         }
@@ -3347,49 +3380,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function applyAdmin(targetInput){
     if(targetInput && targetInput.id){
       const [areaKey, type] = targetInput.id.split('-');
-      if(['hoverBorder','activeBorder','hoverAdjust','activeAdjust'].includes(type)){
-        applyAdmin();
-        return;
-      }
-      const area = colorAreas.find(a=>a.key===areaKey);
-      if(area){
+      if(areaKey === 'body' && ['border','hoverBorder','activeBorder'].includes(type)){
         const colorInput = document.getElementById(`${areaKey}-${type}-c`);
         const opacityInput = document.getElementById(`${areaKey}-${type}-o`);
-        const fontInput = document.getElementById(`${areaKey}-${type}-font`);
-        const sizeInput = document.getElementById(`${areaKey}-${type}-size`);
         const color = colorInput ? colorInput.value : '#ffffff';
         const opacity = opacityInput ? opacityInput.value : 1;
-        const font = fontInput ? fontInput.value : null;
-        const size = sizeInput ? sizeInput.value : null;
-        (area.selectors[type]||[]).forEach(sel=>{
-          document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText' || type==='title'){
-              el.style.color = color;
-              if(font) el.style.fontFamily = font;
-              if(size) el.style.fontSize = `${size}px`;
-            } else if(type==='btn'){
-              el.style.backgroundColor = color;
-              el.style.borderColor = color;
-            } else if(type==='border'){
-              el.style.borderColor = hexToRgba(color, opacity);
-            }
-          });
-        });
-        if(type==='text'){
-          restoreTitleDefaults(area);
-        }
-      }
-      const themeStr = JSON.stringify(collectThemeValues());
-      localStorage.setItem('currentTheme', themeStr);
-      if(type==='text'){
-        applyAdmin();
+        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+        document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
+        const themeStr = JSON.stringify(collectThemeValues());
+        localStorage.setItem('currentTheme', themeStr);
         return;
       }
-      return;
     }
+    ['border','hoverBorder','activeBorder'].forEach(type=>{
+      const c = document.getElementById(`body-${type}-c`);
+      const o = document.getElementById(`body-${type}-o`);
+      if(c){
+        const rgba = hexToRgba(c.value, o ? o.value : 1);
+        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+        document.documentElement.style.setProperty(varMap[type], rgba);
+      }
+    });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3413,8 +3426,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
                 el.style.backgroundColor = color;
                 el.style.borderColor = color;
               }
-            } else if(type==='border'){
-              if(color) el.style.borderColor = hexToRgba(color, opacity);
             }
           });
         });
@@ -3423,36 +3434,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
     });
-    let css = '';
-    colorAreas.forEach(area=>{
-      const hC = document.getElementById(`${area.key}-hoverBorder-c`);
-      const hO = document.getElementById(`${area.key}-hoverBorder-o`);
-      const hA = document.getElementById(`${area.key}-hoverAdjust`);
-      if(area.selectors.hoverBorder && hC){
-        const rgba = hexToRgba(hC.value, hO ? hO.value : 1);
-        const adj = hA ? parseInt(hA.value) : 0;
-        area.selectors.hoverBorder.forEach(sel=>{
-          css += `${sel}{border-color:${rgba};filter:brightness(${100+adj}%);}`;
-        });
-      }
-      const aC = document.getElementById(`${area.key}-activeBorder-c`);
-      const aO = document.getElementById(`${area.key}-activeBorder-o`);
-      const aA = document.getElementById(`${area.key}-activeAdjust`);
-      if(area.selectors.activeBorder && aC){
-        const rgba = hexToRgba(aC.value, aO ? aO.value : 1);
-        const adj = aA ? parseInt(aA.value) : 0;
-        area.selectors.activeBorder.forEach(sel=>{
-          css += `${sel}{border-color:${rgba};filter:brightness(${100+adj}%);}`;
-        });
-      }
-    });
-    let styleEl = document.getElementById('adminDynamicStyles');
-    if(!styleEl){
-      styleEl = document.createElement('style');
-      styleEl.id = 'adminDynamicStyles';
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = css;
     const themeStr = JSON.stringify(collectThemeValues());
     localStorage.setItem('currentTheme', themeStr);
   }
