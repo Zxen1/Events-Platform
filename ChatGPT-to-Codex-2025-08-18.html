@@ -2348,7 +2348,11 @@ function makePosts(){
     }
 
     document.addEventListener('click', (e)=>{
-      if(e.target.closest('.card, .foot-item')) stopSpin();
+      if(e.target.closest('.card, .foot-item')) {
+        spinEnabled = false;
+        localStorage.setItem('spinGlobe', 'false');
+        stopSpin();
+      }
     }, {capture:true});
 
     function updateSpinState(){
