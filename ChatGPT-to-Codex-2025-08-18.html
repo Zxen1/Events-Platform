@@ -319,6 +319,7 @@ button:focus-visible,
 }
 #adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
 #adminModal .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
+#adminModal .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 #adminModal .color-group{
@@ -402,9 +403,9 @@ button:focus-visible,
   max-width:220px;
 }
 #adminModal .control-row select{
-  flex:1 1 120px;
+  flex:1 1 220px;
   width:100%;
-  max-width:120px;
+  max-width:220px;
   margin-left:auto;
   border-radius:4px;
   padding:4px;
@@ -3593,7 +3594,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const picker = document.createElement('div');
           picker.className = 'textpicker';
           picker.id = `${area.key}-${type}-picker`;
-          picker.dataset.bgSource = `${area.key}-${TEXT_BG_MAP[type]}-c`;
+          let bgKey = TEXT_BG_MAP[type];
+          if(type === 'text' && ['list','posts','footer','map'].includes(area.key)){
+            bgKey = 'card';
+          }
+          picker.dataset.bgSource = `${area.key}-${bgKey}-c`;
           const preview = document.createElement('div');
           preview.className = 'text-preview';
           preview.textContent = 'Text';
@@ -3633,7 +3638,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           bgInput && bgInput.addEventListener('input', update);
           preview.addEventListener('click', e=>{ e.stopPropagation(); picker.classList.toggle('open'); });
           popup.addEventListener('click', e=> e.stopPropagation());
-          document.addEventListener('click', e=>{ if(!picker.contains(e.target)) picker.classList.remove('open'); });
+          document.addEventListener('click', e=>{
+            const active = document.activeElement;
+            if(!picker.contains(e.target) && (!active || !picker.contains(active))){
+              picker.classList.remove('open');
+            }
+          });
           update();
           return;
         }
