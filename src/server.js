@@ -1,9 +1,12 @@
 const { getUserTheme, setUserTheme } = require('./db/theme');
+const { generateTheme } = require('./themeBuilder');
 
 function applyTheme(theme) {
-  // Placeholder for actual theme application logic
+  // Build a full theme palette from the stored base color
   if (theme) {
-    console.log(`Applying theme: ${theme.name}`);
+    const base = theme.data && theme.data.primary ? theme.data.primary : '#336699';
+    const generated = generateTheme(base);
+    console.log(`Applying theme: ${theme.name}`, generated);
   }
 }
 
