@@ -1803,6 +1803,11 @@ footer .foot-row .foot-item img {
             <input id="newPresetName" type="text" placeholder="Preset name" />
             <button type="button" id="savePreset">Save Preset</button>
           </div>
+          <div class="modal-field">
+            <label for="baseColor">Base Color</label>
+            <input type="color" id="baseColor" value="#336699" />
+            <button type="button" id="generateThemeBtn">Generate</button>
+          </div>
           <h3>Theme Customization</h3>
           <div id="styleControls"></div>
         </div>
@@ -3196,6 +3201,41 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
+  function hexToRgb(hex){
+    const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
+    return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
+  }
+
+  function clamp(v){
+    return Math.max(0, Math.min(255, v));
+  }
+
+  function adjust(hex, amt){
+    const rgb = hexToRgb(hex);
+    if(!rgb) return hex;
+    return rgbToHex(clamp(rgb.r + amt), clamp(rgb.g + amt), clamp(rgb.b + amt));
+  }
+
+  function luminance(hex){
+    const rgb = hexToRgb(hex);
+    if(!rgb) return 0;
+    const { r, g, b } = rgb;
+    const a = [r, g, b].map(v => {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+  }
+
+  function generateTheme(baseColor){
+    const primary = baseColor;
+    const secondary = adjust(baseColor, 30);
+    const accent = adjust(baseColor, -30);
+    const background = adjust(baseColor, 60);
+    const text = luminance(background) > 0.5 ? '#000000' : '#ffffff';
+    return { primary, secondary, accent, background, text };
+  }
+
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
@@ -3764,6 +3804,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       savePreset(name);
       document.getElementById('newPresetName').value = '';
     }
+  });
+
+  const baseColorInput = document.getElementById('baseColor');
+  const generateThemeBtn = document.getElementById('generateThemeBtn');
+  generateThemeBtn && generateThemeBtn.addEventListener('click', ()=>{
+    const base = baseColorInput.value;
+    const theme = generateTheme(base);
+    document.body.style.backgroundColor = theme.background;
+    document.body.style.color = theme.text;
   });
 
   const palette = document.getElementById('fieldPalette');
