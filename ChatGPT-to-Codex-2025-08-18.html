@@ -2234,6 +2234,11 @@ function makePosts(){
         }
         updatePostPanel();
       }
+      if(m==='posts'){
+        spinEnabled = false;
+        localStorage.setItem('spinGlobe','false');
+        stopSpin();
+      }
       applyFilters();
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
@@ -2290,6 +2295,7 @@ function makePosts(){
     }
 
     function startSpin(){
+      if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
       function step(){
