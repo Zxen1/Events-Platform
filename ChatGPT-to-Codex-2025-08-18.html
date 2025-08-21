@@ -1448,6 +1448,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .map-wrap{position:relative;background:var(--btn);border-radius:16px;overflow:hidden;border:1px solid var(--border);height:100%}
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
+    .geocoder{position:absolute;top:10px;left:10px;z-index:10;min-width:240px}
 
     .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px;color:#000;background:rgba(0,0,0,0.7)}
     .posts-mode .res-list{overflow:visible;padding:12px 0 0}
@@ -1763,6 +1764,7 @@ footer .foot-row .foot-item img {
       </section>
 
     <section class="map-wrap" aria-label="Map">
+      <div id="geocoder" class="geocoder"></div>
       <div id="map"></div>
       <div class="map-overlay">Loading Map…</div>
     </section>
@@ -2449,11 +2451,12 @@ function makePosts(){
           placeholder: 'Try: Federation Square, Swanston St & Flinders St, Melbourne VIC 3000, Australia'
         });
         geocoder.on('result', ()=>{ stopSpin(); applyFilters(); });
-        map.addControl(geocoder, 'top-left');
+        const gc = document.getElementById('geocoder');
+        if(gc) gc.appendChild(geocoder.onAdd(map));
       }
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', stopSpin);
-      map.addControl(geolocate, 'top-left');
+      map.addControl(geolocate, 'top-right');
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
