@@ -1819,7 +1819,7 @@ footer .foot-row .foot-item img {
     const startZoom = savedView?.zoom || 1.5;
     const startPitch = savedView?.pitch || 0;
     let map, spinning = false,
-        spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
+        spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
         spinLoadType = localStorage.getItem('spinLoadType') || 'all',
         spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
         spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
