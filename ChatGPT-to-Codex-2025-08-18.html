@@ -2349,7 +2349,7 @@ function makePosts(){
 
     document.addEventListener('click', (e)=>{
       if(e.target.closest('.card, .foot-item')) stopSpin();
-    });
+    }, {capture:true});
 
     function updateSpinState(){
       const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
@@ -2731,7 +2731,7 @@ function makePosts(){
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div><button class="fav" aria-pressed="${p && p.fav?'true':'false'}" aria-label="Toggle favourite"><svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>`;
         el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
         const favBtn = el.querySelector('.fav');
-        favBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
+        favBtn.addEventListener('click', (e)=>{ if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
         footRow.appendChild(el);
       }
       // scroll to the far right to reveal the newest
