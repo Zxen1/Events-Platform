@@ -2347,6 +2347,10 @@ function makePosts(){
       spinning = false;
     }
 
+    document.addEventListener('click', (e)=>{
+      if(e.target.closest('.card, .foot-item')) stopSpin();
+    });
+
     function updateSpinState(){
       const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
       if(shouldSpin !== spinEnabled){
