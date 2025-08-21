@@ -385,6 +385,14 @@ button:focus-visible,
   display:flex;
   flex-direction:column;
 }
+#baseColorRow{
+  flex-direction:row;
+  align-items:center;
+  gap:10px;
+}
+#baseColorRow label{
+  margin:0;
+}
 .modal-field input,
 .modal-field textarea,
 .modal-field select{
@@ -1825,38 +1833,10 @@ footer .foot-row .foot-item img {
             <input id="newPresetName" type="text" placeholder="Preset name" />
             <button type="button" id="savePreset">Save Preset</button>
           </div>
-          <div class="modal-field">
+          <div class="modal-field" id="baseColorRow">
             <label for="baseColor">Base Color</label>
             <input type="color" id="baseColor" value="#336699" />
             <button type="button" id="generateThemeBtn">Generate</button>
-          </div>
-          <div class="modal-field">
-            <label for="primary">Primary</label>
-            <input type="color" id="primary" value="#333333" />
-          </div>
-          <div class="modal-field">
-            <label for="secondary">Secondary</label>
-            <input type="color" id="secondary" value="#ffffff" />
-          </div>
-          <div class="modal-field">
-            <label for="accent">Accent</label>
-            <input type="color" id="accent" value="#e0e0e0" />
-          </div>
-          <div class="modal-field">
-            <label for="background">Background</label>
-            <input type="color" id="background" value="#f5f5f5" />
-          </div>
-          <div class="modal-field">
-            <label for="text">Text</label>
-            <input type="color" id="text" value="#333333" />
-          </div>
-          <div class="modal-field">
-            <label for="buttonText">Button Text</label>
-            <input type="color" id="buttonText" value="#333333" />
-          </div>
-          <div class="modal-field">
-            <label for="buttonHoverText">Button Hover Text</label>
-            <input type="color" id="buttonHoverText" value="#333333" />
           </div>
           <h3>Theme Customization</h3>
           <div id="styleControls"></div>
@@ -3218,6 +3198,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       });
     });
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text'};
+    Object.entries(varMap).forEach(([id,varName])=>{
+      const el = document.getElementById(id);
+      if(el){
+        const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        if(val) el.value = val;
+      }
+    });
   }
 
   function restoreTitleDefaults(area){
@@ -3293,6 +3281,31 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const input = document.getElementById(key);
       if(input) input.value = val;
     });
+  }
+
+  function spreadTheme(theme){
+    colorAreas.forEach(area=>{
+      const set = (type,val)=>{
+        const el = document.getElementById(`${area.key}-${type}-c`);
+        if(el && val) el.value = val;
+      };
+      set('bg', theme.background);
+      set('text', theme.text);
+      set('card', theme.secondary);
+      set('btn', theme.primary);
+      set('btnText', theme.buttonText);
+    });
+    const b = document.getElementById('body-border-c');
+    if(b) b.value = theme.primary;
+    const hb = document.getElementById('body-hoverBorder-c');
+    if(hb) hb.value = theme.accent;
+    const ab = document.getElementById('body-activeBorder-c');
+    if(ab) ab.value = theme.accent;
+    ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
+      const inp = document.getElementById(id);
+      if(inp && theme[id]) inp.value = theme[id];
+    });
+    applyAdmin();
   }
 
 
@@ -3447,6 +3460,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       lg.appendChild(sameBtn);
       fs.appendChild(lg);
+      if(area.key === 'body'){
+        const palette = [
+          {id:'primary', label:'Primary'},
+          {id:'secondary', label:'Secondary'},
+          {id:'accent', label:'Accent'},
+          {id:'buttonHoverText', label:'Button Hover Text'}
+        ];
+        palette.forEach(p=>{
+          const row = document.createElement('div');
+          row.className = 'control-row';
+          row.innerHTML = `
+              <label>${p.label}</label>
+              <div class="color-group">
+                <input id="${p.id}" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              </div>
+            `;
+          fs.appendChild(row);
+        });
+      }
       const types = ['bg'];
       if(area.selectors.card) types.push('card');
       if(area.selectors.text) types.push('text');
@@ -3692,7 +3724,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
     });
-    ['primary','secondary','accent','background','text','buttonText','buttonHoverText'].forEach(id=>{
+    ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
       const input = document.getElementById(id);
       if(input){
         data[id] = { color: input.value };
@@ -3756,7 +3788,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(!type){
           const input = document.getElementById(key);
           if(input && val.color){ input.value = val.color; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',background:'--background',text:'--text',buttonText:'--button-text',buttonHoverText:'--button-hover-text'};
+          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text'};
           if(varMap[key]) document.documentElement.style.setProperty(varMap[key], val.color);
           return;
         }
@@ -3897,15 +3929,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     root.style.setProperty('--button-text', theme.buttonText);
     root.style.setProperty('--button-hover-text', theme.buttonHoverText);
     updateFields(theme);
+    spreadTheme(theme);
   });
 
   const fieldBindings = {
     primary: '--primary',
     secondary: '--secondary',
     accent: '--accent',
-    background: '--background',
-    text: '--text',
-    buttonText: '--button-text',
     buttonHoverText: '--button-hover-text'
   };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
