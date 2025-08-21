@@ -53,7 +53,7 @@ html,body{
 
 body{
   margin: 0;
-  font-family: 'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
+  font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
   background: #f5f5f5;
   color: var(--ink);
   overflow: hidden;
@@ -556,7 +556,7 @@ button:focus-visible,
 }
 
 .chip.on{
-  outline: 2px solid #3cd1ff;
+  border-color: var(--btn-active);
 }
 
 .cat[aria-expanded="true"] .sub{
@@ -1285,7 +1285,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
+    body{margin:0;font-family:Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
     .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff;position:relative}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
     .logo img{height:48px;display:block}
@@ -1320,7 +1320,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .cat .cfg{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;background:var(--btn);border:1px solid var(--btn);cursor:pointer}
     .sub{margin:6px 0 0 6px;display:none;grid-template-columns:1fr;gap:6px}
     .sub .chip{height:28px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:999px;background:var(--btn);border:1px solid var(--btn);font-size:12px;color:var(--ink-d);width:max-content;cursor:pointer}
-    .chip.on{outline:2px solid #3cd1ff}
+    .chip.on{border-color:var(--btn-active)}
     .cat[aria-expanded="true"] .sub{display:grid}
 
     .reset-box{display:grid;grid-template-columns:1fr 38px;gap:8px;align-items:center;margin-top:10px}
@@ -3136,20 +3136,20 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button'], btnText:['.res-head button']}},
-    {key:'body', label:'Body', selectors:{bg:['body'], border:['button','.card','.toggle'], hoverBorder:['button:hover','.card:hover','.toggle:hover'], activeBorder:['button:active','.card.selected','.card[aria-selected="true"]','.toggle.active','.toggle[aria-selected="true"]']}},
-    {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], headerText:['.results-col .card .t'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
-    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], headerText:['.posts-mode .card .t','.posts-mode .detail-inline .t'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
+    {key:'body', label:'Body', selectors:{bg:['body'], border:['button','[role="button"]','.card','.chip'], hoverBorder:['button:hover','[role="button"]:hover','.card:hover','.chip:hover'], activeBorder:['button:active','[role="button"]:active','button[aria-pressed="true"]','button[aria-current="page"]','button[aria-selected="true"]','[role="button"][aria-pressed="true"]','[role="button"][aria-current="page"]','[role="button"][aria-selected="true"]','.card.selected','.card[aria-selected="true"]','.chip.on']}},
+    {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
+    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], headerText:['.mapboxgl-popup.hover-pop .hover-card .t']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], headerText:['#filterModal .modal-content .t'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
-    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], headerText:['#adminModal .modal-content .t'], btn:['#adminModal button'], btnText:['#adminModal button']}},
-    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], headerText:['#memberModal .modal-content .t'], btn:['#memberModal button'], btnText:['#memberModal button']}}
+    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
+    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
+    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button'], btnText:['#adminModal button']}},
+    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
   ];
 
   let lastFieldsetKey = null;
 
   const COLOR_PICKER_MODE = 'hex';
-  const FONT_OPTIONS = ['Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Verdana','Tahoma','Comic Sans MS'];
+  const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
 
   function rgbToHex(r,g,b){
@@ -3166,7 +3166,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
-      ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -3180,7 +3180,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const cs = getComputedStyle(el);
           if(cInput){
             if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
-            else if(type === 'text' || type === 'btnText' || type === 'headerText') col = cs.color;
+            else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
@@ -3226,7 +3226,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       sameBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
+        ['bg','card','text','title','btn','btnText'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -3247,7 +3247,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const types = ['bg'];
       if(area.selectors.card) types.push('card');
       if(area.selectors.text) types.push('text');
-      if(area.selectors.headerText) types.push('headerText');
+      if(area.selectors.title) types.push('title');
       if(area.selectors.btn) types.push('btn','btnText');
       if(area.selectors.border) types.push('border');
       if(area.selectors.hoverBorder) types.push('hoverAdjust','hoverBorder');
@@ -3259,7 +3259,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           bg: 'Background',
           card: 'Card',
           text: 'Text',
-          headerText: 'Header Text',
+          title: 'Title',
           btn: 'Button',
           btnText: 'Button Text',
           border: 'Border',
@@ -3293,7 +3293,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             `;
         }
         fs.appendChild(row);
-        if(type === 'text' || type === 'headerText' || type === 'btnText'){
+        if(type === 'text' || type === 'title' || type === 'btnText'){
           const fontRow = document.createElement('div');
           fontRow.className = 'control-row';
           const fontLabel = document.createElement('label');
@@ -3353,7 +3353,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         (area.selectors[type]||[]).forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText' || type==='headerText'){
+            else if(type==='text' || type==='btnText' || type==='title'){
               el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -3371,7 +3371,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       return;
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','headerText','btn','btnText','border'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3386,7 +3386,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
-            } else if(type==='text' || type==='btnText' || type==='headerText'){
+            } else if(type==='text' || type==='btnText' || type==='title'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -3439,7 +3439,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','headerText','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3468,7 +3468,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     colorAreas.forEach(area=>{
       if(area.selectors.bg) dark[`${area.key}-bg`] = {color:'#222222', opacity:'1'};
       if(area.selectors.text) dark[`${area.key}-text`] = {color:'#eeeeee', opacity:'1'};
-      if(area.selectors.headerText) dark[`${area.key}-headerText`] = {color:'#eeeeee', opacity:'1'};
+      if(area.selectors.title) dark[`${area.key}-title`] = {color:'#eeeeee', opacity:'1'};
       if(area.selectors.btn) {
         dark[`${area.key}-btn`] = {color:'#444444', opacity:'1'};
         dark[`${area.key}-btnText`] = {color:'#eeeeee', opacity:'1'};
@@ -3480,7 +3480,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     colorAreas.forEach(area=>{
       if(area.selectors.bg) ocean[`${area.key}-bg`] = {color:'#e0f7fa', opacity:'1'};
       if(area.selectors.text) ocean[`${area.key}-text`] = {color:'#006064', opacity:'1'};
-      if(area.selectors.headerText) ocean[`${area.key}-headerText`] = {color:'#006064', opacity:'1'};
+      if(area.selectors.title) ocean[`${area.key}-title`] = {color:'#006064', opacity:'1'};
       if(area.selectors.btn) {
         ocean[`${area.key}-btn`] = {color:'#00838f', opacity:'1'};
         ocean[`${area.key}-btnText`] = {color:'#006064', opacity:'1'};
