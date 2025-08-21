@@ -3136,9 +3136,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card']}},
+    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], headerText:['.mapboxgl-popup.hover-pop .hover-card .t']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
-    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content','.mapboxgl-popup .mapboxgl-popup-content'], text:['#adminModal .modal-content','.mapboxgl-popup .mapboxgl-popup-content'], btn:['#adminModal button','.mapboxgl-popup .mapboxgl-popup-content button'], btnText:['#adminModal button','.mapboxgl-popup .mapboxgl-popup-content button']}},
+    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], btn:['#adminModal button'], btnText:['#adminModal button']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], btn:['#memberModal button'], btnText:['#memberModal button']}}
   ];
 
@@ -3160,7 +3160,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
-      ['bg','card','text','btn','btnText'].forEach(type=>{
+      ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         if(!cInput) return;
@@ -3171,7 +3171,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(!el) return false;
           const cs = getComputedStyle(el);
           if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
-          else if(type === 'text' || type === 'btnText') col = cs.color;
+          else if(type === 'text' || type === 'btnText' || type === 'headerText') col = cs.color;
           return col;
         });
         if(!col) return;
@@ -3204,7 +3204,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       sameBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','text','btn','btnText'].forEach(type=>{
+        ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -3219,6 +3219,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const types = ['bg'];
       if(area.selectors.card) types.push('card');
       if(area.selectors.text) types.push('text');
+      if(area.selectors.headerText) types.push('headerText');
       if(area.selectors.btn) types.push('btn','btnText');
       types.forEach(type=>{
         const row = document.createElement('div');
@@ -3233,7 +3234,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
               </div>
             `;
         } else {
-          const label = type === 'btnText' ? 'button text color' : `${type} color`;
+          const label = type === 'btnText' ? 'button text color' : type === 'headerText' ? 'header text color' : `${type} color`;
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -3259,7 +3260,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         (area.selectors[type]||[]).forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText') el.style.color = color;
+            else if(type==='text' || type==='btnText' || type==='headerText') el.style.color = color;
             else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
           });
         });
@@ -3269,7 +3270,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         return;
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','btn','btnText'].forEach(type=>{
+      ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         if(!c) return;
@@ -3279,7 +3280,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText') el.style.color = color;
+            else if(type==='text' || type==='btnText' || type==='headerText') el.style.color = color;
             else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
           });
         });
@@ -3292,7 +3293,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','btn','btnText'].forEach(type=>{
+      ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         if(c){
@@ -3312,6 +3313,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     colorAreas.forEach(area=>{
       if(area.selectors.bg) dark[`${area.key}-bg`] = {color:'#222222', opacity:'1'};
       if(area.selectors.text) dark[`${area.key}-text`] = {color:'#eeeeee', opacity:'1'};
+      if(area.selectors.headerText) dark[`${area.key}-headerText`] = {color:'#eeeeee', opacity:'1'};
       if(area.selectors.btn) {
         dark[`${area.key}-btn`] = {color:'#444444', opacity:'1'};
         dark[`${area.key}-btnText`] = {color:'#eeeeee', opacity:'1'};
@@ -3323,6 +3325,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     colorAreas.forEach(area=>{
       if(area.selectors.bg) ocean[`${area.key}-bg`] = {color:'#e0f7fa', opacity:'1'};
       if(area.selectors.text) ocean[`${area.key}-text`] = {color:'#006064', opacity:'1'};
+      if(area.selectors.headerText) ocean[`${area.key}-headerText`] = {color:'#006064', opacity:'1'};
       if(area.selectors.btn) {
         ocean[`${area.key}-btn`] = {color:'#00838f', opacity:'1'};
         ocean[`${area.key}-btnText`] = {color:'#006064', opacity:'1'};
