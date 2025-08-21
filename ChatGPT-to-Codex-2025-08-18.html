@@ -337,6 +337,7 @@ body{
     height: calc(100vh - var(--header-h) - var(--footer-h));
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
+    grid-template-rows: auto 1fr;
     gap: var(--gap);
     padding: 14px;
   }
@@ -555,8 +556,10 @@ body{
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  margin: 0 0 8px 0;
+  margin: 0 -14px;
+  padding: 0 14px;
   color: var(--ink-d);
+  grid-column: 1 / -1;
 }
 .res-actions{
   display: flex;
@@ -1606,22 +1609,22 @@ footer .foot-row .foot-item img {
   </header>
 
   <main class="main">
-      <section class="results-col" aria-label="Results">
-        <div class="res-head">
-          <button id="filterBtn" aria-label="Open filters modal">Filters</button>
-          <div class="res-info">
-            <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
-            <div class="muted">Map area filter active in Map mode</div>
-          </div>
-          <div class="res-actions">
-            <select id="sortSelect" aria-label="Sort order">
-              <option value="favaz">Favourites, A - Z</option>
-              <option value="az">Title A - Z</option>
-              <option value="nearest">Closest</option>
-              <option value="soon">Soonest</option>
-            </select>
-          </div>
+      <div class="res-head">
+        <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+        <div class="res-info">
+          <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
+          <div class="muted">Map area filter active in Map mode</div>
         </div>
+        <div class="res-actions">
+          <select id="sortSelect" aria-label="Sort order">
+            <option value="favaz">Favourites, A - Z</option>
+            <option value="az">Title A - Z</option>
+            <option value="nearest">Closest</option>
+            <option value="soon">Soonest</option>
+          </select>
+        </div>
+      </div>
+      <section class="results-col" aria-label="Results">
         <div class="res-list" id="results"></div>
       </section>
 
