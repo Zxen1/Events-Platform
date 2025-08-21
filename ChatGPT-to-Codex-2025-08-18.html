@@ -1902,6 +1902,7 @@ footer .foot-row .foot-item img {
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
+    let activePostId = null;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2687,12 +2688,16 @@ function makePosts(){
       }
       if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
 
-      resultsEl.innerHTML = '';
-      postsWideEl.innerHTML = '';
-      arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
-      updateResultCount(arr.length);
-      prioritizeVisibleImages();
-    }
+        resultsEl.innerHTML = '';
+        postsWideEl.innerHTML = '';
+        arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
+        if(activePostId){
+          const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
+          if(sel) sel.setAttribute('aria-selected','true');
+        }
+        updateResultCount(arr.length);
+        prioritizeVisibleImages();
+      }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
 
@@ -2796,8 +2801,12 @@ function makePosts(){
       const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
       for(const v of items){
         const p = posts.find(x=>x.id===v.id);
-        const el = document.createElement('div'); el.className='chip-small foot-item'; el.title=v.title+' — '+v.city;
+        const el = document.createElement('div');
+        el.className='chip-small foot-item';
+        el.dataset.id = v.id;
+        el.title=v.title+' — '+v.city;
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div><button class="fav" aria-pressed="${p && p.fav?'true':'false'}" aria-label="Toggle favourite"><svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>`;
+        if(v.id===activePostId) el.setAttribute('aria-selected','true');
         el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
         const favBtn = el.querySelector('.fav');
         favBtn.addEventListener('click', (e)=>{ if(p){ p.fav=!p.fav; favBtn.setAttribute('aria-pressed', p.fav?'true':'false'); renderLists(filtered); renderFooter(); } });
@@ -2856,6 +2865,9 @@ function makePosts(){
       localStorage.setItem('spinGlobe', 'false');
       stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
+      activePostId = id;
+      $$('.card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+      $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       if(mode !== 'posts'){
         setMode('posts');
         await nextFrame(); await nextFrame();
@@ -2875,6 +2887,8 @@ function makePosts(){
       let target = postsWideEl.querySelector(`[data-id="${id}"]`);
       if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
+      const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
+      if(resCard) resCard.setAttribute('aria-selected','true');
 
       const container = target.closest('.posts-mode');
       if(container){
@@ -2922,6 +2936,9 @@ function makePosts(){
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
         if(container){ ensureGap(container, replacedCard); }
+        activePostId = null;
+        $$('.card[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
+        $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
       });
       el.querySelector('[data-act="center"]').addEventListener('click', ()=>{
         if(map){
