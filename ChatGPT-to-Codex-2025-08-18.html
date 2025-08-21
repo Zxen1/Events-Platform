@@ -346,6 +346,62 @@ button:focus-visible,
 #adminModal .shadow-group input[type=number]{
   width:50px;
 }
+#adminModal .textpicker{
+  flex:1 1 120px;
+  max-width:120px;
+  position:relative;
+}
+#adminModal .textpicker .text-preview{
+  width:100%;
+  height:40px;
+  border-radius:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+#adminModal .textpicker .text-popup{
+  display:none;
+  position:absolute;
+  top:44px;
+  left:0;
+  z-index:20;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:4px;
+  padding:6px;
+  width:120px;
+}
+#adminModal .textpicker.open .text-popup{display:block;}
+#adminModal .textpicker .text-popup select{
+  width:100%;
+  max-width:100%;
+  margin-top:4px;
+  border-radius:4px;
+  padding:4px;
+}
+#adminModal .textpicker .text-popup input[type=color]{
+  width:100%;
+  height:40px;
+  margin-top:4px;
+  border-radius:4px;
+  padding:0;
+}
+#adminModal .textpicker .text-popup .shadow-group{
+  display:flex;
+  gap:4px;
+  margin-top:4px;
+}
+#adminModal .textpicker .text-popup .shadow-group input[type=color]{
+  width:40px;
+  height:40px;
+  padding:0;
+  border-radius:4px;
+}
+#adminModal .textpicker .text-popup .shadow-group input[type=number]{
+  width:22px;
+  height:40px;
+}
 #adminModal .admin-fieldset input,
 #adminModal .admin-fieldset select{
   width:100%;
@@ -1826,19 +1882,21 @@ footer .foot-row .foot-item img {
       <form id="adminForm" class="modal-body">
         <div id="tab-theme" class="tab-panel active">
           <div class="modal-field">
-            <label for="themePreset">Preset</label>
+            <label for="themePreset">Themes</label>
             <select id="themePreset"></select>
           </div>
           <div class="preset-actions">
-            <input id="newPresetName" type="text" placeholder="Preset name" />
-            <button type="button" id="savePreset">Save Preset</button>
+            <input id="newPresetName" type="text" placeholder="Theme Name" />
+            <button type="button" id="savePreset">Save Theme</button>
           </div>
           <div class="modal-field" id="baseColorRow">
             <label for="baseColor">Base Color</label>
-            <input type="color" id="baseColor" value="#336699" />
-            <button type="button" id="generateThemeBtn">Generate</button>
+            <div class="color-group">
+              <input type="color" id="baseColor" value="#336699" />
+            </div>
+            <button type="button" id="autoBuildBtn">Auto Build</button>
           </div>
-          <h3>Theme Customization</h3>
+          <h3>Theme Builder</h3>
           <div id="styleControls"></div>
         </div>
         <div id="tab-mapbox" class="tab-panel">
@@ -3227,6 +3285,28 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
+  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn'};
+
+  function updateTextPicker(areaKey, type){
+    const picker = document.getElementById(`${areaKey}-${type}-picker`);
+    if(!picker) return;
+    const preview = picker.querySelector('.text-preview');
+    const color = document.getElementById(`${areaKey}-${type}-c`).value;
+    const font = document.getElementById(`${areaKey}-${type}-font`).value;
+    const size = document.getElementById(`${areaKey}-${type}-size`).value;
+    const weight = document.getElementById(`${areaKey}-${type}-weight`).value;
+    const sc = document.getElementById(`${areaKey}-${type}-shadow-color`).value;
+    const sx = document.getElementById(`${areaKey}-${type}-shadow-x`).value;
+    const sy = document.getElementById(`${areaKey}-${type}-shadow-y`).value;
+    const sb = document.getElementById(`${areaKey}-${type}-shadow-blur`).value;
+    const bgInput = document.getElementById(picker.dataset.bgSource);
+    preview.style.backgroundColor = bgInput ? bgInput.value : '#ffffff';
+    preview.style.color = color;
+    preview.style.fontFamily = font;
+    preview.style.fontSize = size + 'px';
+    preview.style.fontWeight = weight;
+    preview.style.textShadow = `${sx}px ${sy}px ${sb}px ${sc}`;
+  }
 
   function rgbToHex(r,g,b){
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -3415,50 +3495,49 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const lg = document.createElement('legend');
       lg.textContent = area.label;
       lg.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
-      const sameBtn = document.createElement('button');
-      sameBtn.type = 'button';
-      sameBtn.textContent = 'Same';
-      sameBtn.className = 'same-btn';
-      sameBtn.addEventListener('click', (e)=>{
+      const colBtn = document.createElement('button');
+      colBtn.type = 'button';
+      colBtn.textContent = '=Col';
+      colBtn.className = 'same-btn';
+      colBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
+        ['bg','card','btn','border','hoverBorder','activeBorder'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
           const toO = document.getElementById(`${area.key}-${type}-o`);
           if(fromC && toC){ toC.value = fromC.value; }
           if(fromO && toO){ toO.value = fromO.value; }
-          const fromF = document.getElementById(`${lastFieldsetKey}-${type}-font`);
-          const toF = document.getElementById(`${area.key}-${type}-font`);
-          if(fromF && toF){ toF.value = fromF.value; }
-          const fromS = document.getElementById(`${lastFieldsetKey}-${type}-size`);
-          const toS = document.getElementById(`${area.key}-${type}-size`);
-          if(fromS && toS){ toS.value = fromS.value; }
-          const fromW = document.getElementById(`${lastFieldsetKey}-${type}-weight`);
-          const toW = document.getElementById(`${area.key}-${type}-weight`);
-          if(fromW && toW){ toW.value = fromW.value; }
-          const fromSC = document.getElementById(`${lastFieldsetKey}-${type}-shadow-color`);
-          const toSC = document.getElementById(`${area.key}-${type}-shadow-color`);
-          if(fromSC && toSC){ toSC.value = fromSC.value; }
-          const fromSX = document.getElementById(`${lastFieldsetKey}-${type}-shadow-x`);
-          const toSX = document.getElementById(`${area.key}-${type}-shadow-x`);
-          if(fromSX && toSX){ toSX.value = fromSX.value; }
-          const fromSY = document.getElementById(`${lastFieldsetKey}-${type}-shadow-y`);
-          const toSY = document.getElementById(`${area.key}-${type}-shadow-y`);
-          if(fromSY && toSY){ toSY.value = fromSY.value; }
-          const fromSB = document.getElementById(`${lastFieldsetKey}-${type}-shadow-blur`);
-          const toSB = document.getElementById(`${area.key}-${type}-shadow-blur`);
-          if(fromSB && toSB){ toSB.value = fromSB.value; }
         });
         ['hoverAdjust','activeAdjust'].forEach(type=>{
           const fromV = document.getElementById(`${lastFieldsetKey}-${type}`);
           const toV = document.getElementById(`${area.key}-${type}`);
           if(fromV && toV){ toV.value = fromV.value; }
         });
+        ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
         applyAdmin();
       });
-      lg.appendChild(sameBtn);
+      const txtBtn = document.createElement('button');
+      txtBtn.type = 'button';
+      txtBtn.textContent = '=Txt';
+      txtBtn.className = 'same-btn';
+      txtBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
+        ['text','title','btnText'].forEach(type=>{
+          const fields = ['c','font','size','weight','shadow-color','shadow-x','shadow-y','shadow-blur'];
+          fields.forEach(suf=>{
+            const from = document.getElementById(`${lastFieldsetKey}-${type}-${suf}`);
+            const to = document.getElementById(`${area.key}-${type}-${suf}`);
+            if(from && to){ to.value = from.value; }
+          });
+          updateTextPicker(area.key, type);
+        });
+        applyAdmin();
+      });
+      lg.appendChild(colBtn);
+      lg.appendChild(txtBtn);
       fs.appendChild(lg);
       if(area.key === 'body'){
         const palette = [
@@ -3488,8 +3567,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.hoverBorder) types.push('hoverAdjust','hoverBorder');
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
       types.forEach(type=>{
-        const row = document.createElement('div');
-        row.className = 'control-row';
         const labelMap = {
           bg: 'Background',
           card: 'Card',
@@ -3504,6 +3581,60 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           activeAdjust: 'Active Brightness'
         };
         const label = labelMap[type] || type;
+        if(type === 'text' || type === 'title' || type === 'btnText'){
+          const row = document.createElement('div');
+          row.className = 'control-row';
+          const labelEl = document.createElement('label');
+          labelEl.textContent = label;
+          row.appendChild(labelEl);
+          const picker = document.createElement('div');
+          picker.className = 'textpicker';
+          picker.id = `${area.key}-${type}-picker`;
+          picker.dataset.bgSource = `${area.key}-${TEXT_BG_MAP[type]}-c`;
+          const preview = document.createElement('div');
+          preview.className = 'text-preview';
+          preview.textContent = 'Text';
+          picker.appendChild(preview);
+          const popup = document.createElement('div');
+          popup.className = 'text-popup';
+          const colorInput = document.createElement('input');
+          colorInput.type = 'color';
+          colorInput.id = `${area.key}-${type}-c`;
+          colorInput.setAttribute('data-mode', COLOR_PICKER_MODE);
+          const fontSelect = document.createElement('select');
+          fontSelect.className = 'font-select';
+          fontSelect.id = `${area.key}-${type}-font`;
+          FONT_OPTIONS.forEach(f=>{ const opt = document.createElement('option'); opt.value = f; opt.textContent = f; fontSelect.appendChild(opt); });
+          const sizeSelect = document.createElement('select');
+          sizeSelect.className = 'font-size-select';
+          sizeSelect.id = `${area.key}-${type}-size`;
+          FONT_SIZE_OPTIONS.forEach(sz=>{ const opt = document.createElement('option'); opt.value = sz; opt.textContent = `${sz}px`; sizeSelect.appendChild(opt); });
+          const weightSelect = document.createElement('select');
+          weightSelect.className = 'font-weight-select';
+          weightSelect.id = `${area.key}-${type}-weight`;
+          ['normal','bold'].forEach(w=>{ const opt = document.createElement('option'); opt.value = w; opt.textContent = w.charAt(0).toUpperCase()+w.slice(1); weightSelect.appendChild(opt); });
+          const shadowGroup = document.createElement('div');
+          shadowGroup.className = 'shadow-group';
+          const sc = document.createElement('input'); sc.type='color'; sc.id = `${area.key}-${type}-shadow-color`; sc.setAttribute('data-mode', COLOR_PICKER_MODE);
+          const sx = document.createElement('input'); sx.type='number'; sx.id = `${area.key}-${type}-shadow-x`; sx.value='0'; sx.step='1';
+          const sy = document.createElement('input'); sy.type='number'; sy.id = `${area.key}-${type}-shadow-y`; sy.value='0'; sy.step='1';
+          const sb = document.createElement('input'); sb.type='number'; sb.id = `${area.key}-${type}-shadow-blur`; sb.value='0'; sb.step='1';
+          shadowGroup.append(sc, sx, sy, sb);
+          popup.append(colorInput, fontSelect, sizeSelect, weightSelect, shadowGroup);
+          picker.appendChild(popup);
+          row.appendChild(picker);
+          fs.appendChild(row);
+          const update = ()=>updateTextPicker(area.key, type);
+          [colorInput,fontSelect,sizeSelect,weightSelect,sc,sx,sy,sb].forEach(el=> el.addEventListener('input', update));
+          const bgInput = document.getElementById(picker.dataset.bgSource);
+          bgInput && bgInput.addEventListener('input', update);
+          preview.addEventListener('click', e=>{ e.stopPropagation(); picker.classList.toggle('open'); });
+          document.addEventListener('click', ()=> picker.classList.remove('open'));
+          update();
+          return;
+        }
+        const row = document.createElement('div');
+        row.className = 'control-row';
         if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder'){
           row.innerHTML = `
               <label>${label}</label>
@@ -3536,71 +3667,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
               <div class="color-group">
                 <input id="${area.key}-${type}-shadow-color" type="color" data-mode="${COLOR_PICKER_MODE}" />
                 <input id="${area.key}-${type}-shadow-blur" type="range" min="0" max="50" step="1" value="0" />
-              </div>
-            `;
-          fs.appendChild(shadowRow);
-        }
-        if(type === 'text' || type === 'title' || type === 'btnText'){
-          const fontRow = document.createElement('div');
-          fontRow.className = 'control-row';
-          const fontLabel = document.createElement('label');
-          fontLabel.textContent = 'Font';
-          const fontSelect = document.createElement('select');
-          fontSelect.className = 'font-select';
-          fontSelect.id = `${area.key}-${type}-font`;
-          FONT_OPTIONS.forEach(f=>{
-            const opt = document.createElement('option');
-            opt.value = f;
-            opt.textContent = f;
-            fontSelect.appendChild(opt);
-          });
-          fontRow.appendChild(fontLabel);
-          fontRow.appendChild(fontSelect);
-          fs.appendChild(fontRow);
-
-          const sizeRow = document.createElement('div');
-          sizeRow.className = 'control-row';
-          const sizeLabel = document.createElement('label');
-          sizeLabel.textContent = 'Font Size';
-          const sizeSelect = document.createElement('select');
-          sizeSelect.className = 'font-size-select';
-          sizeSelect.id = `${area.key}-${type}-size`;
-          FONT_SIZE_OPTIONS.forEach(sz=>{
-            const opt = document.createElement('option');
-            opt.value = sz;
-            opt.textContent = `${sz}px`;
-            sizeSelect.appendChild(opt);
-          });
-          sizeRow.appendChild(sizeLabel);
-          sizeRow.appendChild(sizeSelect);
-          fs.appendChild(sizeRow);
-
-          const weightRow = document.createElement('div');
-          weightRow.className = 'control-row';
-          const weightLabel = document.createElement('label');
-          weightLabel.textContent = 'Font Weight';
-          const weightSelect = document.createElement('select');
-          weightSelect.className = 'font-weight-select';
-          weightSelect.id = `${area.key}-${type}-weight`;
-          ['normal','bold'].forEach(w=>{
-            const opt = document.createElement('option');
-            opt.value = w;
-            opt.textContent = w.charAt(0).toUpperCase()+w.slice(1);
-            weightSelect.appendChild(opt);
-          });
-          weightRow.appendChild(weightLabel);
-          weightRow.appendChild(weightSelect);
-          fs.appendChild(weightRow);
-
-          const shadowRow = document.createElement('div');
-          shadowRow.className = 'control-row';
-          shadowRow.innerHTML = `
-              <label>Text Shadow</label>
-              <div class="shadow-group">
-                <input id="${area.key}-${type}-shadow-color" type="color" data-mode="${COLOR_PICKER_MODE}" />
-                <input id="${area.key}-${type}-shadow-x" type="number" value="0" step="1" />
-                <input id="${area.key}-${type}-shadow-y" type="number" value="0" step="1" />
-                <input id="${area.key}-${type}-shadow-blur" type="number" value="0" step="1" />
               </div>
             `;
           fs.appendChild(shadowRow);
@@ -3911,8 +3977,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   });
 
   const baseColorInput = document.getElementById('baseColor');
-  const generateThemeBtn = document.getElementById('generateThemeBtn');
-  generateThemeBtn && generateThemeBtn.addEventListener('click', ()=>{
+  const autoBuildBtn = document.getElementById('autoBuildBtn');
+  autoBuildBtn && autoBuildBtn.addEventListener('click', ()=>{
     const base = baseColorInput.value;
     const theme = generateTheme(base);
     const root = document.documentElement;
