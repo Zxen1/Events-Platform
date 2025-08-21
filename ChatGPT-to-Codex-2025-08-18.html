@@ -995,6 +995,7 @@ footer{
 
 footer .foot-row .foot-item{
   background:var(--list-background);
+  border:1px solid var(--border);
 }
 
 .chip-small img.mini{
@@ -1433,7 +1434,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
-    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
+    .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
     .meta{display:flex;flex-direction:column;gap:6px;min-width:0}
     .title{font-weight:900;line-height:1.2}
@@ -1443,7 +1444,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .fav svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.5}
     .fav[aria-pressed="true"] svg{fill:var(--gold);stroke:var(--gold)}
 
-    .map-wrap{position:relative;background:var(--btn);border-radius:16px;overflow:hidden;border:1px solid var(--btn)}
+    .map-wrap{position:relative;background:var(--btn);border-radius:16px;overflow:hidden;border:1px solid var(--border)}
     #map{position:absolute;inset:0}
     .map-overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none}
 
@@ -1479,7 +1480,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       footer .foot-row .fav-star{color:var(--gold);flex:0 0 auto;}
   
 /* === 0512 Clean fix: prevent text/image overlap in closed cards without !important === */
-.card{display:flex;gap:12px;align-items:flex-start;opacity:1}
+.card{display:flex;gap:12px;align-items:flex-start;opacity:1;border:1px solid var(--border)}
 .card .thumb{flex:0 0 90px;width:90px;height:70px;display:block;object-fit:cover;border-radius:12px}
 .posts-mode .card .thumb{flex-basis:70px;width:70px;height:70px}
 .card .meta{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
