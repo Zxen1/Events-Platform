@@ -14,7 +14,9 @@
   --gold: #ffc107;
   --muted: #777;
   --btn: #fff;
-  --btn-2: #e0e0e0;
+  --btn-hover: #e0e0e0;
+  --btn-active: #d5d5d5;
+  --btn-2: var(--btn-hover);
   --footer-h: 70px;
   --main-background: rgba(255,255,255,0.8);
   --list-background: rgba(255,255,255,1);
@@ -54,6 +56,33 @@ body{
   background: #f5f5f5;
   color: var(--ink);
   overflow: hidden;
+}
+
+button,
+[role="button"]{
+  background: var(--btn) !important;
+  border: 1px solid var(--btn) !important;
+  color: var(--ink) !important;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+button:hover,
+[role="button"]:hover{
+  background: var(--btn-hover) !important;
+  border-color: var(--btn-hover) !important;
+}
+button:active,
+[role="button"]:active{
+  background: var(--btn-active) !important;
+  border-color: var(--btn-active) !important;
+  transform: scale(0.97);
+}
+button:focus-visible,
+[role="button"]:focus-visible{
+  outline:2px solid var(--ink-d);
+  outline-offset:2px;
 }
 
   .header{
@@ -112,7 +141,7 @@ body{
 }
 
 .view-toggle .seg button[aria-current="page"]{
-  background: rgba(255,255,255,0.35);
+  background: var(--btn-active) !important;
 }
 
 /* Spin controls */
@@ -243,9 +272,9 @@ body{
 #filterModal .btn,
 #adminModal button,
 #memberModal button{
-  background:#fff;
-  border-color:#fff;
-  color:#000;
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
 }
   @media (max-width:600px){
   #adminModal .modal-content,
@@ -1212,7 +1241,9 @@ body.mode-posts .main .map-wrap .main-bg-overlay{
       --gold:#ffc107;
       --muted:#87a2c2;
       --btn:#204261;
-      --btn-2:#1a3853;
+      --btn-hover:#1a3853;
+      --btn-active:#162f46;
+      --btn-2:var(--btn-hover);
       --footer-h:70px;
       --panel-grad:linear-gradient(180deg,#0f1b2a,#0b1623);
       --bg-grad:linear-gradient(0deg,#152944,#192a46);
@@ -1227,7 +1258,7 @@ body.mode-posts .main .map-wrap .main-bg-overlay{
     .view-toggle .seg{display:flex;border:1px solid rgba(255,255,255,.6);border-radius:999px;overflow:hidden}
     .view-toggle .seg button{border:none;border-right:1px solid rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .view-toggle .seg button:last-child{border-right:none}
-    .view-toggle .seg button[aria-current="page"]{background:rgba(255,255,255,0.35)}
+    .view-toggle .seg button[aria-current="page"]{background:var(--btn-active)!important}
     .auth{display:flex;align-items:center;gap:10px}
     .auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
@@ -1509,7 +1540,9 @@ footer .foot-row .foot-item img {
     --ink-d: #555;
     --muted: #666;
     --btn: #ffb74d;
-    --btn-2: #ff9800;
+    --btn-hover: #ff9800;
+    --btn-active: #f57c00;
+    --btn-2: var(--btn-hover);
     --panel-grad: linear-gradient(180deg, #ffecb3, #ffe0b2);
     --bg-grad: linear-gradient(0deg, #fff8e1, #ffe0b2);
     --main-background: rgba(255, 255, 255, 0.8);
@@ -1525,7 +1558,7 @@ footer .foot-row .foot-item img {
     color: inherit;
   }
   .view-toggle .seg button[aria-current="page"] {
-    background: var(--btn-2);
+    background: var(--btn-active);
   }
   .sq,
   .tiny,
