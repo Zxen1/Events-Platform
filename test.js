@@ -1,5 +1,9 @@
 const assert = require('assert');
+const fs = require('fs');
 const { attachFieldsetHandlers } = require('./fieldsetHandler');
+const seed = require('./db/seed');
+const { getUserTheme, setUserTheme } = require('./src/db/theme');
+const { DB_PATH } = require('./src/db');
 
 class MockClassList {
   constructor() { this._set = new Set(); }
@@ -67,15 +71,32 @@ document.dispatchEvent('click', { target: outerToggle });
 assert.strictEqual(outerFieldset.classList.contains('collapsed'), true);
 
 // Ensure non-interactive wrappers with the toggle attribute do not trigger collapsing.
-const fs = new MockElement({ tag: 'fieldset' });
-const wrapper = new MockElement({ parent: fs, attrs: { 'data-fieldset-toggle': '' }, tag: 'div' });
+const fsEl = new MockElement({ tag: 'fieldset' });
+const wrapper = new MockElement({ parent: fsEl, attrs: { 'data-fieldset-toggle': '' }, tag: 'div' });
 const buttonToggle = new MockElement({ parent: wrapper, attrs: { 'data-fieldset-toggle': '' }, tag: 'button' });
 const inner = new MockElement({ parent: wrapper, tag: 'input' });
 
 document.dispatchEvent('click', { target: inner });
-assert.strictEqual(fs.classList.contains('collapsed'), false);
+assert.strictEqual(fsEl.classList.contains('collapsed'), false);
 
 document.dispatchEvent('click', { target: buttonToggle });
-assert.strictEqual(fs.classList.contains('collapsed'), true);
+assert.strictEqual(fsEl.classList.contains('collapsed'), true);
+
+// Theme preference tests
+if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+seed();
+
+// Initially user has no preference
+assert.strictEqual(getUserTheme(1), null);
+
+// Set dark theme with custom background
+const updated = setUserTheme(1, 2, JSON.stringify({ background: '#111' }));
+assert.strictEqual(updated.name, 'dark');
+assert.strictEqual(updated.data.background, '#111');
+assert.strictEqual(updated.data.color, '#fff');
+
+// Switch back to light theme
+const changed = setUserTheme(1, 1);
+assert.strictEqual(changed.name, 'light');
 
 console.log('All tests passed!');
