@@ -11,6 +11,8 @@ const { getFields } = require('./src/themeOrganiser');
 const built = generateTheme('#336699');
 assert.strictEqual(built.primary, '#336699');
 assert.ok(typeof built.background === 'string');
+assert.ok(typeof built.buttonText === 'string');
+assert.ok(typeof built.buttonHoverText === 'string');
 
 // Applying a theme updates organiser before appearance
 const logs = [];

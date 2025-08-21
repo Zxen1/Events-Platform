@@ -39,7 +39,9 @@ function generateTheme(baseColor) {
   const accent = adjust(baseColor, -30);
   const background = adjust(baseColor, 60);
   const text = luminance(background) > 0.5 ? '#000000' : '#ffffff';
-  return { primary, secondary, accent, background, text };
+  const buttonText = luminance(secondary) > 0.5 ? '#000000' : '#ffffff';
+  const buttonHoverText = luminance(accent) > 0.5 ? '#000000' : '#ffffff';
+  return { primary, secondary, accent, background, text, buttonText, buttonHoverText };
 }
 
 module.exports = { generateTheme };
