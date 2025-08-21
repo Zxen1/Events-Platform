@@ -127,18 +127,13 @@ button:focus-visible,
   left: calc(var(--results-w) + var(--gap) - 6px);
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  gap: 8px;
 }
 
-.view-toggle .seg{
-  display: flex;
+.view-toggle button{
   border: 1px solid var(--btn);
   border-radius: 999px;
-  overflow: hidden;
-}
-
-.view-toggle .seg button{
-  border: none;
-  border-right: 1px solid var(--btn);
   padding: 10px 14px;
   background: var(--btn);
   color: var(--ink);
@@ -147,17 +142,13 @@ button:focus-visible,
   transition: background .2s,border-color .2s;
 }
 
-.view-toggle .seg button:hover{
+.view-toggle button:hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
 }
 
-.view-toggle .seg button:last-child{
-  border-right: none;
-}
-
-.view-toggle .seg button[aria-current="page"],
-.view-toggle .seg button[aria-pressed="true"]{
+.view-toggle button[aria-current="page"],
+.view-toggle button[aria-pressed="true"]{
   background: var(--btn-active);
   border-color: var(--btn-active);
 }
@@ -1289,12 +1280,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff;position:relative}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
     .logo img{height:48px;display:block}
-    .view-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%)}
-    .view-toggle .seg{display:flex;border:1px solid var(--btn);border-radius:999px;overflow:hidden}
-    .view-toggle .seg button{border:none;border-right:1px solid var(--btn);padding:10px 14px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;transition:background .2s,border-color .2s}
-    .view-toggle .seg button:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
-    .view-toggle .seg button:last-child{border-right:none}
-    .view-toggle .seg button[aria-current="page"],.view-toggle .seg button[aria-pressed="true"]{background:var(--btn-active);border-color:var(--btn-active)}
+    .view-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%);display:flex;gap:8px}
+    .view-toggle button{border:1px solid var(--btn);border-radius:999px;padding:10px 14px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;transition:background .2s,border-color .2s}
+    .view-toggle button:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+    .view-toggle button[aria-current="page"],.view-toggle button[aria-pressed="true"]{background:var(--btn-active);border-color:var(--btn-active)}
     .auth{display:flex;align-items:center;gap:10px}
     .auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
@@ -1591,20 +1580,20 @@ footer .foot-row .foot-item img {
     background: #fff8e1;
     color: #333;
   }
-  .view-toggle .seg button,
+  .view-toggle button,
   .auth button {
     background: var(--btn);
     border: 1px solid var(--btn);
     color: var(--ink);
     transition: background .2s,border-color .2s;
   }
-  .view-toggle .seg button:hover,
+  .view-toggle button:hover,
   .auth button:hover {
     background: var(--btn-hover);
     border-color: var(--btn-hover);
   }
-  .view-toggle .seg button[aria-current="page"],
-  .view-toggle .seg button[aria-pressed="true"],
+  .view-toggle button[aria-current="page"],
+  .view-toggle button[aria-pressed="true"],
   .auth button[aria-pressed="true"] {
     background: var(--btn-active);
     border-color: var(--btn-active);
@@ -1644,11 +1633,9 @@ footer .foot-row .foot-item img {
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2011-09-30g.png" alt="FunMap.com logo" />
     </div>
-    <nav class="view-toggle" aria-label="Primary">
-      <div class="seg" role="tablist" aria-label="Top navigation">
+    <nav class="view-toggle" aria-label="Primary" role="tablist">
         <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
         <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
-      </div>
     </nav>
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">Members</button>
