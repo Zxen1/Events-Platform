@@ -66,4 +66,16 @@ assert.strictEqual(outerFieldset.classList.contains('collapsed'), false);
 document.dispatchEvent('click', { target: outerToggle });
 assert.strictEqual(outerFieldset.classList.contains('collapsed'), true);
 
+// Ensure non-interactive wrappers with the toggle attribute do not trigger collapsing.
+const fs = new MockElement({ tag: 'fieldset' });
+const wrapper = new MockElement({ parent: fs, attrs: { 'data-fieldset-toggle': '' }, tag: 'div' });
+const buttonToggle = new MockElement({ parent: wrapper, attrs: { 'data-fieldset-toggle': '' }, tag: 'button' });
+const inner = new MockElement({ parent: wrapper, tag: 'input' });
+
+document.dispatchEvent('click', { target: inner });
+assert.strictEqual(fs.classList.contains('collapsed'), false);
+
+document.dispatchEvent('click', { target: buttonToggle });
+assert.strictEqual(fs.classList.contains('collapsed'), true);
+
 console.log('All tests passed!');

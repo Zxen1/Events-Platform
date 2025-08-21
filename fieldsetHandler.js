@@ -3,11 +3,14 @@ function attachFieldsetHandlers(doc) {
     const toggle = e.target.closest('[data-fieldset-toggle]');
     if (!toggle) return;
 
+    // Ignore generic containers that happen to carry the attribute.
+    // Only explicit interactive elements (e.g. buttons or legends)
+    // should trigger collapsing.
+    const interactiveTags = ['button', 'summary', 'legend'];
+    if (!interactiveTags.includes(toggle.tagName.toLowerCase())) return;
+
     const fieldset = toggle.closest('fieldset');
-    // Honor admin modal settings by ignoring clicks that bubble from
-    // within a fieldset carrying the toggle attribute itself. Only
-    // the dedicated toggle elements should trigger collapsing.
-    if (!fieldset || toggle === fieldset) return;
+    if (!fieldset) return;
 
     fieldset.classList.toggle('collapsed');
   });
