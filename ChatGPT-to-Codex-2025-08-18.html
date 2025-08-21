@@ -317,14 +317,14 @@ button:focus-visible,
     max-height:95%;
   }
 }
-#adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
-#adminModal legend button.same-btn{margin-left:8px}
+#adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
+#adminModal .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 #adminModal .color-group{
-  flex:1 1 120px;
+  flex:1 1 220px;
   width:100%;
-  max-width:120px;
+  max-width:220px;
   display:flex;
   flex-direction:column;
   align-items:stretch;
@@ -347,14 +347,14 @@ button:focus-visible,
   width:50px;
 }
 #adminModal .textpicker{
-  flex:1 1 120px;
-  max-width:120px;
+  flex:1 1 220px;
+  max-width:220px;
   position:relative;
 }
 #adminModal .textpicker .text-preview{
   width:100%;
   height:40px;
-  border-radius:4px;
+  border-radius:8px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -368,44 +368,38 @@ button:focus-visible,
   z-index:20;
   background:#fff;
   border:1px solid #ccc;
-  border-radius:4px;
-  padding:6px;
-  width:120px;
+  border-radius:8px;
+  padding:8px;
+  width:220px;
 }
 #adminModal .textpicker.open .text-popup{display:block;}
-#adminModal .textpicker .text-popup select{
-  width:100%;
-  max-width:100%;
-  margin-top:4px;
-  border-radius:4px;
-  padding:4px;
-}
+#adminModal .textpicker .text-popup select,
 #adminModal .textpicker .text-popup input[type=color]{
   width:100%;
-  height:40px;
   margin-top:4px;
-  border-radius:4px;
-  padding:0;
+  border-radius:6px;
+  padding:4px;
+  box-sizing:border-box;
 }
+#adminModal .textpicker .text-popup input[type=color]{height:40px;padding:0;}
 #adminModal .textpicker .text-popup .shadow-group{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
   gap:4px;
   margin-top:4px;
 }
-#adminModal .textpicker .text-popup .shadow-group input[type=color]{
-  width:40px;
-  height:40px;
-  padding:0;
-  border-radius:4px;
-}
+#adminModal .textpicker .text-popup .shadow-group input[type=color],
 #adminModal .textpicker .text-popup .shadow-group input[type=number]{
-  width:22px;
+  width:100%;
   height:40px;
+  border-radius:6px;
+  padding:0;
+  box-sizing:border-box;
 }
 #adminModal .admin-fieldset input,
 #adminModal .admin-fieldset select{
   width:100%;
-  max-width:120px;
+  max-width:220px;
 }
 #adminModal .control-row select{
   flex:1 1 120px;
@@ -446,9 +440,7 @@ button:focus-visible,
   align-items:center;
   gap:10px;
 }
-#baseColorRow label{
-  margin:0;
-}
+#baseColorRow .history-group{display:flex;gap:6px;}
 .modal-field input,
 .modal-field textarea,
 .modal-field select{
@@ -1886,11 +1878,14 @@ footer .foot-row .foot-item img {
             <select id="themePreset"></select>
           </div>
           <div class="preset-actions">
-            <input id="newPresetName" type="text" placeholder="Theme Name" />
+            <input id="newPresetName" type="text" placeholder="Name of your new theme" />
             <button type="button" id="savePreset">Save Theme</button>
           </div>
           <div class="modal-field" id="baseColorRow">
-            <label for="baseColor">Base Color</label>
+            <div class="history-group">
+              <button type="button" id="undoBtn">Undo</button>
+              <button type="button" id="redoBtn">Redo</button>
+            </div>
             <div class="color-group">
               <input type="color" id="baseColor" value="#336699" />
             </div>
@@ -3281,6 +3276,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   storeTitleDefaults();
 
   let lastFieldsetKey = null;
+  let undoStack = [];
+  let redoStack = [];
+  let currentState = {};
+  let undoBtn, redoBtn;
 
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
@@ -3480,6 +3479,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           }
         }
       });
+      ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
   }
 
@@ -3495,6 +3495,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const lg = document.createElement('legend');
       lg.textContent = area.label;
       lg.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
+      fs.appendChild(lg);
+      const btnRow = document.createElement('div');
+      btnRow.className = 'fieldset-actions';
       const colBtn = document.createElement('button');
       colBtn.type = 'button';
       colBtn.textContent = '=Col';
@@ -3536,9 +3539,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
         applyAdmin();
       });
-      lg.appendChild(colBtn);
-      lg.appendChild(txtBtn);
-      fs.appendChild(lg);
+      btnRow.appendChild(colBtn);
+      btnRow.appendChild(txtBtn);
+      fs.appendChild(btnRow);
       if(area.key === 'body'){
         const palette = [
           {id:'primary', label:'Primary'},
@@ -3629,7 +3632,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const bgInput = document.getElementById(picker.dataset.bgSource);
           bgInput && bgInput.addEventListener('input', update);
           preview.addEventListener('click', e=>{ e.stopPropagation(); picker.classList.toggle('open'); });
-          document.addEventListener('click', ()=> picker.classList.remove('open'));
+          popup.addEventListener('click', e=> e.stopPropagation());
+          document.addEventListener('click', e=>{ if(!picker.contains(e.target)) picker.classList.remove('open'); });
           update();
           return;
         }
@@ -3677,6 +3681,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function applyAdmin(targetInput){
+    if(targetInput){
+      undoStack.push(JSON.parse(JSON.stringify(currentState)));
+      redoStack.length = 0;
+    }
     if(targetInput && targetInput.id){
       const [areaKey, type] = targetInput.id.split('-');
       if(areaKey === 'body' && ['border','hoverBorder','activeBorder'].includes(type)){
@@ -3686,8 +3694,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const opacity = opacityInput ? opacityInput.value : 1;
         const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
         document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
-        const themeStr = JSON.stringify(collectThemeValues());
-        localStorage.setItem('currentTheme', themeStr);
+        const data = collectThemeValues();
+        currentState = JSON.parse(JSON.stringify(data));
+        localStorage.setItem('currentTheme', JSON.stringify(data));
+        syncAdminControls();
+        updateHistoryButtons();
         return;
       }
     }
@@ -3754,8 +3765,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
     });
-    const themeStr = JSON.stringify(collectThemeValues());
-    localStorage.setItem('currentTheme', themeStr);
+    const data = collectThemeValues();
+    currentState = JSON.parse(JSON.stringify(data));
+    localStorage.setItem('currentTheme', JSON.stringify(data));
+    syncAdminControls();
+    updateHistoryButtons();
   }
 
   function collectThemeValues(){
@@ -3797,6 +3811,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     return data;
+  }
+
+  function updateHistoryButtons(){
+    if(undoBtn) undoBtn.disabled = undoStack.length === 0;
+    if(redoBtn) redoBtn.disabled = redoStack.length === 0;
   }
 
   let presets = [];
@@ -3904,6 +3923,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   initBuiltInPresets();
   loadPresets();
   loadSavedTheme();
+  currentState = collectThemeValues();
+  updateHistoryButtons();
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
@@ -3978,7 +3999,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const baseColorInput = document.getElementById('baseColor');
   const autoBuildBtn = document.getElementById('autoBuildBtn');
+  undoBtn = document.getElementById('undoBtn');
+  redoBtn = document.getElementById('redoBtn');
   autoBuildBtn && autoBuildBtn.addEventListener('click', ()=>{
+    undoStack.push(JSON.parse(JSON.stringify(currentState)));
+    redoStack.length = 0;
     const base = baseColorInput.value;
     const theme = generateTheme(base);
     const root = document.documentElement;
@@ -3996,6 +4021,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     root.style.setProperty('--button-hover-text', theme.buttonHoverText);
     updateFields(theme);
     spreadTheme(theme);
+    syncAdminControls();
+    currentState = collectThemeValues();
+    updateHistoryButtons();
+  });
+  undoBtn && undoBtn.addEventListener('click', ()=>{
+    if(!undoStack.length) return;
+    redoStack.push(JSON.parse(JSON.stringify(currentState)));
+    const prev = undoStack.pop();
+    applyPresetData(prev);
+    currentState = JSON.parse(JSON.stringify(prev));
+    updateHistoryButtons();
+  });
+  redoBtn && redoBtn.addEventListener('click', ()=>{
+    if(!redoStack.length) return;
+    undoStack.push(JSON.parse(JSON.stringify(currentState)));
+    const next = redoStack.pop();
+    applyPresetData(next);
+    currentState = JSON.parse(JSON.stringify(next));
+    updateHistoryButtons();
   });
 
   const fieldBindings = {
