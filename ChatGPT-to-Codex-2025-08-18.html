@@ -2364,6 +2364,23 @@ function makePosts(){
       }
     }
 
+    window.spinGlobals = {
+      get spinEnabled(){ return spinEnabled; },
+      set spinEnabled(v){ spinEnabled = v; },
+      get spinSpeed(){ return spinSpeed; },
+      set spinSpeed(v){ spinSpeed = v; },
+      get spinLoadStart(){ return spinLoadStart; },
+      set spinLoadStart(v){ spinLoadStart = v; },
+      get spinLoadType(){ return spinLoadType; },
+      set spinLoadType(v){ spinLoadType = v; },
+      get spinLogoClick(){ return spinLogoClick; },
+      set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
+      startSpin,
+      stopSpin,
+      updateSpinState,
+      updateLogoClickState
+    };
+
     $('#btnGeo').addEventListener('click', ()=>{
       stopSpin();
       if(navigator.geolocation) {
@@ -3011,6 +3028,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const memberModal = document.getElementById('memberModal');
   const adminModal = document.getElementById('adminModal');
   const filterModal = document.getElementById('filterModal');
+  const sg = window.spinGlobals || {};
 
   memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
     adminBtn && adminBtn.addEventListener('click', ()=>{
@@ -3324,48 +3342,48 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const speedInput = document.getElementById("spinSpeed");
       const speedVal = document.getElementById("spinSpeedVal");
       const loadStartInput = document.getElementById("spinLoadStart");
-        const typeRadios = document.querySelectorAll("#spinType input");
+      const typeRadios = document.querySelectorAll("#spinType input");
       const logoClickInput = document.getElementById("spinLogoClick");
       if(speedInput && speedVal){
-        speedInput.value = spinEnabled ? spinSpeed : 0;
-        speedVal.textContent = spinEnabled ? spinSpeed.toFixed(2) : "Off";
+        speedInput.value = sg.spinEnabled ? sg.spinSpeed : 0;
+        speedVal.textContent = sg.spinEnabled ? sg.spinSpeed.toFixed(2) : "Off";
         speedInput.addEventListener("input", ()=>{
           const val = Math.max(0, parseFloat(speedInput.value) || 0);
-          spinEnabled = val > 0;
-          spinSpeed = val;
-          speedVal.textContent = spinEnabled ? val.toFixed(2) : "Off";
-          localStorage.setItem("spinGlobe", JSON.stringify(spinEnabled));
-          localStorage.setItem("spinSpeed", String(spinSpeed));
-          if(spinEnabled) startSpin(); else stopSpin();
+          sg.spinEnabled = val > 0;
+          sg.spinSpeed = val;
+          speedVal.textContent = sg.spinEnabled ? val.toFixed(2) : "Off";
+          localStorage.setItem("spinGlobe", JSON.stringify(sg.spinEnabled));
+          localStorage.setItem("spinSpeed", String(sg.spinSpeed));
+          if(sg.spinEnabled) sg.startSpin(); else sg.stopSpin();
         });
       }
       if(loadStartInput){
-        loadStartInput.checked = spinLoadStart;
+        loadStartInput.checked = sg.spinLoadStart;
         loadStartInput.addEventListener("change", ()=>{
-          spinLoadStart = loadStartInput.checked;
-          localStorage.setItem("spinLoadStart", JSON.stringify(spinLoadStart));
-          updateSpinState();
+          sg.spinLoadStart = loadStartInput.checked;
+          localStorage.setItem("spinLoadStart", JSON.stringify(sg.spinLoadStart));
+          sg.updateSpinState();
         });
       }
-        if(typeRadios.length){
-          typeRadios.forEach(radio=>{
-            radio.checked = radio.value === spinLoadType;
-            radio.addEventListener("change", ()=>{
-              if(!radio.checked) return;
-              spinLoadType = radio.value;
-              localStorage.setItem("spinLoadType", spinLoadType);
-              updateSpinState();
-            });
+      if(typeRadios.length){
+        typeRadios.forEach(radio=>{
+          radio.checked = radio.value === sg.spinLoadType;
+          radio.addEventListener("change", ()=>{
+            if(!radio.checked) return;
+            sg.spinLoadType = radio.value;
+            localStorage.setItem("spinLoadType", sg.spinLoadType);
+            sg.updateSpinState();
           });
-        }
-        if(logoClickInput){
-          logoClickInput.checked = spinLogoClick;
-          logoClickInput.addEventListener("change", ()=>{
-            spinLogoClick = logoClickInput.checked;
-            localStorage.setItem("spinLogoClick", JSON.stringify(spinLogoClick));
-            updateLogoClickState();
-          });
-        }
+        });
+      }
+      if(logoClickInput){
+        logoClickInput.checked = sg.spinLogoClick;
+        logoClickInput.addEventListener("change", ()=>{
+          sg.spinLogoClick = logoClickInput.checked;
+          localStorage.setItem("spinLogoClick", JSON.stringify(sg.spinLogoClick));
+          sg.updateLogoClickState();
+        });
+      }
       adminForm.addEventListener("input", e=>{
         if(e.target.id === "spinSpeed") return;
         applyAdmin(e.target);
