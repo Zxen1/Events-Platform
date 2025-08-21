@@ -54,4 +54,16 @@ assert.strictEqual(fieldset.classList.contains('collapsed'), true);
 document.dispatchEvent('click', { target: toggle });
 assert.strictEqual(fieldset.classList.contains('collapsed'), false);
 
+// Ensure clicks within a fieldset marked with the toggle attribute itself
+// do not inadvertently trigger collapsing when interacting inside.
+const outerFieldset = new MockElement({ tag: 'fieldset', attrs: { 'data-fieldset-toggle': '' } });
+const outerToggle = new MockElement({ parent: outerFieldset, attrs: { 'data-fieldset-toggle': '' }, tag: 'button' });
+const innerInput = new MockElement({ parent: outerFieldset, tag: 'input' });
+
+document.dispatchEvent('click', { target: innerInput });
+assert.strictEqual(outerFieldset.classList.contains('collapsed'), false);
+
+document.dispatchEvent('click', { target: outerToggle });
+assert.strictEqual(outerFieldset.classList.contains('collapsed'), true);
+
 console.log('All tests passed!');
