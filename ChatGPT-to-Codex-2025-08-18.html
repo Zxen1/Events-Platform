@@ -70,25 +70,9 @@ button,
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
-button:hover,
-[role="button"]:hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-}
 button:active,
 [role="button"]:active{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
   transform: scale(0.97);
-}
-button[aria-pressed="true"],
-button[aria-current="page"],
-button[aria-selected="true"],
-[role="button"][aria-pressed="true"],
-[role="button"][aria-current="page"],
-[role="button"][aria-selected="true"]{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
 }
 button:focus-visible,
 [role="button"]:focus-visible{
@@ -142,15 +126,9 @@ button:focus-visible,
   transition: background .2s,border-color .2s;
 }
 
-.view-toggle button:hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-}
 
 .view-toggle button[aria-current="page"],
 .view-toggle button[aria-pressed="true"]{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
 }
 
 /* Spin controls */
@@ -188,11 +166,7 @@ button:focus-visible,
     text-align:center;
     transition:background .2s,border-color .2s;
   }
-  #spinType span:hover{
-    background:var(--btn-hover);
-  }
   #spinType input:checked + span{
-    background:var(--btn-active);
   }
 
 .auth{
@@ -259,7 +233,7 @@ button:focus-visible,
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
-.admin-fieldset{margin:10px 0;border:1px solid #ccc;border-radius:8px;padding:10px;}
+.admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
   flex:1 1 180px;
@@ -546,9 +520,6 @@ button:focus-visible,
   cursor: pointer;
 }
 
-.chip.on{
-  border-color: var(--btn-active);
-}
 
 .cat[aria-expanded="true"] .sub{
   display: grid;
@@ -1023,9 +994,6 @@ footer .foot-row .foot-item[aria-selected="true"],
   min-width: 0;
 }
 
-.multi-item:hover{
-  background: #0f243a;
-}
 
 .multi-item img{
   width: 64px;
@@ -1288,8 +1256,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .logo img{height:48px;display:block}
     .view-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%);display:flex;gap:8px}
     .view-toggle button{border:1px solid var(--btn);border-radius:999px;padding:10px 14px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;transition:background .2s,border-color .2s}
-    .view-toggle button:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
-    .view-toggle button[aria-current="page"],.view-toggle button[aria-pressed="true"]{background:var(--btn-active);border-color:var(--btn-active)}
     .auth{display:flex;align-items:center;gap:10px}
     .auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
@@ -1315,8 +1281,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .cat .cfg{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;background:var(--btn);border:1px solid var(--btn);cursor:pointer}
     .sub{margin:6px 0 0 6px;display:none;grid-template-columns:1fr;gap:6px}
     .sub .chip{height:28px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:999px;background:var(--btn);border:1px solid var(--btn);font-size:12px;color:var(--ink-d);width:max-content;cursor:pointer}
-    .chip.on{border-color:var(--btn-active)}
-    .cat[aria-expanded="true"] .sub{display:grid}
 
     .reset-box{display:grid;grid-template-columns:1fr 38px;gap:8px;align-items:center;margin-top:10px}
     .reset-box .btn{height:36px;border-radius:999px;background:var(--btn);border:1px solid var(--btn);display:flex;align-items:center;gap:10px;padding:0 14px;font-weight:700;letter-spacing:.2px;color:var(--ink);cursor:pointer}
@@ -1444,8 +1408,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   cursor:pointer;
   min-width:0;               /* allow shrinking within container */
 }
-.multi-item:hover{background:var(--btn-hover)}
-.multi-item img{width:64px;height:44px;border-radius:8px;object-fit:cover;display:block;background:var(--modal-bg);flex:0 0 auto}
 .multi-item .t{
   font-weight:800;
   font-size:13px;
@@ -1588,14 +1550,10 @@ footer .foot-row .foot-item img {
   }
   .view-toggle button:hover,
   .auth button:hover {
-    background: var(--btn-hover);
-    border-color: var(--btn-hover);
   }
   .view-toggle button[aria-current="page"],
   .view-toggle button[aria-pressed="true"],
   .auth button[aria-pressed="true"] {
-    background: var(--btn-active);
-    border-color: var(--btn-active);
   }
   .sq,
   .tiny,
@@ -3122,13 +3080,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
     {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button'], btnText:['.res-head button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:['button','[role="button"]','.card','.chip'], hoverBorder:['button:hover','[role="button"]:hover','.card:hover','.chip:hover'], activeBorder:['button:active','[role="button"]:active','button[aria-pressed="true"]','button[aria-current="page"]','button[aria-selected="true"]','[role="button"][aria-pressed="true"]','[role="button"][aria-current="page"]','[role="button"][aria-selected="true"]','.card.selected','.card[aria-selected="true"]','.chip.on']}},
-    {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
-    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
-    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
-    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button'], btnText:['#adminModal button']}},
-    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
+    {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card'], border:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn','.results-col .card'], hoverBorder:['.results-col .res-list button:hover','.results-col .res-list .sq:hover','.results-col .res-list .tiny:hover','.results-col .res-list .btn:hover','.results-col .card:hover'], activeBorder:['.results-col .res-list button:active','.results-col .res-list button[aria-pressed="true"]','.results-col .res-list button[aria-current="page"]','.results-col .res-list button[aria-selected="true"]','.results-col .card.selected','.results-col .card[aria-selected="true"]']}},
+    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline'], border:['.posts-mode button','.posts-mode .card','.posts-mode .detail-inline'], hoverBorder:['.posts-mode button:hover','.posts-mode .card:hover','.posts-mode .detail-inline:hover'], activeBorder:['.posts-mode button:active','.posts-mode button[aria-pressed="true"]','.posts-mode button[aria-current="page"]','.posts-mode button[aria-selected="true"]','.posts-mode .card.selected','.posts-mode .card[aria-selected="true"]']}},
+    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item'], border:['footer','footer .chip-small','footer .foot-row .foot-item'], hoverBorder:['footer .chip-small:hover','footer .foot-row .foot-item:hover'], activeBorder:['footer .foot-row .foot-item.selected','footer .foot-row .foot-item[aria-selected="true"]']}},
+    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title'], border:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], hoverBorder:['.mapboxgl-popup.hover-pop .hover-card:hover'], activeBorder:['.mapboxgl-popup.hover-pop .hover-card.selected','.mapboxgl-popup.hover-pop .hover-card[aria-selected="true"]']}},
+    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], border:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], hoverBorder:['#filterModal button:hover','#filterModal .sq:hover','#filterModal .tiny:hover','#filterModal .btn:hover'], activeBorder:['#filterModal button:active','#filterModal button[aria-pressed="true"]','#filterModal button[aria-current="page"]','#filterModal button[aria-selected="true"]']}},
+    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span'], border:['#adminModal button','#adminModal #spinType','#adminModal #spinType span','#adminModal .admin-fieldset'], hoverBorder:['#adminModal button:hover','#adminModal #spinType span:hover'], activeBorder:['#adminModal button:active','#adminModal button[aria-pressed="true"]','#adminModal button[aria-current="page"]','#adminModal button[aria-selected="true"]','#adminModal #spinType input:checked + span']}},
+    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button'], border:['#memberModal button'], hoverBorder:['#memberModal button:hover'], activeBorder:['#memberModal button:active','#memberModal button[aria-pressed="true"]','#memberModal button[aria-current="page"]','#memberModal button[aria-selected="true"]']}}
   ];
 
   let lastFieldsetKey = null;
@@ -3151,21 +3109,26 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function syncAdminControls(){
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
         const sizeSel = document.getElementById(`${area.key}-${type}-size`);
         if(!cInput && !fontSel && !sizeSel) return;
-        const selectors = area.selectors[type] || [];
+        let selectors = area.selectors[type] || [];
+        if((type==='hoverBorder' || type==='activeBorder') && selectors.length===0){
+          selectors = area.selectors.border || [];
+        }
         let col = null, font = null, size = null;
         selectors.some(sel=>{
-          const el = document.querySelector(sel);
+          const cleanSel = sel.replace(/:hover|:active|\[.*?\]/g,'');
+          const el = document.querySelector(cleanSel);
           if(!el) return false;
           const cs = getComputedStyle(el);
           if(cInput){
             if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
             else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
+            else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
@@ -3179,7 +3142,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const bVal = parseInt(match[3],10);
             const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
             cInput.value = rgbToHex(r,g,bVal);
-            if((type==='bg' || type==='card') && oInput) oInput.value = alpha;
+            if((type==='bg' || type==='card' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
           }
         }
         if(fontSel && font){
@@ -3211,7 +3174,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       sameBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','text','title','btn','btnText'].forEach(type=>{
+        ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -3224,6 +3187,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const fromS = document.getElementById(`${lastFieldsetKey}-${type}-size`);
           const toS = document.getElementById(`${area.key}-${type}-size`);
           if(fromS && toS){ toS.value = fromS.value; }
+        });
+        ['hoverAdjust','activeAdjust'].forEach(type=>{
+          const fromV = document.getElementById(`${lastFieldsetKey}-${type}`);
+          const toV = document.getElementById(`${area.key}-${type}`);
+          if(fromV && toV){ toV.value = fromV.value; }
         });
         applyAdmin();
       });
@@ -3525,6 +3493,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   buildStyleControls();
   syncAdminControls();
+  applyAdmin();
   defaultTheme = collectThemeValues();
   initBuiltInPresets();
   loadPresets();
