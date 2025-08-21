@@ -318,6 +318,9 @@ button:focus-visible,
 #adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 #adminModal .control-row label{min-width:40px;font-size:12px;cursor:pointer;user-select:none;}
   #adminModal .color-group{width:120px;display:flex;flex-direction:column;align-items:stretch;position:relative;margin-left:auto;}
+  #adminModal .font-group{display:flex;gap:6px;margin-left:auto;}
+  #adminModal .font-group select{flex:1;}
+  #adminModal .font-group .font-size-select{width:80px;}
 #adminModal .color-group input[type=color]{border:1px solid #ccc;border-radius:4px;padding:0;width:100%;height:40px;display:block;cursor:pointer;pointer-events:auto;}
 #adminModal .color-group input[type=range]{width:100%;}
 #adminModal .tab-bar{display:flex;gap:6px;}
@@ -900,12 +903,14 @@ footer .foot-row .foot-item{
 }
 
 .card,
-footer .foot-row .foot-item{
+footer .foot-row .foot-item,
+.mapboxgl-popup.hover-pop .hover-card{
   transition: filter .2s, box-shadow .2s;
 }
 
 .card:hover,
-footer .foot-row .foot-item:hover{
+footer .foot-row .foot-item:hover,
+.mapboxgl-popup.hover-pop .hover-card:hover{
   filter: brightness(1.05);
 }
 
@@ -3146,7 +3151,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   let lastFieldsetKey = null;
 
   const COLOR_PICKER_MODE = 'hex';
-  const FONT_OPTIONS = ['Inter','Arial','Georgia','Courier New'];
+  const FONT_OPTIONS = ['Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Verdana','Tahoma','Comic Sans MS'];
+  const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
 
   function rgbToHex(r,g,b){
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -3165,26 +3171,40 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
-        if(!cInput) return;
+        const fontSel = document.getElementById(`${area.key}-${type}-font`);
+        const sizeSel = document.getElementById(`${area.key}-${type}-size`);
+        if(!cInput && !fontSel && !sizeSel) return;
         const selectors = area.selectors[type] || [];
-        let col = null;
+        let col = null, font = null, size = null;
         selectors.some(sel=>{
           const el = document.querySelector(sel);
           if(!el) return false;
           const cs = getComputedStyle(el);
-          if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
-          else if(type === 'text' || type === 'btnText' || type === 'headerText') col = cs.color;
-          return col;
+          if(cInput){
+            if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
+            else if(type === 'text' || type === 'btnText' || type === 'headerText') col = cs.color;
+          }
+          if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
+          if(sizeSel) size = parseInt(cs.fontSize,10);
+          return true;
         });
-        if(!col) return;
-        const match = col.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
-        if(!match) return;
-        const r = parseInt(match[1],10);
-        const g = parseInt(match[2],10);
-        const bVal = parseInt(match[3],10);
-        const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
-        cInput.value = rgbToHex(r,g,bVal);
-        if((type==='bg' || type==='card') && oInput) oInput.value = alpha;
+        if(cInput && col){
+          const match = col.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+          if(match){
+            const r = parseInt(match[1],10);
+            const g = parseInt(match[2],10);
+            const bVal = parseInt(match[3],10);
+            const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
+            cInput.value = rgbToHex(r,g,bVal);
+            if((type==='bg' || type==='card') && oInput) oInput.value = alpha;
+          }
+        }
+        if(fontSel && font){
+          fontSel.value = FONT_OPTIONS.includes(font) ? font : FONT_OPTIONS[0];
+        }
+        if(sizeSel && size){
+          sizeSel.value = String(size);
+        }
       });
     });
   }
@@ -3218,9 +3238,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const fromF = document.getElementById(`${lastFieldsetKey}-${type}-font`);
           const toF = document.getElementById(`${area.key}-${type}-font`);
           if(fromF && toF){ toF.value = fromF.value; }
+          const fromS = document.getElementById(`${lastFieldsetKey}-${type}-size`);
+          const toS = document.getElementById(`${area.key}-${type}-size`);
+          if(fromS && toS){ toS.value = fromS.value; }
         });
         applyAdmin();
-        syncFontControls();
       });
       lg.appendChild(sameBtn);
       fs.appendChild(lg);
@@ -3256,6 +3278,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           fontRow.className = 'control-row';
           const fontLabel = document.createElement('label');
           fontLabel.textContent = 'font';
+          const fontGroup = document.createElement('div');
+          fontGroup.className = 'font-group';
           const fontSelect = document.createElement('select');
           fontSelect.className = 'font-select';
           fontSelect.id = `${area.key}-${type}-font`;
@@ -3265,8 +3289,19 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             opt.textContent = f;
             fontSelect.appendChild(opt);
           });
+          const sizeSelect = document.createElement('select');
+          sizeSelect.className = 'font-size-select';
+          sizeSelect.id = `${area.key}-${type}-size`;
+          FONT_SIZE_OPTIONS.forEach(sz=>{
+            const opt = document.createElement('option');
+            opt.value = sz;
+            opt.textContent = `${sz}px`;
+            sizeSelect.appendChild(opt);
+          });
+          fontGroup.appendChild(fontSelect);
+          fontGroup.appendChild(sizeSelect);
           fontRow.appendChild(fontLabel);
-          fontRow.appendChild(fontSelect);
+          fontRow.appendChild(fontGroup);
           fs.appendChild(fontRow);
         }
       });
@@ -3281,33 +3316,56 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area){
         const colorInput = document.getElementById(`${areaKey}-${type}-c`);
         const opacityInput = document.getElementById(`${areaKey}-${type}-o`);
+        const fontInput = document.getElementById(`${areaKey}-${type}-font`);
+        const sizeInput = document.getElementById(`${areaKey}-${type}-size`);
         const color = colorInput ? colorInput.value : '#ffffff';
         const opacity = opacityInput ? opacityInput.value : 1;
+        const font = fontInput ? fontInput.value : null;
+        const size = sizeInput ? sizeInput.value : null;
         (area.selectors[type]||[]).forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
             if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText' || type==='headerText') el.style.color = color;
-            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+            else if(type==='text' || type==='btnText' || type==='headerText'){
+              el.style.color = color;
+              if(font) el.style.fontFamily = font;
+              if(size) el.style.fontSize = `${size}px`;
+            } else if(type==='btn'){
+              el.style.backgroundColor = color;
+              el.style.borderColor = color;
+            }
           });
         });
       }
-        const themeStr = JSON.stringify(collectThemeValues());
-        localStorage.setItem('currentTheme', themeStr);
-        return;
-      }
+      const themeStr = JSON.stringify(collectThemeValues());
+      localStorage.setItem('currentTheme', themeStr);
+      return;
+    }
     colorAreas.forEach(area=>{
       ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
-        if(!c) return;
-        const color = c.value;
+        const f = document.getElementById(`${area.key}-${type}-font`);
+        const s = document.getElementById(`${area.key}-${type}-size`);
+        if(!c && !f && !s) return;
+        const color = c ? c.value : null;
         const opacity = o ? o.value : 1;
+        const font = f ? f.value : null;
+        const size = s ? s.value : null;
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card') el.style.backgroundColor = hexToRgba(color, opacity);
-            else if(type==='text' || type==='btnText' || type==='headerText') el.style.color = color;
-            else if(type==='btn'){ el.style.backgroundColor = color; el.style.borderColor = color; }
+            if(type==='bg' || type==='card'){
+              if(color) el.style.backgroundColor = hexToRgba(color, opacity);
+            } else if(type==='text' || type==='btnText' || type==='headerText'){
+              if(color) el.style.color = color;
+              if(font) el.style.fontFamily = font;
+              if(size) el.style.fontSize = `${size}px`;
+            } else if(type==='btn'){
+              if(color){
+                el.style.backgroundColor = color;
+                el.style.borderColor = color;
+              }
+            }
           });
         });
       });
@@ -3322,8 +3380,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       ['bg','card','text','headerText','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
-        if(c){
-          data[`${area.key}-${type}`] = {color:c.value, opacity: o ? o.value : '1'};
+        const f = document.getElementById(`${area.key}-${type}-font`);
+        const s = document.getElementById(`${area.key}-${type}-size`);
+        if(c || f || s){
+          const entry = {};
+          if(c){ entry.color = c.value; }
+          if((type==='bg' || type==='card') && o){ entry.opacity = o.value; }
+          if(f){ entry.font = f.value; }
+          if(s){ entry.size = s.value; }
+          data[`${area.key}-${type}`] = entry;
         }
       });
     });
@@ -3384,8 +3449,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const [areaKey,type] = key.split('-');
         const c = document.getElementById(`${areaKey}-${type}-c`);
         const o = document.getElementById(`${areaKey}-${type}-o`);
-        if(c){ c.value = val.color; }
+        const f = document.getElementById(`${areaKey}-${type}-font`);
+        const s = document.getElementById(`${areaKey}-${type}-size`);
+        if(c && val.color){ c.value = val.color; }
         if((type==='bg' || type==='card') && o && val.opacity!==undefined){ o.value = val.opacity; }
+        if(f && val.font){ f.value = val.font; }
+        if(s && val.size){ s.value = val.size; }
       });
       applyAdmin();
     }
@@ -3402,24 +3471,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(saved) applyPresetData(saved);
   }
 
-  function syncFontControls(){
-    const stored = localStorage.getItem('siteFont');
-    if(stored) document.body.style.fontFamily = stored;
-    const current = stored || getComputedStyle(document.body).fontFamily;
-    document.querySelectorAll('.font-select').forEach(sel=>{ sel.value = current; });
-  }
-
-  function initFontControls(){
-    syncFontControls();
-    document.addEventListener('change', e=>{
-      if(e.target.classList && e.target.classList.contains('font-select')){
-        const font = e.target.value;
-        document.body.style.fontFamily = font;
-        localStorage.setItem('siteFont', font);
-        document.querySelectorAll('.font-select').forEach(sel=>{ sel.value = font; });
-      }
-    });
-  }
 
   buildStyleControls();
   syncAdminControls();
@@ -3427,7 +3478,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   initBuiltInPresets();
   loadPresets();
   loadSavedTheme();
-  initFontControls();
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
