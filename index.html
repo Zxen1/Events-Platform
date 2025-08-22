@@ -1763,7 +1763,7 @@ footer .foot-row .foot-item img {
     border-color: var(--btn);
   }
   .detail-inline{ overflow:hidden; }
-  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background-size:cover; background-position:center; background-blend-mode:multiply; }
+  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
   .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; position:sticky; top:56px; z-index:2; }
@@ -2952,11 +2952,23 @@ function makePosts(){
       const max = 50;
       const loaded = new Set();
       const queue = [];
+      let inFlight = 0;
       function process(){
-        while(queue.length && loaded.size < max){
+        while(queue.length && inFlight < max){
           const q = queue.shift();
-          q.imgs.forEach(img => { img.src = q.src; });
-          loaded.add(q.src);
+          if(loaded.has(q.src)){
+            q.imgs.forEach(img=>{ img.src = q.src; });
+            continue;
+          }
+          const primary = q.imgs.shift();
+          inFlight++;
+          primary.onload = primary.onerror = () => {
+            loaded.add(q.src);
+            q.imgs.forEach(img=>{ img.src = q.src; });
+            inFlight--;
+            process();
+          };
+          primary.src = q.src;
         }
       }
       function enqueue(img, priority){
@@ -3111,10 +3123,9 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'detail-inline';
       wrap.dataset.id = p.id;
-      const headerImg = imgHero(p);
-      const imgs = [headerImg];
+      const imgs = [imgHero(p)];
       wrap.innerHTML = `
-        <div class="detail-header" style="background-image:url('${headerImg}')">
+        <div class="detail-header">
           <div>
             <div class="title">${p.title}</div>
             <div class="sub">${p.city}</div>
