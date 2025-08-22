@@ -2037,6 +2037,7 @@ footer .foot-row .foot-item img {
   </div>
 
   <script>const __USED_STARTERS = new Set();
+  let startPitch, startBearing;
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -2049,8 +2050,8 @@ footer .foot-row .foot-item img {
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
     const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
-    const startPitch = savedView?.pitch || 0;
-    const startBearing = savedView?.bearing || 0;
+    startPitch = window.startPitch = savedView?.pitch || 0;
+    startBearing = window.startBearing = savedView?.bearing || 0;
       let map, geocoder, spinning = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
