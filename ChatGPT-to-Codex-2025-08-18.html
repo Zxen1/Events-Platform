@@ -2147,6 +2147,7 @@ footer .foot-row .foot-item img {
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
+    window.adjustListHeight = adjustListHeight;
 
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
@@ -2573,7 +2574,6 @@ function makePosts(){
         g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
         g.onload = cb;
         g.onerror = ()=>{
-          console.warn('Mapbox Geocoder failed to load, using fallback');
           const gf = document.createElement('script');
           gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.min.js';
           gf.onload = cb;
@@ -4430,6 +4430,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     syncAdminControls();
     currentState = collectThemeValues();
     updateHistoryButtons();
+    localStorage.setItem('currentTheme', JSON.stringify(currentState));
   });
   undoBtn && undoBtn.addEventListener('click', ()=>{
     if(!undoStack.length) return;
@@ -4505,8 +4506,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dragEl = null;
   });
 
-  window.addEventListener('resize', adjustListHeight);
-  adjustListHeight();
+  window.addEventListener('resize', window.adjustListHeight);
+  window.adjustListHeight();
 })();
 </script>
 </body>
