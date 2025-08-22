@@ -1,6 +1,9 @@
 const { getUserTheme, setUserTheme } = require('./db/theme');
 const { generateTheme } = require('./themeBuilder');
 const { updateFields } = require('./themeOrganiser');
+const { saveTab } = require('./db/admin');
+const http = require('http');
+const url = require('url');
 
 function applyTheme(theme) {
   // Build a full theme palette from the stored base color
@@ -25,4 +28,35 @@ function onThemeChange(userId, themeId, customJson) {
   return theme;
 }
 
-module.exports = { onLogin, onThemeChange, applyTheme };
+function startServer(port = 3000) {
+  const server = http.createServer((req, res) => {
+    const parsed = url.parse(req.url, true);
+    if (req.method === 'POST' && parsed.pathname === '/admin/save') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const { tab, data } = JSON.parse(body || '{}');
+          if (!tab || typeof data !== 'object') {
+            res.writeHead(400); res.end('Invalid'); return;
+          }
+          const record = saveTab(tab, data);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, record }));
+        } catch (e) {
+          res.writeHead(500); res.end('Error');
+        }
+      });
+    } else {
+      res.writeHead(404); res.end('Not found');
+    }
+  });
+  server.listen(port, () => console.log(`Server listening on ${port}`));
+  return server;
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { onLogin, onThemeChange, applyTheme, startServer };

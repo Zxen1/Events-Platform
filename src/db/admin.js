@@ -1,5 +1,23 @@
 const { read, write } = require('./index');
 
+function normalizeTheme(data) {
+  const toHex = (val) => {
+    if (typeof val !== 'string') return val;
+    const m = val.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (!m) return val;
+    let hex = val.toUpperCase();
+    if (hex.length === 4) {
+      hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+    return hex;
+  };
+  const out = {};
+  Object.entries(data).forEach(([k, v]) => {
+    out[k] = toHex(v);
+  });
+  return out;
+}
+
 function saveTab(tab, data) {
   const db = read();
   const tableName = `admin_${tab}`;
@@ -7,7 +25,8 @@ function saveTab(tab, data) {
   db[tableName] = db[tableName] || [];
   db[backupTable] = db[backupTable] || [];
   const id = (db[tableName][db[tableName].length - 1]?.id || 0) + 1;
-  const record = { id, ...data, saved_at: new Date().toISOString() };
+  const cleaned = tab === 'theme' ? normalizeTheme(data) : data;
+  const record = { id, ...cleaned, saved_at: new Date().toISOString() };
   db[tableName].push(record);
   db[backupTable].push(record);
   write(db);

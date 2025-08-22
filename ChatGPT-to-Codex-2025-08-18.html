@@ -3326,6 +3326,9 @@ function handleEsc(){
   const top = modalStack[modalStack.length-1];
   if(!top) return;
   if(top instanceof Element){
+    if(top.id === 'adminModal' && typeof window.saveAdminChanges === 'function'){
+      window.saveAdminChanges();
+    }
     requestCloseModal(top);
   } else if(typeof top.remove==='function'){
     modalStack.pop();
@@ -3351,7 +3354,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
   filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
-    btn.addEventListener('click', ()=> requestCloseModal(btn.closest('.modal')));
+    btn.addEventListener('click', ()=>{
+      const modal = btn.closest('.modal');
+      if(modal && modal.id === 'adminModal') return;
+      requestCloseModal(modal);
+    });
   });
 
   document.querySelectorAll('.modal').forEach(modal=>{
@@ -4290,6 +4297,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const tabPanels = ['theme','mapbox','settings'];
     const savedData = {};
 
+    function toHex(val){
+      if(typeof val !== 'string') return val;
+      const m = val.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if(!m) return val;
+      let h = val.toUpperCase();
+      if(h.length === 4){ h = '#' + h[1]+h[1]+h[2]+h[2]+h[3]+h[3]; }
+      return h;
+    }
+
     function snapshot(tab){
       const panel = document.getElementById(`tab-${tab}`);
       const inputs = panel.querySelectorAll('input,select,textarea');
@@ -4298,7 +4314,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(!el.id && el.name) el.id = el.name; // ensure key
         if(el.type === 'checkbox') data[el.id] = el.checked;
         else if(el.type === 'radio'){ if(el.checked) data[el.name] = el.value; }
-        else data[el.id] = el.value;
+        else {
+          let v = el.value;
+          if(typeof v === 'string' && v.startsWith('#')) v = toHex(v);
+          data[el.id] = v;
+        }
       });
       return data;
     }
@@ -4353,24 +4373,56 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       backups.push({ name:`ADMIN ${tab} Backup ${new Date().toISOString()}`, data });
       localStorage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
       populateBackups(tab);
+      fetch('/admin/save', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ tab, data })
+      }).catch(()=>{});
       return true;
     }
 
-    saveBtn && saveBtn.addEventListener('click', ()=>{
+    function showSaveMessage(msg){
+      let box = document.getElementById('saveStatus');
+      if(!box){
+        box = document.createElement('div');
+        box.id = 'saveStatus';
+        box.style.position = 'fixed';
+        box.style.top = '50%';
+        box.style.left = '50%';
+        box.style.transform = 'translate(-50%, -50%)';
+        box.style.fontFamily = 'Arial, sans-serif';
+        box.style.fontSize = '32px';
+        box.style.background = 'rgba(0,0,0,0.7)';
+        box.style.color = '#fff';
+        box.style.padding = '10px 20px';
+        box.style.borderRadius = '4px';
+        box.style.zIndex = '10000';
+        box.style.display = 'none';
+        document.body.appendChild(box);
+      }
+      box.textContent = msg;
+      box.style.display = 'block';
+      setTimeout(()=>{ box.style.display = 'none'; }, 1500);
+    }
+
+    function saveAllTabs(){
       let changed = false;
       tabPanels.forEach(tab=>{ if(saveTab(tab)) changed = true; });
-      alert(changed ? 'Saved' : 'No changes were made');
-    });
+      showSaveMessage(changed ? 'Saved' : 'No changes were made');
+      return changed;
+    }
+    window.saveAdminChanges = saveAllTabs;
+
+    saveBtn && saveBtn.addEventListener('click', saveAllTabs);
 
     discardBtn && discardBtn.addEventListener('click', ()=>{
-      if(!confirm('Are you sure you want to Discard Your Changes?')) return;
+      if(!confirm('Are you sure you want to Discard Your Changes? Y/N')) return;
       tabPanels.forEach(tab=> applyData(tab, savedData[tab]));
     });
 
     adminClose && adminClose.addEventListener('click', ()=>{
-      let changed = false;
-      tabPanels.forEach(tab=>{ if(saveTab(tab)) changed = true; });
-      alert(changed ? 'Saved' : 'No changes were made');
+      saveAllTabs();
+      requestCloseModal(adminClose.closest('.modal'));
     });
 
     document.querySelectorAll('button[data-restore]').forEach(btn=>{
