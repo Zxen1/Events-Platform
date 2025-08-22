@@ -1762,6 +1762,20 @@ footer .foot-row .foot-item img {
     background: var(--list-background);
     border-color: var(--btn);
   }
+  .detail-inline{ overflow:visible; }
+  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; background:var(--list-background); z-index:3; }
+  .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
+  .detail-header .sub{ font-size:14px; color:var(--muted); }
+  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; position:sticky; top:56px; background:var(--list-background); z-index:2; }
+  .image-row img{ height:400px; object-fit:cover; cursor:pointer; }
+  .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
+  .map-container{ width:300px; height:200px; }
+  .calendar-container{ height:200px; overflow-x:auto; }
+  .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .img-modal img{ max-width:90vw; max-height:90vh; }
+  .img-modal .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; cursor:pointer; user-select:none; }
+  .img-modal .prev{ left:20px; }
+  .img-modal .next{ right:20px; }
 </style>
 
 </head>
@@ -2934,6 +2948,50 @@ function makePosts(){
       if(lastTop < limit){ postsModeEl.scrollTop -= (limit - lastTop); }
     });
 
+    const imageLoader = (() => {
+      const max = 50;
+      const loaded = new Set();
+      const queue = [];
+      function process(){
+        while(queue.length && loaded.size < max){
+          const q = queue.shift();
+          q.imgs.forEach(img => { img.src = q.src; });
+          loaded.add(q.src);
+        }
+      }
+      function enqueue(img, priority){
+        const src = img.dataset.src;
+        if(!src) return;
+        if(loaded.has(src)){ img.src = src; return; }
+        const existing = queue.find(q=>q.src===src);
+        if(existing){ existing.imgs.push(img); return; }
+        queue.push({src, priority, imgs:[img]});
+        queue.sort((a,b)=>a.priority-b.priority);
+        process();
+      }
+      function observe(container, priority){
+        const imgs = container.querySelectorAll('img[data-src]');
+        imgs.forEach(img=>{
+          if(priority===0){
+            enqueue(img,0);
+          } else if('IntersectionObserver' in window){
+            const obs = new IntersectionObserver(entries=>{
+              entries.forEach(entry=>{
+                if(entry.isIntersecting){
+                  enqueue(img,priority);
+                  obs.unobserve(img);
+                }
+              });
+            },{root:null, rootMargin:'200px'});
+            obs.observe(img);
+          } else {
+            enqueue(img,priority);
+          }
+        });
+      }
+      return {observe};
+    })();
+
     function renderLists(list){
       const sort = $('#sortSelect').value;
       const arr = list.slice();
@@ -2953,34 +3011,11 @@ function makePosts(){
           if(sel) sel.setAttribute('aria-selected','true');
         }
         updateResultCount(arr.length);
-        prioritizeVisibleImages();
+        imageLoader.observe(resultsEl,1);
+        imageLoader.observe(postsWideEl,1);
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
-
-    function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
-      roots.forEach(root => {
-        if(!root) return;
-        const imgs = root.querySelectorAll('img.thumb');
-        if(!imgs.length) return;
-        if('IntersectionObserver' in window){
-          const obs = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-              if(entry.isIntersecting){
-                const img = entry.target;
-                img.loading = 'eager';
-                img.fetchPriority = 'high';
-                obs.unobserve(img);
-              }
-            });
-          }, {root});
-          imgs.forEach(img => obs.observe(img));
-        } else {
-          imgs.forEach(img => img.loading = 'eager');
-        }
-      });
-    }
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -2988,7 +3023,7 @@ function makePosts(){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='70px 1fr 36px';
       el.innerHTML = `
-        <img class="thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+        <img class="thumb" data-src="${imgThumb(p)}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
@@ -3076,44 +3111,32 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'detail-inline';
       wrap.dataset.id = p.id;
+      const imgs = [imgHero(p)];
       wrap.innerHTML = `
-        <div class="hero"><img id="hero-img" class="lqip"   src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
-        <div class="body">
+        <div class="detail-header">
           <div>
-            <h2>${p.title}</h2>
-            <div class="meta">
-              <span>📍 ${p.city}</span>
-              <span>🏷️ ${p.category} / ${p.subcategory}</span>
-            </div>
-            <div class="dates">
-              ${p.dates.map(d=> `<span class="date">${d}</span>`).join('')}
-            </div>
-            <div class="desc">${p.desc}</div>
+            <div class="title">${p.title}</div>
+            <div class="sub">${p.city}</div>
           </div>
-          <div class="tools">
-            <button class="pill" data-act="center">Center on Map</button>
-            <button class="pill" data-act="fav">☆ Favourite</button>
-            <button class="close" data-act="close">Close</button>
-          </div>
-        </div>`;
-        // 0577 progressive hero swap
-  (function(){
-    const img = wrap.querySelector('#hero-img');
-    if(img){
-      const full = img.getAttribute('data-full');
-      const hi = new Image();
-      hi.referrerPolicy = 'no-referrer';
-      hi.fetchPriority = 'high';
-      hi.onload = ()=>{
-        // decode for nicer paint if available
-        const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-        if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-      };
-      hi.onerror = ()=>{ /* keep thumb */ };
-      hi.src = full;
-    }
-  })();
-  return wrap;
+          <button class="fav-btn" data-act="fav" aria-label="Toggle favourite">${p.fav ? '★' : '☆'}</button>
+        </div>
+        <div class="image-row">
+          ${imgs.map((src,i)=>`<img class="view-img" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`).join('')}
+        </div>
+        ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
+        <div class="map-calendar">
+          <div class="map-container"></div>
+          <div class="calendar-container">${p.dates.map(d=>`<div>${d}</div>`).join('')}</div>
+        </div>` : ''}
+        <div class="detail-main">
+          <div class="desc">${p.desc}</div>
+        </div>
+        <div class="tools">
+          <button class="pill" data-act="center">Center on Map</button>
+          <button class="close" data-act="close">Close</button>
+        </div>
+      `;
+      return wrap;
     }
 
     async function openPost(id, fromPosts=false){
@@ -3162,6 +3185,7 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
+      setupDetailViewer(detail, p);
 
       if(container){
         if(!fromPosts){
@@ -3174,7 +3198,7 @@ function makePosts(){
       }
 
       const favBtn = detail.querySelector('[data-act="fav"]');
-      favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
+      if(favBtn) favBtn.textContent = p.fav ? '★' : '☆';
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
@@ -3209,11 +3233,77 @@ function makePosts(){
       });
       el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
         p.fav=!p.fav;
-        e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
+        e.currentTarget.textContent = p.fav?'★':'☆';
         renderLists(filtered);
         stopSpin();
         openPost(p.id, !!el.closest('.posts-mode'));
       });
+    }
+
+    function setupDetailViewer(detail, p){
+      const row = detail.querySelector('.image-row');
+      if(row){
+        imageLoader.observe(row,0);
+        const imgs = [...row.querySelectorAll('img')];
+        imgs.forEach((img,idx)=>{
+          img.addEventListener('click',()=>openImageModal(imgs, idx));
+        });
+      }
+      const mapDiv = detail.querySelector('.map-container');
+      if(mapDiv && typeof mapboxgl !== 'undefined'){
+        new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
+        mapDiv.addEventListener('click',()=>openMapModal(p));
+      }
+      const calDiv = detail.querySelector('.calendar-container');
+      if(calDiv){
+        calDiv.addEventListener('click',()=>openCalendarModal(calDiv.innerHTML));
+      }
+    }
+
+    function openImageModal(imgs, idx){
+      let i = idx;
+      const modal = document.createElement('div');
+      modal.className='img-modal';
+      const img = document.createElement('img');
+      modal.appendChild(img);
+      const prev = document.createElement('div'); prev.className='nav prev'; prev.textContent='‹';
+      const next = document.createElement('div'); next.className='nav next'; next.textContent='›';
+      modal.appendChild(prev); modal.appendChild(next);
+      function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].src||imgs[i].dataset.src; img.src=src; }
+      function close(){ modal.remove(); document.removeEventListener('keydown',onKey); }
+      function onKey(e){ if(e.key==='Escape') close(); if(e.key==='ArrowRight') show(i+1); if(e.key==='ArrowLeft') show(i-1); }
+      prev.addEventListener('click',()=>show(i-1));
+      next.addEventListener('click',()=>show(i+1));
+      modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
+      document.addEventListener('keydown',onKey);
+      show(i);
+      document.body.appendChild(modal);
+    }
+
+    function openMapModal(p){
+      const modal = document.createElement('div');
+      modal.className='img-modal';
+      const mapBox = document.createElement('div');
+      mapBox.style.width='80vw'; mapBox.style.height='60vh';
+      modal.appendChild(mapBox);
+      new mapboxgl.Map({container:mapBox, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:6});
+      modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+      document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',esc); }});
+      document.body.appendChild(modal);
+    }
+
+    function openCalendarModal(html){
+      const modal = document.createElement('div');
+      modal.className='img-modal';
+      const inner = document.createElement('div');
+      inner.innerHTML = html;
+      inner.style.background = 'var(--list-background)';
+      inner.style.color = 'var(--ink)';
+      inner.style.padding = '12px';
+      modal.appendChild(inner);
+      modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+      document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',esc); }});
+      document.body.appendChild(modal);
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
