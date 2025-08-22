@@ -1897,6 +1897,8 @@ footer .foot-row .foot-item img {
         <div class="header-top">
           <h2>Admin Settings</h2>
           <div class="modal-actions">
+            <button type="button" id="discardChanges">Discard Changes</button>
+            <button type="button" id="saveNow">Save Now</button>
             <button type="button" class="close-modal">Close</button>
           </div>
         </div>
@@ -1928,6 +1930,11 @@ footer .foot-row .foot-item img {
           </div>
           <h3>Theme Builder</h3>
           <div id="styleControls"></div>
+          <div class="modal-field">
+            <label for="themeRestore">Restore Backup</label>
+            <select id="themeRestore"></select>
+            <button type="button" data-restore="theme">Restore</button>
+          </div>
         </div>
           <div id="tab-mapbox" class="tab-panel">
             <div class="modal-field">
@@ -2009,6 +2016,11 @@ footer .foot-row .foot-item img {
           <div class="modal-field">
             <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
           </div>
+          <div class="modal-field">
+            <label for="mapboxRestore">Restore Backup</label>
+            <select id="mapboxRestore"></select>
+            <button type="button" data-restore="mapbox">Restore</button>
+          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -2031,6 +2043,11 @@ footer .foot-row .foot-item img {
             <div class="field-item" draggable="true" data-type="location">Location</div>
           </div>
           <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
+          <div class="modal-field">
+            <label for="settingsRestore">Restore Backup</label>
+            <select id="settingsRestore"></select>
+            <button type="button" data-restore="settings">Restore</button>
+          </div>
         </div>
       </form>
     </div>
@@ -4265,6 +4282,112 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           applyAdmin(e.target);
         });
     }
+
+    // Save/Discard/Restore logic
+    const saveBtn = document.getElementById('saveNow');
+    const discardBtn = document.getElementById('discardChanges');
+    const adminClose = document.querySelector('#adminModal .close-modal');
+    const tabPanels = ['theme','mapbox','settings'];
+    const savedData = {};
+
+    function snapshot(tab){
+      const panel = document.getElementById(`tab-${tab}`);
+      const inputs = panel.querySelectorAll('input,select,textarea');
+      const data = {};
+      inputs.forEach(el=>{
+        if(!el.id && el.name) el.id = el.name; // ensure key
+        if(el.type === 'checkbox') data[el.id] = el.checked;
+        else if(el.type === 'radio'){ if(el.checked) data[el.name] = el.value; }
+        else data[el.id] = el.value;
+      });
+      return data;
+    }
+
+    function applyData(tab,data){
+      const panel = document.getElementById(`tab-${tab}`);
+      Object.entries(data||{}).forEach(([id,val])=>{
+        const el = panel.querySelector(`#${id}`);
+        if(!el) return;
+        if(el.type === 'checkbox') el.checked = !!val;
+        else if(el.type === 'radio'){
+          const r = panel.querySelector(`input[name="${id}"][value="${val}"]`);
+          if(r) r.checked = true;
+        } else {
+          el.value = val;
+        }
+      });
+    }
+
+    function populateBackups(tab){
+      const select = document.getElementById(`${tab}Restore`);
+      if(!select) return;
+      const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+      select.innerHTML = '';
+      backups.slice().reverse().forEach((b,i)=>{
+        const opt = document.createElement('option');
+        opt.value = backups.length - 1 - i;
+        opt.textContent = b.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function loadSaved(){
+      tabPanels.forEach(tab=>{
+        const raw = localStorage.getItem(`admin-${tab}-current`);
+        if(raw){
+          savedData[tab] = JSON.parse(raw);
+          applyData(tab, savedData[tab]);
+        } else {
+          savedData[tab] = snapshot(tab);
+        }
+        populateBackups(tab);
+      });
+    }
+
+    function saveTab(tab){
+      const data = snapshot(tab);
+      if(JSON.stringify(data) === JSON.stringify(savedData[tab])) return false;
+      savedData[tab] = data;
+      localStorage.setItem(`admin-${tab}-current`, JSON.stringify(data));
+      const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+      backups.push({ name:`ADMIN ${tab} Backup ${new Date().toISOString()}`, data });
+      localStorage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
+      populateBackups(tab);
+      return true;
+    }
+
+    saveBtn && saveBtn.addEventListener('click', ()=>{
+      let changed = false;
+      tabPanels.forEach(tab=>{ if(saveTab(tab)) changed = true; });
+      alert(changed ? 'Saved' : 'No changes were made');
+    });
+
+    discardBtn && discardBtn.addEventListener('click', ()=>{
+      if(!confirm('Are you sure you want to Discard Your Changes?')) return;
+      tabPanels.forEach(tab=> applyData(tab, savedData[tab]));
+    });
+
+    adminClose && adminClose.addEventListener('click', ()=>{
+      let changed = false;
+      tabPanels.forEach(tab=>{ if(saveTab(tab)) changed = true; });
+      alert(changed ? 'Saved' : 'No changes were made');
+    });
+
+    document.querySelectorAll('button[data-restore]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tab = btn.dataset.restore;
+        const select = document.getElementById(`${tab}Restore`);
+        const idx = parseInt(select.value,10);
+        const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+        const backup = backups[idx];
+        if(backup){
+          applyData(tab, backup.data);
+          saveTab(tab);
+        }
+      });
+    });
+
+    loadSaved();
 
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{

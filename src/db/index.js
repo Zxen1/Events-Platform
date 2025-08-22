@@ -8,7 +8,13 @@ function ensureDb() {
     const initial = {
       users: [],
       themes: [],
-      user_theme_preferences: []
+      user_theme_preferences: [],
+      admin_theme: [],
+      admin_mapbox: [],
+      admin_settings: [],
+      admin_theme_backups: [],
+      admin_mapbox_backups: [],
+      admin_settings_backups: []
     };
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
