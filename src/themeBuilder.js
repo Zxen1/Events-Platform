@@ -33,15 +33,22 @@ function luminance(hex) {
   return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
 }
 
+const DEFAULT_BASE_COLOR = '#336699';
+
+function isValidHex(hex) {
+  return /^#([0-9a-fA-F]{6})$/.test(hex);
+}
+
 function generateTheme(baseColor) {
-  const primary = baseColor;
-  const secondary = adjust(baseColor, 30);
-  const accent = adjust(baseColor, -30);
-  const background = adjust(baseColor, 60);
+  const base = isValidHex(baseColor) ? baseColor : DEFAULT_BASE_COLOR;
+  const primary = base;
+  const secondary = adjust(base, 30);
+  const accent = adjust(base, -30);
+  const background = adjust(base, 60);
   const text = luminance(background) > 0.5 ? '#000000' : '#ffffff';
   const buttonText = luminance(secondary) > 0.5 ? '#000000' : '#ffffff';
   const buttonHoverText = luminance(accent) > 0.5 ? '#000000' : '#ffffff';
   return { primary, secondary, accent, background, text, buttonText, buttonHoverText };
 }
 
-module.exports = { generateTheme };
+module.exports = { generateTheme, DEFAULT_BASE_COLOR };

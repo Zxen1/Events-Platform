@@ -3,7 +3,7 @@ const fs = require('fs');
 const seed = require('./db/seed');
 const { getUserTheme, setUserTheme } = require('./src/db/theme');
 const { DB_PATH } = require('./src/db');
-const { generateTheme } = require('./src/themeBuilder');
+const { generateTheme, DEFAULT_BASE_COLOR } = require('./src/themeBuilder');
 const { applyTheme } = require('./src/server');
 const { getFields } = require('./src/themeOrganiser');
 
@@ -13,6 +13,10 @@ assert.strictEqual(built.primary, '#336699');
 assert.ok(typeof built.background === 'string');
 assert.ok(typeof built.buttonText === 'string');
 assert.ok(typeof built.buttonHoverText === 'string');
+
+// Invalid color falls back to default
+const fallbackTheme = generateTheme('blue');
+assert.strictEqual(fallbackTheme.primary, DEFAULT_BASE_COLOR);
 
 // Applying a theme updates organiser before appearance
 const logs = [];
