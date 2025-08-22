@@ -3,6 +3,7 @@ const fs = require('fs');
 const seed = require('./db/seed');
 const { getUserTheme, setUserTheme } = require('./src/db/theme');
 const { DB_PATH } = require('./src/db');
+const { saveTab, listBackups, restoreBackup } = require('./src/db/admin');
 const { generateTheme, DEFAULT_BASE_COLOR } = require('./src/themeBuilder');
 const { applyTheme } = require('./src/server');
 const { getFields } = require('./src/themeOrganiser');
@@ -46,5 +47,12 @@ assert.strictEqual(updated.data.color, '#fff');
 // Switch back to light theme
 const changed = setUserTheme(1, 1);
 assert.strictEqual(changed.name, 'light');
+
+// Admin tab backup tests
+const themeSave = saveTab('theme', { name: 'test', primary: '#000000' });
+assert.strictEqual(themeSave.id, 1);
+assert.ok(listBackups('theme').length === 1);
+const restored = restoreBackup('theme', themeSave.id);
+assert.strictEqual(restored.id, 2);
 
 console.log('All tests passed!');
