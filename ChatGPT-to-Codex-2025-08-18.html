@@ -1972,18 +1972,32 @@ footer .foot-row .foot-item img {
                 <option value="rainbow">Rainbow</option>
               </select>
             </div>
-            <div class="modal-field">
-              <label for="spinSpeed">Spin speed</label>
-              <div class="range-wrap">
-                <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
-                <span id="spinSpeedVal"></span>
+              <div class="modal-field">
+                <label for="spinSpeed">Spin speed</label>
+                <div class="range-wrap">
+                  <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
+                  <span id="spinSpeedVal"></span>
+                </div>
               </div>
-            </div>
-          <div class="modal-field">
-            <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
-              <div id="spinType" class="seg">
-                <label>
-                  <input type="radio" name="spinType" value="all" />
+              <div class="modal-field">
+                <label for="mapPitch">Pitch</label>
+                <div class="range-wrap">
+                  <input type="range" id="mapPitch" min="0" max="85" step="1" />
+                  <span id="pitchVal"></span>
+                </div>
+              </div>
+              <div class="modal-field">
+                <label for="mapBearing">Bearing</label>
+                <div class="range-wrap">
+                  <input type="range" id="mapBearing" min="-180" max="180" step="1" />
+                  <span id="bearingVal"></span>
+                </div>
+              </div>
+            <div class="modal-field">
+              <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
+                <div id="spinType" class="seg">
+                  <label>
+                    <input type="radio" name="spinType" value="all" />
                   <span>Everyone</span>
                 </label>
                 <label>
@@ -2036,6 +2050,7 @@ footer .foot-row .foot-item img {
     const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
     const startPitch = savedView?.pitch || 0;
+    const startBearing = savedView?.bearing || 0;
       let map, geocoder, spinning = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
@@ -2082,7 +2097,7 @@ footer .foot-row .foot-item img {
         localStorage.setItem('spinGlobe', 'true');
         if(map){
           stopSpin();
-          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch});
+          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
           map.once('moveend', startSpin);
         }else{
           startSpin();
@@ -2584,16 +2599,17 @@ function makePosts(){
         console.error('Mapbox GL failed to load');
         return;
       }
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-        map = new mapboxgl.Map({
-          container:'map',
-          style: mapStyle,
-          projection:'globe',
-          center: startCenter,
-          zoom: startZoom,
-          pitch: startPitch,
-          attributionControl:true
-        });
+          mapboxgl.accessToken = MAPBOX_TOKEN;
+          map = new mapboxgl.Map({
+            container:'map',
+            style: mapStyle,
+            projection:'globe',
+            center: startCenter,
+            zoom: startZoom,
+            pitch: startPitch,
+            bearing: startBearing,
+            attributionControl:true
+          });
       addGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
@@ -2608,16 +2624,29 @@ function makePosts(){
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
 
-      ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
-      map.on('moveend', () => {
-        applyFilters();
-        updatePostPanel();
-        const center = map.getCenter().toArray();
-        const zoom = map.getZoom();
-        const pitch = map.getPitch();
-        localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch}));
-      });
-    }
+        ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
+        map.on('pitch', () => {
+          const pIn = document.getElementById('mapPitch');
+          const pVal = document.getElementById('pitchVal');
+          if(pIn) pIn.value = map.getPitch();
+          if(pVal) pVal.textContent = map.getPitch().toFixed(0);
+        });
+        map.on('rotate', () => {
+          const bIn = document.getElementById('mapBearing');
+          const bVal = document.getElementById('bearingVal');
+          if(bIn) bIn.value = map.getBearing();
+          if(bVal) bVal.textContent = map.getBearing().toFixed(0);
+        });
+        map.on('moveend', () => {
+          applyFilters();
+          updatePostPanel();
+          const center = map.getCenter().toArray();
+          const zoom = map.getZoom();
+          const pitch = map.getPitch();
+          const bearing = map.getBearing();
+          localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
+        });
+      }
 
     function startSpin(){
       if(mode!=='map') setMode('map');
@@ -3571,10 +3600,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
 
   function syncAdminControls(){
-    const themeSelect = document.getElementById('mapTheme');
-    if(themeSelect) themeSelect.value = mapStyle;
-    const skySelect = document.getElementById('skyTheme');
-    if(skySelect) skySelect.value = skyStyle;
+      const themeSelect = document.getElementById('mapTheme');
+      if(themeSelect) themeSelect.value = mapStyle;
+      const skySelect = document.getElementById('skyTheme');
+      if(skySelect) skySelect.value = skyStyle;
+      const pitchInput = document.getElementById('mapPitch');
+      const pitchVal = document.getElementById('pitchVal');
+      if(pitchInput){
+        const p = window.map ? window.map.getPitch() : startPitch;
+        pitchInput.value = p;
+        if(pitchVal) pitchVal.textContent = p.toFixed(0);
+      }
+      const bearingInput = document.getElementById('mapBearing');
+      const bearingVal = document.getElementById('bearingVal');
+      if(bearingInput){
+        const b = window.map ? window.map.getBearing() : startBearing;
+        bearingInput.value = b;
+        if(bearingVal) bearingVal.textContent = b.toFixed(0);
+      }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
@@ -4123,12 +4166,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
-        const speedInput = document.getElementById("spinSpeed");
-        const speedVal = document.getElementById("spinSpeedVal");
-        const loadStartInput = document.getElementById("spinLoadStart");
-        const typeRadios = document.querySelectorAll("#spinType input");
-        const logoClickInput = document.getElementById("spinLogoClick");
-        const themeSelect = document.getElementById("mapTheme");
+          const speedInput = document.getElementById("spinSpeed");
+          const speedVal = document.getElementById("spinSpeedVal");
+          const loadStartInput = document.getElementById("spinLoadStart");
+          const typeRadios = document.querySelectorAll("#spinType input");
+          const logoClickInput = document.getElementById("spinLogoClick");
+          const themeSelect = document.getElementById("mapTheme");
+          const pitchInput = document.getElementById("mapPitch");
+          const pitchVal = document.getElementById("pitchVal");
+          const bearingInput = document.getElementById("mapBearing");
+          const bearingVal = document.getElementById("bearingVal");
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
@@ -4159,6 +4206,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(sg.spinEnabled) sg.startSpin(); else sg.stopSpin();
         });
       }
+      if(pitchInput && pitchVal){
+        pitchInput.value = startPitch;
+        pitchVal.textContent = startPitch.toFixed(0);
+        pitchInput.addEventListener("input", ()=>{
+          const val = parseFloat(pitchInput.value) || 0;
+          if(window.map) map.setPitch(val);
+          pitchVal.textContent = val.toFixed(0);
+        });
+      }
+      if(bearingInput && bearingVal){
+        bearingInput.value = startBearing;
+        bearingVal.textContent = startBearing.toFixed(0);
+        bearingInput.addEventListener("input", ()=>{
+          const val = parseFloat(bearingInput.value) || 0;
+          if(window.map) map.setBearing(val);
+          bearingVal.textContent = val.toFixed(0);
+        });
+      }
       if(loadStartInput){
         loadStartInput.checked = sg.spinLoadStart;
         loadStartInput.addEventListener("change", ()=>{
@@ -4187,11 +4252,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(["spinSpeed","mapTheme","skyTheme"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(["spinSpeed","mapTheme","skyTheme"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
     }
