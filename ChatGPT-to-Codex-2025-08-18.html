@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Events Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <style>:root{
   --header-h: 72px;
   --panel-w: 260px;
@@ -93,6 +94,9 @@ button,
   border-radius: 6px;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
 button:hover,
@@ -123,7 +127,7 @@ button:focus-visible,
     height: var(--header-h);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     padding: 0 20px;
     background: #A3956c;
     color: #fff;
@@ -142,7 +146,7 @@ button:focus-visible,
 }
 
 .logo img{
-  height: 48px;
+  height: 64px;
   display: block;
 }
 
@@ -213,6 +217,10 @@ button:focus-visible,
   display: flex;
   align-items: center;
   gap: 10px;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .auth button{
@@ -1395,12 +1403,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font-family:Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;background:#071422;color:var(--ink);overflow:hidden}
-    .header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#A3956c;color:#fff;position:relative;z-index:20}
+    .header{height:var(--header-h);display:flex;align-items:center;justify-content:center;padding:0 20px;background:#A3956c;color:#fff;position:relative;z-index:20}
     .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;user-select:none}
-    .logo img{height:48px;display:block}
+    .logo img{height:64px;display:block}
     .view-toggle{position:absolute;left:calc(var(--results-w) + var(--gap) - 6px);top:50%;transform:translateY(-50%);display:flex;gap:8px}
     .view-toggle button{border:1px solid var(--btn);border-radius:999px;padding:10px 14px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer;transition:background .2s,border-color .2s}
-    .auth{display:flex;align-items:center;gap:10px}
+    .auth{display:flex;align-items:center;gap:10px;position:absolute;right:20px;top:50%;transform:translateY(-50%)}
     .auth button{border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:10px 14px;background:rgba(255,255,255,0.2);color:inherit;font-weight:600;cursor:pointer}
     .gear{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:grid;place-items:center}
     .gear svg{width:18px;height:18px;opacity:.9}
@@ -1702,6 +1710,9 @@ footer .foot-row .foot-item img {
     background: var(--modal-bg);
     color: var(--modal-text);
   }
+  .posts-mode .res-list{overflow:visible;padding:12px 0 0;display:flex;flex-direction:column;align-items:center;}
+  .posts-mode .res-list .card,.posts-mode .res-list .detail-inline{width:100%;max-width:480px;}
+  .date-header{position:sticky;top:0;background:var(--list-background);font-weight:600;padding:4px 8px;z-index:5;width:100%;max-width:480px;}
 </style>
 
 <style>
@@ -1794,6 +1805,7 @@ footer .foot-row .foot-item img {
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
+              <option value="events">Events only</option>
             </select>
           </div>
         </div>
@@ -1836,9 +1848,11 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
+            <div class="input">
+              <input id="dateInput" type="text" value="" aria-label="Date range" readonly />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
+            <div id="litepicker"></div>
           </div>
 
           <h3>Categories</h3>
@@ -2024,6 +2038,22 @@ footer .foot-row .foot-item img {
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
+            <label for="siteName">Site Name</label>
+            <input type="text" id="siteName" />
+          </div>
+          <div class="modal-field">
+            <label for="siteTagline">Tagline</label>
+            <input type="text" id="siteTagline" />
+          </div>
+          <div class="modal-field">
+            <label for="adminEmail">Admin Email</label>
+            <input type="email" id="adminEmail" />
+          </div>
+          <div class="modal-field">
+            <label for="defaultTimezone">Default Timezone</label>
+            <input type="text" id="defaultTimezone" />
+          </div>
+          <div class="modal-field">
             <label for="catList">Categories</label>
             <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
           </div>
@@ -2052,7 +2082,7 @@ footer .foot-row .foot-item img {
       </form>
     </div>
   </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <script>const __USED_STARTERS = new Set();
   let startPitch, startBearing;
 
@@ -2381,13 +2411,18 @@ function uniqueTitle(seed, cityName, idx){
 }function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
     function jitter([lng,lat]){ return [lng + (rnd()-0.5)*8, clamp(lat + (rnd()-0.5)*8,-80,80)]; }
     
-function randomDates(){ 
-  const count = 1 + Math.floor(rnd()*30);
+function randomDates(){
+  const count = 1 + Math.floor(rnd()*10);
   const now = new Date();
-  return Array.from({length:count}, ()=>{ 
-    const d = new Date(+now + Math.floor(rnd()*365)*86400000); 
-    return d.toISOString().slice(0,10); 
-  }).sort(); 
+  return Array.from({length:count}, ()=>{
+    const d = new Date(+now + Math.floor(rnd()*365)*86400000);
+    return d.toISOString().slice(0,10);
+  }).sort();
+}
+
+function randomAddresses(city){
+  const count = 1 + Math.floor(rnd()*10);
+  return Array.from({length:count}, (_,i)=> `${city} Location ${i+1}`);
 }
 
 
@@ -2408,6 +2443,7 @@ function makePosts(){
       lng: fsLng, lat: fsLat,
       category: cat.name,
       subcategory: sub,
+      addresses: randomAddresses(fsCity),
       dates: randomDates(),
       fav:false,
       desc:"Autogenerated demo post with multiple event dates at one venue (Federation Square)."
@@ -2459,8 +2495,8 @@ function makePosts(){
     {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
   ];
 
-  // Generate ~900 posts across hubs with small jitter to spread within cities
-  const TOTAL_WORLD = 900;
+  // Generate ~1900 posts across hubs with small jitter to spread within cities
+  const TOTAL_WORLD = 1900;
   for(let i=0;i<TOTAL_WORLD;i++){
     const hub = hubs[Math.floor(rnd()*hubs.length)];
     const jitter = ()=> (rnd()-0.5) * 0.2; // ~0.2 degrees spread (~20km)
@@ -2474,6 +2510,7 @@ function makePosts(){
       lat: hub.lat + jitter(),
       category: cat.name,
       subcategory: sub,
+      addresses: randomAddresses(hub.c),
       dates: randomDates(),
       fav:false,
       desc:"Autogenerated world demo post."
@@ -2513,12 +2550,40 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value='This month'; if(geocoder) geocoder.clear();
+    $('#kwInput').value=''; $('#dateInput').value=''; if(geocoder) geocoder.clear();
       applyFilters();
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#dateInput').addEventListener('input', applyFilters);
+    const picker = new Litepicker({
+      element: $('#dateInput'),
+      container: $('#litepicker'),
+      inlineMode: true,
+      numberOfMonths: 12,
+      numberOfColumns: 12,
+      selectMode: 'range',
+      autoApply: true,
+      format: 'YYYY-MM-DD',
+      startDate: null,
+      endDate: null,
+      minDate: new Date(),
+      maxDate: (()=>{const d=new Date(); d.setMonth(d.getMonth()+11); return d;})()
+    });
+    $('#litepicker').style.overflowX = 'auto';
+    picker.on('selected', (d1, d2) => {
+      const input = $('#dateInput');
+      if(d1 && d2){
+        input.value = `${d1.format('YYYY-MM-DD')} to ${d2.format('YYYY-MM-DD')}`;
+      } else if(d1){
+        input.value = d1.format('YYYY-MM-DD');
+      } else {
+        input.value = '';
+      }
+      input.dispatchEvent(new Event('input'));
+    });
+    const clearDate = $('#dateInput').parentElement.querySelector('.x');
+    if(clearDate){ clearDate.addEventListener('click', () => { picker.clearSelection(); }); }
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
 
@@ -2944,10 +3009,28 @@ function makePosts(){
         arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
       }
       if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
+      if(sort==='events') arr.sort((a,b)=> a.dates[0].localeCompare(b.dates[0]) || a.title.localeCompare(b.title));
 
         resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
-        arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
+        if(sort==='events'){
+          let current='';
+          arr.forEach(p=>{
+            const d=p.dates[0];
+            if(d!==current){
+              const head=document.createElement('div');
+              head.className='date-header';
+              head.textContent=d;
+              resultsEl.appendChild(head.cloneNode(true));
+              postsWideEl.appendChild(head);
+              current=d;
+            }
+            resultsEl.appendChild(card(p));
+            postsWideEl.appendChild(card(p,true));
+          });
+        } else {
+          arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
+        }
         if(activePostId){
           const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
           if(sel) sel.setAttribute('aria-selected','true');
@@ -2957,6 +3040,7 @@ function makePosts(){
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatAddresses(a){ if(!a||!a.length) return ''; if(a.length===1) return a[0]; return `${a[0]} + ${a.length-1} more`; }
 
     function prioritizeVisibleImages(){
       const roots = [resultsEl, postsWideEl];
@@ -2993,7 +3077,7 @@ function makePosts(){
           <div class="title">${p.title}</div>
           <div class="info">
             <span class="badge" title="Venue">📍</span>
-            <span>${p.city}</span>
+            <span>${formatAddresses(p.addresses)}</span>
             <span class="badge" title="Dates">📅</span>
             <span>${formatDates(p.dates)}</span>
           </div>
@@ -3030,7 +3114,7 @@ function makePosts(){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || 'This month';
+      $('#dateInput').value = st.date || '';
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -3082,7 +3166,7 @@ function makePosts(){
           <div>
             <h2>${p.title}</h2>
             <div class="meta">
-              <span>📍 ${p.city}</span>
+              ${p.addresses.map(a=>`<span>📍 ${a}</span>`).join('')}
               <span>🏷️ ${p.category} / ${p.subcategory}</span>
             </div>
             <div class="dates">
@@ -3227,7 +3311,9 @@ function makePosts(){
     function dateMatch(p){
       const val = $('#dateInput').value.trim();
       let start, end;
-      if(!val || val.toLowerCase() === 'this month'){
+      if(!val){
+        return true;
+      } else if(val.toLowerCase() === 'this month'){
         const now = new Date();
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         end = new Date(now.getFullYear(), now.getMonth()+1, 0);
@@ -3467,6 +3553,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
+    {key:'openPosts', label:'Open Posts', selectors:{bg:['.detail-inline'], text:['.detail-inline','.detail-inline *'], title:['.detail-inline .t','.detail-inline .title'], btn:['.detail-inline button'], btnText:['.detail-inline button'], card:['.detail-inline']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
