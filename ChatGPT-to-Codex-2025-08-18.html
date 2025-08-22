@@ -3607,14 +3607,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const pitchInput = document.getElementById('mapPitch');
       const pitchVal = document.getElementById('pitchVal');
       if(pitchInput){
-        const p = window.map ? window.map.getPitch() : startPitch;
+        const p = (window.map && typeof window.map.getPitch === 'function')
+          ? window.map.getPitch()
+          : startPitch;
         pitchInput.value = p;
         if(pitchVal) pitchVal.textContent = p.toFixed(0);
       }
       const bearingInput = document.getElementById('mapBearing');
       const bearingVal = document.getElementById('bearingVal');
       if(bearingInput){
-        const b = window.map ? window.map.getBearing() : startBearing;
+        const b = (window.map && typeof window.map.getBearing === 'function')
+          ? window.map.getBearing()
+          : startBearing;
         bearingInput.value = b;
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
