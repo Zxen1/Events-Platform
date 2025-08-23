@@ -1,4 +1,4 @@
-:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,1);--border-active:rgba(255,200,0,1);}
+:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -26,24 +26,45 @@ body{background-color:rgba(41,41,41,1);}
 .res-list .tiny{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .btn{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts{background-color:rgba(0,0,0,0);}
-.closed-posts .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-.closed-posts .open-posts{box-shadow:0 0 0px #000000;}
-.closed-posts{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts .card{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
+.closed-posts .open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
+.closed-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #ca6363;}
+.open-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.open-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+.open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .detail-header{background-color:#000000;}
+.open-posts .img-box{background-color:#000000;}
 footer{background-color:rgba(0,0,0,0);}
-footer .foot-row .foot-item{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-footer{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#map{background-color:rgba(0,0,0,0);}
-.mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup.hover-pop .hover-card{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup.hover-pop .hover-card{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup.hover-pop .hover-card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup.hover-pop .hover-card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+footer .foot-row .foot-item{background-color:rgba(0,0,0,0.32);box-shadow:0 0 0px #000000;}
+footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.map-wrap{background-color:rgba(0,0,0,1);}
+.mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .hover-card{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .chip{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .chip-small{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .multi-item{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .hover-card{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 #filterModal .modal-content{background-color:rgba(0,0,0,0.7);}
 #filterModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
