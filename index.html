@@ -1766,18 +1766,21 @@ footer .foot-row .foot-item img {
   .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; padding-right:calc(12px + 8px); position:sticky; top:56px; z-index:2; }
+  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; padding-right:calc(12px + 8px); position:sticky; top:56px; z-index:2; cursor:grab; touch-action:pan-y; }
+  .image-row.dragging{ cursor:grabbing; }
   .image-row img{ height:400px; object-fit:cover; cursor:pointer; }
   .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
   .map-container{ width:300px; height:200px; }
   .calendar-container{ height:200px; overflow-x:auto; }
-  .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
   .img-modal img{ max-width:90vw; max-height:90vh; }
-  .img-modal .nav{ position:absolute; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; cursor:pointer; user-select:none; }
-  .img-modal .prev{ left:20px; }
-  .img-modal .next{ right:20px; }
+  .img-modal .nav{ position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:2rem; color:#fff; cursor:pointer; user-select:none; background:rgba(0,0,0,0); }
+  .img-modal .prev{ left:0; justify-content:flex-start; padding-left:5vw; }
+  .img-modal .next{ right:0; justify-content:flex-end; padding-right:5vw; }
 </style>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
 </head>
 <body class="mode-map">
   <header class="header" role="banner">
@@ -1850,9 +1853,10 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
+            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
+            <div id="datePicker"></div>
           </div>
 
           <h3>Categories</h3>
@@ -2142,6 +2146,7 @@ footer .foot-row .foot-item img {
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let activePostId = null;
+    let rangePicker;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2410,10 +2415,12 @@ function randomDates(){
 function randomImages(id){
   const count = Math.floor(rnd()*10);
   const encId = encodeURIComponent(id);
+  const sizes = [[1200,800],[800,1200],[1200,1200],[1600,900],[900,1600]];
   const imgs = [];
   for(let i=0;i<count;i++){
     const seed = i===0 ? `${encId}-t` : `${encId}-${i}`;
-    imgs.push(`https://picsum.photos/seed/${seed}/1200/800`);
+    const [w,h] = sizes[Math.floor(rnd()*sizes.length)];
+    imgs.push(`https://picsum.photos/seed/${seed}/${w}/${h}`);
   }
   return imgs;
 }
@@ -2515,20 +2522,30 @@ function makePosts(){
     posts = makePosts();
 
     // Image helpers (unique per post)
-    function imgThumb(pOrId){
-      if(typeof pOrId === 'object' && pOrId.images && pOrId.images.length){
-        return pOrId.images[0].replace('/1200/800','/300/200');
-      }
-      const id = typeof pOrId==='string' ? pOrId : pOrId.id;
-      return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`;
-    }
-    function imgHero(pOrId){
-      if(typeof pOrId === 'object' && pOrId.images && pOrId.images.length){
-        return pOrId.images[0];
-      }
-      const id = typeof pOrId==='string' ? pOrId : pOrId.id;
-      return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`;
-    }
+function toThumb(src){
+  const m = src.match(/\/(\d+)\/(\d+)$/);
+  if(m){
+    const w = parseInt(m[1],10), h = parseInt(m[2],10);
+    const tw = 300;
+    const th = Math.round(tw * h / w);
+    return src.replace(/\d+\/\d+$/, `${tw}/${th}`);
+  }
+  return src;
+}
+function imgThumb(pOrId){
+  if(typeof pOrId === 'object' && pOrId.images && pOrId.images.length){
+    return toThumb(pOrId.images[0]);
+  }
+  const id = typeof pOrId==='string' ? pOrId : pOrId.id;
+  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`;
+}
+function imgHero(pOrId){
+  if(typeof pOrId === 'object' && pOrId.images && pOrId.images.length){
+    return pOrId.images[0];
+  }
+  const id = typeof pOrId==='string' ? pOrId : pOrId.id;
+  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`;
+}
 
     function hoverHTML(p){
       return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
@@ -2554,14 +2571,24 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value='This month'; if(geocoder) geocoder.clear();
+      $('#kwInput').value=''; $('#dateInput').value=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
       applyFilters();
+    });
+
+    rangePicker = new Litepicker({
+      element: document.getElementById('datePicker'),
+      inlineMode: true,
+      singleMode: false,
+      onSelect: (start, end)=>{
+        $('#dateInput').value = start && end ? `${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}` : '';
+        applyFilters();
+      }
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#dateInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); if(input.id==='dateInput' && rangePicker) rangePicker.clearSelection(); applyFilters(); } }));
 
     function setMode(m){
       mode = m;
@@ -3104,7 +3131,15 @@ function makePosts(){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || 'This month';
+      $('#dateInput').value = st.date || '';
+      if(rangePicker){
+        if(st.date){
+          const parts = st.date.split(/to/i).map(s=>s.trim()).filter(Boolean);
+          rangePicker.setDateRange(parts[0], parts[1] || parts[0]);
+        } else {
+          rangePicker.clearSelection();
+        }
+      }
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -3161,14 +3196,14 @@ function makePosts(){
         </div>
         ${imgs.length ? `<div class="image-row">
           ${imgs.map((src,i)=>{
-            const thumb = i===0 ? imgThumb(p) : src.replace('/1200/800','/300/200');
+            const thumb = i===0 ? imgThumb(p) : toThumb(src);
             return `<img class="view-img" src="${thumb}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`;
           }).join('')}
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
         <div class="map-calendar">
           <div class="map-container"></div>
-          <div class="calendar-container">${p.dates.map(d=>`<div>${d}</div>`).join('')}</div>
+          <div class="calendar-container"></div>
         </div>` : ''}
         <div class="detail-main">
           <div class="desc">${p.desc}</div>
@@ -3287,8 +3322,13 @@ function makePosts(){
       if(row){
         imageLoader.observe(row,0);
         const imgs = [...row.querySelectorAll('img')];
+        let isDown=false,startX,scrollLeft,dragged=false;
+        row.addEventListener('pointerdown',e=>{ isDown=true; startX=e.clientX; scrollLeft=row.scrollLeft; dragged=false; row.classList.add('dragging'); row.setPointerCapture(e.pointerId); });
+        row.addEventListener('pointermove',e=>{ if(!isDown) return; const dx=e.clientX-startX; if(Math.abs(dx)>5) dragged=true; row.scrollLeft=scrollLeft-dx; });
+        row.addEventListener('pointerup',()=>{ isDown=false; row.classList.remove('dragging'); });
+        row.addEventListener('pointerleave',()=>{ isDown=false; row.classList.remove('dragging'); });
         imgs.forEach((img,idx)=>{
-          img.addEventListener('click',()=>openImageModal(imgs, idx));
+          img.addEventListener('click',e=>{ if(dragged) return; openImageModal(imgs, idx); });
         });
         const container = detail.closest('.posts-mode');
         row.addEventListener('wheel', (e)=>{
@@ -3307,8 +3347,8 @@ function makePosts(){
         mapDiv.addEventListener('click',()=>openMapModal(p));
       }
       const calDiv = detail.querySelector('.calendar-container');
-      if(calDiv){
-        calDiv.addEventListener('click',()=>openCalendarModal(calDiv.innerHTML));
+      if(calDiv && p.dates && p.dates.length){
+        new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0] });
       }
     }
 
@@ -3321,6 +3361,7 @@ function makePosts(){
       const prev = document.createElement('div'); prev.className='nav prev'; prev.textContent='‹';
       const next = document.createElement('div'); next.className='nav next'; next.textContent='›';
       modal.appendChild(prev); modal.appendChild(next);
+      let startX=null, moved=false;
       function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].dataset.src || imgs[i].src; img.src=src; }
       function close(){ modal.remove(); document.removeEventListener('keydown',onKey); }
       function onKey(e){
@@ -3328,8 +3369,11 @@ function makePosts(){
         if(e.key==='ArrowRight'){ e.preventDefault(); show(i+1); }
         if(e.key==='ArrowLeft'){ e.preventDefault(); show(i-1); }
       }
-      prev.addEventListener('click',()=>show(i-1));
-      next.addEventListener('click',()=>show(i+1));
+      prev.addEventListener('click',e=>{ if(moved) return; show(i-1); });
+      next.addEventListener('click',e=>{ if(moved) return; show(i+1); });
+      modal.addEventListener('pointerdown',e=>{ startX=e.clientX; moved=false; });
+      modal.addEventListener('pointermove',e=>{ if(startX!=null && Math.abs(e.clientX-startX)>30) moved=true; });
+      modal.addEventListener('pointerup',e=>{ if(startX!=null){ const dx=e.clientX-startX; if(Math.abs(dx)>30){ if(dx<0) show(i+1); else show(i-1); moved=true; } startX=null; setTimeout(()=>moved=false,0); } });
       modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
       document.addEventListener('keydown',onKey);
       show(i);
@@ -3348,19 +3392,6 @@ function makePosts(){
       document.body.appendChild(modal);
     }
 
-    function openCalendarModal(html){
-      const modal = document.createElement('div');
-      modal.className='img-modal';
-      const inner = document.createElement('div');
-      inner.innerHTML = html;
-      inner.style.background = 'var(--list-background)';
-      inner.style.color = 'var(--ink)';
-      inner.style.padding = '12px';
-      modal.appendChild(inner);
-      modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
-      document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',esc); }});
-      document.body.appendChild(modal);
-    }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
 
@@ -3372,16 +3403,11 @@ function makePosts(){
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const val = $('#dateInput').value.trim();
+      if(!val) return true;
       let start, end;
-      if(!val || val.toLowerCase() === 'this month'){
-        const now = new Date();
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date(now.getFullYear(), now.getMonth()+1, 0);
-      } else {
-        const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        if(parts[0]) start = new Date(parts[0]);
-        if(parts[1]) end = new Date(parts[1]);
-      }
+      const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
+      if(parts[0]) start = new Date(parts[0]);
+      if(parts[1]) end = new Date(parts[1]);
       return p.dates.some(d => {
         const dt = new Date(d);
         if(start && dt < start) return false;
