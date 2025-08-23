@@ -1,8 +1,7 @@
 const assert = require('assert');
-const fs = require('fs');
 const seed = require('./db/seed');
 const { getUserTheme, setUserTheme } = require('./src/db/theme');
-const { DB_PATH } = require('./src/db');
+const { clear } = require('./src/db');
 const { saveTab, listBackups, restoreBackup } = require('./src/db/admin');
 const { generateTheme, DEFAULT_BASE_COLOR } = require('./src/themeBuilder');
 const { applyTheme } = require('./src/server');
@@ -32,7 +31,7 @@ assert.ok(logs[1].startsWith('Applying theme'));
 assert.strictEqual(getFields().primary, '#123456');
 
 // Theme preference tests
-if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+clear();
 seed();
 
 // Initially user has no preference

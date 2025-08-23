@@ -1,10 +1,21 @@
-const fs = require('fs');
-const path = require('path');
+// Database utilities backed by browser localStorage.
+// Falls back to an in-memory store when localStorage is unavailable
+// (e.g. in Node.js tests).
 
-const DB_PATH = path.join(__dirname, '../../db/database.json');
+const storage = typeof localStorage !== 'undefined' ? localStorage : (() => {
+  let store = {};
+  return {
+    getItem: (key) => (Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; }
+  };
+})();
+
+const DB_KEY = 'eventsPlatformDb';
 
 function ensureDb() {
-  if (!fs.existsSync(DB_PATH)) {
+  if (!storage.getItem(DB_KEY)) {
     const initial = {
       users: [],
       themes: [],
@@ -16,22 +27,27 @@ function ensureDb() {
       admin_mapbox_backups: [],
       admin_settings_backups: []
     };
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-    fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
+    storage.setItem(DB_KEY, JSON.stringify(initial));
   }
 }
 
 function read() {
   ensureDb();
-  return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+  return JSON.parse(storage.getItem(DB_KEY));
 }
 
 function write(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+  storage.setItem(DB_KEY, JSON.stringify(data));
+}
+
+function clear() {
+  storage.removeItem(DB_KEY);
 }
 
 module.exports = {
   read,
   write,
-  DB_PATH
+  clear,
+  DB_KEY
 };
+

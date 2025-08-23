@@ -4655,11 +4655,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       backups.push({ name:`ADMIN ${tab} Backup ${new Date().toISOString()}`, data });
       localStorage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
       populateBackups(tab);
-      fetch('/admin/save', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ tab, data })
-      }).catch(()=>{});
       return true;
     }
 
