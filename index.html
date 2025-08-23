@@ -1763,13 +1763,13 @@ footer .foot-row .foot-item img {
     border-color: var(--btn);
   }
   .detail-inline{ overflow:hidden; }
-  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:12px; z-index:3; background:var(--list-background); }
+  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-box-wrap{ display:flex; gap:8px; }
-  .img-box{ width:400px; height:400px; display:flex; align-items:center; justify-content:center; background:var(--img-box-bg, rgba(0,0,0,0.05)); cursor:pointer; }
+  .image-box-wrap{ display:flex; gap:8px; padding:8px; }
+  .img-box{ width:400px; height:400px; display:flex; align-items:center; justify-content:center; background:var(--img-box-bg, rgba(0,0,0,0.05)); cursor:pointer; padding:8px; box-sizing:border-box; }
   .img-box img{ max-width:100%; max-height:100%; object-fit:contain; }
-  .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; }
+  .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-right:4px; }
   .thumb-list img{ width:100px; height:100px; object-fit:cover; cursor:pointer; }
   .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
   .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
@@ -3251,9 +3251,9 @@ function imgHero(pOrId){
           </button>
         </div>
         ${imgs.length ? `<div class="image-box-wrap">
-          <div class="img-box"><img src="${imgs[0]}" data-index="0" referrerpolicy="no-referrer" alt=""/></div>
+          <div class="img-box"><img src="${imgs[0]}" data-index="0" referrerpolicy="no-referrer" loading="lazy" alt=""/></div>
           <div class="thumb-list">
-            ${imgs.map((src,i)=>`<img src="${toThumb(src,100)}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`).join('')}
+            ${imgs.map((src,i)=>`<img src="${toThumb(src,100)}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" loading="lazy" alt=""/>`).join('')}
           </div>
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
@@ -3321,6 +3321,7 @@ function imgHero(pOrId){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
       setupDetailViewer(detail, p);
+      applyAdmin();
 
       if(container){
         if(!fromPosts){
@@ -3368,8 +3369,15 @@ function imgHero(pOrId){
       thumbs.forEach(thumb=>{
         thumb.addEventListener('click',()=>{
           if(mainImg){
-            mainImg.src = thumb.dataset.src || thumb.src;
-            mainImg.dataset.index = thumb.dataset.index;
+            const full = thumb.dataset.src || thumb.src;
+            const idx = thumb.dataset.index;
+            mainImg.src = thumb.src;
+            mainImg.dataset.index = idx;
+            if(thumb.dataset.src){
+              const img = new Image();
+              img.onload = ()=>{ if(mainImg.dataset.index === idx) mainImg.src = full; };
+              img.src = full;
+            }
           }
         });
       });
@@ -3392,7 +3400,6 @@ function imgHero(pOrId){
         const cities = [...new Set(posts.map(p=>p.city))];
         cities.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; addrSel.appendChild(opt); });
         addrSel.value = p.city;
-        if(cities.length>6) addrSel.size = 6;
         addrSel.addEventListener('change', ()=>{
           const city = addrSel.value;
           const match = posts.find(x=>x.city===city);
@@ -3408,7 +3415,6 @@ function imgHero(pOrId){
       if(dateSel && p.dates && p.dates.length){
         p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=formatDateStr(d); dateSel.appendChild(opt); });
         dateSel.value = p.dates[0];
-        if(p.dates.length>6) dateSel.size = 6;
         if(calPicker){
           dateSel.addEventListener('change', ()=> calPicker.setDate(dateSel.value));
         }
@@ -3430,6 +3436,11 @@ function imgHero(pOrId){
         if(e.key==='ArrowLeft'){ e.preventDefault(); show(i-1); }
       }
       modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
+      img.addEventListener('click',e=>{
+        const rect = img.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if(x < rect.width/2) show(i-1); else show(i+1);
+      });
       modal.addEventListener('contextmenu',e=>e.preventDefault());
       document.addEventListener('keydown',onKey);
       show(i);
@@ -4517,11 +4528,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           applyAdmin(e.target);
         });
     }
