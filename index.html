@@ -3211,7 +3211,9 @@ function imgHero(pOrId){
             <div class="title">${p.title}</div>
             <div class="sub">${p.city}</div>
           </div>
-          <button class="fav-btn" data-act="fav" aria-label="Toggle favourite">${p.fav ? '★' : '☆'}</button>
+          <button class="fav" data-act="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
+            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+          </button>
         </div>
         ${imgs.length ? `<div class="image-row">
           ${imgs.map((src,i)=>{
@@ -3226,10 +3228,6 @@ function imgHero(pOrId){
         </div>` : ''}
         <div class="detail-main">
           <div class="desc">${p.desc}</div>
-        </div>
-        <div class="tools">
-          <button class="pill" data-act="center">Center on Map</button>
-          <button class="close" data-act="close">Close</button>
         </div>
       `;
       return wrap;
@@ -3293,8 +3291,8 @@ function imgHero(pOrId){
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
-      const favBtn = detail.querySelector('[data-act="fav"]');
-      if(favBtn) favBtn.textContent = p.fav ? '★' : '☆';
+      const favBtn = detail.querySelector('.fav');
+      if(favBtn) favBtn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
@@ -3310,30 +3308,16 @@ function imgHero(pOrId){
     }
 
     function hookDetailActions(el, p){
-      el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
-        const container = el.closest('.posts-mode');
-        const replacedCard = card(p, true);
-        el.replaceWith(replacedCard);
-        if(container){ ensureGap(container, replacedCard); }
-        activePostId = null;
-        $$('.card[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-        $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-        $$('.mapboxgl-popup .hover-card[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-      });
-      el.querySelector('[data-act="center"]').addEventListener('click', ()=>{
-        if(map){
+      const favBtn = el.querySelector('.fav');
+      if(favBtn){
+        favBtn.addEventListener('click', (e)=>{
+          p.fav=!p.fav;
+          e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false');
+          renderLists(filtered);
           stopSpin();
-          map.flyTo({center:[p.lng,p.lat], zoom:10});
-        }
-        setMode('map');
-      });
-      el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
-        p.fav=!p.fav;
-        e.currentTarget.textContent = p.fav?'★':'☆';
-        renderLists(filtered);
-        stopSpin();
-        openPost(p.id, !!el.closest('.posts-mode'));
-      });
+          openPost(p.id, !!el.closest('.posts-mode'));
+        });
+      }
     }
 
     function setupDetailViewer(detail, p){
