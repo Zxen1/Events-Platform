@@ -1881,10 +1881,15 @@ footer .foot-row .foot-item img {
                 <div class="x" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
+            <h3>Date Range</h3>
+            <div class="field">
+              <div class="input"><input id="dateInput" type="text" placeholder="Select date range" aria-label="Date range" />
+                <div class="x" role="button" aria-label="Clear date">X</div>
+              </div>
+            </div>
 
-
-          <h3>Categories</h3>
-          <div class="cats" id="cats"></div>
+            <h3>Categories</h3>
+            <div class="cats" id="cats"></div>
 
             <div class="reset-box">
               <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
@@ -2170,7 +2175,7 @@ footer .foot-row .foot-item img {
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let activePostId = null;
-    let rangePicker;
+    let rangePicker, modalPicker;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2614,7 +2619,10 @@ function imgHero(pOrId){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateRange').value=''; $('#dateRange').dataset.range=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
+      $('#kwInput').value=''; $('#dateRange').value=''; $('#dateRange').dataset.range=''; $('#dateInput').value=''; $('#dateInput').dataset.range='';
+      rangePicker && rangePicker.clearSelection();
+      modalPicker && modalPicker.clearSelection();
+      if(geocoder) geocoder.clear();
       applyFilters();
     });
 
@@ -2634,11 +2642,43 @@ function imgHero(pOrId){
         if (start && end) {
           $('#dateRange').value = `${fmt(start)} - ${fmt(end)}`;
           $('#dateRange').dataset.range = `${iso(start)} to ${iso(end)}`;
+          $('#dateInput').value = $('#dateRange').value;
+          $('#dateInput').dataset.range = $('#dateRange').dataset.range;
           applyFilters();
         } else if (start) {
           $('#dateRange').value = fmt(start);
           $('#dateRange').dataset.range = '';
+          $('#dateInput').value = $('#dateRange').value;
+          $('#dateInput').dataset.range = '';
         } else {
+          $('#dateRange').value = '';
+          $('#dateRange').dataset.range = '';
+          $('#dateInput').value = '';
+          $('#dateInput').dataset.range = '';
+        }
+      });
+
+      modalPicker = new Litepicker({
+        element: document.getElementById('dateInput'),
+        singleMode: false,
+        inlineMode: true
+      });
+      modalPicker.on('selected', (start) => {
+        const end = modalPicker.getEndDate();
+        if (start && end) {
+          $('#dateInput').value = `${fmt(start)} - ${fmt(end)}`;
+          $('#dateInput').dataset.range = `${iso(start)} to ${iso(end)}`;
+          $('#dateRange').value = $('#dateInput').value;
+          $('#dateRange').dataset.range = $('#dateInput').dataset.range;
+          applyFilters();
+        } else if (start) {
+          $('#dateInput').value = fmt(start);
+          $('#dateInput').dataset.range = '';
+          $('#dateRange').value = $('#dateInput').value;
+          $('#dateRange').dataset.range = '';
+        } else {
+          $('#dateInput').value = '';
+          $('#dateInput').dataset.range = '';
           $('#dateRange').value = '';
           $('#dateRange').dataset.range = '';
         }
@@ -2650,8 +2690,29 @@ function imgHero(pOrId){
     $('#kwInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $('#favTop').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
-    $('#dateRange').addEventListener('input',()=>{ if(!$('#dateRange').value){ $('#dateRange').dataset.range=''; if(rangePicker) rangePicker.clearSelection(); applyFilters(); } });
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
+      const input = x.parentElement.querySelector('input');
+      if(input){
+        input.value='';
+        if(input.dataset) input.dataset.range='';
+        if(input.id==='dateRange'){
+          $('#dateInput').value='';
+          $('#dateInput').dataset.range='';
+          if(rangePicker) rangePicker.clearSelection();
+          if(modalPicker) modalPicker.clearSelection();
+        }
+        if(input.id==='dateInput'){
+          $('#dateRange').value='';
+          $('#dateRange').dataset.range='';
+          if(modalPicker) modalPicker.clearSelection();
+          if(rangePicker) rangePicker.clearSelection();
+        }
+        input.focus();
+        applyFilters();
+      }
+    }));
+    $('#dateRange').addEventListener('input',()=>{ if(!$('#dateRange').value){ $('#dateRange').dataset.range=''; $('#dateInput').dataset.range=''; if(rangePicker) rangePicker.clearSelection(); if(modalPicker) modalPicker.clearSelection(); applyFilters(); } });
+    $('#dateInput').addEventListener('input',()=>{ if(!$('#dateInput').value){ $('#dateInput').dataset.range=''; $('#dateRange').dataset.range=''; if(modalPicker) modalPicker.clearSelection(); if(rangePicker) rangePicker.clearSelection(); applyFilters(); } });
 
     function setMode(m){
       mode = m;
@@ -3209,7 +3270,7 @@ function imgHero(pOrId){
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
-        date: $('#dateRange').dataset.range,
+        date: $('#dateRange').dataset.range || $('#dateInput').dataset.range,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3220,12 +3281,16 @@ function imgHero(pOrId){
       $('#kwInput').value = st.kw || '';
       const range = st.date || '';
       $('#dateRange').dataset.range = range;
+      $('#dateInput').dataset.range = range;
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
         const fmt = d => new Date(d).toLocaleDateString('en-GB',{ weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'');
-        $('#dateRange').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
+        const val = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
+        $('#dateRange').value = val;
+        $('#dateInput').value = val;
       } else {
         $('#dateRange').value = '';
+        $('#dateInput').value = '';
       }
       if(rangePicker){
         if(range){
@@ -3233,6 +3298,14 @@ function imgHero(pOrId){
           rangePicker.setDateRange(parts[0], parts[1] || parts[0]);
         } else {
           rangePicker.clearSelection();
+        }
+      }
+      if(modalPicker){
+        if(range){
+          const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
+          modalPicker.setDateRange(parts[0], parts[1] || parts[0]);
+        } else {
+          modalPicker.clearSelection();
         }
       }
       selection.cats = new Set(st.cats || []);
@@ -3576,7 +3649,7 @@ function imgHero(pOrId){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const range = $('#dateRange').dataset.range || '';
+      const range = $('#dateRange').dataset.range || $('#dateInput').dataset.range || '';
       let start, end;
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
