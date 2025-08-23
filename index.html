@@ -290,8 +290,8 @@ button:focus-visible,
 }
   #adminModal .modal-content,
   #memberModal .modal-content{
-    width:100%;
-    max-width:1200px;
+    width:600px;
+    max-width:90%;
     max-height:90%;
   }
 
@@ -854,7 +854,7 @@ button:focus-visible,
   background:rgba(0,0,0,0.7);
 }
 .closed-posts .res-list{overflow:visible;padding:12px 0 0;}
-.closed-posts, .closed-posts *{color:#000;}
+.closed-posts{color:#000;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
@@ -884,7 +884,7 @@ button:focus-visible,
 
 .open-posts .detail-header{
   display:flex;
-  justify-content:flex-end;
+  justify-content:space-between;
   align-items:center;
   padding:8px 12px;
   border-top-left-radius:inherit;
@@ -900,11 +900,8 @@ button:focus-visible,
   padding:14px;
 }
 
-.open-posts .content{
-  display:grid;
-  grid-template-columns:auto 1fr;
-  gap:16px;
-  align-items:start;
+.open-posts .text{
+  margin-top:12px;
 }
 
 .open-posts .img-area{
@@ -947,8 +944,8 @@ button:focus-visible,
   cursor:pointer;
 }
 
-.open-posts h2{
-  margin-top:0;
+.open-posts .detail-header .title{
+  margin:0;
   font-size:20px;
   line-height:1.2;
 }
@@ -960,11 +957,7 @@ button:focus-visible,
   flex-wrap:wrap;
 }
 
-.open-posts .tools{
-  display:flex;
-  gap:8px;
-  margin-top:12px;
-}
+
 
 .img-modal{
   position:fixed;
@@ -1540,18 +1533,17 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .mode-map .map-wrap{display:block}
 
     .open-posts{border:1px solid var(--border);border-radius:18px;margin:0 0 12px 0;overflow:hidden}
-    .open-posts .detail-header{display:flex;justify-content:flex-end;align-items:center;padding:8px 12px;border-top-left-radius:inherit;border-top-right-radius:inherit}
+    .open-posts .detail-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-top-left-radius:inherit;border-top-right-radius:inherit}
     .open-posts-sticky .open-posts .detail-header{position:sticky;top:0;z-index:3}
     .open-posts .body{padding:14px}
-    .open-posts .content{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
+    .open-posts .text{margin-top:12px}
     .open-posts .img-area{display:flex;gap:8px}
     .open-posts .img-box{width:400px;height:400px;overflow:hidden;border:1px solid var(--border);border-radius:18px;flex-shrink:0;cursor:pointer;background:var(--list-background)}
     .open-posts .img-box img{width:100%;height:100%;object-fit:contain;display:block}
     .open-posts .thumb-column{display:flex;flex-direction:column;height:400px;overflow-y:auto;gap:4px}
     .open-posts .thumb-column img{width:100px;height:100px;object-fit:cover;border:1px solid var(--border);border-radius:8px;cursor:pointer}
-    .open-posts h2{margin-top:0;font-size:20px;line-height:1.2}
+    .open-posts .detail-header .title{margin:0;font-size:20px;line-height:1.2}
     .open-posts .meta{font-size:13px;display:flex;gap:12px;flex-wrap:wrap}
-    .open-posts .tools{display:flex;gap:8px;margin-top:12px}
     .img-modal{position:fixed;inset:0;background:var(--modal-bg);display:flex;justify-content:center;align-items:center;z-index:1000}
     .img-modal img{max-width:90vw;max-height:90vh;cursor:pointer}
     .pill{border:1px solid var(--btn);background:var(--btn);border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
@@ -3218,29 +3210,25 @@ function makePosts(){
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
         <div class="detail-header">
-          <button class="close" data-act="close">Close</button>
+          <h2 class="title">${p.title}</h2>
+          <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
+            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+          </button>
         </div>
         <div class="body">
-          <div class="content">
-            <div class="img-area">
-              <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
-              <div class="thumb-column"></div>
-            </div>
-            <div class="text">
-              <h2>${p.title}</h2>
-              <div class="meta">
-                <span>📍 ${p.city}</span>
-                <span>🏷️ ${p.category} / ${p.subcategory}</span>
-              </div>
-              <div class="dates">
-                ${p.dates.map(d=> `<span class="date">${d}</span>`).join('')}
-              </div>
-              <div class="desc">${p.desc}</div>
-            </div>
+          <div class="img-area">
+            <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
+            <div class="thumb-column"></div>
           </div>
-          <div class="tools">
-            <button class="pill" data-act="center">Center on Map</button>
-            <button class="pill" data-act="fav">☆ Favourite</button>
+          <div class="text">
+            <div class="meta">
+              <span>📍 ${p.city}</span>
+              <span>🏷️ ${p.category} / ${p.subcategory}</span>
+            </div>
+            <div class="dates">
+              ${p.dates.map(d=> `<span class="date">${d}</span>`).join('')}
+            </div>
+            <div class="desc">${p.desc}</div>
           </div>
         </div>`;
         // progressive hero swap
@@ -3320,8 +3308,6 @@ function makePosts(){
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
-      const favBtn = detail.querySelector('[data-act="fav"]');
-      favBtn.textContent = p.fav ? '★ Favourited' : '☆ Favourite';
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
@@ -3337,30 +3323,17 @@ function makePosts(){
     }
 
     function hookDetailActions(el, p){
-      el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
-        const container = el.closest('.closed-posts');
-        const replacedCard = card(p, true);
-        el.replaceWith(replacedCard);
-        if(container){ ensureGap(container, replacedCard); }
-        activePostId = null;
-        $$('.card[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-        $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-        $$('.mapboxgl-popup .hover-card[aria-selected="true"]').forEach(n=>n.removeAttribute('aria-selected'));
-      });
-      el.querySelector('[data-act="center"]').addEventListener('click', ()=>{
-        if(map){
+      const favBtn = el.querySelector('.fav');
+      if(favBtn){
+        favBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          p.fav = !p.fav;
+          favBtn.setAttribute('aria-pressed', p.fav?'true':'false');
+          renderLists(filtered);
           stopSpin();
-          map.flyTo({center:[p.lng,p.lat], zoom:10});
-        }
-        setMode('map');
-      });
-      el.querySelector('[data-act="fav"]').addEventListener('click', (e)=>{
-        p.fav=!p.fav;
-        e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
-        renderLists(filtered);
-        stopSpin();
-        openPost(p.id, !!el.closest('.closed-posts'));
-      });
+          openPost(p.id, !!el.closest('.closed-posts'));
+        });
+      }
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       const thumbCol = el.querySelector('.thumb-column');
@@ -3686,7 +3659,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
+    {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card'], text:['.mapboxgl-popup .hover-card'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
@@ -3961,6 +3934,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(stickyInput){
       stickyInput.checked = !!(currentState['open-posts-sticky'] && currentState['open-posts-sticky'].value === '1');
       document.documentElement.classList.toggle('open-posts-sticky', stickyInput.checked);
+      stickyInput.addEventListener('change', () => {
+        document.documentElement.classList.toggle('open-posts-sticky', stickyInput.checked);
+        const data = collectThemeValues();
+        currentState = JSON.parse(JSON.stringify(data));
+        localStorage.setItem('currentTheme', JSON.stringify(data));
+        updateHistoryButtons();
+      });
     }
   }
 
