@@ -38,10 +38,12 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: #777777;
       --dropdown-title: #000000;
-      --dropdown-selected: #000000;
+      --dropdown-selected-bg: rgba(224,224,224,1);
+      --dropdown-selected-text: #000000;
       --dropdown-text: #000000;
       --dropdown-bg: rgba(255,255,255,1);
-      --dropdown-highlight: rgba(224,224,224,1);
+      --dropdown-hover-bg: rgba(224,224,224,1);
+      --dropdown-hover-text: #000000;
       --dropdown-radius: 6px;
 }
 
@@ -147,8 +149,12 @@ select option{
   color: var(--dropdown-text);
 }
 select option:checked{
-  background: var(--dropdown-highlight);
-  color: var(--dropdown-selected);
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+select option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
 }
 
   .header{
@@ -400,7 +406,7 @@ select option:checked{
   border-radius:4px;
 }
 #adminModal .shadow-group input[type=number]{
-  width:50px;
+  width:52px;
 }
 #adminModal .textpicker{
   flex:1 1 220px;
@@ -799,10 +805,16 @@ select option:checked{
 }
 
 .card{
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns:90px 1fr 36px;
+  gap:12px;
   align-items: flex-start;
+  background: var(--list-background);
   border: 1px solid var(--border);
+  border-radius:16px;
+  padding:12px;
+  margin-bottom:12px;
+  cursor:pointer;
 }
 
 .thumb{
@@ -958,6 +970,10 @@ select option:checked{
 
 .open-posts .body{
   padding:14px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:start;
 }
 
 .open-posts .text{
@@ -3465,6 +3481,69 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     preview.style.textShadow = `${sx}px ${sy}px ${sb}px ${sc}`;
   }
 
+  function createTextPickerRow(id,label,bgSource){
+    const row = document.createElement('div');
+    row.className = 'control-row';
+    const labelEl = document.createElement('label');
+    labelEl.textContent = label;
+    row.appendChild(labelEl);
+    const picker = document.createElement('div');
+    picker.className = 'textpicker';
+    picker.id = `${id}-picker`;
+    picker.dataset.bgSource = bgSource;
+    const preview = document.createElement('div');
+    preview.className = 'text-preview';
+    preview.textContent = 'Text';
+    picker.appendChild(preview);
+    const popup = document.createElement('div');
+    popup.className = 'text-popup';
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.id = `${id}-c`;
+    colorInput.setAttribute('data-mode', COLOR_PICKER_MODE);
+    const fontSelect = document.createElement('select');
+    fontSelect.id = `${id}-font`;
+    FONT_OPTIONS.forEach(f=>{ const opt=document.createElement('option'); opt.value=f; opt.textContent=f; fontSelect.appendChild(opt); });
+    const sizeSelect = document.createElement('select');
+    sizeSelect.id = `${id}-size`;
+    FONT_SIZE_OPTIONS.forEach(sz=>{ const opt=document.createElement('option'); opt.value=sz; opt.textContent=`${sz}px`; sizeSelect.appendChild(opt); });
+    const weightSelect = document.createElement('select');
+    weightSelect.id = `${id}-weight`;
+    ['normal','bold'].forEach(w=>{ const opt=document.createElement('option'); opt.value=w; opt.textContent=w.charAt(0).toUpperCase()+w.slice(1); weightSelect.appendChild(opt); });
+    const shadowGroup = document.createElement('div');
+    shadowGroup.className = 'shadow-group';
+    const sc = document.createElement('input'); sc.type='color'; sc.id = `${id}-shadow-color`; sc.setAttribute('data-mode', COLOR_PICKER_MODE);
+    const sx = document.createElement('input'); sx.type='number'; sx.id = `${id}-shadow-x`; sx.value='0'; sx.step='1';
+    const sy = document.createElement('input'); sy.type='number'; sy.id = `${id}-shadow-y`; sy.value='0'; sy.step='1';
+    const sb = document.createElement('input'); sb.type='number'; sb.id = `${id}-shadow-blur`; sb.value='0'; sb.step='1';
+    shadowGroup.append(sc, sx, sy, sb);
+    popup.append(colorInput, fontSelect, sizeSelect, weightSelect, shadowGroup);
+    picker.appendChild(popup);
+    row.appendChild(picker);
+    const update = ()=>{
+      const bg = document.getElementById(picker.dataset.bgSource);
+      preview.style.backgroundColor = bg ? bg.value : '#ffffff';
+      preview.style.color = colorInput.value;
+      preview.style.fontFamily = fontSelect.value;
+      preview.style.fontSize = sizeSelect.value + 'px';
+      preview.style.fontWeight = weightSelect.value;
+      preview.style.textShadow = `${sx.value}px ${sy.value}px ${sb.value}px ${sc.value}`;
+    };
+    [colorInput,fontSelect,sizeSelect,weightSelect,sc,sx,sy,sb].forEach(el=> el.addEventListener('input', update));
+    const bgInput = document.getElementById(picker.dataset.bgSource);
+    bgInput && bgInput.addEventListener('input', update);
+    preview.addEventListener('click', e=>{ e.stopPropagation(); picker.classList.toggle('open'); });
+    popup.addEventListener('click', e=> e.stopPropagation());
+    document.addEventListener('click', e=>{
+      const active = document.activeElement;
+      if(!picker.contains(e.target) && (!active || !picker.contains(active))){
+        picker.classList.remove('open');
+      }
+    });
+    update();
+    return row;
+  }
+
   function rgbToHex(r,g,b){
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
   }
@@ -3667,6 +3746,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
+    ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const padInputs = {
         top: document.getElementById(`${areaKey}-padding-top`),
@@ -3682,9 +3762,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       };
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
-      const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
+      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-      const el = document.querySelector(listSel);
+      const el = document.querySelector(cardSel);
       if(el){
         const cs = getComputedStyle(el);
         ['Top','Right','Bottom','Left'].forEach(dir=>{
@@ -3702,7 +3782,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -3988,19 +4068,17 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const misc = document.createElement('fieldset');
     misc.className = 'admin-fieldset';
     misc.innerHTML = '<legend>Miscellaneous</legend>';
-    const miscFields = [
+    const miscColors = [
       {id:'btn', label:'Button Base'},
       {id:'btnHover', label:'Button Hover'},
       {id:'btnActive', label:'Button Active'},
       {id:'modalBg', label:'Modal Background'},
-      {id:'modalText', label:'Modal Text'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
-      {id:'listBackground', label:'List Background'},
-      {id:'placeholder', label:'Placeholder Text'}
+      {id:'listBackground', label:'List Background'}
     ];
-    miscFields.forEach(p=>{
+    miscColors.forEach(p=>{
       const row = document.createElement('div');
       row.className = 'control-row';
       row.innerHTML = `
@@ -4012,44 +4090,40 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           `;
       misc.appendChild(row);
     });
+    misc.appendChild(createTextPickerRow('modalText','Image Modal Text','modalBg-c'));
+    misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
     dropdown.className = 'admin-fieldset';
     dropdown.innerHTML = '<legend>Dropdown Boxes</legend>';
-    const dropdownFields = [
+    const ddColors = [
       {id:'dropdownTitle', label:'Title'},
-      {id:'dropdownSelected', label:'Selected'},
-      {id:'dropdownText', label:'Text'},
+      {id:'dropdownSelectedBg', label:'Selected Background', opacity:true},
       {id:'dropdownBg', label:'Background', opacity:true},
-      {id:'dropdownHighlight', label:'Highlight', opacity:true}
+      {id:'dropdownHoverBg', label:'Hover Background', opacity:true}
     ];
-    dropdownFields.forEach(f=>{
+    ddColors.forEach(f=>{
       const row = document.createElement('div');
       row.className = 'control-row';
-      if(f.opacity){
-        row.innerHTML = `
+      row.innerHTML = `
             <label>${f.label}</label>
             <div class="color-group">
               <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
-              <input id="${f.id}-o" type="range" min="0" max="1" step="0.01" value="1" />
+              ${f.opacity ? `<input id="${f.id}-o" type="range" min="0" max="1" step="0.01" value="1" />` : ''}
             </div>
           `;
-      } else {
-        row.innerHTML = `
-            <label>${f.label}</label>
-            <div class="color-group">
-              <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
-            </div>
-          `;
-      }
       dropdown.appendChild(row);
     });
+    dropdown.appendChild(createTextPickerRow('dropdownSelectedText','Selected Text','dropdownSelectedBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownText','Text','dropdownBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownHoverText','Hover Text','dropdownHoverBg-c'));
     wrap.appendChild(dropdown);
     makeFieldsetsCollapsible();
   }
 
   function makeFieldsetsCollapsible(){
     document.querySelectorAll('.admin-fieldset').forEach(fs=>{
+      fs.classList.add('collapsed');
       const lg = fs.querySelector('legend');
       if(lg){
         lg.addEventListener('click', ()=> fs.classList.toggle('collapsed'));
@@ -4102,7 +4176,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -4181,15 +4255,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       };
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       const th = document.getElementById(`${areaKey}-thumbHeight`);
-      const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
-      document.querySelectorAll(listSel).forEach(el=>{
+      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
+      document.querySelectorAll(cardSel).forEach(el=>{
         if(areaKey === 'list' && el.closest('.closed-posts')) return;
         ['Top','Right','Bottom','Left'].forEach(dir=>{
           const key = dir.toLowerCase();
           const p = padInputs[key];
           const m = marginInputs[key];
-          el.style[`padding${dir}`] = p && p.value !== '' ? `${p.value}px` : '';
-          el.style[`margin${dir}`] = m && m.value !== '' ? `${m.value}px` : '';
+          if(p) el.style[`padding${dir}`] = p.value !== '' ? `${p.value}px` : '';
+          if(m) el.style[`margin${dir}`] = m.value !== '' ? `${m.value}px` : '';
         });
       });
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
@@ -4248,7 +4322,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         data[id] = { color: input.value };
       }
     });
-    ['btn','btnHover','btnActive','modalBg','modalText','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','placeholder','dropdownBg','dropdownHighlight'].forEach(id=>{
+    ['btn','btnHover','btnActive','modalBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -4256,7 +4330,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','dropdownSelected','dropdownText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -4278,7 +4352,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -4418,7 +4492,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -4814,10 +4888,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       listBackground: '--list-background',
       placeholder: '--placeholder-text',
       dropdownTitle: '--dropdown-title',
-      dropdownSelected: '--dropdown-selected',
+      dropdownSelectedBg: '--dropdown-selected-bg',
+      dropdownSelectedText: '--dropdown-selected-text',
       dropdownText: '--dropdown-text',
       dropdownBg: '--dropdown-bg',
-      dropdownHighlight: '--dropdown-highlight'
+      dropdownHoverBg: '--dropdown-hover-bg',
+      dropdownHoverText: '--dropdown-hover-text'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(id);
