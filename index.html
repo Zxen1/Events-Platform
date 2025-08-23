@@ -1525,6 +1525,15 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .hover-card .t{font-weight:800;font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .hover-card .s{font-size:12px;opacity:.8}
 
+.post-marker{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  border:1px solid #0b1623;
+  box-shadow:0 0 2px rgba(0,0,0,0.2);
+  pointer-events:none;
+}
+
 /* restore triangular popup tip */
 .mapboxgl-popup-tip{
   width:0!important;
@@ -2845,6 +2854,20 @@ function imgHero(pOrId){
       return { type:'FeatureCollection', features: list.map(p => ({ type:'Feature', properties:{id:p.id, title:p.title, city:p.city, cat:p.category}, geometry:{type:'Point', coordinates:[p.lng,p.lat]} })) };
     }
 
+    function catColor(cat){
+      switch(cat){
+        case 'Film': return '#ff6b6b';
+        case 'Theatre': return '#ffd93d';
+        case 'Music': return '#38bdf8';
+        case 'Dance': return '#a78bfa';
+        case 'Photography': return '#34d399';
+        case 'Gallery': return '#f472b6';
+        case 'Auditions': return '#f59e0b';
+        case 'Talent': return '#22c55e';
+        default: return '#ffce3a';
+      }
+    }
+
     function addPostSource(){
       if(!map) return;
       map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster:true, clusterRadius: 52 });
@@ -3404,6 +3427,10 @@ function imgHero(pOrId){
       let detailMap = null;
       if(mapDiv && typeof mapboxgl !== 'undefined'){
         detailMap = new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
+        const mEl = document.createElement('div');
+        mEl.className = 'post-marker';
+        mEl.style.background = catColor(p.category);
+        new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([p.lng,p.lat]).addTo(detailMap);
         mapDiv.addEventListener('click',()=>openMapModal(p));
       }
       const addrSel = detail.querySelector('.address-dropdown');
@@ -3464,7 +3491,11 @@ function imgHero(pOrId){
       const mapBox = document.createElement('div');
       mapBox.style.width='80vw'; mapBox.style.height='60vh';
       modal.appendChild(mapBox);
-      new mapboxgl.Map({container:mapBox, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:6});
+      const m = new mapboxgl.Map({container:mapBox, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:6});
+      const mEl = document.createElement('div');
+      mEl.className = 'post-marker';
+      mEl.style.background = catColor(p.category);
+      new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([p.lng,p.lat]).addTo(m);
       modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
       document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',esc); }});
       document.body.appendChild(modal);
