@@ -1,14 +1,31 @@
 let fields = {};
 
-function updateFields(newFields) {
+// Update the tracked fields. By default new values are merged with any
+// existing ones, but passing `true` for `replace` will overwrite the entire
+// set. DOM inputs are updated to reflect the provided values.
+function updateFields(newFields, replace = false) {
+  if (replace) fields = {};
   fields = { ...fields, ...newFields };
   if (typeof document !== 'undefined') {
-    Object.entries(newFields).forEach(([key, val]) => {
+    const entries = replace ? fields : newFields;
+    Object.entries(entries).forEach(([key, val]) => {
       const input = document.getElementById(key);
       if (input) input.value = val;
     });
   }
   console.log('Theme organiser updated', fields);
+}
+
+// Clear all stored fields and any associated DOM input values so that stale
+// data does not linger when a new theme is applied.
+function resetFields() {
+  if (typeof document !== 'undefined') {
+    Object.keys(fields).forEach(key => {
+      const input = document.getElementById(key);
+      if (input) input.value = '';
+    });
+  }
+  fields = {};
 }
 
 function getFields() {
@@ -29,4 +46,4 @@ function bindColorInputs(bindings) {
   });
 }
 
-module.exports = { updateFields, getFields, bindColorInputs };
+module.exports = { updateFields, getFields, bindColorInputs, resetFields };
