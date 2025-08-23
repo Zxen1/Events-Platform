@@ -1788,17 +1788,18 @@ footer .foot-row .foot-item img {
   .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-box-wrap{ display:flex; gap:8px; padding:8px 12px; }
+  .image-map-wrap{ display:flex; gap:8px; padding:8px 12px; }
+  .image-box-wrap{ display:flex; gap:8px; }
   .img-box{ width:400px; height:400px; display:flex; align-items:center; justify-content:center; background:var(--img-box-bg, rgba(0,0,0,0.05)); cursor:pointer; padding:8px; box-sizing:border-box; }
   .img-box img{ width:100%; height:100%; object-fit:cover; }
   .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-right:4px; }
   .thumb-list img{ width:100px; height:100px; object-fit:cover; cursor:pointer; }
-  .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
-  .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
-  .map-calendar .map-container,
-  .map-calendar .calendar-container{ width:100%; height:200px; }
-  .map-calendar select{ margin-top:8px; width:100%; max-height:200px; overflow-y:auto; }
-  .calendar-container .litepicker{ width:300px; height:200px; }
+  .detail-side{ width:400px; display:flex; flex-direction:column; gap:8px; }
+  .detail-side .map-container{ width:400px; height:200px; }
+  .detail-side .address-box{ font-size:14px; }
+  .detail-side .calendar-container{ width:400px; height:200px; overflow-x:auto; }
+  .detail-side .calendar-container .litepicker{ width:900px; height:450px; transform:scale(0.44); transform-origin:top left; }
+  .detail-side .time-list{ font-size:14px; }
   .detail-main{ padding:12px; }
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
@@ -2430,17 +2431,38 @@ function uniqueTitle(seed, cityName, idx){
 }function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
     function jitter([lng,lat]){ return [lng + (rnd()-0.5)*8, clamp(lat + (rnd()-0.5)*8,-80,80)]; }
     
-function randomDates(){
+function randomVenue(){
+  const venues = ['Main Hall','Grand Theatre','City Arena','Cultural Center','Downtown Club'];
+  return venues[Math.floor(rnd()*venues.length)];
+}
+
+function randomStreet(){
+  const streets = ['Main St','High St','Broadway','Market St','King St'];
+  const num = 1 + Math.floor(rnd()*200);
+  return `${num} ${streets[Math.floor(rnd()*streets.length)]}`;
+}
+
+function randomSchedule(){
   const count = 1 + Math.floor(rnd()*30);
   const now = new Date();
   return Array.from({length:count}, ()=>{
     const d = new Date(+now + Math.floor(rnd()*365)*86400000);
-    return d.toISOString().slice(0,10);
-  }).sort();
+    const date = d.toISOString().slice(0,10);
+    const hour = 10 + Math.floor(rnd()*10);
+    const minute = rnd() < 0.5 ? '00' : '30';
+    const time = `${hour.toString().padStart(2,'0')}:${minute}`;
+    return {date, time};
+  }).sort((a,b)=> a.date.localeCompare(b.date));
 }
 
 function formatDateStr(d){
   return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(d)).replace(',', '');
+}
+
+function formatDateTime(dt){
+  const d = new Date(dt.date);
+  const formatted = new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(d).replace(',', '');
+  return `${formatted} ${dt.time}`;
 }
 
 
@@ -2484,6 +2506,7 @@ function makePosts(){
       const cat = pick(categories);
       const sub = pick(cat.subs);
       const id = 'FS'+i;
+      const schedule = randomSchedule();
       out.push({
         id,
         title: uniqueTitle(i*7777+13, fsCity, i),
@@ -2491,10 +2514,17 @@ function makePosts(){
         lng: fsLng, lat: fsLat,
         category: cat.name,
         subcategory: sub,
-        dates: randomDates(),
+        dates: schedule.map(d=>d.date),
         images: randomImages(id),
         fav:false,
-        desc: randomParagraphs()
+        desc: randomParagraphs(),
+        addresses: [{
+          venue: randomVenue(),
+          address: `${randomStreet()}, ${fsCity}`,
+          lng: fsLng,
+          lat: fsLat,
+          dates: schedule
+        }]
       });
     }
 
@@ -2551,18 +2581,28 @@ function makePosts(){
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'WW'+i;
+    const lng = hub.lng + jitter();
+    const lat = hub.lat + jitter();
+    const schedule = randomSchedule();
     out.push({
       id,
       title: uniqueTitle(i*9343+19, hub.c, i),
       city: hub.c,
-      lng: hub.lng + jitter(),
-      lat: hub.lat + jitter(),
+      lng,
+      lat,
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: schedule.map(d=>d.date),
       images: randomImages(id),
       fav:false,
-      desc: randomParagraphs()
+      desc: randomParagraphs(),
+      addresses: [{
+        venue: randomVenue(),
+        address: `${randomStreet()}, ${hub.c}`,
+        lng,
+        lat,
+        dates: schedule
+      }]
     });
   }
   return out;
@@ -3297,22 +3337,19 @@ function imgHero(pOrId){
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
         </div>
-        ${imgs.length ? `<div class="image-box-wrap">
-          <div class="img-box"><img src="${ph}" data-src="${imgs[0]}" data-index="0" alt="" style="width:100%;height:100%;object-fit:cover;"/></div>
-          <div class="thumb-list">
-            ${imgs.map((src,i)=>`<img src="${ph}" data-src="${src}" data-index="${i}" alt=""/>`).join('')}
+        ${imgs.length ? `<div class="image-map-wrap">
+          <div class="image-box-wrap">
+            <div class="img-box"><img src="${ph}" data-src="${imgs[0]}" data-index="0" alt="" style="width:100%;height:100%;object-fit:cover;"/></div>
+            <div class="thumb-list">
+              ${imgs.map((src,i)=>`<img src="${ph}" data-src="${src}" data-index="${i}" alt=""/>`).join('')}
+            </div>
           </div>
-        </div>` : ''}
-        ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
-        <div class="map-calendar">
-          <div class="map-section">
+          ${(p.addresses && p.addresses.length) ? `<div class="detail-side">
             <div class="map-container"></div>
-            <select class="address-dropdown"></select>
-          </div>
-          <div class="calendar-section">
+            <div class="address-box"></div>
             <div class="calendar-container"></div>
-            <select class="date-dropdown"></select>
-          </div>
+            <div class="time-list"></div>
+          </div>` : ''}
         </div>` : ''}
         <div class="detail-main">
           <div class="desc">${p.desc}</div>
@@ -3460,55 +3497,71 @@ function imgHero(pOrId){
       const mapDiv = detail.querySelector('.map-container');
       let detailMap = null;
       let detailMarker = null;
-      if(mapDiv && typeof mapboxgl !== 'undefined'){
-        detailMap = new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
+      if(mapDiv && p.addresses && p.addresses.length && typeof mapboxgl !== 'undefined'){
+        const first = p.addresses[0];
+        detailMap = new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[first.lng,first.lat], zoom:4, interactive:false});
         const mEl = document.createElement('div');
         mEl.className = 'post-marker';
         mEl.style.background = catColor(p.category);
-        detailMarker = new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([p.lng,p.lat]).addTo(detailMap);
+        detailMarker = new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([first.lng,first.lat]).addTo(detailMap);
       }
-      const addrSel = detail.querySelector('.address-dropdown');
-      if(addrSel){
-        const cities = [...new Set(posts.map(p=>p.city))];
-        cities.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; addrSel.appendChild(opt); });
-        addrSel.value = p.city;
-        addrSel.addEventListener('change', ()=>{
-          const city = addrSel.value;
-          const match = posts.find(x=>x.city===city);
-          if(match && detailMap){
-            detailMap.setCenter([match.lng, match.lat]);
-            if(detailMarker) detailMarker.setLngLat([match.lng, match.lat]);
-          }
-        });
-      }
+      const addrBox = detail.querySelector('.address-box');
       const calDiv = detail.querySelector('.calendar-container');
+      const timeList = detail.querySelector('.time-list');
       let calPicker = null;
-      if(calDiv && p.dates && p.dates.length){
-        calPicker = new Litepicker({
-          element: calDiv,
-          inlineMode: true,
-          singleMode: true,
-          highlightedDays: p.dates.map(d=>new Date(d)),
-          startDate: new Date(p.dates[0]),
-          format: 'ddd D MMM',
-          lang: 'en-GB'
-        });
-        const calEl = calDiv.querySelector('.litepicker');
-        if(calEl){
-          calEl.addEventListener('pointerdown', e=>{
-            if(!e.target.closest('.button-previous, .button-next')){
-              e.stopPropagation();
-              e.preventDefault();
-            }
-          });
+      if(addrBox && p.addresses && p.addresses.length){
+        let addrs = p.addresses.slice();
+        if(detailMap){
+          const c = detailMap.getCenter();
+          addrs.sort((a,b)=>((a.lng-c.lng)**2+(a.lat-c.lat)**2)-((b.lng-c.lng)**2+(b.lat-c.lat)**2));
         }
-      }
-      const dateSel = detail.querySelector('.date-dropdown');
-      if(dateSel && p.dates && p.dates.length){
-        p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=formatDateStr(d); dateSel.appendChild(opt); });
-        dateSel.value = p.dates[0];
-        if(calPicker){
-          dateSel.addEventListener('change', ()=> calPicker.setDate(new Date(dateSel.value)));
+        const display = document.createElement('div');
+        addrBox.appendChild(display);
+        function render(idx){
+          const a = addrs[idx];
+          display.innerHTML = `<b>${a.venue}</b><br/>${a.address}`;
+          if(detailMap){ detailMap.setCenter([a.lng,a.lat]); if(detailMarker) detailMarker.setLngLat([a.lng,a.lat]); }
+          if(calPicker){ calPicker.destroy(); }
+          if(calDiv){
+            const highlighted = a.dates.map(d=>new Date(d.date));
+            const minDate = new Date(a.dates[0].date);
+            const maxDate = new Date(a.dates[a.dates.length-1].date);
+            const months = Math.max(3, (maxDate.getFullYear()-minDate.getFullYear())*12 + (maxDate.getMonth()-minDate.getMonth()) + 1);
+            calPicker = new Litepicker({
+              element: calDiv,
+              inlineMode: true,
+              singleMode: true,
+              highlightedDays: highlighted,
+              startDate: minDate,
+              numberOfMonths: months,
+              numberOfColumns: 3,
+              format: 'ddd D MMM',
+              lang: 'en-GB'
+            });
+            const calEl = calDiv.querySelector('.litepicker');
+            if(calEl){
+              calEl.style.width = (months*300)+'px';
+              calEl.style.height = '450px';
+              calEl.addEventListener('pointerdown', e=>{
+                if(!e.target.closest('.button-previous, .button-next')){
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              });
+            }
+          }
+          if(timeList){
+            timeList.innerHTML = a.dates.map(dt=>formatDateTime(dt)).join('<br/>');
+          }
+        }
+        if(addrs.length>1){
+          const sel = document.createElement('select');
+          addrs.forEach((a,i)=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=`${a.venue} - ${a.address}`; sel.appendChild(opt); });
+          addrBox.insertBefore(sel, display);
+          sel.addEventListener('change', ()=> render(parseInt(sel.value)));
+          render(0);
+        } else {
+          render(0);
         }
       }
     }
