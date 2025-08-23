@@ -2618,6 +2618,7 @@ function imgHero(pOrId){
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
       $('#dateInput').value='';
+      $('#dateInput').dataset.range='';
       if(datePicker) datePicker.clearSelection();
       if(geocoder) geocoder.clear();
       applyFilters();
@@ -2630,11 +2631,20 @@ function imgHero(pOrId){
       singleMode: false,
       setup: (picker) => {
         picker.on('selected', (start, end) => {
-          $('#dateInput').value = start && end ? `${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}` : '';
+          if(start && end){
+            const sIso = start.format('YYYY-MM-DD');
+            const eIso = end.format('YYYY-MM-DD');
+            $('#dateInput').value = `${formatDateStr(sIso)} to ${formatDateStr(eIso)}`;
+            $('#dateInput').dataset.range = `${sIso} to ${eIso}`;
+          } else {
+            $('#dateInput').value = '';
+            $('#dateInput').dataset.range = '';
+          }
           applyFilters();
         });
         picker.on('clear:selection', () => {
           $('#dateInput').value = '';
+          $('#dateInput').dataset.range = '';
           applyFilters();
         });
       }
@@ -3156,7 +3166,11 @@ function imgHero(pOrId){
         imageLoader.observe(postsWideEl,1);
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatDates(d){
+      if(!d||!d.length) return '';
+      if(d.length===1) return formatDateStr(d[0]);
+      return `${formatDateStr(d[0])} + ${d.length-1} more`;
+    }
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -3199,7 +3213,7 @@ function imgHero(pOrId){
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
-        date: $('#dateInput').value,
+        date: $('#dateInput').dataset.range || '',
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3208,15 +3222,13 @@ function imgHero(pOrId){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || '';
+      const raw = st.date || '';
+      $('#dateInput').dataset.range = raw;
+      const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
+      $('#dateInput').value = parts[0] && parts[1] ? `${formatDateStr(parts[0])} to ${formatDateStr(parts[1])}` : '';
       if(datePicker){
-        if(st.date){
-          const parts = st.date.split(/to/i).map(s=>s.trim()).filter(Boolean);
-          if(parts[0] && parts[1]){
-            datePicker.setDateRange(new Date(parts[0]), new Date(parts[1]));
-          } else {
-            datePicker.clearSelection();
-          }
+        if(parts[0] && parts[1]){
+          datePicker.setDateRange(new Date(parts[0]), new Date(parts[1]));
         } else {
           datePicker.clearSelection();
         }
@@ -3562,7 +3574,7 @@ function imgHero(pOrId){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const val = $('#dateInput').value.trim();
+      const val = $('#dateInput').dataset.range || $('#dateInput').value.trim();
       if(!val) return true;
       let start, end;
       const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
