@@ -137,15 +137,16 @@ textarea::placeholder{
   color: var(--dropdown-title);
 }
 
-.input select{
+select{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border-radius: var(--dropdown-radius);
+}
+select option{
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
 }
-.input select option{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-}
-.input select option:checked{
+select option:checked{
   background: var(--dropdown-highlight);
   color: var(--dropdown-selected);
 }
@@ -312,9 +313,20 @@ textarea::placeholder{
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
-.admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;width:250px;}
+.admin-fieldset{
+  margin:10px 0;
+  border:1px solid var(--btn);
+  border-radius:8px;
+  padding:10px;
+  width:250px;
+  max-height:2000px;
+  transition:max-height .2s ease;
+}
 .admin-fieldset legend{cursor:pointer;}
-.admin-fieldset.collapsed .control-row,
+.admin-fieldset.collapsed{
+  max-height:100px;
+  overflow:hidden;
+}
 .admin-fieldset.collapsed .fieldset-actions{display:none;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
@@ -595,17 +607,21 @@ textarea::placeholder{
   position: relative;
 }
 
-  .input input,.input select{
+.input input,.input select{
     width: 100%;
     height: 40px;
-    border-radius: 12px;
     border: none;
-    background: var(--btn);
-    color: var(--ink);
     padding: 0 38px 0 12px;
     outline: 0;
   }
-.input select{border-radius:var(--dropdown-radius);}
+.input input{
+    border-radius: 12px;
+    background: var(--btn);
+    color: var(--ink);
+  }
+.input select{
+    border-radius: var(--dropdown-radius);
+  }
 
 .input .x,.input .down{
   position: absolute;
@@ -3650,6 +3666,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
+    ['list','closed-posts'].forEach(areaKey=>{
+      const padInput = document.getElementById(`${areaKey}-padding`);
+      const twInput = document.getElementById(`${areaKey}-thumbWidth`);
+      const thInput = document.getElementById(`${areaKey}-thumbHeight`);
+      const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
+      const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
+      if(padInput){
+        const el = document.querySelector(listSel);
+        if(el){ padInput.value = parseInt(getComputedStyle(el).paddingTop,10) || 0; }
+      }
+      if(twInput || thInput){
+        const el = document.querySelector(thumbSel);
+        if(el){
+          const cs = getComputedStyle(el);
+          if(twInput) twInput.value = parseInt(cs.width,10) || 0;
+          if(thInput) thInput.value = parseInt(cs.height,10) || 0;
+        }
+      }
+    });
     const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
@@ -3886,6 +3921,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           fs.appendChild(shadowRow);
         }
       });
+      if(area.key === 'list' || area.key === 'closed-posts'){
+        const padRow = document.createElement('div');
+        padRow.className = 'control-row';
+        padRow.innerHTML = `
+            <label>Padding</label>
+            <input id="${area.key}-padding" type="number" step="1" />
+        `;
+        fs.appendChild(padRow);
+        const thumbRow = document.createElement('div');
+        thumbRow.className = 'control-row';
+        thumbRow.innerHTML = `
+            <label>Thumbnail</label>
+            <div class="shadow-group">
+              <input id="${area.key}-thumbWidth" type="number" step="1" placeholder="W" />
+              <input id="${area.key}-thumbHeight" type="number" step="1" placeholder="H" />
+            </div>
+        `;
+        fs.appendChild(thumbRow);
+      }
       if(area.key === 'open-posts'){
         const stickyRow = document.createElement('div');
         stickyRow.className = 'control-row';
@@ -4078,6 +4132,26 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
     });
+    ['list','closed-posts'].forEach(areaKey=>{
+      const pad = document.getElementById(`${areaKey}-padding`);
+      const tw = document.getElementById(`${areaKey}-thumbWidth`);
+      const th = document.getElementById(`${areaKey}-thumbHeight`);
+      const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
+      document.querySelectorAll(listSel).forEach(el=>{
+        if(areaKey === 'list' && el.closest('.closed-posts')) return;
+        if(pad && pad.value !== ''){
+          el.style.padding = `${pad.value}px`;
+        } else if(pad){
+          el.style.padding = '';
+        }
+      });
+      const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
+      document.querySelectorAll(thumbSel).forEach(el=>{
+        if(areaKey === 'list' && el.closest('.closed-posts')) return;
+        if(tw && tw.value !== '') el.style.width = `${tw.value}px`;
+        if(th && th.value !== '') el.style.height = `${th.value}px`;
+      });
+    });
     const sticky = document.getElementById('open-posts-sticky');
     document.documentElement.classList.toggle('open-posts-sticky', sticky && sticky.checked);
     const data = collectThemeValues();
@@ -4140,6 +4214,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(c){
         data[id] = { color: c.value };
       }
+    });
+    ['list','closed-posts'].forEach(areaKey=>{
+      const pad = document.getElementById(`${areaKey}-padding`);
+      if(pad){ data[`${areaKey}-padding`] = { value: pad.value }; }
+      const tw = document.getElementById(`${areaKey}-thumbWidth`);
+      if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
+      const th = document.getElementById(`${areaKey}-thumbHeight`);
+      if(th){ data[`${areaKey}-thumbHeight`] = { value: th.value }; }
     });
     return data;
   }
@@ -4220,6 +4302,28 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           css += selectors.map(sel=>`${sel}{${rules.join('')}}`).join('\n') + '\n';
         }
       });
+    });
+    ['list','closed-posts'].forEach(areaKey=>{
+      const pad = data[`${areaKey}-padding`];
+      const tw = data[`${areaKey}-thumbWidth`];
+      const th = data[`${areaKey}-thumbHeight`];
+      if(areaKey === 'list'){
+        if(pad) css += `.res-list{padding:${pad.value}px;}` + '\n';
+        if(tw || th){
+          const rules = [];
+          if(tw) rules.push(`width:${tw.value}px;`);
+          if(th) rules.push(`height:${th.value}px;`);
+          css += `.res-list .thumb{${rules.join('')}}` + '\n';
+        }
+      } else {
+        if(pad) css += `.closed-posts .res-list{padding:${pad.value}px;}` + '\n';
+        if(tw || th){
+          const rules = [];
+          if(tw) rules.push(`width:${tw.value}px;`);
+          if(th) rules.push(`height:${th.value}px;`);
+          css += `.closed-posts .thumb{${rules.join('')}}` + '\n';
+        }
+      }
     });
     return css;
   }
