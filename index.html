@@ -2445,7 +2445,7 @@ function formatDateStr(d){
 function randomImages(id){
   const count = rnd() < 0.8 ? 3 + Math.floor(rnd()*8) : 1 + Math.floor(rnd()*2);
   const encId = encodeURIComponent(id);
-  const sizes = [[1200,800],[800,1200],[1200,1200],[1600,900],[900,1600]];
+  const sizes = [[300,200],[200,300],[300,300],[400,225],[225,400]];
   const imgs = [];
   for(let i=0;i<count;i++){
     const seed = i===0 ? `${encId}-t` : `${encId}-${i}`;
@@ -2582,14 +2582,14 @@ function imgThumb(pOrId){
     return toThumb(pOrId.images[0]);
   }
   const id = typeof pOrId==='string' ? pOrId : pOrId.id;
-  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`;
+  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/150/100`;
 }
 function imgHero(pOrId){
   if(typeof pOrId === 'object' && pOrId.images && pOrId.images.length){
     return pOrId.images[0];
   }
   const id = typeof pOrId==='string' ? pOrId : pOrId.id;
-  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`;
+  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`;
 }
 
     function hoverHTML(p){
@@ -3589,8 +3589,8 @@ function imgHero(pOrId){
   })();
   
 // 0577 helpers (safety)
-function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
-function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
+function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
+function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/150/100`; }
 const modalStack = [];
 function bringToTop(item){
   const idx = modalStack.indexOf(item);
@@ -4868,24 +4868,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     updateHistoryButtons();
   });
 
-  const fieldBindings = {
-    primary: '--primary',
-    secondary: '--secondary',
-    accent: '--accent',
-    background: '--background',
-    text: '--text',
-    buttonText: '--button-text',
-    buttonHoverText: '--button-hover-text'
-  };
-  Object.entries(fieldBindings).forEach(([id, varName])=>{
-    const el = document.getElementById(id);
-    if(el){
-      el.addEventListener('input', e=>{
-        document.documentElement.style.setProperty(varName, e.target.value);
-        updateFields({ [id]: e.target.value });
-      });
-    }
-  });
 
   const palette = document.getElementById('fieldPalette');
   const builder = document.getElementById('formBuilder');

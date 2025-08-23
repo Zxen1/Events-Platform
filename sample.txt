@@ -2486,8 +2486,8 @@ function makePosts(){
     posts = makePosts();
 
     // Image helpers (unique per post)
-    function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
-    function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
+    function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/150/100`; }
+    function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
 
     function hoverHTML(p){
       return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
@@ -3257,8 +3257,8 @@ function makePosts(){
   })();
   
 // 0577 helpers (safety)
-function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
-function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
+function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
+function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/150/100`; }
 const modalStack = [];
 function bringToTop(item){
   const idx = modalStack.indexOf(item);
@@ -4501,21 +4501,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     updateHistoryButtons();
   });
 
-  const fieldBindings = {
-    primary: '--primary',
-    secondary: '--secondary',
-    accent: '--accent',
-    buttonHoverText: '--button-hover-text'
-  };
-  Object.entries(fieldBindings).forEach(([id, varName])=>{
-    const el = document.getElementById(id);
-    if(el){
-      el.addEventListener('input', e=>{
-        document.documentElement.style.setProperty(varName, e.target.value);
-        updateFields({ [id]: e.target.value });
-      });
-    }
-  });
 
   const palette = document.getElementById('fieldPalette');
   const builder = document.getElementById('formBuilder');
