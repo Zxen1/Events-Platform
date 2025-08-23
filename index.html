@@ -1815,11 +1815,11 @@ footer .foot-row .foot-item img {
           </div>
           <div class="res-actions">
             <select id="sortSelect" aria-label="Sort order">
-              <option value="favaz">Favourites, A - Z</option>
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
             </select>
+            <label><input type="checkbox" id="favTop"> Favourites to Top</label>
           </div>
         </div>
         <div class="res-list" id="results"></div>
@@ -2218,7 +2218,7 @@ function buildClusterListHTML(items){
     let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
     arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
   }
-  if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
+  if($('#favTop').checked) arr.sort((a,b)=> b.fav - a.fav);
   const list = arr.map(p => {
     return `
       <div class="multi-item" data-id="${p.id}">
@@ -2626,6 +2626,7 @@ function imgHero(pOrId){
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
+    $('#favTop').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); if(input.id==='dateInput'){ input.dataset.range=''; if(rangePicker) rangePicker.clearSelection(); } applyFilters(); } }));
 
     function setMode(m){
@@ -3113,7 +3114,7 @@ function imgHero(pOrId){
         let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
         arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
       }
-      if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
+      if($('#favTop').checked) arr.sort((a,b)=> b.fav - a.fav);
 
         resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
