@@ -725,7 +725,7 @@ button:focus-visible,
   min-height: 0;
 }
 
-.res-head{
+.subheader{
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -844,7 +844,7 @@ button:focus-visible,
   pointer-events: none;
 }
 
-.posts-mode{
+.closed-posts{
   display:none;
   height:100%;
   overflow:auto;
@@ -853,21 +853,21 @@ button:focus-visible,
   color:#000;
   background:rgba(0,0,0,0.7);
 }
-.posts-mode .res-list{overflow:visible;padding:12px 0 0;}
-.posts-mode, .posts-mode *{color:#000;}
-.posts-mode .card,
-.posts-mode .detail-inline{background:var(--list-background);}
-.posts-mode button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.posts-mode .detail-inline{margin-top:6px}
+.closed-posts .res-list{overflow:visible;padding:12px 0 0;}
+.closed-posts, .closed-posts *{color:#000;}
+.closed-posts .card,
+.closed-posts .detail-inline{background:var(--list-background);}
+.closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
+.closed-posts .detail-inline{margin-top:6px}
 
-.mode-posts .posts-mode{
+.mode-posts .closed-posts{
   display: block;
   grid-column: 2/3;
   grid-row: 1;
   z-index: 1;
 }
 
-.mode-map .posts-mode{
+.mode-map .closed-posts{
   display: none;
 }
 
@@ -1045,7 +1045,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 12px;
 }
 
-.posts-mode .card .thumb{
+.closed-posts .card .thumb{
   flex-basis: 70px;
   width: 70px;
   height: 70px;
@@ -1341,7 +1341,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   height: 100%;
 }
 
-.main .posts-mode{
+.main .closed-posts{
   grid-column: 2/3;
   grid-row: 1;
   position: relative;
@@ -1358,7 +1358,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: transparent;
 }
 
-.main .posts-mode{
+.main .closed-posts{
   position: relative;
   z-index: 2;
   background: transparent;
@@ -1432,10 +1432,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     .reset-box .arr{display:grid;place-items:center;width:38px;height:36px;border-radius:12px;border:1px solid}
 
     .results-col{display:flex;flex-direction:column;min-width:0;min-height:0}
-      .res-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;color:var(--ink-d)}
+      .subheader{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;color:var(--ink-d)}
       .res-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
-      .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
-      .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;padding:0 12px}
+      .subheader button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
+      .subheader select{height:40px;border:1px solid var(--ink-d);border-radius:999px;padding:0 12px}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
     .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
@@ -1472,12 +1472,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       color:#000;
     }
 
-    .posts-mode{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px}
-    .posts-mode .res-list{overflow:visible;padding:12px 0 0}
-    .posts-mode .detail-inline{margin-top:6px}
-    .mode-posts .posts-mode{display:block}
+    .closed-posts{display:none;height:100%;overflow:auto;min-height:0;padding:0 6px}
+    .closed-posts .res-list{overflow:visible;padding:12px 0 0}
+    .closed-posts .detail-inline{margin-top:6px}
+    .mode-posts .closed-posts{display:block}
 
-    .mode-map .posts-mode{display:none}
+    .mode-map .closed-posts{display:none}
     .mode-map .map-wrap{display:block}
 
     .detail-inline{border-radius:18px}
@@ -1503,7 +1503,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 /* === 0512 Clean fix: prevent text/image overlap in closed cards without !important === */
 .card{display:flex;gap:12px;align-items:flex-start;opacity:1;border:1px solid var(--border)}
 .card .thumb{flex:0 0 90px;width:90px;height:70px;display:block;object-fit:cover;border-radius:12px}
-.posts-mode .card .thumb{flex-basis:70px;width:70px;height:70px}
+.closed-posts .card .thumb{flex-basis:70px;width:70px;height:70px}
 .card .meta{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
 .card .fav{flex:0 0 auto}
 .title{margin:0;font-weight:900;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -1761,6 +1761,81 @@ footer .foot-row .foot-item img {
   }
 </style>
 
+  <style>
+    /* Dark Transparent Theme */
+    :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,1);--border-active:rgba(255,200,0,1);}
+    .header{background-color:rgba(41,41,41,1);}
+    .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
+    .header .gear{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
+    .header a{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
+    .header button{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .header .gear{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .subheader{background-color:rgba(0,0,0,0);}
+    .subheader{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
+    .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    body{background-color:rgba(41,41,41,1);}
+    .res-list{background-color:rgba(0,0,0,0);}
+    .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
+    .res-list{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .res-list .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .res-list .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .res-list button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+    .res-list .sq{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+    .res-list .tiny{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+    .res-list .btn{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+    .res-list button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .res-list .sq{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .res-list .tiny{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .res-list .btn{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .closed-posts{background-color:rgba(0,0,0,0);}
+    .closed-posts .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+    .closed-posts .detail-inline{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+    .closed-posts{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .closed-posts .detail-inline .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .closed-posts .detail-inline .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+    .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    footer{background-color:rgba(0,0,0,0);}
+    footer .foot-row .foot-item{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+    footer{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #map{background-color:rgba(0,0,0,0);}
+    .mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
+    .mapboxgl-popup.hover-pop .hover-card{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
+    .mapboxgl-popup.hover-pop .hover-card{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    .mapboxgl-popup.hover-pop .hover-card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    .mapboxgl-popup.hover-pop .hover-card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+    #filterModal .modal-content{background-color:rgba(0,0,0,0.7);}
+    #filterModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal button{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+    #filterModal .sq{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+    #filterModal .tiny{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+    #filterModal .btn{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+    #filterModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal .sq{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal .tiny{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #filterModal .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #adminModal .modal-content{background-color:rgba(0,0,0,0.7);}
+    #adminModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #adminModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #adminModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #adminModal button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
+    #adminModal #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
+    #adminModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #adminModal #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #memberModal .modal-content{background-color:rgba(0,0,0,0.7);}
+    #memberModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #memberModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #memberModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+    #memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
+    #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+  </style>
 </head>
 <body class="mode-map">
   <header class="header" role="banner">
@@ -1768,7 +1843,7 @@ footer .foot-row .foot-item img {
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2011-09-30g.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-        <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
+        <button id="tab-posts" role="tab" aria-selected="false">Closed Posts</button>
         <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
     </nav>
     <div class="auth">
@@ -1779,7 +1854,7 @@ footer .foot-row .foot-item img {
 
   <main class="main">
       <section class="results-col" aria-label="Results">
-        <div class="res-head">
+        <div class="subheader">
           <button id="filterBtn" aria-label="Open filters modal">Filters</button>
           <div class="res-info">
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
@@ -1802,7 +1877,7 @@ footer .foot-row .foot-item img {
       <div id="map"></div>
       <div class="map-overlay">Loading Map…</div>
     </section>
-    <section class="posts-mode" aria-label="Posts">
+    <section class="closed-posts" aria-label="Closed Posts">
       <div class="res-list" id="postsWide"></div>
     </section>
   </main>
@@ -2137,7 +2212,7 @@ footer .foot-row .foot-item img {
 
     // Ensure result lists occupy space between the subheader and footer
     function adjustListHeight(){
-      const subHead = document.querySelector('.res-head');
+      const subHead = document.querySelector('.subheader');
       const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
       const availableHeight = window.innerHeight - footerH - topPos;
@@ -2544,7 +2619,7 @@ function makePosts(){
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
     $('#tab-map').addEventListener('click',()=> setMode('map'));
 
-    $('.posts-mode').addEventListener('click', (e)=>{
+    $('.closed-posts').addEventListener('click', (e)=>{
       if(!e.target.closest('.card, .detail-inline')) setMode('map');
     });
 
@@ -2922,7 +2997,7 @@ function makePosts(){
 
     const resultsEl = $('#results');
     const postsWideEl = $('#postsWide');
-    const postsModeEl = $('.posts-mode');
+    const postsModeEl = $('.closed-posts');
 
     postsModeEl.addEventListener('scroll', () => {
       const last = postsWideEl.lastElementChild;
@@ -3147,7 +3222,7 @@ function makePosts(){
       const mapCard = document.querySelector('.mapboxgl-popup .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-      const container = target.closest('.posts-mode');
+      const container = target.closest('.closed-posts');
       if(container){
         if(!fromPosts){
           const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
@@ -3158,6 +3233,7 @@ function makePosts(){
       }
 
       const detail = buildDetail(p);
+      if(!fromPosts) detail.classList.add('open-posts');
       target.replaceWith(detail);
       hookDetailActions(detail, p);
 
@@ -3189,7 +3265,7 @@ function makePosts(){
 
     function hookDetailActions(el, p){
       el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
-        const container = el.closest('.posts-mode');
+        const container = el.closest('.closed-posts');
         const replacedCard = card(p, true);
         el.replaceWith(replacedCard);
         if(container){ ensureGap(container, replacedCard); }
@@ -3210,7 +3286,7 @@ function makePosts(){
         e.currentTarget.textContent = p.fav?'★ Favourited':'☆ Favourite';
         renderLists(filtered);
         stopSpin();
-        openPost(p.id, !!el.closest('.posts-mode'));
+        openPost(p.id, !!el.closest('.closed-posts'));
       });
     }
 
@@ -3282,7 +3358,7 @@ function openModal(m){
     content.style.width = '';
     content.style.height = '';
     if(m.id==='filterModal'){
-      const subHead = document.querySelector('.res-head');
+      const subHead = document.querySelector('.subheader');
       const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
       const availableHeight = window.innerHeight - footerH - topPos;
@@ -3461,10 +3537,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
-    {key:'subheader', label:'Subheader', selectors:{bg:['.res-head'], text:['.res-head'], btn:['.res-head button'], btnText:['.res-head button']}},
+    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
-    {key:'posts', label:'Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode'], title:['.posts-mode .card .t','.posts-mode .card .title','.posts-mode .detail-inline .t','.posts-mode .detail-inline .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card','.posts-mode .detail-inline']}},
+    {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .detail-inline .t','.closed-posts .detail-inline .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .detail-inline']}},
+    {key:'open-posts', label:'Open Posts', selectors:{bg:['.open-posts'], text:['.open-posts'], title:['.open-posts .card .t','.open-posts .card .title','.open-posts .detail-inline .t','.open-posts .detail-inline .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts .card','.open-posts .detail-inline'], header:['.open-posts .hero'], image:['.open-posts .hero img']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
@@ -3646,7 +3723,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -3684,7 +3761,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(!el) return false;
           const cs = getComputedStyle(el);
           if(cInput){
-            if(type === 'bg' || type === 'btn' || type === 'card') col = cs.backgroundColor;
+            if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image') col = cs.backgroundColor;
             else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
             else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
@@ -3705,7 +3782,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const bVal = parseInt(match[3],10);
             const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
             cInput.value = rgbToHex(r,g,bVal);
-            if((type==='bg' || type==='card' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
+            if((type==='bg' || type==='card' || type==='header' || type==='image' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
           }
         }
         if(fontSel && font){
@@ -3761,7 +3838,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       colBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','btn','border','hoverBorder','activeBorder'].forEach(type=>{
+        ['bg','card','btn','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -3825,21 +3902,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.border) types.push('border');
       if(area.selectors.hoverBorder) types.push('hoverAdjust','hoverBorder');
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
-      types.forEach(type=>{
-        const labelMap = {
-          bg: 'Background',
-          card: 'Card',
-          text: 'Text',
-          title: 'Title',
-          btn: 'Button',
-          btnText: 'Button Text',
-          border: 'Border',
-          hoverBorder: 'Hover Border',
-          activeBorder: 'Active Border',
-          hoverAdjust: 'Hover Brightness',
-          activeAdjust: 'Active Brightness'
-        };
-        const label = labelMap[type] || type;
+      if(area.selectors.header) types.push('header');
+      if(area.selectors.image) types.push('image');
+        types.forEach(type=>{
+          const labelMap = {
+            bg: 'Background',
+            card: 'Card',
+            text: 'Text',
+            title: 'Title',
+            btn: 'Button',
+            btnText: 'Button Text',
+            border: 'Border',
+            hoverBorder: 'Hover Border',
+            activeBorder: 'Active Border',
+            hoverAdjust: 'Hover Brightness',
+            activeAdjust: 'Active Brightness',
+            header: 'Header',
+            image: 'Image Box'
+          };
+          const label = labelMap[type] || type;
         if(type === 'text' || type === 'title' || type === 'btnText'){
           const row = document.createElement('div');
           row.className = 'control-row';
@@ -3850,7 +3931,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           picker.className = 'textpicker';
           picker.id = `${area.key}-${type}-picker`;
           let bgKey = TEXT_BG_MAP[type];
-          if(type === 'text' && ['list','posts','footer','map'].includes(area.key)){
+          if(type === 'text' && ['list','closed-posts','open-posts','footer','map'].includes(area.key)){
             bgKey = 'card';
           }
           picker.dataset.bgSource = `${area.key}-${bgKey}-c`;
@@ -3904,7 +3985,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -3977,7 +4058,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -3996,7 +4077,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card'){
+            if(type==='bg' || type==='card' || type==='header' || type==='image'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
               if(type==='card'){
                 const shadowColor = sc ? sc.value : null;
@@ -4040,7 +4121,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4098,13 +4179,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += `:root{${rootVars.join('')}}\n`;
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
         if(!selectors.length) return;
         const rules = [];
-        if(type==='bg' || type==='card'){
+        if(type==='bg' || type==='card' || type==='header' || type==='image'){
           if(entry.color){
             const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
             rules.push(`background-color:${color};`);
