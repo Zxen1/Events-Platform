@@ -6,14 +6,13 @@ const http = require('http');
 const url = require('url');
 
 function applyTheme(theme) {
-  // Build a full theme palette from the stored base color
-  if (theme) {
-    const base = theme.data && theme.data.primary ? theme.data.primary : '#336699';
-    const generated = generateTheme(base);
-    // Update theme organiser fields before applying to website
-    updateFields(generated);
-    console.log(`Applying theme: ${theme.name}`, generated);
-  }
+  if (!theme) return null;
+  const base = theme.data && theme.data.primary ? theme.data.primary : '#336699';
+  const generated = generateTheme(base);
+  // Update theme organiser fields before applying to website
+  updateFields(generated);
+  console.log(`Applying theme: ${theme.name}`, generated);
+  return generated;
 }
 
 function onLogin(userId) {
