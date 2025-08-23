@@ -36,7 +36,13 @@
       --border: rgba(173,173,173,0.31);
       --border-hover: rgba(255,136,0,0.43);
       --border-active: rgba(255,200,0,0.45);
-        --dropdown-radius: 6px;
+      --placeholder-text: #777777;
+      --dropdown-title: #000000;
+      --dropdown-selected: #000000;
+      --dropdown-text: #000000;
+      --dropdown-bg: rgba(255,255,255,1);
+      --dropdown-highlight: rgba(224,224,224,1);
+      --dropdown-radius: 6px;
 }
 
 *{
@@ -120,6 +126,28 @@ button:focus-visible,
 [role="button"]:focus-visible{
   outline:2px solid var(--ink-d);
   outline-offset:2px;
+}
+
+input::placeholder,
+textarea::placeholder{
+  color: var(--placeholder-text);
+}
+
+.field label{
+  color: var(--dropdown-title);
+}
+
+.input select{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.input select option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.input select option:checked{
+  background: var(--dropdown-highlight);
+  color: var(--dropdown-selected);
 }
 
   .header{
@@ -284,12 +312,15 @@ button:focus-visible,
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
-.admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;}
+.admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;width:250px;}
+.admin-fieldset legend{cursor:pointer;}
+.admin-fieldset.collapsed .control-row,
+.admin-fieldset.collapsed .fieldset-actions{display:none;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
-  flex:1 1 180px;
-  min-width:180px;
-  max-width:260px;
+  flex:0 0 250px;
+  min-width:250px;
+  max-width:250px;
 }
   #adminModal .modal-content,
   #memberModal .modal-content{
@@ -755,6 +786,7 @@ button:focus-visible,
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  border: 1px solid var(--border);
 }
 
 .thumb{
@@ -848,16 +880,23 @@ button:focus-visible,
   pointer-events: none;
 }
 
+.geocoder{position:absolute;top:10px;left:10px;z-index:10;min-width:240px;display:flex;gap:4px;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;}
+.geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none;}
+.geocoder .mapboxgl-ctrl-geolocate{width:100%;height:100%;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
+.geocoder .mapboxgl-ctrl-geocoder--suggestions,
+.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
+
 .closed-posts{
   display:none;
   height:100%;
   overflow:auto;
   min-height:0;
-  padding:0 6px;
+  padding:12px 6px;
   color:#000;
   background:rgba(0,0,0,0.7);
 }
-.closed-posts .res-list{overflow:visible;padding:12px 0 0;}
+.closed-posts .res-list{overflow:visible;padding:0;}
 .closed-posts{color:#000;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
@@ -3611,6 +3650,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    Object.entries(varMap).forEach(([id,varName])=>{
+      const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
+      const oInput = document.getElementById(`${id}-o`);
+      if(cInput){
+        const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        if(val){
+          const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+          if(match){
+            cInput.value = rgbToHex(parseInt(match[1],10),parseInt(match[2],10),parseInt(match[3],10));
+            if(oInput) oInput.value = match[4] !== undefined ? parseFloat(match[4]) : 1;
+          }
+        }
+      }
+    });
     const stickyInput = document.getElementById('open-posts-sticky');
     if(stickyInput){
       stickyInput.checked = !!(currentState['open-posts-sticky'] && currentState['open-posts-sticky'].value === '1');
@@ -3855,7 +3909,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
-      {id:'listBackground', label:'List Background'}
+      {id:'listBackground', label:'List Background'},
+      {id:'placeholder', label:'Placeholder Text'}
     ];
     miscFields.forEach(p=>{
       const row = document.createElement('div');
@@ -3863,12 +3918,55 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       row.innerHTML = `
             <label>${p.label}</label>
             <div class="color-group">
-              <input id="${p.id}" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="${p.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="${p.id}-o" type="range" min="0" max="1" step="0.01" value="1" />
             </div>
           `;
       misc.appendChild(row);
     });
     wrap.appendChild(misc);
+    const dropdown = document.createElement('fieldset');
+    dropdown.className = 'admin-fieldset';
+    dropdown.innerHTML = '<legend>Dropdown Boxes</legend>';
+    const dropdownFields = [
+      {id:'dropdownTitle', label:'Title'},
+      {id:'dropdownSelected', label:'Selected'},
+      {id:'dropdownText', label:'Text'},
+      {id:'dropdownBg', label:'Background', opacity:true},
+      {id:'dropdownHighlight', label:'Highlight', opacity:true}
+    ];
+    dropdownFields.forEach(f=>{
+      const row = document.createElement('div');
+      row.className = 'control-row';
+      if(f.opacity){
+        row.innerHTML = `
+            <label>${f.label}</label>
+            <div class="color-group">
+              <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="${f.id}-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+          `;
+      } else {
+        row.innerHTML = `
+            <label>${f.label}</label>
+            <div class="color-group">
+              <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>
+          `;
+      }
+      dropdown.appendChild(row);
+    });
+    wrap.appendChild(dropdown);
+    makeFieldsetsCollapsible();
+  }
+
+  function makeFieldsetsCollapsible(){
+    document.querySelectorAll('.admin-fieldset').forEach(fs=>{
+      const lg = fs.querySelector('legend');
+      if(lg){
+        lg.addEventListener('click', ()=> fs.classList.toggle('collapsed'));
+      }
+    });
   }
 
   function applyAdmin(targetInput){
@@ -3916,6 +4014,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    Object.entries(varMap).forEach(([id,varName])=>{
+      const c = document.getElementById(`${id}-c`) || document.getElementById(id);
+      const o = document.getElementById(`${id}-o`);
+      if(c){
+        const color = c.value;
+        const opacity = o ? o.value : 1;
+        document.documentElement.style.setProperty(varName, hexToRgba(color, opacity));
+      }
+    });
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
@@ -4013,22 +4121,39 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     const sticky = document.getElementById('open-posts-sticky');
     if(sticky){ data['open-posts-sticky'] = { value: sticky.checked ? '1' : '0' }; }
-    ['primary','secondary','accent','buttonHoverText','btn','btnHover','btnActive','modalBg','modalText','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground'].forEach(id=>{
+    ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
       const input = document.getElementById(id);
       if(input){
         data[id] = { color: input.value };
+      }
+    });
+    ['btn','btnHover','btnActive','modalBg','modalText','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','placeholder','dropdownBg','dropdownHighlight'].forEach(id=>{
+      const c = document.getElementById(`${id}-c`);
+      const o = document.getElementById(`${id}-o`);
+      if(c){
+        data[id] = { color: c.value };
+        if(o) data[id].opacity = o.value;
+      }
+    });
+    ['dropdownTitle','dropdownSelected','dropdownText'].forEach(id=>{
+      const c = document.getElementById(`${id}-c`);
+      if(c){
+        data[id] = { color: c.value };
       }
     });
     return data;
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
-    ['primary','secondary','accent','buttonHoverText','btn','btnHover','btnActive','modalBg','modalText','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground'].forEach(key=>{
-      if(data[key] && data[key].color){
-        rootVars.push(`${varNames[key]}:${data[key].color};`);
+    Object.entries(varNames).forEach(([key,varName])=>{
+      if(['border','hoverBorder','activeBorder'].includes(key)) return;
+      const entry = data[key];
+      if(entry && entry.color){
+        const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
+        rootVars.push(`${varName}:${color};`);
       }
     });
     ['border','hoverBorder','activeBorder'].forEach(type=>{
@@ -4128,10 +4253,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       Object.entries(data).forEach(([key,val])=>{
         const [areaKey,type] = key.split('-');
         if(!type){
-          const input = document.getElementById(key);
-          if(input && val.color){ input.value = val.color; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background'};
-          if(varMap[key]) document.documentElement.style.setProperty(varMap[key], val.color);
+          const colorInput = document.getElementById(`${key}-c`) || document.getElementById(key);
+          const opacityInput = document.getElementById(`${key}-o`);
+          if(colorInput && val.color){ colorInput.value = val.color; }
+          if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
+          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+          if(varMap[key]){
+            const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
+            document.documentElement.style.setProperty(varMap[key], color);
+          }
           return;
         }
         const c = document.getElementById(`${areaKey}-${type}-c`);
@@ -4515,13 +4645,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       scrollbarTrack: '--scrollbar-track',
       scrollbarThumb: '--scrollbar-thumb',
       scrollbarThumbHover: '--scrollbar-thumb-hover',
-      listBackground: '--list-background'
+      listBackground: '--list-background',
+      placeholder: '--placeholder-text',
+      dropdownTitle: '--dropdown-title',
+      dropdownSelected: '--dropdown-selected',
+      dropdownText: '--dropdown-text',
+      dropdownBg: '--dropdown-bg',
+      dropdownHighlight: '--dropdown-highlight'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
-    const el = document.getElementById(id);
+    const el = document.getElementById(`${id}-c`) || document.getElementById(id);
     if(el){
       el.addEventListener('input', e=>{
-        document.documentElement.style.setProperty(varName, e.target.value);
+        const o = document.getElementById(`${id}-o`);
+        const color = o ? hexToRgba(e.target.value, o.value) : e.target.value;
+        document.documentElement.style.setProperty(varName, color);
         updateFields({ [id]: e.target.value });
       });
     }
