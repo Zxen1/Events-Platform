@@ -2611,8 +2611,8 @@ function imgHero(pOrId){
         inlineMode: true,
         singleMode: false,
         onSelect: (start, end) => {
-          const fmt = d => d ? d.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
-          const iso = d => d ? d.toISOString().split('T')[0] : '';
+          const fmt = d => d ? d.toDate().toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
+          const iso = d => d ? d.format('YYYY-MM-DD') : '';
           const hasRange = start && end;
           $('#dateInput').value = hasRange ? `${fmt(start)} to ${fmt(end)}` : '';
           $('#dateInput').dataset.range = hasRange ? `${iso(start)} to ${iso(end)}` : '';
