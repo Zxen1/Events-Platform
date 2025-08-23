@@ -1763,7 +1763,7 @@ footer .foot-row .foot-item img {
     border-color: var(--btn);
   }
   .detail-inline{ overflow:hidden; }
-  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
+  .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:12px; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
   .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; padding-right:calc(12px + 8px); position:sticky; top:56px; z-index:2; cursor:grab; touch-action:pan-y; }
@@ -1773,14 +1773,15 @@ footer .foot-row .foot-item img {
   .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
   .map-calendar .map-container,
   .map-calendar .calendar-container{ width:100%; height:200px; }
-  .map-calendar select{ margin-top:8px; width:100%; height:40px; }
+  .map-calendar select{ margin-top:8px; width:100%; max-height:200px; overflow:auto; }
   .calendar-container .litepicker{ height:200px; }
   .detail-main{ padding:12px; }
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
   .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
-  .img-modal img{ max-width:90vw; max-height:90vh; user-select:none; -webkit-user-drag:none; }
-  .img-modal .nav{ position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:2rem; color:#fff; cursor:pointer; user-select:none; background:rgba(0,0,0,0); }
+  .img-modal img{ max-width:90vw; max-height:90vh; user-select:none; -webkit-user-drag:none; -webkit-tap-highlight-color:transparent; }
+  .img-modal .nav{ position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:2rem; color:#fff; cursor:pointer; user-select:none; background:rgba(0,0,0,0); -webkit-tap-highlight-color:transparent; outline:none; }
+  .img-modal .nav:active{ background:rgba(0,0,0,0); }
   .img-modal .prev{ left:0; justify-content:flex-start; padding-left:5vw; }
   .img-modal .next{ right:0; justify-content:flex-end; padding-right:5vw; }
   #filterModal #datePicker{ grid-column:1 / span 2; grid-row:2; margin-top:8px; }
@@ -1862,7 +1863,7 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" />
+            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" readonly />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
             <div id="datePicker"></div>
@@ -2150,7 +2151,7 @@ footer .foot-row .foot-item img {
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let posts = [], filtered = [];
+    let posts = [], filtered = [], postsLoaded = false;
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
@@ -2418,11 +2419,15 @@ function randomDates(){
   }).sort();
 }
 
+function formatDateStr(d){
+  return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(d)).replace(',', '');
+}
+
 
 
 
 function randomImages(id){
-  const count = Math.floor(rnd()*10);
+  const count = rnd() < 0.8 ? 3 + Math.floor(rnd()*8) : 1 + Math.floor(rnd()*2);
   const encId = encodeURIComponent(id);
   const sizes = [[1200,800],[800,1200],[1200,1200],[1600,900],[900,1600]];
   const imgs = [];
@@ -2442,7 +2447,7 @@ function randomParagraphs(){
     'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
     'Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra.'
   ];
-  const count = 1 + Math.floor(rnd()*5);
+  const count = 3 + Math.floor(rnd()*8);
   let out = '';
   for(let i=0;i<count;i++){
     out += `<p>${paras[Math.floor(rnd()*paras.length)]}</p>`;
@@ -2596,7 +2601,7 @@ function imgHero(pOrId){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
+      $('#kwInput').value=''; $('#dateInput').value=''; $('#dateInput').dataset.range=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
       applyFilters();
     });
 
@@ -2605,15 +2610,15 @@ function imgHero(pOrId){
       inlineMode: true,
       singleMode: false,
       onSelect: (start, end)=>{
-        $('#dateInput').value = start && end ? `${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}` : '';
+        $('#dateInput').value = start && end ? `${start.format('ddd D MMM')} to ${end.format('ddd D MMM')}` : '';
+        $('#dateInput').dataset.range = start && end ? `${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}` : '';
         applyFilters();
       }
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
-    $('#dateInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); if(input.id==='dateInput' && rangePicker) rangePicker.clearSelection(); applyFilters(); } }));
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); if(input.id==='dateInput'){ input.dataset.range=''; if(rangePicker) rangePicker.clearSelection(); } applyFilters(); } }));
 
     function setMode(m){
       mode = m;
@@ -2733,7 +2738,8 @@ function imgHero(pOrId){
       map.on('style.load', () => {
         applySky(skyStyle);
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
+      function loadPosts(){ if(postsLoaded) return; addPostSource(); applyFilters(); postsLoaded = true; }
+      map.on('load', ()=>{ $('.map-overlay').style.display='none'; if(spinEnabled) startSpin(); else loadPosts(); updatePostPanel(); });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
         map.on('pitch', () => {
@@ -2774,6 +2780,7 @@ function imgHero(pOrId){
     }
     function stopSpin(){
       spinning = false;
+      if(!postsLoaded) loadPosts();
     }
 
     document.addEventListener('click', (e)=>{
@@ -3358,8 +3365,9 @@ function imgHero(pOrId){
         }, {passive:false});
       }
       const mapDiv = detail.querySelector('.map-container');
+      let detailMap = null;
       if(mapDiv && typeof mapboxgl !== 'undefined'){
-        new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
+        detailMap = new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
         mapDiv.addEventListener('click',()=>openMapModal(p));
       }
       const addrSel = detail.querySelector('.address-dropdown');
@@ -3367,15 +3375,26 @@ function imgHero(pOrId){
         const cities = [...new Set(posts.map(p=>p.city))];
         cities.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; addrSel.appendChild(opt); });
         addrSel.value = p.city;
+        if(cities.length>6) addrSel.size = 6;
+        addrSel.addEventListener('change', ()=>{
+          const city = addrSel.value;
+          const match = posts.find(x=>x.city===city);
+          if(match && detailMap){ detailMap.setCenter([match.lng, match.lat]); }
+        });
       }
       const calDiv = detail.querySelector('.calendar-container');
+      let calPicker = null;
       if(calDiv && p.dates && p.dates.length){
-        new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0] });
+        calPicker = new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0], onSelect: (d)=>{ if(dateSel) dateSel.value = d.format('YYYY-MM-DD'); } });
       }
       const dateSel = detail.querySelector('.date-dropdown');
       if(dateSel && p.dates && p.dates.length){
-        p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=d; dateSel.appendChild(opt); });
+        p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=formatDateStr(d); dateSel.appendChild(opt); });
         dateSel.value = p.dates[0];
+        if(p.dates.length>6) dateSel.size = 6;
+        if(calPicker){
+          dateSel.addEventListener('change', ()=> calPicker.setDate(dateSel.value));
+        }
       }
     }
 
@@ -3431,7 +3450,7 @@ function imgHero(pOrId){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const val = $('#dateInput').value.trim();
+      const val = ($('#dateInput').dataset.range || '').trim();
       if(!val) return true;
       let start, end;
       const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
@@ -3452,7 +3471,7 @@ function imgHero(pOrId){
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
     }
 
-    applyFilters();
+    if(!spinEnabled) applyFilters();
     setMode('map');
     renderFooter();
   })();
