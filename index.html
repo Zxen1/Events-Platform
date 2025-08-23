@@ -2611,13 +2611,20 @@ function imgHero(pOrId){
           const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
           const fmt = d => d ? toDate(d).toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
           const iso = d => {
-            if(!d) return '';
+            if (!d) return '';
             return typeof d.format === 'function' ? d.format('YYYY-MM-DD') : d.toISOString().split('T')[0];
           };
-          const hasRange = start && end;
-          $('#dateInput').value = hasRange ? `${fmt(start)} to ${fmt(end)}` : '';
-          $('#dateInput').dataset.range = hasRange ? `${iso(start)} to ${iso(end)}` : '';
-          applyFilters();
+          if (start && end) {
+            $('#dateInput').value = `${fmt(start)} - ${fmt(end)}`;
+            $('#dateInput').dataset.range = `${iso(start)} to ${iso(end)}`;
+            applyFilters();
+          } else if (start) {
+            $('#dateInput').value = fmt(start);
+            $('#dateInput').dataset.range = '';
+          } else {
+            $('#dateInput').value = '';
+            $('#dateInput').dataset.range = '';
+          }
         }
       });
     } else {
@@ -3183,7 +3190,7 @@ function imgHero(pOrId){
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
         const fmt = d => new Date(d).toLocaleDateString('en-US',{ weekday:'short', day:'numeric', month:'short' });
-        $('#dateInput').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} to ${fmt(parts[1])}` : '';
+        $('#dateInput').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
       } else {
         $('#dateInput').value = '';
       }
