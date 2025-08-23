@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Events Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <style>:root{
   --header-h: 72px;
   --panel-w: 260px;
@@ -34,7 +36,7 @@
     --border: rgba(173,173,173,1);
     --border-hover: rgba(255,136,0,1);
     --border-active: rgba(255,200,0,1);
-    --dropdown-radius: 999px;
+      --dropdown-radius: 6px;
 }
 
 *{
@@ -1762,141 +1764,6 @@ footer .foot-row .foot-item img {
   }
 </style>
 
-<style>
-  :root {
-    --ink: #333;
-    --ink-d: #555;
-    --muted: #666;
-    --btn: #ffb74d;
-    --btn-hover: #ff9800;
-    --btn-active: #f57c00;
-    --btn-2: var(--btn-hover);
-    --panel-grad: linear-gradient(180deg, #ffecb3, #ffe0b2);
-    --bg-grad: linear-gradient(0deg, #fff8e1, #ffe0b2);
-    --list-background: rgba(255, 248, 225, 1);
-  }
-  body {
-    background: #fff8e1;
-    color: #333;
-  }
-  .view-toggle button,
-  .auth button {
-    background: var(--btn);
-    border: 1px solid var(--btn);
-    color: var(--ink);
-    transition: background .2s,border-color .2s;
-  }
-  .view-toggle button:hover,
-  .auth button:hover {
-  }
-  .view-toggle button[aria-current="page"],
-  .view-toggle button[aria-pressed="true"],
-  .auth button[aria-pressed="true"] {
-  }
-  .sq,
-  .tiny,
-  .input .x,
-  .input .down,
-  .cat .cfg,
-  .reset-box .arr,
-  .reset-box .btn,
-  .pill,
-  .close {
-    background: var(--btn);
-    border-color: var(--btn);
-    color: var(--ink);
-  }
-  .input input,
-  .input select,
-  .cat .bar,
-  .sub .chip {
-    background: var(--list-background);
-    border: 1px solid var(--btn);
-    color: var(--ink);
-  }
-  .card,
-  .open-posts,
-  .map-wrap {
-    background: var(--list-background);
-    border-color: var(--btn);
-  }
-</style>
-
-  <style>
-    /* Dark Transparent Theme */
-    :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,1);--border-active:rgba(255,200,0,1);}
-    .header{background-color:rgba(41,41,41,1);}
-    .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-    .header .gear{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-    .header a{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-    .header button{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .header .gear{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .subheader{background-color:rgba(0,0,0,0);}
-    .subheader{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-    .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    body{background-color:rgba(41,41,41,1);}
-    .res-list{background-color:rgba(0,0,0,0);}
-    .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
-    .res-list{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .res-list .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .res-list .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .res-list button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-    .res-list .sq{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-    .res-list .tiny{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-    .res-list .btn{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-    .res-list button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .res-list .sq{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .res-list .tiny{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .res-list .btn{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .closed-posts{background-color:rgba(0,0,0,0);}
-    .closed-posts .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-    .closed-posts .open-posts{box-shadow:0 0 0px #000000;}
-    .closed-posts{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .closed-posts .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .closed-posts .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-    .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    footer{background-color:rgba(0,0,0,0);}
-    footer .foot-row .foot-item{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-    footer{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #map{background-color:rgba(0,0,0,0);}
-    .mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
-    .mapboxgl-popup.hover-pop .hover-card{background-color:rgba(0,0,0,0.68);box-shadow:0 0 0px #000000;}
-    .mapboxgl-popup.hover-pop .hover-card{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    .mapboxgl-popup.hover-pop .hover-card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    .mapboxgl-popup.hover-pop .hover-card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-    #filterModal .modal-content{background-color:rgba(0,0,0,0.7);}
-    #filterModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal button{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-    #filterModal .sq{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-    #filterModal .tiny{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-    #filterModal .btn{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-    #filterModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal .sq{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal .tiny{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #filterModal .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #adminModal .modal-content{background-color:rgba(0,0,0,0.7);}
-    #adminModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #adminModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #adminModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #adminModal button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
-    #adminModal #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
-    #adminModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #adminModal #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #memberModal .modal-content{background-color:rgba(0,0,0,0.7);}
-    #memberModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #memberModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #memberModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-    #memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
-    #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-  </style>
 </head>
 <body class="mode-map">
   <header class="header" role="banner">
@@ -1971,6 +1838,7 @@ footer .foot-row .foot-item img {
             <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
+            <div id="datePicker"></div>
           </div>
 
           <h3>Categories</h3>
@@ -2202,7 +2070,7 @@ footer .foot-row .foot-item img {
     const startZoom = savedView?.zoom || 1.5;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
-      let map, geocoder, spinning = false,
+      let map, geocoder, spinning = false, datePicker,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -2646,14 +2514,56 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value='This month'; if(geocoder) geocoder.clear();
+      $('#kwInput').value='';
+      $('#dateInput').value='This month';
+      $('#dateInput').dataset.range='';
+      if(datePicker) datePicker.clearSelection();
+      if(geocoder) geocoder.clear();
       applyFilters();
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#dateInput').addEventListener('input', applyFilters);
+    datePicker = new Litepicker({
+      element: $('#datePicker'),
+      inlineMode: true,
+      singleMode: false,
+      format: 'YYYY-MM-DD',
+      setup: (picker) => {
+        picker.on('selected', (start, end) => {
+          const input = $('#dateInput');
+          if(start && end){
+            const sIso = start.format('YYYY-MM-DD');
+            const eIso = end.format('YYYY-MM-DD');
+            input.value = `${sIso} to ${eIso}`;
+            input.dataset.range = `${sIso} to ${eIso}`;
+          } else {
+            input.value = '';
+            input.dataset.range = '';
+          }
+          applyFilters();
+        });
+        picker.on('clear:selection', () => {
+          const input = $('#dateInput');
+          input.value = '';
+          input.dataset.range = '';
+          applyFilters();
+        });
+      }
+    });
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
+      const input = x.parentElement.querySelector('input');
+      if(input){
+        input.value='';
+        input.focus();
+        if(input.id==='dateInput'){
+          input.dataset.range='';
+          if(datePicker) datePicker.clearSelection();
+        }
+        applyFilters();
+      }
+    }));
 
     function setMode(m){
       mode = m;
@@ -3416,14 +3326,14 @@ function makePosts(){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const val = $('#dateInput').value.trim();
+      const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
       let start, end;
-      if(!val || val.toLowerCase() === 'this month'){
+      if(!raw || raw.toLowerCase() === 'this month'){
         const now = new Date();
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         end = new Date(now.getFullYear(), now.getMonth()+1, 0);
       } else {
-        const parts = val.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
         if(parts[0]) start = new Date(parts[0]);
         if(parts[1]) end = new Date(parts[1]);
       }
