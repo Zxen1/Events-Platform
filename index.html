@@ -740,6 +740,17 @@ button:focus-visible,
   margin-left: auto;
 }
 
+.res-head input{
+  height: 40px;
+  border: 1px solid var(--ink-d);
+  border-radius: 999px;
+  background: var(--btn);
+  color: var(--ink);
+  padding: 0 12px;
+}
+.date-range-field{display:flex;align-items:center;gap:4px;}
+.new-label{font-size:12px;color:var(--gold);}
+
 .res-list{
   overflow: auto;
   padding-right: 6px;
@@ -1435,7 +1446,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin:0 0 8px 0;color:var(--ink-d)}
       .res-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
-      .res-head select{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
+      .res-head select,
+      .res-head input{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
+      .date-range-field{display:flex;align-items:center;gap:4px}
+      .new-label{font-size:12px;color:var(--gold)}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
     .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
@@ -1791,7 +1805,6 @@ footer .foot-row .foot-item img {
   .detail-main .desc p:last-child{ margin-bottom:0; }
   .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
   .img-modal img{ width:90vw; height:90vh; object-fit:contain; user-select:none; -webkit-user-drag:none; -webkit-tap-highlight-color:transparent; }
-  #filterModal #datePicker{ grid-column:1 / span 2; grid-row:2; margin-top:8px; }
   .main .map-wrap{ position:relative; z-index:0; }
   .main .posts-mode{ position:relative; z-index:1; border-radius:16px; overflow:auto; }
 </style>
@@ -1823,6 +1836,7 @@ footer .foot-row .foot-item img {
             <div class="muted">Map area filter active in Map mode</div>
           </div>
           <div class="res-actions">
+            <div class="date-range-field"><input id="dateRange" type="text" placeholder="Select date range" aria-label="Date range" /><span class="new-label">new</span></div>
             <select id="sortSelect" aria-label="Sort order">
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
@@ -1868,13 +1882,6 @@ footer .foot-row .foot-item img {
               </div>
             </div>
 
-          <h3>Date Range</h3>
-          <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" />
-              <div class="x" role="button" aria-label="Clear date">X</div>
-            </div>
-            <div id="datePicker"></div>
-          </div>
 
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
@@ -2607,14 +2614,13 @@ function imgHero(pOrId){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateInput').value=''; $('#dateInput').dataset.range=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
+      $('#kwInput').value=''; $('#dateRange').value=''; $('#dateRange').dataset.range=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
       applyFilters();
     });
 
     if (window.Litepicker) {
       rangePicker = new Litepicker({
-        element: document.getElementById('datePicker'),
-        inlineMode: true,
+        element: document.getElementById('dateRange'),
         singleMode: false
       });
       const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
@@ -2626,15 +2632,15 @@ function imgHero(pOrId){
       rangePicker.on('selected', (start) => {
         const end = rangePicker.getEndDate();
         if (start && end) {
-          $('#dateInput').value = `${fmt(start)} - ${fmt(end)}`;
-          $('#dateInput').dataset.range = `${iso(start)} to ${iso(end)}`;
+          $('#dateRange').value = `${fmt(start)} - ${fmt(end)}`;
+          $('#dateRange').dataset.range = `${iso(start)} to ${iso(end)}`;
           applyFilters();
         } else if (start) {
-          $('#dateInput').value = fmt(start);
-          $('#dateInput').dataset.range = '';
+          $('#dateRange').value = fmt(start);
+          $('#dateRange').dataset.range = '';
         } else {
-          $('#dateInput').value = '';
-          $('#dateInput').dataset.range = '';
+          $('#dateRange').value = '';
+          $('#dateRange').dataset.range = '';
         }
       });
     } else {
@@ -2644,7 +2650,8 @@ function imgHero(pOrId){
     $('#kwInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $('#favTop').addEventListener('change', ()=> renderLists(filtered));
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); if(input.id==='dateInput'){ input.dataset.range=''; if(rangePicker) rangePicker.clearSelection(); } applyFilters(); } }));
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
+    $('#dateRange').addEventListener('input',()=>{ if(!$('#dateRange').value){ $('#dateRange').dataset.range=''; if(rangePicker) rangePicker.clearSelection(); applyFilters(); } });
 
     function setMode(m){
       mode = m;
@@ -3202,7 +3209,7 @@ function imgHero(pOrId){
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
-        date: $('#dateInput').dataset.range,
+        date: $('#dateRange').dataset.range,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3212,13 +3219,13 @@ function imgHero(pOrId){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
       const range = st.date || '';
-      $('#dateInput').dataset.range = range;
+      $('#dateRange').dataset.range = range;
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
         const fmt = d => new Date(d).toLocaleDateString('en-GB',{ weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'');
-        $('#dateInput').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
+        $('#dateRange').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
       } else {
-        $('#dateInput').value = '';
+        $('#dateRange').value = '';
       }
       if(rangePicker){
         if(range){
@@ -3569,7 +3576,7 @@ function imgHero(pOrId){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const range = $('#dateInput').dataset.range || '';
+      const range = $('#dateRange').dataset.range || '';
       let start, end;
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
