@@ -1770,16 +1770,22 @@ footer .foot-row .foot-item img {
   .image-row.dragging{ cursor:grabbing; }
   .image-row img{ height:400px; object-fit:cover; cursor:pointer; }
   .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
-  .map-container{ width:300px; height:200px; }
-  .calendar-container{ height:200px; overflow-x:auto; }
+  .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
+  .map-calendar .map-container,
+  .map-calendar .calendar-container{ width:100%; height:200px; }
+  .map-calendar select{ margin-top:8px; width:100%; height:40px; }
+  .calendar-container .litepicker{ height:200px; }
   .detail-main{ padding:12px; }
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
   .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
-  .img-modal img{ max-width:90vw; max-height:90vh; }
+  .img-modal img{ max-width:90vw; max-height:90vh; user-select:none; -webkit-user-drag:none; }
   .img-modal .nav{ position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:2rem; color:#fff; cursor:pointer; user-select:none; background:rgba(0,0,0,0); }
   .img-modal .prev{ left:0; justify-content:flex-start; padding-left:5vw; }
   .img-modal .next{ right:0; justify-content:flex-end; padding-right:5vw; }
+  #filterModal #datePicker{ grid-column:1 / span 2; grid-row:2; margin-top:8px; }
+  .main .map-wrap{ position:relative; z-index:0; }
+  .main .posts-mode{ position:relative; z-index:1; border-radius:16px; overflow:auto; }
 </style>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
@@ -3223,8 +3229,14 @@ function imgHero(pOrId){
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
         <div class="map-calendar">
-          <div class="map-container"></div>
-          <div class="calendar-container"></div>
+          <div class="map-section">
+            <div class="map-container"></div>
+            <select class="address-dropdown"></select>
+          </div>
+          <div class="calendar-section">
+            <div class="calendar-container"></div>
+            <select class="date-dropdown"></select>
+          </div>
         </div>` : ''}
         <div class="detail-main">
           <div class="desc">${p.desc}</div>
@@ -3350,9 +3362,20 @@ function imgHero(pOrId){
         new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
         mapDiv.addEventListener('click',()=>openMapModal(p));
       }
+      const addrSel = detail.querySelector('.address-dropdown');
+      if(addrSel){
+        const cities = [...new Set(posts.map(p=>p.city))];
+        cities.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; addrSel.appendChild(opt); });
+        addrSel.value = p.city;
+      }
       const calDiv = detail.querySelector('.calendar-container');
       if(calDiv && p.dates && p.dates.length){
         new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0] });
+      }
+      const dateSel = detail.querySelector('.date-dropdown');
+      if(dateSel && p.dates && p.dates.length){
+        p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=d; dateSel.appendChild(opt); });
+        dateSel.value = p.dates[0];
       }
     }
 
@@ -3361,6 +3384,7 @@ function imgHero(pOrId){
       const modal = document.createElement('div');
       modal.className='img-modal';
       const img = document.createElement('img');
+      img.draggable = false; img.style.userSelect='none'; img.style.webkitUserDrag='none';
       modal.appendChild(img);
       const prev = document.createElement('div'); prev.className='nav prev'; prev.textContent='‹';
       const next = document.createElement('div'); next.className='nav next'; next.textContent='›';
@@ -3375,10 +3399,11 @@ function imgHero(pOrId){
       }
       prev.addEventListener('click',e=>{ if(moved) return; show(i-1); });
       next.addEventListener('click',e=>{ if(moved) return; show(i+1); });
-      modal.addEventListener('pointerdown',e=>{ startX=e.clientX; moved=false; });
-      modal.addEventListener('pointermove',e=>{ if(startX!=null && Math.abs(e.clientX-startX)>30) moved=true; });
-      modal.addEventListener('pointerup',e=>{ if(startX!=null){ const dx=e.clientX-startX; if(Math.abs(dx)>30){ if(dx<0) show(i+1); else show(i-1); moved=true; } startX=null; setTimeout(()=>moved=false,0); } });
+      modal.addEventListener('pointerdown',e=>{ startX=e.clientX; moved=false; e.preventDefault(); });
+      modal.addEventListener('pointermove',e=>{ if(startX!=null){ if(Math.abs(e.clientX-startX)>30) moved=true; e.preventDefault(); } });
+      modal.addEventListener('pointerup',e=>{ if(startX!=null){ const dx=e.clientX-startX; if(Math.abs(dx)>30){ if(dx<0) show(i+1); else show(i-1); moved=true; } startX=null; setTimeout(()=>moved=false,0); } e.preventDefault(); });
       modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
+      modal.addEventListener('contextmenu',e=>e.preventDefault());
       document.addEventListener('keydown',onKey);
       show(i);
       document.body.appendChild(modal);
