@@ -748,8 +748,6 @@ button:focus-visible,
   color: var(--ink);
   padding: 0 12px;
 }
-.date-range-field{display:flex;align-items:center;gap:4px;}
-.new-label{font-size:12px;color:var(--gold);}
 
 .res-list{
   overflow: auto;
@@ -1448,8 +1446,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       .res-head button{border:1px solid var(--ink-d);border-radius:999px;padding:8px 12px;background:var(--btn);color:var(--ink);font-weight:600;cursor:pointer}
       .res-head select,
       .res-head input{height:40px;border:1px solid var(--ink-d);border-radius:999px;background:var(--btn);color:var(--ink);padding:0 12px}
-      .date-range-field{display:flex;align-items:center;gap:4px}
-      .new-label{font-size:12px;color:var(--gold)}
       .res-list{overflow:auto;padding-right:6px;flex:1;min-height:0}
     .card{display:grid;grid-template-columns:90px 1fr 36px;gap:12px;background:var(--list-background);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px;cursor:pointer}
     .thumb{width:90px;height:70px;border-radius:12px;object-fit:cover;display:block;background:var(--modal-bg)}
@@ -1836,7 +1832,6 @@ footer .foot-row .foot-item img {
             <div class="muted">Map area filter active in Map mode</div>
           </div>
           <div class="res-actions">
-            <div class="date-range-field"><input id="dateRange" type="text" placeholder="Select date range" aria-label="Date range" /><span class="new-label">new</span></div>
             <select id="sortSelect" aria-label="Sort order">
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
@@ -2170,7 +2165,6 @@ footer .foot-row .foot-item img {
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let activePostId = null;
-    let rangePicker;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2614,44 +2608,15 @@ function imgHero(pOrId){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value=''; $('#dateRange').value=''; $('#dateRange').dataset.range=''; rangePicker && rangePicker.clearSelection(); if(geocoder) geocoder.clear();
+      $('#kwInput').value='';
+      if(geocoder) geocoder.clear();
       applyFilters();
     });
-
-    if (window.Litepicker) {
-      rangePicker = new Litepicker({
-        element: document.getElementById('dateRange'),
-        singleMode: false
-      });
-      const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
-      const fmt = d => d ? toDate(d).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'') : '';
-      const iso = d => {
-        if (!d) return '';
-        return typeof d.format === 'function' ? d.format('YYYY-MM-DD') : d.toISOString().split('T')[0];
-      };
-      rangePicker.on('selected', (start) => {
-        const end = rangePicker.getEndDate();
-        if (start && end) {
-          $('#dateRange').value = `${fmt(start)} - ${fmt(end)}`;
-          $('#dateRange').dataset.range = `${iso(start)} to ${iso(end)}`;
-          applyFilters();
-        } else if (start) {
-          $('#dateRange').value = fmt(start);
-          $('#dateRange').dataset.range = '';
-        } else {
-          $('#dateRange').value = '';
-          $('#dateRange').dataset.range = '';
-        }
-      });
-    } else {
-      console.warn('Litepicker failed to load');
-    }
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $('#favTop').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{ const input = x.parentElement.querySelector('input'); if(input){ input.value=''; input.focus(); applyFilters(); } }));
-    $('#dateRange').addEventListener('input',()=>{ if(!$('#dateRange').value){ $('#dateRange').dataset.range=''; if(rangePicker) rangePicker.clearSelection(); applyFilters(); } });
 
     function setMode(m){
       mode = m;
@@ -3209,7 +3174,6 @@ function imgHero(pOrId){
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
-        date: $('#dateRange').dataset.range,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3218,23 +3182,6 @@ function imgHero(pOrId){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      const range = st.date || '';
-      $('#dateRange').dataset.range = range;
-      if(range){
-        const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        const fmt = d => new Date(d).toLocaleDateString('en-GB',{ weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'');
-        $('#dateRange').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
-      } else {
-        $('#dateRange').value = '';
-      }
-      if(rangePicker){
-        if(range){
-          const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
-          rangePicker.setDateRange(parts[0], parts[1] || parts[0]);
-        } else {
-          rangePicker.clearSelection();
-        }
-      }
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -3575,25 +3522,10 @@ function imgHero(pOrId){
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
-    function dateMatch(p){
-      const range = $('#dateRange').dataset.range || '';
-      let start, end;
-      if(range){
-        const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        if(parts[0]) start = new Date(parts[0]);
-        if(parts[1]) end = new Date(parts[1]);
-      }
-      return p.dates.some(d => {
-        const dt = new Date(d);
-        if(start && dt < start) return false;
-        if(end && dt > end) return false;
-        return true;
-      });
-    }
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
     function applyFilters(){
-      filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => inBounds(p) && kwMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
     }
