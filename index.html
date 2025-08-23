@@ -1766,7 +1766,7 @@ footer .foot-row .foot-item img {
   .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-box-wrap{ display:flex; gap:8px; padding:8px; }
+  .image-box-wrap{ display:flex; gap:8px; padding:8px 12px; }
   .img-box{ width:400px; height:400px; display:flex; align-items:center; justify-content:center; background:var(--img-box-bg, rgba(0,0,0,0.05)); cursor:pointer; padding:8px; box-sizing:border-box; }
   .img-box img{ max-width:100%; max-height:100%; object-fit:contain; }
   .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-right:4px; }
@@ -1861,7 +1861,7 @@ footer .foot-row .foot-item img {
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" readonly />
+            <div class="input"><input id="dateInput" type="text" value="" placeholder="Select date range" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
             <div id="datePicker"></div>
@@ -2223,7 +2223,7 @@ function buildClusterListHTML(items){
     return `
       <div class="multi-item" data-id="${p.id}">
         <div class="hover-card">
-          <img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/>
+          <img src="${imgThumb(p)}" alt=""/>
           <div>
             <div class="t">${p.title}</div>
             <div class="s">${p.city}</div>
@@ -2575,7 +2575,7 @@ function imgHero(pOrId){
 }
 
     function hoverHTML(p){
-      return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
+      return `<div class="hover-card"><img src="${imgThumb(p)}" alt=""/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
     // Categories UI
@@ -3144,12 +3144,14 @@ function imgHero(pOrId){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='70px 1fr 36px';
       el.innerHTML = `
-        <img class="thumb" data-src="${imgThumb(p)}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="" referrerpolicy="no-referrer" />
+        <img class="thumb" data-src="${imgThumb(p)}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
             <span class="badge" title="Venue">📍</span>
             <span>${p.city}</span>
+          </div>
+          <div class="info">
             <span class="badge" title="Dates">📅</span>
             <span>${formatDates(p.dates)}</span>
           </div>
@@ -3235,7 +3237,7 @@ function imgHero(pOrId){
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
           const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', ()=>{ stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
           footRow.appendChild(el);
@@ -3260,9 +3262,9 @@ function imgHero(pOrId){
           </button>
         </div>
         ${imgs.length ? `<div class="image-box-wrap">
-          <div class="img-box"><img src="${imgs[0]}" data-index="0" referrerpolicy="no-referrer" loading="lazy" alt=""/></div>
+          <div class="img-box"><img src="${imgs[0]}" data-index="0" loading="lazy" alt=""/></div>
           <div class="thumb-list">
-            ${imgs.map((src,i)=>`<img src="${toThumb(src,100)}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" loading="lazy" alt=""/>`).join('')}
+            ${imgs.map((src,i)=>`<img src="${toThumb(src,100)}" data-src="${src}" data-index="${i}" loading="lazy" alt=""/>`).join('')}
           </div>
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
@@ -4215,16 +4217,46 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         updateHistoryButtons();
         return;
       }
-    }
-    ['border','hoverBorder','activeBorder'].forEach(type=>{
-      const c = document.getElementById(`body-${type}-c`);
-      const o = document.getElementById(`body-${type}-o`);
-      if(c){
-        const rgba = hexToRgba(c.value, o ? o.value : 1);
-        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
-        document.documentElement.style.setProperty(varMap[type], rgba);
+      if(areaKey === 'body' && ['hoverAdjust','activeAdjust'].includes(type)){
+        const baseC = document.getElementById('body-border-c');
+        const adjustVal = parseInt(targetInput.value,10) || 0;
+        const newColor = baseC ? adjust(baseC.value, adjustVal) : '#ffffff';
+        const map = {hoverAdjust:{c:'hoverBorder', var:'--border-hover'}, activeAdjust:{c:'activeBorder', var:'--border-active'}};
+        const cInput = document.getElementById(`body-${map[type].c}-c`);
+        const oInput = document.getElementById(`body-${map[type].c}-o`);
+        if(cInput) cInput.value = newColor;
+        const opacity = oInput ? oInput.value : 1;
+        document.documentElement.style.setProperty(map[type].var, hexToRgba(newColor, opacity));
+        const data = collectThemeValues();
+        currentState = JSON.parse(JSON.stringify(data));
+        localStorage.setItem('currentTheme', JSON.stringify(data));
+        syncAdminControls();
+        updateHistoryButtons();
+        return;
       }
-    });
+    }
+    (function(){
+      const baseC = document.getElementById('body-border-c');
+      const hoverAdj = document.getElementById('body-hoverAdjust');
+      const activeAdj = document.getElementById('body-activeAdjust');
+      if(baseC && hoverAdj){
+        const hc = document.getElementById('body-hoverBorder-c');
+        if(hc) hc.value = adjust(baseC.value, parseInt(hoverAdj.value,10) || 0);
+      }
+      if(baseC && activeAdj){
+        const ac = document.getElementById('body-activeBorder-c');
+        if(ac) ac.value = adjust(baseC.value, parseInt(activeAdj.value,10) || 0);
+      }
+      ['border','hoverBorder','activeBorder'].forEach(type=>{
+        const c = document.getElementById(`body-${type}-c`);
+        const o = document.getElementById(`body-${type}-o`);
+        if(c){
+          const rgba = hexToRgba(c.value, o ? o.value : 1);
+          const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+          document.documentElement.style.setProperty(varMap[type], rgba);
+        }
+      });
+    })();
     colorAreas.forEach(area=>{
       ['bg','card','imgBg','headerBg','text','title','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
