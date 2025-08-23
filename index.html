@@ -2606,25 +2606,26 @@ function imgHero(pOrId){
       rangePicker = new Litepicker({
         element: document.getElementById('datePicker'),
         inlineMode: true,
-        singleMode: false,
-        onSelect: (start, end) => {
-          const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
-          const fmt = d => d ? toDate(d).toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
-          const iso = d => {
-            if (!d) return '';
-            return typeof d.format === 'function' ? d.format('YYYY-MM-DD') : d.toISOString().split('T')[0];
-          };
-          if (start && end) {
-            $('#dateInput').value = `${fmt(start)} - ${fmt(end)}`;
-            $('#dateInput').dataset.range = `${iso(start)} to ${iso(end)}`;
-            applyFilters();
-          } else if (start) {
-            $('#dateInput').value = fmt(start);
-            $('#dateInput').dataset.range = '';
-          } else {
-            $('#dateInput').value = '';
-            $('#dateInput').dataset.range = '';
-          }
+        singleMode: false
+      });
+      const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
+      const fmt = d => d ? toDate(d).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'') : '';
+      const iso = d => {
+        if (!d) return '';
+        return typeof d.format === 'function' ? d.format('YYYY-MM-DD') : d.toISOString().split('T')[0];
+      };
+      rangePicker.on('selected', (start) => {
+        const end = rangePicker.getEndDate();
+        if (start && end) {
+          $('#dateInput').value = `${fmt(start)} - ${fmt(end)}`;
+          $('#dateInput').dataset.range = `${iso(start)} to ${iso(end)}`;
+          applyFilters();
+        } else if (start) {
+          $('#dateInput').value = fmt(start);
+          $('#dateInput').dataset.range = '';
+        } else {
+          $('#dateInput').value = '';
+          $('#dateInput').dataset.range = '';
         }
       });
     } else {
@@ -3189,7 +3190,7 @@ function imgHero(pOrId){
       $('#dateInput').dataset.range = range;
       if(range){
         const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        const fmt = d => new Date(d).toLocaleDateString('en-US',{ weekday:'short', day:'numeric', month:'short' });
+        const fmt = d => new Date(d).toLocaleDateString('en-GB',{ weekday:'short', day:'numeric', month:'short' }).replace(/,/g,'');
         $('#dateInput').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} - ${fmt(parts[1])}` : '';
       } else {
         $('#dateInput').value = '';
@@ -3329,7 +3330,7 @@ function imgHero(pOrId){
       target.replaceWith(detail);
       hookDetailActions(detail, p);
       setupDetailViewer(detail, p);
-      applyAdmin();
+      if (typeof window.applyAdmin === 'function') window.applyAdmin();
 
       if(container){
         if(!fromPosts){
@@ -3861,7 +3862,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const inp = document.getElementById(id);
       if(inp && theme[id]) inp.value = theme[id];
     });
-    applyAdmin();
+    if (typeof window.applyAdmin === 'function') window.applyAdmin();
   }
 
 
@@ -4018,7 +4019,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(fromV && toV){ toV.value = fromV.value; }
         });
         ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
-        applyAdmin();
+        if (typeof window.applyAdmin === 'function') window.applyAdmin();
       });
       const txtBtn = document.createElement('button');
       txtBtn.type = 'button';
@@ -4036,7 +4037,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           });
           updateTextPicker(area.key, type);
         });
-        applyAdmin();
+        if (typeof window.applyAdmin === 'function') window.applyAdmin();
       });
       btnRow.appendChild(colBtn);
       btnRow.appendChild(txtBtn);
@@ -4413,7 +4414,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(sb && val.shadow.blur!==undefined) sb.value = val.shadow.blur;
         }
       });
-      applyAdmin();
+      if (typeof window.applyAdmin === 'function') window.applyAdmin();
     }
 
   function savePreset(name){
@@ -4431,7 +4432,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   buildStyleControls();
   syncAdminControls();
-  applyAdmin();
+  if (typeof window.applyAdmin === 'function') window.applyAdmin();
   defaultTheme = collectThemeValues();
   initBuiltInPresets();
   loadPresets();
@@ -4527,10 +4528,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         });
       }
         adminForm.addEventListener("input", e=>{
-          applyAdmin(e.target);
+          if (typeof window.applyAdmin === 'function') window.applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          applyAdmin(e.target);
+          if (typeof window.applyAdmin === 'function') window.applyAdmin(e.target);
         });
     }
 
