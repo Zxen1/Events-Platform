@@ -261,13 +261,14 @@ button:focus-visible,
 .modal-content{
   position:absolute;
   border-radius:8px;
-  width:90%;
-  max-width:600px;
+  width:250px;
+  max-width:250px;
   max-height:90%;
   display:flex;
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
+  padding:20px;
 }
 .modal-content .resizer{position:absolute;z-index:10;background:transparent;}
 .modal-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
@@ -281,7 +282,7 @@ button:focus-visible,
 .modal-body{
   flex:1 1 auto;
   overflow:auto;
-  padding:0 20px 20px;
+  padding:20px 0 0;
   overscroll-behavior:contain;
 }
 .admin-fieldset{margin:10px 0;border:1px solid var(--btn);border-radius:8px;padding:10px;}
@@ -293,8 +294,8 @@ button:focus-visible,
 }
   #adminModal .modal-content,
   #memberModal .modal-content{
-    width:100%;
-    max-width:1200px;
+    width:250px;
+    max-width:250px;
     max-height:90%;
   }
 
@@ -303,9 +304,6 @@ button:focus-visible,
     color:#fff;
   }
 #filterModal .modal-content{
-  width:350px;
-  max-width:600px;
-  max-height:90%;
   background:rgba(0,0,0,0.7);
   color:#fff;
 }
@@ -324,8 +322,8 @@ button:focus-visible,
   #adminModal .modal-content,
   #memberModal .modal-content,
   #filterModal .modal-content{
-    width:95%;
-    max-width:95%;
+    width:250px;
+    max-width:250px;
     max-height:95%;
   }
 }
@@ -1794,12 +1792,15 @@ footer .foot-row .foot-item img {
   .img-box img{ width:100%; height:100%; object-fit:cover; }
   .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-right:4px; }
   .thumb-list img{ width:100px; height:100px; object-fit:cover; cursor:pointer; }
-  .detail-side{ width:400px; display:flex; flex-direction:column; gap:8px; }
-  .detail-side .map-container{ width:400px; height:200px; }
+  .detail-side{ width:250px; display:flex; flex-direction:column; gap:8px; }
+  .detail-side .map-container{ width:250px; height:200px; }
   .detail-side .address-box{ font-size:14px; }
-  .detail-side .calendar-container{ width:400px; height:200px; overflow-x:auto; }
-  .detail-side .calendar-container .litepicker{ width:900px; height:450px; transform:scale(0.44); transform-origin:top left; }
+  .detail-side .calendar-container{ width:250px; height:250px; overflow:hidden; }
+  .detail-side .calendar-container .litepicker{ width:250px; height:250px; transform:scale(1); transform-origin:top left; }
   .detail-side .time-list{ font-size:14px; }
+  .detail-side .time-list .date-row{ display:flex; gap:8px; }
+  .detail-side .time-list .date{ width:90px; flex:0 0 auto; }
+  .detail-side .time-list .times{ flex:1 1 auto; }
   .detail-main{ padding:12px; }
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
@@ -2458,13 +2459,6 @@ function randomSchedule(){
 function formatDateStr(d){
   return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(d)).replace(',', '');
 }
-
-function formatDateTime(dt){
-  const d = new Date(dt.date);
-  const formatted = new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(d).replace(',', '');
-  return `${formatted} ${dt.time}`;
-}
-
 
 
 
@@ -3135,57 +3129,28 @@ function imgHero(pOrId){
     });
 
     const imageLoader = (() => {
-      const max = 50;
-      const loaded = new Set();
-      const queue = [];
-      let inFlight = 0;
-      function process(){
-        while(queue.length && inFlight < max){
-          const q = queue.shift();
-          if(loaded.has(q.src)){
-            q.imgs.forEach(img=>{ img.src = q.src; });
-            continue;
-          }
-          const primary = q.imgs.shift();
-          inFlight++;
-          primary.onload = primary.onerror = () => {
-            loaded.add(q.src);
-            q.imgs.forEach(img=>{ img.src = q.src; });
-            inFlight--;
-            process();
-          };
-          primary.src = q.src;
-        }
-      }
-      function enqueue(img, priority){
+      function load(img){
         const src = img.dataset.src;
         if(!src) return;
-        if(loaded.has(src)){ img.src = src; return; }
-        const existing = queue.find(q=>q.src===src);
-        if(existing){ existing.imgs.push(img); return; }
-        queue.push({src, priority, imgs:[img]});
-        queue.sort((a,b)=>a.priority-b.priority);
-        process();
+        img.onload = () => img.classList.add('loaded');
+        img.onerror = () => img.classList.add('error');
+        img.src = src;
       }
-      function observe(container, priority){
+      function observe(container){
         const imgs = container.querySelectorAll('img[data-src]');
-        imgs.forEach(img=>{
-          if(priority===0){
-            enqueue(img,0);
-          } else if('IntersectionObserver' in window){
-            const obs = new IntersectionObserver(entries=>{
-              entries.forEach(entry=>{
-                if(entry.isIntersecting){
-                  enqueue(img,priority);
-                  obs.unobserve(img);
-                }
-              });
-            },{root:null, rootMargin:'200px'});
-            obs.observe(img);
-          } else {
-            enqueue(img,priority);
-          }
-        });
+        if('IntersectionObserver' in window){
+          const obs = new IntersectionObserver((entries, ob)=>{
+            entries.forEach(e=>{
+              if(e.isIntersecting){
+                load(e.target);
+                ob.unobserve(e.target);
+              }
+            });
+          },{root:null, rootMargin:'200px'});
+          imgs.forEach(img=>obs.observe(img));
+        } else {
+          imgs.forEach(load);
+        }
       }
       return {observe};
     })();
@@ -3209,8 +3174,8 @@ function imgHero(pOrId){
           if(sel) sel.setAttribute('aria-selected','true');
         }
         updateResultCount(arr.length);
-        imageLoader.observe(resultsEl,1);
-        imageLoader.observe(postsWideEl,1);
+        imageLoader.observe(resultsEl);
+        imageLoader.observe(postsWideEl);
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
@@ -3345,10 +3310,10 @@ function imgHero(pOrId){
             </div>
           </div>
           ${(p.addresses && p.addresses.length) ? `<div class="detail-side">
+            <div class="time-list"></div>
+            <div class="calendar-container"></div>
             <div class="map-container"></div>
             <div class="address-box"></div>
-            <div class="calendar-container"></div>
-            <div class="time-list"></div>
           </div>` : ''}
         </div>` : ''}
         <div class="detail-main">
@@ -3524,24 +3489,20 @@ function imgHero(pOrId){
           if(calPicker){ calPicker.destroy(); }
           if(calDiv){
             const highlighted = a.dates.map(d=>new Date(d.date));
-            const minDate = new Date(a.dates[0].date);
-            const maxDate = new Date(a.dates[a.dates.length-1].date);
-            const months = Math.max(3, (maxDate.getFullYear()-minDate.getFullYear())*12 + (maxDate.getMonth()-minDate.getMonth()) + 1);
+            const startDate = new Date(a.dates[0].date);
             calPicker = new Litepicker({
               element: calDiv,
               inlineMode: true,
               singleMode: true,
               highlightedDays: highlighted,
-              startDate: minDate,
-              numberOfMonths: months,
-              numberOfColumns: 3,
+              startDate,
+              numberOfMonths: 1,
+              numberOfColumns: 1,
               format: 'ddd D MMM',
               lang: 'en-GB'
             });
             const calEl = calDiv.querySelector('.litepicker');
             if(calEl){
-              calEl.style.width = (months*300)+'px';
-              calEl.style.height = '450px';
               calEl.addEventListener('pointerdown', e=>{
                 if(!e.target.closest('.button-previous, .button-next')){
                   e.stopPropagation();
@@ -3551,7 +3512,13 @@ function imgHero(pOrId){
             }
           }
           if(timeList){
-            timeList.innerHTML = a.dates.map(dt=>formatDateTime(dt)).join('<br/>');
+            const grouped = {};
+            a.dates.forEach(dt=>{
+              const dstr = new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'}).format(new Date(dt.date)).replace(',', '');
+              if(!grouped[dstr]) grouped[dstr]=[];
+              grouped[dstr].push(dt.time);
+            });
+            timeList.innerHTML = Object.entries(grouped).map(([d,t])=>`<div class="date-row"><span class="date">${d}</span><span class="times">${t.join(', ')}</span></div>`).join('');
           }
         }
         if(addrs.length>1){
@@ -4011,6 +3978,30 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const input = document.getElementById(key);
       if(input) input.value = val;
     });
+  }
+
+  function applyThemeVars(theme){
+    const vars = {
+      '--primary': theme.primary,
+      '--secondary': theme.secondary,
+      '--accent': theme.accent,
+      '--background': theme.background,
+      '--text': theme.text,
+      '--btn': theme.secondary,
+      '--btn-hover': theme.accent,
+      '--btn-active': theme.accent,
+      '--ink': theme.text,
+      '--ink-d': theme.text,
+      '--button-text': theme.buttonText,
+      '--button-hover-text': theme.buttonHoverText
+    };
+    const styleEl = document.getElementById('theme-vars') || (()=>{
+      const s=document.createElement('style');
+      s.id='theme-vars';
+      document.head.appendChild(s);
+      return s;
+    })();
+    styleEl.textContent = `:root{${Object.entries(vars).map(([k,v])=>`${k}:${v}`).join(';')}}`;
   }
 
   function spreadTheme(theme){
@@ -4913,19 +4904,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     redoStack.length = 0;
     const base = baseColorInput.value;
     const theme = generateTheme(base);
-    const root = document.documentElement;
-    root.style.setProperty('--primary', theme.primary);
-    root.style.setProperty('--secondary', theme.secondary);
-    root.style.setProperty('--accent', theme.accent);
-    root.style.setProperty('--background', theme.background);
-    root.style.setProperty('--text', theme.text);
-    root.style.setProperty('--btn', theme.secondary);
-    root.style.setProperty('--btn-hover', theme.accent);
-    root.style.setProperty('--btn-active', theme.accent);
-    root.style.setProperty('--ink', theme.text);
-    root.style.setProperty('--ink-d', theme.text);
-    root.style.setProperty('--button-text', theme.buttonText);
-    root.style.setProperty('--button-hover-text', theme.buttonHoverText);
+    applyThemeVars(theme);
     updateFields(theme);
     spreadTheme(theme);
     syncAdminControls();
