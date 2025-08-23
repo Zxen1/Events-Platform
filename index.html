@@ -1784,8 +1784,8 @@ footer .foot-row .foot-item img {
   .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
   .map-calendar .map-container,
   .map-calendar .calendar-container{ width:100%; height:200px; }
-  .map-calendar select{ margin-top:8px; width:100%; max-height:200px; overflow:auto; }
-  .calendar-container .litepicker{ height:200px; }
+  .map-calendar select{ margin-top:8px; width:100%; max-height:200px; overflow-y:auto; }
+  .calendar-container .litepicker{ width:300px; height:200px; }
   .detail-main{ padding:12px; }
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
@@ -3446,13 +3446,13 @@ function imgHero(pOrId){
       }
       const mapDiv = detail.querySelector('.map-container');
       let detailMap = null;
+      let detailMarker = null;
       if(mapDiv && typeof mapboxgl !== 'undefined'){
         detailMap = new mapboxgl.Map({container:mapDiv, style:'mapbox://styles/mapbox/streets-v11', center:[p.lng,p.lat], zoom:4, interactive:false});
         const mEl = document.createElement('div');
         mEl.className = 'post-marker';
         mEl.style.background = catColor(p.category);
-        new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([p.lng,p.lat]).addTo(detailMap);
-        mapDiv.addEventListener('click',()=>openMapModal(p));
+        detailMarker = new mapboxgl.Marker({element:mEl, anchor:'center'}).setLngLat([p.lng,p.lat]).addTo(detailMap);
       }
       const addrSel = detail.querySelector('.address-dropdown');
       if(addrSel){
@@ -3462,13 +3462,25 @@ function imgHero(pOrId){
         addrSel.addEventListener('change', ()=>{
           const city = addrSel.value;
           const match = posts.find(x=>x.city===city);
-          if(match && detailMap){ detailMap.setCenter([match.lng, match.lat]); }
+          if(match && detailMap){
+            detailMap.setCenter([match.lng, match.lat]);
+            if(detailMarker) detailMarker.setLngLat([match.lng, match.lat]);
+          }
         });
       }
       const calDiv = detail.querySelector('.calendar-container');
       let calPicker = null;
       if(calDiv && p.dates && p.dates.length){
-        calPicker = new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0], onSelect: (d)=>{ if(dateSel) dateSel.value = d.format('YYYY-MM-DD'); } });
+        calPicker = new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0] });
+        const calEl = calDiv.querySelector('.litepicker');
+        if(calEl){
+          calEl.addEventListener('pointerdown', e=>{
+            if(!e.target.closest('.button-previous, .button-next')){
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          });
+        }
       }
       const dateSel = detail.querySelector('.date-dropdown');
       if(dateSel && p.dates && p.dates.length){
