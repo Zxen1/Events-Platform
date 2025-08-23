@@ -3480,9 +3480,19 @@ function imgHero(pOrId){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const [start, end] = ($('#dateInput').dataset.range || '')
-        .split(/to/i).map(s=>s.trim()).filter(Boolean);
-      return p.dates.some(d => (!start || d >= start) && (!end || d <= end));
+      const range = $('#dateInput').dataset.range || '';
+      let start, end;
+      if(range){
+        const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        if(parts[0]) start = new Date(parts[0]);
+        if(parts[1]) end = new Date(parts[1]);
+      }
+      return p.dates.some(d => {
+        const dt = new Date(d);
+        if(start && dt < start) return false;
+        if(end && dt > end) return false;
+        return true;
+      });
     }
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
