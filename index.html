@@ -38,10 +38,12 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: #777777;
       --dropdown-title: #000000;
-      --dropdown-selected: #000000;
+      --dropdown-selected-bg: rgba(224,224,224,1);
+      --dropdown-selected-text: #000000;
       --dropdown-text: #000000;
       --dropdown-bg: rgba(255,255,255,1);
-      --dropdown-highlight: rgba(224,224,224,1);
+      --dropdown-highlight-bg: rgba(224,224,224,1);
+      --dropdown-highlight-text: #000000;
       --dropdown-radius: 6px;
 }
 
@@ -147,8 +149,12 @@ select option{
   color: var(--dropdown-text);
 }
 select option:checked{
-  background: var(--dropdown-highlight);
-  color: var(--dropdown-selected);
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+select option:hover{
+  background: var(--dropdown-highlight-bg);
+  color: var(--dropdown-highlight-text);
 }
 
   .header{
@@ -796,6 +802,9 @@ select option:checked{
   padding-right: 6px;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .card{
@@ -3465,6 +3474,27 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     preview.style.textShadow = `${sx}px ${sy}px ${sb}px ${sc}`;
   }
 
+  function updateStandaloneTextPicker(id){
+    const picker = document.getElementById(`${id}-picker`);
+    if(!picker) return;
+    const preview = picker.querySelector('.text-preview');
+    const color = document.getElementById(`${id}-c`).value;
+    const font = document.getElementById(`${id}-font`).value;
+    const size = document.getElementById(`${id}-size`).value;
+    const weight = document.getElementById(`${id}-weight`).value;
+    const sc = document.getElementById(`${id}-shadow-color`).value;
+    const sx = document.getElementById(`${id}-shadow-x`).value;
+    const sy = document.getElementById(`${id}-shadow-y`).value;
+    const sb = document.getElementById(`${id}-shadow-blur`).value;
+    const bgInput = document.getElementById(picker.dataset.bgSource);
+    preview.style.backgroundColor = bgInput ? bgInput.value : '#ffffff';
+    preview.style.color = color;
+    preview.style.fontFamily = font;
+    preview.style.fontSize = size + 'px';
+    preview.style.fontWeight = weight;
+    preview.style.textShadow = `${sx}px ${sy}px ${sb}px ${sc}`;
+  }
+
   function rgbToHex(r,g,b){
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
   }
@@ -3680,6 +3710,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         bottom: document.getElementById(`${areaKey}-margin-bottom`),
         left: document.getElementById(`${areaKey}-margin-left`)
       };
+      const gapInput = document.getElementById(`${areaKey}-gap`);
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
       const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
@@ -3692,6 +3723,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(padInputs[key]) padInputs[key].value = parseInt(cs[`padding${dir}`],10) || 0;
           if(marginInputs[key]) marginInputs[key].value = parseInt(cs[`margin${dir}`],10) || 0;
         });
+        if(gapInput) gapInput.value = parseInt(cs.gap,10) || 0;
       }
       if(twInput || thInput){
         const elT = document.querySelector(thumbSel);
@@ -3702,7 +3734,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlightBg:'--dropdown-highlight-bg',dropdownHighlightText:'--dropdown-highlight-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -3716,6 +3748,40 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           }
         }
       }
+    });
+    const textSelMap = {
+      modalText: '#adminModal .modal-content',
+      placeholder: 'input',
+      dropdownText: 'select',
+      dropdownSelectedText: 'select',
+      dropdownHighlightText: 'select'
+    };
+    Object.entries(textSelMap).forEach(([id,sel])=>{
+      const fontSel = document.getElementById(`${id}-font`);
+      const sizeSel = document.getElementById(`${id}-size`);
+      const weightSel = document.getElementById(`${id}-weight`);
+      const shColor = document.getElementById(`${id}-shadow-color`);
+      const shX = document.getElementById(`${id}-shadow-x`);
+      const shY = document.getElementById(`${id}-shadow-y`);
+      const shB = document.getElementById(`${id}-shadow-blur`);
+      if(!fontSel && !sizeSel && !weightSel && !shColor) return;
+      const el = document.querySelector(sel);
+      if(el){
+        const cs = getComputedStyle(el);
+        if(fontSel) fontSel.value = FONT_OPTIONS.includes(cs.fontFamily.split(',')[0].replace(/"/g,'').trim()) ? cs.fontFamily.split(',')[0].replace(/"/g,'').trim() : FONT_OPTIONS[0];
+        if(sizeSel) sizeSel.value = parseInt(cs.fontSize,10) || FONT_SIZE_OPTIONS[0];
+        if(weightSel) weightSel.value = parseInt(cs.fontWeight,10) >= 600 ? 'bold' : 'normal';
+        if(shColor && cs.textShadow && cs.textShadow !== 'none'){
+          const m = cs.textShadow.match(/(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+          if(m){
+            shX.value = m[1];
+            shY.value = m[2];
+            shB.value = m[3];
+            shColor.value = rgbToHex(parseInt(m[4],10),parseInt(m[5],10),parseInt(m[6],10));
+          }
+        }
+      }
+      updateStandaloneTextPicker(id);
     });
     const stickyInput = document.getElementById('open-posts-sticky');
     if(stickyInput){
@@ -3734,9 +3800,63 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function buildStyleControls(){
     const wrap = document.getElementById('styleControls');
     if(!wrap) return;
+    function makeTextRow(id,label,bgSource){
+      const row = document.createElement('div');
+      row.className = 'control-row';
+      const labelEl = document.createElement('label');
+      labelEl.textContent = label;
+      row.appendChild(labelEl);
+      const picker = document.createElement('div');
+      picker.className = 'textpicker';
+      picker.id = `${id}-picker`;
+      if(bgSource) picker.dataset.bgSource = bgSource;
+      const preview = document.createElement('div');
+      preview.className = 'text-preview';
+      preview.textContent = 'Text';
+      picker.appendChild(preview);
+      const popup = document.createElement('div');
+      popup.className = 'text-popup';
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.id = `${id}-c`;
+      colorInput.setAttribute('data-mode', COLOR_PICKER_MODE);
+      const fontSelect = document.createElement('select');
+      fontSelect.className = 'font-select';
+      fontSelect.id = `${id}-font`;
+      FONT_OPTIONS.forEach(f=>{ const opt=document.createElement('option'); opt.value=f; opt.textContent=f; fontSelect.appendChild(opt); });
+      const sizeSelect = document.createElement('select');
+      sizeSelect.className = 'font-size-select';
+      sizeSelect.id = `${id}-size`;
+      FONT_SIZE_OPTIONS.forEach(sz=>{ const opt=document.createElement('option'); opt.value=sz; opt.textContent=`${sz}px`; sizeSelect.appendChild(opt); });
+      const weightSelect = document.createElement('select');
+      weightSelect.className = 'font-weight-select';
+      weightSelect.id = `${id}-weight`;
+      ['normal','bold'].forEach(w=>{ const opt=document.createElement('option'); opt.value=w; opt.textContent=w.charAt(0).toUpperCase()+w.slice(1); weightSelect.appendChild(opt); });
+      const shadowGroup = document.createElement('div');
+      shadowGroup.className = 'shadow-group';
+      const sc = document.createElement('input'); sc.type='color'; sc.id=`${id}-shadow-color`; sc.setAttribute('data-mode', COLOR_PICKER_MODE);
+      const sx = document.createElement('input'); sx.type='number'; sx.id=`${id}-shadow-x`; sx.value='0'; sx.step='1';
+      const sy = document.createElement('input'); sy.type='number'; sy.id=`${id}-shadow-y`; sy.value='0'; sy.step='1';
+      const sb = document.createElement('input'); sb.type='number'; sb.id=`${id}-shadow-blur`; sb.value='0'; sb.step='1';
+      shadowGroup.append(sc, sx, sy, sb);
+      popup.append(colorInput,fontSelect,sizeSelect,weightSelect,shadowGroup);
+      picker.appendChild(popup);
+      row.appendChild(picker);
+      const update=()=>updateStandaloneTextPicker(id);
+      [colorInput,fontSelect,sizeSelect,weightSelect,sc,sx,sy,sb].forEach(el=> el.addEventListener('input', update));
+      if(bgSource){
+        const bgInput = document.getElementById(bgSource);
+        if(bgInput) bgInput.addEventListener('input', update);
+      }
+      preview.addEventListener('click', e=>{ e.stopPropagation(); picker.classList.toggle('open'); });
+      popup.addEventListener('click', e=> e.stopPropagation());
+      document.addEventListener('click', e=>{ if(!picker.contains(e.target)) picker.classList.remove('open'); });
+      update();
+      return row;
+    }
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
-      fs.className = 'admin-fieldset';
+      fs.className = 'admin-fieldset collapsed';
       fs.dataset.key = area.key;
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
@@ -3963,6 +4083,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             </div>
         `;
         fs.appendChild(extRow);
+        const gapRow = document.createElement('div');
+        gapRow.className = 'control-row';
+        gapRow.innerHTML = `
+            <label>Gap</label>
+            <input id="${area.key}-gap" type="number" step="1" />
+        `;
+        fs.appendChild(gapRow);
         const thumbRow = document.createElement('div');
         thumbRow.className = 'control-row';
         thumbRow.innerHTML = `
@@ -3986,19 +4113,17 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
-    misc.className = 'admin-fieldset';
+    misc.className = 'admin-fieldset collapsed';
     misc.innerHTML = '<legend>Miscellaneous</legend>';
     const miscFields = [
       {id:'btn', label:'Button Base'},
       {id:'btnHover', label:'Button Hover'},
       {id:'btnActive', label:'Button Active'},
       {id:'modalBg', label:'Modal Background'},
-      {id:'modalText', label:'Modal Text'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
-      {id:'listBackground', label:'List Background'},
-      {id:'placeholder', label:'Placeholder Text'}
+      {id:'listBackground', label:'List Background'}
     ];
     miscFields.forEach(p=>{
       const row = document.createElement('div');
@@ -4012,38 +4137,54 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           `;
       misc.appendChild(row);
     });
+    misc.appendChild(makeTextRow('modalText','Modal Text','modalBg-c'));
+    misc.appendChild(makeTextRow('placeholder','Placeholder Text'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
-    dropdown.className = 'admin-fieldset';
+    dropdown.className = 'admin-fieldset collapsed';
     dropdown.innerHTML = '<legend>Dropdown Boxes</legend>';
-    const dropdownFields = [
-      {id:'dropdownTitle', label:'Title'},
-      {id:'dropdownSelected', label:'Selected'},
-      {id:'dropdownText', label:'Text'},
-      {id:'dropdownBg', label:'Background', opacity:true},
-      {id:'dropdownHighlight', label:'Highlight', opacity:true}
-    ];
-    dropdownFields.forEach(f=>{
-      const row = document.createElement('div');
-      row.className = 'control-row';
-      if(f.opacity){
-        row.innerHTML = `
-            <label>${f.label}</label>
+    const titleRow = document.createElement('div');
+    titleRow.className = 'control-row';
+    titleRow.innerHTML = `
+            <label>Title</label>
             <div class="color-group">
-              <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
-              <input id="${f.id}-o" type="range" min="0" max="1" step="0.01" value="1" />
+              <input id="dropdownTitle-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
             </div>
           `;
-      } else {
-        row.innerHTML = `
-            <label>${f.label}</label>
+    dropdown.appendChild(titleRow);
+    const selBgRow = document.createElement('div');
+    selBgRow.className = 'control-row';
+    selBgRow.innerHTML = `
+            <label>Selected Background</label>
             <div class="color-group">
-              <input id="${f.id}-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="dropdownSelectedBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="dropdownSelectedBg-o" type="range" min="0" max="1" step="0.01" value="1" />
             </div>
           `;
-      }
-      dropdown.appendChild(row);
-    });
+    dropdown.appendChild(selBgRow);
+    dropdown.appendChild(makeTextRow('dropdownSelectedText','Selected Text','dropdownSelectedBg-c'));
+    const bgRow = document.createElement('div');
+    bgRow.className = 'control-row';
+    bgRow.innerHTML = `
+            <label>Background</label>
+            <div class="color-group">
+              <input id="dropdownBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="dropdownBg-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+          `;
+    dropdown.appendChild(bgRow);
+    dropdown.appendChild(makeTextRow('dropdownText','Text','dropdownBg-c'));
+    const hiBgRow = document.createElement('div');
+    hiBgRow.className = 'control-row';
+    hiBgRow.innerHTML = `
+            <label>Highlighted Background</label>
+            <div class="color-group">
+              <input id="dropdownHighlightBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="dropdownHighlightBg-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+          `;
+    dropdown.appendChild(hiBgRow);
+    dropdown.appendChild(makeTextRow('dropdownHighlightText','Highlighted Text','dropdownHighlightBg-c'));
     wrap.appendChild(dropdown);
     makeFieldsetsCollapsible();
   }
@@ -4102,7 +4243,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlightBg:'--dropdown-highlight-bg',dropdownHighlightText:'--dropdown-highlight-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -4179,6 +4320,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         bottom: document.getElementById(`${areaKey}-margin-bottom`),
         left: document.getElementById(`${areaKey}-margin-left`)
       };
+      const gap = document.getElementById(`${areaKey}-gap`);
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       const th = document.getElementById(`${areaKey}-thumbHeight`);
       const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
@@ -4191,6 +4333,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           el.style[`padding${dir}`] = p && p.value !== '' ? `${p.value}px` : '';
           el.style[`margin${dir}`] = m && m.value !== '' ? `${m.value}px` : '';
         });
+        if(gap) el.style.gap = gap.value !== '' ? `${gap.value}px` : '';
       });
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
       document.querySelectorAll(thumbSel).forEach(el=>{
@@ -4199,6 +4342,34 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(th && th.value !== '') el.style.height = `${th.value}px`;
       });
     });
+    const textSelectors = {
+      modalText: '#adminModal .modal-content,#memberModal .modal-content,#filterModal .modal-content',
+      placeholder: 'input::placeholder,textarea::placeholder',
+      dropdownText: 'select,select option',
+      dropdownSelectedText: 'select option:checked',
+      dropdownHighlightText: 'select option:hover'
+    };
+    let extraCss = '';
+    Object.entries(textSelectors).forEach(([id,sels])=>{
+      const c = document.getElementById(`${id}-c`);
+      if(!c) return;
+      const font = document.getElementById(`${id}-font`);
+      const size = document.getElementById(`${id}-size`);
+      const weight = document.getElementById(`${id}-weight`);
+      const sc = document.getElementById(`${id}-shadow-color`);
+      const sx = document.getElementById(`${id}-shadow-x`);
+      const sy = document.getElementById(`${id}-shadow-y`);
+      const sb = document.getElementById(`${id}-shadow-blur`);
+      const rules = [`color:${c.value};`];
+      if(font) rules.push(`font-family:${font.value};`);
+      if(size) rules.push(`font-size:${size.value}px;`);
+      if(weight) rules.push(`font-weight:${weight.value};`);
+      if(sc) rules.push(`text-shadow:${sx.value||0}px ${sy.value||0}px ${sb.value||0}px ${sc.value};`);
+      extraCss += sels.split(',').map(sel=>`${sel}{${rules.join('')}}`).join('\n') + '\n';
+    });
+    let styleEl = document.getElementById('extraTextStyles');
+    if(!styleEl){ styleEl = document.createElement('style'); styleEl.id='extraTextStyles'; document.head.appendChild(styleEl); }
+    styleEl.textContent = extraCss;
     const sticky = document.getElementById('open-posts-sticky');
     document.documentElement.classList.toggle('open-posts-sticky', sticky && sticky.checked);
     const data = collectThemeValues();
@@ -4248,7 +4419,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         data[id] = { color: input.value };
       }
     });
-    ['btn','btnHover','btnActive','modalBg','modalText','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','placeholder','dropdownBg','dropdownHighlight'].forEach(id=>{
+    ['btn','btnHover','btnActive','modalBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHighlightBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -4256,10 +4427,28 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','dropdownSelected','dropdownText'].forEach(id=>{
+    ['dropdownTitle'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
+      }
+    });
+    ['modalText','placeholder','dropdownText','dropdownSelectedText','dropdownHighlightText'].forEach(id=>{
+      const c = document.getElementById(`${id}-c`);
+      const f = document.getElementById(`${id}-font`);
+      const s = document.getElementById(`${id}-size`);
+      const w = document.getElementById(`${id}-weight`);
+      const sc = document.getElementById(`${id}-shadow-color`);
+      const sx = document.getElementById(`${id}-shadow-x`);
+      const sy = document.getElementById(`${id}-shadow-y`);
+      const sb = document.getElementById(`${id}-shadow-blur`);
+      if(c){
+        const entry = { color: c.value };
+        if(f) entry.font = f.value;
+        if(s) entry.size = s.value;
+        if(w) entry.weight = w.value;
+        if(sc){ entry.shadow = { color: sc.value, x: sx.value, y: sy.value, blur: sb.value }; }
+        data[id] = entry;
       }
     });
     ['list','closed-posts'].forEach(areaKey=>{
@@ -4269,6 +4458,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const m = document.getElementById(`${areaKey}-margin-${dir}`);
         if(m){ data[`${areaKey}-margin-${dir}`] = { value: m.value }; }
       });
+      const gap = document.getElementById(`${areaKey}-gap`);
+      if(gap){ data[`${areaKey}-gap`] = { value: gap.value }; }
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
       const th = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4278,7 +4469,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlightBg:'--dropdown-highlight-bg',dropdownHighlightText:'--dropdown-highlight-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -4363,6 +4554,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const m = data[`${areaKey}-margin-${dir}`];
         if(m) mar[dir] = m.value;
       });
+      const gap = data[`${areaKey}-gap`];
       const tw = data[`${areaKey}-thumbWidth`];
       const th = data[`${areaKey}-thumbHeight`];
       const sel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
@@ -4371,6 +4563,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(pad[dir] !== undefined) rules.push(`padding-${dir}:${pad[dir]}px;`);
         if(mar[dir] !== undefined) rules.push(`margin-${dir}:${mar[dir]}px;`);
       });
+      if(gap && gap.value !== undefined) rules.push(`gap:${gap.value}px;`);
       if(rules.length) css += `${sel}{${rules.join('')}}` + '\n';
       if(tw || th){
         const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
@@ -4379,6 +4572,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(th) tRules.push(`height:${th.value}px;`);
         css += `${thumbSel}{${tRules.join('')}}` + '\n';
       }
+    });
+    const textSelectors = {
+      modalText: '#adminModal .modal-content,#memberModal .modal-content,#filterModal .modal-content',
+      placeholder: 'input::placeholder,textarea::placeholder',
+      dropdownText: 'select,select option',
+      dropdownSelectedText: 'select option:checked',
+      dropdownHighlightText: 'select option:hover'
+    };
+    Object.entries(textSelectors).forEach(([id,sels])=>{
+      const entry = data[id];
+      if(!entry) return;
+      const rules = [];
+      if(entry.color) rules.push(`color:${entry.color};`);
+      if(entry.font) rules.push(`font-family:${entry.font};`);
+      if(entry.size) rules.push(`font-size:${entry.size}px;`);
+      if(entry.weight) rules.push(`font-weight:${entry.weight};`);
+      if(entry.shadow){ const s = entry.shadow; const x=s.x||0; const y=s.y||0; const b=s.blur||0; rules.push(`text-shadow:${x}px ${y}px ${b}px ${s.color};`); }
+      if(rules.length) css += sels.split(',').map(sel=>`${sel}{${rules.join('')}}`).join('\n') + '\n';
     });
     return css;
   }
@@ -4418,11 +4629,28 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelected:'--dropdown-selected',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlight:'--dropdown-highlight'};
+          const fontInput = document.getElementById(`${key}-font`);
+          const sizeInput = document.getElementById(`${key}-size`);
+          const weightInput = document.getElementById(`${key}-weight`);
+          const sc = document.getElementById(`${key}-shadow-color`);
+          const sx = document.getElementById(`${key}-shadow-x`);
+          const sy = document.getElementById(`${key}-shadow-y`);
+          const sb = document.getElementById(`${key}-shadow-blur`);
+          if(fontInput && val.font) fontInput.value = val.font;
+          if(sizeInput && val.size) sizeInput.value = val.size;
+          if(weightInput && val.weight) weightInput.value = val.weight;
+          if(sc && val.shadow){
+            sc.value = val.shadow.color || '#000000';
+            if(sx) sx.value = val.shadow.x || 0;
+            if(sy) sy.value = val.shadow.y || 0;
+            if(sb) sb.value = val.shadow.blur || 0;
+          }
+          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHighlightBg:'--dropdown-highlight-bg',dropdownHighlightText:'--dropdown-highlight-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
           }
+          updateStandaloneTextPicker(key);
           return;
         }
         const direct = document.getElementById(`${areaKey}-${type}`);
@@ -4814,10 +5042,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       listBackground: '--list-background',
       placeholder: '--placeholder-text',
       dropdownTitle: '--dropdown-title',
-      dropdownSelected: '--dropdown-selected',
+      dropdownSelectedBg: '--dropdown-selected-bg',
+      dropdownSelectedText: '--dropdown-selected-text',
       dropdownText: '--dropdown-text',
       dropdownBg: '--dropdown-bg',
-      dropdownHighlight: '--dropdown-highlight'
+      dropdownHighlightBg: '--dropdown-highlight-bg',
+      dropdownHighlightText: '--dropdown-highlight-text'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(id);
