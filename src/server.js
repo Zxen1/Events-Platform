@@ -1,10 +1,12 @@
 const { generateTheme, DEFAULT_BASE_COLOR } = require('./themeBuilder');
-const { updateFields } = require('./themeOrganiser');
+const { updateFields, resetFields } = require('./themeOrganiser');
 const http = require('http');
 const url = require('url');
 
 function applyTheme(theme) {
   if (!theme) return null;
+  // Clear any previous theme values before applying the new one
+  resetFields();
   const base = theme.data && theme.data.primary ? theme.data.primary : DEFAULT_BASE_COLOR;
   const generated = generateTheme(base);
   // Update theme organiser fields before applying to website
