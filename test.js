@@ -1,7 +1,6 @@
 const assert = require('assert');
 const { generateTheme, DEFAULT_BASE_COLOR } = require('./src/themeBuilder');
-const { applyTheme } = require('./src/server');
-const { getFields } = require('./src/themeOrganiser');
+const { applyTheme, getFields } = require('./src/server');
 
 // Theme builder tests
 const built = generateTheme('#336699');
