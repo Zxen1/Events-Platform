@@ -1790,7 +1790,7 @@ footer .foot-row .foot-item img {
   .detail-main .desc p{ margin:0 0 12px; }
   .detail-main .desc p:last-child{ margin-bottom:0; }
   .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
-  .img-modal img{ max-width:90vw; max-height:90vh; user-select:none; -webkit-user-drag:none; -webkit-tap-highlight-color:transparent; }
+  .img-modal img{ width:90vw; height:90vh; object-fit:contain; user-select:none; -webkit-user-drag:none; -webkit-tap-highlight-color:transparent; }
   #filterModal #datePicker{ grid-column:1 / span 2; grid-row:2; margin-top:8px; }
   .main .map-wrap{ position:relative; z-index:0; }
   .main .posts-mode{ position:relative; z-index:1; border-radius:16px; overflow:auto; }
@@ -3376,6 +3376,7 @@ function imgHero(pOrId){
       viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
+      if(typeof retryBrokenImages === 'function') retryBrokenImages();
     }
 
     function ensureGap(container, el){
@@ -3499,7 +3500,19 @@ function imgHero(pOrId){
       const img = document.createElement('img');
       img.draggable = false; img.style.userSelect='none'; img.style.webkitUserDrag='none';
       modal.appendChild(img);
-      function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].dataset.src || imgs[i].src; img.src=src; }
+      function show(n){
+        if(n<0) n=imgs.length-1;
+        if(n>=imgs.length) n=0;
+        i=n;
+        const thumbSrc = imgs[i].src;
+        const fullSrc = imgs[i].dataset.src;
+        img.src = thumbSrc;
+        if(fullSrc && fullSrc !== thumbSrc){
+          const hi = new Image();
+          hi.onload = ()=>{ if(i===n) img.src = fullSrc; };
+          hi.src = fullSrc;
+        }
+      }
       function close(){ modal.remove(); document.removeEventListener('keydown',onKey); }
       function onKey(e){
         if(e.key==='Escape'){ e.preventDefault(); close(); }
@@ -3515,8 +3528,20 @@ function imgHero(pOrId){
       modal.addEventListener('contextmenu',e=>e.preventDefault());
       document.addEventListener('keydown',onKey);
       show(i);
-      document.body.appendChild(modal);
+    document.body.appendChild(modal);
     }
+
+    function retryBrokenImages(){
+      document.querySelectorAll('img').forEach(img=>{
+        if(img.complete && img.naturalWidth===0){
+          const src = img.dataset.src || img.src;
+          if(!src) return;
+          const retrySrc = src + (src.includes('?') ? '&' : '?') + 'retry=' + Date.now();
+          img.src = retrySrc;
+        }
+      });
+    }
+    window.addEventListener('load', retryBrokenImages);
 
     function openMapModal(p){
       const modal = document.createElement('div');
