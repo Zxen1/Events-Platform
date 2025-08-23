@@ -1917,6 +1917,7 @@ footer .foot-row .foot-item img {
           <div class="preset-actions">
             <input id="newPresetName" type="text" placeholder="Name of your new theme" />
             <button type="button" id="savePreset">Save Theme</button>
+            <button type="button" id="downloadCss">Download CSS</button>
           </div>
           <div class="modal-field" id="baseColorRow">
             <div class="history-group">
@@ -4080,6 +4081,64 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     return data;
   }
 
+  function generateCss(data){
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    let css = '';
+    const rootVars = [];
+    ['primary','secondary','accent','buttonHoverText'].forEach(key=>{
+      if(data[key] && data[key].color){
+        rootVars.push(`${varNames[key]}:${data[key].color};`);
+      }
+    });
+    ['border','hoverBorder','activeBorder'].forEach(type=>{
+      const entry = data[`body-${type}`];
+      if(entry && entry.color){
+        const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
+        rootVars.push(`${varNames[type]}:${color};`);
+      }
+    });
+    if(rootVars.length){
+      css += `:root{${rootVars.join('')}}\n`;
+    }
+    colorAreas.forEach(area=>{
+      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+        const entry = data[`${area.key}-${type}`];
+        if(!entry) return;
+        const selectors = area.selectors[type] || [];
+        if(!selectors.length) return;
+        const rules = [];
+        if(type==='bg' || type==='card'){
+          if(entry.color){
+            const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
+            rules.push(`background-color:${color};`);
+          }
+          if(type==='card' && entry.shadow){
+            const s = entry.shadow; const blur = s.blur || 0;
+            rules.push(`box-shadow:0 0 ${blur}px ${s.color};`);
+          }
+        } else if(type==='text' || type==='title' || type==='btnText'){
+          if(entry.color) rules.push(`color:${entry.color};`);
+          if(entry.font) rules.push(`font-family:${entry.font};`);
+          if(entry.size) rules.push(`font-size:${entry.size}px;`);
+          if(entry.weight) rules.push(`font-weight:${entry.weight};`);
+          if(entry.shadow){
+            const s = entry.shadow; const x = s.x || 0; const y = s.y || 0; const blur = s.blur || 0;
+            rules.push(`text-shadow:${x}px ${y}px ${blur}px ${s.color};`);
+          }
+        } else if(type==='btn'){
+          if(entry.color) rules.push(`background-color:${entry.color};border-color:${entry.color};`);
+          if(entry.shadow){
+            const s = entry.shadow; const blur = s.blur || 0;
+            rules.push(`box-shadow:0 0 ${blur}px ${s.color};`);
+          }
+        }
+        if(rules.length){
+          css += selectors.map(sel=>`${sel}{${rules.join('')}}`).join('\n') + '\n';
+        }
+      });
+    });
+    return css;
+  }
   function updateHistoryButtons(){
     if(undoBtn) undoBtn.disabled = undoStack.length === 0;
     if(redoBtn) redoBtn.disabled = redoStack.length === 0;
@@ -4424,6 +4483,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       savePreset(name);
       document.getElementById('newPresetName').value = '';
     }
+  });
+
+  const downloadCssBtn = document.getElementById('downloadCss');
+  downloadCssBtn && downloadCssBtn.addEventListener('click', ()=>{
+    const css = generateCss(collectThemeValues());
+    const blob = new Blob([css], { type:'text/css' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'theme.css';
+    a.click();
+    URL.revokeObjectURL(url);
   });
 
   const baseColorInput = document.getElementById('baseColor');
