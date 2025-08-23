@@ -4102,6 +4102,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.card) dark[`${area.key}-card`] = {color:'#222222', opacity:'1'};
     });
     builtInPresets.push({name:'Dark', data: dark});
+
     const ocean = {};
     colorAreas.forEach(area=>{
       if(area.selectors.bg) ocean[`${area.key}-bg`] = {color:'#e0f7fa', opacity:'1'};
@@ -4114,6 +4115,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.card) ocean[`${area.key}-card`] = {color:'#e0f7fa', opacity:'1'};
     });
     builtInPresets.push({name:'Ocean', data: ocean});
+
+    return fetch('beige%20transparency%20theme.txt')
+      .then(res => res.json())
+      .then(json => {
+        const beige = json[0];
+        if(beige && beige.data){
+          builtInPresets.push({ name: beige.name || 'Beige Transparency', data: beige.data });
+        }
+      })
+      .catch(() => {});
   }
 
   function updatePresetOptions(){
@@ -4187,11 +4198,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   syncAdminControls();
   applyAdmin();
   defaultTheme = collectThemeValues();
-  initBuiltInPresets();
-  loadPresets();
-  loadSavedTheme();
-  currentState = collectThemeValues();
-  updateHistoryButtons();
+  initBuiltInPresets().then(() => {
+    loadPresets();
+    loadSavedTheme();
+    currentState = collectThemeValues();
+    updateHistoryButtons();
+  });
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
