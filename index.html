@@ -953,6 +953,7 @@ select option:checked{
   position:sticky;
   top:0;
   z-index:3;
+  background:var(--list-background);
 }
 
 .open-posts .body{
@@ -3667,19 +3668,35 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const padInput = document.getElementById(`${areaKey}-padding`);
+      const padInputs = {
+        top: document.getElementById(`${areaKey}-padding-top`),
+        right: document.getElementById(`${areaKey}-padding-right`),
+        bottom: document.getElementById(`${areaKey}-padding-bottom`),
+        left: document.getElementById(`${areaKey}-padding-left`)
+      };
+      const marginInputs = {
+        top: document.getElementById(`${areaKey}-margin-top`),
+        right: document.getElementById(`${areaKey}-margin-right`),
+        bottom: document.getElementById(`${areaKey}-margin-bottom`),
+        left: document.getElementById(`${areaKey}-margin-left`)
+      };
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
       const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-      if(padInput){
-        const el = document.querySelector(listSel);
-        if(el){ padInput.value = parseInt(getComputedStyle(el).paddingTop,10) || 0; }
+      const el = document.querySelector(listSel);
+      if(el){
+        const cs = getComputedStyle(el);
+        ['Top','Right','Bottom','Left'].forEach(dir=>{
+          const key = dir.toLowerCase();
+          if(padInputs[key]) padInputs[key].value = parseInt(cs[`padding${dir}`],10) || 0;
+          if(marginInputs[key]) marginInputs[key].value = parseInt(cs[`margin${dir}`],10) || 0;
+        });
       }
       if(twInput || thInput){
-        const el = document.querySelector(thumbSel);
-        if(el){
-          const cs = getComputedStyle(el);
+        const elT = document.querySelector(thumbSel);
+        if(elT){
+          const cs = getComputedStyle(elT);
           if(twInput) twInput.value = parseInt(cs.width,10) || 0;
           if(thInput) thInput.value = parseInt(cs.height,10) || 0;
         }
@@ -3925,10 +3942,27 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const padRow = document.createElement('div');
         padRow.className = 'control-row';
         padRow.innerHTML = `
-            <label>Padding</label>
-            <input id="${area.key}-padding" type="number" step="1" />
+            <label>Internal Padding</label>
+            <div class="shadow-group">
+              <input id="${area.key}-padding-top" type="number" step="1" placeholder="T" />
+              <input id="${area.key}-padding-right" type="number" step="1" placeholder="R" />
+              <input id="${area.key}-padding-bottom" type="number" step="1" placeholder="B" />
+              <input id="${area.key}-padding-left" type="number" step="1" placeholder="L" />
+            </div>
         `;
         fs.appendChild(padRow);
+        const extRow = document.createElement('div');
+        extRow.className = 'control-row';
+        extRow.innerHTML = `
+            <label>External Padding</label>
+            <div class="shadow-group">
+              <input id="${area.key}-margin-top" type="number" step="1" placeholder="T" />
+              <input id="${area.key}-margin-right" type="number" step="1" placeholder="R" />
+              <input id="${area.key}-margin-bottom" type="number" step="1" placeholder="B" />
+              <input id="${area.key}-margin-left" type="number" step="1" placeholder="L" />
+            </div>
+        `;
+        fs.appendChild(extRow);
         const thumbRow = document.createElement('div');
         thumbRow.className = 'control-row';
         thumbRow.innerHTML = `
@@ -4133,17 +4167,30 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const pad = document.getElementById(`${areaKey}-padding`);
+      const padInputs = {
+        top: document.getElementById(`${areaKey}-padding-top`),
+        right: document.getElementById(`${areaKey}-padding-right`),
+        bottom: document.getElementById(`${areaKey}-padding-bottom`),
+        left: document.getElementById(`${areaKey}-padding-left`)
+      };
+      const marginInputs = {
+        top: document.getElementById(`${areaKey}-margin-top`),
+        right: document.getElementById(`${areaKey}-margin-right`),
+        bottom: document.getElementById(`${areaKey}-margin-bottom`),
+        left: document.getElementById(`${areaKey}-margin-left`)
+      };
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       const th = document.getElementById(`${areaKey}-thumbHeight`);
       const listSel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
       document.querySelectorAll(listSel).forEach(el=>{
         if(areaKey === 'list' && el.closest('.closed-posts')) return;
-        if(pad && pad.value !== ''){
-          el.style.padding = `${pad.value}px`;
-        } else if(pad){
-          el.style.padding = '';
-        }
+        ['Top','Right','Bottom','Left'].forEach(dir=>{
+          const key = dir.toLowerCase();
+          const p = padInputs[key];
+          const m = marginInputs[key];
+          el.style[`padding${dir}`] = p && p.value !== '' ? `${p.value}px` : '';
+          el.style[`margin${dir}`] = m && m.value !== '' ? `${m.value}px` : '';
+        });
       });
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
       document.querySelectorAll(thumbSel).forEach(el=>{
@@ -4216,8 +4263,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const pad = document.getElementById(`${areaKey}-padding`);
-      if(pad){ data[`${areaKey}-padding`] = { value: pad.value }; }
+      ['top','right','bottom','left'].forEach(dir=>{
+        const p = document.getElementById(`${areaKey}-padding-${dir}`);
+        if(p){ data[`${areaKey}-padding-${dir}`] = { value: p.value }; }
+        const m = document.getElementById(`${areaKey}-margin-${dir}`);
+        if(m){ data[`${areaKey}-margin-${dir}`] = { value: m.value }; }
+      });
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
       const th = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4264,7 +4315,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += `:root{${rootVars.join('')}}\n`;
     }
     if(data['open-posts-sticky'] && data['open-posts-sticky'].value === '1'){
-      css += '.open-posts-sticky .open-posts .detail-header{position:sticky;top:0;z-index:3;}\n';
+      css += '.open-posts-sticky .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
@@ -4304,25 +4355,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const pad = data[`${areaKey}-padding`];
+      const pad = {};
+      const mar = {};
+      ['top','right','bottom','left'].forEach(dir=>{
+        const p = data[`${areaKey}-padding-${dir}`];
+        if(p) pad[dir] = p.value;
+        const m = data[`${areaKey}-margin-${dir}`];
+        if(m) mar[dir] = m.value;
+      });
       const tw = data[`${areaKey}-thumbWidth`];
       const th = data[`${areaKey}-thumbHeight`];
-      if(areaKey === 'list'){
-        if(pad) css += `.res-list{padding:${pad.value}px;}` + '\n';
-        if(tw || th){
-          const rules = [];
-          if(tw) rules.push(`width:${tw.value}px;`);
-          if(th) rules.push(`height:${th.value}px;`);
-          css += `.res-list .thumb{${rules.join('')}}` + '\n';
-        }
-      } else {
-        if(pad) css += `.closed-posts .res-list{padding:${pad.value}px;}` + '\n';
-        if(tw || th){
-          const rules = [];
-          if(tw) rules.push(`width:${tw.value}px;`);
-          if(th) rules.push(`height:${th.value}px;`);
-          css += `.closed-posts .thumb{${rules.join('')}}` + '\n';
-        }
+      const sel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
+      const rules = [];
+      ['top','right','bottom','left'].forEach(dir=>{
+        if(pad[dir] !== undefined) rules.push(`padding-${dir}:${pad[dir]}px;`);
+        if(mar[dir] !== undefined) rules.push(`margin-${dir}:${mar[dir]}px;`);
+      });
+      if(rules.length) css += `${sel}{${rules.join('')}}` + '\n';
+      if(tw || th){
+        const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
+        const tRules = [];
+        if(tw) tRules.push(`width:${tw.value}px;`);
+        if(th) tRules.push(`height:${th.value}px;`);
+        css += `${thumbSel}{${tRules.join('')}}` + '\n';
       }
     });
     return css;
@@ -4355,7 +4410,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function applyPresetData(data){
       Object.entries(data).forEach(([key,val])=>{
-        const [areaKey,type] = key.split('-');
+        const parts = key.split('-');
+        const areaKey = parts.shift();
+        const type = parts.join('-');
         if(!type){
           const colorInput = document.getElementById(`${key}-c`) || document.getElementById(key);
           const opacityInput = document.getElementById(`${key}-o`);
@@ -4366,6 +4423,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
           }
+          return;
+        }
+        const direct = document.getElementById(`${areaKey}-${type}`);
+        if(direct && val.value!==undefined){
+          direct.value = val.value;
           return;
         }
         const c = document.getElementById(`${areaKey}-${type}-c`);
