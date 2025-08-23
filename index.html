@@ -4489,6 +4489,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     updateHistoryButtons();
   }
 
+  window.applyAdmin = applyAdmin;
+
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
