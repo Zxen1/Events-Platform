@@ -27,12 +27,12 @@ body{background-color:rgba(41,41,41,1);}
 .res-list .btn{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts{background-color:rgba(0,0,0,0);}
 .closed-posts .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-.closed-posts .detail-inline{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+.closed-posts .open-posts{box-shadow:0 0 0px #000000;}
 .closed-posts{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.closed-posts .detail-inline .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.closed-posts .detail-inline .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 footer{background-color:rgba(0,0,0,0);}
