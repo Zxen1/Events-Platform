@@ -1766,7 +1766,7 @@ footer .foot-row .foot-item img {
   .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:0; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; position:sticky; top:56px; z-index:2; }
+  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; padding-right:calc(12px + 8px); position:sticky; top:56px; z-index:2; }
   .image-row img{ height:400px; object-fit:cover; cursor:pointer; }
   .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
   .map-container{ width:300px; height:200px; }
@@ -3150,7 +3150,7 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'detail-inline';
       wrap.dataset.id = p.id;
-      const imgs = p.images || [];
+      const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       wrap.innerHTML = `
         <div class="detail-header">
           <div>
@@ -3160,7 +3160,10 @@ function makePosts(){
           <button class="fav-btn" data-act="fav" aria-label="Toggle favourite">${p.fav ? '★' : '☆'}</button>
         </div>
         ${imgs.length ? `<div class="image-row">
-          ${imgs.map((src,i)=>`<img class="view-img" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`).join('')}
+          ${imgs.map((src,i)=>{
+            const thumb = i===0 ? imgThumb(p) : src.replace('/1200/800','/300/200');
+            return `<img class="view-img" src="${thumb}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`;
+          }).join('')}
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
         <div class="map-calendar">
@@ -3287,6 +3290,16 @@ function makePosts(){
         imgs.forEach((img,idx)=>{
           img.addEventListener('click',()=>openImageModal(imgs, idx));
         });
+        const container = detail.closest('.posts-mode');
+        row.addEventListener('wheel', (e)=>{
+          if(!container) return;
+          const atTop = container.scrollTop <= 0;
+          const atBottom = Math.ceil(container.scrollTop + container.clientHeight) >= container.scrollHeight;
+          if((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)){
+            row.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }
+        }, {passive:false});
       }
       const mapDiv = detail.querySelector('.map-container');
       if(mapDiv && typeof mapboxgl !== 'undefined'){
@@ -3308,9 +3321,13 @@ function makePosts(){
       const prev = document.createElement('div'); prev.className='nav prev'; prev.textContent='‹';
       const next = document.createElement('div'); next.className='nav next'; next.textContent='›';
       modal.appendChild(prev); modal.appendChild(next);
-      function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].src||imgs[i].dataset.src; img.src=src; }
+      function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].dataset.src || imgs[i].src; img.src=src; }
       function close(){ modal.remove(); document.removeEventListener('keydown',onKey); }
-      function onKey(e){ if(e.key==='Escape') close(); if(e.key==='ArrowRight') show(i+1); if(e.key==='ArrowLeft') show(i-1); }
+      function onKey(e){
+        if(e.key==='Escape'){ e.preventDefault(); close(); }
+        if(e.key==='ArrowRight'){ e.preventDefault(); show(i+1); }
+        if(e.key==='ArrowLeft'){ e.preventDefault(); show(i-1); }
+      }
       prev.addEventListener('click',()=>show(i-1));
       next.addEventListener('click',()=>show(i+1));
       modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
