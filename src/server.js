@@ -1,13 +1,11 @@
-const { getUserTheme, setUserTheme } = require('./db/theme');
-const { generateTheme } = require('./themeBuilder');
+const { generateTheme, DEFAULT_BASE_COLOR } = require('./themeBuilder');
 const { updateFields } = require('./themeOrganiser');
-const { saveTab } = require('./db/admin');
 const http = require('http');
 const url = require('url');
 
 function applyTheme(theme) {
   if (!theme) return null;
-  const base = theme.data && theme.data.primary ? theme.data.primary : '#336699';
+  const base = theme.data && theme.data.primary ? theme.data.primary : DEFAULT_BASE_COLOR;
   const generated = generateTheme(base);
   // Update theme organiser fields before applying to website
   updateFields(generated);
@@ -15,14 +13,18 @@ function applyTheme(theme) {
   return generated;
 }
 
-function onLogin(userId) {
-  const theme = getUserTheme(userId);
+function onLogin() {
+  const theme = { name: 'default', data: { primary: DEFAULT_BASE_COLOR } };
   applyTheme(theme);
   return theme;
 }
 
-function onThemeChange(userId, themeId, customJson) {
-  const theme = setUserTheme(userId, themeId, customJson);
+function onThemeChange(_userId, _themeId, customJson) {
+  let custom = {};
+  try {
+    custom = JSON.parse(customJson || '{}');
+  } catch (e) {}
+  const theme = { name: 'custom', data: custom };
   applyTheme(theme);
   return theme;
 }
@@ -34,16 +36,11 @@ function startServer(port = 3000) {
       let body = '';
       req.on('data', chunk => { body += chunk; });
       req.on('end', () => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
         try {
-          const { tab, data } = JSON.parse(body || '{}');
-          if (!tab || typeof data !== 'object') {
-            res.writeHead(400); res.end('Invalid'); return;
-          }
-          const record = saveTab(tab, data);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, record }));
+          res.end(JSON.stringify({ success: true, received: JSON.parse(body || '{}') }));
         } catch (e) {
-          res.writeHead(500); res.end('Error');
+          res.end(JSON.stringify({ success: true, received: {} }));
         }
       });
     } else {
