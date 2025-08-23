@@ -1766,9 +1766,11 @@ footer .foot-row .foot-item img {
   .detail-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; position:sticky; top:12px; z-index:3; background:var(--list-background); }
   .detail-header .title{ font-size:20px; font-weight:700; margin:0; }
   .detail-header .sub{ font-size:14px; color:var(--muted); }
-  .image-row{ display:flex; gap:8px; overflow-x:auto; padding:8px 12px; padding-right:calc(12px + 8px); position:sticky; top:56px; z-index:2; cursor:grab; touch-action:pan-y; }
-  .image-row.dragging{ cursor:grabbing; }
-  .image-row img{ height:400px; object-fit:cover; cursor:pointer; }
+  .image-box-wrap{ display:flex; gap:8px; }
+  .img-box{ width:400px; height:400px; display:flex; align-items:center; justify-content:center; background:var(--img-box-bg, rgba(0,0,0,0.05)); cursor:pointer; }
+  .img-box img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .thumb-list{ display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; }
+  .thumb-list img{ width:100px; height:100px; object-fit:cover; cursor:pointer; }
   .map-calendar{ display:flex; gap:12px; padding:8px 12px; }
   .map-calendar > div{ display:flex; flex-direction:column; width:300px; }
   .map-calendar .map-container,
@@ -1780,10 +1782,6 @@ footer .foot-row .foot-item img {
   .detail-main .desc p:last-child{ margin-bottom:0; }
   .img-modal{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--modal-bg); display:flex; align-items:center; justify-content:center; z-index:1000; touch-action:none; }
   .img-modal img{ max-width:90vw; max-height:90vh; user-select:none; -webkit-user-drag:none; -webkit-tap-highlight-color:transparent; }
-  .img-modal .nav{ position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:2rem; color:#fff; cursor:pointer; user-select:none; background:rgba(0,0,0,0); -webkit-tap-highlight-color:transparent; outline:none; }
-  .img-modal .nav:active{ background:rgba(0,0,0,0); }
-  .img-modal .prev{ left:0; justify-content:flex-start; padding-left:5vw; }
-  .img-modal .next{ right:0; justify-content:flex-end; padding-right:5vw; }
   #filterModal #datePicker{ grid-column:1 / span 2; grid-row:2; margin-top:8px; }
   .main .map-wrap{ position:relative; z-index:0; }
   .main .posts-mode{ position:relative; z-index:1; border-radius:16px; overflow:auto; }
@@ -2552,11 +2550,10 @@ function makePosts(){
     posts = makePosts();
 
     // Image helpers (unique per post)
-function toThumb(src){
+function toThumb(src, tw=300){
   const m = src.match(/\/(\d+)\/(\d+)$/);
   if(m){
     const w = parseInt(m[1],10), h = parseInt(m[2],10);
-    const tw = 300;
     const th = Math.round(tw * h / w);
     return src.replace(/\d+\/\d+$/, `${tw}/${th}`);
   }
@@ -2611,8 +2608,12 @@ function imgHero(pOrId){
         inlineMode: true,
         singleMode: false,
         onSelect: (start, end) => {
-          const fmt = d => d ? d.toDate().toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
-          const iso = d => d ? d.format('YYYY-MM-DD') : '';
+          const toDate = d => (typeof d?.toDate === 'function') ? d.toDate() : d;
+          const fmt = d => d ? toDate(d).toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
+          const iso = d => {
+            if(!d) return '';
+            return typeof d.format === 'function' ? d.format('YYYY-MM-DD') : d.toISOString().split('T')[0];
+          };
           const hasRange = start && end;
           $('#dateInput').value = hasRange ? `${fmt(start)} to ${fmt(end)}` : '';
           $('#dateInput').dataset.range = hasRange ? `${iso(start)} to ${iso(end)}` : '';
@@ -3167,7 +3168,7 @@ function imgHero(pOrId){
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
-        date: $('#dateInput').value,
+        date: $('#dateInput').dataset.range,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3176,10 +3177,18 @@ function imgHero(pOrId){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || '';
+      const range = st.date || '';
+      $('#dateInput').dataset.range = range;
+      if(range){
+        const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        const fmt = d => new Date(d).toLocaleDateString('en-US',{ weekday:'short', day:'numeric', month:'short' });
+        $('#dateInput').value = (parts[0] && parts[1]) ? `${fmt(parts[0])} to ${fmt(parts[1])}` : '';
+      } else {
+        $('#dateInput').value = '';
+      }
       if(rangePicker){
-        if(st.date){
-          const parts = st.date.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        if(range){
+          const parts = range.split(/to/i).map(s=>s.trim()).filter(Boolean);
           rangePicker.setDateRange(parts[0], parts[1] || parts[0]);
         } else {
           rangePicker.clearSelection();
@@ -3241,11 +3250,11 @@ function imgHero(pOrId){
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
         </div>
-        ${imgs.length ? `<div class="image-row">
-          ${imgs.map((src,i)=>{
-            const thumb = i===0 ? imgThumb(p) : toThumb(src);
-            return `<img class="view-img" src="${thumb}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`;
-          }).join('')}
+        ${imgs.length ? `<div class="image-box-wrap">
+          <div class="img-box"><img src="${imgs[0]}" data-index="0" referrerpolicy="no-referrer" alt=""/></div>
+          <div class="thumb-list">
+            ${imgs.map((src,i)=>`<img src="${toThumb(src,100)}" data-src="${src}" data-index="${i}" referrerpolicy="no-referrer" alt=""/>`).join('')}
+          </div>
         </div>` : ''}
         ${(p.lng!=null && p.lat!=null && p.dates && p.dates.length) ? `
         <div class="map-calendar">
@@ -3353,29 +3362,24 @@ function imgHero(pOrId){
     }
 
     function setupDetailViewer(detail, p){
-      const row = detail.querySelector('.image-row');
-      if(row){
-        imageLoader.observe(row,0);
-        const imgs = [...row.querySelectorAll('img')];
-        let isDown=false,startX,scrollLeft,dragged=false;
-        row.addEventListener('pointerdown',e=>{ isDown=true; startX=e.clientX; scrollLeft=row.scrollLeft; dragged=false; row.classList.add('dragging'); row.setPointerCapture(e.pointerId); });
-        row.addEventListener('pointermove',e=>{ if(!isDown) return; const dx=e.clientX-startX; if(Math.abs(dx)>5) dragged=true; row.scrollLeft=scrollLeft-dx; });
-        row.addEventListener('pointerup',e=>{ isDown=false; row.classList.remove('dragging'); row.releasePointerCapture(e.pointerId); });
-        row.addEventListener('pointerleave',e=>{ isDown=false; row.classList.remove('dragging'); row.releasePointerCapture(e.pointerId); });
-        row.addEventListener('pointercancel',e=>{ isDown=false; row.classList.remove('dragging'); row.releasePointerCapture(e.pointerId); });
-        imgs.forEach((img,idx)=>{
-          img.addEventListener('click',e=>{ if(dragged) return; openImageModal(imgs, idx); });
-        });
-        const container = detail.closest('.posts-mode');
-        row.addEventListener('wheel', (e)=>{
-          if(!container) return;
-          const atTop = container.scrollTop <= 0;
-          const atBottom = Math.ceil(container.scrollTop + container.clientHeight) >= container.scrollHeight;
-          if((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)){
-            row.scrollLeft += e.deltaY;
-            e.preventDefault();
+      const imgBox = detail.querySelector('.img-box');
+      const mainImg = imgBox ? imgBox.querySelector('img') : null;
+      const thumbs = [...detail.querySelectorAll('.thumb-list img')];
+      thumbs.forEach(thumb=>{
+        thumb.addEventListener('click',()=>{
+          if(mainImg){
+            mainImg.src = thumb.dataset.src || thumb.src;
+            mainImg.dataset.index = thumb.dataset.index;
           }
-        }, {passive:false});
+        });
+      });
+      if(imgBox){
+        imgBox.addEventListener('click',()=>{
+          if(mainImg){
+            const idx = parseInt(mainImg.dataset.index || '0',10);
+            openImageModal(thumbs, idx);
+          }
+        });
       }
       const mapDiv = detail.querySelector('.map-container');
       let detailMap = null;
@@ -3418,10 +3422,6 @@ function imgHero(pOrId){
       const img = document.createElement('img');
       img.draggable = false; img.style.userSelect='none'; img.style.webkitUserDrag='none';
       modal.appendChild(img);
-      const prev = document.createElement('div'); prev.className='nav prev'; prev.textContent='‹';
-      const next = document.createElement('div'); next.className='nav next'; next.textContent='›';
-      modal.appendChild(prev); modal.appendChild(next);
-      let startX=null, moved=false;
       function show(n){ if(n<0) n=imgs.length-1; if(n>=imgs.length) n=0; i=n; const src=imgs[i].dataset.src || imgs[i].src; img.src=src; }
       function close(){ modal.remove(); document.removeEventListener('keydown',onKey); }
       function onKey(e){
@@ -3429,11 +3429,6 @@ function imgHero(pOrId){
         if(e.key==='ArrowRight'){ e.preventDefault(); show(i+1); }
         if(e.key==='ArrowLeft'){ e.preventDefault(); show(i-1); }
       }
-      prev.addEventListener('click',e=>{ if(moved) return; show(i-1); });
-      next.addEventListener('click',e=>{ if(moved) return; show(i+1); });
-      modal.addEventListener('pointerdown',e=>{ startX=e.clientX; moved=false; e.preventDefault(); });
-      modal.addEventListener('pointermove',e=>{ if(startX!=null){ if(Math.abs(e.clientX-startX)>30) moved=true; e.preventDefault(); } });
-      modal.addEventListener('pointerup',e=>{ if(startX!=null){ const dx=e.clientX-startX; if(Math.abs(dx)>30){ if(dx<0) show(i+1); else show(i-1); moved=true; } startX=null; setTimeout(()=>moved=false,0); } e.preventDefault(); });
       modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
       modal.addEventListener('contextmenu',e=>e.preventDefault());
       document.addEventListener('keydown',onKey);
@@ -3702,7 +3697,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.results-col .res-list'], text:['.results-col'], title:['.results-col .card .t','.results-col .card .title'], btn:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], btnText:['.results-col .res-list button','.results-col .res-list .sq','.results-col .res-list .tiny','.results-col .res-list .btn'], card:['.results-col .card']}},
     {key:'closedPosts', label:'Closed Posts', selectors:{bg:['.posts-mode'], text:['.posts-mode','.posts-mode *'], title:['.posts-mode .card .t','.posts-mode .card .title'], btn:['.posts-mode button'], btnText:['.posts-mode button'], card:['.posts-mode .card']}},
-    {key:'openPosts', label:'Open Posts', selectors:{headerBg:['.detail-inline .detail-header'], text:['.detail-inline','.detail-inline *'], title:['.detail-inline .t','.detail-inline .title'], btn:['.detail-inline button'], btnText:['.detail-inline button'], card:['.detail-inline']}},
+    {key:'openPosts', label:'Open Posts', selectors:{headerBg:['.detail-inline .detail-header'], text:['.detail-inline','.detail-inline *'], title:['.detail-inline .t','.detail-inline .title'], btn:['.detail-inline button'], btnText:['.detail-inline button'], card:['.detail-inline'], imgBg:['.detail-inline .img-box']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['#map'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup.hover-pop .hover-card'], text:['.mapboxgl-popup.hover-pop .hover-card'], title:['.mapboxgl-popup.hover-pop .hover-card .t','.mapboxgl-popup.hover-pop .hover-card .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
@@ -3884,7 +3879,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','headerBg','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
+      ['bg','card','imgBg','headerBg','text','title','btn','btnText','border','hoverBorder','activeBorder'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -3943,7 +3938,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const bVal = parseInt(match[3],10);
             const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
             cInput.value = rgbToHex(r,g,bVal);
-            if((type==='bg' || type==='card' || type==='headerBg' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
+            if((type==='bg' || type==='card' || type==='imgBg' || type==='headerBg' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
           }
         }
         if(fontSel && font){
@@ -3999,7 +3994,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       colBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','headerBg','btn','border','hoverBorder','activeBorder'].forEach(type=>{
+        ['bg','card','imgBg','headerBg','btn','border','hoverBorder','activeBorder'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -4059,6 +4054,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.bg) types.push('bg');
       if(area.selectors.headerBg) types.push('headerBg');
       if(area.selectors.card) types.push('card');
+      if(area.selectors.imgBg) types.push('imgBg');
       if(area.selectors.text) types.push('text');
       if(area.selectors.title) types.push('title');
       if(area.selectors.btn) types.push('btn','btnText');
@@ -4069,6 +4065,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const labelMap = {
           bg: 'Background',
           card: 'Card',
+          imgBg: 'Image Box Background',
           text: 'Text',
           title: 'Title',
           btn: 'Button',
@@ -4145,7 +4142,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'headerBg' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder'){
+        if(type === 'bg' || type === 'card' || type === 'headerBg' || type === 'imgBg' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -4218,7 +4215,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','headerBg','text','title','btn','btnText'].forEach(type=>{
+      ['bg','card','imgBg','headerBg','text','title','btn','btnText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4237,7 +4234,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card' || type==='headerBg'){
+            if(type==='bg' || type==='card' || type==='imgBg' || type==='headerBg'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
               if(type==='card'){
                 const shadowColor = sc ? sc.value : null;
@@ -4281,7 +4278,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','headerBg','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
+      ['bg','card','imgBg','headerBg','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4295,7 +4292,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(c || f || s || v || w || sc){
           const entry = {};
           if(c){ entry.color = c.value; }
-          if((['bg','card','headerBg','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
+          if((['bg','card','imgBg','headerBg','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
           if(v){ entry.value = v.value; }
           if(f){ entry.font = f.value; }
           if(s){ entry.size = s.value; }
@@ -4394,7 +4391,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const sb = document.getElementById(`${areaKey}-${type}-shadow-blur`);
         const v = document.getElementById(`${areaKey}-${type}`);
         if(c && val.color){ c.value = val.color; }
-        if((['bg','card','headerBg','border','hoverBorder','activeBorder'].includes(type)) && o && val.opacity!==undefined){ o.value = val.opacity; }
+        if((['bg','card','imgBg','headerBg','border','hoverBorder','activeBorder'].includes(type)) && o && val.opacity!==undefined){ o.value = val.opacity; }
         if(v && val.value!==undefined){ v.value = val.value; }
         if(f && val.font){ f.value = val.font; }
         if(s && val.size){ s.value = val.size; }
