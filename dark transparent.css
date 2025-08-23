@@ -7,10 +7,10 @@
 .header button{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header .gear{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.res-head{background-color:rgba(0,0,0,0);}
-.res-head{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.res-head button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-.res-head button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.subheader{background-color:rgba(0,0,0,0);}
+.subheader{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
+.subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 body{background-color:rgba(41,41,41,1);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
@@ -25,16 +25,16 @@ body{background-color:rgba(41,41,41,1);}
 .res-list .sq{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .tiny{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .btn{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.posts-mode{background-color:rgba(0,0,0,0);}
-.posts-mode .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-.posts-mode .detail-inline{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
-.posts-mode{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.posts-mode .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.posts-mode .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.posts-mode .detail-inline .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.posts-mode .detail-inline .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.posts-mode button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
-.posts-mode button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts{background-color:rgba(0,0,0,0);}
+.closed-posts .card{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+.closed-posts .detail-inline{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
+.closed-posts{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts .detail-inline .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts .detail-inline .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
+.closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 footer{background-color:rgba(0,0,0,0);}
 footer .foot-row .foot-item{background-color:rgba(0,0,0,0.35);box-shadow:0 0 0px #000000;}
 footer{color:#d1d1d1;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
