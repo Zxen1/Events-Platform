@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Events Platform</title>
-  <style>:root{
+  <style id="theme-default">
+:root{
   --header-h: 72px;
   --panel-w: 260px;
   --results-w: 520px;
@@ -13,29 +14,68 @@
   --ink-d: #555;
   --gold: #ffc107;
   --muted: #777;
-    --primary: #333;
-    --secondary: #fff;
-    --accent: #e0e0e0;
-    --background: #f5f5f5;
-    --text: #333;
-    --button-text: #333;
-    --button-hover-text: #333;
-    --btn: var(--secondary);
-    --btn-hover: var(--accent);
-    --btn-active: var(--accent);
-    --btn-2: var(--btn-hover);
-    --modal-bg: rgba(0,0,0,0.7);
-    --modal-text: #fff;
-    --footer-h: 70px;
-    --list-background: rgba(255,255,255,1);
-    --scrollbar-track: transparent;
-    --scrollbar-thumb: rgba(0,0,0,0.3);
-    --scrollbar-thumb-hover: rgba(0,0,0,0.5);
-    --border: rgba(255,255,255,1);
-    --border-hover: rgba(224,224,224,1);
-    --border-active: rgba(213,213,213,1);
+  --primary: #333;
+  --secondary: #fff;
+  --accent: #e0e0e0;
+  --background: #f5f5f5;
+  --text: #333;
+  --button-text: #333;
+  --button-hover-text: #333;
+  --btn: var(--secondary);
+  --btn-hover: var(--accent);
+  --btn-active: var(--accent);
+  --btn-2: var(--btn-hover);
+  --modal-bg: rgba(0,0,0,0.7);
+  --modal-text: #fff;
+  --footer-h: 70px;
+  --list-background: rgba(255,255,255,1);
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(0,0,0,0.3);
+  --scrollbar-thumb-hover: rgba(0,0,0,0.5);
+  --border: rgba(255,255,255,1);
+  --border-hover: rgba(224,224,224,1);
+  --border-active: rgba(213,213,213,1);
 }
-
+  </style>
+  <style id="theme-dark" disabled>
+:root{
+  --ink: #eee;
+  --ink-d: #aaa;
+  --primary: #eeeeee;
+  --secondary: #222222;
+  --accent: #444444;
+  --background: #222222;
+  --text: #eeeeee;
+  --button-text: #eeeeee;
+  --button-hover-text: #eeeeee;
+  --btn: #444444;
+  --btn-hover: #555555;
+  --btn-active: #555555;
+  --border: rgba(34,34,34,1);
+  --border-hover: rgba(68,68,68,1);
+  --border-active: rgba(85,85,85,1);
+}
+  </style>
+  <style id="theme-ocean" disabled>
+:root{
+  --ink: #006064;
+  --ink-d: #004d56;
+  --primary: #006064;
+  --secondary: #e0f7fa;
+  --accent: #00838f;
+  --background: #e0f7fa;
+  --text: #006064;
+  --button-text: #006064;
+  --button-hover-text: #006064;
+  --btn: #00838f;
+  --btn-hover: #00acc1;
+  --btn-active: #00acc1;
+  --border: rgba(224,247,250,1);
+  --border-hover: rgba(0,131,143,1);
+  --border-active: rgba(0,172,193,1);
+}
+  </style>
+  <style>
 *{
   box-sizing: border-box;
   scrollbar-width: thin;
@@ -1917,6 +1957,7 @@ footer .foot-row .foot-item img {
           <div class="preset-actions">
             <input id="newPresetName" type="text" placeholder="Name of your new theme" />
             <button type="button" id="savePreset">Save Theme</button>
+            <button type="button" id="downloadCssBtn">Download CSS</button>
           </div>
           <div class="modal-field" id="baseColorRow">
             <div class="history-group">
@@ -3598,6 +3639,30 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
   }
 
+  function applyThemeVars(theme){
+    const vars = {
+      '--primary': theme.primary,
+      '--secondary': theme.secondary,
+      '--accent': theme.accent,
+      '--background': theme.background,
+      '--text': theme.text,
+      '--btn': theme.secondary,
+      '--btn-hover': theme.accent,
+      '--btn-active': theme.accent,
+      '--ink': theme.text,
+      '--ink-d': theme.text,
+      '--button-text': theme.buttonText,
+      '--button-hover-text': theme.buttonHoverText
+    };
+    const styleEl = document.getElementById('theme-vars') || (()=>{
+      const s = document.createElement('style');
+      s.id = 'theme-vars';
+      document.head.appendChild(s);
+      return s;
+    })();
+    styleEl.textContent = `:root{${Object.entries(vars).map(([k,v])=>`${k}:${v}`).join(';')}}`;
+  }
+
   function spreadTheme(theme){
     colorAreas.forEach(area=>{
       const set = (type,val)=>{
@@ -4080,6 +4145,55 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     return data;
   }
 
+  function generateCssFromTheme(data){
+    const css = [];
+    ['border','hoverBorder','activeBorder'].forEach(type=>{
+      const entry = data[`body-${type}`];
+      if(entry && entry.color){
+        const rgba = hexToRgba(entry.color, entry.opacity || 1);
+        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+        css.push(`:root{${varMap[type]}:${rgba};}`);
+      }
+    });
+    colorAreas.forEach(area=>{
+      ['bg','card','text','title','btn','btnText'].forEach(type=>{
+        const entry = data[`${area.key}-${type}`];
+        if(!entry) return;
+        const selectors = area.selectors[type] || [];
+        selectors.forEach(sel=>{
+          let rule = `${sel}{`;
+          if(type==='bg' || type==='card'){
+            if(entry.color) rule += `background-color:${hexToRgba(entry.color, entry.opacity||1)};`;
+            if(type==='card' && entry.shadow && entry.shadow.color){
+              const blur = entry.shadow.blur || 0;
+              rule += `box-shadow:0 0 ${blur}px ${entry.shadow.color};`;
+            }
+          } else if(type==='text' || type==='btnText' || type==='title'){
+            if(entry.color) rule += `color:${entry.color};`;
+            if(entry.font) rule += `font-family:${entry.font};`;
+            if(entry.size) rule += `font-size:${entry.size}px;`;
+            if(entry.weight) rule += `font-weight:${entry.weight};`;
+            if(entry.shadow && entry.shadow.color){
+              const x = entry.shadow.x||0;
+              const y = entry.shadow.y||0;
+              const blur = entry.shadow.blur||0;
+              rule += `text-shadow:${x}px ${y}px ${blur}px ${entry.shadow.color};`;
+            }
+          } else if(type==='btn'){
+            if(entry.color) rule += `background-color:${entry.color};border-color:${entry.color};`;
+            if(entry.shadow && entry.shadow.color){
+              const blur = entry.shadow.blur||0;
+              rule += `box-shadow:0 0 ${blur}px ${entry.shadow.color};`;
+            }
+          }
+          rule += '}';
+          css.push(rule);
+        });
+      });
+    });
+    return css.join('\n');
+  }
+
   function updateHistoryButtons(){
     if(undoBtn) undoBtn.disabled = undoStack.length === 0;
     if(redoBtn) redoBtn.disabled = redoStack.length === 0;
@@ -4116,15 +4230,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     builtInPresets.push({name:'Ocean', data: ocean});
 
-    return fetch('beige%20transparency%20theme.txt')
-      .then(res => res.json())
-      .then(json => {
-        const beige = json[0];
-        if(beige && beige.data){
-          builtInPresets.push({ name: beige.name || 'Beige Transparency', data: beige.data });
-        }
-      })
-      .catch(() => {});
+    return Promise.resolve();
   }
 
   function updatePresetOptions(){
@@ -4476,19 +4582,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     redoStack.length = 0;
     const base = baseColorInput.value;
     const theme = generateTheme(base);
-    const root = document.documentElement;
-    root.style.setProperty('--primary', theme.primary);
-    root.style.setProperty('--secondary', theme.secondary);
-    root.style.setProperty('--accent', theme.accent);
-    root.style.setProperty('--background', theme.background);
-    root.style.setProperty('--text', theme.text);
-    root.style.setProperty('--btn', theme.secondary);
-    root.style.setProperty('--btn-hover', theme.accent);
-    root.style.setProperty('--btn-active', theme.accent);
-    root.style.setProperty('--ink', theme.text);
-    root.style.setProperty('--ink-d', theme.text);
-    root.style.setProperty('--button-text', theme.buttonText);
-    root.style.setProperty('--button-hover-text', theme.buttonHoverText);
+    applyThemeVars(theme);
     updateFields(theme);
     spreadTheme(theme);
     syncAdminControls();
@@ -4511,6 +4605,17 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     applyPresetData(next);
     currentState = JSON.parse(JSON.stringify(next));
     updateHistoryButtons();
+  });
+
+  const downloadCssBtn = document.getElementById('downloadCssBtn');
+  downloadCssBtn && downloadCssBtn.addEventListener('click', ()=>{
+    const css = generateCssFromTheme(collectThemeValues());
+    const blob = new Blob([css], {type:'text/css'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'theme.css';
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
 
   const fieldBindings = {

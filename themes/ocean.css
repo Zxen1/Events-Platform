@@ -1,0 +1,17 @@
+:root{
+  --ink: #006064;
+  --ink-d: #004d56;
+  --primary: #006064;
+  --secondary: #e0f7fa;
+  --accent: #00838f;
+  --background: #e0f7fa;
+  --text: #006064;
+  --button-text: #006064;
+  --button-hover-text: #006064;
+  --btn: #00838f;
+  --btn-hover: #00acc1;
+  --btn-active: #00acc1;
+  --border: rgba(224,247,250,1);
+  --border-hover: rgba(0,131,143,1);
+  --border-active: rgba(0,172,193,1);
+}
