@@ -2605,16 +2605,23 @@ function imgHero(pOrId){
       applyFilters();
     });
 
-    rangePicker = new Litepicker({
-      element: document.getElementById('datePicker'),
-      inlineMode: true,
-      singleMode: false,
-      onSelect: (start, end)=>{
-        $('#dateInput').value = start && end ? `${start.format('ddd D MMM')} to ${end.format('ddd D MMM')}` : '';
-        $('#dateInput').dataset.range = start && end ? `${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}` : '';
-        applyFilters();
-      }
-    });
+    if (window.Litepicker) {
+      rangePicker = new Litepicker({
+        element: document.getElementById('datePicker'),
+        inlineMode: true,
+        singleMode: false,
+        onSelect: (start, end) => {
+          const fmt = d => d ? d.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' }) : '';
+          const iso = d => d ? d.toISOString().split('T')[0] : '';
+          const hasRange = start && end;
+          $('#dateInput').value = hasRange ? `${fmt(start)} to ${fmt(end)}` : '';
+          $('#dateInput').dataset.range = hasRange ? `${iso(start)} to ${iso(end)}` : '';
+          applyFilters();
+        }
+      });
+    } else {
+      console.warn('Litepicker failed to load');
+    }
 
     $('#kwInput').addEventListener('input', applyFilters);
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
@@ -2739,7 +2746,13 @@ function imgHero(pOrId){
         applySky(skyStyle);
       });
       function loadPosts(){ if(postsLoaded) return; addPostSource(); applyFilters(); postsLoaded = true; }
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; if(spinEnabled) startSpin(); else loadPosts(); updatePostPanel(); });
+      map.on('load', () => {
+        $('.map-overlay').style.display = 'none';
+        loadPosts();
+        lockMap(false);
+        if (spinEnabled) startSpin();
+        updatePostPanel();
+      });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
         map.on('pitch', () => {
