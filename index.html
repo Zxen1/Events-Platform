@@ -2634,6 +2634,8 @@ function imgHero(pOrId){
       element: $('#datePicker'),
       inlineMode: true,
       singleMode: false,
+      format: 'ddd D MMM',
+      lang: 'en-GB',
       setup: (picker) => {
         picker.on('selected', (start, end) => {
           if(start && end){
@@ -3482,7 +3484,15 @@ function imgHero(pOrId){
       const calDiv = detail.querySelector('.calendar-container');
       let calPicker = null;
       if(calDiv && p.dates && p.dates.length){
-        calPicker = new Litepicker({ element: calDiv, inlineMode: true, singleMode: true, highlightedDays: p.dates, startDate: p.dates[0] });
+        calPicker = new Litepicker({
+          element: calDiv,
+          inlineMode: true,
+          singleMode: true,
+          highlightedDays: p.dates.map(d=>new Date(d)),
+          startDate: new Date(p.dates[0]),
+          format: 'ddd D MMM',
+          lang: 'en-GB'
+        });
         const calEl = calDiv.querySelector('.litepicker');
         if(calEl){
           calEl.addEventListener('pointerdown', e=>{
@@ -3498,7 +3508,7 @@ function imgHero(pOrId){
         p.dates.forEach(d=>{ const opt=document.createElement('option'); opt.value=d; opt.textContent=formatDateStr(d); dateSel.appendChild(opt); });
         dateSel.value = p.dates[0];
         if(calPicker){
-          dateSel.addEventListener('change', ()=> calPicker.setDate(dateSel.value));
+          dateSel.addEventListener('change', ()=> calPicker.setDate(new Date(dateSel.value)));
         }
       }
     }
@@ -3529,7 +3539,7 @@ function imgHero(pOrId){
         if(e.key==='ArrowRight'){ e.preventDefault(); show(i+1); }
         if(e.key==='ArrowLeft'){ e.preventDefault(); show(i-1); }
       }
-      modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
+      modal.addEventListener('click',e=>{ if(e.target !== img) close(); });
       img.addEventListener('click',e=>{
         const rect = img.getBoundingClientRect();
         const x = e.clientX - rect.left;
