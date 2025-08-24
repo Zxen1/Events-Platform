@@ -1107,10 +1107,10 @@ select option:hover{
   margin-top:8px;
 }
 
-.open-posts .location-section .map-container{width:400px;}
+.open-posts .location-section .map-container{width:300px;}
 
 .open-posts .post-map{
-  width:400px;
+  width:300px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1789,6 +1789,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="input"><input id="dateInput" type="text" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
+          </div>
+          <div class="field">
+            <label><input id="todayToggle" type="checkbox" checked /> Today Onwards</label>
           </div>
           <div id="datePicker"></div>
 
@@ -2563,15 +2566,16 @@ function makePosts(){
             const eDisp = end.format('ddd D MMM');
             input.value = `${sDisp} to ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
+            $('#todayToggle').checked = false;
           } else {
-            input.value = '';
+            input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
             input.dataset.range = '';
           }
           applyFilters();
         });
         picker.on('clear:selection', () => {
           const input = $('#dateInput');
-          input.value = '';
+          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
           input.dataset.range = '';
           applyFilters();
         });
@@ -2582,15 +2586,35 @@ function makePosts(){
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
       if(input){
-        input.value='';
-        input.focus();
         if(input.id==='dateInput'){
           input.dataset.range='';
           if(datePicker) datePicker.clearSelection();
+          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
+        } else {
+          input.value='';
         }
+        input.focus();
         applyFilters();
       }
     }));
+
+    const todayToggle = $('#todayToggle');
+    if(todayToggle){
+      todayToggle.addEventListener('change', ()=>{
+        const input = $('#dateInput');
+        if(todayToggle.checked){
+          if(!input.dataset.range && !input.value.trim()){
+            input.value = 'Today Onwards';
+          }
+        } else {
+          if(input.value === 'Today Onwards') input.value = '';
+        }
+        applyFilters();
+      });
+      if(todayToggle.checked){
+        $('#dateInput').value = 'Today Onwards';
+      }
+    }
 
     function setMode(m){
       mode = m;
@@ -3026,7 +3050,8 @@ function makePosts(){
         prioritizeVisibleImages();
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatDateStr(s){ return new Date(s).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,''); }
+    function formatDates(d){ if(!d||!d.length) return ''; const first = formatDateStr(d[0]); if(d.length===1) return first; return `${first} + ${d.length-1} more`; }
 
     function prioritizeVisibleImages(){
       const roots = [resultsEl, postsWideEl];
@@ -3238,8 +3263,8 @@ function makePosts(){
       const container = target.closest('.closed-posts');
       if(container){
         if(!fromPosts){
-          const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
+          container.prepend(target);
+          container.scrollTop = 0;
         }
       } else {
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
@@ -3252,8 +3277,7 @@ function makePosts(){
 
       if(container){
         if(!fromPosts){
-          const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
+          container.scrollTop = 0;
         }
         ensureGap(container, detail);
       } else {
@@ -3365,6 +3389,7 @@ function makePosts(){
       let map, marker, picker;
       function updateLocation(idx){
         const loc = p.locations[idx];
+        loc.dates.sort((a,b)=> a.full.localeCompare(b.full));
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(!map){
           map = new mapboxgl.Map({
@@ -3382,7 +3407,12 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
         setTimeout(()=> map.resize(),0);
-        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
+        const maxLen = loc.dates.reduce((m,d)=> Math.max(m, d.date.length), 0);
+        sessSelect.style.fontFamily = 'monospace';
+        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> {
+          const label = `${d.date.padEnd(maxLen,' ')} ${d.time}`.replace(/ /g,'\u00A0');
+          return `<option value="${i}">${label}</option>`;
+        }).join('');
         sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
         sessSelect.value = '';
       }
@@ -3413,14 +3443,19 @@ function makePosts(){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
-      if(!raw){
-        return true;
-      }
+      const val = $('#dateInput').dataset.range || $('#dateInput').value.trim();
+      const raw = val === 'Today Onwards' ? '' : val;
+      const todayOnwards = $('#todayToggle').checked;
       let start, end;
-      const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
-      if(parts[0]) start = new Date(parts[0]);
-      if(parts[1]) end = new Date(parts[1]);
+      if(raw){
+        const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
+        if(parts[0]) start = new Date(parts[0]);
+        if(parts[1]) end = new Date(parts[1]);
+      } else if(todayOnwards){
+        start = new Date();
+        start.setHours(0,0,0,0);
+      }
+      if(!start && !end) return true;
       return p.dates.some(d => {
         const dt = new Date(d);
         if(start && dt < start) return false;
