@@ -3452,7 +3452,6 @@ function makePosts(){
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
         setTimeout(()=> map.resize(),0);
         const maxLen = loc.dates.reduce((m,d)=> Math.max(m, d.date.length), 0);
-        sessSelect.style.fontFamily = 'monospace';
         sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> {
           const label = `${d.date.padEnd(maxLen,' ')} ${d.time}`.replace(/ /g,'\u00A0');
           return `<option value="${i}">${label}</option>`;
