@@ -96,6 +96,12 @@ body{
   color: var(--text);
   overflow: hidden;
   cursor: default;
+  caret-color: transparent;
+}
+
+input,
+textarea{
+  caret-color: auto;
 }
 
 button,
@@ -809,6 +815,12 @@ select option:hover{
   align-items: center;
   gap: 8px;
   margin-left: auto;
+}
+
+.fav-toggle{
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .res-list{
@@ -1693,11 +1705,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <div class="res-actions">
             <select id="sortSelect" aria-label="Sort order">
-              <option value="favaz">Favourites, A - Z</option>
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
             </select>
+            <label class="fav-toggle"><input type="checkbox" id="favToggle" /> Favourites on top</label>
           </div>
         </div>
         <div class="res-list" id="results"></div>
@@ -2099,7 +2111,7 @@ function buildClusterListHTML(items){
     let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
     arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
   }
-  if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
+  if($('#favToggle').checked) arr.sort((a,b)=> (b.fav - a.fav));
   const list = arr.map(p => {
     return `
       <div class="multi-item" data-id="${p.id}">
@@ -2531,6 +2543,7 @@ function makePosts(){
       }
     });
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
+    $('#favToggle').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
       if(input){
@@ -2965,7 +2978,7 @@ function makePosts(){
         let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
         arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
       }
-      if(sort==='favaz') arr.sort((a,b)=> (b.fav-a.fav) || a.title.localeCompare(b.title));
+      if($('#favToggle').checked) arr.sort((a,b)=> (b.fav - a.fav));
 
         resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
