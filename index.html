@@ -4831,6 +4831,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     styleEl.textContent = css;
   }
 
+  cssEditor && cssEditor.addEventListener('input', ()=>{
+    applyCustomCss(cssEditor.value);
+  });
+
   function updatePresetOptions(){
     const sel = document.getElementById('themePreset');
     if(!sel) return;
@@ -5222,16 +5226,23 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   });
 
   saveCssBtn && saveCssBtn.addEventListener('click', ()=>{
-    const css = generateCss(collectThemeValues());
-    cssEditor.value = css;
+    undoStack.push(JSON.parse(JSON.stringify(currentState)));
+    redoStack.length = 0;
+    const css = cssEditor.value;
+    applyCustomCss(css);
+    syncAdminControls();
+    const data = collectThemeValues();
+    currentState = JSON.parse(JSON.stringify(data));
     const idx = parseInt(presetSelect.value, 10);
     const p = presets[idx];
     if(p){
+      p.data = data;
       p.css = css;
       localStorage.setItem('themePresets', JSON.stringify(presets.slice(1)));
     }
     localStorage.setItem('currentThemeCss', css);
-    applyCustomCss(css);
+    localStorage.setItem('currentTheme', JSON.stringify(data));
+    updateHistoryButtons();
   });
 
   const baseColorInput = document.getElementById('baseColor');
