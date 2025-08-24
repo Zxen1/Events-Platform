@@ -995,7 +995,7 @@ select option:hover{
 
 .open-posts-sticky-header .open-posts,
 .open-posts-sticky-images .open-posts{
-  overflow:visible;
+  overflow:hidden;
 }
 
 .open-posts .detail-header{
@@ -1106,10 +1106,11 @@ select option:hover{
   margin-top:8px;
 }
 
-.open-posts .location-section .map-container{width:400px;}
+
+.open-posts .location-section .map-container{width:300px;}
 
 .open-posts .post-map{
-  width:400px;
+  width:300px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1789,6 +1790,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
+          <div class="today-toggle"><label><input id="todayToggle" type="checkbox" checked /> Today Onwards</label></div>
           <div id="datePicker"></div>
 
           <h3>Categories</h3>
@@ -2023,7 +2025,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     const startZoom = savedView?.zoom || 1.5;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
-      let map, geocoder, spinning = false, datePicker,
+      let map, geocoder, spinning = false, datePicker, todayToggle,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -2257,6 +2259,7 @@ const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","S
 const __HOOK = ["at Dusk","of Ideas","in Motion","for Everyone","Remix","Live","Reborn","MKII","Redux","Infinite","Prime","Pulse","Wave","Future","Now","Unlocked","Extended","Panorama","Unbound","Edition","Run","Sequence"];
 function __rng(seed){ let s = seed|0; return ()=> (s = (s*1664525 + 1013904223)>>>0); }
 const __USED_BIGRAMS = new Set();
+const __USED_FIRST_WORDS = new Set();
 function uniqueTitle(seed, cityName, idx){
   // Deterministic RNG with attempt salt for conflict resolution
   const base = (seed||0) ^ ((idx||0)*99991);
@@ -2287,6 +2290,9 @@ function uniqueTitle(seed, cityName, idx){
     // any bigram seen before globally?
     const b = bigrams(lc);
     for(const bg of b){ if(__USED_BIGRAMS.has(bg)) return true; }
+    // first meaningful word unique (excluding articles)
+    const first = lc.find(w => !['a','an','the'].includes(w));
+    if(!first || __USED_FIRST_WORDS.has(first)) return true;
 
     return false;
   };
@@ -2347,6 +2353,8 @@ function uniqueTitle(seed, cityName, idx){
   // Commit global constraints
   const ws = lower(normalize(title));
   for(let i=0;i<ws.length-1;i++){ __USED_BIGRAMS.add(ws[i]+" "+ws[i+1]); }
+  const first = ws.find(w => !['a','an','the'].includes(w));
+  if(first) __USED_FIRST_WORDS.add(first);
 
   return title;
 }function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
@@ -2378,7 +2386,7 @@ function uniqueTitle(seed, cityName, idx){
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
       return {date, time, full: d.toISOString().slice(0,10)};
-    });
+    }).sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
   }
 
   function randomLocation(city, baseLng=0, baseLat=0){
@@ -2422,7 +2430,7 @@ function makePosts(){
     const id = 'FS'+i;
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`,
+      title: uniqueTitle(i*7777+13, fsCity, i),
       city: fsCity,
       lng: fsLng, lat: fsLat,
       category: cat.name,
@@ -2490,7 +2498,7 @@ function makePosts(){
     const id = 'WW'+i;
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*9343+19, hub.c, i)}`,
+      title: uniqueTitle(i*9343+19, hub.c, i),
       city: hub.c,
       lng: hub.lng + jitter(),
       lat: hub.lat + jitter(),
@@ -2538,44 +2546,73 @@ function makePosts(){
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
-      $('#dateInput').value='';
-      $('#dateInput').dataset.range='';
-      if(datePicker) datePicker.clearSelection();
+      if(todayToggle){ todayToggle.checked = true; }
+      setTodayDefault();
       if(geocoder) geocoder.clear();
       applyFilters();
     });
 
     $('#kwInput').addEventListener('input', applyFilters);
-    $('#dateInput').addEventListener('input', applyFilters);
+    const dateInput = $('#dateInput');
+    todayToggle = $('#todayToggle');
+    const setTodayDefault = () => {
+      const today = new Date();
+      const iso = today.toISOString().slice(0,10);
+      dateInput.value = 'Today Onwards';
+      dateInput.dataset.range = `${iso} to`;
+      if(datePicker){
+        datePicker.setOptions({ minDate: today });
+        datePicker.clearSelection();
+      }
+      applyFilters();
+    };
+    if(todayToggle && todayToggle.checked) setTodayDefault();
+    dateInput.addEventListener('input', applyFilters);
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
       singleMode: false,
       format: 'ddd D MMM',
+      minDate: todayToggle && todayToggle.checked ? new Date() : null,
       setup: (picker) => {
         picker.on('selected', (start, end) => {
-          const input = $('#dateInput');
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
             const sDisp = start.format('ddd D MMM');
             const eDisp = end.format('ddd D MMM');
-            input.value = `${sDisp} to ${eDisp}`;
-            input.dataset.range = `${sIso} to ${eIso}`;
+            dateInput.value = `${sDisp} to ${eDisp}`;
+            dateInput.dataset.range = `${sIso} to ${eIso}`;
+            if(todayToggle){ todayToggle.checked = false; datePicker.setOptions({minDate: null}); }
           } else {
-            input.value = '';
-            input.dataset.range = '';
+            dateInput.value = '';
+            dateInput.dataset.range = '';
           }
           applyFilters();
         });
         picker.on('clear:selection', () => {
-          const input = $('#dateInput');
-          input.value = '';
-          input.dataset.range = '';
-          applyFilters();
+          if(todayToggle && todayToggle.checked){
+            setTodayDefault();
+          } else {
+            dateInput.value = '';
+            dateInput.dataset.range = '';
+            applyFilters();
+          }
         });
       }
     });
+    if(todayToggle){
+      todayToggle.addEventListener('change',()=>{
+        if(todayToggle.checked){
+          setTodayDefault();
+        } else {
+          dateInput.value='';
+          dateInput.dataset.range='';
+          if(datePicker){ datePicker.setOptions({minDate:null}); datePicker.clearSelection(); }
+          applyFilters();
+        }
+      });
+    }
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $('#favToggle').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
@@ -2584,8 +2621,12 @@ function makePosts(){
         input.value='';
         input.focus();
         if(input.id==='dateInput'){
-          input.dataset.range='';
-          if(datePicker) datePicker.clearSelection();
+          if(todayToggle && todayToggle.checked){
+            setTodayDefault();
+          } else {
+            input.dataset.range='';
+            if(datePicker) datePicker.clearSelection();
+          }
         }
         applyFilters();
       }
@@ -3025,7 +3066,12 @@ function makePosts(){
         prioritizeVisibleImages();
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatDates(d){
+      if(!d||!d.length) return '';
+      const fmt = ds => new Date(ds).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      if(d.length===1) return fmt(d[0]);
+      return `${fmt(d[0])} + ${d.length-1} more`;
+    }
 
     function prioritizeVisibleImages(){
       const roots = [resultsEl, postsWideEl];
@@ -3361,7 +3407,7 @@ function makePosts(){
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
-      let map, marker, picker;
+      let map, marker, picker, currentDates = [];
       function updateLocation(idx){
         const loc = p.locations[idx];
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
@@ -3379,9 +3425,11 @@ function makePosts(){
           marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
-        picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
+        const sortedDates = [...loc.dates].sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+        currentDates = sortedDates;
+        picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: sortedDates.map(d=>d.full) });
         setTimeout(()=> map.resize(),0);
-        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
+        sessSelect.innerHTML = '<option value="">Select session</option>' + sortedDates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
         sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
         sessSelect.value = '';
       }
@@ -3392,8 +3440,7 @@ function makePosts(){
         }
         sessSelect.addEventListener('change', e=>{
           const locIdx = locSelect ? parseInt(locSelect.value,10) : 0;
-          const loc = p.locations[locIdx];
-          const dt = loc.dates[parseInt(e.target.value,10)];
+          const dt = currentDates[parseInt(e.target.value,10)];
           if(dt){
             sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
           } else {
