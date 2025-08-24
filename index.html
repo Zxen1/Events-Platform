@@ -148,6 +148,9 @@ textarea::placeholder{
 .field label{
   color: var(--dropdown-text);
 }
+#filterModal .field label{
+  color: inherit;
+}
 
 select{
   background: var(--dropdown-bg);
@@ -704,11 +707,10 @@ select option:hover{
 
 .litepicker{
   background: var(--btn);
-  color: var(--ink);
   border: 1px solid var(--border);
   border-radius: 12px;
 }
-.litepicker *{
+.litepicker .day-item{
   color: var(--ink);
 }
 .litepicker .day-item.is-start-date,
@@ -3739,7 +3741,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
+    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], catText:['#filterModal .cat .bar .label'], subText:['#filterModal .sub .chip']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
   ];
@@ -3790,7 +3792,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
-  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn'};
+  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn', catText:'btn', subText:'btn'};
 
   function updateTextPicker(areaKey, type){
     const picker = document.getElementById(`${areaKey}-${type}-picker`);
@@ -3981,7 +3983,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -4020,14 +4022,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const cs = getComputedStyle(el);
           if(cInput){
             if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image') col = cs.backgroundColor;
-            else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
+            else if(type === 'text' || type === 'btnText' || type === 'title' || type === 'catText' || type === 'subText') col = cs.color;
             else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
           if(weightSel) weight = cs.fontWeight;
           if(shColor){
-            if(type==='text' || type==='title' || type==='btnText') shadow = cs.textShadow;
+            if(type==='text' || type==='title' || type==='btnText' || type==='catText' || type==='subText') shadow = cs.textShadow;
             else if(type==='card' || type==='btn') shadow = cs.boxShadow;
           }
           return true;
@@ -4053,7 +4055,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           weightSel.value = parseInt(weight,10) >= 600 ? 'bold' : 'normal';
         }
         if(shColor && shadow && shadow !== 'none'){
-          if(type==='text' || type==='title' || type==='btnText'){
+          if(type==='text' || type==='title' || type==='btnText' || type==='catText' || type==='subText'){
             const m = shadow.match(/(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
             if(m){
               shX.value = m[1];
@@ -4076,7 +4078,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           v.value = currentState[`${area.key}-${type}`].value;
         }
       });
-      ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
+      ['text','title','btnText','catText','subText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
@@ -4192,7 +4194,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const toV = document.getElementById(`${area.key}-${type}`);
           if(fromV && toV){ toV.value = fromV.value; }
         });
-        ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
+        ['text','title','btnText','catText','subText'].forEach(t=> updateTextPicker(area.key, t));
         applyAdmin();
       });
       const txtBtn = document.createElement('button');
@@ -4202,7 +4204,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       txtBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['text','title','btnText'].forEach(type=>{
+        ['text','title','btnText','catText','subText'].forEach(type=>{
           const fields = ['c','font','size','weight','shadow-color','shadow-x','shadow-y','shadow-blur'];
           fields.forEach(suf=>{
             const from = document.getElementById(`${lastFieldsetKey}-${type}-${suf}`);
@@ -4246,6 +4248,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
       if(area.selectors.header) types.push('header');
       if(area.selectors.image) types.push('image');
+      if(area.selectors.catText) types.push('catText');
+      if(area.selectors.subText) types.push('subText');
         types.forEach(type=>{
           const labelMap = {
             bg: 'Background',
@@ -4254,6 +4258,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             title: 'Title',
             btn: 'Button',
             btnText: 'Button Text',
+            catText: 'Category Text',
+            subText: 'Subcategory Text',
             border: 'Border',
             hoverBorder: 'Hover Border',
             activeBorder: 'Active Border',
@@ -4263,7 +4269,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             image: 'Image Box'
           };
           const label = labelMap[type] || type;
-        if(type === 'text' || type === 'title' || type === 'btnText'){
+        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'catText' || type === 'subText'){
           const row = document.createElement('div');
           row.className = 'control-row';
           const labelEl = document.createElement('label');
@@ -4536,7 +4542,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4562,7 +4568,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
                 const blur = sb ? sb.value : 0;
                 if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
               }
-            } else if(type==='text' || type==='btnText' || type==='title'){
+            } else if(type==='text' || type==='btnText' || type==='title' || type==='catText' || type==='subText'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -4636,7 +4642,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4745,7 +4751,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','header','image'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
@@ -4760,7 +4766,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const s = entry.shadow; const blur = s.blur || 0;
             rules.push(`box-shadow:0 0 ${blur}px ${s.color};`);
           }
-        } else if(type==='text' || type==='title' || type==='btnText'){
+        } else if(type==='text' || type==='title' || type==='btnText' || type==='catText' || type==='subText'){
           if(entry.color) rules.push(`color:${entry.color};`);
           if(entry.font) rules.push(`font-family:${entry.font};`);
           if(entry.size) rules.push(`font-size:${entry.size}px;`);
