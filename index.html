@@ -6,8 +6,6 @@
   <title>Events Platform</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>:root{
   --header-h: 72px;
   --panel-w: 260px;
@@ -678,6 +676,22 @@ select option:hover{
 .tiny svg{
   width: 18px;
   height: 18px;
+}
+
+.litepicker{
+  background: var(--btn);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.litepicker *{
+  color: var(--ink);
+}
+.litepicker .day-item.is-start-date,
+.litepicker .day-item.is-end-date,
+.litepicker .day-item.is-in-range{
+  background: var(--accent);
+  color: var(--button-hover-text);
 }
 
 .cats{
@@ -3335,22 +3349,27 @@ function makePosts(){
         const loc = p.locations[idx];
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(!map){
-          map = L.map(mapEl).setView([loc.lat, loc.lng], 13);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
-          marker = L.marker([loc.lat, loc.lng]).addTo(map);
+          map = new mapboxgl.Map({
+            container: mapEl,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [loc.lng, loc.lat],
+            zoom: 13,
+            interactive: false
+          });
+          marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
         } else {
-          map.setView([loc.lat, loc.lng], 13);
-          marker.setLatLng([loc.lat, loc.lng]);
+          map.setCenter([loc.lng, loc.lat]);
+          marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
-        setTimeout(()=> map.invalidateSize(),0);
+        setTimeout(()=> map.resize(),0);
         sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
         sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
         sessSelect.value = '';
       }
       if(mapEl){
-        setTimeout(()=>{ updateLocation(0); if(map) map.invalidateSize(); },0);
+        setTimeout(()=>{ updateLocation(0); if(map) map.resize(); },0);
         if(locSelect){
           locSelect.addEventListener('change', e=> updateLocation(parseInt(e.target.value,10)));
         }
