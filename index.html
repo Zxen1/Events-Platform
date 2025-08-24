@@ -6,6 +6,8 @@
   <title>Events Platform</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+S7sJv0QNXh9gS2wpry9vywgqbiZz05kM1f9x0i3A=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1jGyXus7nEob1jULICwhf66A1VpzwuWgGfp9aggY=" crossorigin=""></script>
   <style>:root{
   --header-h: 72px;
   --panel-w: 260px;
@@ -1037,12 +1039,51 @@ select option:hover{
   line-height:1.2;
 }
 
+.open-posts .detail-header .title-block{
+  display:flex;
+  flex-direction:column;
+}
+
+.open-posts .detail-header .cat-line{
+  font-size:14px;
+  margin-top:4px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
 .open-posts .meta{
   font-size:13px;
   display:flex;
   gap:12px;
   flex-wrap:wrap;
 }
+
+.open-posts .location-section{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:8px;
+}
+
+.open-posts .location-section .map-container{width:200px;}
+
+.open-posts .post-map{
+  width:200px;
+  height:200px;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+
+.open-posts .location-section .calendar-container{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.open-posts .location-info{margin-top:4px;font-size:13px;}
+
+.open-posts .session-info{margin-top:8px;font-size:13px;}
 
 
 
@@ -2117,6 +2158,34 @@ function buildClusterListHTML(items){
       { name:"Auditions", subs:["Film","Theatre","Music"] },
       { name:"Talent",    subs:["Models","Actors","Crew"] }
     ];
+    const subcategoryIcons = {
+      "Screenings":"🎬",
+      "Festivals":"🎉",
+      "Shorts":"📽️",
+      "Indie":"🎞️",
+      "Plays":"🎭",
+      "Musicals":"🎶",
+      "Improv":"🤹",
+      "Gigs":"🎤",
+      "Open Mic":"🎙️",
+      "Classical":"🎼",
+      "Jazz":"🎷",
+      "Ballet":"🩰",
+      "Contemporary":"💃",
+      "Hip Hop":"🕺",
+      "Exhibitions":"🖼️",
+      "Workshops":"🛠️",
+      "Openings":"🚪",
+      "Talks":"🗣️",
+      "Film":"🎥",
+      "Theatre":"🎭",
+      "Music":"🎵",
+      "Dance":"💃",
+      "Photography":"📸",
+      "Gallery":"🏛️",
+      "Auditions":"🎬",
+      "Talent":"⭐"
+    };
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
@@ -2243,19 +2312,22 @@ function uniqueTitle(seed, cityName, idx){
       const d = new Date(+now + Math.floor(rnd()*365)*86400000);
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
-      return {date, time};
+      return {date, time, full: d.toISOString().slice(0,10)};
     });
   }
 
-  function randomLocation(city){
+  function randomLocation(city, baseLng=0, baseLat=0){
     const venue = pick(VENUES);
     const address = `${Math.floor(rnd()*999)+1} ${pick(STREETS)}, ${city}`;
-    return { venue, address, dates: randomSchedule() };
+    const jitter = ()=> (rnd()-0.5) * 0.02;
+    const lng = baseLng + jitter();
+    const lat = baseLat + jitter();
+    return { venue, address, lng, lat, dates: randomSchedule() };
   }
 
-  function randomLocations(city){
+  function randomLocations(city, baseLng=0, baseLat=0){
     const count = 1 + Math.floor(rnd()*5);
-    return Array.from({length:count}, ()=> randomLocation(city));
+    return Array.from({length:count}, ()=> randomLocation(city, baseLng, baseLat));
   }
 
   function randomImages(id){
@@ -2294,7 +2366,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(fsCity),
+      locations: randomLocations(fsCity, fsLng, fsLat),
     });
   }
 
@@ -2363,7 +2435,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(hub.c),
+      locations: randomLocations(hub.c, hub.lng, hub.lat),
     });
   }
   return out;
@@ -3007,7 +3079,10 @@ function makePosts(){
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
         <div class="detail-header">
-          <h2 class="title">${p.title}</h2>
+          <div class="title-block">
+            <h2 class="title">${p.title}</h2>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+          </div>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
@@ -3020,10 +3095,22 @@ function makePosts(){
           <div class="text">
             <div class="meta">
               <span>📍 ${p.city}</span>
-              <span>🏷️ ${p.category} / ${p.subcategory}</span>
             </div>
-            <div class="dates">
-              ${p.dates.map(d=> `<span class="date">${d}</span>`).join('')}
+            <div class="location-section">
+              <div class="map-container">
+                <div id="map-${p.id}" class="post-map"></div>
+                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue} - ${loc.address}</option>`).join('')}</select>` : ``}
+                <div id="loc-info-${p.id}" class="location-info"></div>
+              </div>
+              <div class="calendar-container">
+                <div id="cal-${p.id}" class="post-calendar"></div>
+                <select id="sess-${p.id}" class="session-select">
+                  <option value="">Select session</option>
+                </select>
+                <div id="session-info-${p.id}" class="session-info">
+                  <div class="placeholder">💲 Price range | 📅 Date range</div>
+                </div>
+              </div>
             </div>
             <div class="desc">${p.desc}</div>
           </div>
@@ -3201,6 +3288,46 @@ function makePosts(){
         modalStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
+      const locSelect = el.querySelector(`#loc-${p.id}`);
+      const locInfo = el.querySelector(`#loc-info-${p.id}`);
+      const sessSelect = el.querySelector(`#sess-${p.id}`);
+      const sessionInfo = el.querySelector(`#session-info-${p.id}`);
+      const calendarEl = el.querySelector(`#cal-${p.id}`);
+      const mapEl = el.querySelector(`#map-${p.id}`);
+      let map, marker, picker;
+      function updateLocation(idx){
+        const loc = p.locations[idx];
+        if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
+        if(!map){
+          map = L.map(mapEl).setView([loc.lat, loc.lng], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+          marker = L.marker([loc.lat, loc.lng]).addTo(map);
+        } else {
+          map.setView([loc.lat, loc.lng], 13);
+          marker.setLatLng([loc.lat, loc.lng]);
+        }
+        if(picker){ picker.destroy(); }
+        picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
+        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
+        sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+        sessSelect.value = '';
+      }
+      if(mapEl){
+        updateLocation(0);
+        if(locSelect){
+          locSelect.addEventListener('change', e=> updateLocation(parseInt(e.target.value,10)));
+        }
+        sessSelect.addEventListener('change', e=>{
+          const locIdx = locSelect ? parseInt(locSelect.value,10) : 0;
+          const loc = p.locations[locIdx];
+          const dt = loc.dates[parseInt(e.target.value,10)];
+          if(dt){
+            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+          } else {
+            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+          }
+        });
+      }
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
