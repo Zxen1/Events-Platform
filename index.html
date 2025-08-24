@@ -157,6 +157,10 @@ select{
 .location-select{
   color: var(--dropdown-venue-text);
 }
+
+.location-select option{
+  white-space: pre-line;
+}
 select option{
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
@@ -629,25 +633,45 @@ select option:hover{
 
 .field .input{
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .input input,.input select{
-    width: 100%;
-    height: 40px;
-    border: none;
-    padding: 0 38px 0 12px;
-    outline: 0;
-  }
+  flex: 1;
+  height: 40px;
+  border: none;
+  padding: 0 12px;
+  outline: 0;
+}
 .input input{
-    border-radius: 12px;
-    background: var(--btn);
-    color: var(--ink);
-  }
+  border-radius: 12px;
+  background: var(--btn);
+  color: var(--ink);
+}
 .input select{
-    border-radius: var(--dropdown-radius);
-  }
+  border-radius: var(--dropdown-radius);
+}
 
-.input .x,.input .down{
+.input .x{
+  margin-left: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  cursor: pointer;
+  border: 1px solid var(--btn);
+}
+
+.input .x.active{
+  background: red;
+  border-color: red;
+  color: #fff;
+}
+
+.input .down{
   position: absolute;
   right: 6px;
   top: 50%;
@@ -1739,7 +1763,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="muted">Map area filter active in Map mode</div>
           </div>
           <div class="res-actions">
-            <select id="sortSelect" aria-label="Sort order">
+            <select id="sortSelect" class="location-select" aria-label="Sort order">
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
@@ -2539,18 +2563,29 @@ function makePosts(){
     // Reset
     $('#resetBtn').addEventListener('click',()=>{
       selection.cats.clear(); selection.subs.clear();
-      $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
-      $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value='';
-      $('#dateInput').value='';
-      $('#dateInput').dataset.range='';
-      if(datePicker) datePicker.clearSelection();
-      if(geocoder) geocoder.clear();
-      applyFilters();
-    });
+    $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
+    $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
+    $('#kwInput').value='';
+    $('#dateInput').value='';
+    $('#dateInput').dataset.range='';
+    if(datePicker) datePicker.clearSelection();
+    if(geocoder) geocoder.clear();
+    applyFilters();
+    updateClearButtons();
+  });
 
-    $('#kwInput').addEventListener('input', applyFilters);
-    $('#dateInput').addEventListener('input', applyFilters);
+    function updateClearButtons(){
+      const kw = $('#kwInput');
+      const kwX = kw.parentElement.querySelector('.x');
+      kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      const date = $('#dateInput');
+      const dateX = date.parentElement.querySelector('.x');
+      const hasDate = date.dataset.range || (date.value.trim() && date.value.trim() !== 'Today Onwards');
+      dateX && dateX.classList.toggle('active', !!hasDate);
+    }
+
+    $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
@@ -2572,12 +2607,14 @@ function makePosts(){
             input.dataset.range = '';
           }
           applyFilters();
+          updateClearButtons();
         });
         picker.on('clear:selection', () => {
           const input = $('#dateInput');
           input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
           input.dataset.range = '';
           applyFilters();
+          updateClearButtons();
         });
       }
     });
@@ -2595,6 +2632,7 @@ function makePosts(){
         }
         input.focus();
         applyFilters();
+        updateClearButtons();
       }
     }));
 
@@ -2603,18 +2641,20 @@ function makePosts(){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
         if(todayToggle.checked){
-          if(!input.dataset.range && !input.value.trim()){
-            input.value = 'Today Onwards';
-          }
+          input.dataset.range='';
+          if(datePicker) datePicker.clearSelection();
+          input.value = 'Today Onwards';
         } else {
           if(input.value === 'Today Onwards') input.value = '';
         }
         applyFilters();
+        updateClearButtons();
       });
       if(todayToggle.checked){
         $('#dateInput').value = 'Today Onwards';
       }
     }
+    updateClearButtons();
 
     function setMode(m){
       mode = m;
@@ -3089,6 +3129,8 @@ function makePosts(){
           <div class="info">
             <span class="badge" title="Venue">📍</span>
             <span>${p.city}</span>
+          </div>
+          <div class="info">
             <span class="badge" title="Dates">📅</span>
             <span>${formatDates(p.dates)}</span>
           </div>
@@ -3197,7 +3239,7 @@ function makePosts(){
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <select id="sess-${p.id}" class="session-select">
+                <select id="sess-${p.id}" class="session-select location-select">
                   <option value="">Select session</option>
                 </select>
                 <div id="session-info-${p.id}" class="session-info">
@@ -3426,7 +3468,7 @@ function makePosts(){
           const loc = p.locations[locIdx];
           const dt = loc.dates[parseInt(e.target.value,10)];
           if(dt){
-            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+            sessionInfo.innerHTML = `<div><strong>${dt.date}</strong><br>${dt.time}</div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
           } else {
             sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
           }
