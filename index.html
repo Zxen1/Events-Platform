@@ -3288,12 +3288,14 @@ function makePosts(){
       if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
 
       (function(){
-        const ex = postsWideEl.querySelector('.open-posts');
-        if(ex){
+        const container = document.querySelector('.closed-posts');
+        const openEls = container ? container.querySelectorAll('.open-posts') : [];
+        openEls.forEach(ex => {
           const exId = ex.dataset && ex.dataset.id;
           const prev = posts.find(x=> x.id===exId);
-          if(prev){ ex.replaceWith(card(prev, true)); } else { ex.remove(); }
-        }
+          if(prev){ postsWideEl.prepend(card(prev, true)); }
+          ex.remove();
+        });
       })();
 
       let target = postsWideEl.querySelector(`[data-id="${id}"]`);
