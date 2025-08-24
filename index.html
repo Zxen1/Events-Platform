@@ -152,7 +152,13 @@ textarea::placeholder{
 select{
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
+  border: 1px solid var(--border);
   border-radius: var(--dropdown-radius);
+  padding: 4px 8px;
+  margin: 8px 0;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 .location-select{
   color: var(--dropdown-venue-text);
@@ -707,6 +713,10 @@ select option:hover{
   color: var(--ink);
   border: 1px solid var(--border);
   border-radius: 12px;
+  width: 300px;
+  height: 300px;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 .litepicker *{
   color: var(--ink);
@@ -1601,7 +1611,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .main .map-wrap{
   position: relative;
-  height: 100%;
+  width: 300px;
+  height: 300px;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .main .closed-posts{
@@ -2681,7 +2694,7 @@ function makePosts(){
     $('#tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card, .open-posts')) setMode('map');
+      if(!e.target.closest('.card, .open-posts, .litepicker')) setMode('map');
     });
 
     // Mapbox
