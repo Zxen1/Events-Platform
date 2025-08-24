@@ -638,6 +638,9 @@ select option:hover{
     padding: 0 38px 0 12px;
     outline: 0;
   }
+
+.today-toggle-row{margin:4px 0;}
+.today-toggle-row button{width:100%;}
 .input input{
     border-radius: 12px;
     background: var(--btn);
@@ -1106,10 +1109,10 @@ select option:hover{
   margin-top:8px;
 }
 
-.open-posts .location-section .map-container{width:400px;}
+.open-posts .location-section .map-container{width:300px;}
 
 .open-posts .post-map{
-  width:400px;
+  width:300px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1137,7 +1140,10 @@ select option:hover{
 
 .open-posts .session-select{
   width:300px;
+  font-variant-numeric: tabular-nums;
 }
+
+.open-posts .subcat-marker{font-size:24px;}
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
 
@@ -1789,6 +1795,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
+          <div class="today-toggle-row"><button id="todayToggle" aria-pressed="true">Today Onwards</button></div>
           <div id="datePicker"></div>
 
           <h3>Categories</h3>
@@ -2135,7 +2142,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     }
     
 function buildClusterListHTML(items){
-  const soonest = items.map(p=>p.dates[0]).sort()[0];
+  const soonestRaw = items.map(p=>p.dates[0]).sort()[0];
+  const soonest = formatDateStr(soonestRaw);
   const head = `<h4>${items.length} events here<br><span class="soonest">Soonest: <span class="nowrap">${soonest}</span></span></h4>`;
   const sort = $('#sortSelect').value;
   const arr = items.slice();
@@ -2378,7 +2386,7 @@ function uniqueTitle(seed, cityName, idx){
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
       return {date, time, full: d.toISOString().slice(0,10)};
-    });
+    }).sort((a,b)=> (a.full===b.full ? a.time.localeCompare(b.time) : a.full.localeCompare(b.full)));
   }
 
   function randomLocation(city, baseLng=0, baseLat=0){
@@ -2538,9 +2546,13 @@ function makePosts(){
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
-      $('#dateInput').value='';
-      $('#dateInput').dataset.range='';
-      if(datePicker) datePicker.clearSelection();
+      if($('#todayToggle').getAttribute('aria-pressed')==='true'){
+        applyTodayOnwards();
+      } else {
+        $('#dateInput').value='';
+        $('#dateInput').dataset.range='';
+        if(datePicker) datePicker.clearSelection();
+      }
       if(geocoder) geocoder.clear();
       applyFilters();
     });
@@ -2576,6 +2588,34 @@ function makePosts(){
         });
       }
     });
+    function applyTodayOnwards(){
+      const tIso = new Date().toISOString().slice(0,10);
+      const input = $('#dateInput');
+      input.value = 'Today Onwards';
+      input.dataset.range = `${tIso} to`;
+      if(datePicker){
+        datePicker.clearSelection();
+        datePicker.setOptions({minDate:tIso});
+      }
+    }
+    const todayToggle = $('#todayToggle');
+    todayToggle.addEventListener('click',()=>{
+      const on = todayToggle.getAttribute('aria-pressed')!=='true';
+      todayToggle.setAttribute('aria-pressed', on?'true':'false');
+      if(on){
+        applyTodayOnwards();
+      } else {
+        const input = $('#dateInput');
+        input.value='';
+        input.dataset.range='';
+        if(datePicker){
+          datePicker.clearSelection();
+          datePicker.setOptions({minDate:null});
+        }
+      }
+      applyFilters();
+    });
+    applyTodayOnwards();
     $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
     $('#favToggle').addEventListener('change', ()=> renderLists(filtered));
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
@@ -2584,8 +2624,12 @@ function makePosts(){
         input.value='';
         input.focus();
         if(input.id==='dateInput'){
-          input.dataset.range='';
-          if(datePicker) datePicker.clearSelection();
+          if($('#todayToggle').getAttribute('aria-pressed')==='true'){
+            applyTodayOnwards();
+          } else {
+            input.dataset.range='';
+            if(datePicker) datePicker.clearSelection();
+          }
         }
         applyFilters();
       }
@@ -2616,7 +2660,7 @@ function makePosts(){
     $('#tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card, .open-posts')) setMode('map');
+      if(!e.target.closest('.card, .open-posts, .litepicker')) setMode('map');
     });
 
     // Mapbox
@@ -3025,7 +3069,8 @@ function makePosts(){
         prioritizeVisibleImages();
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatDateStr(str){ const dt = new Date(str); return isNaN(dt)?str: dt.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,''); }
+    function formatDates(d){ if(!d||!d.length) return ''; const first = formatDateStr(d[0]); if(d.length===1) return first; return `${first} + ${d.length-1} more`; }
 
     function prioritizeVisibleImages(){
       const roots = [resultsEl, postsWideEl];
@@ -3364,16 +3409,20 @@ function makePosts(){
       let map, marker, picker;
       function updateLocation(idx){
         const loc = p.locations[idx];
+        loc.dates.sort((a,b)=> (a.full===b.full ? a.time.localeCompare(b.time) : a.full.localeCompare(b.full)));
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v11',
             center: [loc.lng, loc.lat],
-            zoom: 13,
+            zoom: 11,
             interactive: false
           });
-          marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          const icon = document.createElement('div');
+          icon.className = 'subcat-marker';
+          icon.textContent = subcategoryIcons[p.subcategory] || '';
+          marker = new mapboxgl.Marker(icon).setLngLat([loc.lng, loc.lat]).addTo(map);
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
