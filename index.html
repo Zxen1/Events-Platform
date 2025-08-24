@@ -146,7 +146,7 @@ textarea::placeholder{
 }
 
 .field label{
-  color: var(--dropdown-text);
+  color: var(--dropdown-title);
 }
 #filterModal .field label{
   color: inherit;
@@ -155,6 +155,7 @@ textarea::placeholder{
 select{
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
+  border:1px solid var(--border);
   border-radius: var(--dropdown-radius);
 }
 .location-select{
@@ -1035,9 +1036,11 @@ select option:hover{
 }
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
-  top:0;
+  top:-1px;
   z-index:3;
   background:var(--list-background);
+  border:1px solid var(--border);
+  border-bottom:0;
 }
 
 .open-posts .body{
@@ -1143,7 +1146,7 @@ select option:hover{
 }
 
 .open-posts .location-select{
-  width:300px;
+  width:100%;
 }
 
 .open-posts .location-select option{
@@ -1154,23 +1157,10 @@ select option:hover{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:400px;
 }
 
 .open-posts .post-calendar{
-  width:400px;
-  height:300px;
   overflow-x:auto;
-}
-
-.open-posts .post-calendar .litepicker{
-  width:400px;
-  height:300px;
-}
-
-.open-posts .session-select{
-  width:400px;
-  height:50px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -1769,7 +1759,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <button id="filterBtn" aria-label="Open filters modal">Filters</button>
           <div class="res-info">
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
-            <div class="muted">Map area filter active in Map mode</div>
           </div>
           <div class="res-actions">
             <select id="sortSelect" class="location-select" aria-label="Sort order">
@@ -3738,10 +3727,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
-    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box']}},
+    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], litepickerText:['.open-posts .litepicker','.open-posts .litepicker .day-item']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], catText:['#filterModal .cat .bar .label'], subText:['#filterModal .sub .chip']}},
+    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], catText:['#filterModal .cat .bar .label'], subText:['#filterModal .sub .chip'], litepickerText:['#filterModal .litepicker','#filterModal .litepicker .day-item']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
   ];
@@ -3792,7 +3781,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
-  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn', catText:'btn', subText:'btn'};
+  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn', catText:'btn', subText:'btn', litepickerText:'btn'};
 
   function updateTextPicker(areaKey, type){
     const picker = document.getElementById(`${areaKey}-${type}-picker`);
@@ -3983,7 +3972,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','catText','subText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','litepickerText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -4078,7 +4067,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           v.value = currentState[`${area.key}-${type}`].value;
         }
       });
-      ['text','title','btnText','catText','subText'].forEach(t=> updateTextPicker(area.key, t));
+      ['text','title','btnText','catText','subText','litepickerText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
@@ -4194,7 +4183,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const toV = document.getElementById(`${area.key}-${type}`);
           if(fromV && toV){ toV.value = fromV.value; }
         });
-        ['text','title','btnText','catText','subText'].forEach(t=> updateTextPicker(area.key, t));
+        ['text','title','btnText','catText','subText','litepickerText'].forEach(t=> updateTextPicker(area.key, t));
         applyAdmin();
       });
       const txtBtn = document.createElement('button');
@@ -4204,7 +4193,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       txtBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['text','title','btnText','catText','subText'].forEach(type=>{
+        ['text','title','btnText','catText','subText','litepickerText'].forEach(type=>{
           const fields = ['c','font','size','weight','shadow-color','shadow-x','shadow-y','shadow-blur'];
           fields.forEach(suf=>{
             const from = document.getElementById(`${lastFieldsetKey}-${type}-${suf}`);
@@ -4250,6 +4239,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.image) types.push('image');
       if(area.selectors.catText) types.push('catText');
       if(area.selectors.subText) types.push('subText');
+      if(area.selectors.litepickerText) types.push('litepickerText');
         types.forEach(type=>{
           const labelMap = {
             bg: 'Background',
@@ -4260,6 +4250,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             btnText: 'Button Text',
             catText: 'Category Text',
             subText: 'Subcategory Text',
+            litepickerText: 'Litepicker Text',
             border: 'Border',
             hoverBorder: 'Hover Border',
             activeBorder: 'Active Border',
@@ -4269,7 +4260,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             image: 'Image Box'
           };
           const label = labelMap[type] || type;
-        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'catText' || type === 'subText'){
+        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'catText' || type === 'subText' || type === 'litepickerText'){
           const row = document.createElement('div');
           row.className = 'control-row';
           const labelEl = document.createElement('label');
@@ -4542,7 +4533,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','catText','subText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','litepickerText','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4642,7 +4633,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','catText','subText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','litepickerText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4751,7 +4742,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','catText','subText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','catText','subText','litepickerText','header','image'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
