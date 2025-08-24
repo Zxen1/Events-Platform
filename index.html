@@ -953,7 +953,8 @@ select option:hover{
   overflow:hidden;
 }
 
-.open-posts-sticky .open-posts{
+.open-posts-sticky-header .open-posts,
+.open-posts-sticky-images .open-posts{
   overflow:visible;
 }
 
@@ -965,7 +966,7 @@ select option:hover{
   border-top-left-radius:inherit;
   border-top-right-radius:inherit;
 }
-.open-posts-sticky .open-posts .detail-header{
+.open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
   top:0;
   z-index:3;
@@ -989,7 +990,7 @@ select option:hover{
   gap:8px;
 }
 
-.open-posts-sticky .open-posts .img-area{
+.open-posts-sticky-images .open-posts .img-area{
   position:sticky;
   top:calc(var(--header-h) + 8px);
   align-self:start;
@@ -3807,12 +3808,26 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const stickyInput = document.getElementById('open-posts-sticky');
-    if(stickyInput){
-      stickyInput.checked = !!(currentState['open-posts-sticky'] && currentState['open-posts-sticky'].value === '1');
-      document.documentElement.classList.toggle('open-posts-sticky', stickyInput.checked);
-      stickyInput.addEventListener('change', () => {
-        document.documentElement.classList.toggle('open-posts-sticky', stickyInput.checked);
+    const stickyHeaderInput = document.getElementById('open-posts-sticky-header');
+    if(stickyHeaderInput){
+      const state = currentState['open-posts-sticky-header'];
+      stickyHeaderInput.checked = state ? state.value === '1' : true;
+      document.documentElement.classList.toggle('open-posts-sticky-header', stickyHeaderInput.checked);
+      stickyHeaderInput.addEventListener('change', () => {
+        document.documentElement.classList.toggle('open-posts-sticky-header', stickyHeaderInput.checked);
+        const data = collectThemeValues();
+        currentState = JSON.parse(JSON.stringify(data));
+        localStorage.setItem('currentTheme', JSON.stringify(data));
+        updateHistoryButtons();
+      });
+    }
+    const stickyImageInput = document.getElementById('open-posts-sticky-images');
+    if(stickyImageInput){
+      const state = currentState['open-posts-sticky-images'];
+      stickyImageInput.checked = state ? state.value === '1' : true;
+      document.documentElement.classList.toggle('open-posts-sticky-images', stickyImageInput.checked);
+      stickyImageInput.addEventListener('change', () => {
+        document.documentElement.classList.toggle('open-posts-sticky-images', stickyImageInput.checked);
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
         localStorage.setItem('currentTheme', JSON.stringify(data));
@@ -4069,7 +4084,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         stickyRow.className = 'control-row';
         stickyRow.innerHTML = `
             <label>Sticky Header</label>
-            <input id="open-posts-sticky" type="checkbox" />
+            <input id="open-posts-sticky-header" type="checkbox" checked />
+            <label>Sticky Images</label>
+            <input id="open-posts-sticky-images" type="checkbox" checked />
         `;
         fs.appendChild(stickyRow);
       }
@@ -4283,8 +4300,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(th && th.value !== '') el.style.height = `${th.value}px`;
       });
     });
-    const sticky = document.getElementById('open-posts-sticky');
-    document.documentElement.classList.toggle('open-posts-sticky', sticky && sticky.checked);
+    const stickyHeader = document.getElementById('open-posts-sticky-header');
+    document.documentElement.classList.toggle('open-posts-sticky-header', stickyHeader && stickyHeader.checked);
+    const stickyImages = document.getElementById('open-posts-sticky-images');
+    document.documentElement.classList.toggle('open-posts-sticky-images', stickyImages && stickyImages.checked);
     const data = collectThemeValues();
     currentState = JSON.parse(JSON.stringify(data));
     localStorage.setItem('currentTheme', JSON.stringify(data));
@@ -4324,8 +4343,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
     });
-    const sticky = document.getElementById('open-posts-sticky');
-    if(sticky){ data['open-posts-sticky'] = { value: sticky.checked ? '1' : '0' }; }
+    const stickyHeader = document.getElementById('open-posts-sticky-header');
+    if(stickyHeader){ data['open-posts-sticky-header'] = { value: stickyHeader.checked ? '1' : '0' }; }
+    const stickyImages = document.getElementById('open-posts-sticky-images');
+    if(stickyImages){ data['open-posts-sticky-images'] = { value: stickyImages.checked ? '1' : '0' }; }
     ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
       const input = document.getElementById(id);
       if(input){
@@ -4398,8 +4419,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(rootVars.length){
       css += `:root{${rootVars.join('')}}\n`;
     }
-    if(data['open-posts-sticky'] && data['open-posts-sticky'].value === '1'){
-      css += '.open-posts-sticky .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
+    if(data['open-posts-sticky-header'] && data['open-posts-sticky-header'].value === '1'){
+      css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
