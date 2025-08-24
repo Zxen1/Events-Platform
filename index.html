@@ -146,7 +146,7 @@ textarea::placeholder{
 }
 
 .field label{
-  color: var(--dropdown-title);
+  color: var(--dropdown-text);
 }
 
 select{
@@ -1152,16 +1152,23 @@ select option:hover{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:300px;
+  width:400px;
 }
 
 .open-posts .post-calendar{
-  width:300px;
+  width:400px;
+  height:300px;
   overflow-x:auto;
 }
 
+.open-posts .post-calendar .litepicker{
+  width:400px;
+  height:300px;
+}
+
 .open-posts .session-select{
-  width:300px;
+  width:400px;
+  height:50px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -1792,7 +1799,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="modal-content">
       <div class="modal-header">
         <div class="header-top">
-          <h2>Filters</h2>
+          <h2 class="title">Filters</h2>
           <div class="modal-actions">
             <button type="button" class="close-modal">Close</button>
           </div>
@@ -1801,14 +1808,14 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <div class="modal-body">
         <section class="filters-col" aria-label="Filters">
           <div>
-            <h3>Keywords</h3>
+            <h3 class="title">Keywords</h3>
             <div class="field">
               <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
                 <div class="x" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
 
-          <h3>Date Range</h3>
+          <h3 class="title">Date Range</h3>
           <div class="field">
             <div class="input"><input id="dateInput" type="text" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
@@ -1819,7 +1826,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <div id="datePicker"></div>
 
-          <h3>Categories</h3>
+          <h3 class="title">Categories</h3>
           <div class="cats" id="cats"></div>
 
             <div class="reset-box">
@@ -1837,7 +1844,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="modal-content">
       <div class="modal-header">
         <div class="header-top">
-          <h2>Create Post</h2>
+          <h2 class="title">Create Post</h2>
           <div class="modal-actions">
             <button type="submit" form="memberForm">Save</button>
             <button type="button" class="close-modal">Close</button>
@@ -1873,7 +1880,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="modal-content">
       <div class="modal-header">
         <div class="header-top">
-          <h2>Admin Settings</h2>
+          <h2 class="title">Admin Settings</h2>
           <div class="modal-actions">
             <button type="button" id="discardChanges">Discard Changes</button>
             <button type="button" id="saveNow">Save Now</button>
@@ -1910,7 +1917,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
             <button type="button" id="autoBuildBtn">Auto Build</button>
           </div>
-          <h3>Theme Builder</h3>
+          <h3 class="title">Theme Builder</h3>
           <div id="styleControls"></div>
           <div class="modal-field">
             <label for="themeRestore">Restore Backup</label>
@@ -2017,7 +2024,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label for="aColor">Color</label>
             <input type="color" id="aColor" data-mode="hex" value="#000000" />
           </div>
-          <h3>Subcategory Form Builder</h3>
+          <h3 class="title">Subcategory Form Builder</h3>
           <div class="palette" id="fieldPalette">
             <div class="field-item" draggable="true" data-type="text">Text</div>
             <div class="field-item" draggable="true" data-type="date">Date</div>
@@ -2681,7 +2688,7 @@ function makePosts(){
     $('#tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card, .open-posts')) setMode('map');
+      if(!e.target.closest('.card, .open-posts, .litepicker')) setMode('map');
     });
 
     // Mapbox
