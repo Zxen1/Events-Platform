@@ -24,21 +24,21 @@
       --text: #ffffff;
       --button-text: #ffffff;
       --button-hover-text: #000000;
-      --btn: #22343f;
-      --btn-hover: #22343f;
-      --btn-active: #22343f;
+      --btn: rgba(74,74,74,0.9);
+      --btn-hover: rgba(0,0,0,1);
+      --btn-active: rgba(0,0,0,1);
       --btn-2: var(--btn-hover);
-      --modal-bg: rgba(0,0,0,0.7);
-      --modal-text: #ffffff;
+      --modal-bg: rgba(0,0,0,0.62);
+      --modal-text: #000000;
       --footer-h: 70px;
-      --list-background: rgba(0,0,0,0);
-      --scrollbar-track: transparent;
+      --list-background: rgba(0,0,0,0.37);
+      --scrollbar-track: rgba(0,0,0,0);
       --scrollbar-thumb: rgba(0,0,0,0.3);
       --scrollbar-thumb-hover: rgba(0,0,0,0.5);
       --border: rgba(173,173,173,0.31);
       --border-hover: rgba(255,136,0,0.43);
       --border-active: rgba(255,200,0,0.45);
-      --placeholder-text: #777777;
+      --placeholder-text: #d1d1d1;
       --dropdown-title: #000000;
       --dropdown-selected-bg: rgba(224,224,224,1);
       --dropdown-selected-text: #000000;
@@ -104,6 +104,9 @@ button,
   color: var(--button-text);
   padding: 6px 10px;
   border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
@@ -506,6 +509,11 @@ select option:hover{
   gap:10px;
 }
 #baseColorRow .history-group{display:flex;gap:6px;}
+.preset-select{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 .modal-field input,
 .modal-field textarea,
 .modal-field select{
@@ -1552,7 +1560,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 </style>
 <style id="theme-dark-transparency">
-:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);}
+:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--modal-bg:rgba(0,0,0,0.62);--modal-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);}
+.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -1590,7 +1599,7 @@ body{background-color:rgba(41,41,41,1);}
 .closed-posts .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #ca6363;}
+.open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
 .open-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
@@ -1602,27 +1611,27 @@ footer{background-color:rgba(0,0,0,0);}
 footer .foot-row .foot-item{background-color:rgba(0,0,0,0.32);box-shadow:0 0 0px #000000;}
 footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .map-wrap{background-color:rgba(0,0,0,1);}
-.mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .hover-card{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .chip{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .chip-small{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .multi-item{background-color:rgba(0,0,0,0.7);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .hover-card{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .t{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .title{color:#ff7575;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .hover-card{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .chip{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .chip-small{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .multi-item{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .hover-card{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 #filterModal .modal-content{background-color:rgba(0,0,0,0.7);}
 #filterModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterModal button{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
 #filterModal .sq{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
 #filterModal .tiny{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
@@ -1633,25 +1642,28 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #filterModal .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminModal .modal-content{background-color:rgba(0,0,0,0.7);}
 #adminModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminModal button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
 #adminModal #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
 #adminModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminModal #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberModal .modal-content{background-color:rgba(0,0,0,0.7);}
 #memberModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal .modal-content .t{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal .modal-content .title{color:#000000;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
+.res-list .thumb{width:80px;height:80px;}
+.closed-posts .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
+.closed-posts .thumb{width:70px;height:70px;}
+
+
+
+
 
 </style>
-
-
-
-
-
 </head>
 <body class="mode-map">
   <header class="header" role="banner">
@@ -1800,7 +1812,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div id="tab-theme" class="tab-panel active">
           <div class="modal-field">
             <label for="themePreset">Themes</label>
-            <select id="themePreset"></select>
+            <div class="preset-select">
+              <select id="themePreset"></select>
+              <button type="button" id="refreshTheme">Refresh</button>
+            </div>
           </div>
           <div class="preset-actions">
             <input id="newPresetName" type="text" placeholder="Name of your new theme" />
@@ -4671,6 +4686,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       opt.textContent = p.name;
       sel.appendChild(opt);
     });
+    sel.selectedIndex = 0;
   }
 
   function loadPresets(){
@@ -4999,7 +5015,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
-    const p = presets[e.target.value];
+    const idx = parseInt(e.target.value, 10);
+    const p = presets[idx];
+    if(p) applyPresetData(p.data);
+  });
+  const refreshBtn = document.getElementById('refreshTheme');
+  refreshBtn && refreshBtn.addEventListener('click', ()=>{
+    const idx = parseInt(presetSelect.value, 10);
+    const p = presets[idx];
     if(p) applyPresetData(p.data);
   });
   const savePresetBtn = document.getElementById('savePreset');
