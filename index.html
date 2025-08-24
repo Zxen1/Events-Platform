@@ -46,6 +46,7 @@
       --dropdown-bg: rgba(255,255,255,1);
       --dropdown-hover-bg: rgba(224,224,224,1);
       --dropdown-hover-text: #000000;
+      --dropdown-venue-text: #000000;
       --dropdown-radius: 6px;
 }
 
@@ -148,6 +149,9 @@ select{
   background: var(--dropdown-bg);
   color: var(--dropdown-text);
   border-radius: var(--dropdown-radius);
+}
+.location-select{
+  color: var(--dropdown-venue-text);
 }
 select option{
   background: var(--dropdown-bg);
@@ -1735,7 +1739,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" value="This month" aria-label="Date range" />
+            <div class="input"><input id="dateInput" type="text" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -2488,7 +2492,7 @@ function makePosts(){
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
-      $('#dateInput').value='This month';
+      $('#dateInput').value='';
       $('#dateInput').dataset.range='';
       if(datePicker) datePicker.clearSelection();
       if(geocoder) geocoder.clear();
@@ -2501,14 +2505,16 @@ function makePosts(){
       element: $('#datePicker'),
       inlineMode: true,
       singleMode: false,
-      format: 'YYYY-MM-DD',
+      format: 'ddd D MMM',
       setup: (picker) => {
         picker.on('selected', (start, end) => {
           const input = $('#dateInput');
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
-            input.value = `${sIso} to ${eIso}`;
+            const sDisp = start.format('ddd D MMM');
+            const eDisp = end.format('ddd D MMM');
+            input.value = `${sDisp} to ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
           } else {
             input.value = '';
@@ -3038,6 +3044,7 @@ function makePosts(){
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
+        range: $('#dateInput').dataset.range,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3046,7 +3053,8 @@ function makePosts(){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || 'This month';
+      $('#dateInput').value = st.date || '';
+      $('#dateInput').dataset.range = st.range || '';
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -3323,12 +3331,13 @@ function makePosts(){
         }
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
+        setTimeout(()=> map.invalidateSize(),0);
         sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
         sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
         sessSelect.value = '';
       }
       if(mapEl){
-        updateLocation(0);
+        setTimeout(()=>{ updateLocation(0); if(map) map.invalidateSize(); },0);
         if(locSelect){
           locSelect.addEventListener('change', e=> updateLocation(parseInt(e.target.value,10)));
         }
@@ -3355,16 +3364,13 @@ function makePosts(){
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
-      let start, end;
-      if(!raw || raw.toLowerCase() === 'this month'){
-        const now = new Date();
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        end = new Date(now.getFullYear(), now.getMonth()+1, 0);
-      } else {
-        const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
-        if(parts[0]) start = new Date(parts[0]);
-        if(parts[1]) end = new Date(parts[1]);
+      if(!raw){
+        return true;
       }
+      let start, end;
+      const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
+      if(parts[0]) start = new Date(parts[0]);
+      if(parts[1]) end = new Date(parts[1]);
       return p.dates.some(d => {
         const dt = new Date(d);
         if(start && dt < start) return false;
@@ -3938,7 +3944,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText'].forEach(id=> updateTextPicker(id,'text'));
+    ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const padInputs = {
         top: document.getElementById(`${areaKey}-padding-top`),
@@ -3974,7 +3980,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -4325,6 +4331,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dropdown.appendChild(createTextPickerRow('dropdownSelectedText','Selected Text','dropdownSelectedBg-c'));
     dropdown.appendChild(createTextPickerRow('dropdownText','Text','dropdownBg-c'));
     dropdown.appendChild(createTextPickerRow('dropdownHoverText','Hover Text','dropdownHoverBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownVenueText','Venue','dropdownBg-c'));
     wrap.appendChild(dropdown);
     makeFieldsetsCollapsible();
   }
@@ -4384,7 +4391,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -4542,7 +4549,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -4564,7 +4571,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -4705,7 +4712,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text'};
+          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -5113,7 +5120,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       dropdownText: '--dropdown-text',
       dropdownBg: '--dropdown-bg',
       dropdownHoverBg: '--dropdown-hover-bg',
-      dropdownHoverText: '--dropdown-hover-text'
+      dropdownHoverText: '--dropdown-hover-text',
+      dropdownVenueText: '--dropdown-venue-text'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(id);
