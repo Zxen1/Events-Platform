@@ -1761,7 +1761,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
           </div>
           <div class="res-actions">
-            <select id="sortSelect" class="location-select" aria-label="Sort order">
+            <select id="sortSelect" aria-label="Sort order">
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
@@ -3232,12 +3232,12 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
+                ${p.locations.length>1 ? `<select id="loc-${p.id}">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
                 <div id="loc-info-${p.id}" class="location-info"></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <select id="sess-${p.id}" class="session-select location-select">
+                <select id="sess-${p.id}">
                   <option value="">Select session</option>
                 </select>
                 <div id="session-info-${p.id}" class="session-info">
