@@ -1027,6 +1027,7 @@ select option:hover{
 
 .open-posts .img-area{
   display:flex;
+  flex-direction:column;
   gap:8px;
 }
 
@@ -1056,9 +1057,10 @@ select option:hover{
 
 .open-posts .thumb-column{
   display:flex;
-  flex-direction:column;
-  height:400px;
-  overflow-y:auto;
+  flex-direction:row;
+  width:400px;
+  height:auto;
+  overflow-x:auto;
   gap:4px;
 }
 
@@ -1104,19 +1106,37 @@ select option:hover{
   margin-top:8px;
 }
 
-.open-posts .location-section .map-container{width:200px;}
+.open-posts .location-section .map-container{width:400px;}
 
 .open-posts .post-map{
-  width:200px;
+  width:400px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
+}
+
+.open-posts .location-select{
+  width:300px;
+}
+
+.open-posts .location-select option{
+  white-space:pre-line;
 }
 
 .open-posts .location-section .calendar-container{
   display:flex;
   flex-direction:column;
   gap:4px;
+  width:300px;
+}
+
+.open-posts .post-calendar{
+  width:300px;
+  overflow-x:auto;
+}
+
+.open-posts .session-select{
+  width:300px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -3143,13 +3163,10 @@ function makePosts(){
             <div class="thumb-column"></div>
           </div>
           <div class="text">
-            <div class="meta">
-              <span>📍 ${p.city}</span>
-            </div>
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue} - ${loc.address}</option>`).join('')}</select>` : ``}
+                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
                 <div id="loc-info-${p.id}" class="location-info"></div>
               </div>
               <div class="calendar-container">
