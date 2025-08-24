@@ -5222,7 +5222,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   });
 
   saveCssBtn && saveCssBtn.addEventListener('click', ()=>{
-    const css = cssEditor.value;
+    const css = generateCss(collectThemeValues());
+    cssEditor.value = css;
     const idx = parseInt(presetSelect.value, 10);
     const p = presets[idx];
     if(p){
