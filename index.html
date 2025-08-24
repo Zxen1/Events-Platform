@@ -174,19 +174,6 @@ select option:hover{
   color: var(--dropdown-hover-text);
 }
 
-select.unstyled-select{
-  background: revert;
-  color: inherit;
-  border: revert;
-  border-radius: revert;
-  appearance: revert;
-}
-select.unstyled-select option,
-select.unstyled-select option:checked,
-select.unstyled-select option:hover{
-  background: revert;
-  color: inherit;
-}
 
   .header{
     height: var(--header-h);
@@ -1771,7 +1758,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
           </div>
           <div class="res-actions">
-            <select id="sortSelect" class="unstyled-select" aria-label="Sort order">
+            <select id="sortSelect" aria-label="Sort order">
               <option value="az">Title A - Z</option>
               <option value="nearest">Closest</option>
               <option value="soon">Soonest</option>
@@ -1925,6 +1912,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <select id="themeRestore"></select>
             <button type="button" data-restore="theme">Restore</button>
           </div>
+          <details id="cssEditorContainer" class="modal-field">
+            <summary>Edit CSS</summary>
+            <textarea id="themeCssEditor" rows="10"></textarea>
+            <button type="button" id="themeCssSave">Save CSS</button>
+          </details>
         </div>
           <div id="tab-mapbox" class="tab-panel">
             <div class="modal-field">
@@ -3242,12 +3234,12 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select unstyled-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
+                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
                 <div id="loc-info-${p.id}" class="location-info"></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <select id="sess-${p.id}" class="unstyled-select">
+                <select id="sess-${p.id}">
                   <option value="">Select session</option>
                 </select>
                 <div id="session-info-${p.id}" class="session-info">
@@ -4824,6 +4816,19 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   let presets = [];
   let defaultTheme = {};
 
+  const cssEditor = document.getElementById('themeCssEditor');
+  const saveCssBtn = document.getElementById('themeCssSave');
+
+  function applyCustomCss(css){
+    let styleEl = document.getElementById('customThemeCss');
+    if(!styleEl){
+      styleEl = document.createElement('style');
+      styleEl.id = 'customThemeCss';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = css;
+  }
+
   function updatePresetOptions(){
     const sel = document.getElementById('themePreset');
     if(!sel) return;
@@ -4839,7 +4844,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function loadPresets(){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
-    presets = [{name:'Default', data: defaultTheme}, ...stored];
+    stored.forEach(p=>{ if(!p.css) p.css = generateCss(p.data); });
+    presets = [{name:'Default', data: defaultTheme, css: generateCss(defaultTheme)}, ...stored];
     updatePresetOptions();
   }
 
@@ -4893,7 +4899,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function savePreset(name){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
-    stored.push({name,data: collectThemeValues()});
+    stored.push({name,data: collectThemeValues(), css: cssEditor ? cssEditor.value : generateCss(collectThemeValues())});
     localStorage.setItem('themePresets', JSON.stringify(stored));
     loadPresets();
   }
@@ -4901,6 +4907,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function loadSavedTheme(){
     const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
     if(saved) applyPresetData(saved);
+    const css = localStorage.getItem('currentThemeCss') || generateCss(collectThemeValues());
+    if(cssEditor){
+      cssEditor.value = css;
+      applyCustomCss(css);
+    }
   }
 
 
@@ -5165,13 +5176,27 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   presetSelect && presetSelect.addEventListener('change', e=>{
     const idx = parseInt(e.target.value, 10);
     const p = presets[idx];
-    if(p) applyPresetData(p.data);
+    if(p){
+      applyPresetData(p.data);
+      if(cssEditor){
+        cssEditor.value = p.css || generateCss(p.data);
+        applyCustomCss(cssEditor.value);
+        localStorage.setItem('currentThemeCss', cssEditor.value);
+      }
+    }
   });
   const refreshBtn = document.getElementById('refreshTheme');
   refreshBtn && refreshBtn.addEventListener('click', ()=>{
     const idx = parseInt(presetSelect.value, 10);
     const p = presets[idx];
-    if(p) applyPresetData(p.data);
+    if(p){
+      applyPresetData(p.data);
+      if(cssEditor){
+        cssEditor.value = p.css || generateCss(p.data);
+        applyCustomCss(cssEditor.value);
+        localStorage.setItem('currentThemeCss', cssEditor.value);
+      }
+    }
   });
   const savePresetBtn = document.getElementById('savePreset');
   savePresetBtn && savePresetBtn.addEventListener('click', ()=>{
@@ -5184,7 +5209,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const downloadCssBtn = document.getElementById('downloadCss');
   downloadCssBtn && downloadCssBtn.addEventListener('click', ()=>{
-    const css = generateCss(collectThemeValues());
+    const css = cssEditor ? cssEditor.value : generateCss(collectThemeValues());
     const blob = new Blob([css], { type:'text/css' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -5192,6 +5217,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     a.download = 'theme.css';
     a.click();
     URL.revokeObjectURL(url);
+  });
+
+  saveCssBtn && saveCssBtn.addEventListener('click', ()=>{
+    const css = cssEditor.value;
+    const idx = parseInt(presetSelect.value, 10);
+    const p = presets[idx];
+    if(p){
+      p.css = css;
+      localStorage.setItem('themePresets', JSON.stringify(presets.slice(1)));
+    }
+    localStorage.setItem('currentThemeCss', css);
+    applyCustomCss(css);
   });
 
   const baseColorInput = document.getElementById('baseColor');
