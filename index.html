@@ -2075,7 +2075,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
         <div class="modal-field">
           <label for="mColor">Color</label>
-          <input type="color" id="mColor" data-mode="hex" value="#000000" />
+          <div class="color-group">
+            <input type="color" id="mColor" data-mode="hex" value="#000000" />
+          </div>
         </div>
       </form>
     </div>
@@ -2227,15 +2229,20 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <div class="modal-field">
             <label for="aColor">Color</label>
-            <input type="color" id="aColor" data-mode="hex" value="#000000" />
+            <div class="color-group">
+              <input type="color" id="aColor" data-mode="hex" value="#000000" />
+            </div>
           </div>
           <div class="modal-field">
             <label for="welcomeImage">Welcome Image URL</label>
             <input type="text" id="welcomeImage" value="assets/welcome 001.jpg" placeholder="Image URL" />
           </div>
           <div class="modal-field">
-            <label for="welcomeBg">Welcome Background Color</label>
-            <input type="color" id="welcomeBg" data-mode="hex" value="#ffffff" />
+            <label for="welcomeBg-c">Welcome Background Color</label>
+            <div class="color-group">
+              <input type="color" id="welcomeBg-c" data-mode="hex" value="#000000" />
+              <input type="range" id="welcomeBg-o" min="0" max="1" step="0.01" value="0" />
+            </div>
           </div>
           <div class="modal-field">
             <label for="welcomeMessage">Welcome Message</label>
@@ -2287,21 +2294,32 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
      const DEFAULT_WELCOME_IMAGE = 'assets/welcome 001.jpg';
      const DEFAULT_WELCOME_MESSAGE = 'Welcome to Funmap! Choose the area you want to search on the Map, then click the Filter button to refine your search. Click a result to expand it. There\'s so much to do in the world so have fun!';
      let welcomeImage = DEFAULT_WELCOME_IMAGE;
-     let welcomeBg = '#ffffff';
+     let welcomeBgColor = '#000000';
+     let welcomeBgOpacity = 0;
      let welcomeMessage = DEFAULT_WELCOME_MESSAGE;
+     let welcomeTextStyle = { color:'#ffffff', font:'Verdana', size:24, weight:'normal', shadow:{color:'#000000', x:0, y:0, blur:2} };
      let welcomeVisible = false;
      function updateWelcomeSettings(){
        const s = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
        if(s.welcomeImage) welcomeImage = s.welcomeImage;
-       if(s.welcomeBg) welcomeBg = s.welcomeBg;
+       if(s['welcomeBg-c']) welcomeBgColor = s['welcomeBg-c'];
+       if(s['welcomeBg-o']) welcomeBgOpacity = parseFloat(s['welcomeBg-o']);
        if(s.welcomeMessage) welcomeMessage = s.welcomeMessage;
+       if(s['welcomeText-c']) welcomeTextStyle.color = s['welcomeText-c'];
+       if(s['welcomeText-font']) welcomeTextStyle.font = s['welcomeText-font'];
+       if(s['welcomeText-size']) welcomeTextStyle.size = parseInt(s['welcomeText-size'],10);
+       if(s['welcomeText-weight']) welcomeTextStyle.weight = s['welcomeText-weight'];
+       if(s['welcomeText-shadow-color']) welcomeTextStyle.shadow.color = s['welcomeText-shadow-color'];
+       if(s['welcomeText-shadow-x']) welcomeTextStyle.shadow.x = parseInt(s['welcomeText-shadow-x'],10);
+       if(s['welcomeText-shadow-y']) welcomeTextStyle.shadow.y = parseInt(s['welcomeText-shadow-y'],10);
+       if(s['welcomeText-shadow-blur']) welcomeTextStyle.shadow.blur = parseInt(s['welcomeText-shadow-blur'],10);
      }
      updateWelcomeSettings();
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
         if(logoEl){
-          logoEl.style.cursor = spinLogoClick ? 'pointer' : 'default';
-          logoEl.style.pointerEvents = spinLogoClick ? 'auto' : 'none';
+          logoEl.style.cursor = 'pointer';
+          logoEl.style.pointerEvents = 'auto';
         }
       }
       updateLogoClickState();
@@ -2329,12 +2347,15 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
 
       logoEl?.addEventListener('click', () => {
-        if(!spinLogoClick) return;
+        showWelcome();
+        if(!spinLogoClick){
+          setTimeout(hideWelcome, 3000);
+          return;
+        }
         spinEnabled = true;
         localStorage.setItem('spinGlobe', 'true');
         if(map){
           spinning = false;
-          hideWelcome();
           map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
           map.once('moveend', startSpin);
         }else{
@@ -3084,7 +3105,9 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
-      showWelcome();
+      if(!welcomeVisible) showWelcome();
+      const rc = document.getElementById('resultCount');
+      if(rc) rc.style.display = 'none';
       map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
@@ -3097,6 +3120,8 @@ function makePosts(){
     function stopSpin(){
       spinning = false;
       hideWelcome();
+      const rc = document.getElementById('resultCount');
+      if(rc) rc.style.display = '';
       applyFilters();
     }
 
@@ -3359,21 +3384,36 @@ function makePosts(){
       welcomeVisible = true;
       [resultsEl, postsWideEl].forEach(root=>{
         if(!root) return;
-        root.innerHTML = '';
+        root.style.position = 'relative';
         const wrap = document.createElement('div');
         wrap.setAttribute('data-welcome','');
-        wrap.style.position = 'relative';
+        wrap.style.position = 'absolute';
+        wrap.style.top = '0';
+        wrap.style.left = '0';
+        wrap.style.right = '0';
+        wrap.style.bottom = '0';
         wrap.style.width = '100%';
+        wrap.style.height = '100%';
         if(welcomeImage){
           const img = document.createElement('img');
           img.src = welcomeImage;
           img.alt = 'Welcome';
           img.style.width = '100%';
+          img.style.position = 'relative';
+          img.style.zIndex = '0';
           wrap.appendChild(img);
         } else {
-          wrap.style.background = welcomeBg;
           wrap.style.height = '100%';
         }
+        const bg = document.createElement('div');
+        bg.style.position = 'absolute';
+        bg.style.top = '0';
+        bg.style.left = '0';
+        bg.style.right = '0';
+        bg.style.bottom = '0';
+        bg.style.background = hexToRgba(welcomeBgColor, welcomeBgOpacity);
+        bg.style.zIndex = '1';
+        wrap.appendChild(bg);
         const msg = document.createElement('div');
         msg.textContent = welcomeMessage;
         msg.style.position = 'absolute';
@@ -3387,8 +3427,12 @@ function makePosts(){
         msg.style.textAlign = 'center';
         msg.style.padding = '20px';
         msg.style.boxSizing = 'border-box';
-        msg.style.background = 'rgba(0,0,0,0.5)';
-        msg.style.color = '#fff';
+        msg.style.zIndex = '2';
+        msg.style.color = welcomeTextStyle.color;
+        msg.style.fontFamily = welcomeTextStyle.font;
+        msg.style.fontSize = welcomeTextStyle.size + 'px';
+        msg.style.fontWeight = welcomeTextStyle.weight;
+        msg.style.textShadow = `${welcomeTextStyle.shadow.x}px ${welcomeTextStyle.shadow.y}px ${welcomeTextStyle.shadow.blur}px ${welcomeTextStyle.shadow.color}`;
         wrap.appendChild(msg);
         root.appendChild(wrap);
       });
@@ -4974,10 +5018,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function applyAdmin(targetInput){
-    if(targetInput && ['welcomeImage','welcomeBg','welcomeMessage'].includes(targetInput.id)){
+    if(targetInput && /^welcome/.test(targetInput.id)){
       if(targetInput.id === 'welcomeImage') welcomeImage = targetInput.value;
-      if(targetInput.id === 'welcomeBg') welcomeBg = targetInput.value;
+      if(targetInput.id.startsWith('welcomeBg')){
+        const c = document.getElementById('welcomeBg-c');
+        const o = document.getElementById('welcomeBg-o');
+        welcomeBgColor = c ? c.value : '#000000';
+        welcomeBgOpacity = o ? parseFloat(o.value) : 0;
+      }
       if(targetInput.id === 'welcomeMessage') welcomeMessage = targetInput.value;
+      if(targetInput.id.startsWith('welcomeText')){
+        welcomeTextStyle = {
+          color: document.getElementById('welcomeText-c')?.value || '#ffffff',
+          font: document.getElementById('welcomeText-font')?.value || 'Verdana',
+          size: parseInt(document.getElementById('welcomeText-size')?.value || '24',10),
+          weight: document.getElementById('welcomeText-weight')?.value || 'normal',
+          shadow:{
+            color: document.getElementById('welcomeText-shadow-color')?.value || '#000000',
+            x: parseInt(document.getElementById('welcomeText-shadow-x')?.value || '0',10),
+            y: parseInt(document.getElementById('welcomeText-shadow-y')?.value || '0',10),
+            blur: parseInt(document.getElementById('welcomeText-shadow-blur')?.value || '0',10)
+          }
+        };
+      }
       return;
     }
     if(targetInput){
@@ -5407,6 +5470,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     const adminForm = document.getElementById('adminForm');
     if(adminForm){
+          const settingsPanel = document.getElementById('tab-settings');
+          if(settingsPanel){
+            const msgField = document.getElementById('welcomeMessage')?.parentElement;
+            const textRow = createTextPickerRow('welcomeText','Welcome Text','welcomeBg-c');
+            textRow.className = 'modal-field';
+            if(msgField) settingsPanel.insertBefore(textRow, msgField.nextSibling);
+            const wtc = document.getElementById('welcomeText-c');
+            if(wtc){
+              wtc.value = '#ffffff';
+              document.getElementById('welcomeText-font').value = 'Verdana';
+              document.getElementById('welcomeText-size').value = '24';
+              document.getElementById('welcomeText-weight').value = 'normal';
+              document.getElementById('welcomeText-shadow-color').value = '#000000';
+              document.getElementById('welcomeText-shadow-blur').value = '2';
+              ['welcomeText-c','welcomeText-font','welcomeText-size','welcomeText-weight','welcomeText-shadow-color','welcomeText-shadow-blur'].forEach(id=>{
+                const el = document.getElementById(id); el && el.dispatchEvent(new Event('input'));
+              });
+            }
+          }
           const speedInput = document.getElementById("spinSpeed");
           const speedVal = document.getElementById("spinSpeedVal");
           const loadStartInput = document.getElementById("spinLoadStart");
@@ -5652,6 +5734,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
 
     loadSaved();
+    applyAdmin();
+    ['welcomeText-c','welcomeText-font','welcomeText-size','welcomeText-weight','welcomeText-shadow-color','welcomeText-shadow-x','welcomeText-shadow-y','welcomeText-shadow-blur','welcomeBg-c','welcomeBg-o'].forEach(id=>{
+      const el = document.getElementById(id);
+      el && el.dispatchEvent(new Event('input'));
+    });
 
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
