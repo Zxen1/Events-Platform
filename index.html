@@ -1865,6 +1865,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
+.main{margin:14px;}
+
+.hide-map-calendar .open-posts .map-container,
+.hide-map-calendar .open-posts .calendar-container{display:none;}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
 .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2349,23 +2353,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
     function updateStickyImages(){
       const root = document.documentElement;
-      const stickyInput = document.getElementById('open-posts-sticky-images');
-      if(!(stickyInput && stickyInput.checked)){
-        root.classList.remove('open-posts-sticky-images');
-        return;
-      }
       const body = document.querySelector('.open-posts .body');
-      if(!body){
+      const imgArea = body ? body.querySelector('.img-area') : null;
+      const text = body ? body.querySelector('.text') : null;
+      const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
+      root.classList.toggle('hide-map-calendar', isBelow);
+      const stickyInput = document.getElementById('open-posts-sticky-images');
+      if(!(stickyInput && stickyInput.checked) || !body || !imgArea || !text){
         root.classList.remove('open-posts-sticky-images');
         return;
       }
-      const imgArea = body.querySelector('.img-area');
-      const text = body.querySelector('.text');
-      if(!imgArea || !text){
-        root.classList.remove('open-posts-sticky-images');
-        return;
-      }
-      const isBelow = text.offsetTop > imgArea.offsetTop;
       root.classList.toggle('open-posts-sticky-images', !isBelow);
     }
 
