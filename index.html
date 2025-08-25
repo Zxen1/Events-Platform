@@ -1134,27 +1134,70 @@ select option:hover{
 }
 
 
+.open-posts .location-dropdown,
+.open-posts .session-dropdown{
+  position:relative;
+  width:400px;
+}
+
+.open-posts .location-dropdown > button,
+.open-posts .session-dropdown > button{
+  width:100%;
+  height:50px;
+  background:var(--dropdown-bg);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+}
+
+.open-posts .location-dropdown > button{color:var(--dropdown-venue-text);}
+.open-posts .session-dropdown > button{color:var(--dropdown-text);}
+
+.open-posts .location-dropdown > button .venue-name{
+  font-weight:bold;
+  display:block;
+}
+
+.open-posts .location-dropdown > button .venue-address{
+  display:block;
+}
+
 .open-posts .location-menu,
 .open-posts .session-menu{
-  width:400px;
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  width:100%;
   max-height:400px;
   overflow-y:auto;
+  background:var(--dropdown-bg);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  padding:10px;
   display:flex;
   flex-direction:column;
   gap:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  z-index:30;
 }
+
+.open-posts .location-menu[hidden],
+.open-posts .session-menu[hidden]{display:none;}
 
 .open-posts .location-menu button,
 .open-posts .session-menu button{
   width:100%;
   height:50px;
   background:var(--dropdown-bg);
-  color:var(--dropdown-text);
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
   text-align:left;
   padding:4px 8px;
 }
+
+.open-posts .location-menu button{color:var(--dropdown-venue-text);}
+.open-posts .session-menu button{color:var(--dropdown-text);}
 
 .open-posts .location-menu button.selected,
 .open-posts .session-menu button.selected{
@@ -1170,17 +1213,22 @@ select option:hover{
 
 .open-posts .session-menu button{
   display:flex;
-  justify-content:space-between;
   align-items:center;
 }
 
-.open-posts .session-menu button .session-date{
-  flex:1;
+.open-posts .session-menu button .session-time{
+  margin-left:auto;
+  padding-right:20px;
 }
 
-.open-posts .session-menu button .session-time{
-  width:80px;
-  text-align:right;
+.open-posts .session-dropdown > button{
+  display:flex;
+  align-items:center;
+}
+
+.open-posts .session-dropdown > button .session-time{
+  margin-left:auto;
+  padding-right:20px;
 }
 
 
@@ -3317,33 +3365,31 @@ function makePosts(){
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
         <div class="detail-header">
-          <div class="title-block">
-            <h2 class="title">${p.title}</h2>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-          </div>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
         </div>
         <div class="body">
           <div class="img-area">
-            <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=\'${imgThumb(p)}\';"/></div>
+            <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
             <div class="thumb-column"></div>
           </div>
           <div class="text">
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-menu">${p.locations.map((loc,i)=>`<button data-index="${i}"><div class="venue-name t">${loc.venue}</div><div class="venue-address">${loc.address}</div></button>`).join('')}</div>` : ``}
-                <div id="loc-info-${p.id}" class="location-info"></div>
+                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-dropdown options-dropdown"><button class="loc-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="location-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>` : ``}
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <div id="sess-${p.id}" class="session-menu"></div>
-                <div id="session-info-${p.id}" class="session-info">
-                  <div class="placeholder">💲 Price range | 📅 Date range</div>
-                </div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
               </div>
+            </div>
+            <h2 class="title">${p.title}</h2>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div id="loc-info-${p.id}" class="location-info"></div>
+            <div id="session-info-${p.id}" class="session-info">
+              <div class="placeholder">💲 Price range | 📅 Date range</div>
             </div>
             <div class="desc">${p.desc}</div>
           </div>
@@ -3532,9 +3578,13 @@ function makePosts(){
         modalStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
-      const locMenu = el.querySelector(`#loc-${p.id}`);
+      const locDropdown = el.querySelector(`#loc-${p.id}`);
+      const locBtn = locDropdown ? locDropdown.querySelector('.loc-btn') : null;
+      const locMenu = locDropdown ? locDropdown.querySelector('.location-menu') : null;
       const locInfo = el.querySelector(`#loc-info-${p.id}`);
-      const sessMenu = el.querySelector(`#sess-${p.id}`);
+      const sessDropdown = el.querySelector(`#sess-${p.id}`);
+      const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
+      const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
@@ -3542,6 +3592,7 @@ function makePosts(){
       function updateLocation(idx){
         const loc = p.locations[idx];
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
+        if(locBtn) locBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -3557,40 +3608,60 @@ function makePosts(){
         }
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
-        setTimeout(()=> map.resize(),0);
+        setTimeout(()=> map && map.resize(),0);
         if(sessMenu){
           sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
           sessMenu.scrollTop = 0;
           sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+          if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
           sessMenu.querySelectorAll('button').forEach(btn=>{
-            btn.addEventListener('click', e=>{
+            btn.addEventListener('click', ()=>{
               sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
               btn.classList.add('selected');
               const dt = loc.dates[parseInt(btn.dataset.index,10)];
               if(dt){
                 sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+                if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
               } else {
                 sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+                if(sessBtn) sessBtn.textContent = 'Select Session';
               }
+              sessMenu.hidden = true;
+              sessBtn && sessBtn.setAttribute('aria-expanded','false');
             });
           });
         }
       }
       if(mapEl){
-        setTimeout(()=>{ 
-          updateLocation(0); 
-          if(locMenu){
-            const first = locMenu.querySelector('button');
-            first && first.classList.add('selected');
+        setTimeout(()=>{
+          updateLocation(0);
+          if(locMenu && locBtn){
             locMenu.querySelectorAll('button').forEach(btn=>{
+              if(btn.dataset.index==='0') btn.classList.add('selected');
               btn.addEventListener('click', ()=>{
                 locMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
                 btn.classList.add('selected');
                 updateLocation(parseInt(btn.dataset.index,10));
+                locMenu.hidden = true;
+                locBtn.setAttribute('aria-expanded','false');
               });
             });
+            locBtn.addEventListener('click', ()=>{
+              const expanded = locBtn.getAttribute('aria-expanded') === 'true';
+              locBtn.setAttribute('aria-expanded', String(!expanded));
+              locMenu.hidden = expanded;
+            });
+            document.addEventListener('click', e=>{ if(locDropdown && !locDropdown.contains(e.target)){ locMenu.hidden = true; locBtn.setAttribute('aria-expanded','false'); } });
           }
-          if(map) map.resize(); 
+          if(sessBtn && sessMenu){
+            sessBtn.addEventListener('click', ()=>{
+              const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
+              sessBtn.setAttribute('aria-expanded', String(!expanded));
+              sessMenu.hidden = expanded;
+            });
+            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
+          }
+          if(map) map.resize();
         },0);
       }
     }
@@ -4534,6 +4605,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         fs.appendChild(thumbRow);
       }
       if(area.key === 'open-posts'){
+        fs.appendChild(createTextPickerRow('dropdownVenueText','Venue Button Text','open-posts-menu-c'));
         const stickyRow = document.createElement('div');
         stickyRow.className = 'control-row';
         stickyRow.innerHTML = `
@@ -4622,7 +4694,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dropdown.appendChild(createTextPickerRow('dropdownSelectedText','Selected Text','dropdownSelectedBg-c'));
     dropdown.appendChild(createTextPickerRow('dropdownText','Text','dropdownBg-c'));
     dropdown.appendChild(createTextPickerRow('dropdownHoverText','Hover Text','dropdownHoverBg-c'));
-    dropdown.appendChild(createTextPickerRow('dropdownVenueText','Venue','dropdownBg-c'));
     wrap.appendChild(dropdown);
   }
 
