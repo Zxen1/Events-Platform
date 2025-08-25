@@ -586,7 +586,7 @@ select option:hover{
     grid-template-columns: var(--results-w) 1fr;
     grid-template-rows: auto 1fr;
     gap: var(--gap);
-    padding: 14px;
+    padding: 0;
   }
 
 .filters-col{
@@ -799,6 +799,7 @@ select option:hover{
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  padding: 0 14px 14px;
 }
 
 .subheader{
@@ -808,6 +809,7 @@ select option:hover{
   gap: 8px;
   color: var(--ink-d);
   grid-column: 1 / -1;
+  padding: 14px;
 }
 .res-actions{
   display: flex;
@@ -950,7 +952,7 @@ select option:hover{
   background:rgba(0,0,0,0.7);
 }
 .closed-posts .res-list{overflow:visible;padding:0;}
-.closed-posts{color:#000;}
+.closed-posts{color:#000;padding:0 14px 14px;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
@@ -1563,6 +1565,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .main .map-wrap{
   position: relative;
   height: 100%;
+  padding: 0 14px 14px;
 }
 
 .main .closed-posts{
@@ -1704,7 +1707,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 <body class="mode-map">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
-      <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2011-09-30g.png" alt="FunMap.com logo" />
+      <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist"><button id="tab-posts" role="tab" aria-selected="false">Posts</button>
         <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
