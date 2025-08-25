@@ -1289,27 +1289,64 @@ select option:hover{
 }
 
 .open-posts .post-calendar{
-  width:400px;
-  overflow-x:auto;
+  width:100%;
+  overflow:hidden;
+  position:relative;
 }
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
+  width:100%;
+  box-sizing:border-box;
 }
 
 .open-posts .post-calendar .container__months{
-  display:flex;
-  flex-wrap:nowrap;
+  display:block;
 }
 
 .open-posts .post-calendar .container__months .month-item{
-  flex:0 0 400px;
+  width:100%;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:4px;
+}
+
+.open-posts .post-calendar .selected-month-name{
+  background:var(--accent);
+  color:var(--button-hover-text);
+  border-radius:4px;
+  padding:0 4px;
+}
+
+.open-posts .post-calendar .time-popup{
+  position:absolute;
+  inset:0;
+  background:var(--modal-bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.open-posts .post-calendar .time-popup .time-list{
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  padding:8px;
+  border-radius:4px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.open-posts .post-calendar .time-popup .time-list button{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  border-radius:4px;
+  padding:6px 10px;
+  cursor:pointer;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -3700,21 +3737,69 @@ function makePosts(){
           marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
-        const dateStrings = loc.dates.map(d=>d.full).sort();
+        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full))).sort();
         const firstDate = dateStrings.length ? new Date(dateStrings[0]) : new Date();
         const lastDate = dateStrings.length ? new Date(dateStrings[dateStrings.length-1]) : firstDate;
-        const months = Math.max(1, (lastDate.getFullYear()-firstDate.getFullYear())*12 + (lastDate.getMonth()-firstDate.getMonth()) + 1);
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
           inlineMode: true,
-          selectMode: 'multiple',
+          selectMode: 'single',
           highlightedDates: dateStrings,
           startDate: firstDate,
-          numberOfMonths: months,
-          numberOfColumns: months
+          minDate: firstDate,
+          maxDate: lastDate,
+          numberOfMonths: 1,
+          numberOfColumns: 1
         });
-        calendarEl.scrollLeft = 0;
+        let ignoreSelect = false;
+        function highlightMonth(){
+          calendarEl.querySelectorAll('.month-name').forEach(n=> n.classList.remove('selected-month-name'));
+          const m = calendarEl.querySelector('.month-name');
+          if(m) m.classList.add('selected-month-name');
+        }
+        function selectSession(i){
+          if(!sessMenu) return;
+          sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+          const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
+          if(btn) btn.classList.add('selected');
+          const dt = loc.dates[i];
+          if(dt){
+            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
+            ignoreSelect = true;
+            picker.setDate(dt.full);
+            picker.gotoDate(new Date(dt.full));
+            ignoreSelect = false;
+            highlightMonth();
+          } else {
+            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+            if(sessBtn) sessBtn.textContent = 'Select Session';
+            picker.clearSelection();
+          }
+          sessMenu.hidden = true;
+          sessBtn && sessBtn.setAttribute('aria-expanded','false');
+        }
+        function showTimePopup(matches){
+          const popup = document.createElement('div');
+          popup.className = 'time-popup';
+          popup.innerHTML = `<div class="time-list">${matches.map(m=>`<button data-index="${m.i}">${m.d.time}</button>`).join('')}</div>`;
+          calendarEl.appendChild(popup);
+          popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
+          popup.addEventListener('click', e=>{ if(e.target===popup) popup.remove(); });
+        }
+        picker.on('selected', (date)=>{
+          if(ignoreSelect) return;
+          const ds = date.format('YYYY-MM-DD');
+          const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
+          if(matches.length===1){
+            selectSession(matches[0].i);
+          } else if(matches.length>1){
+            showTimePopup(matches);
+          } else {
+            picker.clearSelection();
+          }
+        });
         setTimeout(()=>{
           mapEl.style.height = calendarEl.offsetHeight + 'px';
           map && map.resize();
@@ -3725,20 +3810,7 @@ function makePosts(){
           sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
           if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
           sessMenu.querySelectorAll('button').forEach(btn=>{
-            btn.addEventListener('click', ()=>{
-              sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-              btn.classList.add('selected');
-              const dt = loc.dates[parseInt(btn.dataset.index,10)];
-              if(dt){
-                sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-                if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
-              } else {
-                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-                if(sessBtn) sessBtn.textContent = 'Select Session';
-              }
-              sessMenu.hidden = true;
-              sessBtn && sessBtn.setAttribute('aria-expanded','false');
-            });
+            btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
           });
         }
       }
