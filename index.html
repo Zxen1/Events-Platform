@@ -2347,6 +2347,28 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     }
     window.adjustListHeight = adjustListHeight;
 
+    function updateStickyImages(){
+      const root = document.documentElement;
+      const stickyInput = document.getElementById('open-posts-sticky-images');
+      if(!(stickyInput && stickyInput.checked)){
+        root.classList.remove('open-posts-sticky-images');
+        return;
+      }
+      const body = document.querySelector('.open-posts .body');
+      if(!body){
+        root.classList.remove('open-posts-sticky-images');
+        return;
+      }
+      const imgArea = body.querySelector('.img-area');
+      const text = body.querySelector('.text');
+      if(!imgArea || !text){
+        root.classList.remove('open-posts-sticky-images');
+        return;
+      }
+      const isBelow = text.offsetTop > imgArea.offsetTop;
+      root.classList.toggle('open-posts-sticky-images', !isBelow);
+    }
+
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
@@ -3602,6 +3624,7 @@ function makePosts(){
       // class already applied in buildDetail
       target.replaceWith(detail);
       hookDetailActions(detail, p);
+      updateStickyImages();
 
       if(container){
         if(!fromPosts){
@@ -4539,9 +4562,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(stickyImageInput){
       const state = currentState['open-posts-sticky-images'];
       stickyImageInput.checked = state ? state.value === '1' : true;
-      document.documentElement.classList.toggle('open-posts-sticky-images', stickyImageInput.checked);
+      updateStickyImages();
       stickyImageInput.addEventListener('change', () => {
-        document.documentElement.classList.toggle('open-posts-sticky-images', stickyImageInput.checked);
+        updateStickyImages();
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
         localStorage.setItem('currentTheme', JSON.stringify(data));
@@ -5732,7 +5755,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   });
 
   window.addEventListener('resize', window.adjustListHeight);
+  window.addEventListener('resize', updateStickyImages);
   window.adjustListHeight();
+  updateStickyImages();
 })();
 </script>
 </body>
