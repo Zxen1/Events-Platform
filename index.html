@@ -1288,16 +1288,22 @@ select option:hover{
   max-width:400px;
 }
 
+
 .open-posts .post-calendar{
   width:100%;
   overflow:hidden;
   position:relative;
+  display:flex;
+  justify-content:center;
 }
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
-  width:400px;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
   box-sizing:border-box;
+  display:block;
 }
 
 .open-posts .post-calendar .container__months{
@@ -1311,6 +1317,13 @@ select option:hover{
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--accent);
   color:var(--button-hover-text);
+  border-radius:4px;
+}
+
+.open-posts .post-calendar .litepicker-day.is-selected,
+.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{
+  background:var(--btn);
+  color:var(--button-text);
   border-radius:4px;
 }
 
@@ -3721,6 +3734,7 @@ function makePosts(){
       let map, marker, picker;
       function updateLocation(idx){
         const loc = p.locations[idx];
+        loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(locBtn) locBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
         if(!map){
@@ -3737,9 +3751,10 @@ function makePosts(){
           marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
-        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full))).sort();
-        const firstDate = dateStrings.length ? new Date(dateStrings[0]) : new Date();
-        const lastDate = dateStrings.length ? new Date(dateStrings[dateStrings.length-1]) : firstDate;
+        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
+        const allowedSet = new Set(dateStrings);
+        const firstDate = dateStrings[0];
+        const lastDate = dateStrings[dateStrings.length-1] || firstDate;
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -3750,7 +3765,8 @@ function makePosts(){
           minDate: firstDate,
           maxDate: lastDate,
           numberOfMonths: 1,
-          numberOfColumns: 1
+          numberOfColumns: 1,
+          lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         let ignoreSelect = false;
@@ -3759,28 +3775,31 @@ function makePosts(){
           const m = calendarEl.querySelector('.month-name');
           if(m) m.classList.add('selected-month-name');
         }
+        highlightMonth();
+        picker.on('render:month', highlightMonth);
         function selectSession(i){
           if(!sessMenu) return;
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
           const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
-          if(btn) btn.classList.add('selected');
-          const dt = loc.dates[i];
-          if(dt){
-            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
-            ignoreSelect = true;
-            picker.setDate(dt.full);
-            picker.gotoDate(new Date(dt.full));
-            ignoreSelect = false;
-            highlightMonth();
-          } else {
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-            if(sessBtn) sessBtn.textContent = 'Select Session';
-            picker.clearSelection();
+            if(btn) btn.classList.add('selected');
+            const dt = loc.dates[i];
+            if(dt){
+              sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
+              ignoreSelect = true;
+              picker.setDate(dt.full);
+              picker.gotoDate(dt.full);
+              ignoreSelect = false;
+              highlightMonth();
+            } else {
+              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+              if(sessBtn) sessBtn.textContent = 'Select Session';
+              picker.clearSelection();
+              highlightMonth();
+            }
+            sessMenu.hidden = true;
+            sessBtn && sessBtn.setAttribute('aria-expanded','false');
           }
-          sessMenu.hidden = true;
-          sessBtn && sessBtn.setAttribute('aria-expanded','false');
-        }
         function showTimePopup(matches){
           const popup = document.createElement('div');
           popup.className = 'time-popup';
@@ -3789,31 +3808,32 @@ function makePosts(){
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
           popup.addEventListener('click', e=>{ if(e.target===popup) popup.remove(); });
         }
-        picker.on('selected', (date)=>{
-          if(ignoreSelect) return;
-          const ds = date.format('YYYY-MM-DD');
-          const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
-          if(matches.length===1){
-            selectSession(matches[0].i);
-          } else if(matches.length>1){
-            showTimePopup(matches);
-          } else {
-            picker.clearSelection();
-          }
-        });
+          picker.on('selected', (date)=>{
+            if(ignoreSelect) return;
+            const ds = date.format('YYYY-MM-DD');
+            const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
+            if(matches.length===1){
+              selectSession(matches[0].i);
+            } else if(matches.length>1){
+              showTimePopup(matches);
+            } else {
+              picker.clearSelection();
+              highlightMonth();
+            }
+          });
         setTimeout(()=>{
           mapEl.style.height = calendarEl.offsetHeight + 'px';
           map && map.resize();
         },0);
-        if(sessMenu){
-          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
-          sessMenu.scrollTop = 0;
-          sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-          if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
-          sessMenu.querySelectorAll('button').forEach(btn=>{
-            btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
-          });
-        }
+          if(sessMenu){
+            sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
+            sessMenu.scrollTop = 0;
+            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+            if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+            sessMenu.querySelectorAll('button').forEach(btn=>{
+              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
+            });
+          }
       }
       if(mapEl){
         setTimeout(()=>{
