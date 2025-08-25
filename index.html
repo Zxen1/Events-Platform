@@ -2229,6 +2229,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label for="aColor">Color</label>
             <input type="color" id="aColor" data-mode="hex" value="#000000" />
           </div>
+          <div class="modal-field">
+            <label for="welcomeImage">Welcome Image URL</label>
+            <input type="text" id="welcomeImage" value="assets/welcome 001.jpg" placeholder="Image URL" />
+          </div>
+          <div class="modal-field">
+            <label for="welcomeBg">Welcome Background Color</label>
+            <input type="color" id="welcomeBg" data-mode="hex" value="#ffffff" />
+          </div>
+          <div class="modal-field">
+            <label for="welcomeMessage">Welcome Message</label>
+            <textarea id="welcomeMessage" rows="3" placeholder="Enter welcome message">Welcome to Funmap! Choose the area you want to search on the Map, then click the Filter button to refine your search. Click a result to expand it. There's so much to do in the world so have fun!</textarea>
+          </div>
           <h3>Subcategory Form Builder</h3>
           <div class="palette" id="fieldPalette">
             <div class="field-item" draggable="true" data-type="text">Text</div>
@@ -2272,6 +2284,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+     const DEFAULT_WELCOME_IMAGE = 'assets/welcome 001.jpg';
+     const DEFAULT_WELCOME_MESSAGE = 'Welcome to Funmap! Choose the area you want to search on the Map, then click the Filter button to refine your search. Click a result to expand it. There\'s so much to do in the world so have fun!';
+     let welcomeImage = DEFAULT_WELCOME_IMAGE;
+     let welcomeBg = '#ffffff';
+     let welcomeMessage = DEFAULT_WELCOME_MESSAGE;
+     let welcomeVisible = false;
+     function updateWelcomeSettings(){
+       const s = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
+       if(s.welcomeImage) welcomeImage = s.welcomeImage;
+       if(s.welcomeBg) welcomeBg = s.welcomeBg;
+       if(s.welcomeMessage) welcomeMessage = s.welcomeMessage;
+     }
+     updateWelcomeSettings();
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
         if(logoEl){
@@ -2308,7 +2333,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         spinEnabled = true;
         localStorage.setItem('spinGlobe', 'true');
         if(map){
-          stopSpin();
+          spinning = false;
+          hideWelcome();
           map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
           map.once('moveend', startSpin);
         }else{
@@ -3058,7 +3084,7 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
-      renderLists(filtered);
+      showWelcome();
       map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
@@ -3070,6 +3096,8 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
+      hideWelcome();
+      applyFilters();
     }
 
     function haltSpin(){
@@ -3077,7 +3105,6 @@ function makePosts(){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
         stopSpin();
-        renderLists(filtered);
       }
     }
 
@@ -3327,6 +3354,52 @@ function makePosts(){
       const lastTop = last.getBoundingClientRect().top;
       if(lastTop < limit){ postsModeEl.scrollTop -= (limit - lastTop); }
     });
+
+    function showWelcome(){
+      welcomeVisible = true;
+      [resultsEl, postsWideEl].forEach(root=>{
+        if(!root) return;
+        root.innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.setAttribute('data-welcome','');
+        wrap.style.position = 'relative';
+        wrap.style.width = '100%';
+        if(welcomeImage){
+          const img = document.createElement('img');
+          img.src = welcomeImage;
+          img.alt = 'Welcome';
+          img.style.width = '100%';
+          wrap.appendChild(img);
+        } else {
+          wrap.style.background = welcomeBg;
+          wrap.style.height = '100%';
+        }
+        const msg = document.createElement('div');
+        msg.textContent = welcomeMessage;
+        msg.style.position = 'absolute';
+        msg.style.top = '0';
+        msg.style.left = '0';
+        msg.style.right = '0';
+        msg.style.bottom = '0';
+        msg.style.display = 'flex';
+        msg.style.alignItems = 'center';
+        msg.style.justifyContent = 'center';
+        msg.style.textAlign = 'center';
+        msg.style.padding = '20px';
+        msg.style.boxSizing = 'border-box';
+        msg.style.background = 'rgba(0,0,0,0.5)';
+        msg.style.color = '#fff';
+        wrap.appendChild(msg);
+        root.appendChild(wrap);
+      });
+    }
+    function hideWelcome(){
+      welcomeVisible = false;
+      [resultsEl, postsWideEl].forEach(root=>{
+        const w = root?.querySelector('[data-welcome]');
+        if(w) root.removeChild(w);
+      });
+    }
 
     function renderLists(list){
       const sort = currentSort;
@@ -3900,7 +3973,9 @@ function makePosts(){
 
     function applyFilters(){
       filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
-      renderLists(filtered);
+      if(!spinEnabled && !spinning && !welcomeVisible){
+        renderLists(filtered);
+      }
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
     }
 
@@ -4899,6 +4974,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function applyAdmin(targetInput){
+    if(targetInput && ['welcomeImage','welcomeBg','welcomeMessage'].includes(targetInput.id)){
+      if(targetInput.id === 'welcomeImage') welcomeImage = targetInput.value;
+      if(targetInput.id === 'welcomeBg') welcomeBg = targetInput.value;
+      if(targetInput.id === 'welcomeMessage') welcomeMessage = targetInput.value;
+      return;
+    }
     if(targetInput){
       undoStack.push(JSON.parse(JSON.stringify(currentState)));
       redoStack.length = 0;
