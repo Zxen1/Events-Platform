@@ -314,7 +314,7 @@ select option:hover{
   z-index:2000;
   pointer-events:none;
 }
-.modal.show{display:block;}
+.modal.show{display:block;pointer-events:auto;}
 .modal-content{
   position:absolute;
   border-radius:8px;
@@ -897,14 +897,26 @@ select option:hover{
 }
 
 .info{
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  font-size: 13px;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+  font-size:13px;
+  min-width:0;
+  overflow:hidden;
+}
+.info > div{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.card .cat-line{
+  display:flex;
+  align-items:center;
+  gap:4px;
 }
 
 .badge{
@@ -1944,9 +1956,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
 .res-list .thumb{width:80px;height:80px;}
-.closed-posts .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
 .closed-posts .thumb{width:70px;height:70px;}
 
 
@@ -3424,15 +3434,15 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='70px 1fr 36px';
+      const address = p.locations && p.locations[0] ? p.locations[0].address : p.city;
       el.innerHTML = `
         <img class="thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <span class="badge" title="Venue">📍</span>
-            <span>${p.city}</span>
-            <span class="badge" title="Dates">📅</span>
-            <span>${formatDates(p.dates)}</span>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div><span class="badge" title="Venue">📍</span><span>${address}</span></div>
+            <div><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
         <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
@@ -4033,10 +4043,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const sg = window.spinGlobals || {};
 
   memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
-    adminBtn && adminBtn.addEventListener('click', ()=>{
-      syncAdminControls();
-      toggleModal(adminModal);
-    });
+  adminBtn && adminBtn.addEventListener('click', ()=>{
+    try{ syncAdminControls(); }catch(e){ console.error(e); }
+    toggleModal(adminModal);
+  });
   filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
   document.querySelectorAll('.modal .close-modal').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -4496,24 +4506,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
-      const marginInputs = {
-        top: document.getElementById(`${areaKey}-margin-top`),
-        right: document.getElementById(`${areaKey}-margin-right`),
-        bottom: document.getElementById(`${areaKey}-margin-bottom`),
-        left: document.getElementById(`${areaKey}-margin-left`)
-      };
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
-      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-      const el = document.querySelector(cardSel);
-      if(el){
-        const cs = getComputedStyle(el);
-        ['Top','Right','Bottom','Left'].forEach(dir=>{
-          const key = dir.toLowerCase();
-          if(marginInputs[key]) marginInputs[key].value = parseInt(cs[`margin${dir}`],10) || 0;
-        });
-      }
       if(twInput || thInput){
         const elT = document.querySelector(thumbSel);
         if(elT){
@@ -4789,18 +4784,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
       if(area.key === 'list' || area.key === 'closed-posts'){
-        const extRow = document.createElement('div');
-        extRow.className = 'control-row';
-        extRow.innerHTML = `
-            <label>External Margin</label>
-            <div class="shadow-group">
-              <input id="${area.key}-margin-top" type="number" step="1" placeholder="T" />
-              <input id="${area.key}-margin-right" type="number" step="1" placeholder="R" />
-              <input id="${area.key}-margin-bottom" type="number" step="1" placeholder="B" />
-              <input id="${area.key}-margin-left" type="number" step="1" placeholder="L" />
-            </div>
-        `;
-        fs.appendChild(extRow);
         const thumbRow = document.createElement('div');
         thumbRow.className = 'control-row';
         thumbRow.innerHTML = `
@@ -5015,23 +4998,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const marginInputs = {
-        top: document.getElementById(`${areaKey}-margin-top`),
-        right: document.getElementById(`${areaKey}-margin-right`),
-        bottom: document.getElementById(`${areaKey}-margin-bottom`),
-        left: document.getElementById(`${areaKey}-margin-left`)
-      };
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       const th = document.getElementById(`${areaKey}-thumbHeight`);
-      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
-      document.querySelectorAll(cardSel).forEach(el=>{
-        if(areaKey === 'list' && el.closest('.closed-posts')) return;
-        ['Top','Right','Bottom','Left'].forEach(dir=>{
-          const key = dir.toLowerCase();
-          const m = marginInputs[key];
-          if(m) el.style[`margin${dir}`] = m.value !== '' ? `${m.value}px` : '';
-        });
-      });
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
       document.querySelectorAll(thumbSel).forEach(el=>{
         if(areaKey === 'list' && el.closest('.closed-posts')) return;
@@ -5107,10 +5075,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      ['top','right','bottom','left'].forEach(dir=>{
-        const m = document.getElementById(`${areaKey}-margin-${dir}`);
-        if(m){ data[`${areaKey}-margin-${dir}`] = { value: m.value }; }
-      });
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
       const th = document.getElementById(`${areaKey}-thumbHeight`);
@@ -5197,19 +5161,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const mar = {};
-      ['top','right','bottom','left'].forEach(dir=>{
-        const m = data[`${areaKey}-margin-${dir}`];
-        if(m) mar[dir] = m.value;
-      });
       const tw = data[`${areaKey}-thumbWidth`];
       const th = data[`${areaKey}-thumbHeight`];
-      const sel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
-      const rules = [];
-      ['top','right','bottom','left'].forEach(dir=>{
-        if(mar[dir] !== undefined) rules.push(`margin-${dir}:${mar[dir]}px;`);
-      });
-      if(rules.length) css += `${sel}{${rules.join('')}}` + '\n';
       if(tw || th){
         const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
         const tRules = [];
