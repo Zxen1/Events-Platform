@@ -4496,12 +4496,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
-      const padInputs = {
-        top: document.getElementById(`${areaKey}-padding-top`),
-        right: document.getElementById(`${areaKey}-padding-right`),
-        bottom: document.getElementById(`${areaKey}-padding-bottom`),
-        left: document.getElementById(`${areaKey}-padding-left`)
-      };
       const marginInputs = {
         top: document.getElementById(`${areaKey}-margin-top`),
         right: document.getElementById(`${areaKey}-margin-right`),
@@ -4517,7 +4511,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const cs = getComputedStyle(el);
         ['Top','Right','Bottom','Left'].forEach(dir=>{
           const key = dir.toLowerCase();
-          if(padInputs[key]) padInputs[key].value = parseInt(cs[`padding${dir}`],10) || 0;
           if(marginInputs[key]) marginInputs[key].value = parseInt(cs[`margin${dir}`],10) || 0;
         });
       }
@@ -4796,22 +4789,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
       if(area.key === 'list' || area.key === 'closed-posts'){
-        const padRow = document.createElement('div');
-        padRow.className = 'control-row';
-        padRow.innerHTML = `
-            <label>Internal Padding</label>
-            <div class="shadow-group">
-              <input id="${area.key}-padding-top" type="number" step="1" placeholder="T" />
-              <input id="${area.key}-padding-right" type="number" step="1" placeholder="R" />
-              <input id="${area.key}-padding-bottom" type="number" step="1" placeholder="B" />
-              <input id="${area.key}-padding-left" type="number" step="1" placeholder="L" />
-            </div>
-        `;
-        fs.appendChild(padRow);
         const extRow = document.createElement('div');
         extRow.className = 'control-row';
         extRow.innerHTML = `
-            <label>External Padding</label>
+            <label>External Margin</label>
             <div class="shadow-group">
               <input id="${area.key}-margin-top" type="number" step="1" placeholder="T" />
               <input id="${area.key}-margin-right" type="number" step="1" placeholder="R" />
@@ -5034,12 +5015,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const padInputs = {
-        top: document.getElementById(`${areaKey}-padding-top`),
-        right: document.getElementById(`${areaKey}-padding-right`),
-        bottom: document.getElementById(`${areaKey}-padding-bottom`),
-        left: document.getElementById(`${areaKey}-padding-left`)
-      };
       const marginInputs = {
         top: document.getElementById(`${areaKey}-margin-top`),
         right: document.getElementById(`${areaKey}-margin-right`),
@@ -5053,9 +5028,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(areaKey === 'list' && el.closest('.closed-posts')) return;
         ['Top','Right','Bottom','Left'].forEach(dir=>{
           const key = dir.toLowerCase();
-          const p = padInputs[key];
           const m = marginInputs[key];
-          if(p) el.style[`padding${dir}`] = p.value !== '' ? `${p.value}px` : '';
           if(m) el.style[`margin${dir}`] = m.value !== '' ? `${m.value}px` : '';
         });
       });
@@ -5135,8 +5108,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     ['list','closed-posts'].forEach(areaKey=>{
       ['top','right','bottom','left'].forEach(dir=>{
-        const p = document.getElementById(`${areaKey}-padding-${dir}`);
-        if(p){ data[`${areaKey}-padding-${dir}`] = { value: p.value }; }
         const m = document.getElementById(`${areaKey}-margin-${dir}`);
         if(m){ data[`${areaKey}-margin-${dir}`] = { value: m.value }; }
       });
@@ -5226,11 +5197,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const pad = {};
       const mar = {};
       ['top','right','bottom','left'].forEach(dir=>{
-        const p = data[`${areaKey}-padding-${dir}`];
-        if(p) pad[dir] = p.value;
         const m = data[`${areaKey}-margin-${dir}`];
         if(m) mar[dir] = m.value;
       });
@@ -5239,7 +5207,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const sel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
       const rules = [];
       ['top','right','bottom','left'].forEach(dir=>{
-        if(pad[dir] !== undefined) rules.push(`padding-${dir}:${pad[dir]}px;`);
         if(mar[dir] !== undefined) rules.push(`margin-${dir}:${mar[dir]}px;`);
       });
       if(rules.length) css += `${sel}{${rules.join('')}}` + '\n';
