@@ -4496,32 +4496,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
-      const padInputs = {
-        top: document.getElementById(`${areaKey}-padding-top`),
-        right: document.getElementById(`${areaKey}-padding-right`),
-        bottom: document.getElementById(`${areaKey}-padding-bottom`),
-        left: document.getElementById(`${areaKey}-padding-left`)
-      };
-      const marginInputs = {
-        top: document.getElementById(`${areaKey}-margin-top`),
-        right: document.getElementById(`${areaKey}-margin-right`),
-        bottom: document.getElementById(`${areaKey}-margin-bottom`),
-        left: document.getElementById(`${areaKey}-margin-left`)
-      };
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
-      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
-      const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-      const el = document.querySelector(cardSel);
-      if(el){
-        const cs = getComputedStyle(el);
-        ['Top','Right','Bottom','Left'].forEach(dir=>{
-          const key = dir.toLowerCase();
-          if(padInputs[key]) padInputs[key].value = parseInt(cs[`padding${dir}`],10) || 0;
-          if(marginInputs[key]) marginInputs[key].value = parseInt(cs[`margin${dir}`],10) || 0;
-        });
-      }
       if(twInput || thInput){
+        const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
         const elT = document.querySelector(thumbSel);
         if(elT){
           const cs = getComputedStyle(elT);
@@ -4796,30 +4774,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       });
       if(area.key === 'list' || area.key === 'closed-posts'){
-        const padRow = document.createElement('div');
-        padRow.className = 'control-row';
-        padRow.innerHTML = `
-            <label>Internal Padding</label>
-            <div class="shadow-group">
-              <input id="${area.key}-padding-top" type="number" step="1" placeholder="T" />
-              <input id="${area.key}-padding-right" type="number" step="1" placeholder="R" />
-              <input id="${area.key}-padding-bottom" type="number" step="1" placeholder="B" />
-              <input id="${area.key}-padding-left" type="number" step="1" placeholder="L" />
-            </div>
-        `;
-        fs.appendChild(padRow);
-        const extRow = document.createElement('div');
-        extRow.className = 'control-row';
-        extRow.innerHTML = `
-            <label>External Padding</label>
-            <div class="shadow-group">
-              <input id="${area.key}-margin-top" type="number" step="1" placeholder="T" />
-              <input id="${area.key}-margin-right" type="number" step="1" placeholder="R" />
-              <input id="${area.key}-margin-bottom" type="number" step="1" placeholder="B" />
-              <input id="${area.key}-margin-left" type="number" step="1" placeholder="L" />
-            </div>
-        `;
-        fs.appendChild(extRow);
         const thumbRow = document.createElement('div');
         thumbRow.className = 'control-row';
         thumbRow.innerHTML = `
@@ -5034,31 +4988,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const padInputs = {
-        top: document.getElementById(`${areaKey}-padding-top`),
-        right: document.getElementById(`${areaKey}-padding-right`),
-        bottom: document.getElementById(`${areaKey}-padding-bottom`),
-        left: document.getElementById(`${areaKey}-padding-left`)
-      };
-      const marginInputs = {
-        top: document.getElementById(`${areaKey}-margin-top`),
-        right: document.getElementById(`${areaKey}-margin-right`),
-        bottom: document.getElementById(`${areaKey}-margin-bottom`),
-        left: document.getElementById(`${areaKey}-margin-left`)
-      };
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       const th = document.getElementById(`${areaKey}-thumbHeight`);
-      const cardSel = areaKey === 'list' ? '.res-list .card' : '.closed-posts .card';
-      document.querySelectorAll(cardSel).forEach(el=>{
-        if(areaKey === 'list' && el.closest('.closed-posts')) return;
-        ['Top','Right','Bottom','Left'].forEach(dir=>{
-          const key = dir.toLowerCase();
-          const p = padInputs[key];
-          const m = marginInputs[key];
-          if(p) el.style[`padding${dir}`] = p.value !== '' ? `${p.value}px` : '';
-          if(m) el.style[`margin${dir}`] = m.value !== '' ? `${m.value}px` : '';
-        });
-      });
       const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
       document.querySelectorAll(thumbSel).forEach(el=>{
         if(areaKey === 'list' && el.closest('.closed-posts')) return;
@@ -5134,12 +5065,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      ['top','right','bottom','left'].forEach(dir=>{
-        const p = document.getElementById(`${areaKey}-padding-${dir}`);
-        if(p){ data[`${areaKey}-padding-${dir}`] = { value: p.value }; }
-        const m = document.getElementById(`${areaKey}-margin-${dir}`);
-        if(m){ data[`${areaKey}-margin-${dir}`] = { value: m.value }; }
-      });
       const tw = document.getElementById(`${areaKey}-thumbWidth`);
       if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
       const th = document.getElementById(`${areaKey}-thumbHeight`);
@@ -5226,29 +5151,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
     });
     ['list','closed-posts'].forEach(areaKey=>{
-      const pad = {};
-      const mar = {};
-      ['top','right','bottom','left'].forEach(dir=>{
-        const p = data[`${areaKey}-padding-${dir}`];
-        if(p) pad[dir] = p.value;
-        const m = data[`${areaKey}-margin-${dir}`];
-        if(m) mar[dir] = m.value;
-      });
       const tw = data[`${areaKey}-thumbWidth`];
       const th = data[`${areaKey}-thumbHeight`];
-      const sel = areaKey === 'list' ? '.res-list' : '.closed-posts .res-list';
-      const rules = [];
-      ['top','right','bottom','left'].forEach(dir=>{
-        if(pad[dir] !== undefined) rules.push(`padding-${dir}:${pad[dir]}px;`);
-        if(mar[dir] !== undefined) rules.push(`margin-${dir}:${mar[dir]}px;`);
-      });
-      if(rules.length) css += `${sel}{${rules.join('')}}` + '\n';
       if(tw || th){
         const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
         const tRules = [];
         if(tw) tRules.push(`width:${tw.value}px;`);
         if(th) tRules.push(`height:${th.value}px;`);
-        css += `${thumbSel}{${tRules.join('')}}` + '\n';
+        if(tRules.length) css += `${thumbSel}{${tRules.join('')}}` + '\n';
       }
     });
     return css;
