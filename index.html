@@ -2884,7 +2884,7 @@ function makePosts(){
     $('#tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card, .open-posts')) setMode('map');
+      if(!e.target.closest('.card, .open-posts, .litepicker')) setMode('map');
     });
 
     // Mapbox
@@ -3695,7 +3695,7 @@ function makePosts(){
           marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
-        picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
+        picker = new Litepicker({ element: calendarEl, container: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
         setTimeout(()=> map && map.resize(),0);
         if(sessMenu){
           sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
