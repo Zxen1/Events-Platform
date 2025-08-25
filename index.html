@@ -1133,28 +1133,74 @@ select option:hover{
   border-radius:8px;
 }
 
-.open-posts .location-select{
-  width:300px;
+.open-posts .options-dropdown{
+  width:400px;
 }
 
-.open-posts .location-select option{
-  white-space:pre-line;
+.open-posts .options-dropdown > button{
+  width:100%;
+  height:50px;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
 }
+
+.open-posts .options-dropdown .options-menu{
+  width:100%;
+  max-height:400px;
+  overflow-y:auto;
+}
+
+.open-posts .options-dropdown .options-menu button{
+  width:100%;
+  height:50px;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+}
+
+.open-posts .options-dropdown .options-menu button.selected{
+  background:var(--dropdown-selected-bg);
+  color:var(--dropdown-selected-text);
+}
+
+.open-posts .options-dropdown .options-menu button:hover{
+  background:var(--dropdown-hover-bg);
+  color:var(--dropdown-hover-text);
+}
+
+.open-posts .location-dropdown .venue-name,
+.open-posts .location-dropdown .venue-address{
+  display:block;
+}
+.open-posts .location-dropdown .venue-name{font-weight:bold;}
+
+.open-posts .session-dropdown button{
+  display:flex;
+  align-items:center;
+}
+.open-posts .session-dropdown button .session-date{width:240px;}
+.open-posts .session-dropdown button .session-time{width:100px;}
+
+
+
 
 .open-posts .location-section .calendar-container{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:300px;
+  width:400px;
 }
 
 .open-posts .post-calendar{
-  width:300px;
+  width:400px;
   overflow-x:auto;
-}
-
-.open-posts .session-select{
-  width:300px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -3278,10 +3324,6 @@ function makePosts(){
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
         <div class="detail-header">
-          <div class="title-block">
-            <h2 class="title">${p.title}</h2>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-          </div>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
@@ -3295,19 +3337,17 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
-                <div id="loc-info-${p.id}" class="location-info"></div>
+                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-dropdown options-dropdown"><button aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>` : ``}
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <select id="sess-${p.id}" class="session-select">
-                  <option value="">Select session</option>
-                </select>
-                <div id="session-info-${p.id}" class="session-info">
-                  <div class="placeholder">💲 Price range | 📅 Date range</div>
-                </div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button aria-haspopup="true" aria-expanded="false"></button><div class="options-menu" hidden></div></div>
               </div>
             </div>
+            <h2 class="title">${p.title}</h2>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div id="loc-info-${p.id}" class="location-info"></div>
+            <div id="session-info-${p.id}" class="session-info"><div class="placeholder">💲 Price range | 📅 Date range</div></div>
             <div class="desc">${p.desc}</div>
           </div>
         </div>`;
@@ -3495,16 +3535,49 @@ function makePosts(){
         modalStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
-      const locSelect = el.querySelector(`#loc-${p.id}`);
+      const locDropdown = el.querySelector(`#loc-${p.id}`);
       const locInfo = el.querySelector(`#loc-info-${p.id}`);
-      const sessSelect = el.querySelector(`#sess-${p.id}`);
+      const sessDropdown = el.querySelector(`#sess-${p.id}`);
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
       let map, marker, picker;
+
+      function setupDropdown(dd){
+        if(!dd || dd.dataset.bound) return;
+        dd.dataset.bound = '1';
+        const btn = dd.querySelector('button');
+        const menu = dd.querySelector('.options-menu');
+        btn.addEventListener('click', e=>{
+          e.stopPropagation();
+          const open = !menu.hasAttribute('hidden');
+          if(open){
+            menu.setAttribute('hidden','');
+            btn.setAttribute('aria-expanded','false');
+          } else {
+            menu.removeAttribute('hidden');
+            btn.setAttribute('aria-expanded','true');
+          }
+        });
+        menu.addEventListener('click', e=> e.stopPropagation());
+        document.addEventListener('click', ()=>{
+          menu.setAttribute('hidden','');
+          btn.setAttribute('aria-expanded','false');
+        });
+      }
+
       function updateLocation(idx){
         const loc = p.locations[idx];
         if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
+        if(locDropdown){
+          const btn = locDropdown.querySelector('button');
+          const menuBtns = locDropdown.querySelectorAll('.options-menu button');
+          menuBtns.forEach(b=> b.classList.remove('selected'));
+          const sel = locDropdown.querySelector(`.options-menu button[data-index="${idx}"]`);
+          if(sel){ sel.classList.add('selected'); btn.innerHTML = sel.innerHTML; }
+          locDropdown.querySelector('.options-menu').setAttribute('hidden','');
+          btn.setAttribute('aria-expanded','false');
+        }
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -3521,25 +3594,48 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
         setTimeout(()=> map.resize(),0);
-        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
-        sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-        sessSelect.value = '';
+        if(sessDropdown){
+          const sessBtn = sessDropdown.querySelector('button');
+          const sessMenu = sessDropdown.querySelector('.options-menu');
+          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
+          sessMenu.scrollTop = 0;
+          sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+          if(loc.dates[0]){
+            sessBtn.innerHTML = `<span class="session-date">${loc.dates[0].date}</span><span class="session-time">${loc.dates[0].time}</span>`;
+          } else {
+            sessBtn.textContent = '';
+          }
+          const sessButtons = sessMenu.querySelectorAll('button');
+          sessButtons.forEach(b=>{
+            b.addEventListener('click', ()=>{
+              sessButtons.forEach(x=> x.classList.remove('selected'));
+              b.classList.add('selected');
+              sessBtn.innerHTML = b.innerHTML;
+              sessMenu.setAttribute('hidden','');
+              sessBtn.setAttribute('aria-expanded','false');
+              const dt = loc.dates[parseInt(b.dataset.index,10)];
+              if(dt){
+                sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              } else {
+                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+              }
+            });
+          });
+          setupDropdown(sessDropdown);
+        }
       }
       if(mapEl){
-        setTimeout(()=>{ updateLocation(0); if(map) map.resize(); },0);
-        if(locSelect){
-          locSelect.addEventListener('change', e=> updateLocation(parseInt(e.target.value,10)));
-        }
-        sessSelect.addEventListener('change', e=>{
-          const locIdx = locSelect ? parseInt(locSelect.value,10) : 0;
-          const loc = p.locations[locIdx];
-          const dt = loc.dates[parseInt(e.target.value,10)];
-          if(dt){
-            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-          } else {
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+        setTimeout(()=>{
+          if(locDropdown){
+            setupDropdown(locDropdown);
+            const menu = locDropdown.querySelector('.options-menu');
+            menu.querySelectorAll('button').forEach(btn=>{
+              btn.addEventListener('click', ()=> updateLocation(parseInt(btn.dataset.index,10)));
+            });
           }
-        });
+          updateLocation(0);
+          if(map) map.resize();
+        },0);
       }
     }
 
@@ -3802,7 +3898,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
-    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box']}},
+    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], venueBtnText:['.open-posts .location-dropdown button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .location-dropdown .options-menu button','.open-posts .session-dropdown .options-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
@@ -3856,7 +3952,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
-  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn'};
+  const TEXT_BG_MAP = {text:'bg', title:'card', btnText:'btn', venueBtnText:'btn'};
 
   function updateTextPicker(areaKey, type){
     const picker = document.getElementById(`${areaKey}-${type}-picker`);
@@ -4008,6 +4104,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       set('card', theme.secondary);
       set('btn', theme.primary);
       set('btnText', theme.buttonText);
+      set('venueBtnText', theme.buttonText);
     });
     const b = document.getElementById('body-border-c');
     if(b) b.value = theme.primary;
@@ -4047,7 +4144,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','venueBtnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -4086,14 +4183,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const cs = getComputedStyle(el);
           if(cInput){
             if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image' || type === 'optionsMenu') col = cs.backgroundColor;
-            else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
+            else if(type === 'text' || type === 'btnText' || type === 'title' || type === 'venueBtnText') col = cs.color;
             else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
           if(weightSel) weight = cs.fontWeight;
           if(shColor){
-            if(type==='text' || type==='title' || type==='btnText') shadow = cs.textShadow;
+            if(type==='text' || type==='title' || type==='btnText' || type==='venueBtnText') shadow = cs.textShadow;
             else if(type==='card' || type==='btn') shadow = cs.boxShadow;
           }
           return true;
@@ -4119,7 +4216,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           weightSel.value = parseInt(weight,10) >= 600 ? 'bold' : 'normal';
         }
         if(shColor && shadow && shadow !== 'none'){
-          if(type==='text' || type==='title' || type==='btnText'){
+          if(type==='text' || type==='title' || type==='btnText' || type==='venueBtnText'){
             const m = shadow.match(/(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
             if(m){
               shX.value = m[1];
@@ -4142,7 +4239,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           v.value = currentState[`${area.key}-${type}`].value;
         }
       });
-      ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
+      ['text','title','btnText','venueBtnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
@@ -4269,7 +4366,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const toV = document.getElementById(`${area.key}-${type}`);
           if(fromV && toV){ toV.value = fromV.value; }
         });
-        ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
+        ['text','title','btnText','venueBtnText'].forEach(t=> updateTextPicker(area.key, t));
         applyAdmin();
       });
       const txtBtn = document.createElement('button');
@@ -4279,7 +4376,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       txtBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['text','title','btnText'].forEach(type=>{
+        ['text','title','btnText','venueBtnText'].forEach(type=>{
           const fields = ['c','font','size','weight','shadow-color','shadow-x','shadow-y','shadow-blur'];
           fields.forEach(suf=>{
             const from = document.getElementById(`${lastFieldsetKey}-${type}-${suf}`);
@@ -4318,12 +4415,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.text) types.push('text');
       if(area.selectors.title) types.push('title');
       if(area.selectors.btn) types.push('btn','btnText');
+      if(area.selectors.venueBtnText) types.push('venueBtnText');
       if(area.selectors.border) types.push('border');
       if(area.selectors.hoverBorder) types.push('hoverAdjust','hoverBorder');
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
       if(area.selectors.header) types.push('header');
       if(area.selectors.image) types.push('image');
       if(area.selectors.optionsMenu) types.push('optionsMenu');
+      if(area.selectors.menu) types.push('menu');
         types.forEach(type=>{
           const labelMap = {
             bg: 'Background',
@@ -4332,6 +4431,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             title: 'Title',
             btn: 'Button',
             btnText: 'Button Text',
+            venueBtnText: 'Venue Button Text',
             border: 'Border',
             hoverBorder: 'Hover Border',
             activeBorder: 'Active Border',
@@ -4339,10 +4439,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             activeAdjust: 'Active Brightness',
             header: 'Header',
             image: 'Image Box',
-            optionsMenu: 'Options Menu'
+            optionsMenu: 'Options Menu',
+            menu: 'Menu Background'
           };
           const label = labelMap[type] || type;
-        if(type === 'text' || type === 'title' || type === 'btnText'){
+        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'venueBtnText'){
           const row = document.createElement('div');
           row.className = 'control-row';
           const labelEl = document.createElement('label');
@@ -4406,7 +4507,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu' || type === 'menu'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -4628,7 +4729,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','venueBtnText','header','image','optionsMenu','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4654,7 +4755,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
                 const blur = sb ? sb.value : 0;
                 if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
               }
-            } else if(type==='text' || type==='btnText' || type==='title'){
+            } else if(type==='text' || type==='btnText' || type==='title' || type==='venueBtnText'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -4728,7 +4829,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','venueBtnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4837,13 +4938,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','venueBtnText','header','image','optionsMenu','menu'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
         if(!selectors.length) return;
         const rules = [];
-        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu'){
+        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu' || type==='menu'){
           if(entry.color){
             const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
             rules.push(`background-color:${color};`);
@@ -4852,7 +4953,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const s = entry.shadow; const blur = s.blur || 0;
             rules.push(`box-shadow:0 0 ${blur}px ${s.color};`);
           }
-        } else if(type==='text' || type==='title' || type==='btnText'){
+        } else if(type==='text' || type==='title' || type==='btnText' || type==='venueBtnText'){
           if(entry.color) rules.push(`color:${entry.color};`);
           if(entry.font) rules.push(`font-family:${entry.font};`);
           if(entry.size) rules.push(`font-size:${entry.size}px;`);
