@@ -821,28 +821,6 @@ select option:hover{
   display: inline-block;
 }
 
-.sort-box select{
-  padding-right: 140px;
-}
-
-.sort-box .fav-check{
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--dropdown-text);
-  z-index: 1;
-  background: var(--dropdown-bg);
-  padding: 0 4px;
-}
-
-.sort-box .fav-check input{
-  margin: 0;
-}
 
 .res-list{
   overflow: auto;
@@ -1743,14 +1721,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <button id="filterBtn" aria-label="Open filters modal">Filters</button>
         <div class="sort-box">
           <select id="sortSelect" aria-label="Sort order">
+            <option value="favToggle">Favourites to top</option>
             <option value="az">Title A - Z</option>
             <option value="nearest">Closest</option>
             <option value="soon">Soonest</option>
           </select>
-          <label class="fav-check">
-            <input type="checkbox" id="favToggle" aria-label="Toggle favourites on top" />
-            Favourites to top
-          </label>
         </div>
         <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
       </div>
@@ -2039,7 +2014,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
+          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default',
+          favToTop = false;
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
@@ -2154,7 +2130,7 @@ function buildClusterListHTML(items){
     let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
     arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
   }
-  if($('#favToggle').checked) arr.sort((a,b)=> (b.fav - a.fav));
+  if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
   const list = arr.map(p => {
     return `
       <div class="multi-item" data-id="${p.id}">
@@ -2585,9 +2561,17 @@ function makePosts(){
         });
       }
     });
-    $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    const favToggleBtn = $('#favToggle');
-    favToggleBtn.addEventListener('change', ()=> renderLists(filtered));
+    const sortSelect = $('#sortSelect');
+    let lastSort = sortSelect.value;
+    sortSelect.addEventListener('change', ()=>{
+      if(sortSelect.value === 'favToggle'){
+        favToTop = !favToTop;
+        sortSelect.value = lastSort;
+      } else {
+        lastSort = sortSelect.value;
+      }
+      renderLists(filtered);
+    });
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
       if(input){
@@ -3022,7 +3006,7 @@ function makePosts(){
         let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
         arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
       }
-      if($('#favToggle').checked) arr.sort((a,b)=> (b.fav - a.fav));
+      if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
 
         resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
@@ -4864,7 +4848,16 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           themeSelect.addEventListener("change", ()=>{
             mapStyle = window.mapStyle = themeSelect.value;
             localStorage.setItem("mapStyle", mapStyle);
-            if(window.map) window.map.setStyle(mapStyle);
+            if(window.map){
+              const center = window.map.getCenter();
+              const zoom = window.map.getZoom();
+              const pitch = window.map.getPitch();
+              const bearing = window.map.getBearing();
+              window.map.setStyle(mapStyle);
+              window.map.once('style.load', ()=>{
+                window.map.jumpTo({center, zoom, pitch, bearing});
+              });
+            }
           });
         }
         const skySelect = document.getElementById("skyTheme");
