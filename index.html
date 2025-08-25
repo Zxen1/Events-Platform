@@ -1719,16 +1719,14 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <div class="subheader">
         <button id="filterBtn" aria-label="Open filters modal">Filters</button>
         <div class="options-dropdown">
-          <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Options</button>
+          <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
           <div id="optionsMenu" class="options-menu" hidden>
-            <label><input type="checkbox" id="favChk" /> Favourites to Top</label>
-            <label>Sort Order
-              <select id="sortSelect" aria-label="Sort order">
-                <option value="az">Title A - Z</option>
-                <option value="nearest">Closest</option>
-                <option value="soon">Soonest</option>
-              </select>
-            </label>
+            <button id="favToggle" aria-pressed="false">☆ Favourites to Top</button>
+            <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+              <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
+              <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
+              <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+            </div>
           </div>
         </div>
         <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
@@ -2066,6 +2064,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
+    let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
@@ -2125,7 +2124,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 function buildClusterListHTML(items){
   const soonest = items.map(p=>p.dates[0]).sort()[0];
   const head = `<h4>${items.length} events here<br><span class="soonest">Soonest: <span class="nowrap">${soonest}</span></span></h4>`;
-  const sort = $('#sortSelect').value;
+  const sort = currentSort;
   const arr = items.slice();
   if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
   if(sort==='soon') arr.sort((a,b)=> a.dates[0].localeCompare(b.dates[0]));
@@ -2133,7 +2132,7 @@ function buildClusterListHTML(items){
     let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
     arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
   }
-  if($('#favChk').checked) arr.sort((a,b)=> (b.fav - a.fav));
+  if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
   const list = arr.map(p => {
     return `
       <div class="multi-item" data-id="${p.id}">
@@ -2564,11 +2563,27 @@ function makePosts(){
         });
       }
     });
-    $('#sortSelect').addEventListener('change', ()=> renderLists(filtered));
-    const favChk = $('#favChk');
-    favChk.addEventListener('change', ()=> renderLists(filtered));
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
+    const favToggle = $('#favToggle');
+    const sortButtons = $$('.sort-option');
+
+    favToggle.addEventListener('click', ()=>{
+      favToTop = !favToTop;
+      favToggle.setAttribute('aria-pressed', favToTop);
+      favToggle.textContent = `${favToTop ? '★' : '☆'} Favourites to Top`;
+      renderLists(filtered);
+    });
+
+    sortButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        currentSort = btn.dataset.sort;
+        sortButtons.forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
+        optionsBtn.textContent = btn.textContent;
+        renderLists(filtered);
+      });
+    });
+
     optionsBtn.addEventListener('click', e=>{
       e.stopPropagation();
       const open = !optionsMenu.hasAttribute('hidden');
@@ -3011,7 +3026,7 @@ function makePosts(){
     });
 
     function renderLists(list){
-      const sort = $('#sortSelect').value;
+      const sort = currentSort;
       const arr = list.slice();
       if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
       if(sort==='soon') arr.sort((a,b)=> a.dates[0].localeCompare(b.dates[0]));
@@ -3019,7 +3034,7 @@ function makePosts(){
         let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
         arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
       }
-      if($('#favChk').checked) arr.sort((a,b)=> (b.fav - a.fav));
+      if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
 
         resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
