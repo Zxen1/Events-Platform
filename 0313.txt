@@ -3446,7 +3446,7 @@ function makePosts(){
             container: mapEl,
             style: 'mapbox://styles/mapbox/streets-v11',
             center: [loc.lng, loc.lat],
-            zoom: 13,
+            zoom: 10,
             interactive: false
           });
           marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
