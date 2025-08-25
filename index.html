@@ -409,7 +409,9 @@ select option:hover{
   margin-left:auto;
 }
 #adminModal .shadow-group{
-  flex:1 1 auto;
+  flex:1 1 220px;
+  width:100%;
+  max-width:220px;
   display:flex;
   gap:4px;
   align-items:center;
@@ -421,7 +423,7 @@ select option:hover{
   border-radius:4px;
 }
 #adminModal .shadow-group input[type=number]{
-  width:52px;
+  flex:1 1 0;
 }
 #adminModal .textpicker{
   flex:1 1 220px;
@@ -846,9 +848,9 @@ select option:hover{
 
 .res-list{
   overflow: auto;
-  padding-right: 6px;
   flex: 1;
   min-height: 0;
+  scrollbar-gutter: stable;
 }
 
 .card{
@@ -1145,7 +1147,6 @@ select option:hover{
 .open-posts .post-map{
   width:100%;
   max-width:400px;
-  height:200px;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1288,8 +1289,8 @@ select option:hover{
 }
 
 .open-posts .post-calendar{
-  display:inline-block;
-  overflow:hidden;
+  width:400px;
+  overflow-x:auto;
 }
 
 .open-posts .post-calendar .litepicker{
@@ -1299,6 +1300,10 @@ select option:hover{
 .open-posts .post-calendar .container__months{
   display:flex;
   flex-wrap:nowrap;
+}
+
+.open-posts .post-calendar .container__months .month-item{
+  flex:0 0 400px;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -3695,8 +3700,25 @@ function makePosts(){
           marker.setLngLat([loc.lng, loc.lat]);
         }
         if(picker){ picker.destroy(); }
-        picker = new Litepicker({ element: calendarEl, container: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
-        setTimeout(()=> map && map.resize(),0);
+        const dateStrings = loc.dates.map(d=>d.full).sort();
+        const firstDate = dateStrings.length ? new Date(dateStrings[0]) : new Date();
+        const lastDate = dateStrings.length ? new Date(dateStrings[dateStrings.length-1]) : firstDate;
+        const months = Math.max(1, (lastDate.getFullYear()-firstDate.getFullYear())*12 + (lastDate.getMonth()-firstDate.getMonth()) + 1);
+        picker = new Litepicker({
+          element: calendarEl,
+          container: calendarEl,
+          inlineMode: true,
+          selectMode: 'multiple',
+          highlightedDates: dateStrings,
+          startDate: firstDate,
+          numberOfMonths: months,
+          numberOfColumns: months
+        });
+        calendarEl.scrollLeft = 0;
+        setTimeout(()=>{
+          mapEl.style.height = calendarEl.offsetHeight + 'px';
+          map && map.resize();
+        },0);
         if(sessMenu){
           sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
           sessMenu.scrollTop = 0;
