@@ -338,15 +338,10 @@ select option:hover{
   border-radius:8px;
   padding:10px;
   width:250px;
-  max-height:2000px;
-  transition:max-height .2s ease;
 }
-.admin-fieldset legend{cursor:pointer;}
-.admin-fieldset.collapsed{
-  max-height:100px;
-  overflow:hidden;
-}
-.admin-fieldset.collapsed .fieldset-actions{display:none;}
+.admin-fieldset legend{cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.admin-fieldset legend .fs-toggle{margin-left:8px;padding:2px 6px;font-size:12px;}
+.admin-fieldset.collapsed > *:not(legend){display:none;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
   flex:0 0 250px;
@@ -3705,7 +3700,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
-    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button']}},
+    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button'], optionsMenu:['.options-menu']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
@@ -3954,7 +3949,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -3992,7 +3987,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           if(!el) return false;
           const cs = getComputedStyle(el);
           if(cInput){
-            if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image') col = cs.backgroundColor;
+            if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image' || type === 'optionsMenu') col = cs.backgroundColor;
             else if(type === 'text' || type === 'btnText' || type === 'title') col = cs.color;
             else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
@@ -4013,7 +4008,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const bVal = parseInt(match[3],10);
             const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
             cInput.value = rgbToHex(r,g,bVal);
-            if((type==='bg' || type==='card' || type==='header' || type==='image' || type==='border' || type==='hoverBorder' || type==='activeBorder') && oInput) oInput.value = alpha;
+            if((type==='bg' || type==='card' || type==='header' || type==='image' || type==='border' || type==='hoverBorder' || type==='activeBorder' || type==='optionsMenu') && oInput) oInput.value = alpha;
           }
         }
         if(fontSel && font){
@@ -4135,13 +4130,24 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(!wrap) return;
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
-      fs.className = 'admin-fieldset';
+      fs.className = 'admin-fieldset collapsed';
       fs.dataset.key = area.key;
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
       const lg = document.createElement('legend');
       lg.textContent = area.label;
       lg.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'fs-toggle';
+      toggleBtn.textContent = '+';
+      toggleBtn.addEventListener('click', e=>{
+        e.stopPropagation();
+        fs.classList.toggle('collapsed');
+        lastFieldsetKey = area.key;
+        toggleBtn.textContent = fs.classList.contains('collapsed') ? '+' : '−';
+      });
+      lg.appendChild(toggleBtn);
       fs.appendChild(lg);
       const btnRow = document.createElement('div');
       btnRow.className = 'fieldset-actions';
@@ -4152,7 +4158,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       colBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','btn','border','hoverBorder','activeBorder','header','image'].forEach(type=>{
+        ['bg','card','btn','border','hoverBorder','activeBorder','header','image','optionsMenu'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -4219,6 +4225,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.activeBorder) types.push('activeAdjust','activeBorder');
       if(area.selectors.header) types.push('header');
       if(area.selectors.image) types.push('image');
+      if(area.selectors.optionsMenu) types.push('optionsMenu');
         types.forEach(type=>{
           const labelMap = {
             bg: 'Background',
@@ -4233,7 +4240,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             hoverAdjust: 'Hover Brightness',
             activeAdjust: 'Active Brightness',
             header: 'Header',
-            image: 'Image Box'
+            image: 'Image Box',
+            optionsMenu: 'Options Menu'
           };
           const label = labelMap[type] || type;
         if(type === 'text' || type === 'title' || type === 'btnText'){
@@ -4300,7 +4308,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -4387,8 +4395,20 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
-    misc.className = 'admin-fieldset';
-    misc.innerHTML = '<legend>Miscellaneous</legend>';
+    misc.className = 'admin-fieldset collapsed';
+    const miscLg = document.createElement('legend');
+    miscLg.textContent = 'Miscellaneous';
+    const miscToggle = document.createElement('button');
+    miscToggle.type = 'button';
+    miscToggle.className = 'fs-toggle';
+    miscToggle.textContent = '+';
+    miscToggle.addEventListener('click', e=>{
+      e.stopPropagation();
+      misc.classList.toggle('collapsed');
+      miscToggle.textContent = misc.classList.contains('collapsed') ? '+' : '−';
+    });
+    miscLg.appendChild(miscToggle);
+    misc.appendChild(miscLg);
     const miscColors = [
       {id:'btn', label:'Button Base'},
       {id:'btnHover', label:'Button Hover'},
@@ -4415,8 +4435,20 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
-    dropdown.className = 'admin-fieldset';
-    dropdown.innerHTML = '<legend>Dropdown Boxes</legend>';
+    dropdown.className = 'admin-fieldset collapsed';
+    const ddLg = document.createElement('legend');
+    ddLg.textContent = 'Dropdown Boxes';
+    const ddToggle = document.createElement('button');
+    ddToggle.type = 'button';
+    ddToggle.className = 'fs-toggle';
+    ddToggle.textContent = '+';
+    ddToggle.addEventListener('click', e=>{
+      e.stopPropagation();
+      dropdown.classList.toggle('collapsed');
+      ddToggle.textContent = dropdown.classList.contains('collapsed') ? '+' : '−';
+    });
+    ddLg.appendChild(ddToggle);
+    dropdown.appendChild(ddLg);
     const ddColors = [
       {id:'dropdownTitle', label:'Title'},
       {id:'dropdownSelectedBg', label:'Selected Background', opacity:true},
@@ -4440,17 +4472,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dropdown.appendChild(createTextPickerRow('dropdownHoverText','Hover Text','dropdownHoverBg-c'));
     dropdown.appendChild(createTextPickerRow('dropdownVenueText','Venue','dropdownBg-c'));
     wrap.appendChild(dropdown);
-    makeFieldsetsCollapsible();
-  }
-
-  function makeFieldsetsCollapsible(){
-    document.querySelectorAll('.admin-fieldset').forEach(fs=>{
-      fs.classList.add('collapsed');
-      const lg = fs.querySelector('legend');
-      if(lg){
-        lg.addEventListener('click', ()=> fs.classList.toggle('collapsed'));
-      }
-    });
   }
 
   function applyAdmin(targetInput){
@@ -4509,7 +4530,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4528,7 +4549,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card' || type==='header' || type==='image'){
+            if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
               if(type==='card'){
                 const shadowColor = sc ? sc.value : null;
@@ -4609,7 +4630,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4623,7 +4644,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(c || f || s || v || w || sc){
           const entry = {};
           if(c){ entry.color = c.value; }
-          if((['bg','card','border','hoverBorder','activeBorder'].includes(type)) && o){ entry.opacity = o.value; }
+          if((['bg','card','border','hoverBorder','activeBorder','optionsMenu'].includes(type)) && o){ entry.opacity = o.value; }
           if(v){ entry.value = v.value; }
           if(f){ entry.font = f.value; }
           if(s){ entry.size = s.value; }
@@ -4718,13 +4739,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
         if(!selectors.length) return;
         const rules = [];
-        if(type==='bg' || type==='card' || type==='header' || type==='image'){
+        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu'){
           if(entry.color){
             const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
             rules.push(`background-color:${color};`);
