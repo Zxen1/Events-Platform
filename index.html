@@ -3262,10 +3262,20 @@ function makePosts(){
         favBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           p.fav = !p.fav;
-          favBtn.setAttribute('aria-pressed', p.fav?'true':'false');
+          favBtn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+          const detailEl = el;
+          const container = detailEl.closest('.closed-posts');
           renderLists(filtered);
-          stopSpin();
-          openPost(p.id, !!el.closest('.closed-posts'));
+          renderFooter();
+          const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
+          if(replacement){
+            replacement.replaceWith(detailEl);
+            if(container){
+              ensureGap(container, detailEl);
+            } else {
+              detailEl.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+            }
+          }
         });
       }
 
