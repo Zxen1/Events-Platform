@@ -1159,17 +1159,14 @@ select option:hover{
 
 .open-posts .location-dropdown > button{
   width:100%;
-  height:50px;
+  min-height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
   padding:4px 8px;
   color:var(--button-text);
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
+  display:block;
 }
 
 .open-posts .session-dropdown > button{
@@ -1228,17 +1225,14 @@ select option:hover{
 
 .open-posts .location-menu button{
   width:100%;
-  height:50px;
+  min-height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
   padding:4px 8px;
   color:var(--button-text);
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
+  display:block;
 }
 
 .open-posts .session-menu button{
@@ -1834,8 +1828,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--modal-bg:rgba(0,0,0,0.62);--modal-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
-.open-posts .post-calendar .litepicker-day.is-highlighted{background:var(--session-available);color:var(--button-hover-text);border-radius:4px;}
-.open-posts .post-calendar .litepicker-day.is-selected,.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{background:var(--session-selected);color:var(--button-text);border-radius:4px;}
+.open-posts .post-calendar .litepicker-day.is-highlighted{background:var(--session-available)!important;color:var(--button-hover-text)!important;border-radius:4px!important;}
+.open-posts .post-calendar .litepicker-day.is-selected,.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{background:var(--session-selected)!important;color:var(--button-text)!important;border-radius:4px!important;}
 .open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -3738,17 +3732,19 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
-        const firstDate = dateStrings[0];
-        const lastDate = dateStrings[dateStrings.length-1] || firstDate;
+        const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+        const highlighted = dateStrings.map(toDate);
+        const firstDateObj = highlighted[0];
+        const lastDateObj = highlighted[highlighted.length-1] || firstDateObj;
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
           inlineMode: true,
           selectMode: 'single',
-          highlightedDates: dateStrings,
-          startDate: firstDate,
-          minDate: firstDate,
-          maxDate: lastDate,
+          highlightedDates: highlighted,
+          startDate: firstDateObj,
+          minDate: firstDateObj,
+          maxDate: lastDateObj,
           numberOfMonths: 1,
           numberOfColumns: 1,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
@@ -3774,8 +3770,9 @@ function makePosts(){
               sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
               if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
               ignoreSelect = true;
-              picker.setDate(dt.full);
-              picker.gotoDate(dt.full);
+              const dateObj = toDate(dt.full);
+              picker.setDate(dateObj);
+              picker.gotoDate(dateObj);
               ignoreSelect = false;
               highlightMonth();
             } else {
@@ -5171,8 +5168,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(rootVars.length){
       css += `:root{${rootVars.join('')}}\n`;
     }
-    css += '.open-posts .post-calendar .litepicker-day.is-highlighted{background:var(--session-available);color:var(--button-hover-text);border-radius:4px;}\n';
-    css += '.open-posts .post-calendar .litepicker-day.is-selected,.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{background:var(--session-selected);color:var(--button-text);border-radius:4px;}\n';
+    css += '.open-posts .post-calendar .litepicker-day.is-highlighted{background:var(--session-available)!important;color:var(--button-hover-text)!important;border-radius:4px!important;}\n';
+    css += '.open-posts .post-calendar .litepicker-day.is-selected,.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{background:var(--session-selected)!important;color:var(--button-text)!important;border-radius:4px!important;}\n';
     if(data['open-posts-sticky-header'] && data['open-posts-sticky-header'].value === '1'){
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
