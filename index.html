@@ -2309,9 +2309,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         localStorage.setItem('spinGlobe', 'true');
         if(map){
           stopSpin();
+          renderLists(filtered);
           map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
           map.once('moveend', startSpin);
         }else{
+          renderLists(filtered);
           startSpin();
         }
       });
@@ -2323,6 +2325,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let activePostId = null;
+
+    const resultsCol = document.querySelector('.results-col');
+    let resultsVisible = true;
+    if(resultsCol){
+      const listWidth = resultsCol.getBoundingClientRect().width;
+      if(window.innerWidth < listWidth * 2){
+        resultsCol.remove();
+        resultsVisible = false;
+      }
+    }
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -2652,12 +2664,13 @@ function uniqueTitle(seed, cityName, idx){
 
     
 
-function makePosts(){
+function makePosts(count=900){
   const out = [];
-  // ---- 100 posts at Federation Square (as before) ----
+  // ---- Posts at Federation Square (as before) ----
   const fsLng = 144.9695, fsLat = -37.8178;
   const fsCity = "Federation Square, Melbourne";
-  for(let i=0;i<100;i++){
+  const fsLimit = Math.min(100, count);
+  for(let i=0;i<fsLimit;i++){
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'FS'+i;
@@ -2721,9 +2734,9 @@ function makePosts(){
     {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
   ];
 
-  // Generate ~900 posts across hubs with small jitter to spread within cities
-  const TOTAL_WORLD = 900;
-  for(let i=0;i<TOTAL_WORLD;i++){
+  count -= fsLimit;
+  // Generate posts across hubs with small jitter to spread within cities
+  for(let i=0;i<count;i++){
     const hub = hubs[Math.floor(rnd()*hubs.length)];
     const jitter = ()=> (rnd()-0.5) * 0.2; // ~0.2 degrees spread (~20km)
     const cat = pick(categories);
@@ -2745,10 +2758,8 @@ function makePosts(){
     });
   }
   return out;
+
 }
-
-
-    posts = makePosts();
 
     // Image helpers (unique per post)
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
@@ -3028,7 +3039,14 @@ function makePosts(){
       map.on('style.load', () => {
         applySky(skyStyle);
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
+      map.on('load', ()=>{
+        $('.map-overlay').style.display='none';
+        prepareInitialData();
+        addPostSource();
+        updatePostPanel();
+        applyFilters();
+        if(spinEnabled) startSpin();
+      });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
         map.on('pitch', () => {
@@ -3058,7 +3076,6 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
-      renderLists(filtered);
       map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
@@ -3090,7 +3107,7 @@ function makePosts(){
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-        if(spinEnabled) startSpin(); else stopSpin();
+        if(spinEnabled) { renderLists(filtered); startSpin(); } else stopSpin();
       }
     }
 
@@ -3105,7 +3122,7 @@ function makePosts(){
       set spinLoadType(v){ spinLoadType = v; },
       get spinLogoClick(){ return spinLogoClick; },
       set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
-      startSpin,
+      startSpin: ()=>{ renderLists(filtered); startSpin(); },
       stopSpin,
       updateSpinState,
       updateLogoClickState
@@ -3329,6 +3346,10 @@ function makePosts(){
     });
 
     function renderLists(list){
+      if(!resultsEl || !postsWideEl){
+        updateResultCount(list.length);
+        return;
+      }
       const sort = currentSort;
       const arr = list.slice();
       if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -3423,6 +3444,29 @@ function makePosts(){
         renderFooter();
       });
       return el;
+    }
+
+    function prepareInitialData(){
+      if(!resultsVisible){
+        posts = [];
+        filtered = [];
+        return;
+      }
+      let count = 900;
+      if(spinEnabled){
+        const samplePost = makePosts(1)[0];
+        const temp = card(samplePost);
+        temp.style.visibility = 'hidden';
+        if(resultsEl) resultsEl.appendChild(temp);
+        const rect = temp.getBoundingClientRect();
+        const style = getComputedStyle(temp);
+        const cardHeight = rect.height + parseFloat(style.marginBottom || 0);
+        if(resultsEl) resultsEl.removeChild(temp);
+        const container = document.querySelector('.results-col');
+        count = Math.max(1, Math.floor((container ? container.clientHeight : 0) / cardHeight));
+      }
+      posts = makePosts(count);
+      filtered = posts.slice();
     }
 
     // Footer history
@@ -3566,7 +3610,7 @@ function makePosts(){
         await nextFrame(); await nextFrame();
       }
 
-      if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
+      if(postsWideEl && !postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
 
       (function(){
         const ex = postsWideEl.querySelector('.open-posts');
@@ -3577,10 +3621,10 @@ function makePosts(){
         }
       })();
 
-      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
+      let target = postsWideEl ? postsWideEl.querySelector(`[data-id="${id}"]`) : null;
+      if(postsWideEl && !target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
-      const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
+      const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
       if(resCard) resCard.setAttribute('aria-selected','true');
       const mapCard = document.querySelector('.mapboxgl-popup .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
@@ -3904,7 +3948,6 @@ function makePosts(){
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
     }
 
-    applyFilters();
     setMode('map');
     renderFooter();
   })();
