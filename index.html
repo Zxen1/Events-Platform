@@ -907,6 +907,18 @@ select option:hover{
   text-overflow: ellipsis;
 }
 
+.res-list .info{
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.res-list .info > div{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .badge{
   width: 18px;
   height: 18px;
@@ -2366,6 +2378,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       root.classList.toggle('open-posts-sticky-images', !isBelow);
     }
 
+    window.updateStickyImages = updateStickyImages;
+
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
@@ -3426,10 +3440,9 @@ function makePosts(){
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <span class="badge" title="Venue">📍</span>
-            <span>${p.city}</span>
-            <span class="badge" title="Dates">📅</span>
-            <span>${formatDates(p.dates)}</span>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+            <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
         <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
@@ -3621,7 +3634,9 @@ function makePosts(){
       // class already applied in buildDetail
       target.replaceWith(detail);
       hookDetailActions(detail, p);
-      updateStickyImages();
+      if (typeof updateStickyImages === 'function') {
+        updateStickyImages();
+      }
 
       if(container){
         if(!fromPosts){
@@ -4537,9 +4552,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(stickyImageInput){
       const state = currentState['open-posts-sticky-images'];
       stickyImageInput.checked = state ? state.value === '1' : true;
-      updateStickyImages();
-      stickyImageInput.addEventListener('change', () => {
+      if (typeof updateStickyImages === 'function') {
         updateStickyImages();
+      }
+      stickyImageInput.addEventListener('change', () => {
+        if (typeof updateStickyImages === 'function') {
+          updateStickyImages();
+        }
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
         localStorage.setItem('currentTheme', JSON.stringify(data));
@@ -5664,7 +5683,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   window.addEventListener('resize', window.adjustListHeight);
   window.addEventListener('resize', updateStickyImages);
   window.adjustListHeight();
-  updateStickyImages();
+  if (typeof updateStickyImages === 'function') {
+    updateStickyImages();
+  }
 })();
 </script>
 </body>
