@@ -341,7 +341,7 @@ select option:hover{
 }
 .admin-fieldset legend{cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
 .admin-fieldset legend .fs-toggle{margin-left:8px;padding:2px 6px;font-size:12px;}
-.admin-fieldset.collapsed > *:not(legend){display:none;}
+.admin-fieldset.collapsed > *:not(legend):not(.fieldset-actions){display:none;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
   flex:0 0 250px;
