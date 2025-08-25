@@ -658,6 +658,16 @@ select option:hover{
   cursor: pointer;
   border: 1px solid var(--btn);
 }
+.input .x{
+  margin-left: 6px;
+  display: grid;
+  place-items: center;
+}
+.input .x.active{
+  background: red;
+  border-color: red;
+  color: #fff;
+}
 
 .tiny{
   display: grid;
@@ -1793,7 +1803,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
           </div>
           <div class="field">
-            <label class="t"><input type="checkbox" id="todayOnwards" /> Today Onwards</label>
+            <label class="t"><input id="todayToggle" type="checkbox" checked /> Today Onwards</label>
           </div>
           <div id="datePicker"></div>
 
@@ -2547,14 +2557,25 @@ function makePosts(){
       $('#kwInput').value='';
       $('#dateInput').value='';
       $('#dateInput').dataset.range='';
-      $('#todayOnwards').checked = false;
+      $('#todayToggle').checked = false;
       if(datePicker) datePicker.clearSelection();
       if(geocoder) geocoder.clear();
       applyFilters();
+      updateClearButtons();
     });
 
-    $('#kwInput').addEventListener('input', applyFilters);
-    $('#dateInput').addEventListener('input', applyFilters);
+    function updateClearButtons(){
+      const kw = $('#kwInput');
+      const kwX = kw.parentElement.querySelector('.x');
+      kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      const date = $('#dateInput');
+      const dateX = date.parentElement.querySelector('.x');
+      const hasDate = date.dataset.range || (date.value.trim() && date.value.trim() !== 'Today Onwards');
+      dateX && dateX.classList.toggle('active', !!hasDate);
+    }
+
+    $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
@@ -2563,7 +2584,6 @@ function makePosts(){
       setup: (picker) => {
         picker.on('selected', (start, end) => {
           const input = $('#dateInput');
-          $('#todayOnwards').checked = false;
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
@@ -2571,34 +2591,59 @@ function makePosts(){
             const eDisp = end.format('ddd D MMM');
             input.value = `${sDisp} to ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
+            $('#todayToggle').checked = false;
           } else {
-            input.value = '';
+            input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
             input.dataset.range = '';
           }
           applyFilters();
+          updateClearButtons();
         });
         picker.on('clear:selection', () => {
           const input = $('#dateInput');
-          input.value = '';
+          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
           input.dataset.range = '';
-          $('#todayOnwards').checked = false;
           applyFilters();
+          updateClearButtons();
         });
       }
     });
 
-    const todayChk = $('#todayOnwards');
-    todayChk.addEventListener('change', () => {
-      const input = $('#dateInput');
-      if(todayChk.checked){
-        input.value = 'Today Onwards';
-        input.dataset.range = '';
-        if(datePicker) datePicker.clearSelection();
-      } else {
-        if(input.value === 'Today Onwards') input.value = '';
+    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
+      const input = x.parentElement.querySelector('input');
+      if(input){
+        if(input.id==='dateInput'){
+          input.dataset.range='';
+          if(datePicker) datePicker.clearSelection();
+          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
+        } else {
+          input.value='';
+        }
+        input.focus();
+        applyFilters();
+        updateClearButtons();
       }
-      applyFilters();
-    });
+    }));
+
+    const todayToggle = $('#todayToggle');
+    if(todayToggle){
+      todayToggle.addEventListener('change', ()=>{
+        const input = $('#dateInput');
+        if(todayToggle.checked){
+          input.dataset.range='';
+          if(datePicker) datePicker.clearSelection();
+          input.value = 'Today Onwards';
+        } else {
+          if(input.value === 'Today Onwards') input.value = '';
+        }
+        applyFilters();
+        updateClearButtons();
+      });
+      if(todayToggle.checked){
+        $('#dateInput').value = 'Today Onwards';
+      }
+    }
+    updateClearButtons();
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
     const favToggle = $('#favToggle');
@@ -2635,19 +2680,6 @@ function makePosts(){
       optionsMenu.setAttribute('hidden','');
       optionsBtn.setAttribute('aria-expanded','false');
     });
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
-      const input = x.parentElement.querySelector('input');
-      if(input){
-        input.value='';
-        input.focus();
-        if(input.id==='dateInput'){
-          $('#todayOnwards').checked = false;
-          input.dataset.range='';
-          if(datePicker) datePicker.clearSelection();
-        }
-        applyFilters();
-      }
-    }));
 
     function setMode(m){
       mode = m;
@@ -2769,7 +2801,7 @@ function makePosts(){
       });
       map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
 
-        ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, stopSpin));
+        ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
         map.on('pitch', () => {
           const pIn = document.getElementById('mapPitch');
           const pVal = document.getElementById('pitchVal');
@@ -2797,6 +2829,7 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
+      renderLists(filtered);
       map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
@@ -2810,13 +2843,18 @@ function makePosts(){
       spinning = false;
     }
 
-    document.addEventListener('click', (e)=>{
-      if(e.target.closest('.card, .foot-item')) {
+    function haltSpin(){
+      if(spinEnabled || spinning){
         spinEnabled = false;
-        localStorage.setItem('spinGlobe', 'false');
+        localStorage.setItem('spinGlobe','false');
         stopSpin();
+        renderLists(filtered);
       }
-    }, {capture:true});
+    }
+
+    ['pointerdown','wheel','keydown','touchstart'].forEach(ev=>
+      document.addEventListener(ev, haltSpin, {capture:true})
+    );
 
     function updateSpinState(){
       const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
@@ -3072,16 +3110,29 @@ function makePosts(){
       }
       if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
 
-        resultsEl.innerHTML = '';
-        postsWideEl.innerHTML = '';
-        arr.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
-        if(activePostId){
-          const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
-          if(sel) sel.setAttribute('aria-selected','true');
-        }
-        updateResultCount(arr.length);
-        prioritizeVisibleImages();
+      let toRender = arr;
+      if(spinning && arr.length){
+        const sample = card(arr[0], true);
+        sample.style.visibility = 'hidden';
+        postsWideEl.appendChild(sample);
+        const rect = sample.getBoundingClientRect();
+        const style = getComputedStyle(sample);
+        const cardHeight = rect.height + parseFloat(style.marginBottom || 0);
+        postsWideEl.removeChild(sample);
+        const max = Math.max(1, Math.floor(postsModeEl.clientHeight / cardHeight));
+        toRender = arr.slice(0, max);
       }
+
+      resultsEl.innerHTML = '';
+      postsWideEl.innerHTML = '';
+      toRender.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
+      if(activePostId){
+        const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
+        if(sel) sel.setAttribute('aria-selected','true');
+      }
+      updateResultCount(toRender.length);
+      prioritizeVisibleImages();
+    }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
       if(!d || !d.length) return '';
@@ -3156,7 +3207,7 @@ function makePosts(){
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
         range: $('#dateInput').dataset.range,
-        today: $('#todayOnwards').checked,
+        today: $('#todayToggle').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3167,8 +3218,8 @@ function makePosts(){
       $('#kwInput').value = st.kw || '';
       $('#dateInput').value = st.date || '';
       $('#dateInput').dataset.range = st.range || '';
-      $('#todayOnwards').checked = st.today || false;
-      if($('#todayOnwards').checked){
+      $('#todayToggle').checked = st.today || false;
+      if($('#todayToggle').checked){
         $('#dateInput').value = 'Today Onwards';
         $('#dateInput').dataset.range = '';
       }
@@ -3191,6 +3242,7 @@ function makePosts(){
         postPanel = bounds;
       }
       applyFilters();
+      updateClearButtons();
     }
     function renderFooter(){
       footRow.innerHTML='';
@@ -3493,7 +3545,7 @@ function makePosts(){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
-      const todayChk = $('#todayOnwards');
+      const todayChk = $('#todayToggle');
       if(todayChk && todayChk.checked){
         const today = new Date(); today.setHours(0,0,0,0);
         return p.dates.some(d => new Date(d) >= today);
