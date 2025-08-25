@@ -624,34 +624,36 @@ select option:hover{
 
 .field .input{
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .input input,.input select{
-    width: 100%;
-    height: 40px;
-    border: none;
-    padding: 0 38px 0 12px;
-    outline: 0;
-  }
+  flex: 1;
+  width: 100%;
+  height: 40px;
+  border: none;
+  padding: 0 12px;
+  outline: 0;
+}
 .input input{
-    border-radius: 12px;
-    background: var(--btn);
-    color: var(--ink);
-  }
+  border-radius: 12px;
+  background: var(--btn);
+  color: var(--ink);
+}
 .input select{
-    border-radius: var(--dropdown-radius);
-  }
+  border-radius: var(--dropdown-radius);
+}
 
 .input .x,.input .down{
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: static;
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--btn);
   cursor: pointer;
   border: 1px solid var(--btn);
@@ -1624,6 +1626,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
@@ -1788,6 +1791,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="input"><input id="dateInput" type="text" aria-label="Date range" />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
+          </div>
+          <div class="field">
+            <label class="t"><input type="checkbox" id="todayOnwards" /> Today Onwards</label>
           </div>
           <div id="datePicker"></div>
 
@@ -2541,6 +2547,7 @@ function makePosts(){
       $('#kwInput').value='';
       $('#dateInput').value='';
       $('#dateInput').dataset.range='';
+      $('#todayOnwards').checked = false;
       if(datePicker) datePicker.clearSelection();
       if(geocoder) geocoder.clear();
       applyFilters();
@@ -2556,6 +2563,7 @@ function makePosts(){
       setup: (picker) => {
         picker.on('selected', (start, end) => {
           const input = $('#dateInput');
+          $('#todayOnwards').checked = false;
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
@@ -2573,9 +2581,23 @@ function makePosts(){
           const input = $('#dateInput');
           input.value = '';
           input.dataset.range = '';
+          $('#todayOnwards').checked = false;
           applyFilters();
         });
       }
+    });
+
+    const todayChk = $('#todayOnwards');
+    todayChk.addEventListener('change', () => {
+      const input = $('#dateInput');
+      if(todayChk.checked){
+        input.value = 'Today Onwards';
+        input.dataset.range = '';
+        if(datePicker) datePicker.clearSelection();
+      } else {
+        if(input.value === 'Today Onwards') input.value = '';
+      }
+      applyFilters();
     });
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
@@ -2619,6 +2641,7 @@ function makePosts(){
         input.value='';
         input.focus();
         if(input.id==='dateInput'){
+          $('#todayOnwards').checked = false;
           input.dataset.range='';
           if(datePicker) datePicker.clearSelection();
         }
@@ -3060,7 +3083,12 @@ function makePosts(){
         prioritizeVisibleImages();
       }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){ if(!d||!d.length) return ''; if(d.length===1) return d[0]; return `${d[0]} + ${d.length-1} more`; }
+    function formatDates(d){
+      if(!d || !d.length) return '';
+      const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      if(d.length===1) return fmt(d[0]);
+      return `${fmt(d[0])} + ${d.length-1} more`;
+    }
 
     function prioritizeVisibleImages(){
       const roots = [resultsEl, postsWideEl];
@@ -3128,6 +3156,7 @@ function makePosts(){
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
         range: $('#dateInput').dataset.range,
+        today: $('#todayOnwards').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -3138,6 +3167,11 @@ function makePosts(){
       $('#kwInput').value = st.kw || '';
       $('#dateInput').value = st.date || '';
       $('#dateInput').dataset.range = st.range || '';
+      $('#todayOnwards').checked = st.today || false;
+      if($('#todayOnwards').checked){
+        $('#dateInput').value = 'Today Onwards';
+        $('#dateInput').dataset.range = '';
+      }
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -3459,6 +3493,11 @@ function makePosts(){
     }
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
+      const todayChk = $('#todayOnwards');
+      if(todayChk && todayChk.checked){
+        const today = new Date(); today.setHours(0,0,0,0);
+        return p.dates.some(d => new Date(d) >= today);
+      }
       const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
       if(!raw){
         return true;
