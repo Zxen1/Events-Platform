@@ -667,13 +667,22 @@ select option:hover{
 }
 .input .x{
   margin-left: 6px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 .input .x.active{
   background: red;
   border-color: red;
   color: #fff;
+}
+
+#filterModal .field label.t{
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tiny{
@@ -1279,15 +1288,12 @@ select option:hover{
 }
 
 .open-posts .post-calendar{
-  width:100%;
-  max-width:400px;
-  height:300px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  display:inline-block;
+  overflow:hidden;
 }
 
 .open-posts .post-calendar .litepicker{
-  height:100%;
+  font-size:16px;
 }
 
 .open-posts .post-calendar .container__months{
@@ -1970,7 +1976,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
           </div>
           <div class="field">
-            <label class="t"><input id="todayToggle" type="checkbox" checked /> Today Onwards</label>
+            <label class="t">Today Onwards <input id="todayToggle" type="checkbox" checked /></label>
           </div>
           <div id="datePicker"></div>
 
@@ -2206,7 +2212,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     const startZoom = savedView?.zoom || 1.5;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
-      let map, geocoder, spinning = false, datePicker,
+      let map, geocoder, spinning = false, datePicker, todayWasOn = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -2725,6 +2731,7 @@ function makePosts(){
       $('#dateInput').value='';
       $('#dateInput').dataset.range='';
       $('#todayToggle').checked = false;
+      todayWasOn = false;
       if(datePicker) datePicker.clearSelection();
       if(geocoder) geocoder.clear();
       applyFilters();
@@ -2758,6 +2765,7 @@ function makePosts(){
             const eDisp = end.format('ddd D MMM');
             input.value = `${sDisp} to ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
+            todayWasOn = todayToggle && todayToggle.checked;
             $('#todayToggle').checked = false;
           } else {
             input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
@@ -2768,10 +2776,12 @@ function makePosts(){
         });
         picker.on('clear:selection', () => {
           const input = $('#dateInput');
-          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
+          if(todayWasOn && todayToggle) todayToggle.checked = true;
+          input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
           input.dataset.range = '';
           applyFilters();
           updateClearButtons();
+          todayWasOn = todayToggle && todayToggle.checked;
         });
       }
     });
@@ -2782,7 +2792,6 @@ function makePosts(){
         if(input.id==='dateInput'){
           input.dataset.range='';
           if(datePicker) datePicker.clearSelection();
-          input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
         } else {
           input.value='';
         }
@@ -2793,6 +2802,7 @@ function makePosts(){
     }));
 
     const todayToggle = $('#todayToggle');
+    todayWasOn = todayToggle && todayToggle.checked;
     if(todayToggle){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
@@ -2803,6 +2813,7 @@ function makePosts(){
         } else {
           if(input.value === 'Today Onwards') input.value = '';
         }
+        todayWasOn = todayToggle.checked;
         applyFilters();
         updateClearButtons();
       });
