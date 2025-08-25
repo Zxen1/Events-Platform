@@ -2979,6 +2979,7 @@ function makePosts(){
     const resultsEl = $('#results');
     const postsWideEl = $('#postsWide');
     const postsModeEl = $('.closed-posts');
+    let openPostScrollDetach = null;
 
     postsModeEl.addEventListener('scroll', () => {
       const last = postsWideEl.lastElementChild;
@@ -2987,6 +2988,22 @@ function makePosts(){
       const lastTop = last.getBoundingClientRect().top;
       if(lastTop < limit){ postsModeEl.scrollTop -= (limit - lastTop); }
     });
+
+    function setupOpenPostScroll(el){
+      if(openPostScrollDetach) openPostScrollDetach();
+      const body = el.querySelector('.body');
+      const header = el.querySelector('.detail-header');
+      if(!body || !header){ openPostScrollDetach = null; return; }
+      const container = postsModeEl;
+      function check(){
+        const headerBottom = header.getBoundingClientRect().bottom;
+        const containerTop = container.getBoundingClientRect().top;
+        body.style.display = headerBottom < containerTop ? 'none' : '';
+      }
+      container.addEventListener('scroll', check);
+      check();
+      openPostScrollDetach = () => container.removeEventListener('scroll', check);
+    }
 
     function renderLists(list){
       const sort = $('#sortSelect').value;
@@ -3386,6 +3403,7 @@ function makePosts(){
           }
         });
       }
+      setupOpenPostScroll(el);
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
