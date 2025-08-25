@@ -1117,17 +1117,25 @@ select option:hover{
   flex-wrap:wrap;
 }
 
+
 .open-posts .location-section{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
-  margin-top:8px;
+  margin-top:0;
 }
 
-.open-posts .location-section .map-container{width:400px;}
+.open-posts .location-section .map-container{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  width:100%;
+  max-width:400px;
+}
 
 .open-posts .post-map{
-  width:400px;
+  width:100%;
+  max-width:400px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1137,22 +1145,40 @@ select option:hover{
 .open-posts .location-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  width:400px;
+  width:100%;
+  max-width:400px;
 }
 
-.open-posts .location-dropdown > button,
-.open-posts .session-dropdown > button{
+
+
+.open-posts .location-dropdown > button{
   width:100%;
   height:50px;
-  background:var(--dropdown-bg);
-  border:1px solid var(--border);
+  background:var(--btn);
+  border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
   padding:4px 8px;
+  color:var(--button-text);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
 }
 
-.open-posts .location-dropdown > button{color:var(--dropdown-venue-text);}
-.open-posts .session-dropdown > button{color:var(--dropdown-text);}
+.open-posts .session-dropdown > button{
+  width:100%;
+  height:50px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+  color:var(--button-text);
+  display:flex;
+  align-items:center;
+}
+
 
 .open-posts .location-dropdown > button .venue-name{
   font-weight:bold;
@@ -1160,6 +1186,15 @@ select option:hover{
 }
 
 .open-posts .location-dropdown > button .venue-address{
+  display:block;
+}
+
+.open-posts .location-menu button .venue-name{
+  font-weight:bold;
+  display:block;
+}
+
+.open-posts .location-menu button .venue-address{
   display:block;
 }
 
@@ -1185,19 +1220,34 @@ select option:hover{
 .open-posts .location-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
 
-.open-posts .location-menu button,
-.open-posts .session-menu button{
+.open-posts .location-menu button{
   width:100%;
   height:50px;
-  background:var(--dropdown-bg);
-  border:1px solid var(--border);
+  background:var(--btn);
+  border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
   padding:4px 8px;
+  color:var(--button-text);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
 }
 
-.open-posts .location-menu button{color:var(--dropdown-venue-text);}
-.open-posts .session-menu button{color:var(--dropdown-text);}
+.open-posts .session-menu button{
+  width:100%;
+  height:50px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+  color:var(--button-text);
+  display:flex;
+  align-items:center;
+}
+
 
 .open-posts .location-menu button.selected,
 .open-posts .session-menu button.selected{
@@ -1210,22 +1260,10 @@ select option:hover{
   background:var(--dropdown-hover-bg);
   color:var(--dropdown-hover-text);
 }
-
-.open-posts .session-menu button{
-  display:flex;
-  align-items:center;
-}
-
 .open-posts .session-menu button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
-
-.open-posts .session-dropdown > button{
-  display:flex;
-  align-items:center;
-}
-
 .open-posts .session-dropdown > button .session-time{
   margin-left:auto;
   padding-right:20px;
@@ -1236,12 +1274,31 @@ select option:hover{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:400px;
+  width:100%;
+  max-width:400px;
 }
 
 .open-posts .post-calendar{
-  width:400px;
+  width:100%;
+  max-width:400px;
+  height:300px;
   overflow-x:auto;
+  overflow-y:hidden;
+}
+
+.open-posts .post-calendar .litepicker{
+  height:100%;
+}
+
+.open-posts .post-calendar .container__months{
+  display:flex;
+  flex-wrap:nowrap;
+}
+
+.open-posts .post-calendar .litepicker-day.is-highlighted{
+  background:var(--accent);
+  color:var(--button-hover-text);
+  border-radius:4px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -1299,6 +1356,22 @@ select option:hover{
 
 .desc{
   margin-top: 8px;
+}
+
+@media (max-width:840px){
+  .open-posts .body{
+    grid-template-columns:1fr;
+  }
+  .open-posts .img-box,
+  .open-posts .location-section .map-container,
+  .open-posts .location-section .calendar-container,
+  .open-posts .post-map,
+  .open-posts .post-calendar,
+  .open-posts .location-dropdown,
+  .open-posts .session-dropdown{
+    max-width:100%;
+    width:100%;
+  }
 }
 
 footer{
@@ -1759,7 +1832,7 @@ body{background-color:rgba(41,41,41,1);}
 .open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
 .open-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;margin:8px 0 4px;}
 .open-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .open-posts .detail-header{background-color:#000000;}
@@ -3365,6 +3438,10 @@ function makePosts(){
       wrap.dataset.id = p.id;
       wrap.innerHTML = `
         <div class="detail-header">
+          <div class="title-block">
+            <div class="t">${p.title}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+          </div>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
