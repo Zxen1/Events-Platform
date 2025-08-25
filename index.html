@@ -3382,606 +3382,60 @@ function makePosts(){
 
     function showWelcome(){
       welcomeVisible = true;
-      [resultsEl, postsWideEl].forEach(root=>{
-        if(!root) return;
-        root.style.position = 'relative';
-        const wrap = document.createElement('div');
-        wrap.setAttribute('data-welcome','');
-        wrap.style.position = 'absolute';
-        wrap.style.top = '0';
-        wrap.style.left = '0';
-        wrap.style.right = '0';
-        wrap.style.bottom = '0';
-        wrap.style.width = '100%';
-        wrap.style.height = '100%';
-        if(welcomeImage){
-          const img = document.createElement('img');
-          img.src = welcomeImage;
-          img.alt = 'Welcome';
-          img.style.width = '100%';
-          img.style.position = 'relative';
-          img.style.zIndex = '0';
-          wrap.appendChild(img);
-        } else {
-          wrap.style.height = '100%';
-        }
-        const bg = document.createElement('div');
-        bg.style.position = 'absolute';
-        bg.style.top = '0';
-        bg.style.left = '0';
-        bg.style.right = '0';
-        bg.style.bottom = '0';
-        bg.style.background = hexToRgba(welcomeBgColor, welcomeBgOpacity);
-        bg.style.zIndex = '1';
-        wrap.appendChild(bg);
-        const msg = document.createElement('div');
-        msg.textContent = welcomeMessage;
-        msg.style.position = 'absolute';
-        msg.style.top = '0';
-        msg.style.left = '0';
-        msg.style.right = '0';
-        msg.style.bottom = '0';
-        msg.style.display = 'flex';
-        msg.style.alignItems = 'center';
-        msg.style.justifyContent = 'center';
-        msg.style.textAlign = 'center';
-        msg.style.padding = '20px';
-        msg.style.boxSizing = 'border-box';
-        msg.style.zIndex = '2';
-        msg.style.color = welcomeTextStyle.color;
-        msg.style.fontFamily = welcomeTextStyle.font;
-        msg.style.fontSize = welcomeTextStyle.size + 'px';
-        msg.style.fontWeight = welcomeTextStyle.weight;
-        msg.style.textShadow = `${welcomeTextStyle.shadow.x}px ${welcomeTextStyle.shadow.y}px ${welcomeTextStyle.shadow.blur}px ${welcomeTextStyle.shadow.color}`;
-        wrap.appendChild(msg);
-        root.appendChild(wrap);
-      });
+      const root = document.body;
+      const wrap = document.createElement('div');
+      wrap.setAttribute('data-welcome','');
+      wrap.style.position = 'fixed';
+      wrap.style.top = '0';
+      wrap.style.left = '0';
+      wrap.style.right = '0';
+      wrap.style.bottom = '0';
+      wrap.style.width = '100%';
+      wrap.style.height = '100%';
+      if(welcomeImage){
+        const img = document.createElement('img');
+        img.src = welcomeImage;
+        img.alt = 'Welcome';
+        img.style.width = '100%';
+        img.style.position = 'relative';
+        img.style.zIndex = '0';
+        wrap.appendChild(img);
+      }
+      const bg = document.createElement('div');
+      bg.style.position = 'absolute';
+      bg.style.top = '0';
+      bg.style.left = '0';
+      bg.style.right = '0';
+      bg.style.bottom = '0';
+      bg.style.background = hexToRgba(welcomeBgColor, welcomeBgOpacity);
+      bg.style.zIndex = '1';
+      wrap.appendChild(bg);
+      const msg = document.createElement('div');
+      msg.textContent = welcomeMessage;
+      msg.style.position = 'absolute';
+      msg.style.top = '0';
+      msg.style.left = '0';
+      msg.style.right = '0';
+      msg.style.bottom = '0';
+      msg.style.display = 'flex';
+      msg.style.alignItems = 'center';
+      msg.style.justifyContent = 'center';
+      msg.style.textAlign = 'center';
+      msg.style.padding = '20px';
+      msg.style.boxSizing = 'border-box';
+      msg.style.zIndex = '2';
+      msg.style.color = welcomeTextStyle.color;
+      msg.style.fontFamily = welcomeTextStyle.font;
+      msg.style.fontSize = welcomeTextStyle.size + 'px';
+      msg.style.fontWeight = welcomeTextStyle.weight;
+      msg.style.textShadow = `${welcomeTextStyle.shadow.x}px ${welcomeTextStyle.shadow.y}px ${welcomeTextStyle.shadow.blur}px${welcomeTextStyle.shadow.color}`;
+      wrap.appendChild(msg);
+      root.appendChild(wrap);
     }
     function hideWelcome(){
       welcomeVisible = false;
-      [resultsEl, postsWideEl].forEach(root=>{
-        const w = root?.querySelector('[data-welcome]');
-        if(w) root.removeChild(w);
-      });
-    }
-
-    function renderLists(list){
-      const sort = currentSort;
-      const arr = list.slice();
-      if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
-      if(sort==='soon') arr.sort((a,b)=> a.dates[0].localeCompare(b.dates[0]));
-      if(sort==='nearest'){
-        let ref = {lng:0,lat:0}; if(map){ const c = map.getCenter(); ref = {lng:c.lng,lat:c.lat}; }
-        arr.sort((a,b)=> distKm({lng:a.lng,lat:a.lat}, ref) - distKm({lng:b.lng,lat:b.lat}, ref));
-      }
-      if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
-
-      let toRender = arr;
-      if(spinning && arr.length){
-        const sample = card(arr[0], true);
-        sample.style.visibility = 'hidden';
-        postsWideEl.appendChild(sample);
-        const rect = sample.getBoundingClientRect();
-        const style = getComputedStyle(sample);
-        const cardHeight = rect.height + parseFloat(style.marginBottom || 0);
-        postsWideEl.removeChild(sample);
-        const max = Math.max(1, Math.floor(postsModeEl.clientHeight / cardHeight));
-        toRender = arr.slice(0, max);
-      }
-
-      resultsEl.innerHTML = '';
-      postsWideEl.innerHTML = '';
-      toRender.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
-      if(activePostId){
-        const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
-        if(sel) sel.setAttribute('aria-selected','true');
-      }
-      updateResultCount(toRender.length);
-      prioritizeVisibleImages();
-    }
-    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
-    function formatDates(d){
-      if(!d || !d.length) return '';
-      const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      if(d.length===1) return fmt(d[0]);
-      return `${fmt(d[0])} + ${d.length-1} more`;
-    }
-
-    function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
-      roots.forEach(root => {
-        if(!root) return;
-        const imgs = root.querySelectorAll('img.thumb');
-        if(!imgs.length) return;
-        if('IntersectionObserver' in window){
-          const obs = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-              if(entry.isIntersecting){
-                const img = entry.target;
-                img.loading = 'eager';
-                img.fetchPriority = 'high';
-                obs.unobserve(img);
-              }
-            });
-          }, {root});
-          imgs.forEach(img => obs.observe(img));
-        } else {
-          imgs.forEach(img => img.loading = 'eager');
-        }
-      });
-    }
-
-    function card(p, wide=false){
-      const el = document.createElement('article');
-      el.className = 'card';
-      el.dataset.id = p.id;
-      if(wide) el.style.gridTemplateColumns='70px 1fr 36px';
-      el.innerHTML = `
-        <img class="thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
-        <div class="meta">
-          <div class="title">${p.title}</div>
-          <div class="info">
-            <span class="badge" title="Venue">📍</span>
-            <span>${p.city}</span>
-            <span class="badge" title="Dates">📅</span>
-            <span>${formatDates(p.dates)}</span>
-          </div>
-        </div>
-        <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-          <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-        </button>
-      `;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); openPost(p.id, wide); });
-      el.querySelector('.fav').addEventListener('click', (e)=>{
-        p.fav = !p.fav;
-        document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
-          btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
-        });
-        renderFooter();
-      });
-      return el;
-    }
-
-    // Footer history
-    const footRow = $('#footRow');
-    function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
-    function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
-
-    function captureState(){
-      return {
-        bounds: map ? map.getBounds().toArray() : null,
-        kw: $('#kwInput').value,
-        date: $('#dateInput').value,
-        range: $('#dateInput').dataset.range,
-        today: $('#todayToggle').checked,
-        cats: [...selection.cats],
-        subs: [...selection.subs]
-      };
-    }
-
-    function restoreState(st){
-      if(!st) return;
-      $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || '';
-      $('#dateInput').dataset.range = st.range || '';
-      $('#todayToggle').checked = st.today || false;
-      if($('#todayToggle').checked){
-        $('#dateInput').value = 'Today Onwards';
-        $('#dateInput').dataset.range = '';
-      }
-      selection.cats = new Set(st.cats || []);
-      selection.subs = new Set(st.subs || []);
-      $$('.cat').forEach(el=>{
-        const label = el.querySelector('.label').textContent;
-        const expanded = selection.cats.has(label);
-        el.setAttribute('aria-expanded', expanded?'true':'false');
-        el.querySelectorAll('.sub .chip').forEach(ch=>{
-          const subName = ch.textContent.trim();
-          const key = label+'::'+subName;
-          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
-        });
-      });
-      if(map && st.bounds){
-        stopSpin();
-        const bounds = new mapboxgl.LngLatBounds(st.bounds);
-        map.fitBounds(bounds, {duration:0});
-        postPanel = bounds;
-      }
-      applyFilters();
-      updateClearButtons();
-    }
-    function renderFooter(){
-      footRow.innerHTML='';
-      if(!viewHistory.length){ return; }
-      // render oldest -> newest so newest appears at the far right
-      const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
-        for(const v of items){
-          const p = posts.find(x=>x.id===v.id);
-          const el = document.createElement('div');
-          el.className='chip-small foot-item';
-          el.dataset.id = v.id;
-          el.title=v.title+' — '+v.city;
-          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
-          if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', ()=>{ stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
-          footRow.appendChild(el);
-        }
-      // scroll to the far right to reveal the newest
-      footRow.scrollLeft = footRow.scrollWidth;
-    }
-
-    function buildDetail(p){
-      const wrap = document.createElement('div');
-      wrap.className = 'open-posts';
-      wrap.dataset.id = p.id;
-      wrap.innerHTML = `
-        <div class="detail-header">
-          <div class="title-block">
-            <div class="t">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-          </div>
-          <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
-            <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
-          </button>
-        </div>
-        <div class="body">
-          <div class="img-area">
-            <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
-            <div class="thumb-column"></div>
-          </div>
-          <div class="text">
-            <div class="location-section">
-              <div class="map-container">
-                <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-dropdown options-dropdown"><button class="loc-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="location-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>` : ``}
-              </div>
-              <div class="calendar-container">
-                <div id="cal-${p.id}" class="post-calendar"></div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
-              </div>
-            </div>
-            <h2 class="title">${p.title}</h2>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div id="loc-info-${p.id}" class="location-info"></div>
-            <div id="session-info-${p.id}" class="session-info">
-              <div class="placeholder">💲 Price range | 📅 Date range</div>
-            </div>
-            <div class="desc">${p.desc}</div>
-          </div>
-        </div>`;
-        // progressive hero swap
-        (function(){
-          const img = wrap.querySelector('#hero-img');
-          if(img){
-            const full = img.getAttribute('data-full');
-            const hi = new Image();
-            hi.referrerPolicy = 'no-referrer';
-            hi.fetchPriority = 'high';
-            hi.onload = ()=>{
-              const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-              if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-            };
-            hi.onerror = ()=>{};
-            hi.src = full;
-          }
-        })();
-        return wrap;
-    }
-
-    async function openPost(id, fromPosts=false){
-      spinEnabled = false;
-      localStorage.setItem('spinGlobe', 'false');
-      stopSpin();
-      const p = posts.find(x=>x.id===id); if(!p) return;
-      activePostId = id;
-      $$('.card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('.mapboxgl-popup .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      if(mode !== 'posts'){
-        setMode('posts');
-        await nextFrame(); await nextFrame();
-      }
-
-      if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
-
-      (function(){
-        const ex = postsWideEl.querySelector('.open-posts');
-        if(ex){
-          const exId = ex.dataset && ex.dataset.id;
-          const prev = posts.find(x=> x.id===exId);
-          if(prev){ ex.replaceWith(card(prev, true)); } else { ex.remove(); }
-        }
-      })();
-
-      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
-      if(!target){ return; }
-      const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
-      if(resCard) resCard.setAttribute('aria-selected','true');
-      const mapCard = document.querySelector('.mapboxgl-popup .hover-card');
-      if(mapCard) mapCard.setAttribute('aria-selected','true');
-
-      const container = target.closest('.closed-posts');
-      if(container){
-        if(!fromPosts){
-          const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
-        }
-      } else {
-        target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      }
-
-      const detail = buildDetail(p);
-      // class already applied in buildDetail
-      target.replaceWith(detail);
-      hookDetailActions(detail, p);
-
-      if(container){
-        if(!fromPosts){
-          const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
-        }
-        ensureGap(container, detail);
-      } else {
-        detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      }
-
-
-      // Update history on open (keep newest-first)
-      viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
-      if(viewHistory.length>100) viewHistory.length=100;
-      saveHistory(); renderFooter();
-    }
-
-    function ensureGap(container, el){
-      const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-      const desired = el.offsetTop - pad - 12;
-      if(container.scrollTop > desired){ container.scrollTop = Math.max(desired, 0); }
-    }
-
-    function hookDetailActions(el, p){
-      const favBtn = el.querySelector('.fav');
-      if(favBtn){
-        favBtn.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          p.fav = !p.fav;
-          document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
-            btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
-          });
-          const detailEl = el;
-          const container = detailEl.closest('.closed-posts');
-          renderFooter();
-          const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
-          if(replacement){
-            replacement.replaceWith(detailEl);
-            if(container){
-              ensureGap(container, detailEl);
-            } else {
-              detailEl.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-            }
-          }
-        });
-      }
-
-      const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
-      const thumbCol = el.querySelector('.thumb-column');
-      const mainImg = el.querySelector('.img-box img');
-      imgs.forEach((url,i)=>{
-        const t = document.createElement('img');
-        t.src = url;
-        t.dataset.full = url;
-        t.dataset.index = i;
-        t.tabIndex = 0;
-        thumbCol.appendChild(t);
-      });
-      function show(idx){
-        const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
-        if(!t) return;
-        mainImg.src = t.src;
-        mainImg.dataset.index = idx;
-        const hi = new Image();
-        const full = t.dataset.full;
-        hi.onload = ()=>{ if(mainImg.dataset.index==idx) mainImg.src = full; };
-        hi.src = full;
-        thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
-      }
-      show(0);
-      thumbCol.addEventListener('click', e=>{
-        const t = e.target.closest('img');
-        if(t) show(parseInt(t.dataset.index,10));
-      });
-      thumbCol.addEventListener('keydown', e=>{
-        const cur = parseInt(mainImg.dataset.index||'0',10);
-        if(e.key==='ArrowDown'){
-          e.preventDefault();
-          const ni = Math.min(cur+1, imgs.length-1);
-          show(ni);
-          thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
-        } else if(e.key==='ArrowUp'){
-          e.preventDefault();
-          const ni = Math.max(cur-1,0);
-          show(ni);
-          thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
-        }
-      });
-      function openImageModal(start){
-        const modal = document.createElement('div');
-        modal.className = 'img-modal';
-        const imgEl = document.createElement('img');
-        let idx = start;
-        imgEl.src = imgs[idx];
-        imgEl.dataset.index = idx;
-        modal.appendChild(imgEl);
-        function next(){
-          idx = (idx+1)%imgs.length;
-          imgEl.src = imgs[idx];
-          imgEl.dataset.index = idx;
-        }
-        const entry = {remove: ()=> modal.remove()};
-        modal.addEventListener('click', e=>{
-          if(e.target===modal){
-            modal.remove();
-            const i = modalStack.indexOf(entry);
-            if(i!==-1) modalStack.splice(i,1);
-          } else {
-            next();
-          }
-        });
-        imgEl.addEventListener('click', next);
-        document.body.appendChild(modal);
-        modalStack.push(entry);
-      }
-      mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
-      const locDropdown = el.querySelector(`#loc-${p.id}`);
-      const locBtn = locDropdown ? locDropdown.querySelector('.loc-btn') : null;
-      const locMenu = locDropdown ? locDropdown.querySelector('.location-menu') : null;
-      const locInfo = el.querySelector(`#loc-info-${p.id}`);
-      const sessDropdown = el.querySelector(`#sess-${p.id}`);
-      const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
-      const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
-      const sessionInfo = el.querySelector(`#session-info-${p.id}`);
-      const calendarEl = el.querySelector(`#cal-${p.id}`);
-      const mapEl = el.querySelector(`#map-${p.id}`);
-      let map, marker, picker;
-      function updateLocation(idx){
-        const loc = p.locations[idx];
-        loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
-        if(locInfo) locInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(locBtn) locBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
-        if(!map){
-          map = new mapboxgl.Map({
-            container: mapEl,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [loc.lng, loc.lat],
-            zoom: 10,
-            interactive: false
-          });
-          marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
-        } else {
-          map.setCenter([loc.lng, loc.lat]);
-          marker.setLngLat([loc.lng, loc.lat]);
-        }
-        if(picker){ picker.destroy(); }
-        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
-        const allowedSet = new Set(dateStrings);
-        const firstDate = dateStrings[0];
-        const lastDate = dateStrings[dateStrings.length-1] || firstDate;
-        picker = new Litepicker({
-          element: calendarEl,
-          container: calendarEl,
-          inlineMode: true,
-          selectMode: 'single',
-          highlightedDates: dateStrings,
-          startDate: firstDate,
-          minDate: firstDate,
-          maxDate: lastDate,
-          numberOfMonths: 1,
-          numberOfColumns: 1,
-          lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
-        });
-        const lp = calendarEl.querySelector('.litepicker');
-        if(lp && mapEl) lp.style.width = mapEl.offsetWidth + 'px';
-        calendarEl.addEventListener('click', e=> e.stopPropagation());
-        let ignoreSelect = false;
-        function highlightMonth(){
-          calendarEl.querySelectorAll('.month-name').forEach(n=> n.classList.remove('selected-month-name'));
-          const m = calendarEl.querySelector('.month-name');
-          if(m) m.classList.add('selected-month-name');
-        }
-        highlightMonth();
-        picker.on('render:month', highlightMonth);
-        function selectSession(i){
-          if(!sessMenu) return;
-          sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-          const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
-            if(btn) btn.classList.add('selected');
-            const dt = loc.dates[i];
-            if(dt){
-              sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
-              ignoreSelect = true;
-              picker.setDate(dt.full);
-              picker.gotoDate(dt.full);
-              ignoreSelect = false;
-              highlightMonth();
-            } else {
-              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn) sessBtn.textContent = 'Select Session';
-              picker.clearSelection();
-              highlightMonth();
-            }
-            sessMenu.hidden = true;
-            sessBtn && sessBtn.setAttribute('aria-expanded','false');
-          }
-        function showTimePopup(matches){
-          const popup = document.createElement('div');
-          popup.className = 'time-popup';
-          popup.innerHTML = `<div class="time-list">${matches.map(m=>`<button data-index="${m.i}">${m.d.time}</button>`).join('')}</div>`;
-          calendarEl.appendChild(popup);
-          popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
-          popup.addEventListener('click', e=>{ if(e.target===popup) popup.remove(); });
-        }
-          picker.on('selected', (date)=>{
-            if(ignoreSelect) return;
-            const ds = date.format('YYYY-MM-DD');
-            const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
-            if(matches.length===1){
-              selectSession(matches[0].i);
-            } else if(matches.length>1){
-              showTimePopup(matches);
-            } else {
-              picker.clearSelection();
-              highlightMonth();
-            }
-          });
-        setTimeout(()=>{
-          mapEl.style.height = calendarEl.offsetHeight + 'px';
-          map && map.resize();
-        },0);
-          if(sessMenu){
-            sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
-            sessMenu.scrollTop = 0;
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-            if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
-            sessMenu.querySelectorAll('button').forEach(btn=>{
-              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
-            });
-          }
-      }
-      if(mapEl){
-        setTimeout(()=>{
-          updateLocation(0);
-          if(locMenu && locBtn){
-            locMenu.querySelectorAll('button').forEach(btn=>{
-              if(btn.dataset.index==='0') btn.classList.add('selected');
-              btn.addEventListener('click', ()=>{
-                locMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-                btn.classList.add('selected');
-                updateLocation(parseInt(btn.dataset.index,10));
-                locMenu.hidden = true;
-                locBtn.setAttribute('aria-expanded','false');
-              });
-            });
-            locBtn.addEventListener('click', ()=>{
-              const expanded = locBtn.getAttribute('aria-expanded') === 'true';
-              locBtn.setAttribute('aria-expanded', String(!expanded));
-              locMenu.hidden = expanded;
-            });
-            document.addEventListener('click', e=>{ if(locDropdown && !locDropdown.contains(e.target)){ locMenu.hidden = true; locBtn.setAttribute('aria-expanded','false'); } });
-          }
-          if(sessBtn && sessMenu){
-            sessBtn.addEventListener('click', ()=>{
-              const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-              sessBtn.setAttribute('aria-expanded', String(!expanded));
-              sessMenu.hidden = expanded;
-            });
-            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
-          }
-          if(map) map.resize();
-        },0);
-      }
+      const w = document.querySelector('[data-welcome]');
+      if(w) w.remove();
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
@@ -5896,6 +5350,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dragEl = null;
   });
 
+  showWelcome();
+  setTimeout(hideWelcome, 3000);
   window.addEventListener('resize', window.adjustListHeight);
   window.adjustListHeight();
 })();
