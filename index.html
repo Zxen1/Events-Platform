@@ -2227,7 +2227,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <div class="modal-field">
             <label for="aColor">Color</label>
-            <input type="color" id="aColor" data-mode="hex" value="#000000" />
+            <div class="color-group">
+              <input type="color" id="aColor" data-mode="hex" value="#000000" />
+            </div>
           </div>
           <div class="modal-field">
             <label for="welcomeImage">Welcome Image URL</label>
@@ -2235,7 +2237,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <div class="modal-field">
             <label for="welcomeBg">Welcome Background Color</label>
-            <input type="color" id="welcomeBg" data-mode="hex" value="#ffffff" />
+            <div class="color-group">
+              <input type="color" id="welcomeBg" data-mode="hex" value="#000000" />
+              <input type="range" id="welcomeBgOpacity" min="0" max="1" step="0.01" value="0" />
+            </div>
           </div>
           <div class="modal-field">
             <label for="welcomeMessage">Welcome Message</label>
@@ -2286,15 +2291,36 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
      const DEFAULT_WELCOME_IMAGE = 'assets/welcome 001.jpg';
      const DEFAULT_WELCOME_MESSAGE = 'Welcome to Funmap! Choose the area you want to search on the Map, then click the Filter button to refine your search. Click a result to expand it. There\'s so much to do in the world so have fun!';
+     const DEFAULT_WELCOME_TEXT_STYLE = {
+       color:'#ffffff',
+       font:'Verdana',
+       size:24,
+       weight:'normal',
+       shadowColor:'#000000',
+       shadowX:2,
+       shadowY:2,
+       shadowBlur:2
+     };
      let welcomeImage = DEFAULT_WELCOME_IMAGE;
-     let welcomeBg = '#ffffff';
+     let welcomeBg = '#000000';
+     let welcomeBgOpacity = 0;
      let welcomeMessage = DEFAULT_WELCOME_MESSAGE;
+     let welcomeText = { ...DEFAULT_WELCOME_TEXT_STYLE };
      let welcomeVisible = false;
      function updateWelcomeSettings(){
        const s = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
        if(s.welcomeImage) welcomeImage = s.welcomeImage;
        if(s.welcomeBg) welcomeBg = s.welcomeBg;
+       if(s.welcomeBgOpacity !== undefined) welcomeBgOpacity = parseFloat(s.welcomeBgOpacity);
        if(s.welcomeMessage) welcomeMessage = s.welcomeMessage;
+       if(s['welcome-text-c']) welcomeText.color = s['welcome-text-c'];
+       if(s['welcome-text-font']) welcomeText.font = s['welcome-text-font'];
+       if(s['welcome-text-size']) welcomeText.size = parseInt(s['welcome-text-size'],10);
+       if(s['welcome-text-weight']) welcomeText.weight = s['welcome-text-weight'];
+       if(s['welcome-text-shadow-color']) welcomeText.shadowColor = s['welcome-text-shadow-color'];
+       if(s['welcome-text-shadow-x']) welcomeText.shadowX = parseInt(s['welcome-text-shadow-x'],10);
+       if(s['welcome-text-shadow-y']) welcomeText.shadowY = parseInt(s['welcome-text-shadow-y'],10);
+       if(s['welcome-text-shadow-blur']) welcomeText.shadowBlur = parseInt(s['welcome-text-shadow-blur'],10);
      }
      updateWelcomeSettings();
       const logoEl = document.querySelector('.logo');
@@ -2333,13 +2359,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         spinEnabled = true;
         localStorage.setItem('spinGlobe', 'true');
         if(map){
-          spinning = false;
-          hideWelcome();
-          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
-          map.once('moveend', startSpin);
-        }else{
-          startSpin();
+          map.stop();
         }
+        spinning = false;
+        startSpin();
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
@@ -3084,6 +3107,8 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       spinning = true;
+      const rc = $('#resultCount');
+      if(rc) rc.style.display = 'none';
       showWelcome();
       map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
@@ -3092,10 +3117,12 @@ function makePosts(){
         map.setCenter([c.lng + spinSpeed, c.lat]);
         requestAnimationFrame(step);
       }
-      map.once('moveend', () => requestAnimationFrame(step));
+      requestAnimationFrame(step);
     }
     function stopSpin(){
       spinning = false;
+      const rc = $('#resultCount');
+      if(rc) rc.style.display = '';
       hideWelcome();
       applyFilters();
     }
@@ -3364,15 +3391,19 @@ function makePosts(){
         wrap.setAttribute('data-welcome','');
         wrap.style.position = 'relative';
         wrap.style.width = '100%';
+        wrap.style.height = '100%';
         if(welcomeImage){
           const img = document.createElement('img');
           img.src = welcomeImage;
           img.alt = 'Welcome';
+          img.style.position = 'absolute';
+          img.style.top = '0';
+          img.style.left = '0';
           img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.zIndex = '0';
           wrap.appendChild(img);
-        } else {
-          wrap.style.background = welcomeBg;
-          wrap.style.height = '100%';
         }
         const msg = document.createElement('div');
         msg.textContent = welcomeMessage;
@@ -3387,8 +3418,13 @@ function makePosts(){
         msg.style.textAlign = 'center';
         msg.style.padding = '20px';
         msg.style.boxSizing = 'border-box';
-        msg.style.background = 'rgba(0,0,0,0.5)';
-        msg.style.color = '#fff';
+        msg.style.zIndex = '1';
+        msg.style.background = hexToRgba(welcomeBg, welcomeBgOpacity);
+        msg.style.color = welcomeText.color;
+        msg.style.fontFamily = welcomeText.font;
+        msg.style.fontSize = welcomeText.size + 'px';
+        msg.style.fontWeight = welcomeText.weight;
+        msg.style.textShadow = `${welcomeText.shadowX}px ${welcomeText.shadowY}px ${welcomeText.shadowBlur}px ${welcomeText.shadowColor}`;
         wrap.appendChild(msg);
         root.appendChild(wrap);
       });
@@ -4973,11 +5009,35 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     wrap.appendChild(dropdown);
   }
 
+  const welcomeMsgField = document.getElementById('welcomeMessage');
+  if(welcomeMsgField){
+    const row = createTextPickerRow('welcome-text','Welcome Text','welcomeBg');
+    welcomeMsgField.parentElement.insertAdjacentElement('afterend', row);
+    document.getElementById('welcome-text-c').value = welcomeText.color;
+    document.getElementById('welcome-text-font').value = welcomeText.font;
+    document.getElementById('welcome-text-size').value = welcomeText.size;
+    document.getElementById('welcome-text-weight').value = welcomeText.weight;
+    document.getElementById('welcome-text-shadow-color').value = welcomeText.shadowColor;
+    document.getElementById('welcome-text-shadow-x').value = welcomeText.shadowX;
+    document.getElementById('welcome-text-shadow-y').value = welcomeText.shadowY;
+    document.getElementById('welcome-text-shadow-blur').value = welcomeText.shadowBlur;
+    updateTextPicker('welcome','text');
+  }
+
   function applyAdmin(targetInput){
-    if(targetInput && ['welcomeImage','welcomeBg','welcomeMessage'].includes(targetInput.id)){
+    if(targetInput && (['welcomeImage','welcomeBg','welcomeBgOpacity','welcomeMessage'].includes(targetInput.id) || targetInput.id.startsWith('welcome-text'))){
       if(targetInput.id === 'welcomeImage') welcomeImage = targetInput.value;
       if(targetInput.id === 'welcomeBg') welcomeBg = targetInput.value;
+      if(targetInput.id === 'welcomeBgOpacity') welcomeBgOpacity = parseFloat(targetInput.value);
       if(targetInput.id === 'welcomeMessage') welcomeMessage = targetInput.value;
+      if(targetInput.id === 'welcome-text-c') welcomeText.color = targetInput.value;
+      if(targetInput.id === 'welcome-text-font') welcomeText.font = targetInput.value;
+      if(targetInput.id === 'welcome-text-size') welcomeText.size = parseInt(targetInput.value,10);
+      if(targetInput.id === 'welcome-text-weight') welcomeText.weight = targetInput.value;
+      if(targetInput.id === 'welcome-text-shadow-color') welcomeText.shadowColor = targetInput.value;
+      if(targetInput.id === 'welcome-text-shadow-x') welcomeText.shadowX = parseInt(targetInput.value,10);
+      if(targetInput.id === 'welcome-text-shadow-y') welcomeText.shadowY = parseInt(targetInput.value,10);
+      if(targetInput.id === 'welcome-text-shadow-blur') welcomeText.shadowBlur = parseInt(targetInput.value,10);
       return;
     }
     if(targetInput){
@@ -5652,6 +5712,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
 
     loadSaved();
+    updateTextPicker('welcome','text');
 
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
