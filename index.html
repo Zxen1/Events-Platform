@@ -1133,28 +1133,67 @@ select option:hover{
   border-radius:8px;
 }
 
-.open-posts .location-select{
-  width:300px;
+
+.open-posts .location-menu,
+.open-posts .session-menu{
+  width:400px;
+  max-height:400px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
-.open-posts .location-select option{
-  white-space:pre-line;
+.open-posts .location-menu button,
+.open-posts .session-menu button{
+  width:100%;
+  height:50px;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border:1px solid var(--border);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
 }
+
+.open-posts .location-menu button.selected,
+.open-posts .session-menu button.selected{
+  background:var(--dropdown-selected-bg);
+  color:var(--dropdown-selected-text);
+}
+
+.open-posts .location-menu button:hover,
+.open-posts .session-menu button:hover{
+  background:var(--dropdown-hover-bg);
+  color:var(--dropdown-hover-text);
+}
+
+.open-posts .session-menu button{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.open-posts .session-menu button .session-date{
+  flex:1;
+}
+
+.open-posts .session-menu button .session-time{
+  width:80px;
+  text-align:right;
+}
+
 
 .open-posts .location-section .calendar-container{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:300px;
+  width:400px;
 }
 
 .open-posts .post-calendar{
-  width:300px;
+  width:400px;
   overflow-x:auto;
-}
-
-.open-posts .session-select{
-  width:300px;
 }
 
 .open-posts .location-info{margin-top:4px;font-size:13px;}
@@ -3295,14 +3334,12 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<select id="loc-${p.id}" class="location-select">${p.locations.map((loc,i)=>`<option value="${i}">${loc.venue}&#10;${loc.address}</option>`).join('')}</select>` : ``}
+                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-menu">${p.locations.map((loc,i)=>`<button data-index="${i}"><div class="venue-name t">${loc.venue}</div><div class="venue-address">${loc.address}</div></button>`).join('')}</div>` : ``}
                 <div id="loc-info-${p.id}" class="location-info"></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <select id="sess-${p.id}" class="session-select">
-                  <option value="">Select session</option>
-                </select>
+                <div id="sess-${p.id}" class="session-menu"></div>
                 <div id="session-info-${p.id}" class="session-info">
                   <div class="placeholder">💲 Price range | 📅 Date range</div>
                 </div>
@@ -3495,9 +3532,9 @@ function makePosts(){
         modalStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
-      const locSelect = el.querySelector(`#loc-${p.id}`);
+      const locMenu = el.querySelector(`#loc-${p.id}`);
       const locInfo = el.querySelector(`#loc-info-${p.id}`);
-      const sessSelect = el.querySelector(`#sess-${p.id}`);
+      const sessMenu = el.querySelector(`#sess-${p.id}`);
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
@@ -3521,25 +3558,40 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         picker = new Litepicker({ element: calendarEl, inlineMode:true, selectMode:'multiple', highlightedDates: loc.dates.map(d=>d.full) });
         setTimeout(()=> map.resize(),0);
-        sessSelect.innerHTML = '<option value="">Select session</option>' + loc.dates.map((d,i)=> `<option value="${i}">${d.date} ${d.time}</option>`).join('');
-        sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-        sessSelect.value = '';
+        if(sessMenu){
+          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
+          sessMenu.scrollTop = 0;
+          sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+          sessMenu.querySelectorAll('button').forEach(btn=>{
+            btn.addEventListener('click', e=>{
+              sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+              btn.classList.add('selected');
+              const dt = loc.dates[parseInt(btn.dataset.index,10)];
+              if(dt){
+                sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              } else {
+                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+              }
+            });
+          });
+        }
       }
       if(mapEl){
-        setTimeout(()=>{ updateLocation(0); if(map) map.resize(); },0);
-        if(locSelect){
-          locSelect.addEventListener('change', e=> updateLocation(parseInt(e.target.value,10)));
-        }
-        sessSelect.addEventListener('change', e=>{
-          const locIdx = locSelect ? parseInt(locSelect.value,10) : 0;
-          const loc = p.locations[locIdx];
-          const dt = loc.dates[parseInt(e.target.value,10)];
-          if(dt){
-            sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-          } else {
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+        setTimeout(()=>{ 
+          updateLocation(0); 
+          if(locMenu){
+            const first = locMenu.querySelector('button');
+            first && first.classList.add('selected');
+            locMenu.querySelectorAll('button').forEach(btn=>{
+              btn.addEventListener('click', ()=>{
+                locMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+                btn.classList.add('selected');
+                updateLocation(parseInt(btn.dataset.index,10));
+              });
+            });
           }
-        });
+          if(map) map.resize(); 
+        },0);
       }
     }
 
@@ -3802,7 +3854,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
-    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box']}},
+    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .location-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
@@ -4047,7 +4099,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -4324,6 +4376,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.header) types.push('header');
       if(area.selectors.image) types.push('image');
       if(area.selectors.optionsMenu) types.push('optionsMenu');
+      if(area.selectors.menu) types.push('menu');
         types.forEach(type=>{
           const labelMap = {
             bg: 'Background',
@@ -4339,7 +4392,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             activeAdjust: 'Active Brightness',
             header: 'Header',
             image: 'Image Box',
-            optionsMenu: 'Options Menu'
+            optionsMenu: 'Options Menu',
+            menu: 'Menu Background'
           };
           const label = labelMap[type] || type;
         if(type === 'text' || type === 'title' || type === 'btnText'){
@@ -4406,7 +4460,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu' || type === 'menu'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -4628,7 +4682,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4728,7 +4782,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -4837,13 +4891,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
         if(!selectors.length) return;
         const rules = [];
-        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu'){
+        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu' || type==='menu'){
           if(entry.color){
             const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
             rules.push(`background-color:${color};`);
