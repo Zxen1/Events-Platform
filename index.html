@@ -913,6 +913,24 @@ select option:hover{
   stroke: var(--gold);
 }
 
+#favToggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+#favToggle svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:var(--gold);
+  stroke-width:1.5;
+}
+#favToggle[aria-pressed="true"] svg{
+  fill:var(--gold);
+  stroke:var(--gold);
+}
+
 
 
 #map{
@@ -933,11 +951,12 @@ select option:hover{
 }
 
 .geocoder{position:absolute;top:10px;left:10px;z-index:10;min-width:240px;display:flex;gap:4px;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;}
 .geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none;}
 .geocoder .mapboxgl-ctrl-geolocate{width:100%;height:100%;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
 
 .closed-posts{
   display:none;
@@ -1721,7 +1740,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div class="options-dropdown">
           <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
           <div id="optionsMenu" class="options-menu" hidden>
-            <button id="favToggle" aria-pressed="false">☆ Favourites to Top</button>
+            <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
             <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
               <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
               <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
@@ -2571,7 +2590,6 @@ function makePosts(){
     favToggle.addEventListener('click', ()=>{
       favToTop = !favToTop;
       favToggle.setAttribute('aria-pressed', favToTop);
-      favToggle.textContent = `${favToTop ? '★' : '☆'} Favourites to Top`;
       renderLists(filtered);
     });
 
@@ -3096,8 +3114,9 @@ function makePosts(){
       el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); openPost(p.id, wide); });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
-        e.currentTarget.setAttribute('aria-pressed', p.fav?'true':'false');
-        renderLists(filtered);
+        document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
+          btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+        });
         renderFooter();
       });
       return el;
@@ -3301,10 +3320,11 @@ function makePosts(){
         favBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           p.fav = !p.fav;
-          favBtn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+          document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
+            btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
+          });
           const detailEl = el;
           const container = detailEl.closest('.closed-posts');
-          renderLists(filtered);
           renderFooter();
           const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
           if(replacement){
