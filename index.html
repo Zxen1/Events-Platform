@@ -591,7 +591,8 @@ select option:hover{
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
     grid-template-rows: auto 1fr;
-    gap: var(--gap);
+    row-gap: var(--gap);
+    column-gap: 0;
     padding: 0;
   }
 
@@ -826,7 +827,7 @@ select option:hover{
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 0 14px 14px;
+  padding: 0 0 14px 14px;
 }
 
 .subheader{
@@ -990,12 +991,12 @@ select option:hover{
   height:100%;
   overflow:auto;
   min-height:0;
-  padding:12px 6px;
+  padding:12px 6px 12px 0;
   color:#000;
   background:rgba(0,0,0,0.7);
 }
 .closed-posts .res-list{overflow:visible;padding:0;}
-.closed-posts{color:#000;padding:0 14px 14px;}
+.closed-posts{color:#000;padding:0 14px 14px 0;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
@@ -1011,7 +1012,7 @@ select option:hover{
   display: none;
 }
 
-.mode-map .map-wrap{
+.mode-map .post-panel{
   display: block;
 }
 
@@ -1040,20 +1041,22 @@ select option:hover{
 
 .open-posts .body{
   padding:14px;
-  display:grid;
-  grid-template-columns:1fr auto;
+  display:flex;
+  flex-wrap:wrap;
   gap:8px;
-  align-items:start;
+  align-items:flex-start;
 }
 
 .open-posts .text{
   margin-top:0;
+  flex:1 1 300px;
 }
 
 .open-posts .img-area{
   display:flex;
   flex-direction:column;
   gap:8px;
+  flex:0 0 400px;
 }
 
 .open-posts-sticky-images .open-posts .img-area{
@@ -1417,7 +1420,7 @@ select option:hover{
 
 @media (max-width:840px){
   .open-posts .body{
-    grid-template-columns:1fr;
+    flex-direction:column;
   }
   .open-posts .img-box,
   .open-posts .location-section .map-container,
@@ -1795,7 +1798,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   display: -webkit-box;
 }
 
-.mode-posts .map-wrap{
+.mode-posts .post-panel{
 
   display: block;
   grid-column: 2/3;
@@ -1809,10 +1812,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius: inherit;
 }
 
-.main .map-wrap{
+.main .post-panel{
   position: relative;
   height: 100%;
-  padding: 0 14px 14px;
+  padding: 0 14px 14px 0;
 }
 
 .main .closed-posts{
@@ -1838,7 +1841,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: transparent;
 }
 
-.main .map-wrap #map{
+.main .post-panel #map{
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -1897,7 +1900,7 @@ body{background-color:rgba(41,41,41,1);}
 footer{background-color:rgba(0,0,0,0);}
 footer .foot-row .foot-item{background-color:rgba(0,0,0,0.32);box-shadow:0 0 0px #000000;}
 footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.map-wrap{background-color:rgba(0,0,0,1);}
+.post-panel{background-color:rgba(0,0,0,1);}
 .mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .hover-card{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .chip{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
@@ -1986,7 +1989,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div class="res-list" id="results"></div>
       </section>
 
-    <section class="map-wrap" aria-label="Map">
+    <section class="post-panel" aria-label="Map">
       <div id="geocoder" class="geocoder"></div>
       <div id="map"></div>
       <div class="map-overlay">Loading Map…</div>
@@ -4128,7 +4131,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .location-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['.map-wrap'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
+    {key:'map', label:'Map', selectors:{bg:['.post-panel'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
