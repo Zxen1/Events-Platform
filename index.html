@@ -2356,8 +2356,24 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         localStorage.setItem('spinGlobe', 'true');
         if(map){
           spinning = false;
-          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
-          map.once('moveend', startSpin);
+          const target = {center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing};
+          const current = {
+            center: map.getCenter().toArray(),
+            zoom: map.getZoom(),
+            pitch: map.getPitch(),
+            bearing: map.getBearing()
+          };
+          const needsMove = current.center[0] !== target.center[0] ||
+                            current.center[1] !== target.center[1] ||
+                            current.zoom !== target.zoom ||
+                            current.pitch !== target.pitch ||
+                            current.bearing !== target.bearing;
+          if(needsMove){
+            map.flyTo(target);
+            map.once('moveend', startSpin);
+          } else {
+            startSpin();
+          }
         }else{
           startSpin();
         }
@@ -3370,9 +3386,10 @@ function makePosts(){
 
     const resultsEl = $('#results');
     const postsWideEl = $('#postsWide');
+    const mapWrapEl = $('.map-wrap');
     const postsModeEl = $('.closed-posts');
 
-    postsModeEl.addEventListener('scroll', () => {
+    postsModeEl && postsModeEl.addEventListener('scroll', () => {
       const last = postsWideEl.lastElementChild;
       if(!last) return;
       const limit = postsModeEl.getBoundingClientRect().top + 12;
@@ -3382,7 +3399,7 @@ function makePosts(){
 
     function showWelcome(){
       welcomeVisible = true;
-      [resultsEl, postsWideEl].forEach(root=>{
+      [resultsEl, postsWideEl, mapWrapEl].forEach(root=>{
         if(!root) return;
         root.style.position = 'relative';
         const wrap = document.createElement('div');
@@ -3439,7 +3456,7 @@ function makePosts(){
     }
     function hideWelcome(){
       welcomeVisible = false;
-      [resultsEl, postsWideEl].forEach(root=>{
+      [resultsEl, postsWideEl, mapWrapEl].forEach(root=>{
         const w = root?.querySelector('[data-welcome]');
         if(w) root.removeChild(w);
       });
