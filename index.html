@@ -584,7 +584,7 @@ select option:hover{
     height: calc(100vh - var(--header-h) - var(--footer-h));
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
-    grid-template-rows: 1fr;
+    grid-template-rows: auto 1fr;
     gap: var(--gap);
     padding: 14px;
   }
@@ -806,8 +806,8 @@ select option:hover{
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  margin: 0 0 8px 0;
   color: var(--ink-d);
+  grid-column: 1 / -1;
 }
 .res-actions{
   display: flex;
@@ -958,7 +958,7 @@ select option:hover{
 .mode-posts .closed-posts{
   display: block;
   grid-column: 2/3;
-  grid-row: 1;
+  grid-row: 2;
   z-index: 1;
 }
 
@@ -1550,7 +1550,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
   display: block;
   grid-column: 2/3;
-  grid-row: 1;
+  grid-row: 2;
   z-index: 0;
 }
 
@@ -1567,7 +1567,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .main .closed-posts{
   grid-column: 2/3;
-  grid-row: 1;
+  grid-row: 2;
   position: relative;
   z-index: 1;
 }
@@ -1716,22 +1716,21 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
 
   <main class="main">
-      <section class="results-col" aria-label="Results">
-        <div class="subheader">
-          <button id="filterBtn" aria-label="Open filters modal">Filters</button>
-          <div class="res-info">
-            <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
-            <div class="muted">Map area filter active in Map mode</div>
-          </div>
-          <div class="res-actions">
-            <select id="sortSelect" aria-label="Sort order">
-              <option value="az">Title A - Z</option>
-              <option value="nearest">Closest</option>
-              <option value="soon">Soonest</option>
-            </select>
-            <label class="fav-toggle"><input type="checkbox" id="favToggle" /> Favourites on top</label>
-          </div>
+      <div class="subheader">
+        <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+        <div class="res-info">
+          <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
         </div>
+        <div class="res-actions">
+          <select id="sortSelect" aria-label="Sort order">
+            <option value="az">Title A - Z</option>
+            <option value="nearest">Closest</option>
+            <option value="soon">Soonest</option>
+          </select>
+          <label class="fav-toggle"><input type="checkbox" id="favToggle" /> Favourites on top</label>
+        </div>
+      </div>
+      <section class="results-col" aria-label="Results">
         <div class="res-list" id="results"></div>
       </section>
 
@@ -3453,23 +3452,29 @@ function openModal(m){
   if(content){
     content.style.width = '';
     content.style.height = '';
+  }
+  m.classList.add('show');
+  m.removeAttribute('aria-hidden');
+  if(content){
     if(m.id==='filterModal'){
-      const subHead = document.querySelector('.subheader');
-      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
-      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
-      const availableHeight = window.innerHeight - footerH - topPos;
-      content.style.left = '0';
-      content.style.top = `${topPos}px`;
-      content.style.maxHeight = `${availableHeight}px`;
-      content.style.transform = '';
+      const position = ()=>{
+        const subHead = document.querySelector('.subheader');
+        const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+        const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+        const availableHeight = window.innerHeight - footerH - topPos;
+        content.style.left = '0';
+        content.style.top = `${topPos}px`;
+        content.style.maxHeight = `${availableHeight}px`;
+        content.style.transform = '';
+      };
+      position();
+      requestAnimationFrame(position);
     } else {
       content.style.left = '50%';
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
   }
-  m.classList.add('show');
-  m.removeAttribute('aria-hidden');
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
     m.__bringToTopAdded = true;
