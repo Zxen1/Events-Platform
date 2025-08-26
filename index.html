@@ -5804,5 +5804,132 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 })();
 </script>
+
+<div id="balloonTool">
+  <style>
+    #balloonTool { padding: 10px; }
+    #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid #000; background: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); cursor: pointer; }
+    #balloonTool .shape-button svg { width: 24px; height: 24px; }
+    #balloonTool .shape-button.active { outline: 2px solid #000; }
+    #balloonTool .size-control { margin-bottom: 8px; }
+    #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+    #balloonTool #balloonGrid svg { cursor: pointer; }
+  </style>
+  <div class="shape-buttons" id="balloonShapeButtons"></div>
+  <div class="size-control">
+    <label>Size: <input type="range" id="balloonSize" min="40" max="120" value="60" /> <span id="balloonSizeValue">60</span>px</label>
+  </div>
+  <div id="balloonGrid"></div>
+</div>
+
+<script>
+  (function(){
+    const ns = 'http://www.w3.org/2000/svg';
+    const SHAPES = {
+      circle(){ const c=document.createElementNS(ns,'circle'); c.setAttribute('cx','0'); c.setAttribute('cy','0'); c.setAttribute('r','50'); return c; },
+      tallEllipse(){ const e=document.createElementNS(ns,'ellipse'); e.setAttribute('cx','0'); e.setAttribute('cy','0'); e.setAttribute('rx','40'); e.setAttribute('ry','55'); return e; },
+      heart(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-30 C-30,-70 -70,-20 -35,15 Q0,55 35,15 C70,-20 30,-70 0,-30Z'); return p; },
+      star(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L14,-17 L47,-17 L23,5 L35,45 L0,25 L-35,45 L-23,5 L-47,-17 L-14,-17 Z'); return p; },
+      triangle(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,55 L50,-45 L-50,-45 Z'); return p; },
+      rectangle(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-35'); r.setAttribute('y','-55'); r.setAttribute('width','70'); r.setAttribute('height','110'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
+      square(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-45'); r.setAttribute('y','-45'); r.setAttribute('width','90'); r.setAttribute('height','90'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
+      diamond(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L45,0 0,55 -45,0 Z'); return p; },
+      pentagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L52,-17 L32,45 -32,45 -52,-17 Z'); return p; },
+      hexagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L47,-27 L47,27 0,55 -47,27 -47,-27 Z'); return p; }
+    };
+
+    function hslToHex(h, s, l){
+      s/=100; l/=100;
+      const k = n => (n + h/30) % 12;
+      const a = s * Math.min(l, 1-l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+      return '#' + [f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+    }
+    const COLORS = Array.from({length:100}, (_,i)=>hslToHex(i*3.6,100,50));
+
+    function createBalloon(shapeName, color, size){
+      const svg = document.createElementNS(ns,'svg');
+      svg.setAttribute('viewBox','-60 -80 120 160');
+      svg.setAttribute('width', size);
+      svg.setAttribute('height', size);
+      svg.dataset.color = color;
+      svg.setAttribute('title', color + ' ' + size + 'px');
+      const body = SHAPES[shapeName]();
+      body.setAttribute('fill', color);
+      body.setAttribute('stroke', '#000');
+      body.setAttribute('stroke-width', '1');
+      svg.appendChild(body);
+      const tie = document.createElementNS(ns,'path');
+      tie.setAttribute('d','M-8,55 L0,60 L8,55 Z');
+      tie.setAttribute('fill','#000');
+      tie.setAttribute('stroke','#000');
+      tie.setAttribute('stroke-width','1');
+      svg.appendChild(tie);
+      const string = document.createElementNS(ns,'line');
+      string.setAttribute('x1','0'); string.setAttribute('y1','60');
+      string.setAttribute('x2','0'); string.setAttribute('y2','80');
+      string.setAttribute('stroke','#fff');
+      string.setAttribute('stroke-width','2');
+      svg.appendChild(string);
+      const gleam = document.createElementNS(ns,'ellipse');
+      gleam.setAttribute('cx','-20'); gleam.setAttribute('cy','-20');
+      gleam.setAttribute('rx','10'); gleam.setAttribute('ry','6');
+      gleam.setAttribute('fill','#fff');
+      svg.appendChild(gleam);
+      return svg;
+    }
+
+    const buttons = document.getElementById('balloonShapeButtons');
+    const grid = document.getElementById('balloonGrid');
+    const sizeSlider = document.getElementById('balloonSize');
+    const sizeValue = document.getElementById('balloonSizeValue');
+
+    sizeSlider.addEventListener('input', ()=>{
+      sizeValue.textContent = sizeSlider.value;
+      grid.querySelectorAll('svg').forEach(svg=>{
+        svg.setAttribute('width', sizeSlider.value);
+        svg.setAttribute('height', sizeSlider.value);
+        svg.setAttribute('title', svg.dataset.color + ' ' + sizeSlider.value + 'px');
+      });
+    });
+
+    function render(name){
+      grid.innerHTML='';
+      COLORS.forEach(color=>{
+        grid.appendChild(createBalloon(name, color, sizeSlider.value));
+      });
+    }
+
+    const LABELS = {
+      circle:'circle',
+      tallEllipse:'tall ellipse',
+      heart:'heart',
+      star:'soft star',
+      triangle:'soft triangle',
+      rectangle:'tall rectangle',
+      square:'square',
+      diamond:'diamond',
+      pentagon:'pentagon',
+      hexagon:'hexagon'
+    };
+
+    Object.keys(SHAPES).forEach((name,idx)=>{
+      const btn = document.createElement('button');
+      btn.className = 'shape-button';
+      btn.appendChild(createBalloon(name, '#000', 24));
+      btn.appendChild(document.createTextNode(LABELS[name] || name));
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('#balloonTool .shape-button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        render(name);
+      });
+      if(idx===0) btn.classList.add('active');
+      buttons.appendChild(btn);
+    });
+
+    render(Object.keys(SHAPES)[0]);
+  })();
+</script>
 </body>
 </html>
