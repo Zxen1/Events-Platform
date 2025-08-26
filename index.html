@@ -5971,6 +5971,7 @@ window.addEventListener('resize', updateStickyImages);
 
     Object.keys(SHAPES).forEach((name,idx)=>{
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'shape-button';
       btn.appendChild(createBalloon(name, '#000', 24));
       btn.appendChild(document.createTextNode(LABELS[name] || name));
