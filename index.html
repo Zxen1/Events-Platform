@@ -511,10 +511,11 @@ select option:hover{
 #adminModal .tab-panel{display:none;}
 #adminModal .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
 #adminModal .marker-grid{display:flex;flex-direction:column;gap:8px;}
-#adminModal .marker-row{display:flex;align-items:center;gap:8px;}
-#adminModal .marker-row select{min-width:120px;}
-#adminModal .marker-set{display:grid;grid-template-columns:repeat(10,24px);gap:4px;}
-#adminModal .marker-set svg{width:24px;height:30px;}
+#adminModal .marker-grid select{min-width:120px;}
+#adminModal .marker-options{display:flex;gap:8px;align-items:center;}
+#adminModal .marker-set{display:grid;grid-template-columns:repeat(10,max-content);gap:4px;}
+#adminModal .marker-set svg.shadow{filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));}
+#adminModal .marker-set svg.outline *{stroke:#000;stroke-width:1;}
 #adminModal input[type=range]{width:100%;}
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
 #adminModal .preset-actions input{flex:1;padding:6px;border-radius:4px;}
@@ -2201,8 +2202,15 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </select>
             </div>
             <div class="modal-field">
-              <label>Mapmarkers</label>
-              <div id="markerGrid" class="marker-grid"></div>
+              <label for="markerSetSelect">Mapmarker Sets</label>
+              <div id="markerGrid" class="marker-grid">
+                <select id="markerSetSelect"></select>
+                <div class="marker-options">
+                  <label><input type="checkbox" id="markerShadow"> Shadow</label>
+                  <label><input type="checkbox" id="markerOutline"> Outline</label>
+                </div>
+                <div id="markerDisplay" class="marker-set"></div>
+              </div>
             </div>
               <div class="modal-field">
                 <label for="spinSpeed">Spin speed</label>
@@ -4170,51 +4178,100 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
   });
 
-  const markerGrid = document.getElementById('markerGrid');
-  if(markerGrid){
-    const colors = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#1abc9c','#34495e','#f39c12','#7f8c8d'];
-    const icons = ['1','2','3','4','5','6','7','8','9','10'];
-    colors.forEach((color, idx)=>{
-      const row = document.createElement('div');
-      row.className = 'marker-row';
-      const select = document.createElement('select');
+  const markerSelect = document.getElementById('markerSetSelect');
+  const markerDisplay = document.getElementById('markerDisplay');
+  const markerShadow = document.getElementById('markerShadow');
+  const markerOutline = document.getElementById('markerOutline');
+  if(markerSelect && markerDisplay){
+    const catIcons = ['📷','🎬','🎨','🎵','🏀','🎭','📚','🍽','🎮','🎤'];
+    const markerSets = ['Numbered','Heart Standard','Heart Premium','Star','Diamond','Square','Triangle','Circle','Hexagon','Pin'];
+    const shapeMap = { 'Heart Standard':'heart','Heart Premium':'heart','Star':'star','Diamond':'diamond','Square':'square','Triangle':'triangle','Circle':'circle','Hexagon':'hexagon','Pin':'pin' };
+    markerSets.forEach(name=>{
       const opt = document.createElement('option');
-      opt.textContent = `Category ${idx+1}`;
-      select.appendChild(opt);
-      row.appendChild(select);
-      const set = document.createElement('div');
-      set.className = 'marker-set';
-      icons.forEach(ic=>{
-        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        svg.setAttribute('viewBox','0 0 20 30');
-        const body = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
-        body.setAttribute('cx','10');
-        body.setAttribute('cy','10');
-        body.setAttribute('rx','9');
-        body.setAttribute('ry','10');
-        body.setAttribute('fill',color);
-        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-        line.setAttribute('x1','10');
-        line.setAttribute('y1','20');
-        line.setAttribute('x2','10');
-        line.setAttribute('y2','30');
-        line.setAttribute('stroke','#555');
-        line.setAttribute('stroke-width','1');
-        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
-        text.setAttribute('x','10');
-        text.setAttribute('y','14');
-        text.setAttribute('font-size','8');
-        text.setAttribute('text-anchor','middle');
-        text.setAttribute('fill','#fff');
-        text.textContent = ic;
-        svg.appendChild(body);
-        svg.appendChild(line);
-        svg.appendChild(text);
-        set.appendChild(svg);
-      });
-      row.appendChild(set);
-      markerGrid.appendChild(row);
+      opt.value = name;
+      opt.textContent = name;
+      markerSelect.appendChild(opt);
     });
+    function createShape(shape){
+      const ns = 'http://www.w3.org/2000/svg';
+      switch(shape){
+        case 'heart':
+          const heart = document.createElementNS(ns,'path');
+          heart.setAttribute('d','M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z');
+          return heart;
+        case 'star':
+          const star = document.createElementNS(ns,'path');
+          star.setAttribute('d','M12 .587l3.668 7.568L24 9.423l-6 5.849L19.335 24 12 19.771 4.665 24 6 15.272 0 9.423l8.332-1.268z');
+          return star;
+        case 'diamond':
+          const diamond = document.createElementNS(ns,'polygon');
+          diamond.setAttribute('points','12,2 22,12 12,22 2,12');
+          return diamond;
+        case 'square':
+          const square = document.createElementNS(ns,'rect');
+          square.setAttribute('x','2'); square.setAttribute('y','2'); square.setAttribute('width','20'); square.setAttribute('height','20'); square.setAttribute('rx','4');
+          return square;
+        case 'triangle':
+          const triangle = document.createElementNS(ns,'polygon');
+          triangle.setAttribute('points','12,2 22,22 2,22');
+          return triangle;
+        case 'circle':
+          const circle = document.createElementNS(ns,'circle');
+          circle.setAttribute('cx','12'); circle.setAttribute('cy','12'); circle.setAttribute('r','10');
+          return circle;
+        case 'hexagon':
+          const hex = document.createElementNS(ns,'polygon');
+          hex.setAttribute('points','12,2 21,7 21,17 12,22 3,17 3,7');
+          return hex;
+        case 'pin':
+        default:
+          const pin = document.createElementNS(ns,'path');
+          pin.setAttribute('d','M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z');
+          return pin;
+      }
+    }
+    function createMarker(shape, icon, size=24){
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns,'svg');
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.setAttribute('width',size);
+      svg.setAttribute('height',size);
+      const base = createShape(shape);
+      base.setAttribute('fill','#e74c3c');
+      svg.appendChild(base);
+      const text = document.createElementNS(ns,'text');
+      text.setAttribute('x','12');
+      text.setAttribute('y','16');
+      text.setAttribute('font-size','10');
+      text.setAttribute('text-anchor','middle');
+      text.textContent = icon;
+      if(/^[0-9]+$/.test(icon)) text.setAttribute('fill','#fff');
+      svg.appendChild(text);
+      return svg;
+    }
+    function updateEffects(){
+      markerDisplay.querySelectorAll('svg').forEach(svg=>{
+        svg.classList.toggle('shadow', markerShadow.checked);
+        svg.classList.toggle('outline', markerOutline.checked);
+      });
+    }
+    function renderMarkerSet(name){
+      markerDisplay.innerHTML='';
+      if(name==='Numbered'){
+        for(let i=1;i<=100;i++){
+          markerDisplay.appendChild(createMarker('pin',String(i)));
+        }
+      } else {
+        const shape = shapeMap[name];
+        const size = name.includes('Premium') ? 36 : 24;
+        catIcons.forEach(ic=> markerDisplay.appendChild(createMarker(shape,ic,size)));
+      }
+      updateEffects();
+    }
+    markerSelect.addEventListener('change', e=> renderMarkerSet(e.target.value));
+    if(markerShadow) markerShadow.addEventListener('change', updateEffects);
+    if(markerOutline) markerOutline.addEventListener('change', updateEffects);
+    renderMarkerSet('Numbered');
   }
 
   const colorAreas = [
