@@ -4191,17 +4191,38 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const markerOutline = document.getElementById('markerOutline');
   const markerOpacity = document.getElementById('markerOpacity');
   if(markerButtons && markerDisplay){
-    const catIcons = ['📷','🎬','🎨','🎵','🏀','🎭','📚','🍽','🎮','🎤'];
-    const markerSets = ['Numbered','Heart Standard','Heart Premium','Star','Diamond','Square','Triangle','Circle','Hexagon','Pin'];
-    const shapeMap = { 'Heart Standard':'heart','Heart Premium':'heart','Star':'star','Diamond':'diamond','Square':'square','Triangle':'triangle','Circle':'circle','Hexagon':'hexagon','Pin':'pin' };
-    let currentSet = 'Numbered';
-    markerSets.forEach(name=>{
+    const markerSets = [
+      {name:'Heart',shape:'heart'},
+      {name:'Star',shape:'star'},
+      {name:'Diamond',shape:'diamond'},
+      {name:'Square',shape:'square'},
+      {name:'Triangle',shape:'triangle'},
+      {name:'Circle',shape:'circle'},
+      {name:'Hexagon',shape:'hexagon'},
+      {name:'Pin',shape:'pin'}
+    ];
+    let currentSet = markerSets[0].shape;
+    markerSets.forEach(({name,shape})=>{
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = name;
-      btn.addEventListener('click', ()=>{ currentSet = name; renderMarkerSet(name); });
+      btn.style.width = '100px';
+      btn.style.flexDirection = 'column';
+      btn.style.gap = '4px';
+      const icon = createMarker(shape,'#e74c3c',24);
+      icon.style.pointerEvents = 'none';
+      btn.appendChild(icon);
+      const label = document.createElement('span');
+      label.textContent = name;
+      btn.appendChild(label);
+      btn.addEventListener('click', ()=>{ currentSet = shape; renderMarkerSet(shape); });
       markerButtons.appendChild(btn);
     });
+    function randColor(){
+      const h = Math.floor(Math.random()*360);
+      const s = 70 + Math.floor(Math.random()*30);
+      const l = 45 + Math.floor(Math.random()*20);
+      return `hsl(${h} ${s}% ${l}%)`;
+    }
     function createShape(shape){
       const ns = 'http://www.w3.org/2000/svg';
       switch(shape){
@@ -4240,7 +4261,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           return pin;
       }
     }
-    function createMarker(shape, icon, size=24){
+    function createMarker(shape, color, size=24){
       const ns = 'http://www.w3.org/2000/svg';
       const svg = document.createElementNS(ns,'svg');
       svg.setAttribute('viewBox','0 0 24 24');
@@ -4248,30 +4269,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       svg.setAttribute('height',size);
       const base = createShape(shape);
       base.dataset.shape = shape;
-      base.setAttribute('fill','#e74c3c');
+      base.setAttribute('fill', color);
       if(shape==='star' || shape==='triangle'){
-        base.setAttribute('stroke','#e74c3c');
+        base.setAttribute('stroke', color);
         base.setAttribute('stroke-width','2');
         base.setAttribute('stroke-linejoin','round');
         base.setAttribute('stroke-linecap','round');
       }
       svg.appendChild(base);
-      const text = document.createElementNS(ns,'text');
-      text.setAttribute('x','12');
-      text.setAttribute('y','16');
-      text.setAttribute('font-size','10');
-      text.setAttribute('text-anchor','middle');
-      text.textContent = icon;
-      if(/^[0-9]+$/.test(icon)) text.setAttribute('fill','#fff');
-      svg.appendChild(text);
       svg.addEventListener('click', ()=>{
         const code = svg.outerHTML;
-        window.prompt('SVG Code', code);
-        const favs = JSON.parse(localStorage.getItem('markerFavs') || '[]');
-        if(!favs.includes(code)){
-          favs.push(code);
-          localStorage.setItem('markerFavs', JSON.stringify(favs));
-        }
+        if(navigator.clipboard){ navigator.clipboard.writeText(code); }
+        else { window.prompt('SVG Code', code); }
       });
       return svg;
     }
@@ -4287,7 +4296,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           base.setAttribute('stroke','#000');
           base.setAttribute('stroke-width', outline);
         } else if(shape==='star' || shape==='triangle'){
-          base.setAttribute('stroke','#e74c3c');
+          const fill = base.getAttribute('fill');
+          base.setAttribute('stroke', fill);
           base.setAttribute('stroke-width','2');
           base.setAttribute('stroke-linejoin','round');
           base.setAttribute('stroke-linecap','round');
@@ -4298,16 +4308,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         svg.style.opacity = opacity;
       });
     }
-    function renderMarkerSet(name){
+    function renderMarkerSet(shape){
       markerDisplay.innerHTML='';
       const size = parseInt(markerSize.value,10) || 24;
-      if(name==='Numbered'){
-        for(let i=1;i<=100;i++){
-          markerDisplay.appendChild(createMarker('pin',String(i),size));
-        }
-      } else {
-        const shape = shapeMap[name];
-        catIcons.forEach(ic=> markerDisplay.appendChild(createMarker(shape,ic,size)));
+      for(let i=0;i<1000;i++){
+        markerDisplay.appendChild(createMarker(shape, randColor(), size));
       }
       updateEffects();
     }
