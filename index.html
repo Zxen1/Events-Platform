@@ -3042,7 +3042,7 @@ function makePosts(){
       }
       window.adjustListHeight();
         setTimeout(()=>{
-          if(map){
+          if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
             applyFilters();
@@ -3055,7 +3055,7 @@ function makePosts(){
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
         setTimeout(()=>{
-          if(map){
+          if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
             applyFilters();
@@ -3072,7 +3072,7 @@ function makePosts(){
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
       $('#main-tab-map').setAttribute('aria-selected', m==='map');
       if(map){
-        if(m==='map'){
+        if(m==='map' && typeof map.resize === 'function'){
           map.resize();
         }
         updatePostPanel();
@@ -3981,7 +3981,7 @@ function makePosts(){
           });
         setTimeout(()=>{
           mapEl.style.height = calendarEl.offsetHeight + 'px';
-          map && map.resize();
+          if(map && typeof map.resize === 'function') map.resize();
         },0);
           if(sessMenu){
             sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
@@ -4022,7 +4022,7 @@ function makePosts(){
             });
             document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
           }
-          if(map) map.resize();
+          if(map && typeof map.resize === 'function') map.resize();
         },0);
       }
     }
@@ -4150,7 +4150,7 @@ function openModal(m){
     m.__bringToTopAdded = true;
   }
   bringToTop(m);
-  if(map) setTimeout(()=> map.resize(),0);
+  if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function closeModal(m){
   m.classList.remove('show');
@@ -4158,7 +4158,7 @@ function closeModal(m){
   localStorage.setItem(`modal-open-${m.id}`,'false');
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
-    if(map) setTimeout(()=> map.resize(),0);
+    if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function requestCloseModal(m){
   closeModal(m);
@@ -5666,11 +5666,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       backups.push({ name:`ADMIN ${tab} Backup ${new Date().toISOString()}`, data });
       localStorage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
       populateBackups(tab);
-      fetch('/admin/save', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ tab, data })
-      }).catch(()=>{});
+      if(location.hostname !== 'zxen1.github.io'){
+        fetch('/admin/save', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ tab, data })
+        }).catch(()=>{});
+      }
       return true;
     }
 
