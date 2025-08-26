@@ -15,6 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <style>:root{
   --header-h: 72px;
+  --subheader-h: 60px;
   --panel-w: 260px;
   --results-w: 520px;
   --gap: 12px;
@@ -598,7 +599,7 @@ select option:hover{
 .main{
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: var(--subheader-h) 1fr;
     row-gap: var(--gap);
     column-gap: 0;
     padding: 0;
@@ -858,6 +859,7 @@ select option:hover{
   gap: 8px;
   color: var(--ink-d);
   grid-column: 1 / -1;
+  height: var(--subheader-h);
   padding: 14px;
 }
 
@@ -1851,6 +1853,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .main .post-panel{
   position: relative;
   height: 100%;
+  min-height: 0;
   padding: 0 14px 14px 0;
 }
 
