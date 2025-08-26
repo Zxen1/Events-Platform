@@ -510,6 +510,11 @@ select option:hover{
 #adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
 #adminModal .tab-panel{display:none;}
 #adminModal .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+#adminModal .marker-grid{display:flex;flex-direction:column;gap:8px;}
+#adminModal .marker-row{display:flex;align-items:center;gap:8px;}
+#adminModal .marker-row select{min-width:120px;}
+#adminModal .marker-set{display:grid;grid-template-columns:repeat(10,24px);gap:4px;}
+#adminModal .marker-set svg{width:24px;height:30px;}
 #adminModal input[type=range]{width:100%;}
 #adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
 #adminModal .preset-actions input{flex:1;padding:6px;border-radius:4px;}
@@ -2194,6 +2199,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="sunrise">Sunrise</option>
                 <option value="rainbow">Rainbow</option>
               </select>
+            </div>
+            <div class="modal-field">
+              <label>Mapmarkers</label>
+              <div id="markerGrid" class="marker-grid"></div>
             </div>
               <div class="modal-field">
                 <label for="spinSpeed">Spin speed</label>
@@ -4160,6 +4169,53 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       panel && panel.classList.add('active');
     });
   });
+
+  const markerGrid = document.getElementById('markerGrid');
+  if(markerGrid){
+    const colors = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#1abc9c','#34495e','#f39c12','#7f8c8d'];
+    const icons = ['1','2','3','4','5','6','7','8','9','10'];
+    colors.forEach((color, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'marker-row';
+      const select = document.createElement('select');
+      const opt = document.createElement('option');
+      opt.textContent = `Category ${idx+1}`;
+      select.appendChild(opt);
+      row.appendChild(select);
+      const set = document.createElement('div');
+      set.className = 'marker-set';
+      icons.forEach(ic=>{
+        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox','0 0 20 30');
+        const body = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+        body.setAttribute('cx','10');
+        body.setAttribute('cy','10');
+        body.setAttribute('rx','9');
+        body.setAttribute('ry','10');
+        body.setAttribute('fill',color);
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1','10');
+        line.setAttribute('y1','20');
+        line.setAttribute('x2','10');
+        line.setAttribute('y2','30');
+        line.setAttribute('stroke','#555');
+        line.setAttribute('stroke-width','1');
+        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute('x','10');
+        text.setAttribute('y','14');
+        text.setAttribute('font-size','8');
+        text.setAttribute('text-anchor','middle');
+        text.setAttribute('fill','#fff');
+        text.textContent = ic;
+        svg.appendChild(body);
+        svg.appendChild(line);
+        svg.appendChild(text);
+        set.appendChild(svg);
+      });
+      row.appendChild(set);
+      markerGrid.appendChild(row);
+    });
+  }
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
