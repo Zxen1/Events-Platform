@@ -1003,7 +1003,10 @@ select option:hover{
 
 .map-overlay{
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: var(--results-w);
+  right: 0;
   display: grid;
   place-items: center;
   color: #fff;
@@ -1013,13 +1016,16 @@ select option:hover{
   pointer-events: none;
 }
 
-.geocoder{position:absolute;top:10px;left:10px;z-index:10;min-width:240px;display:flex;gap:4px;}
+.geocoder{position:absolute;top:10px;left:calc(var(--results-w) + 10px);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
 .geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;}
 .geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none;}
 .geocoder .mapboxgl-ctrl-geolocate{width:100%;height:100%;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
+
+.main.hide-results + .post-panel .geocoder{left:10px;}
+.main.hide-results + .post-panel .map-overlay{left:0;}
 
 .closed-posts{
   display:none;
@@ -1047,8 +1053,15 @@ select option:hover{
   display: none;
 }
 
-.mode-map .post-panel{
-  display: block;
+
+.mode-posts .map-area{
+  display: none;
+}
+
+.map-area{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
 }
 
 
@@ -1836,25 +1849,18 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   display: -webkit-box;
 }
 
-.mode-posts .post-panel{
-
-  display: block;
-  grid-column: 2/3;
-  grid-row: 2;
-  z-index: 0;
-}
-
-
-
 .results-col .res-list{
   border-radius: inherit;
 }
 
-.main .post-panel{
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  padding: 0 14px 14px 0;
+.post-panel{
+  position: fixed;
+  top: calc(var(--header-h) + var(--subheader-h));
+  bottom: var(--footer-h);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .main .closed-posts{
@@ -1880,12 +1886,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: transparent;
 }
 
-.main .post-panel #map{
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--modal-bg:rgba(0,0,0,0.62);--modal-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
@@ -1906,7 +1906,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 body{background-color:rgba(41,41,41,1);}
 .main{margin:0;}
 
-.main .post-panel{padding:0;}
+  .post-panel{padding:0;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
@@ -1945,7 +1945,7 @@ body{background-color:rgba(41,41,41,1);}
 footer{background-color:rgba(0,0,0,0);}
 footer .foot-row .foot-item{background-color:rgba(0,0,0,0.32);box-shadow:0 0 0px #000000;}
 footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.post-panel{background-color:rgba(0,0,0,1);}
+  .map-area{background-color:rgba(0,0,0,1);}
 .mapboxgl-popup .mapboxgl-popup-content{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .hover-card{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .chip{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
@@ -2015,6 +2015,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </header>
 
+  <section class="map-area" aria-label="Map">
+    <div id="map"></div>
+  </section>
+
   <main class="main">
       <div class="subheader">
         <button id="filterBtn" aria-label="Open filters modal">Filters</button>
@@ -2036,15 +2040,15 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div class="res-list" id="results"></div>
       </section>
 
-    <section class="post-panel" aria-label="Map">
-      <div id="geocoder" class="geocoder"></div>
-      <div id="map"></div>
-      <div class="map-overlay">Loading Map…</div>
-    </section>
     <section class="closed-posts" aria-label="Closed Posts">
       <div class="res-list" id="postsWide"></div>
     </section>
   </main>
+
+  <section class="post-panel" aria-label="Map Controls">
+    <div id="geocoder" class="geocoder"></div>
+    <div class="map-overlay">Loading Map…</div>
+  </section>
 
   <footer>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
@@ -4295,7 +4299,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .location-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['.post-panel'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
+    {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
     {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
     {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
