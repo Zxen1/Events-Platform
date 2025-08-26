@@ -2205,30 +2205,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </select>
             </div>
             <div class="modal-field">
-              <label for="markerSize">Size</label>
-              <input type="range" id="markerSize" min="16" max="64" step="1" value="24" />
-            </div>
-            <div class="modal-field">
-              <label for="markerShadow">Shadow</label>
-              <input type="range" id="markerShadow" min="0" max="10" step="1" value="0" />
-            </div>
-            <div class="modal-field">
-              <label for="markerOutline">Outline</label>
-              <input type="range" id="markerOutline" min="0" max="5" step="0.5" value="0" />
-            </div>
-            <div class="modal-field">
-              <label for="markerOpacity">Opacity</label>
-              <input type="range" id="markerOpacity" min="0" max="1" step="0.1" value="1" />
-            </div>
-            <div class="modal-field">
-              <div id="markerButtons" class="marker-buttons" style="display:flex;flex-direction:column;gap:4px;"></div>
-              <div id="markerDisplay" class="marker-set"></div>
-            </div>
-              <div class="modal-field">
-                <label for="spinSpeed">Spin speed</label>
-                <div class="range-wrap">
-                  <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
-                  <span id="spinSpeedVal"></span>
+              <label for="spinSpeed">Spin speed</label>
+              <div class="range-wrap">
+                <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
+                <span id="spinSpeedVal"></span>
                 </div>
               </div>
               <div class="modal-field">
@@ -4014,6 +3994,30 @@ function registerPopup(p){
     el.addEventListener('mousedown', ()=> bringToTop(p));
   }
 }
+function saveModalState(m){
+  if(!m || !m.id) return;
+  const content = m.querySelector('.modal-content');
+  if(!content) return;
+  const state = {
+    left: content.style.left,
+    top: content.style.top,
+    width: content.style.width,
+    height: content.style.height
+  };
+  localStorage.setItem(`modal-${m.id}`, JSON.stringify(state));
+}
+function loadModalState(m){
+  if(!m || !m.id) return;
+  const content = m.querySelector('.modal-content');
+  if(!content) return;
+  const saved = JSON.parse(localStorage.getItem(`modal-${m.id}`) || 'null');
+  if(saved){
+    ['width','height','left','top'].forEach(prop=>{
+      if(saved[prop]) content.style[prop] = saved[prop];
+    });
+    if(saved.left || saved.top) content.style.transform = 'none';
+  }
+}
 function openModal(m){
   const content = m.querySelector('.modal-content');
   if(content){
@@ -4041,6 +4045,7 @@ function openModal(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
+    loadModalState(m);
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
@@ -4137,6 +4142,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         dragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        saveModalState(modal);
       }
 
     const handles = ['n','e','s','w','ne','nw','se','sw'];
@@ -4188,6 +4194,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     function stopResize(){
       document.removeEventListener('mousemove', onResize);
       document.removeEventListener('mouseup', stopResize);
+      saveModalState(modal);
     }
   });
 
@@ -4202,145 +4209,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       panel && panel.classList.add('active');
     });
   });
-
-  const markerButtons = document.getElementById('markerButtons');
-  const markerDisplay = document.getElementById('markerDisplay');
-  const markerSize = document.getElementById('markerSize');
-  const markerShadow = document.getElementById('markerShadow');
-  const markerOutline = document.getElementById('markerOutline');
-  const markerOpacity = document.getElementById('markerOpacity');
-  if(markerButtons && markerDisplay){
-    const markerSets = [
-      {name:'Heart',shape:'heart'},
-      {name:'Star',shape:'star'},
-      {name:'Diamond',shape:'diamond'},
-      {name:'Square',shape:'square'},
-      {name:'Triangle',shape:'triangle'},
-      {name:'Circle',shape:'circle'},
-      {name:'Hexagon',shape:'hexagon'},
-      {name:'Pin',shape:'pin'}
-    ];
-    let currentSet = markerSets[0].shape;
-    markerSets.forEach(({name,shape})=>{
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.style.width = '100px';
-      btn.style.flexDirection = 'column';
-      btn.style.gap = '4px';
-      const icon = createMarker(shape,'#e74c3c',24);
-      icon.style.pointerEvents = 'none';
-      btn.appendChild(icon);
-      const label = document.createElement('span');
-      label.textContent = name;
-      btn.appendChild(label);
-      btn.addEventListener('click', ()=>{ currentSet = shape; renderMarkerSet(shape); });
-      markerButtons.appendChild(btn);
-    });
-    function randColor(){
-      const h = Math.floor(Math.random()*360);
-      const s = 70 + Math.floor(Math.random()*30);
-      const l = 45 + Math.floor(Math.random()*20);
-      return `hsl(${h} ${s}% ${l}%)`;
-    }
-    function createShape(shape){
-      const ns = 'http://www.w3.org/2000/svg';
-      switch(shape){
-        case 'heart':
-          const heart = document.createElementNS(ns,'path');
-          heart.setAttribute('d','M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z');
-          return heart;
-        case 'star':
-          const star = document.createElementNS(ns,'path');
-          star.setAttribute('d','M12 5l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 17.7 7.2 20.9l.9-5.4-3.9-3.8 5.4-.8z');
-          return star;
-        case 'diamond':
-          const diamond = document.createElementNS(ns,'polygon');
-          diamond.setAttribute('points','12,2 22,12 12,22 2,12');
-          return diamond;
-        case 'square':
-          const square = document.createElementNS(ns,'rect');
-          square.setAttribute('x','2'); square.setAttribute('y','2'); square.setAttribute('width','20'); square.setAttribute('height','20'); square.setAttribute('rx','4');
-          return square;
-        case 'triangle':
-          const triangle = document.createElementNS(ns,'path');
-          triangle.setAttribute('d','M12 4 L20 20 L4 20 Z');
-          return triangle;
-        case 'circle':
-          const circle = document.createElementNS(ns,'circle');
-          circle.setAttribute('cx','12'); circle.setAttribute('cy','12'); circle.setAttribute('r','10');
-          return circle;
-        case 'hexagon':
-          const hex = document.createElementNS(ns,'polygon');
-          hex.setAttribute('points','12,2 21,7 21,17 12,22 3,17 3,7');
-          return hex;
-        case 'pin':
-        default:
-          const pin = document.createElementNS(ns,'path');
-          pin.setAttribute('d','M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z');
-          return pin;
-      }
-    }
-    function createMarker(shape, color, size=24){
-      const ns = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(ns,'svg');
-      svg.setAttribute('viewBox','0 0 24 24');
-      svg.setAttribute('width',size);
-      svg.setAttribute('height',size);
-      const base = createShape(shape);
-      base.dataset.shape = shape;
-      base.setAttribute('fill', color);
-      if(shape==='star' || shape==='triangle'){
-        base.setAttribute('stroke', color);
-        base.setAttribute('stroke-width','2');
-        base.setAttribute('stroke-linejoin','round');
-        base.setAttribute('stroke-linecap','round');
-      }
-      svg.appendChild(base);
-      svg.addEventListener('click', ()=>{
-        const code = svg.outerHTML;
-        if(navigator.clipboard){ navigator.clipboard.writeText(code); }
-        else { window.prompt('SVG Code', code); }
-      });
-      return svg;
-    }
-    function updateEffects(){
-      const shadow = parseFloat(markerShadow.value) || 0;
-      const outline = parseFloat(markerOutline.value) || 0;
-      const opacity = parseFloat(markerOpacity.value) || 1;
-      markerDisplay.querySelectorAll('svg').forEach(svg=>{
-        const base = svg.firstElementChild;
-        const shape = base.dataset.shape;
-        svg.style.filter = shadow>0 ? `drop-shadow(0 0 ${shadow}px rgba(0,0,0,0.5))` : 'none';
-        if(outline>0){
-          base.setAttribute('stroke','#000');
-          base.setAttribute('stroke-width', outline);
-        } else if(shape==='star' || shape==='triangle'){
-          const fill = base.getAttribute('fill');
-          base.setAttribute('stroke', fill);
-          base.setAttribute('stroke-width','2');
-          base.setAttribute('stroke-linejoin','round');
-          base.setAttribute('stroke-linecap','round');
-        } else {
-          base.removeAttribute('stroke');
-          base.removeAttribute('stroke-width');
-        }
-        svg.style.opacity = opacity;
-      });
-    }
-    function renderMarkerSet(shape){
-      markerDisplay.innerHTML='';
-      const size = parseInt(markerSize.value,10) || 24;
-      for(let i=0;i<1000;i++){
-        markerDisplay.appendChild(createMarker(shape, randColor(), size));
-      }
-      updateEffects();
-    }
-    markerSize.addEventListener('input', ()=> renderMarkerSet(currentSet));
-    markerShadow.addEventListener('input', updateEffects);
-    markerOutline.addEventListener('input', updateEffects);
-    markerOpacity.addEventListener('input', updateEffects);
-    renderMarkerSet(currentSet);
-  }
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
