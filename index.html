@@ -2987,10 +2987,28 @@ function makePosts(){
 
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
+      const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
+      if(storedHidden){
+        $('.main').classList.add('hide-results');
+        resultsToggle.setAttribute('aria-pressed','false');
+        resultsCol.setAttribute('aria-hidden','true');
+      } else {
+        resultsToggle.setAttribute('aria-pressed','true');
+        resultsCol.setAttribute('aria-hidden','false');
+      }
+      window.adjustListHeight();
+      setTimeout(()=>{
+        if(window.map){
+          map.resize();
+          updatePostPanel();
+          applyFilters();
+        }
+      }, 0);
       resultsToggle.addEventListener('click', ()=>{
         const hidden = $('.main').classList.toggle('hide-results');
         resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+        localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
         setTimeout(()=>{
           if(window.map){
@@ -4056,6 +4074,7 @@ function openModal(m){
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
+  localStorage.setItem(`modal-open-${m.id}`,'true');
   if(content){
     if(m.id==='filterModal'){
       const position = ()=>{
@@ -4082,12 +4101,15 @@ function openModal(m){
     m.__bringToTopAdded = true;
   }
   bringToTop(m);
+  if(window.map) setTimeout(()=> map.resize(),0);
 }
 function closeModal(m){
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
+  localStorage.setItem(`modal-open-${m.id}`,'false');
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
+  if(window.map) setTimeout(()=> map.resize(),0);
 }
 function requestCloseModal(m){
   closeModal(m);
@@ -4136,6 +4158,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(modal && modal.id === 'adminModal') return;
       requestCloseModal(modal);
     });
+  });
+
+  [filterModal, memberModal, adminModal].forEach(m=>{
+    if(m && localStorage.getItem(`modal-open-${m.id}`) === 'true'){
+      openModal(m);
+    }
   });
 
   document.querySelectorAll('.modal').forEach(modal=>{
