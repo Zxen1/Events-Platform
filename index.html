@@ -2162,6 +2162,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
           <button type="button" class="tab-btn" data-tab="map">Map</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
         </div>
       </div>
       <form id="adminForm" class="modal-body">
@@ -2320,6 +2321,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
             <button type="button" data-restore="settings">Restore</button>
+          </div>
+        </div>
+        <div id="tab-forms" class="tab-panel">
+          <style>
+            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
+            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+            #tab-forms .subcategory-table{border-collapse:collapse;}
+            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
+          </style>
+          <div id="formsControls">
+            <button type="button" id="addCategory">Add Category</button>
+            <div id="formsCategories"></div>
           </div>
         </div>
       </form>
@@ -5992,6 +6005,85 @@ window.addEventListener('resize', updateStickyImages);
 
     render(Object.keys(SHAPES)[0]);
   })();
+</script>
+<script>
+(function(){
+  const ICONS = {
+    circle:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#000"/></svg>',
+    square:'<svg viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#000"/></svg>',
+    triangle:'<svg viewBox="0 0 20 20"><polygon points="10,2 18,18 2,18" fill="#000"/></svg>'
+  };
+  const FIELD_TYPES = ['Text','Number','Date','Color'];
+  function createIconSelect(){
+    const s=document.createElement('select');
+    Object.keys(ICONS).forEach(k=>{
+      const o=document.createElement('option');
+      o.value=k;
+      o.innerHTML=ICONS[k];
+      s.appendChild(o);
+    });
+    return s;
+  }
+  function createFieldSelect(){
+    const s=document.createElement('select');
+    FIELD_TYPES.forEach(t=>{
+      const o=document.createElement('option');
+      o.value=t.toLowerCase();
+      o.textContent=t;
+      s.appendChild(o);
+    });
+    return s;
+  }
+  function addSubcategory(table){
+    const iconRow=table.querySelector('.icon-row');
+    const nameRow=table.querySelector('.name-row');
+    const iconCell=document.createElement('td'); iconCell.appendChild(createIconSelect()); iconRow.appendChild(iconCell);
+    const nameCell=document.createElement('td'); const inp=document.createElement('input'); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
+    table.querySelectorAll('.field-row').forEach(row=>{
+      const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell);
+    });
+  }
+  function addFieldRow(table){
+    const cols=table.querySelector('.icon-row').children.length;
+    const row=document.createElement('tr'); row.className='field-row';
+    for(let i=0;i<cols;i++){ const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell); }
+    table.appendChild(row);
+  }
+  function wireCategory(cat){
+    const table=cat.querySelector('table');
+    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
+    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
+    cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
+    cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
+  }
+  function createCategory(){
+    const cat=document.createElement('div'); cat.className='form-category';
+    const header=document.createElement('div'); header.className='category-header';
+    const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
+    const icon=createIconSelect();
+    const color=document.createElement('input'); color.type='color'; color.value='#000000';
+    const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
+    const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
+    header.append(name,icon,color,copy,del);
+    cat.appendChild(header);
+    const table=document.createElement('table'); table.className='subcategory-table';
+    const iconRow=document.createElement('tr'); iconRow.className='icon-row';
+    const nameRow=document.createElement('tr'); nameRow.className='name-row';
+    table.append(iconRow,nameRow);
+    cat.appendChild(table);
+    const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
+    const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
+    cat.append(addSub,addField);
+    addSubcategory(table);
+    addFieldRow(table);
+    wireCategory(cat);
+    return cat;
+  }
+  document.getElementById('addCategory').addEventListener('click',()=>{
+    const cat=createCategory();
+    document.getElementById('formsCategories').appendChild(cat);
+  });
+})();
 </script>
 
 </body>
