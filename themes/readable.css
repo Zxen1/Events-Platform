@@ -14,7 +14,9 @@
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .options-menu{background-color:rgba(255,255,255,1);}
 body{background-color:rgba(41,41,41,1);}
-.main{margin:14px;}
+.main{margin:0;}
+
+.main .post-panel{padding:0;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
