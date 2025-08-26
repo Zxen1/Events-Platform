@@ -1061,12 +1061,6 @@ select option:hover{
 .mode-map .closed-posts{
   display: none;
 }
-
-
-.mode-posts .map-area{
-  display: none;
-}
-
 .map-area{
   position: fixed;
   top: var(--header-h);
@@ -3072,7 +3066,7 @@ function makePosts(){
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
       $('#main-tab-map').setAttribute('aria-selected', m==='map');
       if(map){
-        if(m==='map' && typeof map.resize === 'function'){
+        if(typeof map.resize === 'function'){
           map.resize();
         }
         updatePostPanel();
