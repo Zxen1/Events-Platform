@@ -1462,7 +1462,10 @@ footer{
   gap: 10px;
   padding: 10px 14px;
   background: var(--list-background);
-  position: relative;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
 }
 
@@ -1884,7 +1887,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#tab-map[aria-selected="true"]{color:#ff0000;}
+#main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
 .main{margin:14px;}
 
@@ -1980,13 +1983,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
 </style>
 </head>
-<body class="mode-map">
+<body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist"><button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-        <button id="tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+        <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
     </nav>
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">Members</button>
@@ -2122,7 +2125,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
         <div class="tab-bar">
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
-          <button type="button" class="tab-btn" data-tab="mapbox">Mapbox</button>
+          <button type="button" class="tab-btn" data-tab="map">Map</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
@@ -2131,7 +2134,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div class="modal-field">
             <label for="themePreset">Themes</label>
             <div class="preset-select">
-              <select id="themePreset"></select>
+              <select id="themePreset" style="width:250px"></select>
               <button type="button" id="refreshTheme">Refresh</button>
             </div>
           </div>
@@ -2154,14 +2157,14 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div id="styleControls"></div>
           <div class="modal-field">
             <label for="themeRestore">Restore Backup</label>
-            <select id="themeRestore"></select>
+            <select id="themeRestore" style="width:250px"></select>
             <button type="button" data-restore="theme">Restore</button>
           </div>
         </div>
-          <div id="tab-mapbox" class="tab-panel">
+          <div id="tab-map" class="tab-panel">
             <div class="modal-field">
               <label for="mapTheme">Theme</label>
-              <select id="mapTheme">
+              <select id="mapTheme" style="width:250px">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
                 <option value="mapbox://styles/mapbox/light-v11">Light</option>
@@ -2186,7 +2189,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
             <div class="modal-field">
               <label for="skyTheme">Sky</label>
-              <select id="skyTheme">
+              <select id="skyTheme" style="width:250px">
                 <option value="default">Default</option>
                 <option value="sunset">Sunset</option>
                 <option value="night">Night</option>
@@ -2202,15 +2205,24 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </select>
             </div>
             <div class="modal-field">
-              <label for="markerSetSelect">Mapmarker Sets</label>
-              <div id="markerGrid" class="marker-grid">
-                <select id="markerSetSelect"></select>
-                <div class="marker-options">
-                  <label><input type="checkbox" id="markerShadow"> Shadow</label>
-                  <label><input type="checkbox" id="markerOutline"> Outline</label>
-                </div>
-                <div id="markerDisplay" class="marker-set"></div>
-              </div>
+              <label for="markerSize">Size</label>
+              <input type="range" id="markerSize" min="16" max="64" step="1" value="24" />
+            </div>
+            <div class="modal-field">
+              <label for="markerShadow">Shadow</label>
+              <input type="range" id="markerShadow" min="0" max="10" step="1" value="0" />
+            </div>
+            <div class="modal-field">
+              <label for="markerOutline">Outline</label>
+              <input type="range" id="markerOutline" min="0" max="5" step="0.5" value="0" />
+            </div>
+            <div class="modal-field">
+              <label for="markerOpacity">Opacity</label>
+              <input type="range" id="markerOpacity" min="0" max="1" step="0.1" value="1" />
+            </div>
+            <div class="modal-field">
+              <div id="markerButtons" class="marker-buttons" style="display:flex;flex-direction:column;gap:4px;"></div>
+              <div id="markerDisplay" class="marker-set"></div>
             </div>
               <div class="modal-field">
                 <label for="spinSpeed">Spin speed</label>
@@ -2234,26 +2246,20 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 </div>
               </div>
             <div class="modal-field">
-              <label><input type="checkbox" id="spinLoadStart"> Start on load</label>
-                <div id="spinType" class="seg">
-                  <label>
-                    <input type="radio" name="spinType" value="all" />
-                  <span>Everyone</span>
-                </label>
-                <label>
-                  <input type="radio" name="spinType" value="new" />
-                  <span>New Users</span>
-                </label>
+              <button type="button" id="spinLoadStart" class="toggle-btn" aria-pressed="false">Start on load</button>
+              <div id="spinType">
+                <div><label><input type="radio" name="spinType" value="all" /> <span>Everyone</span></label></div>
+                <div><label><input type="radio" name="spinType" value="new" /> <span>New Users</span></label></div>
               </div>
-          </div>
-          <div class="modal-field">
-            <label><input type="checkbox" id="spinLogoClick"> Start on logo click</label>
-          </div>
-          <div class="modal-field">
-            <label for="mapboxRestore">Restore Backup</label>
-            <select id="mapboxRestore"></select>
-            <button type="button" data-restore="mapbox">Restore</button>
-          </div>
+            </div>
+            <div class="modal-field">
+              <button type="button" id="spinLogoClick" class="toggle-btn" aria-pressed="true">Start on logo click</button>
+            </div>
+            <div class="modal-field">
+              <label for="mapRestore">Restore Backup</label>
+              <select id="mapRestore" style="width:250px"></select>
+              <button type="button" data-restore="map">Restore</button>
+            </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -2278,7 +2284,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
           <div class="modal-field">
             <label for="settingsRestore">Restore Backup</label>
-            <select id="settingsRestore"></select>
+            <select id="settingsRestore" style="width:250px"></select>
             <button type="button" data-restore="settings">Restore</button>
           </div>
         </div>
@@ -2971,9 +2977,9 @@ function makePosts(){
       document.body.classList.remove('mode-map','mode-posts');
       document.body.classList.add('mode-'+m);
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
-      $('#tab-map').setAttribute('aria-current', m==='map'?'page':'');
+      $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
-      $('#tab-map').setAttribute('aria-selected', m==='map');
+      $('#main-tab-map').setAttribute('aria-selected', m==='map');
       if(map){
         if(m==='map'){
           map.resize();
@@ -2988,7 +2994,7 @@ function makePosts(){
       applyFilters();
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
-    $('#tab-map').addEventListener('click',()=> setMode('map'));
+    $('#main-tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
       if(!e.target.closest('.card, .open-posts, .litepicker')) setMode('map');
@@ -4178,19 +4184,23 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
   });
 
-  const markerSelect = document.getElementById('markerSetSelect');
+  const markerButtons = document.getElementById('markerButtons');
   const markerDisplay = document.getElementById('markerDisplay');
+  const markerSize = document.getElementById('markerSize');
   const markerShadow = document.getElementById('markerShadow');
   const markerOutline = document.getElementById('markerOutline');
-  if(markerSelect && markerDisplay){
+  const markerOpacity = document.getElementById('markerOpacity');
+  if(markerButtons && markerDisplay){
     const catIcons = ['📷','🎬','🎨','🎵','🏀','🎭','📚','🍽','🎮','🎤'];
     const markerSets = ['Numbered','Heart Standard','Heart Premium','Star','Diamond','Square','Triangle','Circle','Hexagon','Pin'];
     const shapeMap = { 'Heart Standard':'heart','Heart Premium':'heart','Star':'star','Diamond':'diamond','Square':'square','Triangle':'triangle','Circle':'circle','Hexagon':'hexagon','Pin':'pin' };
+    let currentSet = 'Numbered';
     markerSets.forEach(name=>{
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      markerSelect.appendChild(opt);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = name;
+      btn.addEventListener('click', ()=>{ currentSet = name; renderMarkerSet(name); });
+      markerButtons.appendChild(btn);
     });
     function createShape(shape){
       const ns = 'http://www.w3.org/2000/svg';
@@ -4201,7 +4211,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           return heart;
         case 'star':
           const star = document.createElementNS(ns,'path');
-          star.setAttribute('d','M12 .587l3.668 7.568L24 9.423l-6 5.849L19.335 24 12 19.771 4.665 24 6 15.272 0 9.423l8.332-1.268z');
+          star.setAttribute('d','M12 5l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 17.7 7.2 20.9l.9-5.4-3.9-3.8 5.4-.8z');
           return star;
         case 'diamond':
           const diamond = document.createElementNS(ns,'polygon');
@@ -4212,8 +4222,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           square.setAttribute('x','2'); square.setAttribute('y','2'); square.setAttribute('width','20'); square.setAttribute('height','20'); square.setAttribute('rx','4');
           return square;
         case 'triangle':
-          const triangle = document.createElementNS(ns,'polygon');
-          triangle.setAttribute('points','12,2 22,22 2,22');
+          const triangle = document.createElementNS(ns,'path');
+          triangle.setAttribute('d','M12 4 L20 20 L4 20 Z');
           return triangle;
         case 'circle':
           const circle = document.createElementNS(ns,'circle');
@@ -4237,7 +4247,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       svg.setAttribute('width',size);
       svg.setAttribute('height',size);
       const base = createShape(shape);
+      base.dataset.shape = shape;
       base.setAttribute('fill','#e74c3c');
+      if(shape==='star' || shape==='triangle'){
+        base.setAttribute('stroke','#e74c3c');
+        base.setAttribute('stroke-width','2');
+        base.setAttribute('stroke-linejoin','round');
+        base.setAttribute('stroke-linecap','round');
+      }
       svg.appendChild(base);
       const text = document.createElementNS(ns,'text');
       text.setAttribute('x','12');
@@ -4247,31 +4264,58 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       text.textContent = icon;
       if(/^[0-9]+$/.test(icon)) text.setAttribute('fill','#fff');
       svg.appendChild(text);
+      svg.addEventListener('click', ()=>{
+        const code = svg.outerHTML;
+        window.prompt('SVG Code', code);
+        const favs = JSON.parse(localStorage.getItem('markerFavs') || '[]');
+        if(!favs.includes(code)){
+          favs.push(code);
+          localStorage.setItem('markerFavs', JSON.stringify(favs));
+        }
+      });
       return svg;
     }
     function updateEffects(){
+      const shadow = parseFloat(markerShadow.value) || 0;
+      const outline = parseFloat(markerOutline.value) || 0;
+      const opacity = parseFloat(markerOpacity.value) || 1;
       markerDisplay.querySelectorAll('svg').forEach(svg=>{
-        svg.classList.toggle('shadow', markerShadow.checked);
-        svg.classList.toggle('outline', markerOutline.checked);
+        const base = svg.firstElementChild;
+        const shape = base.dataset.shape;
+        svg.style.filter = shadow>0 ? `drop-shadow(0 0 ${shadow}px rgba(0,0,0,0.5))` : 'none';
+        if(outline>0){
+          base.setAttribute('stroke','#000');
+          base.setAttribute('stroke-width', outline);
+        } else if(shape==='star' || shape==='triangle'){
+          base.setAttribute('stroke','#e74c3c');
+          base.setAttribute('stroke-width','2');
+          base.setAttribute('stroke-linejoin','round');
+          base.setAttribute('stroke-linecap','round');
+        } else {
+          base.removeAttribute('stroke');
+          base.removeAttribute('stroke-width');
+        }
+        svg.style.opacity = opacity;
       });
     }
     function renderMarkerSet(name){
       markerDisplay.innerHTML='';
+      const size = parseInt(markerSize.value,10) || 24;
       if(name==='Numbered'){
         for(let i=1;i<=100;i++){
-          markerDisplay.appendChild(createMarker('pin',String(i)));
+          markerDisplay.appendChild(createMarker('pin',String(i),size));
         }
       } else {
         const shape = shapeMap[name];
-        const size = name.includes('Premium') ? 36 : 24;
         catIcons.forEach(ic=> markerDisplay.appendChild(createMarker(shape,ic,size)));
       }
       updateEffects();
     }
-    markerSelect.addEventListener('change', e=> renderMarkerSet(e.target.value));
-    if(markerShadow) markerShadow.addEventListener('change', updateEffects);
-    if(markerOutline) markerOutline.addEventListener('change', updateEffects);
-    renderMarkerSet('Numbered');
+    markerSize.addEventListener('input', ()=> renderMarkerSet(currentSet));
+    markerShadow.addEventListener('input', updateEffects);
+    markerOutline.addEventListener('input', updateEffects);
+    markerOpacity.addEventListener('input', updateEffects);
+    renderMarkerSet(currentSet);
   }
 
   const colorAreas = [
@@ -5396,9 +5440,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(adminForm){
           const speedInput = document.getElementById("spinSpeed");
           const speedVal = document.getElementById("spinSpeedVal");
-          const loadStartInput = document.getElementById("spinLoadStart");
+          const loadStartBtn = document.getElementById("spinLoadStart");
           const typeRadios = document.querySelectorAll("#spinType input");
-          const logoClickInput = document.getElementById("spinLogoClick");
+          const logoClickBtn = document.getElementById("spinLogoClick");
           const themeSelect = document.getElementById("mapTheme");
           const pitchInput = document.getElementById("mapPitch");
           const pitchVal = document.getElementById("pitchVal");
@@ -5452,10 +5496,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           bearingVal.textContent = val.toFixed(0);
         });
       }
-      if(loadStartInput){
-        loadStartInput.checked = sg.spinLoadStart;
-        loadStartInput.addEventListener("change", ()=>{
-          sg.spinLoadStart = loadStartInput.checked;
+      if(loadStartBtn){
+        loadStartBtn.setAttribute('aria-pressed', sg.spinLoadStart);
+        loadStartBtn.addEventListener("click", ()=>{
+          sg.spinLoadStart = loadStartBtn.getAttribute('aria-pressed') !== 'true';
+          loadStartBtn.setAttribute('aria-pressed', sg.spinLoadStart);
           localStorage.setItem("spinLoadStart", JSON.stringify(sg.spinLoadStart));
           sg.updateSpinState();
         });
@@ -5471,10 +5516,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           });
         });
       }
-      if(logoClickInput){
-        logoClickInput.checked = sg.spinLogoClick;
-        logoClickInput.addEventListener("change", ()=>{
-          sg.spinLogoClick = logoClickInput.checked;
+      if(logoClickBtn){
+        logoClickBtn.setAttribute('aria-pressed', sg.spinLogoClick);
+        logoClickBtn.addEventListener("click", ()=>{
+          sg.spinLogoClick = logoClickBtn.getAttribute('aria-pressed') !== 'true';
+          logoClickBtn.setAttribute('aria-pressed', sg.spinLogoClick);
           localStorage.setItem("spinLogoClick", JSON.stringify(sg.spinLogoClick));
           sg.updateLogoClickState();
         });
@@ -5493,7 +5539,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const saveBtn = document.getElementById('saveNow');
     const discardBtn = document.getElementById('discardChanges');
     const adminClose = document.querySelector('#adminModal .close-modal');
-    const tabPanels = ['theme','mapbox','settings'];
+    const tabPanels = ['theme','map','settings'];
     const savedData = {};
 
     function toHex(val){
@@ -5507,11 +5553,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     function snapshot(tab){
       const panel = document.getElementById(`tab-${tab}`);
-      const inputs = panel.querySelectorAll('input,select,textarea');
+      const inputs = panel.querySelectorAll('input,select,textarea,button.toggle-btn');
       const data = {};
       inputs.forEach(el=>{
         if(!el.id && el.name) el.id = el.name; // ensure key
-        if(el.type === 'checkbox') data[el.id] = el.checked;
+        if(el.tagName === 'BUTTON'){
+          data[el.id] = el.getAttribute('aria-pressed') === 'true';
+        } else if(el.type === 'checkbox') data[el.id] = el.checked;
         else if(el.type === 'radio'){ if(el.checked) data[el.name] = el.value; }
         else {
           let v = el.value;
@@ -5527,7 +5575,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       Object.entries(data||{}).forEach(([id,val])=>{
         const el = panel.querySelector(`#${id}`);
         if(!el) return;
-        if(el.type === 'checkbox') el.checked = !!val;
+        if(el.tagName === 'BUTTON') el.setAttribute('aria-pressed', val);
+        else if(el.type === 'checkbox') el.checked = !!val;
         else if(el.type === 'radio'){
           const r = panel.querySelector(`input[name="${id}"][value="${val}"]`);
           if(r) r.checked = true;
@@ -5805,131 +5854,5 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 })();
 </script>
 
-<div id="balloonTool">
-  <style>
-    #balloonTool { padding: 10px; }
-    #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-    #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid #000; background: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); cursor: pointer; }
-    #balloonTool .shape-button svg { width: 24px; height: 24px; }
-    #balloonTool .shape-button.active { outline: 2px solid #000; }
-    #balloonTool .size-control { margin-bottom: 8px; }
-    #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-    #balloonTool #balloonGrid svg { cursor: pointer; }
-  </style>
-  <div class="shape-buttons" id="balloonShapeButtons"></div>
-  <div class="size-control">
-    <label>Size: <input type="range" id="balloonSize" min="40" max="120" value="60" /> <span id="balloonSizeValue">60</span>px</label>
-  </div>
-  <div id="balloonGrid"></div>
-</div>
-
-<script>
-  (function(){
-    const ns = 'http://www.w3.org/2000/svg';
-    const SHAPES = {
-      circle(){ const c=document.createElementNS(ns,'circle'); c.setAttribute('cx','0'); c.setAttribute('cy','0'); c.setAttribute('r','50'); return c; },
-      tallEllipse(){ const e=document.createElementNS(ns,'ellipse'); e.setAttribute('cx','0'); e.setAttribute('cy','0'); e.setAttribute('rx','40'); e.setAttribute('ry','55'); return e; },
-      heart(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-30 C-30,-70 -70,-20 -35,15 Q0,55 35,15 C70,-20 30,-70 0,-30Z'); return p; },
-      star(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L14,-17 L47,-17 L23,5 L35,45 L0,25 L-35,45 L-23,5 L-47,-17 L-14,-17 Z'); return p; },
-      triangle(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,55 L50,-45 L-50,-45 Z'); return p; },
-      rectangle(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-35'); r.setAttribute('y','-55'); r.setAttribute('width','70'); r.setAttribute('height','110'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
-      square(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-45'); r.setAttribute('y','-45'); r.setAttribute('width','90'); r.setAttribute('height','90'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
-      diamond(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L45,0 0,55 -45,0 Z'); return p; },
-      pentagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L52,-17 L32,45 -32,45 -52,-17 Z'); return p; },
-      hexagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L47,-27 L47,27 0,55 -47,27 -47,-27 Z'); return p; }
-    };
-
-    function hslToHex(h, s, l){
-      s/=100; l/=100;
-      const k = n => (n + h/30) % 12;
-      const a = s * Math.min(l, 1-l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
-      return '#' + [f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
-    }
-    const COLORS = Array.from({length:100}, (_,i)=>hslToHex(i*3.6,100,50));
-
-    function createBalloon(shapeName, color, size){
-      const svg = document.createElementNS(ns,'svg');
-      svg.setAttribute('viewBox','-60 -80 120 160');
-      svg.setAttribute('width', size);
-      svg.setAttribute('height', size);
-      svg.dataset.color = color;
-      svg.setAttribute('title', color + ' ' + size + 'px');
-      const body = SHAPES[shapeName]();
-      body.setAttribute('fill', color);
-      body.setAttribute('stroke', '#000');
-      body.setAttribute('stroke-width', '1');
-      svg.appendChild(body);
-      const tie = document.createElementNS(ns,'path');
-      tie.setAttribute('d','M-8,55 L0,60 L8,55 Z');
-      tie.setAttribute('fill','#000');
-      tie.setAttribute('stroke','#000');
-      tie.setAttribute('stroke-width','1');
-      svg.appendChild(tie);
-      const string = document.createElementNS(ns,'line');
-      string.setAttribute('x1','0'); string.setAttribute('y1','60');
-      string.setAttribute('x2','0'); string.setAttribute('y2','80');
-      string.setAttribute('stroke','#fff');
-      string.setAttribute('stroke-width','2');
-      svg.appendChild(string);
-      const gleam = document.createElementNS(ns,'ellipse');
-      gleam.setAttribute('cx','-20'); gleam.setAttribute('cy','-20');
-      gleam.setAttribute('rx','10'); gleam.setAttribute('ry','6');
-      gleam.setAttribute('fill','#fff');
-      svg.appendChild(gleam);
-      return svg;
-    }
-
-    const buttons = document.getElementById('balloonShapeButtons');
-    const grid = document.getElementById('balloonGrid');
-    const sizeSlider = document.getElementById('balloonSize');
-    const sizeValue = document.getElementById('balloonSizeValue');
-
-    sizeSlider.addEventListener('input', ()=>{
-      sizeValue.textContent = sizeSlider.value;
-      grid.querySelectorAll('svg').forEach(svg=>{
-        svg.setAttribute('width', sizeSlider.value);
-        svg.setAttribute('height', sizeSlider.value);
-        svg.setAttribute('title', svg.dataset.color + ' ' + sizeSlider.value + 'px');
-      });
-    });
-
-    function render(name){
-      grid.innerHTML='';
-      COLORS.forEach(color=>{
-        grid.appendChild(createBalloon(name, color, sizeSlider.value));
-      });
-    }
-
-    const LABELS = {
-      circle:'circle',
-      tallEllipse:'tall ellipse',
-      heart:'heart',
-      star:'soft star',
-      triangle:'soft triangle',
-      rectangle:'tall rectangle',
-      square:'square',
-      diamond:'diamond',
-      pentagon:'pentagon',
-      hexagon:'hexagon'
-    };
-
-    Object.keys(SHAPES).forEach((name,idx)=>{
-      const btn = document.createElement('button');
-      btn.className = 'shape-button';
-      btn.appendChild(createBalloon(name, '#000', 24));
-      btn.appendChild(document.createTextNode(LABELS[name] || name));
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#balloonTool .shape-button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        render(name);
-      });
-      if(idx===0) btn.classList.add('active');
-      buttons.appendChild(btn);
-    });
-
-    render(Object.keys(SHAPES)[0]);
-  })();
-</script>
 </body>
 </html>
