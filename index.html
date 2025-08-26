@@ -2992,7 +2992,13 @@ function makePosts(){
         resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         window.adjustListHeight();
-        setTimeout(()=>{ if(window.map) map.resize(); }, 310);
+        setTimeout(()=>{
+          if(window.map){
+            map.resize();
+            updatePostPanel();
+            applyFilters();
+          }
+        }, 310);
       });
 
       function setMode(m){
