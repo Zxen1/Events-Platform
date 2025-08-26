@@ -14,8 +14,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <style>:root{
-  --header-h: 72px;
-  --subheader-h: 60px;
+  --header-h: 100px;
+  --subheader-h: 50px;
   --panel-w: 260px;
   --results-w: 520px;
   --gap: 12px;
@@ -187,7 +187,7 @@ select option:hover{
     height: var(--header-h);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 0 20px;
     background: #A3956c;
     color: #fff;
@@ -196,14 +196,18 @@ select option:hover{
   }
 
   .logo{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  letter-spacing: .4px;
-  user-select: none;
-  cursor: pointer;
-}
+    position: absolute;
+    left: 50%;
+    top: 75px;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    user-select: none;
+    cursor: pointer;
+  }
 
 .logo img{
   height: 48px;
@@ -1060,7 +1064,10 @@ select option:hover{
 
 .map-area{
   position: fixed;
-  inset: 0;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 0;
 }
 
@@ -2385,16 +2392,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
 
       logoEl?.addEventListener('click', () => {
-        if(!spinLogoClick) return;
+        if(!spinLogoClick || !map) return;
+        if(map.getZoom() >= 5) return;
         spinEnabled = true;
         localStorage.setItem('spinGlobe', 'true');
-        if(map){
-          stopSpin();
-          map.flyTo({center:[0,0], zoom:startZoom, pitch:startPitch, bearing:startBearing});
-          map.once('moveend', startSpin);
-        }else{
-          startSpin();
-        }
+        stopSpin();
+        startSpin(true);
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
@@ -3186,19 +3189,24 @@ function makePosts(){
         });
       }
 
-    function startSpin(){
+    function startSpin(fromCurrent=false){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
+      if(map.getZoom() >= 5) return;
       spinning = true;
       renderLists(filtered);
-      map.easeTo({center:[0,0], zoom:1.5, pitch:0, essential:true});
       function step(){
         if(!spinning || !map) return;
         const c = map.getCenter();
         map.setCenter([c.lng + spinSpeed, c.lat]);
         requestAnimationFrame(step);
       }
-      map.once('moveend', () => requestAnimationFrame(step));
+      if(fromCurrent){
+        requestAnimationFrame(step);
+      }else{
+        map.easeTo({center:[0,0], zoom:startZoom, pitch:0, essential:true});
+        map.once('moveend', () => requestAnimationFrame(step));
+      }
     }
     function stopSpin(){
       spinning = false;
