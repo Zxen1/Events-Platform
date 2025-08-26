@@ -2192,13 +2192,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
                 <option value="mapbox://styles/mapbox/navigation-day-v1">Navigation Day</option>
                 <option value="mapbox://styles/mapbox/navigation-night-v1">Navigation Night</option>
-                <option value="mapbox://styles/mapbox/standard">Standard</option>
-                <option value="mapbox://styles/mapbox/standard-satellite">Standard Satellite</option>
+                  <option value="mapbox://styles/mapbox/standard">Standard</option>
+                  <option value="mapbox://styles/mapbox/satellite-streets-v12">Standard Satellite</option>
                 <option value="mapbox://styles/mapbox/traffic-day-v2">Traffic Day</option>
                 <option value="mapbox://styles/mapbox/traffic-night-v2">Traffic Night</option>
-                <option value="mapbox://styles/mapbox/terrain-v2">Terrain</option>
-                <option value="mapbox://styles/mapbox/standard-light">Standard Light</option>
-                <option value="mapbox://styles/mapbox/standard-dark">Standard Dark</option>
+                  <option value="mapbox://styles/mapbox/terrain-v2">Terrain</option>
+                  <option value="mapbox://styles/mapbox/light-v11">Standard Light</option>
+                  <option value="mapbox://styles/mapbox/dark-v11">Standard Dark</option>
                 <option value="mapbox://styles/mapbox/streets-v8">Streets Classic</option>
                 <option value="mapbox://styles/mapbox/emerald-v8">Emerald</option>
                 <option value="mapbox://styles/mapbox/wheatpaste-v9">Wheatpaste</option>
@@ -2326,13 +2326,27 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     const startZoom = savedView?.zoom || 1.5;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
+
+    function normalizeMapStyle(style){
+      switch(style){
+        case 'mapbox://styles/mapbox/standard-dark':
+          return 'mapbox://styles/mapbox/dark-v11';
+        case 'mapbox://styles/mapbox/standard-light':
+          return 'mapbox://styles/mapbox/light-v11';
+        case 'mapbox://styles/mapbox/standard-satellite':
+          return 'mapbox://styles/mapbox/satellite-streets-v12';
+        default:
+          return style;
+      }
+    }
+
       let map, geocoder, spinning = false, datePicker, todayWasOn = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = localStorage.getItem('mapStyle') || 'mapbox://styles/mapbox/outdoors-v12',
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/outdoors-v12',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
@@ -2345,7 +2359,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       updateLogoClickState();
 
       function applySky(theme){
-        if(!window.map || typeof map.setFog !== 'function'){
+        if(!map || typeof map.setFog !== 'function'){
           console.warn('map.setFog is not available in this Mapbox GL JS version.');
           return;
         }
@@ -3002,13 +3016,13 @@ function makePosts(){
         resultsCol.setAttribute('aria-hidden','false');
       }
       window.adjustListHeight();
-      setTimeout(()=>{
-        if(window.map){
-          map.resize();
-          updatePostPanel();
-          applyFilters();
-        }
-      }, 0);
+        setTimeout(()=>{
+          if(map){
+            map.resize();
+            updatePostPanel();
+            applyFilters();
+          }
+        }, 0);
       resultsToggle.addEventListener('click', ()=>{
         const hidden = $('.main').classList.toggle('hide-results');
         resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
@@ -3016,7 +3030,7 @@ function makePosts(){
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
         setTimeout(()=>{
-          if(window.map){
+          if(map){
             map.resize();
             updatePostPanel();
             applyFilters();
@@ -4106,7 +4120,7 @@ function openModal(m){
     m.__bringToTopAdded = true;
   }
   bringToTop(m);
-  if(window.map) setTimeout(()=> map.resize(),0);
+  if(map) setTimeout(()=> map.resize(),0);
 }
 function closeModal(m){
   m.classList.remove('show');
@@ -4114,7 +4128,7 @@ function closeModal(m){
   localStorage.setItem(`modal-open-${m.id}`,'false');
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
-  if(window.map) setTimeout(()=> map.resize(),0);
+    if(map) setTimeout(()=> map.resize(),0);
 }
 function requestCloseModal(m){
   closeModal(m);
@@ -4507,19 +4521,19 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(skySelect) skySelect.value = skyStyle;
       const pitchInput = document.getElementById('mapPitch');
       const pitchVal = document.getElementById('pitchVal');
-      if(pitchInput){
-        const p = (window.map && typeof window.map.getPitch === 'function')
-          ? window.map.getPitch()
-          : startPitch;
+        if(pitchInput){
+          const p = (map && typeof map.getPitch === 'function')
+            ? map.getPitch()
+            : startPitch;
         pitchInput.value = p;
         if(pitchVal) pitchVal.textContent = p.toFixed(0);
       }
       const bearingInput = document.getElementById('mapBearing');
       const bearingVal = document.getElementById('bearingVal');
-      if(bearingInput){
-        const b = (window.map && typeof window.map.getBearing === 'function')
-          ? window.map.getBearing()
-          : startBearing;
+        if(bearingInput){
+          const b = (map && typeof map.getBearing === 'function')
+            ? map.getBearing()
+            : startBearing;
         bearingInput.value = b;
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
@@ -5452,18 +5466,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
-            mapStyle = window.mapStyle = themeSelect.value;
-            localStorage.setItem("mapStyle", mapStyle);
-            if(window.map) window.map.setStyle(mapStyle);
+              mapStyle = window.mapStyle = themeSelect.value;
+              localStorage.setItem("mapStyle", mapStyle);
+              if(map) map.setStyle(mapStyle);
           });
         }
         const skySelect = document.getElementById("skyTheme");
         if(skySelect){
           skySelect.value = skyStyle;
           skySelect.addEventListener("change", ()=>{
-            skyStyle = window.skyStyle = skySelect.value;
-            localStorage.setItem("skyStyle", skyStyle);
-            if(window.map) applySky(skyStyle);
+              skyStyle = window.skyStyle = skySelect.value;
+              localStorage.setItem("skyStyle", skyStyle);
+              if(map) applySky(skyStyle);
           });
         }
         if(speedInput && speedVal){
@@ -5484,7 +5498,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         pitchVal.textContent = startPitch.toFixed(0);
         pitchInput.addEventListener("input", ()=>{
           const val = parseFloat(pitchInput.value) || 0;
-          if(window.map) map.setPitch(val);
+            if(map) map.setPitch(val);
           pitchVal.textContent = val.toFixed(0);
         });
       }
@@ -5493,7 +5507,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         bearingVal.textContent = startBearing.toFixed(0);
         bearingInput.addEventListener("input", ()=>{
           const val = parseFloat(bearingInput.value) || 0;
-          if(window.map) map.setBearing(val);
+            if(map) map.setBearing(val);
           bearingVal.textContent = val.toFixed(0);
         });
       }
