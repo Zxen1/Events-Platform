@@ -603,6 +603,11 @@ select option:hover{
     column-gap: 0;
     padding: 0;
     flex: 1 0 auto;
+    transition: grid-template-columns .3s ease;
+  }
+
+  .main.hide-results{
+    grid-template-columns: 0 1fr;
   }
 
 .filters-col{
@@ -837,6 +842,13 @@ select option:hover{
   min-width: 0;
   min-height: 0;
   padding: 0 0 14px 14px;
+  max-width: var(--results-w);
+  transition: max-width .3s ease, padding .3s ease;
+}
+
+.main.hide-results .results-col{
+  max-width: 0;
+  padding: 0;
 }
 
 .subheader{
@@ -2012,6 +2024,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
           </div>
         </div>
+        <button id="resultsToggle" aria-pressed="true">Results List</button>
         <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
       </div>
       <section class="results-col" aria-label="Results">
@@ -2967,13 +2980,23 @@ function makePosts(){
       }
     });
     optionsMenu.addEventListener('click', e=> e.stopPropagation());
-    document.addEventListener('click', ()=>{
-      optionsMenu.setAttribute('hidden','');
-      optionsBtn.setAttribute('aria-expanded','false');
-    });
+      document.addEventListener('click', ()=>{
+        optionsMenu.setAttribute('hidden','');
+        optionsBtn.setAttribute('aria-expanded','false');
+      });
 
-    function setMode(m){
-      mode = m;
+      const resultsToggle = $('#resultsToggle');
+      const resultsCol = $('.results-col');
+      resultsToggle.addEventListener('click', ()=>{
+        const hidden = $('.main').classList.toggle('hide-results');
+        resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+        resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+        window.adjustListHeight();
+        setTimeout(()=>{ if(window.map) map.resize(); }, 310);
+      });
+
+      function setMode(m){
+        mode = m;
       document.body.classList.remove('mode-map','mode-posts');
       document.body.classList.add('mode-'+m);
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
