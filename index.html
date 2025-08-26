@@ -1982,6 +1982,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
 
 </style>
+<link id="theme-readable" rel="stylesheet" href="themes/readable.css" disabled>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
@@ -5254,7 +5255,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function loadPresets(){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
-    presets = [{name:'Default', data: defaultTheme}, ...stored];
+    presets = [
+      {name:'Dark Transparency', css:'theme-dark-transparency'},
+      {name:'Readable', css:'theme-readable'},
+      ...stored
+    ];
     updatePresetOptions();
   }
 
@@ -5306,6 +5311,35 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       applyAdmin();
     }
 
+  function applyPreset(p){
+    document.querySelectorAll('[id^="theme-"]').forEach(el=>{ el.disabled = true; });
+    if(!p) return;
+    if(p.data){
+      localStorage.removeItem('selectedCssTheme');
+      applyPresetData(p.data);
+    } else if(p.css){
+      localStorage.setItem('selectedCssTheme', p.css);
+      localStorage.removeItem('currentTheme');
+      document.documentElement.removeAttribute('style');
+      colorAreas.forEach(area=>{
+        Object.values(area.selectors).flat().forEach(sel=>{
+          document.querySelectorAll(sel).forEach(el=>{
+            if(el === document.body){
+              const pad = el.style.paddingBottom;
+              el.removeAttribute('style');
+              if(pad) el.style.paddingBottom = pad;
+            } else {
+              el.removeAttribute('style');
+            }
+          });
+        });
+      });
+      document.querySelectorAll('.res-list .thumb,.closed-posts .thumb').forEach(el=> el.removeAttribute('style'));
+      const styleEl = document.getElementById(p.css);
+      if(styleEl) styleEl.disabled = false;
+    }
+  }
+
   function savePreset(name){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
     stored.push({name,data: collectThemeValues()});
@@ -5314,8 +5348,21 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function loadSavedTheme(){
+    const cssTheme = localStorage.getItem('selectedCssTheme');
+    if(cssTheme){
+      const idx = presets.findIndex(p=>p.css===cssTheme);
+      if(idx !== -1){
+        const sel = document.getElementById('themePreset');
+        if(sel) sel.value = idx;
+        applyPreset(presets[idx]);
+        return;
+      }
+    }
     const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
-    if(saved) applyPresetData(saved);
+    if(saved){
+      localStorage.removeItem('selectedCssTheme');
+      applyPresetData(saved);
+    }
   }
 
 
@@ -5584,14 +5631,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const presetSelect = document.getElementById('themePreset');
   presetSelect && presetSelect.addEventListener('change', e=>{
     const idx = parseInt(e.target.value, 10);
-    const p = presets[idx];
-    if(p) applyPresetData(p.data);
+    applyPreset(presets[idx]);
   });
   const refreshBtn = document.getElementById('refreshTheme');
   refreshBtn && refreshBtn.addEventListener('click', ()=>{
     const idx = parseInt(presetSelect.value, 10);
-    const p = presets[idx];
-    if(p) applyPresetData(p.data);
+    applyPreset(presets[idx]);
   });
   const savePresetBtn = document.getElementById('savePreset');
   savePresetBtn && savePresetBtn.addEventListener('click', ()=>{
