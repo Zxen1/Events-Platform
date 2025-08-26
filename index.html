@@ -604,11 +604,13 @@ select option:hover{
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
     grid-template-rows: var(--subheader-h) 1fr;
-    row-gap: var(--gap);
+    row-gap: 0;
     column-gap: 0;
     padding: 0;
     flex: 1 0 auto;
     transition: grid-template-columns .3s ease;
+    position: relative;
+    z-index: 1;
   }
 
   .main.hide-results{
@@ -849,6 +851,8 @@ select option:hover{
   padding: 0 0 14px 14px;
   max-width: var(--results-w);
   transition: max-width .3s ease, padding .3s ease;
+  position: relative;
+  z-index: 2;
 }
 
 .main.hide-results .results-col{
@@ -865,6 +869,8 @@ select option:hover{
   grid-column: 1 / -1;
   height: var(--subheader-h);
   padding: 14px;
+  position: relative;
+  z-index: 3;
 }
 
 #filterBtn{
