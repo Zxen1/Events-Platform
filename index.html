@@ -104,6 +104,9 @@ body{
   overflow: hidden;
   cursor: default;
   caret-color: transparent;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 input,
@@ -587,13 +590,13 @@ select option:hover{
 .field-instance{margin:4px 0;}
 
 .main{
-    height: calc(100vh - var(--header-h) - var(--footer-h));
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
     grid-template-rows: auto 1fr;
     row-gap: var(--gap);
     column-gap: 0;
     padding: 0;
+    flex: 1 0 auto;
   }
 
 .filters-col{
