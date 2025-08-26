@@ -2260,6 +2260,25 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <select id="mapRestore" style="width:250px"></select>
               <button type="button" data-restore="map">Restore</button>
             </div>
+            <div class="modal-field">
+              <div id="balloonTool">
+                <style>
+                  #balloonTool { padding: 10px; }
+                  #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+                  #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid #000; background: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); cursor: pointer; }
+                  #balloonTool .shape-button svg { width: 24px; height: 24px; }
+                  #balloonTool .shape-button.active { outline: 2px solid #000; }
+                  #balloonTool .size-control { margin-bottom: 8px; }
+                  #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+                  #balloonTool #balloonGrid svg { cursor: pointer; }
+                </style>
+                <div class="shape-buttons" id="balloonShapeButtons"></div>
+                <div class="size-control">
+                  <label>Size: <input type="range" id="balloonSize" min="40" max="120" value="60" /> <span id="balloonSizeValue">60</span>px</label>
+                </div>
+                <div id="balloonGrid"></div>
+              </div>
+            </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -5858,24 +5877,6 @@ window.addEventListener('resize', updateStickyImages);
   }
 })();
 </script>
-
-<div id="balloonTool">
-  <style>
-    #balloonTool { padding: 10px; }
-    #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-    #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid #000; background: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); cursor: pointer; }
-    #balloonTool .shape-button svg { width: 24px; height: 24px; }
-    #balloonTool .shape-button.active { outline: 2px solid #000; }
-    #balloonTool .size-control { margin-bottom: 8px; }
-    #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-    #balloonTool #balloonGrid svg { cursor: pointer; }
-  </style>
-  <div class="shape-buttons" id="balloonShapeButtons"></div>
-  <div class="size-control">
-    <label>Size: <input type="range" id="balloonSize" min="40" max="120" value="60" /> <span id="balloonSizeValue">60</span>px</label>
-  </div>
-  <div id="balloonGrid"></div>
-</div>
 
 <script>
   (function(){
