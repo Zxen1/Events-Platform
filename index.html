@@ -2312,6 +2312,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div id="tab-map" class="tab-panel">
             <div class="modal-field">
               <label for="mapTheme">Map Colour</label>
+              <div style="display:flex;align-items:center;gap:4px;">
               <select id="mapTheme" style="width:250px">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
@@ -2334,9 +2335,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="mapbox://styles/mapbox/pencil-v2">Pencil</option>
                 <option value="mapbox://styles/mapbox/vintage-v10">Vintage</option>
               </select>
+              <button type="button" class="refresh-page-btn">Refresh</button>
+              </div>
             </div>
             <div class="modal-field">
               <label for="skyTheme">Sky Colour</label>
+              <div style="display:flex;align-items:center;gap:4px;">
               <select id="skyTheme" style="width:250px">
                 <option value="default">Default</option>
                 <option value="sunset">Sunset</option>
@@ -2351,6 +2355,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="sunrise">Sunrise</option>
                 <option value="rainbow">Rainbow</option>
               </select>
+              <button type="button" class="refresh-page-btn">Refresh</button>
+              </div>
             </div>
             <div class="modal-field">
               <label for="spinSpeed">Spin speed</label>
@@ -4284,6 +4290,9 @@ function makePosts(){
             sessMenu.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
+            if(!hasMultipleSessions && loc.dates.length === 1){
+              selectSession(0);
+            }
           }
       }
       if(mapEl){
@@ -5864,6 +5873,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
               if(map) applySky(skyStyle);
           });
         }
+        adminForm.querySelectorAll('.refresh-page-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=> location.reload());
+        });
         if(speedInput && speedVal){
         speedInput.value = sg.spinEnabled ? sg.spinSpeed : 0;
         speedVal.textContent = sg.spinEnabled ? sg.spinSpeed.toFixed(2) : "Off";
