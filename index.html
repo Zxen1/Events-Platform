@@ -851,7 +851,7 @@ select option:hover{
   width: var(--results-w);
   display: flex;
   flex-direction: column;
-  padding: 0 0 14px 0;
+  padding: 0;
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
   pointer-events: auto;
@@ -872,7 +872,7 @@ body.hide-results .results-col{
   height: var(--subheader-h);
   min-height: var(--subheader-h);
   max-height: var(--subheader-h);
-  padding: 14px 14px 14px 0;
+  padding: 14px 20px;
   position: fixed;
   top: var(--header-h);
   left: 0;
@@ -1882,7 +1882,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   left: 0;
   right: 0;
   z-index: 10;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .mode-posts #postsWide{
@@ -1913,14 +1913,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
-.results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0 0 14px 0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
+.results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
 body.hide-results .results-col{width:0;padding:0;}
 .map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
 .closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow:auto;padding:12px 6px 12px 0;}
 body.hide-results .closed-posts{left:0;}
 .mode-posts .closed-posts{display:block;z-index:1;pointer-events:auto;}
 
-  .post-panel{padding:0;pointer-events:auto;}
+  .post-panel{padding:0;pointer-events:none;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
@@ -3092,7 +3092,7 @@ function makePosts(){
       document.body.classList.add('mode-'+m);
       const panel = document.querySelector('.post-panel');
       if(panel){
-        panel.style.pointerEvents = m === 'map' ? 'none' : 'auto';
+        panel.style.pointerEvents = 'none';
       }
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
       $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
@@ -3231,6 +3231,9 @@ function makePosts(){
           const pitch = map.getPitch();
           const bearing = map.getBearing();
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
+        });
+        map.on('click', () => {
+          if(mode === 'posts') setMode('map');
         });
       }
 
