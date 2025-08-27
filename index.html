@@ -253,15 +253,17 @@ select option:hover{
   transform:translateY(-50%);
   border:1px solid var(--btn);
   border-radius:999px;
-  padding:10px;
+  padding:10px 14px;
   background:var(--btn);
   color:var(--ink);
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
+  gap:4px;
   transition:background .2s,border-color .2s;
 }
+#resultsToggle .btn-label{line-height:1;}
 #resultsToggle svg{
   width:16px;
   height:16px;
@@ -273,6 +275,12 @@ select option:hover{
 @media (max-width:1000px){
   #resultsToggle{display:none;}
   .view-toggle{left:20px;}
+}
+
+@media (max-width:650px){
+  .logo{left:20px; transform:translateY(-50%);}
+  .view-toggle{left:80px;}
+  .header{justify-content:flex-end;}
 }
 
 .view-toggle button[aria-current="page"],
@@ -964,6 +972,12 @@ body.hide-results .results-col{
   border-radius: var(--dropdown-radius);
 }
 
+#filterBtn.active{
+  background:red;
+  border-color:red;
+  color:#fff;
+}
+
 .options-dropdown{ position:relative; }
 .options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; }
 .options-menu[hidden]{ display:none; }
@@ -1133,12 +1147,12 @@ body.hide-results .results-col{
   left: var(--results-w);
   right: 0;
   overflow:auto;
-  padding:12px 6px 12px 0;
+  padding:0 6px 0 0;
   color:#000;
   background:rgba(0,0,0,0.7);
 }
 .closed-posts .res-list{overflow:visible;}
-.closed-posts{color:#000;padding:0 14px 14px 0;}
+.closed-posts{color:#000;padding:0 14px 0 0;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:0}
@@ -1426,7 +1440,7 @@ body.hide-results .closed-posts{
 }
 .options-dropdown>button{
   position:relative;
-  padding-right:24px;
+  padding:10px;
 }
 .options-dropdown>button .dropdown-arrow{
   position:absolute;
@@ -2028,7 +2042,7 @@ body{background-color:rgba(41,41,41,1);}
 .results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
 body.hide-results .results-col{width:0;padding:0;overflow:hidden;}
 .map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
-.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow:auto;padding:12px 6px 12px 0;}
+  .closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow:auto;padding:0 6px 0 0;}
 body.hide-results .closed-posts{left:0;}
 .mode-posts .closed-posts{display:block;z-index:1;pointer-events:auto;}
 
@@ -2118,7 +2132,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding:12px;margin:0;}
 .res-list .thumb{width:80px;height:80px;}
-.closed-posts .res-list{padding:12px;margin:0;}
+.closed-posts .res-list{padding:12px;padding-bottom:0;margin:0;}
 .closed-posts .thumb{width:80px;height:80px;}
 
 
@@ -2131,11 +2145,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
     <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
+      <span class="btn-label">List</span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     </button>
     <div class="logo" aria-label="Site logo">
       <picture>
-        <source media="(max-width:600px)" srcset="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png">
+        <source media="(max-width:650px)" srcset="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png">
         <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
       </picture>
     </div>
@@ -2286,7 +2301,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div class="tab-bar">
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Themes</button>
           <button type="button" class="tab-btn" data-tab="map">Map</button>
-          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
@@ -2416,8 +2430,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <div id="balloonTool">
                 <style>
-                  #balloonTool { padding: 10px; width:auto; height:auto; max-width:100%; max-height:100%; }
-                  #balloonTool .admin-fieldset{ width:100%; }
+                  #balloonTool { padding: 10px; width:100%; height:100%; max-width:none; max-height:none; }
+                  #balloonTool .admin-fieldset{ flex:1 1 auto; width:100%; min-width:0; max-width:none; }
                   #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
                   #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--secondary); background: var(--secondary); color: var(--button-text); cursor: pointer; border-radius:6px; transition: background .2s,border-color .2s,color .2s; }
                   #balloonTool .shape-button:hover { background: var(--accent); border-color: var(--accent); color: var(--button-hover-text); }
@@ -2426,7 +2440,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                   #balloonTool .size-control { margin-bottom: 8px; }
                   #balloonTool .svg-output { display:flex; gap:8px; margin-bottom:8px; }
                   #balloonTool .svg-output textarea{ flex:1; }
-                  #balloonTool #balloonIconsWrapper{ overflow:auto; max-height:100%; }
+                  #balloonTool #balloonIconsWrapper{ overflow:auto; height:100%; }
                   #balloonTool #balloonScrollTop,
                   #balloonTool #balloonScrollBottom{ overflow-x:auto; overflow-y:hidden; }
                   #balloonTool #balloonScrollTop{ margin-bottom:4px; height:8px; }
@@ -2453,18 +2467,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 </fieldset>
               </div>
             </div>
-        </div>
-        <div id="tab-forms" class="tab-panel">
-          <style>
-            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
-            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
-            #tab-forms .subcategory-table{border-collapse:collapse;}
-            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
-          </style>
-          <div id="formsControls">
-            <button type="button" id="addCategory">Add Category</button>
-            <div id="formsCategories"></div>
-          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -2548,6 +2550,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
+      const filterBtn = document.getElementById('filterBtn');
       function updateLogoClickState(){
         if(logoEl){
           logoEl.style.cursor = 'pointer';
@@ -2584,7 +2587,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
         body.innerHTML = msg;
         if(!/\<img/i.test(msg)){
-          const logoPath = window.matchMedia('(max-width:600px)').matches ?
+          const logoPath = window.matchMedia('(max-width:650px)').matches ?
             'https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png' :
             'https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png';
           body.insertAdjacentHTML('afterbegin', `<img src="${logoPath}" alt="FunMap logo" />`);
@@ -2601,7 +2604,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         }
       }
 
-      logoEl?.addEventListener('click', () => {
+      logoEl?.addEventListener('click', (e) => {
+        e.stopPropagation();
         if(spinning){
           openWelcome();
           return;
@@ -3418,7 +3422,7 @@ function makePosts(){
           localStorage.setItem('spinGlobe','false');
           stopSpin();
           setMode('map');
-          if(map) map.once('moveend', () => { applyFilters(); updatePostPanel(); });
+          if(map) map.once('moveend', () => { geocoder.clear(); applyFilters(); updatePostPanel(); });
         });
         const gc = document.getElementById('geocoder');
         if(gc) gc.appendChild(geocoder.onAdd(map));
@@ -3445,6 +3449,7 @@ function makePosts(){
             const place = e.result;
             info.innerHTML = `<strong>${place.text}</strong><br>${place.place_name}`;
           }
+          memberGeocoder.clear();
         });
         memberGeocoder.on('clear', ()=>{
           const info = document.getElementById('mLocationInfo');
@@ -4413,6 +4418,8 @@ function makePosts(){
       filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      const hasActiveFilters = $('#kwInput').value.trim() || $('#dateInput').value.trim() || $('#dateInput').dataset.range || selection.cats.size || selection.subs.size || $('#todayToggle').checked;
+      if(filterBtn) filterBtn.classList.toggle('active', !!hasActiveFilters);
     }
 
     applyFilters();
@@ -6481,85 +6488,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     render(Object.keys(SHAPES)[0]);
   })();
-</script>
-<script>
-(function(){
-  const ICONS = {
-    circle:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#000"/></svg>',
-    square:'<svg viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#000"/></svg>',
-    triangle:'<svg viewBox="0 0 20 20"><polygon points="10,2 18,18 2,18" fill="#000"/></svg>'
-  };
-  const FIELD_TYPES = ['Text','Number','Date','Color'];
-  function createIconSelect(){
-    const s=document.createElement('select');
-    Object.keys(ICONS).forEach(k=>{
-      const o=document.createElement('option');
-      o.value=k;
-      o.innerHTML=ICONS[k];
-      s.appendChild(o);
-    });
-    return s;
-  }
-  function createFieldSelect(){
-    const s=document.createElement('select');
-    FIELD_TYPES.forEach(t=>{
-      const o=document.createElement('option');
-      o.value=t.toLowerCase();
-      o.textContent=t;
-      s.appendChild(o);
-    });
-    return s;
-  }
-  function addSubcategory(table){
-    const iconRow=table.querySelector('.icon-row');
-    const nameRow=table.querySelector('.name-row');
-    const iconCell=document.createElement('td'); iconCell.appendChild(createIconSelect()); iconRow.appendChild(iconCell);
-    const nameCell=document.createElement('td'); const inp=document.createElement('input'); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
-    table.querySelectorAll('.field-row').forEach(row=>{
-      const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell);
-    });
-  }
-  function addFieldRow(table){
-    const cols=table.querySelector('.icon-row').children.length;
-    const row=document.createElement('tr'); row.className='field-row';
-    for(let i=0;i<cols;i++){ const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell); }
-    table.appendChild(row);
-  }
-  function wireCategory(cat){
-    const table=cat.querySelector('table');
-    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
-    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
-    cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
-    cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
-  }
-  function createCategory(){
-    const cat=document.createElement('div'); cat.className='form-category';
-    const header=document.createElement('div'); header.className='category-header';
-    const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
-    const icon=createIconSelect();
-    const color=document.createElement('input'); color.type='color'; color.value='#000000';
-    const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
-    const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
-    header.append(name,icon,color,copy,del);
-    cat.appendChild(header);
-    const table=document.createElement('table'); table.className='subcategory-table';
-    const iconRow=document.createElement('tr'); iconRow.className='icon-row';
-    const nameRow=document.createElement('tr'); nameRow.className='name-row';
-    table.append(iconRow,nameRow);
-    cat.appendChild(table);
-    const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
-    const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
-    cat.append(addSub,addField);
-    addSubcategory(table);
-    addFieldRow(table);
-    wireCategory(cat);
-    return cat;
-  }
-  document.getElementById('addCategory').addEventListener('click',()=>{
-    const cat=createCategory();
-    document.getElementById('formsCategories').appendChild(cat);
-  });
-})();
 </script>
 
 </body>
