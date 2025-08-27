@@ -185,13 +185,18 @@ select option:hover{
 
   .header{
     height: var(--header-h);
+    min-height: var(--header-h);
+    max-height: var(--header-h);
     display: flex;
     align-items: center;
     justify-content: flex-end;
     padding: 0 20px;
     background: #A3956c;
     color: #fff;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 20;
   }
 
@@ -600,7 +605,7 @@ select option:hover{
 }
 .field-instance{margin:4px 0;}
 
-.main{
+  .main{
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
     grid-template-rows: var(--subheader-h) 1fr;
@@ -612,6 +617,7 @@ select option:hover{
     position: relative;
     z-index: 1;
     pointer-events: none;
+    margin-top: var(--header-h);
   }
 
   .main.hide-results{
@@ -870,8 +876,13 @@ select option:hover{
   color: var(--ink-d);
   grid-column: 1 / -1;
   height: var(--subheader-h);
+  min-height: var(--subheader-h);
+  max-height: var(--subheader-h);
   padding: 14px 14px 14px 0;
-  position: relative;
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
   z-index: 3;
   pointer-events: auto;
 }
@@ -1870,7 +1881,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   left: 0;
   right: 0;
   z-index: 10;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .main .closed-posts{
@@ -1915,9 +1926,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
-.main{margin:0;}
+.main{margin-top:var(--header-h);margin-right:0;margin-bottom:0;margin-left:0;}
 
-  .post-panel{padding:0;}
+  .post-panel{padding:0;pointer-events:auto;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
