@@ -1487,6 +1487,12 @@ body.hide-results .closed-posts{
   margin-top: 8px;
 }
 
+@media (max-width:1000px){
+  .results-col{display:none;}
+  .closed-posts{left:0;}
+  #resultsToggle{display:none;}
+}
+
 @media (max-width:840px){
   .open-posts .body{
     flex-direction:column;
@@ -1500,6 +1506,10 @@ body.hide-results .closed-posts{
   .open-posts .session-dropdown{
     max-width:100%;
     width:100%;
+  }
+  .open-posts .location-dropdown,
+  .open-posts .session-dropdown{
+    display:block;
   }
 }
 
@@ -1872,6 +1882,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .post-panel{
@@ -3704,7 +3716,7 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                ${p.locations.length>1 ? `<div id="loc-${p.id}" class="location-dropdown options-dropdown"><button class="loc-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="location-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>` : ``}
+                <div id="loc-${p.id}" class="location-dropdown options-dropdown"><button class="loc-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="location-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
