@@ -17,21 +17,6 @@
 *{
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  border-color: var(--border) !important;
-}
-
-*:active,
-*[aria-pressed="true"],
-*[aria-current="page"],
-*[aria-selected="true"],
-.selected,
-.on{
-  border-color: var(--border-active) !important;
-}
-
-*:hover{
-  border-color: var(--border-hover) !important;
 }
 
 html,body{
@@ -42,41 +27,24 @@ html,body{
   width:8px;
   height:8px;
 }
-*::-webkit-scrollbar-track{
-  background:var(--scrollbar-track);
-}
 *::-webkit-scrollbar-thumb{
-  background:var(--scrollbar-thumb);
   border-radius:4px;
-}
-*::-webkit-scrollbar-thumb:hover{
-  background:var(--scrollbar-thumb-hover);
 }
 
 body{
   margin: 0;
   font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
-  background: var(--background);
-  color: var(--text);
   overflow: hidden;
   cursor: default;
-  caret-color: transparent;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   padding-bottom: var(--footer-h);
 }
 
-input,
-textarea{
-  caret-color: auto;
-}
-
 button,
 [role="button"]{
-  background: var(--secondary);
-  border: 1px solid var(--secondary);
-  color: var(--button-text);
+  border: 1px solid;
   padding: 6px 10px;
   border-radius: 6px;
   display: inline-flex;
@@ -85,45 +53,14 @@ button,
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
-
-button:hover,
-[role="button"]:hover{
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--button-hover-text);
-}
-
-a{
-  color: var(--primary);
-}
-
-a:hover{
-  color: var(--accent);
-}
 button:active,
 [role="button"]:active{
   transform: scale(0.97);
 }
 button:focus-visible,
 [role="button"]:focus-visible{
-  outline:2px solid var(--ink-d);
+  outline:2px solid;
   outline-offset:2px;
-}
-
-input::placeholder,
-textarea::placeholder{
-  color: var(--placeholder-text);
-}
-#kwInput::placeholder{ color: var(--filter-placeholder-text); }
-#filterModal #dateInput{ color: var(--filter-date-text); }
-#filterModal input[type="text"]{ background:var(--dropdown-bg); }
-#adminModal .textpicker,
-#filterModal .textpicker{ background:var(--dropdown-bg); }
-#adminModal .textpicker .text-popup select,
-#adminModal .textpicker .text-popup input[type=color]{ background:var(--dropdown-bg); }
-
-.field label{
-  color: var(--dropdown-title);
 }
 
 .sort-options{
@@ -145,24 +82,7 @@ textarea::placeholder{
 }
 
 select{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
   border-radius: var(--dropdown-radius);
-}
-.venue-select{
-  color: var(--dropdown-venue-text);
-}
-select option{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-}
-select option:checked{
-  background: var(--dropdown-selected-bg);
-  color: var(--dropdown-selected-text);
-}
-select option:hover{
-  background: var(--dropdown-hover-bg);
-  color: var(--dropdown-hover-text);
 }
 
   .header{
@@ -205,11 +125,9 @@ select option:hover{
 .sub-icon svg{width:20px;height:20px;}
 
 .view-toggle button{
-  border: 1px solid var(--btn);
+  border: 1px solid;
   border-radius: 999px;
   padding: 10px 14px;
-  background: var(--btn);
-  color: var(--ink);
   font-weight: 600;
   cursor: pointer;
   transition: background .2s,border-color .2s;
@@ -224,11 +142,9 @@ select option:hover{
 }
 
 #resultsToggle{
-  border:1px solid var(--btn);
+  border:1px solid;
   border-radius:999px;
   padding:10px 14px;
-  background:var(--btn);
-  color:var(--ink);
   cursor:pointer;
   display:flex;
   align-items:center;
@@ -2078,6 +1994,104 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       --session-available: #0000ff;
       --session-selected: #008000;
       --filter-btn-active: #8b0000;
+}
+*{
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  border-color: var(--border) !important;
+}
+*:active,
+*[aria-pressed="true"],
+*[aria-current="page"],
+*[aria-selected="true"],
+.selected,
+.on{
+  border-color: var(--border-active) !important;
+}
+*:hover{
+  border-color: var(--border-hover) !important;
+}
+*::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+*::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+}
+*::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+body{
+  background: var(--background);
+  color: var(--text);
+  caret-color: transparent;
+}
+input,
+textarea{
+  caret-color: auto;
+}
+button,
+[role="button"]{
+  background: var(--secondary);
+  border-color: var(--secondary);
+  color: var(--button-text);
+}
+button:hover,
+[role="button"]:hover{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--button-hover-text);
+}
+a{
+  color: var(--primary);
+}
+a:hover{
+  color: var(--accent);
+}
+button:focus-visible,
+[role="button"]:focus-visible{
+  outline-color: var(--ink-d);
+}
+input::placeholder,
+textarea::placeholder{
+  color: var(--placeholder-text);
+}
+#kwInput::placeholder{ color: var(--filter-placeholder-text); }
+#filterModal #dateInput{ color: var(--filter-date-text); }
+#filterModal input[type="text"]{ background:var(--dropdown-bg); }
+#adminModal .textpicker,
+#filterModal .textpicker{ background:var(--dropdown-bg); }
+#adminModal .textpicker .text-popup select,
+#adminModal .textpicker .text-popup input[type=color]{ background:var(--dropdown-bg); }
+.field label{
+  color: var(--dropdown-title);
+}
+select{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.venue-select{
+  color: var(--dropdown-venue-text);
+}
+select option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+select option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+select option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+.view-toggle button{
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
+}
+#resultsToggle{
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
 }
 </style>
 <style id="mapbox">
