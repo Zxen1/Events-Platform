@@ -14,8 +14,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <style>:root{
-  --header-h: 100px;
-  --subheader-h: 50px;
+  --header-h: 75px;
+  --subheader-h: 75px;
   --panel-w: 260px;
   --results-w: 520px;
   --gap: 12px;
@@ -615,6 +615,7 @@ select option:hover{
     z-index: 1;
     pointer-events: none;
     margin-top: calc(var(--header-h) + var(--subheader-h));
+    height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
   }
 
   .main.hide-results{
@@ -898,6 +899,7 @@ select option:hover{
   flex: 1;
   min-height: 0;
   scrollbar-gutter: stable;
+  max-height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
 }
 
 .card{
@@ -1875,6 +1877,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   position: fixed;
   top: calc(var(--header-h) + var(--subheader-h));
   bottom: var(--footer-h);
+  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
   left: 0;
   right: 0;
   z-index: 10;
@@ -2449,10 +2452,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
     // Ensure result lists occupy space between the subheader and footer
     function adjustListHeight(){
-      const subHead = document.querySelector('.subheader');
-      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
-      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
-      const availableHeight = window.innerHeight - footerH - topPos;
+      const rootStyles = getComputedStyle(document.documentElement);
+      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+      const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
+      const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+      const availableHeight = window.innerHeight - headerH - subH - footerH;
       document.querySelectorAll('.res-list').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
