@@ -46,7 +46,6 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: #d1d1d1;
       --filter-placeholder-text: var(--placeholder-text);
-      --address-placeholder-text: var(--placeholder-text);
       --dropdown-title: #000000;
       --dropdown-selected-bg: rgba(224,224,224,1);
       --dropdown-selected-text: #000000;
@@ -160,7 +159,6 @@ textarea::placeholder{
   color: var(--placeholder-text);
 }
 #kwInput::placeholder{ color: var(--filter-placeholder-text); }
-#geocoder .mapboxgl-ctrl-geocoder input::placeholder{ color: var(--address-placeholder-text); }
 
 .field label{
   color: var(--dropdown-title);
@@ -1076,15 +1074,10 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;background:var(--dropdown-bg);border:1px solid var(--border);min-width:240px !important;}
-.geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none;}
-.geocoder .mapboxgl-ctrl-geolocate,
-.geocoder .north-btn{width:40px;height:40px;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--btn);color:var(--button-text);display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
-.geocoder .mapboxgl-ctrl-geolocate:hover,
-.geocoder .north-btn:hover{background:var(--btn-hover);color:var(--button-hover-text);}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;background:var(--dropdown-bg);color:var(--dropdown-text);}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
 
 
 
@@ -2410,14 +2403,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
   <div id="welcomeModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-content">
-      <div class="modal-header">
-        <div class="header-top">
-          <h2 class="title">Welcome</h2>
-          <div class="modal-actions">
-            <button type="button" class="close-modal">Close</button>
-          </div>
-        </div>
-      </div>
       <div class="modal-body" id="welcomeBody"></div>
     </div>
   </div>
@@ -3070,17 +3055,14 @@ function makePosts(){
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
-            const fmt = d => d.toDate().toLocaleDateString('en-GB', {
-              weekday: 'short', day: 'numeric', month: 'short'
-            }).replace(/,/g, '');
-            const sDisp = fmt(start);
-            const eDisp = fmt(end);
-            input.value = `${sDisp} - ${eDisp}`;
+            const sDisp = start.format('ddd D MMM');
+            const eDisp = end.format('ddd D MMM');
+            input.value = `${sDisp} to ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
             todayWasOn = todayToggle && todayToggle.checked;
-            $('#todayToggle').checked = false;
+            if(todayToggle) todayToggle.checked = false;
           } else {
-            input.value = $('#todayToggle').checked ? 'Today Onwards' : '';
+            input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
             input.dataset.range = '';
           }
           applyFilters();
@@ -3359,13 +3341,8 @@ function makePosts(){
       const geoContainer = document.getElementById('geocoder');
       if(geoContainer){
         geoContainer.appendChild(geolocate.onAdd(map));
-        const northBtn = document.createElement('button');
-        northBtn.className = 'north-btn';
-        northBtn.type = 'button';
-        northBtn.setAttribute('aria-label','Reset north');
-        northBtn.textContent = 'N';
-        northBtn.addEventListener('click', ()=>{ if(map) map.resetNorth(); });
-        geoContainer.appendChild(northBtn);
+        const nav = new mapboxgl.NavigationControl({showZoom: false});
+        geoContainer.appendChild(nav.onAdd(map));
       }
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
@@ -3416,7 +3393,6 @@ function makePosts(){
         if(resultsToggle) resultsToggle.setAttribute('aria-pressed','false');
         if(resultsCol) resultsCol.setAttribute('aria-hidden','true');
       }
-      renderLists(filtered);
       function step(){
         if(!spinning || !map) return;
         const c = map.getCenter();
@@ -3441,6 +3417,7 @@ function makePosts(){
         if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
         if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
       }
+      renderLists(filtered);
     }
 
     function haltSpin(){
@@ -3448,7 +3425,6 @@ function makePosts(){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
         stopSpin();
-        renderLists(filtered);
       }
     }
 
@@ -3700,6 +3676,7 @@ function makePosts(){
     });
 
     function renderLists(list){
+      if(spinning) return;
       const sort = currentSort;
       const arr = list.slice();
       if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -4305,7 +4282,7 @@ function registerPopup(p){
   }
 }
 function saveModalState(m){
-  if(!m || !m.id) return;
+  if(!m || !m.id || m.id === 'welcomeModal') return;
   const content = m.querySelector('.modal-content');
   if(!content) return;
   const state = {
@@ -4356,7 +4333,7 @@ function openModal(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    loadModalState(m);
+    if(m.id !== 'welcomeModal') loadModalState(m);
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
@@ -4459,6 +4436,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       openModal(m);
     }
   });
+  if(welcomeModal){
+    welcomeModal.addEventListener('click', e=>{
+      if(e.target === welcomeModal) closeModal(welcomeModal);
+    });
+  }
 
   document.querySelectorAll('.modal').forEach(modal=>{
     const content = modal.querySelector('.modal-content');
@@ -4911,7 +4893,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','filterPlaceholder','addressPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
+    ['modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4925,7 +4907,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5221,9 +5203,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.key === 'filter'){
         fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
       }
-      if(area.key === 'subheader'){
-        fs.appendChild(createTextPickerRow('addressPlaceholder','Address Placeholder','btn-c'));
-      }
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
@@ -5350,7 +5329,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -5485,7 +5464,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','filterPlaceholder','addressPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -5501,7 +5480,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5631,7 +5610,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -6079,7 +6058,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       listBackground: '--list-background',
       placeholder: '--placeholder-text',
       filterPlaceholder: '--filter-placeholder-text',
-      addressPlaceholder: '--address-placeholder-text',
       dropdownTitle: '--dropdown-title',
       dropdownSelectedBg: '--dropdown-selected-bg',
       dropdownSelectedText: '--dropdown-selected-text',
@@ -6091,13 +6069,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(id);
+    const oEl = document.getElementById(`${id}-o`);
     if(el){
-      el.addEventListener('input', e=>{
-        const o = document.getElementById(`${id}-o`);
-        const color = o ? hexToRgba(e.target.value, o.value) : e.target.value;
+      const handler = ()=>{
+        const color = oEl ? hexToRgba(el.value, oEl.value) : el.value;
         document.documentElement.style.setProperty(varName, color);
-        updateFields({ [id]: e.target.value });
-      });
+        updateFields({ [id]: el.value });
+        currentState = collectThemeValues();
+        updateHistoryButtons();
+        localStorage.setItem('currentTheme', JSON.stringify(currentState));
+      };
+      el.addEventListener('input', handler);
+      if(oEl) oEl.addEventListener('input', handler);
     }
   });
 
