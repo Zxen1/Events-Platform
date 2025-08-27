@@ -2468,6 +2468,22 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
     window.updateStickyImages = updateStickyImages;
 
+    function updateLayoutVars(){
+      const root = document.documentElement;
+      const header = document.querySelector('.header');
+      const subHead = document.querySelector('.subheader');
+      if(header){
+        root.style.setProperty('--header-h', `${header.offsetHeight}px`);
+      }
+      if(subHead){
+        root.style.setProperty('--subheader-h', `${subHead.offsetHeight}px`);
+      }
+      if(typeof window.adjustListHeight === 'function'){
+        window.adjustListHeight();
+      }
+    }
+    window.updateLayoutVars = updateLayoutVars;
+
     function updatePostPanel(){ if(map) postPanel = map.getBounds(); }
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
@@ -5926,9 +5942,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     dragEl = null;
   });
 
-  window.addEventListener('resize', window.adjustListHeight);
-window.addEventListener('resize', updateStickyImages);
-  window.adjustListHeight();
+  window.addEventListener('resize', updateLayoutVars);
+  window.addEventListener('resize', updateStickyImages);
+  window.addEventListener('load', updateLayoutVars);
+  updateLayoutVars();
   if (typeof updateStickyImages === 'function') {
     updateStickyImages();
   }
