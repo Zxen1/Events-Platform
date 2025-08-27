@@ -514,8 +514,21 @@ select option:hover{
   pointer-events:auto;
 }
 #adminModal .tab-bar{display:flex;gap:6px;}
-#adminModal .tab-bar button{flex:1;padding:6px 10px;border-radius:6px;background:#eee;cursor:pointer;}
-#adminModal .tab-bar button[aria-selected="true"]{background:#ddd;font-weight:600;}
+#adminModal .tab-bar button{
+  flex:1;
+  padding:6px 10px;
+  border-radius:6px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  cursor:pointer;
+}
+#adminModal .tab-bar button[aria-selected="true"]{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+  font-weight:600;
+}
 #adminModal .tab-panel{display:none;}
 #adminModal .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
 #adminModal .marker-grid{display:flex;flex-direction:column;gap:8px;}
@@ -613,7 +626,7 @@ select option:hover{
     transition: grid-template-columns .3s ease;
     position: relative;
     z-index: 1;
-    pointer-events: none;
+    pointer-events: auto;
     margin-top: calc(var(--header-h) + var(--subheader-h));
     height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
   }
@@ -859,6 +872,7 @@ select option:hover{
   position: relative;
   z-index: 2;
   pointer-events: auto;
+  height:100%;
 }
 
 .main.hide-results .results-col{
@@ -899,7 +913,7 @@ select option:hover{
   flex: 1;
   min-height: 0;
   scrollbar-gutter: stable;
-  max-height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
+  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
 }
 
 .card{
@@ -1881,7 +1895,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   left: 0;
   right: 0;
   z-index: 10;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .main .closed-posts{
@@ -1928,7 +1942,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 body{background-color:rgba(41,41,41,1);}
 .main{margin-top:calc(var(--header-h) + var(--subheader-h));margin-right:0;margin-bottom:0;margin-left:0;}
 
-  .post-panel{padding:0;pointer-events:none;}
+  .post-panel{padding:0;pointer-events:auto;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
