@@ -20,6 +20,7 @@ body{background-color:rgba(41,41,41,1);}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
+.hide-map-calendar .open-posts .venue-dropdown{margin-bottom:var(--gap);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
 .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}

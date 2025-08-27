@@ -256,16 +256,15 @@ select option:hover{
 }
   #spinType{
     display:flex;
-    border:1px solid var(--btn);
-    border-radius:999px;
-    overflow:hidden;
+    gap:6px;
     margin-top:6px;
   }
   #spinType label{
     flex:1;
-    border-right:1px solid var(--btn);
+    border:1px solid var(--btn);
+    border-radius:6px;
+    overflow:hidden;
   }
-  #spinType label:last-child{border-right:none;}
   #spinType input{
     display:none;
   }
@@ -273,13 +272,16 @@ select option:hover{
     display:block;
     padding:6px 10px;
     background:var(--btn);
-    color:var(--ink);
+    color:var(--button-text);
     font-weight:600;
     cursor:pointer;
     text-align:center;
-    transition:background .2s,border-color .2s;
+    transition:background .2s,border-color .2s,color .2s;
   }
   #spinType input:checked + span{
+    background:var(--btn-hover);
+    border-color:var(--btn-hover);
+    color:var(--button-hover-text);
   }
 
 .auth{
@@ -1975,6 +1977,7 @@ body.hide-results .closed-posts{left:0;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
+.hide-map-calendar .open-posts .venue-dropdown{margin-bottom:var(--gap);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
 .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2322,8 +2325,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <label><input type="checkbox" id="spinLoadStart" /> Start on load</label>
               <div id="spinType">
-                <div><label><input type="radio" name="spinType" value="all" /> <span>Everyone</span></label></div>
-                <div><label><input type="radio" name="spinType" value="new" /> <span>New Users</span></label></div>
+                <label><input type="radio" name="spinType" value="all" /> <span>Everyone</span></label>
+                <label><input type="radio" name="spinType" value="new" /> <span>New Users</span></label>
               </div>
             </div>
             <div class="modal-field">
