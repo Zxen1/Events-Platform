@@ -58,7 +58,7 @@
       --dropdown-radius: 6px;
       --session-available: #0000ff;
       --session-selected: #008000;
-      --filter-btn-active: #ff0000;
+      --filter-btn-active: #8b0000;
 }
 
 *{
@@ -217,6 +217,7 @@ select option:hover{
     letter-spacing: .4px;
     user-select: none;
     cursor: pointer;
+    margin: 0 auto;
   }
 
 .logo img{
@@ -957,7 +958,14 @@ body.hide-results .results-col{
 
 #filterBtn{
   border-radius: var(--dropdown-radius);
+  display:grid;
+  place-items:center;
+  height:32px;
+  width:32px;
+  padding:0;
 }
+#filterBtn svg{width:20px;height:20px;display:block;}
+#optionsBtn{height:32px;}
 
 #filterBtn.active{
   background:var(--filter-btn-active);
@@ -1116,12 +1124,14 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:auto;left:50%;transform:translateX(-50%);z-index:10;min-width:240px;max-width:300px;width:100%;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;padding:0;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;min-width:240px !important;padding:0;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
 .geocoder .mapboxgl-ctrl-geocoder--button,
-.geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);display:flex;align-items:center;justify-content:center;}
+.geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);position:absolute;top:50%;transform:translateY(-50%);display:block;}
+.geocoder .mapboxgl-ctrl-geocoder--icon{left:8px;}
+.geocoder .mapboxgl-ctrl-geocoder--button{right:8px;}
 
 .mapboxgl-ctrl-geocoder,
 .mapboxgl-ctrl-geolocate,
@@ -2168,7 +2178,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </header>
   <div class="subheader">
-    <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+    <button id="filterBtn" aria-label="Open filters modal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z" fill="currentColor"/></svg></button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
@@ -2433,11 +2443,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <select id="mapRestore"></select>
               <button type="button" data-restore="map">Restore</button>
             </div>
-            <div class="modal-field">
+            <div class="modal-field" id="balloonField">
               <div id="balloonTool">
                 <style>
+                  #balloonField{max-width:none;width:100%;height:100%;}
                   #balloonTool { padding: 10px; width:100%; height:100%; max-width:none; max-height:none; }
-                  #balloonTool .admin-fieldset{ flex:1 1 auto; width:100%; min-width:0; max-width:none; }
+                  #balloonTool .admin-fieldset{ flex:1 1 auto; width:100%; min-width:0; max-width:none; height:100%; }
                   #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
                   #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--secondary); background: var(--secondary); color: var(--button-text); cursor: pointer; border-radius:6px; transition: background .2s,border-color .2s,color .2s; }
                   #balloonTool .shape-button:hover { background: var(--accent); border-color: var(--accent); color: var(--button-hover-text); }
@@ -2475,14 +2486,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
         </div>
         <div id="tab-forms" class="tab-panel">
-          <h3>Subcategory Form Builder</h3>
-          <div class="palette" id="fieldPalette">
-            <div class="field-item" draggable="true" data-type="text">Text</div>
-            <div class="field-item" draggable="true" data-type="date">Date</div>
-            <div class="field-item" draggable="true" data-type="image">Image</div>
-            <div class="field-item" draggable="true" data-type="location">Location</div>
+          <style>
+            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
+            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+            #tab-forms .subcategory-table{border-collapse:collapse;}
+            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
+          </style>
+          <div id="formsControls">
+            <button type="button" id="addCategory">Add Category</button>
+            <div id="formsCategories"></div>
           </div>
-          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
@@ -5426,12 +5439,14 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         fs.appendChild(bgRow);
         fs.appendChild(createTextPickerRow('dateRangeText','Date Range Box Text','modalBg-c'));
         fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','modalBg-c'));
+      }
+      if(area.key === 'subheader'){
         const activeRow = document.createElement('div');
         activeRow.className = 'control-row';
         activeRow.innerHTML = `
-            <label>Active Button</label>
+            <label>Active Filters Button</label>
             <div class="color-group">
-              <input id="filterBtnActive-c" type="color" data-mode="${COLOR_PICKER_MODE}" value="#ff0000" />
+              <input id="filterBtnActive-c" type="color" data-mode="${COLOR_PICKER_MODE}" value="#8b0000" />
             </div>
         `;
         fs.appendChild(activeRow);
@@ -6322,47 +6337,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     }
   });
 
-  const palette = document.getElementById('fieldPalette');
-  const builder = document.getElementById('formBuilder');
-  let dragType = null;
-
-  palette && palette.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-item')){
-      dragType = e.target.dataset.type;
-    }
-  });
-
-  builder && builder.addEventListener('dragover', e=> e.preventDefault());
-
-  builder && builder.addEventListener('drop', e=>{
-    e.preventDefault();
-    if(dragType){
-      const item = document.createElement('div');
-      item.className = 'field-instance';
-      item.textContent = dragType.charAt(0).toUpperCase()+dragType.slice(1);
-      item.setAttribute('draggable','true');
-      builder.appendChild(item);
-      dragType = null;
-    }
-  });
-
-  let dragEl = null;
-  builder && builder.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-instance')){
-      dragEl = e.target;
-    }
-  });
-
-  builder && builder.addEventListener('drop', e=>{
-    if(dragEl && e.target.classList.contains('field-instance')){
-      e.preventDefault();
-      const rect = e.target.getBoundingClientRect();
-      const after = (e.clientY - rect.top) > rect.height/2;
-      builder.insertBefore(dragEl, after ? e.target.nextSibling : e.target);
-    }
-    dragEl = null;
-  });
-
   window.addEventListener('resize', updateLayoutVars);
   window.addEventListener('resize', updateStickyImages);
   window.addEventListener('load', updateLayoutVars);
@@ -6507,7 +6481,87 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       buttons.appendChild(btn);
     });
 
-    render(Object.keys(SHAPES)[0]);
+  render(Object.keys(SHAPES)[0]);
+  })();
+</script>
+
+<script>
+  (function(){
+    const ICONS = {
+      circle:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#000"/></svg>',
+      square:'<svg viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#000"/></svg>',
+      triangle:'<svg viewBox="0 0 20 20"><polygon points="10,2 18,18 2,18" fill="#000"/></svg>'
+    };
+    const FIELD_TYPES = ['Text','Number','Date','Color'];
+    function createIconSelect(){
+      const s=document.createElement('select');
+      Object.keys(ICONS).forEach(k=>{
+        const o=document.createElement('option');
+        o.value=k;
+        o.innerHTML=ICONS[k];
+        s.appendChild(o);
+      });
+      return s;
+    }
+    function createFieldSelect(){
+      const s=document.createElement('select');
+      FIELD_TYPES.forEach(t=>{
+        const o=document.createElement('option');
+        o.value=t.toLowerCase();
+        o.textContent=t;
+        s.appendChild(o);
+      });
+      return s;
+    }
+    function addSubcategory(table){
+      const iconRow=table.querySelector('.icon-row');
+      const nameRow=table.querySelector('.name-row');
+      const iconCell=document.createElement('td'); iconCell.appendChild(createIconSelect()); iconRow.appendChild(iconCell);
+      const nameCell=document.createElement('td'); const inp=document.createElement('input'); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
+      table.querySelectorAll('.field-row').forEach(row=>{
+        const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell);
+      });
+    }
+    function addFieldRow(table){
+      const cols=table.querySelector('.icon-row').children.length;
+      const row=document.createElement('tr'); row.className='field-row';
+      for(let i=0;i<cols;i++){ const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell); }
+      table.appendChild(row);
+    }
+    function wireCategory(cat){
+      const table=cat.querySelector('table');
+      cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
+      cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
+      cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
+      cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
+    }
+    function createCategory(){
+      const cat=document.createElement('div'); cat.className='form-category';
+      const header=document.createElement('div'); header.className='category-header';
+      const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
+      const icon=createIconSelect();
+      const color=document.createElement('input'); color.type='color'; color.value='#000000';
+      const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
+      const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
+      header.append(name,icon,color,copy,del);
+      cat.appendChild(header);
+      const table=document.createElement('table'); table.className='subcategory-table';
+      const iconRow=document.createElement('tr'); iconRow.className='icon-row';
+      const nameRow=document.createElement('tr'); nameRow.className='name-row';
+      table.append(iconRow,nameRow);
+      cat.appendChild(table);
+      const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
+      const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
+      cat.append(addSub,addField);
+      addSubcategory(table);
+      addFieldRow(table);
+      wireCategory(cat);
+      return cat;
+    }
+    document.getElementById('addCategory').addEventListener('click',()=>{
+      const cat=createCategory();
+      document.getElementById('formsCategories').appendChild(cat);
+    });
   })();
 </script>
 
