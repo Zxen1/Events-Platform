@@ -401,6 +401,10 @@ select option:hover{
   color: var(--ink);
   border: none;
 }
+#filterModal .litepicker [role="button"],
+#filterModal .litepicker [role="button"]:hover{
+  color: initial;
+}
 #memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberModal input[type=color]{
   border-radius:4px;
@@ -3024,9 +3028,12 @@ function makePosts(){
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
-            const sDisp = start.format('ddd D MMM');
-            const eDisp = end.format('ddd D MMM');
-            input.value = `${sDisp} to ${eDisp}`;
+            const fmt = d => d.toDate().toLocaleDateString('en-GB', {
+              weekday: 'short', day: 'numeric', month: 'short'
+            }).replace(/,/g, '');
+            const sDisp = fmt(start);
+            const eDisp = fmt(end);
+            input.value = `${sDisp} - ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
             todayWasOn = todayToggle && todayToggle.checked;
             $('#todayToggle').checked = false;
