@@ -261,7 +261,6 @@ select option:hover{
   }
   #spinType label{
     flex:1;
-    border:1px solid var(--btn);
     border-radius:6px;
     overflow:hidden;
   }
@@ -277,6 +276,8 @@ select option:hover{
     cursor:pointer;
     text-align:center;
     transition:background .2s,border-color .2s,color .2s;
+    border:1px solid var(--btn);
+    border-radius:6px;
   }
   #spinType input:checked + span{
     background:var(--btn-hover);
@@ -2346,12 +2347,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                   #balloonTool .shape-button svg { width: 24px; height: 24px; }
                   #balloonTool .shape-button.active { outline: 2px solid #000; }
                   #balloonTool .size-control { margin-bottom: 8px; }
+                  #balloonTool .svg-output { display:flex; gap:8px; margin-bottom:8px; }
+                  #balloonTool .svg-output textarea{ flex:1; }
                   #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
                   #balloonTool #balloonGrid svg { cursor: pointer; }
                 </style>
+                <div class="t">Balloon Icon Generator</div>
                 <div class="shape-buttons" id="balloonShapeButtons"></div>
                 <div class="size-control">
-                  <label>Size: <input type="range" id="balloonSize" min="40" max="120" value="60" /> <span id="balloonSizeValue">60</span>px</label>
+                  <label>Balloon size: <input type="range" id="balloonSize" min="40" max="120" value="40" /> <span id="balloonSizeValue">40</span>px</label>
+                </div>
+                <div class="svg-output">
+                  <textarea id="balloonSvgCode" readonly></textarea>
+                  <button type="button" id="copySvgCode">Copy SVG code</button>
                 </div>
                 <div id="balloonGrid"></div>
               </div>
@@ -2490,6 +2498,15 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap logo" />');
         }
         toggleModal(document.getElementById('welcomeModal'));
+        body.style.padding = '20px';
+        const content = document.querySelector('#welcomeModal .modal-content');
+        const subHead = document.querySelector('.subheader');
+        const topPos = subHead ? subHead.getBoundingClientRect().bottom : 0;
+        if(content){
+          content.style.left = '50%';
+          content.style.transform = 'translateX(-50%)';
+          content.style.top = `${topPos + 100}px`;
+        }
       }
 
       logoEl?.addEventListener('click', () => {
@@ -3387,6 +3404,7 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 5) return;
+      if(typeof filterModal !== 'undefined' && filterModal) closeModal(filterModal);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
@@ -6169,7 +6187,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       svg.setAttribute('width', size);
       svg.setAttribute('height', size);
       svg.dataset.color = color;
-      svg.setAttribute('title', color + ' ' + size + 'px');
+      svg.setAttribute('title', size + 'px ' + color);
       const body = SHAPES[shapeName]();
       body.setAttribute('fill', color);
       body.setAttribute('stroke', '#000');
@@ -6199,21 +6217,32 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const grid = document.getElementById('balloonGrid');
     const sizeSlider = document.getElementById('balloonSize');
     const sizeValue = document.getElementById('balloonSizeValue');
+    const svgCode = document.getElementById('balloonSvgCode');
+    const copyBtn = document.getElementById('copySvgCode');
+
+    sizeValue.textContent = sizeSlider.value;
+    copyBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(svgCode.value); });
 
     sizeSlider.addEventListener('input', ()=>{
       sizeValue.textContent = sizeSlider.value;
       grid.querySelectorAll('svg').forEach(svg=>{
         svg.setAttribute('width', sizeSlider.value);
         svg.setAttribute('height', sizeSlider.value);
-        svg.setAttribute('title', svg.dataset.color + ' ' + sizeSlider.value + 'px');
+        svg.setAttribute('title', sizeSlider.value + 'px ' + svg.dataset.color);
       });
+      const first = grid.querySelector('svg');
+      if(first) svgCode.value = first.outerHTML;
     });
 
     function render(name){
       grid.innerHTML='';
       COLORS.forEach(color=>{
-        grid.appendChild(createBalloon(name, color, sizeSlider.value));
+        const svg = createBalloon(name, color, sizeSlider.value);
+        svg.addEventListener('click', ()=>{ svgCode.value = svg.outerHTML; });
+        grid.appendChild(svg);
       });
+      const first = grid.querySelector('svg');
+      if(first) svgCode.value = first.outerHTML;
     }
 
     const LABELS = {
