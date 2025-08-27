@@ -692,6 +692,8 @@ select option:hover{
   display: flex;
   flex-direction: column;
   min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 .left-tools{
@@ -3331,7 +3333,7 @@ function makePosts(){
       document.body.classList.add('mode-'+m);
       const panel = document.querySelector('.post-panel');
       if(panel){
-        panel.style.pointerEvents = m === 'posts' ? 'auto' : 'none';
+        panel.style.pointerEvents = m === 'map' ? 'auto' : 'none';
       }
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
       $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
