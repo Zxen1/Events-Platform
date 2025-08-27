@@ -616,24 +616,6 @@ select option:hover{
 }
 .field-instance{margin:4px 0;}
 
-  .main{
-    display: grid;
-    grid-template-columns: var(--results-w) 1fr;
-    row-gap: 0;
-    column-gap: 0;
-    padding: 0;
-    flex: 1 0 auto;
-    transition: grid-template-columns .3s ease;
-    position: relative;
-    z-index: 1;
-    pointer-events: auto;
-    margin-top: calc(var(--header-h) + var(--subheader-h));
-    height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
-  }
-
-  .main.hide-results{
-    grid-template-columns: 0 1fr;
-  }
 
 .filters-col{
   display: flex;
@@ -862,21 +844,21 @@ select option:hover{
 }
 
 .results-col{
+  position: fixed;
+  top: calc(var(--header-h) + var(--subheader-h));
+  bottom: var(--footer-h);
+  left: 0;
+  width: var(--results-w);
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  min-height: 0;
   padding: 0 0 14px 0;
-  max-width: var(--results-w);
-  transition: max-width .3s ease, padding .3s ease;
-  position: relative;
+  transition: width .3s ease, padding .3s ease;
   z-index: 2;
   pointer-events: auto;
-  height:100%;
 }
 
-.main.hide-results .results-col{
-  max-width: 0;
+body.hide-results .results-col{
+  width: 0;
   padding: 0;
 }
 
@@ -1042,7 +1024,7 @@ select option:hover{
   position: absolute;
   top: 0;
   bottom: 0;
-  left: var(--results-w);
+  left: 0;
   right: 0;
   display: grid;
   place-items: center;
@@ -1061,13 +1043,16 @@ select option:hover{
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
 
-.main.hide-results + .post-panel .map-overlay{left:0;}
+
 
 .closed-posts{
   display:none;
-  height:100%;
+  position: fixed;
+  top: calc(var(--header-h) + var(--subheader-h));
+  bottom: var(--footer-h);
+  left: var(--results-w);
+  right: 0;
   overflow:auto;
-  min-height:0;
   padding:12px 6px 12px 0;
   color:#000;
   background:rgba(0,0,0,0.7);
@@ -1078,10 +1063,12 @@ select option:hover{
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
 
+body.hide-results .closed-posts{
+  left:0;
+}
+
 .mode-posts .closed-posts{
   display: block;
-  grid-column: 2/3;
-  grid-row: 2;
   z-index: 1;
   pointer-events: auto;
 }
@@ -1898,15 +1885,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   pointer-events: auto;
 }
 
-.main .closed-posts{
-  grid-column: 2/3;
-  grid-row: 2;
-  position: relative;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-
 .mode-posts #postsWide{
   border: none;
   background: transparent;
@@ -1916,11 +1894,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: transparent;
 }
 
-.main .closed-posts{
-  position: relative;
-  z-index: 2;
-  background: transparent;
-}
 
 </style>
 <style id="theme-dark-transparency">
@@ -1940,7 +1913,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
-.main{margin-top:calc(var(--header-h) + var(--subheader-h));margin-right:0;margin-bottom:0;margin-left:0;}
+.results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0 0 14px 0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
+body.hide-results .results-col{width:0;padding:0;}
+.map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
+.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow:auto;padding:12px 6px 12px 0;}
+body.hide-results .closed-posts{left:0;}
+.mode-posts .closed-posts{display:block;z-index:1;pointer-events:auto;}
 
   .post-panel{padding:0;pointer-events:auto;}
 
@@ -2072,15 +2050,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div id="map"></div>
   </section>
 
-  <main class="main">
-      <section class="results-col" aria-label="Results">
-        <div class="res-list" id="results"></div>
-      </section>
+  <section class="results-col" aria-label="Results">
+    <div class="res-list" id="results"></div>
+  </section>
 
-    <section class="closed-posts" aria-label="Closed Posts">
-      <div class="res-list" id="postsWide"></div>
-    </section>
-  </main>
+  <section class="closed-posts" aria-label="Closed Posts">
+    <div class="res-list" id="postsWide"></div>
+  </section>
 
   <section class="post-panel" aria-label="Map Controls">
     <div class="map-overlay">Loading Map…</div>
@@ -3080,7 +3056,7 @@ function makePosts(){
       const resultsCol = $('.results-col');
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
       if(storedHidden){
-        $('.main').classList.add('hide-results');
+        document.body.classList.add('hide-results');
         resultsToggle.setAttribute('aria-pressed','false');
         resultsCol.setAttribute('aria-hidden','true');
       } else {
@@ -3096,7 +3072,7 @@ function makePosts(){
           }
         }, 0);
       resultsToggle.addEventListener('click', ()=>{
-        const hidden = $('.main').classList.toggle('hide-results');
+        const hidden = document.body.classList.toggle('hide-results');
         resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
