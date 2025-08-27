@@ -226,9 +226,9 @@ select option:hover{
   display: block;
 }
 
-  .view-toggle{
+.view-toggle{
   position: absolute;
-  left: 20px;
+  left: 60px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -246,6 +246,34 @@ select option:hover{
   transition: background .2s,border-color .2s;
 }
 
+#resultsToggle{
+  position:absolute;
+  left:20px;
+  top:50%;
+  transform:translateY(-50%);
+  border:1px solid var(--btn);
+  border-radius:999px;
+  padding:10px;
+  background:var(--btn);
+  color:var(--ink);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .2s,border-color .2s;
+}
+#resultsToggle svg{
+  width:16px;
+  height:16px;
+  transition:transform .3s;
+}
+#resultsToggle[aria-pressed="false"] svg{
+  transform:rotate(180deg);
+}
+@media (max-width:1000px){
+  #resultsToggle{display:none;}
+  .view-toggle{left:20px;}
+}
 
 .view-toggle button[aria-current="page"],
 .view-toggle button[aria-pressed="true"]{
@@ -1109,11 +1137,11 @@ body.hide-results .results-col{
   color:#000;
   background:rgba(0,0,0,0.7);
 }
-.closed-posts .res-list{overflow:visible;padding:0;}
+.closed-posts .res-list{overflow:visible;}
 .closed-posts{color:#000;padding:0 14px 14px 0;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.closed-posts .open-posts{margin-top:6px}
+.closed-posts .open-posts{margin-top:0}
 
 body.hide-results .closed-posts{
   left:0;
@@ -1398,7 +1426,7 @@ body.hide-results .closed-posts{
 }
 .options-dropdown>button{
   position:relative;
-  padding-right:30px;
+  padding-right:24px;
 }
 .options-dropdown>button .dropdown-arrow{
   position:absolute;
@@ -1676,9 +1704,9 @@ footer .foot-row .foot-item[aria-selected="true"],
 }
 
 .closed-posts .card .thumb{
-  flex-basis: 70px;
-  width: 70px;
-  height: 70px;
+  flex-basis: 80px;
+  width: 80px;
+  height: 80px;
 }
 
 .card .meta{
@@ -2088,10 +2116,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
+.res-list{padding:12px;margin:0;}
 .res-list .thumb{width:80px;height:80px;}
-.closed-posts .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
-.closed-posts .thumb{width:70px;height:70px;}
+.closed-posts .res-list{padding:12px;margin:0;}
+.closed-posts .thumb{width:80px;height:80px;}
 
 
 
@@ -2102,6 +2130,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
+    <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
     <div class="logo" aria-label="Site logo">
       <picture>
         <source media="(max-width:600px)" srcset="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png">
@@ -2118,7 +2149,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
   <div class="subheader">
     <button id="filterBtn" aria-label="Open filters modal">Filters</button>
-    <button id="resultsToggle" aria-pressed="true">Results List</button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
@@ -2608,7 +2638,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH;
       document.querySelectorAll('.res-list').forEach(list=>{
-        list.style.maxHeight = `${availableHeight}px`;
+        const style = getComputedStyle(list);
+        const pad = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        list.style.maxHeight = `${Math.max(0, availableHeight - pad)}px`;
       });
     }
     window.adjustListHeight = adjustListHeight;
@@ -3247,6 +3279,7 @@ function makePosts(){
 
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
+      const filterModal = $('#filterModal');
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
       const shouldHide = storedHidden || spinEnabled || window.matchMedia('(max-width:1000px)').matches;
       if(shouldHide){
@@ -3278,6 +3311,16 @@ function makePosts(){
             applyFilters();
           }
         }, 310);
+      });
+
+      const mq = window.matchMedia('(max-width:1000px)');
+      mq.addEventListener('change', e=>{
+        if(e.matches){
+          document.body.classList.add('hide-results');
+          resultsToggle.setAttribute('aria-pressed','false');
+          resultsCol.setAttribute('aria-hidden','true');
+          if(filterModal) requestCloseModal(filterModal);
+        }
       });
 
       const resList = $('.res-list');
@@ -3374,6 +3417,7 @@ function makePosts(){
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
+          setMode('map');
           if(map) map.once('moveend', () => { applyFilters(); updatePostPanel(); });
         });
         const gc = document.getElementById('geocoder');
@@ -3430,7 +3474,7 @@ function makePosts(){
       addGeocoder();
       addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
-      geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
+      geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); setMode('map'); });
       const geoContainer = document.getElementById('geocoder');
       if(geoContainer){
         geoContainer.appendChild(geolocate.onAdd(map));
@@ -3844,7 +3888,7 @@ function makePosts(){
       const el = document.createElement('article');
       el.className = 'card';
       el.dataset.id = p.id;
-      if(wide) el.style.gridTemplateColumns='70px 1fr 36px';
+      if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       el.innerHTML = `
         <img class="thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
         <div class="meta">
@@ -4443,6 +4487,15 @@ function openModal(m){
       if(!content.style.left) content.style.left = '50%';
       if(!content.style.top) content.style.top = `${topPos}px`;
       content.style.transform = 'translate(-50%, 0)';
+    } else if(m.id === 'memberModal' || m.id === 'adminModal'){
+      const header = document.querySelector('header');
+      const topPos = header ? header.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+      if(!content.style.left && !content.style.right){
+        content.style.right = '0';
+        content.style.left = '';
+        content.style.top = `${topPos}px`;
+        content.style.transform = 'none';
+      }
     } else {
       if(!content.style.left){
         content.style.left = '50%';
@@ -4485,8 +4538,14 @@ function moveModalToEdge(modal, side){
   if(!modal) return;
   const content = modal.querySelector('.modal-content');
   if(!content) return;
-  const subHead = document.querySelector('.subheader');
-  const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  let topPos;
+  if(modal.id === 'filterModal'){
+    const subHead = document.querySelector('.subheader');
+    topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  } else {
+    const header = document.querySelector('header');
+    topPos = header ? header.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  }
   content.style.top = `${topPos}px`;
   content.style.transform = 'none';
   if(side === 'left'){
@@ -4554,7 +4613,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const welcomeModal = document.getElementById('welcomeModal');
   [filterModal, memberModal, adminModal, welcomeModal].forEach(m=>{
     if(m && localStorage.getItem(`modal-open-${m.id}`) === 'true'){
-      openModal(m);
+      if(m.id !== 'filterModal' || !window.matchMedia('(max-width:1000px)').matches){
+        openModal(m);
+      } else {
+        localStorage.setItem(`modal-open-${m.id}`,'false');
+      }
     }
   });
   if(welcomeModal){
@@ -5313,8 +5376,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         thumbRow.innerHTML = `
             <label>Thumbnail</label>
             <div class="shadow-group">
-              <input id="${area.key}-thumbWidth" type="number" step="1" placeholder="W" />
-              <input id="${area.key}-thumbHeight" type="number" step="1" placeholder="H" />
+              <input id="${area.key}-thumbWidth" type="number" step="1" placeholder="W" value="80" />
+              <input id="${area.key}-thumbHeight" type="number" step="1" placeholder="H" value="80" />
             </div>
         `;
         fs.appendChild(thumbRow);
