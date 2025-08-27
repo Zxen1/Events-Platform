@@ -160,7 +160,12 @@ textarea::placeholder{
   color: var(--placeholder-text);
 }
 #kwInput::placeholder{ color: var(--filter-placeholder-text); }
-#dateInput{ color: var(--filter-date-text); }
+#filterModal #dateInput{ color: var(--filter-date-text); }
+#filterModal input[type="text"]{ background:var(--dropdown-bg); }
+#adminModal .textpicker,
+#filterModal .textpicker{ background:var(--dropdown-bg); }
+#adminModal .textpicker .text-popup select,
+#adminModal .textpicker .text-popup input[type=color]{ background:var(--dropdown-bg); }
 
 .field label{
   color: var(--dropdown-title);
@@ -1105,7 +1110,9 @@ body.hide-results .results-col{
 .geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
+.geocoder .mapboxgl-ctrl-geocoder--button,
+.geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);display:flex;align-items:center;justify-content:center;}
 
 
 
@@ -1403,13 +1410,30 @@ body.hide-results .closed-posts{
   background:var(--dropdown-hover-bg);
   color:var(--dropdown-hover-text);
 }
-.open-posts .session-menu button .session-time{
-  margin-left:auto;
-  padding-right:20px;
-}
+.open-posts .session-menu button .session-time,
 .open-posts .session-dropdown > button .session-time{
-  margin-left:auto;
-  padding-right:20px;
+  margin-left:8px;
+  padding-right:0;
+}
+.options-dropdown>button{
+  position:relative;
+  padding-right:30px;
+}
+.options-dropdown>button .dropdown-arrow{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  transition:transform .2s;
+}
+.options-dropdown>button[aria-expanded="true"] .dropdown-arrow{
+  transform:translateY(-50%) rotate(180deg);
+}
+.options-dropdown.single>button{
+  padding-right:8px;
+}
+.options-dropdown.single>button .dropdown-arrow{
+  display:none;
 }
 
 
@@ -2287,7 +2311,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
           <div id="tab-map" class="tab-panel">
             <div class="modal-field">
-              <label for="mapTheme">Theme</label>
+              <label for="mapTheme">Map Colour</label>
               <select id="mapTheme" style="width:250px">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
@@ -2312,7 +2336,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </select>
             </div>
             <div class="modal-field">
-              <label for="skyTheme">Sky</label>
+              <label for="skyTheme">Sky Colour</label>
               <select id="skyTheme" style="width:250px">
                 <option value="default">Default</option>
                 <option value="sunset">Sunset</option>
@@ -2367,8 +2391,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <div id="balloonTool">
                 <style>
-                  #balloonTool { padding: 10px; }
-                  #balloonTool .admin-fieldset{ width:auto; }
+                  #balloonTool { padding: 10px; width:100%; height:100%; }
+                  #balloonTool .admin-fieldset{ width:100%; }
                   #balloonTool .shape-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
                   #balloonTool .shape-button { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid #000; background: #fff; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); cursor: pointer; }
                   #balloonTool .shape-button svg { width: 24px; height: 24px; }
@@ -2376,7 +2400,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                   #balloonTool .size-control { margin-bottom: 8px; }
                   #balloonTool .svg-output { display:flex; gap:8px; margin-bottom:8px; }
                   #balloonTool .svg-output textarea{ flex:1; }
-                  #balloonTool #balloonIconsWrapper{ overflow:hidden; }
+                  #balloonTool #balloonIconsWrapper{ overflow:auto; max-height:100%; }
                   #balloonTool #balloonScrollTop,
                   #balloonTool #balloonScrollBottom{ overflow-x:auto; overflow-y:hidden; }
                   #balloonTool #balloonScrollTop{ margin-bottom:4px; height:8px; }
@@ -2915,11 +2939,15 @@ function uniqueTitle(seed, cityName, idx){
   function randomSchedule(){
     const count = 1 + Math.floor(rnd()*20);
     const now = new Date();
+    const cents = ()=> rnd() < 0.8 ? 0 : 0.5;
     return Array.from({length:count}, ()=>{
       const d = new Date(+now + Math.floor(rnd()*365)*86400000);
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
-      return {date, time, full: d.toISOString().slice(0,10)};
+      const adult = 10 + Math.floor(rnd()*40) + cents();
+      const kid = Math.max(0, adult - (5 + Math.floor(rnd()*6))) + cents();
+      const pensioner = Math.max(0, adult - (2 + Math.floor(rnd()*6))) + cents();
+      return {date, time, full: d.toISOString().slice(0,10), price:{adult, kid, pensioner}};
     });
   }
 
@@ -3924,11 +3952,11 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown ${p.locations.length>1?'':'single'}"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown ${p.locations[0].dates.length>1?'':'single'}"><button class="sess-btn" aria-haspopup="true" aria-expanded="false"><span class="sess-label">Select Session</span>${p.locations[0].dates.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}</button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
@@ -4142,7 +4170,7 @@ function makePosts(){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
+        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}`;
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -4192,16 +4220,21 @@ function makePosts(){
             if(btn) btn.classList.add('selected');
             const dt = loc.dates[i];
             if(dt){
-              sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
+              sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $${dt.price.adult.toFixed(2)}, Kids $${dt.price.kid.toFixed(2)}, Pensioners $${dt.price.pensioner.toFixed(2)}</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>${loc.dates.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}`;
               ignoreSelect = true;
               picker.setDate(dt.full);
               picker.gotoDate(dt.full);
               ignoreSelect = false;
               highlightMonth();
             } else {
-              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn) sessBtn.textContent = 'Select Session';
+              const priceVals = loc.dates.flatMap(d=>[d.price.adult,d.price.kid,d.price.pensioner]);
+              const minP = Math.min(...priceVals);
+              const maxP = Math.max(...priceVals);
+              const first = loc.dates[0]?.date;
+              const last = loc.dates[loc.dates.length-1]?.date || first;
+              sessionInfo.innerHTML = `<div>💲 $${minP.toFixed(2)} - $${maxP.toFixed(2)} | 📅 ${first} - ${last}</div>`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="sess-label">Select Session</span>${loc.dates.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}`;
               picker.clearSelection();
               highlightMonth();
             }
@@ -4236,8 +4269,18 @@ function makePosts(){
           if(sessMenu){
             sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
             sessMenu.scrollTop = 0;
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-            if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+            const hasMultipleSessions = loc.dates.length>1;
+            sessDropdown.classList.toggle('single', !hasMultipleSessions);
+            if(sessBtn){
+              sessBtn.innerHTML = `<span class="sess-label">Select Session</span>${hasMultipleSessions?'<span class="dropdown-arrow">&#9662;</span>':''}`;
+              sessBtn.setAttribute('aria-expanded','false');
+            }
+            const priceVals = loc.dates.flatMap(d=>[d.price.adult,d.price.kid,d.price.pensioner]);
+            const minP = Math.min(...priceVals);
+            const maxP = Math.max(...priceVals);
+            const first = loc.dates[0]?.date;
+            const last = loc.dates[loc.dates.length-1]?.date || first;
+            if(sessionInfo) sessionInfo.innerHTML = `<div>💲 $${minP.toFixed(2)} - $${maxP.toFixed(2)} | 📅 ${first} - ${last}</div>`;
             sessMenu.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
@@ -4503,6 +4546,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   if(welcomeModal){
     welcomeModal.addEventListener('click', e=>{
       if(e.target === welcomeModal) closeModal(welcomeModal);
+    });
+    document.addEventListener('click', e=>{
+      if(welcomeModal.classList.contains('show') && !welcomeModal.querySelector('.modal-content').contains(e.target)){
+        closeModal(welcomeModal);
+      }
     });
     if(!localStorage.getItem('welcomeSeen')) openWelcome();
   }
@@ -6278,6 +6326,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const svgCode = document.getElementById('balloonSvgCode');
     const copyBtn = document.getElementById('copySvgCode');
     let selectedBalloon = null;
+    const storedSize = localStorage.getItem('balloonSize');
+    if(storedSize) sizeSlider.value = storedSize;
 
     function syncScroll(e){
       if(e.target === scrollTop) scrollBottom.scrollLeft = scrollTop.scrollLeft;
@@ -6295,6 +6345,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     sizeSlider.addEventListener('input', ()=>{
       sizeValue.textContent = sizeSlider.value;
+      localStorage.setItem('balloonSize', sizeSlider.value);
       balloons.querySelectorAll('svg').forEach(svg=>{
         svg.setAttribute('width', sizeSlider.value);
         svg.setAttribute('height', sizeSlider.value);
@@ -6311,8 +6362,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         svg.addEventListener('click', ()=>{ selectedBalloon = svg; svgCode.value = svg.outerHTML; });
         balloons.appendChild(svg);
       });
-      selectedBalloon = balloons.querySelector('svg');
-      if(selectedBalloon) svgCode.value = selectedBalloon.outerHTML;
       updateScrollWidth();
     }
 
