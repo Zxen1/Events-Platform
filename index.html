@@ -45,6 +45,8 @@
       --border-hover: rgba(255,136,0,0.43);
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: #d1d1d1;
+      --filter-placeholder-text: var(--placeholder-text);
+      --address-placeholder-text: var(--placeholder-text);
       --dropdown-title: #000000;
       --dropdown-selected-bg: rgba(224,224,224,1);
       --dropdown-selected-text: #000000;
@@ -157,6 +159,8 @@ input::placeholder,
 textarea::placeholder{
   color: var(--placeholder-text);
 }
+#kwInput::placeholder{ color: var(--filter-placeholder-text); }
+#geocoder .mapboxgl-ctrl-geocoder input::placeholder{ color: var(--address-placeholder-text); }
 
 .field label{
   color: var(--dropdown-title);
@@ -397,6 +401,14 @@ select option:hover{
   color: var(--ink);
   border: none;
 }
+#memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
+#memberModal input[type=color]{
+  border-radius:4px;
+  padding:0;
+  height:40px;
+  display:block;
+}
+#memberModal .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
   #adminModal .modal-content,
   #memberModal .modal-content,
@@ -882,7 +894,7 @@ body.hide-results .results-col{
 }
 
 #filterBtn{
-  border-radius: 999px;
+  border-radius: var(--dropdown-radius);
 }
 
 .options-dropdown{ position:relative; }
@@ -1496,6 +1508,9 @@ body.hide-results .closed-posts{
 @media (max-width:840px){
   .open-posts .body{
     flex-direction:column;
+  }
+  .open-posts .text .location-section{
+    order:-1;
   }
   .open-posts .img-box,
   .open-posts .location-section .map-container,
@@ -2153,7 +2168,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
         <div class="modal-field">
           <label for="mLocation">Location</label>
-          <input type="text" id="mLocation" />
+          <div id="mLocation"></div>
+          <div id="mLocationInfo" class="location-info"></div>
         </div>
         <div class="modal-field">
           <label for="mColor">Color</label>
@@ -2387,7 +2403,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, spinning = false, datePicker, todayWasOn = false,
+      let map, geocoder, memberGeocoder, spinning = false, datePicker, todayWasOn = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -3098,6 +3114,17 @@ function makePosts(){
         }, 310);
       });
 
+      const resList = $('.res-list');
+      resList && resList.addEventListener('click', e=>{
+        if(e.target === resList){
+          document.body.classList.add('hide-results');
+          resultsToggle.setAttribute('aria-pressed','false');
+          resultsCol.setAttribute('aria-hidden','true');
+          localStorage.setItem('resultsHidden','true');
+          setMode('map');
+        }
+      });
+
       function setMode(m){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts');
@@ -3192,6 +3219,30 @@ function makePosts(){
       }
     }
 
+    function addMemberGeocoder(){
+      if(typeof MapboxGeocoder !== 'undefined'){
+        memberGeocoder = new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl,
+          marker:false,
+          placeholder:'Search Location'
+        });
+        memberGeocoder.on('result', e=>{
+          const info = document.getElementById('mLocationInfo');
+          if(info){
+            const place = e.result;
+            info.innerHTML = `<strong>${place.text}</strong><br>${place.place_name}`;
+          }
+        });
+        memberGeocoder.on('clear', ()=>{
+          const info = document.getElementById('mLocationInfo');
+          if(info) info.innerHTML='';
+        });
+        const container = document.getElementById('mLocation');
+        if(container) container.appendChild(memberGeocoder.onAdd(map));
+      }
+    }
+
     function initMap(){
       if(typeof mapboxgl === 'undefined'){
         console.error('Mapbox GL failed to load');
@@ -3209,6 +3260,7 @@ function makePosts(){
             attributionControl:true
           });
       addGeocoder();
+      addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
       const geoContainer = document.getElementById('geocoder');
@@ -4738,7 +4790,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
+    ['modalText','placeholder','filterPlaceholder','addressPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4752,7 +4804,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5086,6 +5138,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     misc.appendChild(createTextPickerRow('modalText','Image Modal Text','modalBg-c'));
     misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
+    misc.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
+    misc.appendChild(createTextPickerRow('addressPlaceholder','Address Placeholder','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
     dropdown.className = 'admin-fieldset collapsed';
@@ -5171,7 +5225,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -5306,7 +5360,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','filterPlaceholder','addressPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -5322,7 +5376,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5452,7 +5506,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',addressPlaceholder:'--address-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -5901,6 +5955,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       scrollbarThumbHover: '--scrollbar-thumb-hover',
       listBackground: '--list-background',
       placeholder: '--placeholder-text',
+      filterPlaceholder: '--filter-placeholder-text',
+      addressPlaceholder: '--address-placeholder-text',
       dropdownTitle: '--dropdown-title',
       dropdownSelectedBg: '--dropdown-selected-bg',
       dropdownSelectedText: '--dropdown-selected-text',
