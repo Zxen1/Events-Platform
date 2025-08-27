@@ -230,6 +230,8 @@ select option:hover{
   gap: 8px;
 }
 
+.sub-icon svg{width:20px;height:20px;}
+
 .view-toggle button{
   border: 1px solid var(--btn);
   border-radius: 999px;
@@ -239,6 +241,13 @@ select option:hover{
   font-weight: 600;
   cursor: pointer;
   transition: background .2s,border-color .2s;
+}
+
+@media (min-width:650px){
+  .header > #resultsToggle{order:0;}
+  .header > .view-toggle{order:1;}
+  .header > .logo{order:2;margin:0 auto;}
+  .header > .auth{order:3;}
 }
 
 #resultsToggle{
@@ -492,6 +501,7 @@ select option:hover{
     height:100%;
     overflow:auto;
   }
+  #adminModal .modal-body{display:flex;flex-direction:column;gap:12px;}
   #adminModal .move-left,#adminModal .move-right,
   #memberModal .move-left,#memberModal .move-right,
   #filterModal .move-left,#filterModal .move-right,
@@ -641,7 +651,7 @@ select option:hover{
   display:flex;
   flex-direction:column;
 }
-#adminModal .modal-field{margin:0;max-width:320px;}
+#adminModal .modal-field{margin:8px 0;max-width:320px;}
 #baseColorRow{
   flex-direction:row;
   align-items:center;
@@ -2330,7 +2340,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="modal-content">
       <div class="modal-header">
         <div class="header-top">
-          <h2>Admin Settings</h2>
+          <h2>Admin</h2>
           <div class="modal-actions">
             <button type="button" id="discardChanges">Discard Changes</button>
             <button type="button" id="saveNow">Save Now</button>
@@ -2348,8 +2358,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </div>
       <form id="adminForm" class="modal-body">
         <div id="tab-theme" class="tab-panel active">
+          <h3>Preset Themes</h3>
           <div class="modal-field">
-            <label for="themePreset">Preset Themes</label>
+            <label for="themePreset">Select Theme</label>
             <div class="preset-select">
               <select id="themePreset" style="width:250px"></select>
               <button type="button" id="refreshTheme">Refresh</button>
@@ -2888,34 +2899,60 @@ function buildClusterListHTML(items){
       { name:"Auditions", subs:["Film","Theatre","Music"] },
       { name:"Talent",    subs:["Models","Actors","Crew"] }
     ];
-    const subcategoryIcons = {
-      "Screenings":"🎬",
-      "Festivals":"🎉",
-      "Shorts":"📽️",
-      "Indie":"🎞️",
-      "Plays":"🎭",
-      "Musicals":"🎶",
-      "Improv":"🤹",
-      "Gigs":"🎤",
-      "Open Mic":"🎙️",
-      "Classical":"🎼",
-      "Jazz":"🎷",
-      "Ballet":"🩰",
-      "Contemporary":"💃",
-      "Hip Hop":"🕺",
-      "Exhibitions":"🖼️",
-      "Workshops":"🛠️",
-      "Openings":"🚪",
-      "Talks":"🗣️",
-      "Film":"🎥",
-      "Theatre":"🎭",
-      "Music":"🎵",
-      "Dance":"💃",
-      "Photography":"📸",
-      "Gallery":"🏛️",
-      "Auditions":"🎬",
-      "Talent":"⭐"
+    const categoryShapes = {
+      "Film":"circle",
+      "Theatre":"square",
+      "Music":"triangle",
+      "Dance":"star",
+      "Photography":"diamond",
+      "Gallery":"pentagon",
+      "Auditions":"hexagon",
+      "Talent":"heart"
     };
+
+    function hslToHex(h,s,l){
+      s/=100; l/=100;
+      const k=n=>(n + h/30)%12;
+      const a=s*Math.min(l,1-l);
+      const f=n=>l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+      return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+    }
+
+    function balloonSVG(shape,color,withString=true,size=40){
+      const body={
+        circle:`<circle cx="0" cy="0" r="50"/>`,
+        tallEllipse:`<ellipse cx="0" cy="0" rx="40" ry="55"/>`,
+        heart:`<path d="M0,-30 C-30,-70 -70,-20 -35,15 Q0,55 35,15 C70,-20 30,-70 0,-30Z"/>`,
+        star:`<path d="M0,-55 L14,-17 L47,-17 L23,5 L35,45 L0,25 L-35,45 L-23,5 L-47,-17 L-14,-17 Z"/>`,
+        triangle:`<path d="M0,55 L50,-45 L-50,-45 Z"/>`,
+        rectangle:`<rect x="-35" y="-55" width="70" height="110" rx="20" ry="20"/>`,
+        square:`<rect x="-45" y="-45" width="90" height="90" rx="20" ry="20"/>`,
+        diamond:`<path d="M0,-55 L45,0 0,55 -45,0 Z"/>`,
+        pentagon:`<path d="M0,-55 L52,-17 L32,45 -32,45 -52,-17 Z"/>`,
+        hexagon:`<path d="M0,-55 L47,-27 L47,27 0,55 -47,27 -47,-27 Z"/>`
+      }[shape]||'';
+      let svg=`<svg viewBox="-60 -80 120 160" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">`;
+      svg+=`<g fill="${color}" stroke="#000" stroke-width="1">${body}</g>`;
+      if(withString){svg+=`<path d="M-8,55 L0,60 L8,55 Z" fill="#000" stroke="#000" stroke-width="1"/><line x1="0" y1="60" x2="0" y2="80" stroke="#fff" stroke-width="2"/>`;}
+      svg+=`<ellipse cx="-20" cy="-20" rx="10" ry="6" fill="#fff"/></svg>`;
+      return svg;
+    }
+
+    const markerIcons = {};
+    const subcategoryIcons = {};
+    let colorIdx = 0;
+    const totalSubs = categories.reduce((s,c)=>s + c.subs.length, 0);
+    categories.forEach(cat=>{
+      const shape = categoryShapes[cat.name];
+      cat.subs.forEach(sub=>{
+        const hue = (colorIdx*360)/totalSubs;
+        const color = hslToHex(hue,100,50);
+        const key = sub.replace(/\s+/g,'_');
+        subcategoryIcons[sub] = balloonSVG(shape, color, false, 24);
+        markerIcons[key] = balloonSVG(shape, color, true, 40);
+        colorIdx++;
+      });
+    });
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
@@ -3651,11 +3688,27 @@ function makePosts(){
 
     // Map layers
     function postsToGeoJSON(list){
-      return { type:'FeatureCollection', features: list.map(p => ({ type:'Feature', properties:{id:p.id, title:p.title, city:p.city, cat:p.category}, geometry:{type:'Point', coordinates:[p.lng,p.lat]} })) };
+      return {
+        type:'FeatureCollection',
+        features: list.map(p => ({
+          type:'Feature',
+          properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:p.subcategory.replace(/\s+/g,'_')},
+          geometry:{type:'Point', coordinates:[p.lng,p.lat]}
+        }))
+      };
+    }
+
+    function addMarkerImages(){
+      Object.entries(markerIcons).forEach(([name, svg])=>{
+        const img = new Image();
+        img.onload = ()=>{ if(!map.hasImage(name)) map.addImage(name, img); };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      });
     }
 
     function addPostSource(){
       if(!map) return;
+      addMarkerImages();
       map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster:true, clusterRadius: 52 });
       map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
@@ -3678,9 +3731,11 @@ function makePosts(){
       });
       window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
 
-      map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
-        'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-        'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+      map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{
+        'icon-image':['get','sub'],
+        'icon-size':0.5,
+        'icon-allow-overlap':true
+      }});
       // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
       map.on('contextmenu','unclustered', (e)=>{
         const f = e.features && e.features[0]; if(!f) return;
@@ -3755,7 +3810,7 @@ function makePosts(){
       // Hover ring layer for individual points
       map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
         'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
-        'circle-stroke-width': 2, 'circle-radius': 12
+        'circle-stroke-width': 2, 'circle-radius': 24
       }});
 
       // Cursor + popup for unclustered points
@@ -4288,7 +4343,12 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          const el = document.createElement('div');
+          el.innerHTML = markerIcons[p.subcategory.replace(/\s+/g,'_')];
+          const svg = el.firstElementChild;
+          svg.style.width = '40px';
+          svg.style.height = '40px';
+          marker = new mapboxgl.Marker({element: svg}).setLngLat([loc.lng, loc.lat]).addTo(map);
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
