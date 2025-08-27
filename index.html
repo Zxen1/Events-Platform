@@ -46,6 +46,7 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: #d1d1d1;
       --filter-placeholder-text: var(--placeholder-text);
+      --filter-date-text: var(--text);
       --dropdown-title: #000000;
       --dropdown-selected-bg: rgba(224,224,224,1);
       --dropdown-selected-text: #000000;
@@ -159,6 +160,7 @@ textarea::placeholder{
   color: var(--placeholder-text);
 }
 #kwInput::placeholder{ color: var(--filter-placeholder-text); }
+#dateInput{ color: var(--filter-date-text); }
 
 .field label{
   color: var(--dropdown-title);
@@ -397,10 +399,32 @@ select option:hover{
 #filterModal .tiny,
 #filterModal .btn,
 #adminModal button,
+#adminModal #spinType span,
 #memberModal button{
   background: var(--btn);
-  color: var(--ink);
-  border: none;
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+}
+#filterModal button:hover,
+#filterModal .sq:hover,
+#filterModal .tiny:hover,
+#filterModal .btn:hover,
+#adminModal button:hover,
+#adminModal #spinType span:hover,
+#memberModal button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+#filterModal button:active,
+#filterModal .sq:active,
+#filterModal .tiny:active,
+#filterModal .btn:active,
+#adminModal button:active,
+#adminModal #spinType span:active,
+#memberModal button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
 }
 #filterModal input[type="text"]{
   background: var(--modal-bg);
@@ -1076,11 +1100,11 @@ body.hide-results .results-col{
   pointer-events: none;
 }
 
-.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;min-width:240px !important;}
+.geocoder{position:relative;top:auto;left:auto;transform:none;z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;flex:1;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
-.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
+.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;}
 
 
 
@@ -1241,6 +1265,7 @@ body.hide-results .closed-posts{
   flex-wrap:wrap;
   gap:8px;
   margin-top:0;
+  margin-bottom:var(--gap);
 }
 
 .open-posts .location-section .map-container{
@@ -2221,16 +2246,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
         </div>
         <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
+          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Themes</button>
           <button type="button" class="tab-btn" data-tab="map">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
           <button type="button" class="tab-btn" data-tab="forms">Forms</button>
+          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
       <form id="adminForm" class="modal-body">
         <div id="tab-theme" class="tab-panel active">
           <div class="modal-field">
-            <label for="themePreset">Themes</label>
+            <label for="themePreset">Preset Themes</label>
             <div class="preset-select">
               <select id="themePreset" style="width:250px"></select>
               <button type="button" id="refreshTheme">Refresh</button>
@@ -2365,6 +2390,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </div>
             </div>
         </div>
+        <div id="tab-forms" class="tab-panel">
+          <style>
+            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
+            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+            #tab-forms .subcategory-table{border-collapse:collapse;}
+            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
+          </style>
+          <div id="formsControls">
+            <button type="button" id="addCategory">Add Category</button>
+            <div id="formsCategories"></div>
+          </div>
+        </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
             <label for="catList">Categories</label>
@@ -2394,18 +2431,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
             <button type="button" data-restore="settings">Restore</button>
-          </div>
-        </div>
-        <div id="tab-forms" class="tab-panel">
-          <style>
-            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
-            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
-            #tab-forms .subcategory-table{border-collapse:collapse;}
-            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
-          </style>
-          <div id="formsControls">
-            <button type="button" id="addCategory">Add Category</button>
-            <div id="formsCategories"></div>
           </div>
         </div>
       </form>
@@ -4331,31 +4356,27 @@ function openModal(m){
   if(content){
     content.style.width = '';
     content.style.height = '';
+    if(m.id !== 'welcomeModal') loadModalState(m);
+    if(m.id === 'filterModal'){
+      const subHead = document.querySelector('.subheader');
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+      const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
+      const availableHeight = window.innerHeight - footerH - topPos;
+      if(!content.style.left) content.style.left = '0';
+      if(!content.style.top) content.style.top = `${topPos}px`;
+      content.style.maxHeight = `${availableHeight}px`;
+      if(!content.style.transform) content.style.transform = '';
+    } else {
+      if(!content.style.left){
+        content.style.left = '50%';
+        content.style.top = '50%';
+        content.style.transform = 'translate(-50%, -50%)';
+      }
+    }
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   localStorage.setItem(`modal-open-${m.id}`,'true');
-  if(content){
-    if(m.id==='filterModal'){
-      const position = ()=>{
-        const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
-        const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
-        const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left = '0';
-        content.style.top = `${topPos}px`;
-        content.style.maxHeight = `${availableHeight}px`;
-        content.style.transform = '';
-      };
-      position();
-      requestAnimationFrame(position);
-    } else {
-      content.style.left = '50%';
-      content.style.top = '50%';
-      content.style.transform = 'translate(-50%, -50%)';
-    }
-    if(m.id !== 'welcomeModal') loadModalState(m);
-  }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
     m.__bringToTopAdded = true;
@@ -4364,12 +4385,14 @@ function openModal(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function closeModal(m){
+  saveModalState(m);
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
   localStorage.setItem(`modal-open-${m.id}`,'false');
+  if(m.id === 'welcomeModal') localStorage.setItem('welcomeSeen','true');
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
-    if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+  if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function requestCloseModal(m){
   closeModal(m);
@@ -4461,6 +4484,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     welcomeModal.addEventListener('click', e=>{
       if(e.target === welcomeModal) closeModal(welcomeModal);
     });
+    if(!localStorage.getItem('welcomeSeen')) openWelcome();
   }
 
   document.querySelectorAll('.modal').forEach(modal=>{
@@ -4914,7 +4938,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
+    ['modalText','placeholder','filterPlaceholder','dateRangeText','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4928,7 +4952,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5222,7 +5246,18 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         fs.appendChild(stickyRow);
       }
       if(area.key === 'filter'){
-        fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
+        const bgRow = document.createElement('div');
+        bgRow.className = 'control-row';
+        bgRow.innerHTML = `
+            <label>Input background</label>
+            <div class="color-group">
+              <input id="modalBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="modalBg-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+        `;
+        fs.appendChild(bgRow);
+        fs.appendChild(createTextPickerRow('dateRangeText','Date Range Box Text','modalBg-c'));
+        fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','modalBg-c'));
       }
       wrap.appendChild(fs);
     });
@@ -5245,7 +5280,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       {id:'btn', label:'Button Base'},
       {id:'btnHover', label:'Button Hover'},
       {id:'btnActive', label:'Button Active'},
-      {id:'modalBg', label:'Modal Background'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
@@ -5350,7 +5384,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -5485,7 +5519,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dateRangeText','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -5501,7 +5535,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5631,7 +5665,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -6079,6 +6113,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       listBackground: '--list-background',
       placeholder: '--placeholder-text',
       filterPlaceholder: '--filter-placeholder-text',
+      dateRangeText: '--filter-date-text',
       dropdownTitle: '--dropdown-title',
       dropdownSelectedBg: '--dropdown-selected-bg',
       dropdownSelectedText: '--dropdown-selected-text',
