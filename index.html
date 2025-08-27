@@ -401,9 +401,19 @@ select option:hover{
   color: var(--ink);
   border: none;
 }
-#filterModal .litepicker [role="button"],
-#filterModal .litepicker [role="button"]:hover{
+#filterModal input[type="text"]{
+  background: var(--modal-bg);
+  color: var(--modal-text);
+}
+#filterModal .litepicker [role="button"]{
+  background: initial;
   color: initial;
+  border: none;
+}
+#filterModal .litepicker [role="button"]:hover{
+  background: initial;
+  color: initial;
+  border: none;
 }
 #memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberModal input[type=color]{
@@ -411,6 +421,19 @@ select option:hover{
   padding:0;
   height:40px;
   display:block;
+}
+#welcomeBody{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+#welcomeBody img{
+  max-width:400px;
+  max-height:300px;
+  width:auto;
+  height:auto;
+  margin-bottom:10px;
 }
 #memberModal .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
@@ -1053,12 +1076,15 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;background:var(--dropdown-bg);border:1px solid var(--border);min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-group{height:40px;width:40px;box-shadow:none;}
-.geocoder .mapboxgl-ctrl-geolocate{width:100%;height:100%;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:#fff;display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
+.geocoder .mapboxgl-ctrl-geolocate,
+.geocoder .north-btn{width:40px;height:40px;margin:0;padding:0;border:1px solid var(--border);border-radius:4px;background:var(--btn);color:var(--button-text);display:flex;align-items:center;justify-content:center;background-position:center;background-size:20px 20px;}
+.geocoder .mapboxgl-ctrl-geolocate:hover,
+.geocoder .north-btn:hover{background:var(--btn-hover);color:var(--button-hover-text);}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;background:var(--dropdown-bg);color:var(--dropdown-text);}
 
 
 
@@ -2122,7 +2148,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" />
+            <div class="input"><input id="dateInput" type="text" aria-label="Date range" readonly />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -2301,14 +2327,14 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 </div>
               </div>
             <div class="modal-field">
-              <button type="button" id="spinLoadStart" class="toggle-btn" aria-pressed="false">Start on load</button>
+              <label><input type="checkbox" id="spinLoadStart" /> Start on load</label>
               <div id="spinType">
                 <div><label><input type="radio" name="spinType" value="all" /> <span>Everyone</span></label></div>
                 <div><label><input type="radio" name="spinType" value="new" /> <span>New Users</span></label></div>
               </div>
             </div>
             <div class="modal-field">
-              <button type="button" id="spinLogoClick" class="toggle-btn" aria-pressed="true">Start on logo click</button>
+              <label><input type="checkbox" id="spinLogoClick" checked /> Start on logo click</label>
             </div>
             <div class="modal-field">
               <label for="mapRestore">Restore Backup</label>
@@ -2437,11 +2463,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
-      let logoClicked = false;
       function updateLogoClickState(){
         if(logoEl){
-          logoEl.style.cursor = spinLogoClick ? 'pointer' : 'default';
-          logoEl.style.pointerEvents = spinLogoClick ? 'auto' : 'none';
+          logoEl.style.cursor = 'pointer';
+          logoEl.style.pointerEvents = 'auto';
         }
       }
       updateLogoClickState();
@@ -2480,22 +2505,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
 
       logoEl?.addEventListener('click', () => {
-        if(!logoClicked && spinLogoClick && map){
-          logoClicked = true;
+        if(spinning){
+          openWelcome();
+          return;
+        }
+        if(spinLogoClick && map && map.getZoom() <= 4){
           spinEnabled = true;
           localStorage.setItem('spinGlobe', 'true');
-          stopSpin();
-          const z = map.getZoom();
-          if(z < 4){
-            startSpin(true);
-          } else {
-            map.easeTo({zoom:4, essential:true});
-            map.once('moveend', () => startSpin(true));
-          }
-        } else {
-          logoClicked = true;
-          openWelcome();
+          startSpin(true);
         }
+        openWelcome();
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
@@ -2534,6 +2553,28 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       const text = body ? body.querySelector('.text') : null;
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
       root.classList.toggle('hide-map-calendar', isBelow);
+      if(body && text){
+        const venueDropdown = body.querySelector('.venue-dropdown');
+        const sessionDropdown = body.querySelector('.session-dropdown');
+        const mapContainer = body.querySelector('.map-container');
+        const calContainer = body.querySelector('.calendar-container');
+        const titleEl = text.querySelector('.title');
+        if(isBelow){
+          if(venueDropdown && venueDropdown.parentElement !== text && titleEl){
+            text.insertBefore(venueDropdown, titleEl);
+          }
+          if(sessionDropdown && sessionDropdown.parentElement !== text && titleEl){
+            text.insertBefore(sessionDropdown, titleEl);
+          }
+        } else {
+          if(venueDropdown && mapContainer && venueDropdown.parentElement !== mapContainer){
+            mapContainer.appendChild(venueDropdown);
+          }
+          if(sessionDropdown && calContainer && sessionDropdown.parentElement !== calContainer){
+            calContainer.appendChild(sessionDropdown);
+          }
+        }
+      }
       const stickyInput = document.getElementById('open-posts-sticky-images');
       if(!(stickyInput && stickyInput.checked) || !body || !imgArea || !text){
         root.classList.remove('open-posts-sticky-images');
@@ -3017,6 +3058,7 @@ function makePosts(){
 
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
@@ -3249,7 +3291,9 @@ function makePosts(){
           accessToken: mapboxgl.accessToken,
           mapboxgl,
           marker: false,
-          placeholder: 'Search Location'
+          placeholder: 'Search Location',
+          reverseGeocode: true,
+          collapsed: false
         });
         geocoder.on('result', ()=>{
           spinEnabled = false;
@@ -3313,7 +3357,16 @@ function makePosts(){
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
       const geoContainer = document.getElementById('geocoder');
-      if(geoContainer) geoContainer.appendChild(geolocate.onAdd(map));
+      if(geoContainer){
+        geoContainer.appendChild(geolocate.onAdd(map));
+        const northBtn = document.createElement('button');
+        northBtn.className = 'north-btn';
+        northBtn.type = 'button';
+        northBtn.setAttribute('aria-label','Reset north');
+        northBtn.textContent = 'N';
+        northBtn.addEventListener('click', ()=>{ if(map) map.resetNorth(); });
+        geoContainer.appendChild(northBtn);
+      }
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
@@ -5684,9 +5737,9 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(adminForm){
           const speedInput = document.getElementById("spinSpeed");
           const speedVal = document.getElementById("spinSpeedVal");
-          const loadStartBtn = document.getElementById("spinLoadStart");
+          const loadStartChk = document.getElementById("spinLoadStart");
           const typeRadios = document.querySelectorAll("#spinType input");
-          const logoClickBtn = document.getElementById("spinLogoClick");
+          const logoClickChk = document.getElementById("spinLogoClick");
           const themeSelect = document.getElementById("mapTheme");
           const pitchInput = document.getElementById("mapPitch");
           const pitchVal = document.getElementById("pitchVal");
@@ -5740,11 +5793,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           bearingVal.textContent = val.toFixed(0);
         });
       }
-      if(loadStartBtn){
-        loadStartBtn.setAttribute('aria-pressed', sg.spinLoadStart);
-        loadStartBtn.addEventListener("click", ()=>{
-          sg.spinLoadStart = loadStartBtn.getAttribute('aria-pressed') !== 'true';
-          loadStartBtn.setAttribute('aria-pressed', sg.spinLoadStart);
+      if(loadStartChk){
+        loadStartChk.checked = sg.spinLoadStart;
+        loadStartChk.addEventListener("change", ()=>{
+          sg.spinLoadStart = loadStartChk.checked;
           localStorage.setItem("spinLoadStart", JSON.stringify(sg.spinLoadStart));
           sg.updateSpinState();
         });
@@ -5760,11 +5812,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           });
         });
       }
-      if(logoClickBtn){
-        logoClickBtn.setAttribute('aria-pressed', sg.spinLogoClick);
-        logoClickBtn.addEventListener("click", ()=>{
-          sg.spinLogoClick = logoClickBtn.getAttribute('aria-pressed') !== 'true';
-          logoClickBtn.setAttribute('aria-pressed', sg.spinLogoClick);
+      if(logoClickChk){
+        logoClickChk.checked = sg.spinLogoClick;
+        logoClickChk.addEventListener("change", ()=>{
+          sg.spinLogoClick = logoClickChk.checked;
           localStorage.setItem("spinLogoClick", JSON.stringify(sg.spinLogoClick));
           sg.updateLogoClickState();
         });
