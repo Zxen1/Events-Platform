@@ -191,8 +191,6 @@ select option:hover{
     align-items: center;
     justify-content: flex-end;
     padding: 0 20px;
-    background: #A3956c;
-    color: #fff;
     position: fixed;
     top: 0;
     left: 0;
@@ -221,7 +219,7 @@ select option:hover{
 
   .view-toggle{
   position: absolute;
-  left: calc(var(--results-w) + var(--gap) - 6px);
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -608,7 +606,6 @@ select option:hover{
   .main{
     display: grid;
     grid-template-columns: var(--results-w) 1fr;
-    grid-template-rows: var(--subheader-h) 1fr;
     row-gap: 0;
     column-gap: 0;
     padding: 0;
@@ -617,7 +614,7 @@ select option:hover{
     position: relative;
     z-index: 1;
     pointer-events: none;
-    margin-top: var(--header-h);
+    margin-top: calc(var(--header-h) + var(--subheader-h));
   }
 
   .main.hide-results{
@@ -1881,7 +1878,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   left: 0;
   right: 0;
   z-index: 10;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .main .closed-posts{
@@ -1889,7 +1886,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   grid-row: 2;
   position: relative;
   z-index: 1;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 
@@ -1926,9 +1923,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
-.main{margin-top:var(--header-h);margin-right:0;margin-bottom:0;margin-left:0;}
+.main{margin-top:calc(var(--header-h) + var(--subheader-h));margin-right:0;margin-bottom:0;margin-left:0;}
 
-  .post-panel{padding:0;pointer-events:auto;}
+  .post-panel{padding:0;pointer-events:none;}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{display:none;}
@@ -2036,29 +2033,29 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <button id="adminBtn" aria-label="Open admin area">Admin</button>
     </div>
   </header>
+  <div class="subheader">
+    <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+    <div class="options-dropdown">
+      <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
+      <div id="optionsMenu" class="options-menu" hidden>
+        <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+        <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+          <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
+          <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
+          <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+        </div>
+      </div>
+    </div>
+    <div id="geocoder" class="geocoder"></div>
+    <button id="resultsToggle" aria-pressed="true">Results List</button>
+    <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
+  </div>
 
   <section class="map-area" aria-label="Map">
     <div id="map"></div>
   </section>
 
   <main class="main">
-      <div class="subheader">
-        <button id="filterBtn" aria-label="Open filters modal">Filters</button>
-        <div class="options-dropdown">
-          <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
-          <div id="optionsMenu" class="options-menu" hidden>
-            <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-            <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-              <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-              <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-              <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
-            </div>
-          </div>
-        </div>
-        <div id="geocoder" class="geocoder"></div>
-        <button id="resultsToggle" aria-pressed="true">Results List</button>
-        <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
-      </div>
       <section class="results-col" aria-label="Results">
         <div class="res-list" id="results"></div>
       </section>
@@ -3099,6 +3096,10 @@ function makePosts(){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts');
       document.body.classList.add('mode-'+m);
+      const panel = document.querySelector('.post-panel');
+      if(panel){
+        panel.style.pointerEvents = m === 'map' ? 'none' : 'auto';
+      }
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
       $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
