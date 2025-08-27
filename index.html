@@ -471,13 +471,34 @@ select option:hover{
   margin-bottom:10px;
 }
 #memberModal .location-info{margin-top:4px;font-size:13px;}
-  @media (max-width:600px){
+@media (max-width:650px){
   #adminModal .modal-content,
   #memberModal .modal-content,
   #filterModal .modal-content{
-    width:95%;
-    max-width:95%;
-    max-height:95%;
+    position:fixed;
+    top:calc(var(--header-h) + var(--subheader-h));
+    left:0;
+    right:0;
+    width:100%;
+    height:calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
+    max-width:none;
+    max-height:none;
+    border-radius:0;
+    transform:none !important;
+  }
+  #adminModal .modal-body,
+  #memberModal .modal-body,
+  #filterModal .modal-body{
+    height:100%;
+    overflow:auto;
+  }
+  #adminModal .move-left,#adminModal .move-right,
+  #memberModal .move-left,#memberModal .move-right,
+  #filterModal .move-left,#filterModal .move-right,
+  #adminModal .modal-content .resizer,
+  #memberModal .modal-content .resizer,
+  #filterModal .modal-content .resizer{
+    display:none !important;
   }
 }
 #adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
@@ -968,6 +989,11 @@ body.hide-results .results-col{
 #optionsBtn{height:32px;}
 
 #filterBtn.active{
+  background:var(--filter-btn-active);
+  border-color:var(--filter-btn-active);
+  color:#fff;
+}
+#filterBtn.active:hover{
   background:var(--filter-btn-active);
   border-color:var(--filter-btn-active);
   color:#fff;
@@ -2572,6 +2598,17 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       const filterBtn = document.getElementById('filterBtn');
+      function updateViewport(){
+        const vp = document.querySelector('meta[name="viewport"]');
+        if(!vp) return;
+        if(window.innerWidth < 1024 && !document.querySelector('.img-modal')){
+          vp.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+        } else {
+          vp.setAttribute('content','width=device-width, initial-scale=1');
+        }
+      }
+      updateViewport();
+      window.addEventListener('resize', updateViewport);
       function updateLogoClickState(){
         if(logoEl){
           logoEl.style.cursor = 'pointer';
@@ -3306,7 +3343,7 @@ function makePosts(){
       const resultsCol = $('.results-col');
       const filterModal = $('#filterModal');
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
-      const shouldHide = storedHidden || spinEnabled || window.matchMedia('(max-width:1000px)').matches;
+      const shouldHide = spinEnabled || (storedHidden && !window.matchMedia('(max-width:1000px)').matches);
       if(shouldHide){
         document.body.classList.add('hide-results');
         resultsToggle.setAttribute('aria-pressed','false');
@@ -3336,16 +3373,6 @@ function makePosts(){
             applyFilters();
           }
         }, 310);
-      });
-
-      const mq = window.matchMedia('(max-width:1000px)');
-      mq.addEventListener('change', e=>{
-        if(e.matches){
-          document.body.classList.add('hide-results');
-          resultsToggle.setAttribute('aria-pressed','false');
-          resultsCol.setAttribute('aria-hidden','true');
-          if(filterModal) requestCloseModal(filterModal);
-        }
       });
 
       const resList = $('.res-list');
@@ -4220,10 +4247,11 @@ function makePosts(){
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
-        const entry = {remove: ()=> modal.remove()};
+        const entry = {remove: ()=>{ modal.remove(); updateViewport(); }};
         modal.addEventListener('click', e=>{
           if(e.target===modal){
             modal.remove();
+            updateViewport();
             const i = modalStack.indexOf(entry);
             if(i!==-1) modalStack.splice(i,1);
           } else {
@@ -4233,6 +4261,7 @@ function makePosts(){
         imgEl.addEventListener('click', next);
         document.body.appendChild(modal);
         modalStack.push(entry);
+        updateViewport();
       }
       mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
@@ -4441,7 +4470,7 @@ function makePosts(){
       filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
-      const hasActiveFilters = $('#kwInput').value.trim() || $('#dateInput').value.trim() || $('#dateInput').dataset.range || selection.cats.size || selection.subs.size || $('#todayToggle').checked;
+      const hasActiveFilters = $('#kwInput').value.trim() || $('#dateInput').value.trim() || $('#dateInput').dataset.range || selection.cats.size || selection.subs.size;
       if(filterBtn) filterBtn.classList.toggle('active', !!hasActiveFilters);
     }
 
@@ -4474,6 +4503,7 @@ function registerPopup(p){
 }
 function saveModalState(m){
   if(!m || !m.id || m.id === 'welcomeModal') return;
+  if(window.matchMedia('(max-width:650px)').matches && ['filterModal','memberModal','adminModal'].includes(m.id)) return;
   const content = m.querySelector('.modal-content');
   if(!content) return;
   const state = {
@@ -4501,8 +4531,21 @@ function openModal(m){
   if(content){
     content.style.width = '';
     content.style.height = '';
-    if(m.id !== 'welcomeModal') loadModalState(m);
-    if(m.id === 'filterModal'){
+    const fixed = window.matchMedia('(max-width:650px)').matches && (m.id==='filterModal' || m.id==='memberModal' || m.id==='adminModal');
+    if(!fixed && m.id !== 'welcomeModal') loadModalState(m);
+    if(fixed){
+      const rs = getComputedStyle(document.documentElement);
+      const headerH = parseFloat(rs.getPropertyValue('--header-h')) || 0;
+      const subH = parseFloat(rs.getPropertyValue('--subheader-h')) || 0;
+      const footerH = parseFloat(rs.getPropertyValue('--footer-h')) || 0;
+      content.style.left = '0';
+      content.style.top = `${headerH + subH}px`;
+      content.style.width = '100%';
+      content.style.height = `calc(100vh - ${headerH + subH + footerH}px)`;
+      content.style.maxWidth = 'none';
+      content.style.maxHeight = 'none';
+      content.style.transform = 'none';
+    } else if(m.id === 'filterModal'){
       const subHead = document.querySelector('.subheader');
       const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
@@ -4625,20 +4668,37 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       requestCloseModal(modal);
     });
   });
-  document.querySelectorAll('.modal .move-left').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const modal = btn.closest('.modal');
-      moveModalToEdge(modal, 'left');
+  const isNarrow = window.matchMedia('(max-width:650px)').matches;
+  if(!isNarrow){
+    document.querySelectorAll('.modal .move-left').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        const modal = btn.closest('.modal');
+        moveModalToEdge(modal, 'left');
+      });
     });
-  });
-  document.querySelectorAll('.modal .move-right').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const modal = btn.closest('.modal');
-      moveModalToEdge(modal, 'right');
+    document.querySelectorAll('.modal .move-right').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        const modal = btn.closest('.modal');
+        moveModalToEdge(modal, 'right');
+      });
     });
-  });
+  }
+
+  function relocateMapControls(){
+    const gc = document.getElementById('geocoder');
+    const filterBody = document.querySelector('#filterModal .modal-body');
+    const subHead = document.querySelector('.subheader');
+    if(!gc || !filterBody || !subHead) return;
+    if(window.matchMedia('(max-width:650px)').matches){
+      if(gc.parentElement !== filterBody) filterBody.insertBefore(gc, filterBody.firstChild);
+    } else {
+      if(gc.parentElement !== subHead) subHead.appendChild(gc);
+    }
+  }
+  relocateMapControls();
+  window.addEventListener('resize', relocateMapControls);
 
   const welcomeModal = document.getElementById('welcomeModal');
   [filterModal, memberModal, adminModal, welcomeModal].forEach(m=>{
@@ -4665,7 +4725,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   document.querySelectorAll('.modal').forEach(modal=>{
     const content = modal.querySelector('.modal-content');
     const header = modal.querySelector('.modal-header');
-    if(!content || !header) return;
+    const fixed = window.matchMedia('(max-width:650px)').matches && ['filterModal','memberModal','adminModal'].includes(modal.id);
+    if(!content || !header || fixed) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
       header.addEventListener('mousedown', e=>{
