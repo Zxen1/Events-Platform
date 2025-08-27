@@ -1106,13 +1106,14 @@ body.hide-results .results-col{
   pointer-events: none;
 }
 
-.geocoder{position:relative;top:auto;left:auto;transform:none;z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;flex:1;}
+.geocoder{position:absolute;top:auto;left:50%;transform:translateX(-50%);z-index:10;min-width:240px;max-width:300px;width:100%;display:flex;gap:4px;pointer-events:auto;}
 .geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
 .geocoder .mapboxgl-ctrl-geocoder--button,
 .geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);display:flex;align-items:center;justify-content:center;}
+@media (max-width:1000px){.geocoder{position:static;left:auto;transform:none;margin-left:auto;flex:1;}}
 
 
 
@@ -2135,6 +2136,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
   <div class="subheader">
     <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+    <button id="resultsToggle" aria-pressed="true">Results List</button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
@@ -2146,9 +2148,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
       </div>
     </div>
-    <div id="geocoder" class="geocoder"></div>
-    <button id="resultsToggle" aria-pressed="true">Results List</button>
     <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
+    <div id="geocoder" class="geocoder"></div>
   </div>
 
   <section class="map-area" aria-label="Map">
@@ -2671,6 +2672,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
       if(typeof window.adjustListHeight === 'function'){
         window.adjustListHeight();
+      }
+      if(window.innerWidth >= 1000 && typeof renderLists === 'function' && filtered && filtered.length){
+        const resEl = document.getElementById('results');
+        if(resEl && resEl.children.length === 0){
+          renderLists(filtered);
+        }
       }
     }
     window.updateLayoutVars = updateLayoutVars;
@@ -3249,7 +3256,8 @@ function makePosts(){
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
-      if(storedHidden){
+      const shouldHide = storedHidden || spinEnabled;
+      if(shouldHide){
         document.body.classList.add('hide-results');
         resultsToggle.setAttribute('aria-pressed','false');
         resultsCol.setAttribute('aria-hidden','true');
@@ -3770,6 +3778,10 @@ function makePosts(){
     });
 
     function renderLists(list){
+      if(window.innerWidth < 1000){
+        updateResultCount(list.length);
+        return;
+      }
       if(spinning) return;
       const sort = currentSort;
       const arr = list.slice();
