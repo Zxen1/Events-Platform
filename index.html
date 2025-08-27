@@ -13,54 +13,7 @@
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
-  <style>:root{
-  --header-h: 75px;
-  --subheader-h: 75px;
-  --panel-w: 260px;
-  --results-w: 520px;
-  --gap: 12px;
-    --ink: #ffffff;
-    --ink-d: #ececec;
-    --gold: #ffc107;
-    --muted: #777;
-      --primary: #000000;
-      --secondary: #000000;
-      --accent: #000000;
-      --background: rgba(41,41,41,1);
-      --text: #ffffff;
-      --button-text: #ffffff;
-      --button-hover-text: #000000;
-      --btn: rgba(74,74,74,0.9);
-      --btn-hover: rgba(0,0,0,1);
-      --btn-active: rgba(0,0,0,1);
-      --btn-2: var(--btn-hover);
-      --modal-bg: rgba(0,0,0,0.62);
-      --modal-text: #000000;
-      --footer-h: 70px;
-      --list-background: rgba(0,0,0,0.37);
-      --scrollbar-track: rgba(0,0,0,0);
-      --scrollbar-thumb: rgba(0,0,0,0.3);
-      --scrollbar-thumb-hover: rgba(0,0,0,0.5);
-      --border: rgba(173,173,173,0.31);
-      --border-hover: rgba(255,136,0,0.43);
-      --border-active: rgba(255,200,0,0.45);
-      --placeholder-text: #d1d1d1;
-      --filter-placeholder-text: var(--placeholder-text);
-      --filter-date-text: var(--text);
-      --dropdown-title: #000000;
-      --dropdown-selected-bg: rgba(224,224,224,1);
-      --dropdown-selected-text: #000000;
-      --dropdown-text: #000000;
-      --dropdown-bg: rgba(255,255,255,1);
-      --dropdown-hover-bg: rgba(224,224,224,1);
-      --dropdown-hover-text: #000000;
-      --dropdown-venue-text: #000000;
-      --dropdown-radius: 6px;
-      --session-available: #0000ff;
-      --session-selected: #008000;
-      --filter-btn-active: #8b0000;
-}
-
+  <style id="layout">
 *{
   box-sizing: border-box;
   scrollbar-width: thin;
@@ -111,6 +64,7 @@ body{
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  padding-bottom: var(--footer-h);
 }
 
 input,
@@ -170,6 +124,24 @@ textarea::placeholder{
 
 .field label{
   color: var(--dropdown-title);
+}
+
+.sort-options{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+#themePreset,
+#themeRestore,
+#settingsRestore{
+  width:250px;
+}
+
+.flex-row{
+  display:flex;
+  align-items:center;
+  gap:4px;
 }
 
 select{
@@ -446,17 +418,14 @@ select option:hover{
   background: var(--modal-bg);
   color: var(--modal-text);
 }
-#filterModal .litepicker [role="button"]{
   background: initial;
   color: initial;
   border: none;
 }
-#filterModal .litepicker [role="button"]:hover{
   background: initial;
   color: initial;
   border: none;
 }
-#memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberModal input[type=color]{
   border-radius:4px;
   padding:0;
@@ -1157,32 +1126,17 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:auto;left:50%;transform:translateX(-50%);z-index:10;min-width:240px;max-width:300px;width:100%;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;min-width:240px !important;padding:0;}
-.geocoder .mapboxgl-ctrl-geocoder--suggestions,
-.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
-.geocoder .mapboxgl-ctrl-geocoder--button,
-.geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);position:absolute;top:50%;transform:translateY(-50%);display:block;}
-.geocoder .mapboxgl-ctrl-geocoder--icon{left:8px;}
-.geocoder .mapboxgl-ctrl-geocoder--button{right:8px;}
 
-.mapboxgl-ctrl-geocoder,
-.mapboxgl-ctrl-geolocate,
-.mapboxgl-ctrl-compass{
   background:#fff;
   border:1px solid #fff;
   padding:0;
 }
 
-.mapboxgl-ctrl-geolocate,
-.mapboxgl-ctrl-compass{
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
-.mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
   margin:0;
 }
 @media (max-width:1000px){.geocoder{position:static;left:auto;transform:none;margin-left:auto;flex:1;}}
@@ -1525,7 +1479,6 @@ body.hide-results .closed-posts{
   justify-content:center;
 }
 
-.open-posts .post-calendar .litepicker{
   font-size:16px;
   width:100%;
   max-width:400px;
@@ -1542,14 +1495,11 @@ body.hide-results .closed-posts{
   width:100%;
 }
 
-.open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--session-available);
   color:var(--button-hover-text);
   border-radius:4px;
 }
 
-.open-posts .post-calendar .litepicker-day.is-selected,
-.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{
   background:var(--session-selected);
   color:var(--button-text);
   border-radius:4px;
@@ -1737,13 +1687,11 @@ footer .foot-row .foot-item{
 
 .card,
 footer .foot-row .foot-item,
-.mapboxgl-popup.hover-pop .hover-card{
   transition: filter .2s, box-shadow .2s;
 }
 
 .card:hover,
 footer .foot-row .foot-item:hover,
-.mapboxgl-popup.hover-pop .hover-card:hover{
   filter: brightness(1.05);
 }
 
@@ -1751,8 +1699,6 @@ footer .foot-row .foot-item:hover,
 .card[aria-selected="true"],
 footer .foot-row .foot-item.selected,
 footer .foot-row .foot-item[aria-selected="true"],
-.mapboxgl-popup.hover-pop .hover-card.selected,
-.mapboxgl-popup.hover-pop .hover-card[aria-selected="true"]{
   filter: brightness(0.95);
 }
 
@@ -1826,7 +1772,6 @@ footer .foot-row .foot-item[aria-selected="true"],
   overflow: hidden;
 }
 
-.mapboxgl-popup.hover-pop{
   pointer-events: auto;
 }
 
@@ -1947,7 +1892,6 @@ footer .foot-row .foot-item[aria-selected="true"],
   transform: none;
 }
 
-.hover-card img, .mapboxgl-popup .hover-card img{
   width: 64px;
   height: 64px;
   object-fit: cover;
@@ -1994,21 +1938,17 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius: 8px;
 }
 
-} } .mapboxgl-popup.hover-pop.hover-multi-list{
   max-width: none;
 }
 
-.mapboxgl-popup.hover-pop.hover-multi-list .mapboxgl-popup-content{
   max-width: none;
   width: auto;
 }
 
-.mapboxgl-popup.hover-pop.hover-multi-list .multi-hover{
   width: auto;
   max-width: none;
 }
 
-.mapboxgl-popup.hover-pop:not(.hover-multi-list){
   max-width: 320px;
 }
 
@@ -2016,25 +1956,20 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   min-width: 0;
 }
 
-.mapboxgl-popup.hover-pop .mapboxgl-popup-content{
   border-radius: 12px;
   padding: 6px 10px 6px 8px;
 }
 
-.mapboxgl-popup.hover-multi-list .mapboxgl-popup-content{
   width: auto;
   max-width: none;
 }
 
-.mapboxgl-popup.hover-multi-list .multi-hover{
   width: auto;
 }
 
-.mapboxgl-popup.hover-multi-list .multi-item .txt{
   min-width: 0;
 }
 
-.mapboxgl-popup.hover-multi-list .multi-item .t{
   white-space: normal;
   overflow-wrap: anywhere;
   -webkit-line-clamp: 2;
@@ -2091,14 +2026,103 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
 #tab-forms .subcategory-table{border-collapse:collapse;}
 #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
-#filterModal .mapboxgl-ctrl-group button{background:#fff;border:1px solid #fff;}
 @media (max-width:650px){
-  #filterModal .mapboxgl-ctrl-top-right{left:8px;right:auto;}
 }
-
+</style>
+<style id="theme-default">
+:root{
+  --header-h: 75px;
+  --subheader-h: 75px;
+  --panel-w: 260px;
+  --results-w: 520px;
+  --gap: 12px;
+    --ink: #ffffff;
+    --ink-d: #ececec;
+    --gold: #ffc107;
+    --muted: #777;
+      --primary: #000000;
+      --secondary: #000000;
+      --accent: #000000;
+      --background: rgba(41,41,41,1);
+      --text: #ffffff;
+      --button-text: #ffffff;
+      --button-hover-text: #000000;
+      --btn: rgba(74,74,74,0.9);
+      --btn-hover: rgba(0,0,0,1);
+      --btn-active: rgba(0,0,0,1);
+      --btn-2: var(--btn-hover);
+      --modal-bg: rgba(0,0,0,0.62);
+      --modal-text: #000000;
+      --footer-h: 70px;
+      --list-background: rgba(0,0,0,0.37);
+      --scrollbar-track: rgba(0,0,0,0);
+      --scrollbar-thumb: rgba(0,0,0,0.3);
+      --scrollbar-thumb-hover: rgba(0,0,0,0.5);
+      --border: rgba(173,173,173,0.31);
+      --border-hover: rgba(255,136,0,0.43);
+      --border-active: rgba(255,200,0,0.45);
+      --placeholder-text: #d1d1d1;
+      --filter-placeholder-text: var(--placeholder-text);
+      --filter-date-text: var(--text);
+      --dropdown-title: #000000;
+      --dropdown-selected-bg: rgba(224,224,224,1);
+      --dropdown-selected-text: #000000;
+      --dropdown-text: #000000;
+      --dropdown-bg: rgba(255,255,255,1);
+      --dropdown-hover-bg: rgba(224,224,224,1);
+      --dropdown-hover-text: #000000;
+      --dropdown-venue-text: #000000;
+      --dropdown-radius: 6px;
+      --session-available: #0000ff;
+      --session-selected: #008000;
+      --filter-btn-active: #8b0000;
+}
+</style>
+<style id="mapbox">
+#memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;min-width:240px !important;padding:0;}
+.geocoder .mapboxgl-ctrl-geocoder--suggestions,
+.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
+.geocoder .mapboxgl-ctrl-geocoder--button,
+.geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);position:absolute;top:50%;transform:translateY(-50%);display:block;}
+.geocoder .mapboxgl-ctrl-geocoder--icon{left:8px;}
+.geocoder .mapboxgl-ctrl-geocoder--button{right:8px;}
+.mapboxgl-ctrl-geocoder,
+.mapboxgl-ctrl-geolocate,
+.mapboxgl-ctrl-compass{
+.mapboxgl-ctrl-geolocate,
+.mapboxgl-ctrl-compass{
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
+.mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
+.mapboxgl-popup.hover-pop .hover-card{
+.mapboxgl-popup.hover-pop .hover-card:hover{
+.mapboxgl-popup.hover-pop .hover-card.selected,
+.mapboxgl-popup.hover-pop .hover-card[aria-selected="true"]{
+.mapboxgl-popup.hover-pop{
+.hover-card img, .mapboxgl-popup .hover-card img{
+} } .mapboxgl-popup.hover-pop.hover-multi-list{
+.mapboxgl-popup.hover-pop.hover-multi-list .mapboxgl-popup-content{
+.mapboxgl-popup.hover-pop.hover-multi-list .multi-hover{
+.mapboxgl-popup.hover-pop:not(.hover-multi-list){
+.mapboxgl-popup.hover-pop .mapboxgl-popup-content{
+.mapboxgl-popup.hover-multi-list .mapboxgl-popup-content{
+.mapboxgl-popup.hover-multi-list .multi-hover{
+.mapboxgl-popup.hover-multi-list .multi-item .txt{
+.mapboxgl-popup.hover-multi-list .multi-item .t{
+#filterModal .mapboxgl-ctrl-group button{background:#fff;border:1px solid #fff;}
+  #filterModal .mapboxgl-ctrl-top-right{left:8px;right:auto;}
+</style>
+<style id="litepicker">
+#filterModal .litepicker [role="button"]{
+#filterModal .litepicker [role="button"]:hover{
+.open-posts .post-calendar .litepicker{
+.open-posts .post-calendar .litepicker-day.is-highlighted{
+.open-posts .post-calendar .litepicker-day.is-selected,
+.open-posts .post-calendar .litepicker-day.is-start-date.is-end-date{
 </style>
 </head>
-<body class="mode-map" style="padding-bottom:var(--footer-h);">
+<body class="mode-map">
   <header class="header" role="banner">
     <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
       <span class="btn-label">List</span>
@@ -2124,7 +2148,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
         <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-        <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+        <div class="sort-options" role="group" aria-label="Sort order">
           <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
           <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
           <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
@@ -2267,7 +2291,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           <div class="modal-field">
             <label for="themePreset">Select Theme</label>
             <div class="preset-select">
-              <select id="themePreset" style="width:250px"></select>
+              <select id="themePreset"></select>
               <button type="button" id="refreshTheme">Refresh</button>
             </div>
           </div>
@@ -2290,14 +2314,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           <div id="styleControls"></div>
           <div class="modal-field">
             <label for="themeRestore">Restore Backup</label>
-            <select id="themeRestore" style="width:250px"></select>
+            <select id="themeRestore"></select>
             <button type="button" data-restore="theme">Restore</button>
           </div>
         </div>
           <div id="tab-map" class="tab-panel">
             <div class="modal-field">
               <label for="mapTheme">Map Colour</label>
-              <div style="display:flex;align-items:center;gap:4px;">
+              <div class="flex-row">
               <select id="mapTheme">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
@@ -2325,7 +2349,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
             </div>
             <div class="modal-field">
               <label for="skyTheme">Sky Colour</label>
-              <div style="display:flex;align-items:center;gap:4px;">
+              <div class="flex-row">
               <select id="skyTheme">
                 <option value="default">Default</option>
                 <option value="sunset">Sunset</option>
@@ -2431,7 +2455,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           </div>
           <div class="modal-field">
             <label for="settingsRestore">Restore Backup</label>
-            <select id="settingsRestore" style="width:250px"></select>
+            <select id="settingsRestore"></select>
             <button type="button" data-restore="settings">Restore</button>
           </div>
         </div>
