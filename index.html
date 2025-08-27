@@ -1520,9 +1520,9 @@ body.hide-results .closed-posts{
   cursor:pointer;
 }
 
-.open-posts .venue-info{margin-top:4px;font-size:13px;}
+.open-posts .venue-info{margin-top:4px;font-size:inherit;}
 
-.open-posts .session-info{margin-top:8px;font-size:13px;}
+.open-posts .session-info{margin-top:8px;font-size:inherit;}
 
 
 
@@ -1578,9 +1578,8 @@ body.hide-results .closed-posts{
 }
 
 @media (max-width:1000px){
-  .results-col{display:none;}
+  .results-col{width:100%;}
   .closed-posts{left:0;}
-  #resultsToggle{display:none;}
 }
 
 @media (max-width:840px){
@@ -2124,7 +2123,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
-      <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
+      <picture>
+        <source media="(max-width:600px)" srcset="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png">
+        <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
+      </picture>
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist"><button id="tab-posts" role="tab" aria-selected="false">Posts</button>
         <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
@@ -2565,7 +2567,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
         body.innerHTML = msg;
         if(!/\<img/i.test(msg)){
-          body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap logo" />');
+          const logoPath = window.matchMedia('(max-width:600px)').matches ?
+            'https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap%20logo%202011-09-30h.png' :
+            'https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png';
+          body.insertAdjacentHTML('afterbegin', `<img src="${logoPath}" alt="FunMap logo" />`);
         }
         toggleModal(document.getElementById('welcomeModal'));
         body.style.padding = '20px';
@@ -3256,7 +3261,7 @@ function makePosts(){
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
-      const shouldHide = storedHidden || spinEnabled;
+      const shouldHide = storedHidden || spinEnabled || window.matchMedia('(max-width:1000px)').matches;
       if(shouldHide){
         document.body.classList.add('hide-results');
         resultsToggle.setAttribute('aria-pressed','false');
@@ -4222,6 +4227,7 @@ function makePosts(){
         });
         const lp = calendarEl.querySelector('.litepicker');
         if(lp && mapEl) lp.style.width = mapEl.offsetWidth + 'px';
+        if(lp && sessMenu && window.matchMedia('(min-width:1001px)').matches) sessMenu.style.width = lp.offsetWidth + 'px';
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         let ignoreSelect = false;
         function highlightMonth(){
@@ -5836,23 +5842,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const sel = document.getElementById('themePreset');
         if(sel) sel.value = idx;
         applyPreset(presets[idx]);
-        return;
+        return true;
       }
     }
     const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
     if(saved){
       localStorage.removeItem('selectedCssTheme');
       applyPresetData(saved);
+      return true;
     }
+    return false;
   }
 
 
   buildStyleControls();
   syncAdminControls();
-  applyAdmin();
   defaultTheme = collectThemeValues();
   loadPresets();
-  loadSavedTheme();
+  const applied = loadSavedTheme();
+  if(!applied) applyAdmin();
   currentState = collectThemeValues();
   updateHistoryButtons();
 
