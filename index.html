@@ -872,6 +872,7 @@ select option:hover{
 body.hide-results .results-col{
   width: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .subheader{
@@ -1941,7 +1942,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 #main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
 .results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
-body.hide-results .results-col{width:0;padding:0;}
+body.hide-results .results-col{width:0;padding:0;overflow:hidden;}
 .map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
 .closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow:auto;padding:12px 6px 12px 0;}
 body.hide-results .closed-posts{left:0;}
@@ -2403,7 +2404,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, memberGeocoder, spinning = false, datePicker, todayWasOn = false,
+      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = false, datePicker, todayWasOn = false,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -3306,6 +3307,14 @@ function makePosts(){
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 5) return;
       spinning = true;
+      resultsWasHidden = document.body.classList.contains('hide-results');
+      if(!resultsWasHidden){
+        document.body.classList.add('hide-results');
+        const resultsToggle = document.getElementById('resultsToggle');
+        const resultsCol = document.querySelector('.results-col');
+        if(resultsToggle) resultsToggle.setAttribute('aria-pressed','false');
+        if(resultsCol) resultsCol.setAttribute('aria-hidden','true');
+      }
       renderLists(filtered);
       function step(){
         if(!spinning || !map) return;
@@ -3322,6 +3331,13 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
+      if(!resultsWasHidden){
+        const resultsToggle = document.getElementById('resultsToggle');
+        const resultsCol = document.querySelector('.results-col');
+        document.body.classList.remove('hide-results');
+        if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
+        if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
+      }
     }
 
     function haltSpin(){
@@ -5097,6 +5113,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         `;
         fs.appendChild(stickyRow);
       }
+      if(area.key === 'filter'){
+        fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
+      }
+      if(area.key === 'subheader'){
+        fs.appendChild(createTextPickerRow('addressPlaceholder','Address Placeholder','btn-c'));
+      }
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
@@ -5138,8 +5160,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     });
     misc.appendChild(createTextPickerRow('modalText','Image Modal Text','modalBg-c'));
     misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
-    misc.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
-    misc.appendChild(createTextPickerRow('addressPlaceholder','Address Placeholder','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
     dropdown.className = 'admin-fieldset collapsed';
