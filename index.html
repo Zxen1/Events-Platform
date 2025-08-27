@@ -1147,12 +1147,10 @@ body.hide-results .results-col{
   left: var(--results-w);
   right: 0;
   overflow:auto;
-  padding:0 6px 0 0;
+  padding:0;
   color:#000;
   background:rgba(0,0,0,0.7);
 }
-.closed-posts .res-list{overflow:visible;}
-.closed-posts{color:#000;padding:0 14px 0 0;}
 .closed-posts .card{background:var(--list-background);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:0}
@@ -2132,7 +2130,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding:12px;margin:0;}
 .res-list .thumb{width:80px;height:80px;}
-.closed-posts .res-list{padding:12px;padding-bottom:0;margin:0;}
+.closed-posts .res-list{height:100%;overflow:auto;padding:12px;margin:0;box-sizing:border-box;}
 .closed-posts .thumb{width:80px;height:80px;}
 
 
