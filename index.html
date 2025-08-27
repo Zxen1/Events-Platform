@@ -2326,7 +2326,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <label for="mapTheme">Map Colour</label>
               <div style="display:flex;align-items:center;gap:4px;">
-              <select id="mapTheme" style="width:250px">
+              <select id="mapTheme">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
                 <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
                 <option value="mapbox://styles/mapbox/light-v11">Light</option>
@@ -2335,7 +2335,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
                 <option value="mapbox://styles/mapbox/navigation-day-v1">Navigation Day</option>
                 <option value="mapbox://styles/mapbox/navigation-night-v1">Navigation Night</option>
-                  <option value="mapbox://styles/mapbox/standard">Standard</option>
+                  <option value="mapbox://styles/mapbox/standard" selected>Standard</option>
                   <option value="mapbox://styles/mapbox/satellite-streets-v12">Standard Satellite</option>
                 <option value="mapbox://styles/mapbox/traffic-day-v2">Traffic Day</option>
                 <option value="mapbox://styles/mapbox/traffic-night-v2">Traffic Night</option>
@@ -2354,10 +2354,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <label for="skyTheme">Sky Colour</label>
               <div style="display:flex;align-items:center;gap:4px;">
-              <select id="skyTheme" style="width:250px">
+              <select id="skyTheme">
                 <option value="default">Default</option>
                 <option value="sunset">Sunset</option>
-                <option value="night">Night</option>
+                <option value="night" selected>Night</option>
                 <option value="aurora">Aurora</option>
                 <option value="dawn">Dawn</option>
                 <option value="dusk">Dusk</option>
@@ -2395,10 +2395,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="modal-field">
               <div class="control-row">
                 <label for="spinLoadStart">Spin on Load</label>
-                <input type="checkbox" id="spinLoadStart" />
+                <input type="checkbox" id="spinLoadStart" checked />
               </div>
               <div id="spinType">
-                <label for="spinTypeAll"><input type="radio" id="spinTypeAll" name="spinType" value="all" /> Everyone</label>
+                <label for="spinTypeAll"><input type="radio" id="spinTypeAll" name="spinType" value="all" checked /> Everyone</label>
                 <label for="spinTypeNew"><input type="radio" id="spinTypeNew" name="spinType" value="new" /> New Users</label>
               </div>
             </div>
@@ -2410,7 +2410,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
             <div class="modal-field">
               <label for="mapRestore">Restore Backup</label>
-              <select id="mapRestore" style="width:250px"></select>
+              <select id="mapRestore"></select>
               <button type="button" data-restore="map">Restore</button>
             </div>
             <div class="modal-field">
@@ -2514,7 +2514,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
     let mode = 'map';
-    const DEFAULT_SPIN_SPEED = 0.3;
+    const DEFAULT_SPIN_SPEED = 0.2;
     const DEFAULT_WELCOME = '<p>Welcome!</p>';
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
@@ -2539,13 +2539,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     }
 
       let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false,
-          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
+          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/outdoors-v12',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
+          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       function updateLogoClickState(){
@@ -4228,7 +4228,7 @@ function makePosts(){
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
-            style: 'mapbox://styles/mapbox/streets-v11',
+            style: mapStyle,
             center: [loc.lng, loc.lat],
             zoom: 10,
             interactive: false
@@ -5889,6 +5889,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function loadSavedTheme(){
+    const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
+    if(saved){
+      localStorage.removeItem('selectedCssTheme');
+      applyPresetData(saved);
+      return true;
+    }
     const cssTheme = localStorage.getItem('selectedCssTheme');
     if(cssTheme){
       const idx = presets.findIndex(p=>p.css===cssTheme);
@@ -5898,12 +5904,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         applyPreset(presets[idx]);
         return true;
       }
-    }
-    const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
-    if(saved){
-      localStorage.removeItem('selectedCssTheme');
-      applyPresetData(saved);
-      return true;
     }
     return false;
   }
