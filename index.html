@@ -58,6 +58,7 @@
       --dropdown-radius: 6px;
       --session-available: #0000ff;
       --session-selected: #008000;
+      --filter-btn-active: #ff0000;
 }
 
 *{
@@ -198,7 +199,8 @@ select option:hover{
     max-height: var(--header-h);
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    gap: 20px;
     padding: 0 20px;
     position: fixed;
     top: 0;
@@ -208,10 +210,6 @@ select option:hover{
   }
 
   .logo{
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -227,10 +225,6 @@ select option:hover{
 }
 
 .view-toggle{
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   gap: 8px;
 }
@@ -274,13 +268,6 @@ select option:hover{
 }
 @media (max-width:1000px){
   #resultsToggle{display:none;}
-  .view-toggle{left:20px;}
-}
-
-@media (max-width:650px){
-  .logo{left:20px; transform:translateY(-50%);}
-  .view-toggle{left:80px;}
-  .header{justify-content:flex-end;}
 }
 
 .view-toggle button[aria-current="page"],
@@ -313,6 +300,7 @@ select option:hover{
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
 }
 
 .auth button{
@@ -386,16 +374,15 @@ select option:hover{
   border:1px solid var(--btn);
   border-radius:8px;
   padding:10px;
-  width:250px;
 }
 .admin-fieldset legend{cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
 .admin-fieldset legend .fs-toggle{margin-left:8px;padding:2px 6px;font-size:12px;}
 .admin-fieldset.collapsed > *:not(legend):not(.fieldset-actions){display:none;}
 #adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminModal .admin-fieldset{
-  flex:0 0 250px;
+  flex:1 1 250px;
   min-width:250px;
-  max-width:250px;
+  max-width:none;
 }
   #adminModal .modal-content,
   #memberModal .modal-content{
@@ -973,8 +960,8 @@ body.hide-results .results-col{
 }
 
 #filterBtn.active{
-  background:red;
-  border-color:red;
+  background:var(--filter-btn-active);
+  border-color:var(--filter-btn-active);
   color:#fff;
 }
 
@@ -1129,12 +1116,32 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:auto;left:50%;transform:translateX(-50%);z-index:10;min-width:240px;max-width:300px;width:100%;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:32px;display:flex;align-items:center;min-width:240px !important;padding:0;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:32px;}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:32px;padding:0 30px;font-size:14px;}
 .geocoder .mapboxgl-ctrl-geocoder--button,
 .geocoder .mapboxgl-ctrl-geocoder--icon{color:var(--text);display:flex;align-items:center;justify-content:center;}
+
+.mapboxgl-ctrl-geocoder,
+.mapboxgl-ctrl-geolocate,
+.mapboxgl-ctrl-compass{
+  background:#fff;
+  border:1px solid #fff;
+  padding:0;
+}
+
+.mapboxgl-ctrl-geolocate,
+.mapboxgl-ctrl-compass{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
+.mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
+  margin:0;
+}
 @media (max-width:1000px){.geocoder{position:static;left:auto;transform:none;margin-left:auto;flex:1;}}
 
 
@@ -2299,6 +2306,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         <div class="tab-bar">
           <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Themes</button>
           <button type="button" class="tab-btn" data-tab="map">Map</button>
+          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
         </div>
       </div>
@@ -2466,6 +2474,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </div>
             </div>
         </div>
+        <div id="tab-forms" class="tab-panel">
+          <h3>Subcategory Form Builder</h3>
+          <div class="palette" id="fieldPalette">
+            <div class="field-item" draggable="true" data-type="text">Text</div>
+            <div class="field-item" draggable="true" data-type="date">Date</div>
+            <div class="field-item" draggable="true" data-type="image">Image</div>
+            <div class="field-item" draggable="true" data-type="location">Location</div>
+          </div>
+          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
+        </div>
         <div id="tab-settings" class="tab-panel">
           <div class="modal-field">
             <label for="catList">Categories</label>
@@ -2483,14 +2501,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label for="welcomeMessage">Welcome Message</label>
             <textarea id="welcomeMessage" rows="4" placeholder="<p>Welcome!</p>"></textarea>
           </div>
-          <h3>Subcategory Form Builder</h3>
-          <div class="palette" id="fieldPalette">
-            <div class="field-item" draggable="true" data-type="text">Text</div>
-            <div class="field-item" draggable="true" data-type="date">Date</div>
-            <div class="field-item" draggable="true" data-type="image">Image</div>
-            <div class="field-item" draggable="true" data-type="location">Location</div>
-          </div>
-          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
           <div class="modal-field">
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
@@ -2699,7 +2709,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       if(typeof window.adjustListHeight === 'function'){
         window.adjustListHeight();
       }
-      if(window.innerWidth >= 1000 && typeof renderLists === 'function' && filtered && filtered.length){
+      if(typeof renderLists === 'function' && filtered && filtered.length){
         const resEl = document.getElementById('results');
         if(resEl && resEl.children.length === 0){
           renderLists(filtered);
@@ -4284,6 +4294,7 @@ function makePosts(){
               picker.setDate(dt.full);
               picker.gotoDate(dt.full);
               ignoreSelect = false;
+              picker.setOptions({ highlightedDates: dateStrings });
               highlightMonth();
             } else {
               const priceVals = loc.dates.flatMap(d=>[d.price.adult,d.price.kid,d.price.pensioner]);
@@ -4294,6 +4305,7 @@ function makePosts(){
               sessionInfo.innerHTML = `<div>💲 $${minP.toFixed(2)} - $${maxP.toFixed(2)} | 📅 ${first} - ${last}</div>`;
               if(sessBtn) sessBtn.innerHTML = `<span class="sess-label">Select Session</span>${loc.dates.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}`;
               picker.clearSelection();
+              picker.setOptions({ highlightedDates: dateStrings });
               highlightMonth();
             }
             sessMenu.hidden = true;
@@ -4745,7 +4757,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
-    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button'], optionsMenu:['.options-menu']}},
+    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button'], optionsMenu:['.options-menu'], mapCtrl:['.mapboxgl-ctrl-geocoder','.mapboxgl-ctrl-geolocate','.mapboxgl-ctrl-compass']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
@@ -4995,7 +5007,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','mapCtrl','menu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -5106,7 +5118,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-btn-active'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5254,6 +5266,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       if(area.selectors.header) types.push('header');
       if(area.selectors.image) types.push('image');
       if(area.selectors.optionsMenu) types.push('optionsMenu');
+      if(area.selectors.mapCtrl) types.push('mapCtrl');
       if(area.selectors.menu) types.push('menu');
         types.forEach(type=>{
           const labelMap = {
@@ -5271,6 +5284,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             header: 'Header',
             image: 'Image Box',
             optionsMenu: 'Options Menu',
+            mapCtrl: 'Map Controls',
             menu: 'Menu Background'
           };
           const label = labelMap[type] || type;
@@ -5412,6 +5426,15 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         fs.appendChild(bgRow);
         fs.appendChild(createTextPickerRow('dateRangeText','Date Range Box Text','modalBg-c'));
         fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','modalBg-c'));
+        const activeRow = document.createElement('div');
+        activeRow.className = 'control-row';
+        activeRow.innerHTML = `
+            <label>Active Button</label>
+            <div class="color-group">
+              <input id="filterBtnActive-c" type="color" data-mode="${COLOR_PICKER_MODE}" value="#ff0000" />
+            </div>
+        `;
+        fs.appendChild(activeRow);
       }
       wrap.appendChild(fs);
     });
@@ -5538,7 +5561,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-btn-active'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -5549,7 +5572,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
     });
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','mapCtrl','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -5586,7 +5609,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
                 const blur = sb ? sb.value : 0;
                 el.style.textShadow = `${x}px ${y}px ${blur}px ${sc.value}`;
               }
-            } else if(type==='btn'){
+            } else if(type==='btn' || type==='mapCtrl'){
               if(color){
                 el.style.backgroundColor = color;
                 el.style.borderColor = color;
@@ -5626,7 +5649,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','mapCtrl','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -5673,7 +5696,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dateRangeText','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dateRangeText','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','filterBtnActive'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -5689,7 +5712,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-btn-active',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5729,7 +5752,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
-      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','title','btn','btnText','header','image','optionsMenu','mapCtrl','menu'].forEach(type=>{
         const entry = data[`${area.key}-${type}`];
         if(!entry) return;
         const selectors = area.selectors[type] || [];
@@ -5753,7 +5776,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
             const s = entry.shadow; const x = s.x || 0; const y = s.y || 0; const blur = s.blur || 0;
             rules.push(`text-shadow:${x}px ${y}px ${blur}px ${s.color};`);
           }
-        } else if(type==='btn'){
+        } else if(type==='btn' || type==='mapCtrl'){
           if(entry.color) rules.push(`background-color:${entry.color};border-color:${entry.color};`);
           if(entry.shadow){
             const s = entry.shadow; const blur = s.blur || 0;
@@ -5819,7 +5842,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dateRangeText:'--filter-date-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-btn-active'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
