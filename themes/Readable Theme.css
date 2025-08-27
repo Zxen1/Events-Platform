@@ -46,7 +46,7 @@ body{background-color:rgba(41,41,41,1);}
 .open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .open-posts .detail-header{background-color:#000000;}
 .open-posts .img-box{background-color:#000000;}
-.open-posts .location-menu button{background-color:#000000;}
+.open-posts .venue-menu button{background-color:#000000;}
 .open-posts .session-menu button{background-color:#000000;}
 footer{background-color:rgba(0,0,0,0);}
 footer .foot-row .foot-item{background-color:rgba(0,0,0,0.32);box-shadow:0 0 0px #000000;}
