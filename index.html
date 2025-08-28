@@ -2655,14 +2655,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         }
         togglePanel(document.getElementById('welcomePanel'));
         body.style.padding = '20px';
-        const content = document.querySelector('#welcomePanel .panel-content');
-        const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : 0;
-        if(content){
-          content.style.left = '50%';
-          content.style.transform = 'translateX(-50%)';
-          content.style.top = `${topPos + 100}px`;
-        }
       }
 
       logoEl?.addEventListener('click', () => {
@@ -4569,16 +4561,18 @@ function openPanel(m){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+      const subHead = document.querySelector('.subheader');
+      const topPos = subHead ? subHead.getBoundingClientRect().top : headerH;
       content.style.left = '0';
       content.style.right = '0';
-      content.style.top = `${headerH}px`;
+      content.style.top = `${topPos}px`;
       content.style.bottom = `${footerH}px`;
       content.style.transform = 'none';
       content.style.maxHeight = '';
     } else if(m.id==='filterPanel'){
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+        const topPos = subHead ? subHead.getBoundingClientRect().top : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
         const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
         const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left = '0';
@@ -4590,6 +4584,14 @@ function openPanel(m){
       };
       position();
       requestAnimationFrame(position);
+    } else if(m.id==='welcomePanel'){
+      const rootStyles = getComputedStyle(document.documentElement);
+      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+      const subHead = document.querySelector('.subheader');
+      const baseTop = subHead ? subHead.getBoundingClientRect().bottom : headerH;
+      content.style.left = '50%';
+      content.style.top = `${baseTop + 20}px`;
+      content.style.transform = 'translateX(-50%)';
     } else {
       content.style.left = '50%';
       content.style.top = '50%';
@@ -4630,7 +4632,7 @@ function movePanelToEdge(panel, side){
   const content = panel.querySelector('.panel-content');
   if(!content) return;
   const subHead = document.querySelector('.subheader');
-  const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  const topPos = subHead ? subHead.getBoundingClientRect().top : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
   content.style.top = `${topPos}px`;
   content.style.transform = 'none';
   if(side === 'left'){
