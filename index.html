@@ -2630,6 +2630,7 @@ select option:hover{
   </div>
 
   <script>
+  const sg = window.spinGlobals || {};
   let startPitch, startBearing;
 
   (function(){
@@ -4775,7 +4776,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   const memberModal = document.getElementById('memberModal');
   const adminModal = document.getElementById('adminModal');
   const filterModal = document.getElementById('filterModal');
-  const sg = window.spinGlobals || {};
 
   memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
     adminBtn && adminBtn.addEventListener('click', ()=>{
@@ -5367,7 +5367,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     if(!wrap) return;
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
-      fs.className = 'admin-fieldset collapsed';
+      fs.className = 'admin-fieldset';
       fs.dataset.key = area.key;
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
@@ -5377,7 +5377,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
       toggleBtn.className = 'fs-toggle';
-      toggleBtn.textContent = '+';
+      toggleBtn.textContent = '−';
       toggleBtn.addEventListener('click', e=>{
         e.stopPropagation();
         fs.classList.toggle('collapsed');
@@ -5638,13 +5638,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
-    misc.className = 'admin-fieldset collapsed';
+    misc.className = 'admin-fieldset';
     const miscLg = document.createElement('legend');
     miscLg.textContent = 'Miscellaneous';
     const miscToggle = document.createElement('button');
     miscToggle.type = 'button';
     miscToggle.className = 'fs-toggle';
-    miscToggle.textContent = '+';
+    miscToggle.textContent = '−';
     miscToggle.addEventListener('click', e=>{
       e.stopPropagation();
       misc.classList.toggle('collapsed');
@@ -5677,13 +5677,13 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
-    dropdown.className = 'admin-fieldset collapsed';
+    dropdown.className = 'admin-fieldset';
     const ddLg = document.createElement('legend');
     ddLg.textContent = 'Dropdown Boxes';
     const ddToggle = document.createElement('button');
     ddToggle.type = 'button';
     ddToggle.className = 'fs-toggle';
-    ddToggle.textContent = '+';
+    ddToggle.textContent = '−';
     ddToggle.addEventListener('click', e=>{
       e.stopPropagation();
       dropdown.classList.toggle('collapsed');
@@ -6023,7 +6023,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   function loadPresets(){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
-    presets = [...stored];
+    const defaults = [
+      {name:'Default Theme', css:'theme-default'},
+      {name:'Clean Slate', css:'theme-clean-slate'}
+    ];
+    presets = [...defaults, ...stored];
     updatePresetOptions();
   }
 
