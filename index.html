@@ -3350,8 +3350,8 @@ function makePosts(){
         if(!geoWrap || !addressTitle || !addressField) return;
         const w = window.innerWidth;
         if(w < 650){
-          addressTitle.style.display = '';
-          addressField.style.display = '';
+          addressTitle.style.display = 'block';
+          addressField.style.display = 'block';
           addressField.appendChild(geoWrap);
           geoWrap.style.position = 'static';
           geoWrap.style.transform = 'none';
