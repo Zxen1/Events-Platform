@@ -34,8 +34,8 @@
       --btn-hover: rgba(0,0,0,1);
       --btn-active: rgba(0,0,0,1);
       --btn-2: var(--btn-hover);
-      --modal-bg: rgba(0,0,0,0.62);
-      --modal-text: #000000;
+      --panel-bg: rgba(0,0,0,0.62);
+      --panel-text: #000000;
       --footer-h: 70px;
       --list-background: rgba(0,0,0,0.37);
       --scrollbar-track: rgba(0,0,0,0);
@@ -357,7 +357,7 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   opacity: .9;
 }
 
-.modal{
+.panel{
   position:fixed;
   top:0;
   left:0;
@@ -368,8 +368,8 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   z-index:2000;
   pointer-events:none;
 }
-.modal.show{display:block;}
-.modal-content{
+.panel.show{display:block;}
+.panel-content{
   position:absolute;
   border-radius:8px;
   width:90%;
@@ -380,16 +380,16 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   overflow:hidden;
   pointer-events:auto;
 }
-.modal-content .resizer{position:absolute;z-index:10;background:transparent;}
-.modal-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
-.modal-content .resizer.s{bottom:0;left:0;right:0;height:6px;cursor:s-resize;}
-.modal-content .resizer.e{top:0;right:0;bottom:0;width:6px;cursor:e-resize;}
-.modal-content .resizer.w{top:0;left:0;bottom:0;width:6px;cursor:w-resize;}
-.modal-content .resizer.ne{top:0;right:0;width:10px;height:10px;cursor:ne-resize;}
-.modal-content .resizer.nw{top:0;left:0;width:10px;height:10px;cursor:nw-resize;}
-.modal-content .resizer.se{bottom:0;right:0;width:10px;height:10px;cursor:se-resize;}
-.modal-content .resizer.sw{bottom:0;left:0;width:10px;height:10px;cursor:sw-resize;}
-.modal-body{
+.panel-content .resizer{position:absolute;z-index:10;background:transparent;}
+.panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
+.panel-content .resizer.s{bottom:0;left:0;right:0;height:6px;cursor:s-resize;}
+.panel-content .resizer.e{top:0;right:0;bottom:0;width:6px;cursor:e-resize;}
+.panel-content .resizer.w{top:0;left:0;bottom:0;width:6px;cursor:w-resize;}
+.panel-content .resizer.ne{top:0;right:0;width:10px;height:10px;cursor:ne-resize;}
+.panel-content .resizer.nw{top:0;left:0;width:10px;height:10px;cursor:nw-resize;}
+.panel-content .resizer.se{bottom:0;right:0;width:10px;height:10px;cursor:se-resize;}
+.panel-content .resizer.sw{bottom:0;left:0;width:10px;height:10px;cursor:sw-resize;}
+.panel-body{
   flex:1 1 auto;
   overflow:auto;
   padding:0 20px 20px;
@@ -405,24 +405,24 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
 .admin-fieldset legend{cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
 .admin-fieldset legend .fs-toggle{margin-left:8px;padding:2px 6px;font-size:12px;}
 .admin-fieldset.collapsed > *:not(legend):not(.fieldset-actions){display:none;}
-#adminModal #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
-#adminModal .admin-fieldset{
+#adminPanel #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
+#adminPanel .admin-fieldset{
   flex:0 0 250px;
   min-width:250px;
   max-width:250px;
 }
-  #adminModal .modal-content,
-  #memberModal .modal-content{
+  #adminPanel .panel-content,
+  #memberPanel .panel-content{
     width:600px;
     max-width:90%;
     max-height:90%;
   }
 
-  #memberModal .modal-content{
+  #memberPanel .panel-content{
     background:rgba(0,0,0,0.7);
     color:#fff;
   }
-#filterModal .modal-content{
+#filterPanel .panel-content{
   width:350px;
   max-width:600px;
   max-height:90%;
@@ -430,32 +430,32 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   color:#fff;
 }
 
-#filterModal button,
-#filterModal .sq,
-#filterModal .tiny,
-#filterModal .btn,
-#adminModal button,
-#memberModal button{
+#filterPanel button,
+#filterPanel .sq,
+#filterPanel .tiny,
+#filterPanel .btn,
+#adminPanel button,
+#memberPanel button{
   background: var(--btn);
   color: var(--ink);
   border: none;
 }
-#filterModal input[type="text"]{
-  background: var(--modal-bg);
-  color: var(--modal-text);
+#filterPanel input[type="text"]{
+  background: var(--panel-bg);
+  color: var(--panel-text);
 }
-#filterModal .litepicker [role="button"]{
+#filterPanel .litepicker [role="button"]{
   background: initial;
   color: initial;
   border: none;
 }
-#filterModal .litepicker [role="button"]:hover{
+#filterPanel .litepicker [role="button"]:hover{
   background: initial;
   color: initial;
   border: none;
 }
-#memberModal #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
-#memberModal input[type=color]{
+#memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
+#memberPanel input[type=color]{
   border-radius:4px;
   padding:0;
   height:40px;
@@ -474,22 +474,22 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   height:auto;
   margin-bottom:10px;
 }
-#memberModal .location-info{margin-top:4px;font-size:13px;}
+#memberPanel .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
-  #adminModal .modal-content,
-  #memberModal .modal-content,
-  #filterModal .modal-content{
+  #adminPanel .panel-content,
+  #memberPanel .panel-content,
+  #filterPanel .panel-content{
     width:95%;
     max-width:95%;
     max-height:95%;
   }
 }
-#adminModal legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
-#adminModal .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
-#adminModal .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminModal .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
-#adminModal .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
-#adminModal .color-group{
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;justify-content:flex-start;cursor:pointer;user-select:none;}
+#adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
+#adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
+#adminPanel .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+#adminPanel .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
+#adminPanel .color-group{
   flex:1 1 220px;
   width:100%;
   max-width:220px;
@@ -499,7 +499,7 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   position:relative;
   margin-left:auto;
 }
-#adminModal .shadow-group{
+#adminPanel .shadow-group{
   flex:1 1 220px;
   width:100%;
   max-width:220px;
@@ -507,21 +507,21 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   gap:4px;
   align-items:center;
 }
-#adminModal .shadow-group input[type=color]{
+#adminPanel .shadow-group input[type=color]{
   width:40px;
   height:40px;
   padding:0;
   border-radius:4px;
 }
-#adminModal .shadow-group input[type=number]{
+#adminPanel .shadow-group input[type=number]{
   flex:1 1 0;
 }
-#adminModal .textpicker{
+#adminPanel .textpicker{
   flex:1 1 220px;
   max-width:220px;
   position:relative;
 }
-#adminModal .textpicker .text-preview{
+#adminPanel .textpicker .text-preview{
   width:100%;
   height:40px;
   border-radius:8px;
@@ -530,7 +530,7 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   justify-content:center;
   cursor:pointer;
 }
-#adminModal .textpicker .text-popup{
+#adminPanel .textpicker .text-popup{
   display:none;
   position:absolute;
   top:44px;
@@ -542,36 +542,36 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   padding:8px;
   width:220px;
 }
-#adminModal .textpicker.open .text-popup{display:block;}
-#adminModal .textpicker .text-popup select,
-#adminModal .textpicker .text-popup input[type=color]{
+#adminPanel .textpicker.open .text-popup{display:block;}
+#adminPanel .textpicker .text-popup select,
+#adminPanel .textpicker .text-popup input[type=color]{
   width:100%;
   margin-top:4px;
   border-radius:var(--dropdown-radius);
   padding:4px;
   box-sizing:border-box;
 }
-#adminModal .textpicker .text-popup input[type=color]{height:40px;padding:0;}
-#adminModal .textpicker .text-popup .shadow-group{
+#adminPanel .textpicker .text-popup input[type=color]{height:40px;padding:0;}
+#adminPanel .textpicker .text-popup .shadow-group{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
   margin-top:4px;
 }
-#adminModal .textpicker .text-popup .shadow-group input[type=color],
-#adminModal .textpicker .text-popup .shadow-group input[type=number]{
+#adminPanel .textpicker .text-popup .shadow-group input[type=color],
+#adminPanel .textpicker .text-popup .shadow-group input[type=number]{
   width:100%;
   height:40px;
   border-radius:var(--dropdown-radius);
   padding:0;
   box-sizing:border-box;
 }
-#adminModal .admin-fieldset input,
-#adminModal .admin-fieldset select{
+#adminPanel .admin-fieldset input,
+#adminPanel .admin-fieldset select{
   width:100%;
   max-width:220px;
 }
-#adminModal .control-row select{
+#adminPanel .control-row select{
   flex:1 1 220px;
   width:100%;
   max-width:220px;
@@ -579,11 +579,11 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   border-radius:var(--dropdown-radius);
   padding:4px;
 }
-#adminModal .color-group input[type=color],
-#adminModal .color-group input[type=range]{
+#adminPanel .color-group input[type=color],
+#adminPanel .color-group input[type=range]{
   width:100%;
 }
-#adminModal .color-group input[type=color]{
+#adminPanel .color-group input[type=color]{
   border-radius:4px;
   padding:0;
   height:40px;
@@ -591,8 +591,8 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   cursor:pointer;
   pointer-events:auto;
 }
-#adminModal .tab-bar{display:flex;gap:6px;}
-#adminModal .tab-bar button{
+#adminPanel .tab-bar{display:flex;gap:6px;}
+#adminPanel .tab-bar button{
   flex:1;
   padding:6px 10px;
   border-radius:6px;
@@ -601,30 +601,30 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   color:var(--button-text);
   cursor:pointer;
 }
-#adminModal .tab-bar button[aria-selected="true"]{
+#adminPanel .tab-bar button[aria-selected="true"]{
   background:var(--btn-hover);
   border-color:var(--btn-hover);
   color:var(--button-hover-text);
   font-weight:600;
 }
-#adminModal .tab-panel{display:none;}
-#adminModal .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
-#adminModal .marker-grid{display:flex;flex-direction:column;gap:8px;}
-#adminModal .marker-grid select{min-width:120px;}
-#adminModal .marker-options{display:flex;gap:8px;align-items:center;}
-#adminModal .marker-set{display:grid;grid-template-columns:repeat(10,max-content);gap:4px;}
-#adminModal .marker-set svg.shadow{filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));}
-#adminModal .marker-set svg.outline *{stroke:#000;stroke-width:1;}
-#adminModal input[type=range]{width:100%;}
-#adminModal .preset-actions{display:flex;gap:6px;margin:6px 0;}
-#adminModal .preset-actions input{flex:1;padding:6px;border-radius:4px;}
-#adminModal .preset-actions button{padding:6px 10px;}
-.modal-field{
+#adminPanel .tab-panel{display:none;}
+#adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+#adminPanel .marker-grid{display:flex;flex-direction:column;gap:8px;}
+#adminPanel .marker-grid select{min-width:120px;}
+#adminPanel .marker-options{display:flex;gap:8px;align-items:center;}
+#adminPanel .marker-set{display:grid;grid-template-columns:repeat(10,max-content);gap:4px;}
+#adminPanel .marker-set svg.shadow{filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));}
+#adminPanel .marker-set svg.outline *{stroke:#000;stroke-width:1;}
+#adminPanel input[type=range]{width:100%;}
+#adminPanel .preset-actions{display:flex;gap:6px;margin:6px 0;}
+#adminPanel .preset-actions input{flex:1;padding:6px;border-radius:4px;}
+#adminPanel .preset-actions button{padding:6px 10px;}
+.panel-field{
   margin:8px 0;
   display:flex;
   flex-direction:column;
 }
-#adminModal .modal-field{margin:0;max-width:320px;}
+#adminPanel .panel-field{margin:0;max-width:320px;}
 #baseColorRow{
   flex-direction:row;
   align-items:center;
@@ -636,21 +636,21 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   align-items:center;
   gap:6px;
 }
-.modal-field input,
-.modal-field textarea,
-.modal-field select{
+.panel-field input,
+.panel-field textarea,
+.panel-field select{
   padding:8px;
   border-radius:var(--dropdown-radius);
   border:none;
   width:100%;
   max-width:100%;
 }
-.modal-actions{
+.panel-actions{
   margin-top:10px;
   display:flex;
   gap:10px;
 }
-.modal-header{
+.panel-header{
   position:sticky;
   top:0;
   padding:10px 20px;
@@ -663,15 +663,15 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   gap:10px;
   flex-shrink:0;
 }
-.modal-header .header-top{
+.panel-header .header-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-.modal-header .modal-actions{
+.panel-header .panel-actions{
   margin-top:0;
 }
-.modal-header h2{
+.panel-header h2{
   margin:0;
 }
 .palette{
@@ -789,7 +789,7 @@ button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
   color: #fff;
 }
 
-#filterModal .field label.t{
+#filterPanel .field label.t{
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
@@ -1006,7 +1006,7 @@ body.filters-active #filterBtn{
   border-radius: 12px;
   object-fit: cover;
   display: block;
-  background: var(--modal-bg);
+  background: var(--panel-bg);
 }
 
 .meta{
@@ -1504,7 +1504,7 @@ body.hide-results .closed-posts{
 .open-posts .post-calendar .time-popup{
   position:absolute;
   inset:0;
-  background:var(--modal-bg);
+  background:var(--panel-bg);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1535,16 +1535,16 @@ body.hide-results .closed-posts{
 
 
 
-.img-modal{
+.img-panel{
   position:fixed;
   inset:0;
-  background:var(--modal-bg);
+  background:var(--panel-bg);
   display:flex;
   justify-content:center;
   align-items:center;
   z-index:1000;
 }
-.img-modal img{
+.img-panel img{
   max-width:90vw;
   max-height:90vh;
   cursor:pointer;
@@ -1743,7 +1743,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   flex: 0 0 auto;
   display: block;
-  background: var(--modal-bg);
+  background: var(--panel-bg);
 }
 
 .hover-card .t{
@@ -1810,7 +1810,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   object-fit: cover;
   display: block;
-  background: var(--modal-bg);
+  background: var(--panel-bg);
   flex: 0 0 auto;
 }
 
@@ -1900,7 +1900,7 @@ footer .foot-row .foot-item[aria-selected="true"],
   border-radius: 8px;
   flex: 0 0 auto;
   display: block;
-  background: var(--modal-bg);
+  background: var(--panel-bg);
 }
 
 .foot-item img{
@@ -2016,7 +2016,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 </style>
 <style id="theme-dark-transparency">
-:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--modal-bg:rgba(0,0,0,0.62);--modal-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
+:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
 .open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2097,32 +2097,32 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 .mapboxgl-popup .chip-small .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .mapboxgl-popup .multi-item .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .mapboxgl-popup .multi-item .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-#filterModal .modal-content{background-color:rgba(0,0,0,0.7);}
-#filterModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal button{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-#filterModal .sq{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-#filterModal .tiny{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-#filterModal .btn{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
-#filterModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .sq{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .tiny{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#filterModal .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal .modal-content{background-color:rgba(0,0,0,0.7);}
-#adminModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
-#adminModal #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
-#adminModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminModal #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal .modal-content{background-color:rgba(0,0,0,0.7);}
-#memberModal .modal-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal .modal-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal .modal-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberModal button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
-#memberModal button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .panel-content{background-color:rgba(0,0,0,0.7);}
+#filterPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .panel-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .panel-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel button{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+#filterPanel .sq{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+#filterPanel .tiny{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+#filterPanel .btn{background-color:#601a7a;border-color:#601a7a;box-shadow:0 0 0px #000000;}
+#filterPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .sq{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .tiny{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#filterPanel .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminPanel .panel-content{background-color:rgba(0,0,0,0.7);}
+#adminPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminPanel .panel-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminPanel .panel-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminPanel button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
+#adminPanel #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
+#adminPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#adminPanel #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberPanel .panel-content{background-color:rgba(0,0,0,0.7);}
+#memberPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberPanel .panel-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberPanel .panel-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+#memberPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
+#memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
 .res-list .thumb{width:80px;height:80px;}
 .closed-posts .res-list{padding-top:0;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:12px;padding-left:12px;margin-left:0px;}
@@ -2152,7 +2152,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </header>
   <div class="subheader">
-    <button id="filterBtn" aria-label="Open filters modal">Filters</button>
+    <button id="filterBtn" aria-label="Open filters panel">Filters</button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
@@ -2188,19 +2188,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
   </footer>
 
-  <div id="filterModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
+  <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
-          <div class="modal-actions">
-            <button type="button" class="move-left" aria-label="Move modal left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move modal right">&gt;</button>
-            <button type="button" class="close-modal">Close</button>
+          <div class="panel-actions">
+            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="close-panel">Close</button>
           </div>
         </div>
       </div>
-      <div class="modal-body">
+      <div class="panel-body">
         <section class="filters-col" aria-label="Filters">
           <div>
             <h3>Keywords</h3>
@@ -2238,38 +2238,38 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </div>
 
-  <div id="memberModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
+  <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
-          <div class="modal-actions">
+          <div class="panel-actions">
             <button type="submit" form="memberForm">Save</button>
-            <button type="button" class="move-left" aria-label="Move modal left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move modal right">&gt;</button>
-            <button type="button" class="close-modal">Close</button>
+            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="close-panel">Close</button>
           </div>
         </div>
       </div>
-      <form id="memberForm" class="modal-body">
-        <div class="modal-field">
+      <form id="memberForm" class="panel-body">
+        <div class="panel-field">
           <label for="mTitle">Title</label>
           <input type="text" id="mTitle" required />
         </div>
-        <div class="modal-field">
+        <div class="panel-field">
           <label for="mImage">Image</label>
           <input type="file" id="mImage" accept="image/*" />
         </div>
-        <div class="modal-field">
+        <div class="panel-field">
           <label for="mDate">Date</label>
           <input type="date" id="mDate" />
         </div>
-        <div class="modal-field">
+        <div class="panel-field">
           <label for="mLocation">Location</label>
           <div id="mLocation"></div>
           <div id="mLocationInfo" class="location-info"></div>
         </div>
-        <div class="modal-field">
+        <div class="panel-field">
           <label for="mColor">Color</label>
           <input type="color" id="mColor" data-mode="hex" value="#000000" />
         </div>
@@ -2277,17 +2277,17 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </div>
 
-  <div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-header">
+  <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-header">
         <div class="header-top">
           <h2>Admin Settings</h2>
-          <div class="modal-actions">
+          <div class="panel-actions">
             <button type="button" id="discardChanges">Discard Changes</button>
             <button type="button" id="saveNow">Save Now</button>
-            <button type="button" class="move-left" aria-label="Move modal left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move modal right">&gt;</button>
-            <button type="button" class="close-modal">Close</button>
+            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="close-panel">Close</button>
           </div>
         </div>
         <div class="tab-bar">
@@ -2297,9 +2297,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <button type="button" class="tab-btn" data-tab="forms">Forms</button>
         </div>
       </div>
-      <form id="adminForm" class="modal-body">
+      <form id="adminForm" class="panel-body">
         <div id="tab-theme" class="tab-panel active">
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="themePreset">Themes</label>
             <div class="preset-select">
               <select id="themePreset" style="width:250px"></select>
@@ -2311,7 +2311,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <button type="button" id="savePreset">Save Theme</button>
             <button type="button" id="downloadCss">Download CSS</button>
           </div>
-          <div class="modal-field" id="baseColorRow">
+          <div class="panel-field" id="baseColorRow">
             <div class="history-group">
               <button type="button" id="undoBtn">Undo</button>
               <button type="button" id="redoBtn">Redo</button>
@@ -2323,14 +2323,14 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
           <h3>Theme Builder</h3>
           <div id="styleControls"></div>
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="themeRestore">Restore Backup</label>
             <select id="themeRestore" style="width:250px"></select>
             <button type="button" data-restore="theme">Restore</button>
           </div>
         </div>
           <div id="tab-map" class="tab-panel">
-            <div class="modal-field">
+            <div class="panel-field">
               <label for="mapTheme">Theme</label>
               <select id="mapTheme" style="width:250px">
                 <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
@@ -2355,7 +2355,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="mapbox://styles/mapbox/vintage-v10">Vintage</option>
               </select>
             </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <label for="skyTheme">Sky</label>
               <select id="skyTheme" style="width:250px">
                 <option value="default">Default</option>
@@ -2372,43 +2372,43 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <option value="rainbow">Rainbow</option>
               </select>
             </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <label for="spinSpeed">Spin speed</label>
               <div class="range-wrap">
                 <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
                 <span id="spinSpeedVal"></span>
                 </div>
               </div>
-              <div class="modal-field">
+              <div class="panel-field">
                 <label for="mapPitch">Pitch</label>
                 <div class="range-wrap">
                   <input type="range" id="mapPitch" min="0" max="85" step="1" />
                   <span id="pitchVal"></span>
                 </div>
               </div>
-              <div class="modal-field">
+              <div class="panel-field">
                 <label for="mapBearing">Bearing</label>
                 <div class="range-wrap">
                   <input type="range" id="mapBearing" min="-180" max="180" step="1" />
                   <span id="bearingVal"></span>
                 </div>
               </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <label><input type="checkbox" id="spinLoadStart" /> Start on load</label>
               <div id="spinType">
                 <label><input type="radio" name="spinType" value="all" /> <span>Everyone</span></label>
                 <label><input type="radio" name="spinType" value="new" /> <span>New Users</span></label>
               </div>
             </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <label><input type="checkbox" id="spinLogoClick" checked /> Start on logo click</label>
             </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <label for="mapRestore">Restore Backup</label>
               <select id="mapRestore" style="width:250px"></select>
               <button type="button" data-restore="map">Restore</button>
             </div>
-            <div class="modal-field">
+            <div class="panel-field">
               <div id="balloonTool">
                 <style>
                   #balloonTool { padding: 10px; }
@@ -2436,19 +2436,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </div>
         </div>
         <div id="tab-settings" class="tab-panel">
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="catList">Categories</label>
             <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
           </div>
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="subList">Subcategories</label>
             <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
           </div>
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="aColor">Color</label>
             <input type="color" id="aColor" data-mode="hex" value="#000000" />
           </div>
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="welcomeMessage">Welcome Message</label>
             <textarea id="welcomeMessage" rows="4" placeholder="<p>Welcome!</p>"></textarea>
           </div>
@@ -2460,7 +2460,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div class="field-item" draggable="true" data-type="location">Location</div>
           </div>
           <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
-          <div class="modal-field">
+          <div class="panel-field">
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
             <button type="button" data-restore="settings">Restore</button>
@@ -2482,9 +2482,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
   </div>
 
-  <div id="welcomeModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-content">
-      <div class="modal-body" id="welcomeBody"></div>
+  <div id="welcomePanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content">
+      <div class="panel-body" id="welcomeBody"></div>
     </div>
   </div>
 
@@ -2567,9 +2567,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         if(!/\<img/i.test(msg)){
           body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap logo" />');
         }
-        toggleModal(document.getElementById('welcomeModal'));
+        togglePanel(document.getElementById('welcomePanel'));
         body.style.padding = '20px';
-        const content = document.querySelector('#welcomeModal .modal-content');
+        const content = document.querySelector('#welcomePanel .panel-content');
         const subHead = document.querySelector('.subheader');
         const topPos = subHead ? subHead.getBoundingClientRect().bottom : 0;
         if(content){
@@ -3531,7 +3531,7 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 5) return;
-      if(typeof filterModal !== 'undefined' && filterModal) closeModal(filterModal);
+      if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
@@ -4179,34 +4179,34 @@ function makePosts(){
           thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
         }
       });
-      function openImageModal(start){
-        const modal = document.createElement('div');
-        modal.className = 'img-modal';
+      function openImagePanel(start){
+        const panel = document.createElement('div');
+        panel.className = 'img-panel';
         const imgEl = document.createElement('img');
         let idx = start;
         imgEl.src = imgs[idx];
         imgEl.dataset.index = idx;
-        modal.appendChild(imgEl);
+        panel.appendChild(imgEl);
         function next(){
           idx = (idx+1)%imgs.length;
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
-        const entry = {remove: ()=> modal.remove()};
-        modal.addEventListener('click', e=>{
-          if(e.target===modal){
-            modal.remove();
-            const i = modalStack.indexOf(entry);
-            if(i!==-1) modalStack.splice(i,1);
+        const entry = {remove: ()=> panel.remove()};
+        panel.addEventListener('click', e=>{
+          if(e.target===panel){
+            panel.remove();
+            const i = panelStack.indexOf(entry);
+            if(i!==-1) panelStack.splice(i,1);
           } else {
             next();
           }
         });
         imgEl.addEventListener('click', next);
-        document.body.appendChild(modal);
-        modalStack.push(entry);
+        document.body.appendChild(panel);
+        panelStack.push(entry);
       }
-      mainImg.addEventListener('click', ()=> openImageModal(parseInt(mainImg.dataset.index||'0',10)));
+      mainImg.addEventListener('click', ()=> openImagePanel(parseInt(mainImg.dataset.index||'0',10)));
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
@@ -4413,18 +4413,18 @@ function makePosts(){
 // 0577 helpers (safety)
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
-const modalStack = [];
+const panelStack = [];
 function bringToTop(item){
-  const idx = modalStack.indexOf(item);
-  if(idx!==-1) modalStack.splice(idx,1);
-  modalStack.push(item);
+  const idx = panelStack.indexOf(item);
+  if(idx!==-1) panelStack.splice(idx,1);
+  panelStack.push(item);
 }
 function registerPopup(p){
   bringToTop(p);
   if(typeof p.on==='function'){
     p.on('close',()=>{
-      const i = modalStack.indexOf(p);
-      if(i!==-1) modalStack.splice(i,1);
+      const i = panelStack.indexOf(p);
+      if(i!==-1) panelStack.splice(i,1);
     });
   }
   const el = p.getElement && p.getElement();
@@ -4432,9 +4432,9 @@ function registerPopup(p){
     el.addEventListener('mousedown', ()=> bringToTop(p));
   }
 }
-function saveModalState(m){
-  if(!m || !m.id || m.id === 'welcomeModal') return;
-  const content = m.querySelector('.modal-content');
+function savePanelState(m){
+  if(!m || !m.id || m.id === 'welcomePanel') return;
+  const content = m.querySelector('.panel-content');
   if(!content) return;
   const state = {
     left: content.style.left,
@@ -4442,13 +4442,13 @@ function saveModalState(m){
     width: content.style.width,
     height: content.style.height
   };
-  localStorage.setItem(`modal-${m.id}`, JSON.stringify(state));
+  localStorage.setItem(`panel-${m.id}`, JSON.stringify(state));
 }
-function loadModalState(m){
+function loadPanelState(m){
   if(!m || !m.id) return false;
-  const content = m.querySelector('.modal-content');
+  const content = m.querySelector('.panel-content');
   if(!content) return false;
-  const saved = JSON.parse(localStorage.getItem(`modal-${m.id}`) || 'null');
+  const saved = JSON.parse(localStorage.getItem(`panel-${m.id}`) || 'null');
   if(saved){
     ['width','height','left','top'].forEach(prop=>{
       if(saved[prop]) content.style[prop] = saved[prop];
@@ -4458,17 +4458,17 @@ function loadModalState(m){
   }
   return false;
 }
-function openModal(m){
-  const content = m.querySelector('.modal-content');
+function openPanel(m){
+  const content = m.querySelector('.panel-content');
   if(content){
     content.style.width = '';
     content.style.height = '';
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
-  localStorage.setItem(`modal-open-${m.id}`,'true');
+  localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
-    if(m.id==='filterModal'){
+    if(m.id==='filterPanel'){
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
         const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
@@ -4486,9 +4486,9 @@ function openModal(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    const loaded = m.id !== 'welcomeModal' ? loadModalState(m) : false;
-    if(!loaded && (m.id==='adminModal' || m.id==='memberModal')){
-      moveModalToEdge(m,'right');
+    const loaded = m.id !== 'welcomePanel' ? loadPanelState(m) : false;
+    if(!loaded && (m.id==='adminPanel' || m.id==='memberPanel')){
+      movePanelToEdge(m,'right');
     }
   }
   if(!m.__bringToTopAdded){
@@ -4498,27 +4498,27 @@ function openModal(m){
   bringToTop(m);
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
-function closeModal(m){
+function closePanel(m){
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
-  localStorage.setItem(`modal-open-${m.id}`,'false');
-  const idx = modalStack.indexOf(m);
-  if(idx!==-1) modalStack.splice(idx,1);
+  localStorage.setItem(`panel-open-${m.id}`,'false');
+  const idx = panelStack.indexOf(m);
+  if(idx!==-1) panelStack.splice(idx,1);
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
-function requestCloseModal(m){
-  closeModal(m);
+function requestClosePanel(m){
+  closePanel(m);
 }
-function toggleModal(m){
+function togglePanel(m){
   if(m.classList.contains('show')){
-    requestCloseModal(m);
+    requestClosePanel(m);
   } else {
-    openModal(m);
+    openPanel(m);
   }
 }
-function moveModalToEdge(modal, side){
-  if(!modal) return;
-  const content = modal.querySelector('.modal-content');
+function movePanelToEdge(panel, side){
+  if(!panel) return;
+  const content = panel.querySelector('.panel-content');
   if(!content) return;
   const subHead = document.querySelector('.subheader');
   const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
@@ -4531,84 +4531,84 @@ function moveModalToEdge(modal, side){
     content.style.left = '';
     content.style.right = '0';
   }
-  saveModalState(modal);
+  savePanelState(panel);
 }
 function handleEsc(){
-  const top = modalStack[modalStack.length-1];
+  const top = panelStack[panelStack.length-1];
   if(!top) return;
   if(top instanceof Element){
-    if(top.id === 'adminModal' && typeof window.saveAdminChanges === 'function'){
+    if(top.id === 'adminPanel' && typeof window.saveAdminChanges === 'function'){
       window.saveAdminChanges();
     }
-    requestCloseModal(top);
+    requestClosePanel(top);
   } else if(typeof top.remove==='function'){
-    modalStack.pop();
+    panelStack.pop();
     top.remove();
   }
 }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
   else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
-    const top = modalStack[modalStack.length-1];
-    if(top && (top.id==='adminModal' || top.id==='memberModal')){
-      moveModalToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
+    const top = panelStack[panelStack.length-1];
+    if(top && (top.id==='adminPanel' || top.id==='memberPanel')){
+      movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
     }
   }
 });
 
-// Modals and admin/member interactions
+// Panels and admin/member interactions
 (function(){
   const memberBtn = document.getElementById('memberBtn');
   const adminBtn = document.getElementById('adminBtn');
   const filterBtn = document.getElementById('filterBtn');
-  const memberModal = document.getElementById('memberModal');
-  const adminModal = document.getElementById('adminModal');
-  const filterModal = document.getElementById('filterModal');
+  const memberPanel = document.getElementById('memberPanel');
+  const adminPanel = document.getElementById('adminPanel');
+  const filterPanel = document.getElementById('filterPanel');
   const sg = window.spinGlobals || {};
 
-  memberBtn && memberBtn.addEventListener('click', ()=> toggleModal(memberModal));
+  memberBtn && memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
     adminBtn && adminBtn.addEventListener('click', ()=>{
       syncAdminControls();
-      toggleModal(adminModal);
+      togglePanel(adminPanel);
     });
-  filterBtn && filterBtn.addEventListener('click', ()=> toggleModal(filterModal));
-  document.querySelectorAll('.modal .close-modal').forEach(btn=>{
+  filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
+  document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const modal = btn.closest('.modal');
-      if(modal && modal.id === 'adminModal') return;
-      requestCloseModal(modal);
+      const panel = btn.closest('.panel');
+      if(panel && panel.id === 'adminPanel') return;
+      requestClosePanel(panel);
     });
   });
-  document.querySelectorAll('.modal .move-left').forEach(btn=>{
+  document.querySelectorAll('.panel .move-left').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      const modal = btn.closest('.modal');
-      moveModalToEdge(modal, 'left');
+      const panel = btn.closest('.panel');
+      movePanelToEdge(panel, 'left');
     });
   });
-  document.querySelectorAll('.modal .move-right').forEach(btn=>{
+  document.querySelectorAll('.panel .move-right').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      const modal = btn.closest('.modal');
-      moveModalToEdge(modal, 'right');
+      const panel = btn.closest('.panel');
+      movePanelToEdge(panel, 'right');
     });
   });
 
-  const welcomeModal = document.getElementById('welcomeModal');
-  [filterModal, memberModal, adminModal, welcomeModal].forEach(m=>{
-    if(m && localStorage.getItem(`modal-open-${m.id}`) === 'true'){
-      openModal(m);
+  const welcomePanel = document.getElementById('welcomePanel');
+  [filterPanel, memberPanel, adminPanel, welcomePanel].forEach(m=>{
+    if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
+      openPanel(m);
     }
   });
-  if(welcomeModal){
-    welcomeModal.addEventListener('click', e=>{
-      if(e.target === welcomeModal) closeModal(welcomeModal);
+  if(welcomePanel){
+    welcomePanel.addEventListener('click', e=>{
+      if(e.target === welcomePanel) closePanel(welcomePanel);
     });
   }
 
-  document.querySelectorAll('.modal').forEach(modal=>{
-    const content = modal.querySelector('.modal-content');
-    const header = modal.querySelector('.modal-header');
+  document.querySelectorAll('.panel').forEach(panel=>{
+    const content = panel.querySelector('.panel-content');
+    const header = panel.querySelector('.panel-header');
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
@@ -4640,7 +4640,7 @@ document.addEventListener('keydown', e=>{
         dragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        saveModalState(modal);
+        savePanelState(panel);
       }
 
     const handles = ['n','e','s','w','ne','nw','se','sw'];
@@ -4692,12 +4692,12 @@ document.addEventListener('keydown', e=>{
     function stopResize(){
       document.removeEventListener('mousemove', onResize);
       document.removeEventListener('mouseup', stopResize);
-      saveModalState(modal);
+      savePanelState(panel);
     }
   });
 
-  const adminTabs = document.querySelectorAll('#adminModal .tab-bar button');
-  const adminPanels = document.querySelectorAll('#adminModal .tab-panel');
+  const adminTabs = document.querySelectorAll('#adminPanel .tab-bar button');
+  const adminPanels = document.querySelectorAll('#adminPanel .tab-panel');
   adminTabs.forEach(btn=>{
     btn.addEventListener('click', ()=>{
       adminTabs.forEach(b=>b.setAttribute('aria-selected','false'));
@@ -4717,10 +4717,10 @@ document.addEventListener('keydown', e=>{
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
-    {key:'filter', label:'Filter Modal', selectors:{bg:['#filterModal .modal-content'], text:['#filterModal .modal-content'], title:['#filterModal .modal-content .t','#filterModal .modal-content .title'], btn:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn'], btnText:['#filterModal button','#filterModal .sq','#filterModal .tiny','#filterModal .btn']}},
-    {key:'adminModal', label:'Admin Modal', selectors:{bg:['#adminModal .modal-content'], text:['#adminModal .modal-content'], title:['#adminModal .modal-content .t','#adminModal .modal-content .title'], btn:['#adminModal button','#adminModal #spinType span'], btnText:['#adminModal button','#adminModal #spinType span']}},
-    {key:'welcomeModal', label:'Welcome Modal', selectors:{bg:['#welcomeModal .modal-content'], text:['#welcomeModal .modal-content'], title:['#welcomeModal .modal-content .t','#welcomeModal .modal-content .title'], btn:['#welcomeModal button'], btnText:['#welcomeModal button']}},
-    {key:'memberModal', label:'Member Modal', selectors:{bg:['#memberModal .modal-content'], text:['#memberModal .modal-content'], title:['#memberModal .modal-content .t','#memberModal .modal-content .title'], btn:['#memberModal button'], btnText:['#memberModal button']}}
+    {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
+    {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
+    {key:'welcomePanel', label:'Welcome Panel', selectors:{bg:['#welcomePanel .panel-content'], text:['#welcomePanel .panel-content'], title:['#welcomePanel .panel-content .t','#welcomePanel .panel-content .title'], btn:['#welcomePanel button'], btnText:['#welcomePanel button']}},
+    {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}}
   ];
 
   function storeTitleDefaults(){
@@ -5057,7 +5057,7 @@ document.addEventListener('keydown', e=>{
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
+    ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
@@ -5071,9 +5071,9 @@ document.addEventListener('keydown', e=>{
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
-      const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
+      const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
       if(cInput){
         const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -5353,7 +5353,7 @@ document.addEventListener('keydown', e=>{
         fs.appendChild(thumbRow);
       }
       if(area.key === 'open-posts'){
-        fs.appendChild(createTextPickerRow('dropdownVenueText','Venue Button Text','open-posts-menu-c'));
+        fs.appendChild(createTextPickerRow('dropdownVenueText-text','Venue Button Text','open-posts-menu-c'));
         const stickyRow = document.createElement('div');
         stickyRow.className = 'control-row';
         stickyRow.innerHTML = `
@@ -5365,7 +5365,7 @@ document.addEventListener('keydown', e=>{
         fs.appendChild(stickyRow);
       }
       if(area.key === 'filter'){
-        fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
+        fs.appendChild(createTextPickerRow('filterPlaceholder-text','Keyword Placeholder','btn-c'));
         const activeRow = document.createElement('div');
         activeRow.className = 'control-row';
         activeRow.innerHTML = `
@@ -5395,7 +5395,7 @@ document.addEventListener('keydown', e=>{
             </div>
           `;
         fs.appendChild(dateBg);
-        fs.appendChild(createTextPickerRow('dateRangeText','Date Range Text','dateRangeBg-c'));
+        fs.appendChild(createTextPickerRow('dateRangeText-text','Date Range Text','dateRangeBg-c'));
       }
       wrap.appendChild(fs);
     });
@@ -5418,7 +5418,7 @@ document.addEventListener('keydown', e=>{
       {id:'btn', label:'Button Base'},
       {id:'btnHover', label:'Button Hover'},
       {id:'btnActive', label:'Button Active'},
-      {id:'modalBg', label:'Modal Background'},
+      {id:'panelBg', label:'Panel Background'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
@@ -5436,8 +5436,8 @@ document.addEventListener('keydown', e=>{
           `;
       misc.appendChild(row);
     });
-    misc.appendChild(createTextPickerRow('modalText','Image Modal Text','modalBg-c'));
-    misc.appendChild(createTextPickerRow('placeholder','Placeholder Text','btn-c'));
+    misc.appendChild(createTextPickerRow('panelText-text','Image Panel Text','panelBg-c'));
+    misc.appendChild(createTextPickerRow('placeholder-text','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
     dropdown.className = 'admin-fieldset collapsed';
@@ -5472,9 +5472,9 @@ document.addEventListener('keydown', e=>{
           `;
       dropdown.appendChild(row);
     });
-    dropdown.appendChild(createTextPickerRow('dropdownSelectedText','Selected Text','dropdownSelectedBg-c'));
-    dropdown.appendChild(createTextPickerRow('dropdownText','Text','dropdownBg-c'));
-    dropdown.appendChild(createTextPickerRow('dropdownHoverText','Hover Text','dropdownHoverBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownSelectedText-text','Selected Text','dropdownSelectedBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownText-text','Text','dropdownBg-c'));
+    dropdown.appendChild(createTextPickerRow('dropdownHoverText-text','Hover Text','dropdownHoverBg-c'));
     wrap.appendChild(dropdown);
   }
 
@@ -5523,9 +5523,9 @@ document.addEventListener('keydown', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
-      const c = document.getElementById(`${id}-c`) || document.getElementById(id);
+      const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
       if(c){
         const color = c.value;
@@ -5650,7 +5650,7 @@ document.addEventListener('keydown', e=>{
         data[id] = { color: input.value };
       }
     });
-    ['btn','btnHover','btnActive','modalBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','filterBtnActive','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','btnHover','btnActive','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','filterBtnActive','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -5658,8 +5658,8 @@ document.addEventListener('keydown', e=>{
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=>{
-      const c = document.getElementById(`${id}-c`);
+    ['dropdownTitle','panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=>{
+      const c = document.getElementById(`${id}-text-c`) || document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
       }
@@ -5674,7 +5674,7 @@ document.addEventListener('keydown', e=>{
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5804,7 +5804,7 @@ document.addEventListener('keydown', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -6006,7 +6006,7 @@ document.addEventListener('keydown', e=>{
     // Save/Discard/Restore logic
     const saveBtn = document.getElementById('saveNow');
     const discardBtn = document.getElementById('discardChanges');
-    const adminClose = document.querySelector('#adminModal .close-modal');
+    const adminClose = document.querySelector('#adminPanel .close-panel');
     const tabPanels = ['theme','map','settings'];
     const savedData = {};
 
@@ -6140,7 +6140,7 @@ document.addEventListener('keydown', e=>{
 
     adminClose && adminClose.addEventListener('click', ()=>{
       saveAllTabs();
-      requestCloseModal(adminClose.closest('.modal'));
+      requestClosePanel(adminClose.closest('.panel'));
     });
 
     document.querySelectorAll('button[data-restore]').forEach(btn=>{
@@ -6244,8 +6244,8 @@ document.addEventListener('keydown', e=>{
       btn: '--btn',
       btnHover: '--btn-hover',
       btnActive: '--btn-active',
-      modalBg: '--modal-bg',
-      modalText: '--modal-text',
+      panelBg: '--panel-bg',
+      panelText: '--panel-text',
       scrollbarTrack: '--scrollbar-track',
       scrollbarThumb: '--scrollbar-thumb',
       scrollbarThumbHover: '--scrollbar-thumb-hover',
@@ -6266,7 +6266,7 @@ document.addEventListener('keydown', e=>{
       dateRangeText: '--date-range-text'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
-    const el = document.getElementById(`${id}-c`) || document.getElementById(id);
+    const el = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
     const oEl = document.getElementById(`${id}-o`);
     if(el){
       const handler = ()=>{
