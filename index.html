@@ -128,9 +128,9 @@ button,
   color: var(--button-text);
   padding: 6px 10px;
   border-radius: 6px;
-  display: inline-grid;
-  place-items: center;
-  grid-auto-flow: column;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
@@ -285,7 +285,7 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   transition:transform .3s;
 }
 
-.open-posts .options-dropdown .dropdown-arrow.up{
+button[aria-expanded="true"] .dropdown-arrow{
   transform:translateY(-50%) rotate(225deg);
 }
 
@@ -669,8 +669,6 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   border:1px solid #ccc;
   min-height:80px;
   padding:8px;
-  caret-color:auto;
-  cursor:text;
 }
 .wysiwyg:empty:before{
   content:attr(data-placeholder);
@@ -681,9 +679,6 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   gap:4px;
 }
 .wysiwyg-toolbar button{
-  padding:4px 6px;
-}
-.wysiwyg-toolbar select{
   padding:4px 6px;
 }
 .panel-field input,
@@ -724,6 +719,25 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
 .panel-header h2{
   margin:0;
 }
+.palette{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+.field-item,
+.field-instance{
+  padding:6px 10px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  background:#f9f9f9;
+  cursor:move;
+}
+.builder-zone{
+  min-height:100px;
+  border:2px dashed #ccc;
+  padding:10px;
+}
+.field-instance{margin:4px 0;}
 
 
 .filters-col{
@@ -1155,12 +1169,12 @@ body.filters-active #filterBtn{
   pointer-events: none;
 }
 
-.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;}
+.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
+.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;}
-.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;line-height:var(--control-h);text-align:center;display:grid;place-items:center;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;line-height:var(--control-h);text-align:center;}
 .mapboxgl-ctrl-group button,
 .mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;border-radius:4px;line-height:var(--control-h);text-align:center;}
 .mapboxgl-ctrl button svg,
@@ -1224,10 +1238,6 @@ body.hide-results .closed-posts{
   overflow:visible;
 }
 
-.open-posts-sticky-header .open-posts{
-  overflow:hidden;
-}
-
 .open-posts .detail-header{
   display:flex;
   justify-content:space-between;
@@ -1238,7 +1248,7 @@ body.hide-results .closed-posts{
 }
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
-  top:-1px;
+  top:0;
   z-index:3;
   background:var(--list-background);
 }
@@ -1343,7 +1353,7 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  flex:1 1 400px;
+  width:100%;
   max-width:400px;
 }
 
@@ -1494,36 +1504,34 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  flex:1 1 400px;
+  width:100%;
   max-width:400px;
 }
 
 
 .open-posts .post-calendar{
   width:100%;
-  max-width:400px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  overflow:hidden;
   position:relative;
-  display:block;
-  padding-bottom:20px;
+  display:flex;
+  justify-content:center;
 }
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
-  width:fit-content;
-  min-width:100%;
-  margin:0;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
   box-sizing:border-box;
   display:block;
 }
 
 .open-posts .post-calendar .container__months{
-  display:flex;
+  display:block;
 }
 
 .open-posts .post-calendar .container__months .month-item{
-  flex:0 0 400px;
+  width:100%;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -2064,7 +2072,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   #filterPanel .panel-content,
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    position:fixed;
     top:var(--header-h);
     left:0;
     right:0;
@@ -2073,7 +2080,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     max-width:none;
     max-height:none;
     border-radius:0;
-    transform:none;
   }
   #filterPanel .panel-content .resizer,
   #adminPanel .panel-content .resizer,
@@ -2091,8 +2097,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
-.open-posts-sticky-header .open-posts{overflow:hidden;}
-.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:-1px;z-index:3;background:var(--list-background);}
+.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -2512,24 +2517,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="panel-field">
-            <label for="siteName">Site Name</label>
-            <input type="text" id="siteName" />
+            <label for="catList">Categories</label>
+            <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
           </div>
           <div class="panel-field">
-            <label for="siteDescription">Site Description</label>
-            <textarea id="siteDescription" rows="2"></textarea>
+            <label for="subList">Subcategories</label>
+            <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
           </div>
           <div class="panel-field">
-            <label for="logo">Logo</label>
-            <input type="file" id="logo" accept="image/*" />
-          </div>
-          <div class="panel-field">
-            <label for="smallLogo">Small Logo</label>
-            <input type="file" id="smallLogo" accept="image/*" />
-          </div>
-          <div class="panel-field">
-            <label for="favicon">Favicon</label>
-            <input type="file" id="favicon" accept="image/x-icon,image/png" />
+            <label for="aColor">Color</label>
+            <input type="color" id="aColor" data-mode="hex" value="#000000" />
           </div>
           <div class="panel-field">
             <label for="welcomeMessageEditor">Welcome Message</label>
@@ -2537,20 +2534,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <button type="button" data-command="bold"><b>B</b></button>
               <button type="button" data-command="italic"><i>I</i></button>
               <button type="button" data-command="underline"><u>U</u></button>
-              <select data-command="fontName">
-                <option value="Arial">Arial</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Courier New">Courier New</option>
-              </select>
-              <select data-command="fontSize">
-                <option value="3">Normal</option>
-                <option value="4">Large</option>
-                <option value="5">Larger</option>
-              </select>
             </div>
             <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome!</p>"></div>
             <textarea id="welcomeMessage" hidden></textarea>
           </div>
+          <h3>Subcategory Form Builder</h3>
+          <div class="palette" id="fieldPalette">
+            <div class="field-item" draggable="true" data-type="text">Text</div>
+            <div class="field-item" draggable="true" data-type="date">Date</div>
+            <div class="field-item" draggable="true" data-type="image">Image</div>
+            <div class="field-item" draggable="true" data-type="location">Location</div>
+          </div>
+          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
           <div class="panel-field">
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
@@ -4344,9 +4339,6 @@ function makePosts(){
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
-        const firstDateObj = new Date(firstDate);
-        const lastDateObj = new Date(lastDate);
-        const numberOfMonths = (lastDateObj.getFullYear() - firstDateObj.getFullYear())*12 + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -4356,18 +4348,13 @@ function makePosts(){
           startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
-          numberOfMonths,
-          numberOfColumns: numberOfMonths,
+          numberOfMonths: 1,
+          numberOfColumns: 1,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         const lp = calendarEl.querySelector('.litepicker');
-        if(lp){
-          const width = calendarEl.offsetWidth;
-          lp.style.width = (width * numberOfMonths) + 'px';
-          lp.querySelectorAll('.month-item').forEach(m=> m.style.width = width + 'px');
-        }
+        if(lp && mapEl) lp.style.width = mapEl.offsetWidth + 'px';
         calendarEl.addEventListener('click', e=> e.stopPropagation());
-        calendarEl.addEventListener('wheel', e=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ calendarEl.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
         let ignoreSelect = false;
         function highlightMonth(){
           calendarEl.querySelectorAll('.month-name').forEach(n=> n.classList.remove('selected-month-name'));
@@ -4398,8 +4385,6 @@ function makePosts(){
             }
             sessMenu.hidden = true;
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
-            const arrow = sessBtn ? sessBtn.querySelector('.dropdown-arrow') : null;
-            if(arrow) arrow.classList.remove('up');
           }
         function showTimePopup(matches){
           const popup = document.createElement('div');
@@ -4457,32 +4442,22 @@ function makePosts(){
                 updateVenue(parseInt(btn.dataset.index,10));
                 venueMenu.hidden = true;
                 venueBtn.setAttribute('aria-expanded','false');
-                const arrow = venueBtn.querySelector('.dropdown-arrow');
-                if(arrow) arrow.classList.remove('up');
               });
             });
             venueBtn.addEventListener('click', ()=>{
               const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
               venueBtn.setAttribute('aria-expanded', String(!expanded));
               venueMenu.hidden = expanded;
-              const arrow = venueBtn.querySelector('.dropdown-arrow');
-              if(arrow && venueMenu.children.length>1){
-                arrow.classList.toggle('up', !expanded);
-              }
             });
-            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); const arrow = venueBtn.querySelector('.dropdown-arrow'); if(arrow) arrow.classList.remove('up'); } });
+            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
           }
           if(sessBtn && sessMenu){
             sessBtn.addEventListener('click', ()=>{
               const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
               sessBtn.setAttribute('aria-expanded', String(!expanded));
               sessMenu.hidden = expanded;
-              const arrow = sessBtn.querySelector('.dropdown-arrow');
-              if(arrow && sessMenu.children.length>1){
-                arrow.classList.toggle('up', !expanded);
-              }
             });
-            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); const arrow = sessBtn.querySelector('.dropdown-arrow'); if(arrow) arrow.classList.remove('up'); } });
+            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
           }
           if(map && typeof map.resize === 'function') map.resize();
         },0);
@@ -4594,7 +4569,6 @@ function openPanel(m){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-      content.style.position = 'fixed';
       content.style.left = '0';
       content.style.right = '0';
       content.style.top = `${headerH}px`;
@@ -4602,7 +4576,6 @@ function openPanel(m){
       content.style.transform = 'none';
       content.style.maxHeight = '';
     } else if(m.id==='filterPanel'){
-      content.style.position = 'absolute';
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
         const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
@@ -4618,7 +4591,6 @@ function openPanel(m){
       position();
       requestAnimationFrame(position);
     } else {
-      content.style.position = 'absolute';
       content.style.left = '50%';
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
@@ -4657,8 +4629,8 @@ function movePanelToEdge(panel, side){
   if(!panel) return;
   const content = panel.querySelector('.panel-content');
   if(!content) return;
-  const header = document.querySelector('.header');
-  const topPos = header ? header.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  const subHead = document.querySelector('.subheader');
+  const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
   content.style.top = `${topPos}px`;
   content.style.transform = 'none';
   if(side === 'left'){
@@ -4685,6 +4657,12 @@ function handleEsc(){
 }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
+  else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+    const top = panelStack[panelStack.length-1];
+    if(window.innerWidth >= 650 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
+      movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
+    }
+  }
 });
 
 // Panels and admin/member interactions
@@ -4732,11 +4710,8 @@ document.addEventListener('keydown', e=>{
     }
   });
   if(welcomePanel){
-    document.addEventListener('click', e=>{
-      const content = welcomePanel.querySelector('.panel-content');
-      if(welcomePanel.classList.contains('show') && content && !content.contains(e.target)){
-        closePanel(welcomePanel);
-      }
+    welcomePanel.addEventListener('click', e=>{
+      if(e.target === welcomePanel) closePanel(welcomePanel);
     });
   }
 
@@ -5849,7 +5824,7 @@ document.addEventListener('keydown', e=>{
       css += `:root{${rootVars.join('')}}\n`;
     }
     if(data['open-posts-sticky-header'] && data['open-posts-sticky-header'].value === '1'){
-      css += '.open-posts-sticky-header .open-posts{overflow:hidden;}.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:-1px;z-index:3;background:var(--list-background);}\n';
+      css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
@@ -6420,6 +6395,47 @@ document.addEventListener('keydown', e=>{
     }
   });
 
+  const palette = document.getElementById('fieldPalette');
+  const builder = document.getElementById('formBuilder');
+  let dragType = null;
+
+  palette && palette.addEventListener('dragstart', e=>{
+    if(e.target.classList.contains('field-item')){
+      dragType = e.target.dataset.type;
+    }
+  });
+
+  builder && builder.addEventListener('dragover', e=> e.preventDefault());
+
+  builder && builder.addEventListener('drop', e=>{
+    e.preventDefault();
+    if(dragType){
+      const item = document.createElement('div');
+      item.className = 'field-instance';
+      item.textContent = dragType.charAt(0).toUpperCase()+dragType.slice(1);
+      item.setAttribute('draggable','true');
+      builder.appendChild(item);
+      dragType = null;
+    }
+  });
+
+  let dragEl = null;
+  builder && builder.addEventListener('dragstart', e=>{
+    if(e.target.classList.contains('field-instance')){
+      dragEl = e.target;
+    }
+  });
+
+  builder && builder.addEventListener('drop', e=>{
+    if(dragEl && e.target.classList.contains('field-instance')){
+      e.preventDefault();
+      const rect = e.target.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height/2;
+      builder.insertBefore(dragEl, after ? e.target.nextSibling : e.target);
+    }
+    dragEl = null;
+  });
+
   window.addEventListener('resize', updateLayoutVars);
   window.addEventListener('resize', updateStickyImages);
   window.addEventListener('load', updateLayoutVars);
@@ -6639,19 +6655,11 @@ document.addEventListener('DOMContentLoaded', () => {
     hidden.value = hidden.value || placeholder;
     editor.innerHTML = hidden.value;
     editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-    document.querySelectorAll('.wysiwyg-toolbar [data-command]').forEach(ctrl => {
-      const cmd = ctrl.dataset.command;
-      if(ctrl.tagName === 'BUTTON'){
-        ctrl.addEventListener('click', () => {
-          document.execCommand(cmd, false, null);
-          editor.focus();
-        });
-      } else if(ctrl.tagName === 'SELECT'){
-        ctrl.addEventListener('change', () => {
-          document.execCommand(cmd, false, ctrl.value);
-          editor.focus();
-        });
-      }
+    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.execCommand(btn.dataset.command, false, null);
+        editor.focus();
+      });
     });
   }
 });
