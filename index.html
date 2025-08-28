@@ -163,7 +163,7 @@ input::placeholder,
 textarea::placeholder{
   color: var(--placeholder-text);
 }
-#kwInput::placeholder{ color: var(--filter-placeholder-text); }
+#filterPanel #kwInput::placeholder{ color: var(--filter-placeholder-text); }
 
 .field label{
   color: var(--dropdown-title);
@@ -261,24 +261,26 @@ select option:hover{
   height:8px;
   border:solid currentColor;
   border-width:0 2px 2px 0;
+  color:inherit;
 }
 
 .results-arrow{
-  margin-right:4px;
+  margin-right:8px;
   transform:rotate(135deg);
   transition:transform .3s;
+  vertical-align:middle;
 }
 body.hide-results .results-arrow{transform:rotate(-45deg);}
 
 .open-posts .options-dropdown button{
   position:relative;
-  padding-right:24px;
+  padding-right:30px;
 }
 
 .open-posts .options-dropdown .dropdown-arrow{
   position:absolute;
   top:50%;
-  right:8px;
+  right:10px;
   transform:translateY(-50%) rotate(45deg);
   transition:transform .3s;
 }
@@ -799,10 +801,10 @@ button[aria-expanded="true"] .dropdown-arrow{
 .input select{
   border-radius: var(--dropdown-radius);
 }
-#kwInput{
+#filterPanel #kwInput{
   background: var(--keyword-bg);
 }
-#dateInput{
+#filterPanel #dateInput{
   background: var(--date-range-bg);
   color: var(--date-range-text);
 }
@@ -1417,6 +1419,13 @@ body.hide-results .closed-posts{
 
 .open-posts .venue-menu button .venue-address{
   display:block;
+}
+
+.open-posts .venue-dropdown > button .venue-name,
+.open-posts .venue-dropdown > button .venue-address,
+.open-posts .venue-menu button .venue-name,
+.open-posts .venue-menu button .venue-address{
+  line-height:1.2;
 }
 
 .open-posts .venue-menu,
