@@ -128,9 +128,9 @@ button,
   color: var(--button-text);
   padding: 6px 10px;
   border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
+  grid-auto-flow: column;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
@@ -1169,12 +1169,12 @@ body.filters-active #filterBtn{
   pointer-events: none;
 }
 
-.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
-.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;}
+.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;}
+.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;}
-.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;line-height:var(--control-h);text-align:center;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;line-height:var(--control-h);text-align:center;display:grid;place-items:center;}
 .mapboxgl-ctrl-group button,
 .mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;border-radius:4px;line-height:var(--control-h);text-align:center;}
 .mapboxgl-ctrl button svg,
@@ -2076,6 +2076,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   #filterPanel .panel-content,
   #adminPanel .panel-content,
   #memberPanel .panel-content{
+    position:fixed;
     top:var(--header-h);
     left:0;
     right:0;
@@ -2084,6 +2085,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     max-width:none;
     max-height:none;
     border-radius:0;
+    transform:none;
   }
   #filterPanel .panel-content .resizer,
   #adminPanel .panel-content .resizer,
@@ -4574,6 +4576,7 @@ function openPanel(m){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+      content.style.position = 'fixed';
       content.style.left = '0';
       content.style.right = '0';
       content.style.top = `${headerH}px`;
@@ -4581,6 +4584,7 @@ function openPanel(m){
       content.style.transform = 'none';
       content.style.maxHeight = '';
     } else if(m.id==='filterPanel'){
+      content.style.position = 'absolute';
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
         const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
@@ -4596,6 +4600,7 @@ function openPanel(m){
       position();
       requestAnimationFrame(position);
     } else {
+      content.style.position = 'absolute';
       content.style.left = '50%';
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
