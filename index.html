@@ -6105,9 +6105,12 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     }
 
   function applyPreset(p){
-    document.querySelectorAll('[id^="theme-"]').forEach(el=>{ el.disabled = true; });
-    if(!p) return;
+    const themes = document.querySelectorAll('[id^="theme-"]');
+    themes.forEach(el=>{ el.disabled = true; });
+    const enableBase = ()=>{ const base=document.getElementById('theme-default'); if(base) base.disabled=false; };
+    if(!p){ enableBase(); return; }
     if(p.data){
+      enableBase();
       storage.removeItem('selectedCssTheme');
       applyPresetData(p.data);
     } else if(p.css){
