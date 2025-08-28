@@ -2636,13 +2636,23 @@ select option:hover{
       window.localStorage.setItem(testKey, '1');
       window.localStorage.removeItem(testKey);
       return window.localStorage;
-    } catch (e) {
-      const store = {};
-      return {
-        getItem: key => (key in store ? store[key] : null),
-        setItem: (key, val) => { store[key] = String(val); },
-        removeItem: key => { delete store[key]; }
-      };
+    } catch (e1) {
+      try {
+        const testKey = '__storage_test__';
+        window.sessionStorage.setItem(testKey, '1');
+        window.sessionStorage.removeItem(testKey);
+        return window.sessionStorage;
+      } catch (e2) {
+        let store = {};
+        return {
+          get length() { return Object.keys(store).length; },
+          key: i => Object.keys(store)[i] || null,
+          getItem: key => (key in store ? store[key] : null),
+          setItem: (key, val) => { store[key] = String(val); },
+          removeItem: key => { delete store[key]; },
+          clear: () => { store = {}; }
+        };
+      }
     }
   })();
   const sg = window.spinGlobals || {};
@@ -2658,10 +2668,10 @@ select option:hover{
     storage.setItem('hasVisited','1');
     const savedView = JSON.parse(storage.getItem('mapView') || 'null');
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
-    const startCenter = savedView?.center || defaultCenter;
-    const startZoom = savedView?.zoom || 1.5;
-    startPitch = window.startPitch = savedView?.pitch || 0;
-    startBearing = window.startBearing = savedView?.bearing || 0;
+    const startCenter = (savedView && savedView.center) || defaultCenter;
+    const startZoom = (savedView && savedView.zoom) || 1.5;
+    startPitch = window.startPitch = (savedView && savedView.pitch) || 0;
+    startBearing = window.startBearing = (savedView && savedView.bearing) || 0;
 
     function normalizeMapStyle(style){
       switch(style){
@@ -2677,7 +2687,7 @@ select option:hover{
     }
 
       let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false,
-          spinLoadStart = JSON.parse(storage.getItem('spinLoadStart') ?? 'true'),
+          spinLoadStart = JSON.parse(storage.getItem('spinLoadStart') || 'true'),
           spinLoadType = storage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(storage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(storage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
@@ -2751,7 +2761,7 @@ select option:hover{
         }
       }
 
-      logoEl?.addEventListener('click', (e) => {
+      if (logoEl) logoEl.addEventListener('click', (e) => {
         e.stopPropagation();
         if(spinning){
           openWelcome();
@@ -4480,8 +4490,8 @@ function makePosts(){
               const priceVals = loc.dates.flatMap(d=>[d.price.adult,d.price.kid,d.price.pensioner]);
               const minP = Math.min(...priceVals);
               const maxP = Math.max(...priceVals);
-              const first = loc.dates[0]?.date;
-              const last = loc.dates[loc.dates.length-1]?.date || first;
+              const first = loc.dates[0] && loc.dates[0].date;
+              const last = (loc.dates[loc.dates.length-1] && loc.dates[loc.dates.length-1].date) || first;
               sessionInfo.innerHTML = `<div>💲 $${minP.toFixed(2)} - $${maxP.toFixed(2)} | 📅 ${first} - ${last}</div>`;
               if(sessBtn) sessBtn.innerHTML = `<span class="sess-label">Select Session</span>${loc.dates.length>1?'<span class="dropdown-arrow">&#9662;</span>':''}`;
               picker.clearSelection();
@@ -4528,8 +4538,8 @@ function makePosts(){
             const priceVals = loc.dates.flatMap(d=>[d.price.adult,d.price.kid,d.price.pensioner]);
             const minP = Math.min(...priceVals);
             const maxP = Math.max(...priceVals);
-            const first = loc.dates[0]?.date;
-            const last = loc.dates[loc.dates.length-1]?.date || first;
+            const first = loc.dates[0] && loc.dates[0].date;
+            const last = (loc.dates[loc.dates.length-1] && loc.dates[loc.dates.length-1].date) || first;
             if(sessionInfo) sessionInfo.innerHTML = `<div>💲 $${minP.toFixed(2)} - $${maxP.toFixed(2)} | 📅 ${first} - ${last}</div>`;
             sessMenu.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
