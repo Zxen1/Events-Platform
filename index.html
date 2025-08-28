@@ -61,7 +61,7 @@
       --keyword-bg: rgba(74,74,74,0.9);
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
-      --control-h: calc(var(--subheader-h) - 28px);
+      --control-h: 40px;
 }
 
 *{
@@ -244,13 +244,33 @@ select option:hover{
   transition: background .2s,border-color .2s;
 }
 
+.header button,
+.view-toggle button,
+.auth button,
+.subheader button,
+.options-menu button{
+  height:40px;
+  line-height:40px;
+}
+
 .results-arrow{
   display:inline-block;
-  font-size:20px;
+  font-size:12px;
   line-height:1;
+  margin-right:4px;
   transition:transform .3s;
 }
 body.hide-results .results-arrow{transform:rotate(180deg);}
+
+.dropdown-arrow{
+  display:inline-block;
+  font-size:12px;
+  margin-left:4px;
+  transition:transform .3s;
+}
+button[aria-expanded="true"] .dropdown-arrow{transform:rotate(180deg);}
+
+#addressTitle,#addressField{display:none;}
 
 #smallLogo{
   display:none;
@@ -1105,11 +1125,22 @@ body.filters-active #filterBtn{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:var(--control-h);display:flex;align-items:center;min-width:240px !important;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:var(--control-h);display:flex;align-items:center;min-width:240px !important;background:#fff;border:1px solid #ccc;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 30px;}
-.mapboxgl-ctrl-group button{width:var(--control-h);height:var(--control-h);}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 30px;background:#fff;color:#000;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{display:grid;place-items:center;background:#fff;border:1px solid #ccc;color:#000;padding:0;margin:0;}
+.mapboxgl-ctrl-group button,
+.mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff;border:1px solid #ccc;color:#000;display:grid;place-items:center;padding:0;border-radius:4px;}
+.mapboxgl-ctrl button svg,
+.mapboxgl-ctrl button span{display:block;}
+
+@media (max-width:999px){
+  .geocoder{position:static;transform:none;margin-left:auto;}
+}
+@media (max-width:649px){
+  .geocoder{width:100%;margin-left:0;}
+}
 
 
 
@@ -1127,7 +1158,7 @@ body.filters-active #filterBtn{
 }
 .closed-posts .res-list{overflow:visible;padding:0;}
 .closed-posts{color:#000;padding:0 14px 14px 0;}
-.closed-posts .card{background:var(--list-background);}
+.closed-posts .card{background:rgba(0,0,0,0.37);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
 
@@ -2109,8 +2140,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
-    <nav class="view-toggle" aria-label="Primary" role="tablist"><span class="results-arrow" aria-hidden="true">&#9664;</span>
-      <button id="resultsToggle" aria-pressed="true">Results List</button>
+    <nav class="view-toggle" aria-label="Primary" role="tablist">
+      <button id="resultsToggle" aria-pressed="true"><span class="results-arrow" aria-hidden="true">&#9664;</span> Results List</button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
       <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
       <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
@@ -2189,6 +2220,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label class="t">Today Onwards <input id="todayToggle" type="checkbox" checked /></label>
           </div>
           <div id="datePicker"></div>
+
+          <h3 id="addressTitle">Address</h3>
+          <div class="field" id="addressField"></div>
 
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
@@ -3278,6 +3312,39 @@ function makePosts(){
         }
       });
 
+      const geoWrap = document.getElementById('geocoder');
+      const addressTitle = document.getElementById('addressTitle');
+      const addressField = document.getElementById('addressField');
+      function placeGeocoder(){
+        if(!geoWrap || !addressTitle || !addressField) return;
+        const w = window.innerWidth;
+        if(w < 650){
+          addressTitle.style.display = '';
+          addressField.style.display = '';
+          addressField.appendChild(geoWrap);
+          geoWrap.style.position = 'static';
+          geoWrap.style.transform = 'none';
+          geoWrap.style.marginLeft = '0';
+        } else {
+          addressTitle.style.display = 'none';
+          addressField.style.display = 'none';
+          document.querySelector('.subheader').appendChild(geoWrap);
+          if(w < 1000){
+            geoWrap.style.position = 'static';
+            geoWrap.style.transform = 'none';
+            geoWrap.style.marginLeft = 'auto';
+          } else {
+            geoWrap.style.position = 'absolute';
+            geoWrap.style.top = '50%';
+            geoWrap.style.left = '50%';
+            geoWrap.style.transform = 'translate(-50%, -50%)';
+            geoWrap.style.marginLeft = '';
+          }
+        }
+      }
+      window.addEventListener('resize', placeGeocoder);
+      placeGeocoder();
+
       function setMode(m){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts');
@@ -3937,11 +4004,11 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true">&#9662;</span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
                 <div id="cal-${p.id}" class="post-calendar"></div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true">&#9662;</span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
@@ -4150,12 +4217,13 @@ function makePosts(){
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
-      let map, marker, picker;
+      let map, marker, picker, sessionHasMultiple = false;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
+        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true">&#9662;</span>':''}`;
+        sessionHasMultiple = loc.dates.length > 1;
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -4206,7 +4274,7 @@ function makePosts(){
             const dt = loc.dates[i];
             if(dt){
               sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true">&#9662;</span>':''}`;
               ignoreSelect = true;
               picker.setDate(dt.full);
               picker.gotoDate(dt.full);
@@ -4214,7 +4282,7 @@ function makePosts(){
               highlightMonth();
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn) sessBtn.textContent = 'Select Session';
+              if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="dropdown-arrow" aria-hidden="true">&#9662;</span>' : 'Select Session';
               picker.clearSelection();
               highlightMonth();
             }
@@ -4249,8 +4317,17 @@ function makePosts(){
           if(sessMenu){
             sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
             sessMenu.scrollTop = 0;
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-            if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+            if(sessionHasMultiple){
+              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="dropdown-arrow" aria-hidden="true">&#9662;</span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            } else {
+              if(loc.dates.length){
+                selectSession(0);
+              } else {
+                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+                if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+              }
+            }
             sessMenu.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
@@ -4368,16 +4445,18 @@ function saveModalState(m){
   localStorage.setItem(`modal-${m.id}`, JSON.stringify(state));
 }
 function loadModalState(m){
-  if(!m || !m.id) return;
+  if(!m || !m.id) return false;
   const content = m.querySelector('.modal-content');
-  if(!content) return;
+  if(!content) return false;
   const saved = JSON.parse(localStorage.getItem(`modal-${m.id}`) || 'null');
   if(saved){
     ['width','height','left','top'].forEach(prop=>{
       if(saved[prop]) content.style[prop] = saved[prop];
     });
     if(saved.left || saved.top) content.style.transform = 'none';
+    return true;
   }
+  return false;
 }
 function openModal(m){
   const content = m.querySelector('.modal-content');
@@ -4407,7 +4486,10 @@ function openModal(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    if(m.id !== 'welcomeModal') loadModalState(m);
+    const loaded = m.id !== 'welcomeModal' ? loadModalState(m) : false;
+    if(!loaded && (m.id==='adminModal' || m.id==='memberModal')){
+      moveModalToEdge(m,'right');
+    }
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
@@ -4464,7 +4546,15 @@ function handleEsc(){
     top.remove();
   }
 }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') handleEsc();
+  else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+    const top = modalStack[modalStack.length-1];
+    if(top && (top.id==='adminModal' || top.id==='memberModal')){
+      moveModalToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
+    }
+  }
+});
 
 // Modals and admin/member interactions
 (function(){
@@ -4620,7 +4710,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
-    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader button'], btnText:['.subheader button'], optionsMenu:['.options-menu']}},
+    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader > button','.options-dropdown > button'], btnText:['.subheader > button','.options-dropdown > button'], optionsMenu:['.options-menu']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'Results List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
