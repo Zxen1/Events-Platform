@@ -2633,26 +2633,19 @@ select option:hover{
   const storage = (() => {
     try {
       const testKey = '__storage_test__';
-      window.localStorage.setItem(testKey, '1');
-      window.localStorage.removeItem(testKey);
-      return window.localStorage;
-    } catch (e1) {
-      try {
-        const testKey = '__storage_test__';
-        window.sessionStorage.setItem(testKey, '1');
-        window.sessionStorage.removeItem(testKey);
-        return window.sessionStorage;
-      } catch (e2) {
-        let store = {};
-        return {
-          get length() { return Object.keys(store).length; },
-          key: i => Object.keys(store)[i] || null,
-          getItem: key => (key in store ? store[key] : null),
-          setItem: (key, val) => { store[key] = String(val); },
-          removeItem: key => { delete store[key]; },
-          clear: () => { store = {}; }
-        };
-      }
+      window.sessionStorage.setItem(testKey, '1');
+      window.sessionStorage.removeItem(testKey);
+      return window.sessionStorage;
+    } catch (e) {
+      let store = {};
+      return {
+        get length() { return Object.keys(store).length; },
+        key: i => Object.keys(store)[i] || null,
+        getItem: key => (key in store ? store[key] : null),
+        setItem: (key, val) => { store[key] = String(val); },
+        removeItem: key => { delete store[key]; },
+        clear: () => { store = {}; }
+      };
     }
   })();
   const sg = window.spinGlobals || {};
