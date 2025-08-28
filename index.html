@@ -3686,14 +3686,6 @@ function makePosts(){
     const postsWideEl = $('#postsWide');
     const postsModeEl = $('.closed-posts');
 
-    postsModeEl.addEventListener('scroll', () => {
-      const last = postsWideEl.lastElementChild;
-      if(!last) return;
-      const limit = postsModeEl.getBoundingClientRect().top + 12;
-      const lastTop = last.getBoundingClientRect().top;
-      if(lastTop < limit){ postsModeEl.scrollTop -= (limit - lastTop); }
-    });
-
     function renderLists(list){
       if(spinning) return;
       const sort = currentSort;
