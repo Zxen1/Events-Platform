@@ -285,7 +285,7 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   transition:transform .3s;
 }
 
-button[aria-expanded="true"] .dropdown-arrow{
+.open-posts .options-dropdown .dropdown-arrow.up{
   transform:translateY(-50%) rotate(225deg);
 }
 
@@ -1357,7 +1357,7 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:100%;
+  flex:1 1 400px;
   max-width:400px;
 }
 
@@ -1508,34 +1508,36 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:100%;
+  flex:1 1 400px;
   max-width:400px;
 }
 
 
 .open-posts .post-calendar{
   width:100%;
-  overflow:hidden;
+  max-width:400px;
+  overflow-x:auto;
+  overflow-y:hidden;
   position:relative;
-  display:flex;
-  justify-content:center;
+  display:block;
+  padding-bottom:20px;
 }
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
-  width:100%;
-  max-width:400px;
-  margin:0 auto;
+  width:fit-content;
+  min-width:100%;
+  margin:0;
   box-sizing:border-box;
   display:block;
 }
 
 .open-posts .post-calendar .container__months{
-  display:block;
+  display:flex;
 }
 
 .open-posts .post-calendar .container__months .month-item{
-  width:100%;
+  flex:0 0 400px;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -4346,6 +4348,9 @@ function makePosts(){
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
+        const firstDateObj = new Date(firstDate);
+        const lastDateObj = new Date(lastDate);
+        const numberOfMonths = (lastDateObj.getFullYear() - firstDateObj.getFullYear())*12 + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -4355,13 +4360,18 @@ function makePosts(){
           startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
-          numberOfMonths: 1,
-          numberOfColumns: 1,
+          numberOfMonths,
+          numberOfColumns: numberOfMonths,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         const lp = calendarEl.querySelector('.litepicker');
-        if(lp && mapEl) lp.style.width = mapEl.offsetWidth + 'px';
+        if(lp){
+          const width = calendarEl.offsetWidth;
+          lp.style.width = (width * numberOfMonths) + 'px';
+          lp.querySelectorAll('.month-item').forEach(m=> m.style.width = width + 'px');
+        }
         calendarEl.addEventListener('click', e=> e.stopPropagation());
+        calendarEl.addEventListener('wheel', e=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ calendarEl.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
         let ignoreSelect = false;
         function highlightMonth(){
           calendarEl.querySelectorAll('.month-name').forEach(n=> n.classList.remove('selected-month-name'));
@@ -4392,6 +4402,8 @@ function makePosts(){
             }
             sessMenu.hidden = true;
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
+            const arrow = sessBtn ? sessBtn.querySelector('.dropdown-arrow') : null;
+            if(arrow) arrow.classList.remove('up');
           }
         function showTimePopup(matches){
           const popup = document.createElement('div');
@@ -4449,22 +4461,32 @@ function makePosts(){
                 updateVenue(parseInt(btn.dataset.index,10));
                 venueMenu.hidden = true;
                 venueBtn.setAttribute('aria-expanded','false');
+                const arrow = venueBtn.querySelector('.dropdown-arrow');
+                if(arrow) arrow.classList.remove('up');
               });
             });
             venueBtn.addEventListener('click', ()=>{
               const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
               venueBtn.setAttribute('aria-expanded', String(!expanded));
               venueMenu.hidden = expanded;
+              const arrow = venueBtn.querySelector('.dropdown-arrow');
+              if(arrow && venueMenu.children.length>1){
+                arrow.classList.toggle('up', !expanded);
+              }
             });
-            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
+            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); const arrow = venueBtn.querySelector('.dropdown-arrow'); if(arrow) arrow.classList.remove('up'); } });
           }
           if(sessBtn && sessMenu){
             sessBtn.addEventListener('click', ()=>{
               const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
               sessBtn.setAttribute('aria-expanded', String(!expanded));
               sessMenu.hidden = expanded;
+              const arrow = sessBtn.querySelector('.dropdown-arrow');
+              if(arrow && sessMenu.children.length>1){
+                arrow.classList.toggle('up', !expanded);
+              }
             });
-            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
+            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); const arrow = sessBtn.querySelector('.dropdown-arrow'); if(arrow) arrow.classList.remove('up'); } });
           }
           if(map && typeof map.resize === 'function') map.resize();
         },0);
@@ -4720,8 +4742,11 @@ document.addEventListener('keydown', e=>{
     }
   });
   if(welcomePanel){
-    welcomePanel.addEventListener('click', e=>{
-      if(e.target === welcomePanel) closePanel(welcomePanel);
+    document.addEventListener('click', e=>{
+      const content = welcomePanel.querySelector('.panel-content');
+      if(welcomePanel.classList.contains('show') && content && !content.contains(e.target)){
+        closePanel(welcomePanel);
+      }
     });
   }
 
