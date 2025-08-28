@@ -909,7 +909,6 @@ body.hide-results .results-col{
   justify-content: flex-start;
   gap: 8px;
   color: var(--ink-d);
-  grid-column: 1 / -1;
   height: var(--subheader-h);
   min-height: var(--subheader-h);
   max-height: var(--subheader-h);
@@ -1932,9 +1931,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   position: fixed;
   top: calc(var(--header-h) + var(--subheader-h));
   bottom: var(--footer-h);
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
-  left: 0;
-  right: 0;
+  left: var(--results-w);
+  width: var(--panel-w);
   z-index: 10;
   pointer-events: none;
 }
