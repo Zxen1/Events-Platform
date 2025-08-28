@@ -3170,6 +3170,10 @@ function makePosts(){
       document.body.classList.toggle('filters-active', filtersActive());
     }
 
+    function fmtShort(iso){
+      return new Date(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+    }
+
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
@@ -3184,8 +3188,8 @@ function makePosts(){
           if(start && end){
             const sIso = start.format('YYYY-MM-DD');
             const eIso = end.format('YYYY-MM-DD');
-            const sDisp = start.format('ddd D MMM');
-            const eDisp = end.format('ddd D MMM');
+            const sDisp = fmtShort(sIso);
+            const eDisp = fmtShort(eIso);
             input.value = `${sDisp} - ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
             todayWasOn = todayToggle && todayToggle.checked;
@@ -3959,8 +3963,15 @@ function makePosts(){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').value = st.date || '';
       $('#dateInput').dataset.range = st.range || '';
+      if(st.date){
+        $('#dateInput').value = st.date;
+      } else if(st.range){
+        const [sIso, eIso] = st.range.split(' to ').map(s=>s.trim());
+        $('#dateInput').value = `${fmtShort(sIso)} - ${fmtShort(eIso)}`;
+      } else {
+        $('#dateInput').value = '';
+      }
       $('#todayToggle').checked = st.today || false;
       if($('#todayToggle').checked){
         $('#dateInput').value = 'Today Onwards';
