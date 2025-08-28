@@ -719,25 +719,6 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
 .panel-header h2{
   margin:0;
 }
-.palette{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-.field-item,
-.field-instance{
-  padding:6px 10px;
-  border:1px solid #ccc;
-  border-radius:4px;
-  background:#f9f9f9;
-  cursor:move;
-}
-.builder-zone{
-  min-height:100px;
-  border:2px dashed #ccc;
-  padding:10px;
-}
-.field-instance{margin:4px 0;}
 
 
 .filters-col{
@@ -2526,16 +2507,24 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="panel-field">
-            <label for="catList">Categories</label>
-            <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
+            <label for="siteName">Site Name</label>
+            <input type="text" id="siteName" />
           </div>
           <div class="panel-field">
-            <label for="subList">Subcategories</label>
-            <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
+            <label for="siteDescription">Site Description</label>
+            <textarea id="siteDescription" rows="2"></textarea>
           </div>
           <div class="panel-field">
-            <label for="aColor">Color</label>
-            <input type="color" id="aColor" data-mode="hex" value="#000000" />
+            <label for="logo">Logo</label>
+            <input type="file" id="logo" accept="image/*" />
+          </div>
+          <div class="panel-field">
+            <label for="smallLogo">Small Logo</label>
+            <input type="file" id="smallLogo" accept="image/*" />
+          </div>
+          <div class="panel-field">
+            <label for="favicon">Favicon</label>
+            <input type="file" id="favicon" accept="image/x-icon,image/png" />
           </div>
           <div class="panel-field">
             <label for="welcomeMessageEditor">Welcome Message</label>
@@ -2547,14 +2536,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome!</p>"></div>
             <textarea id="welcomeMessage" hidden></textarea>
           </div>
-          <h3>Subcategory Form Builder</h3>
-          <div class="palette" id="fieldPalette">
-            <div class="field-item" draggable="true" data-type="text">Text</div>
-            <div class="field-item" draggable="true" data-type="date">Date</div>
-            <div class="field-item" draggable="true" data-type="image">Image</div>
-            <div class="field-item" draggable="true" data-type="location">Location</div>
-          </div>
-          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
           <div class="panel-field">
             <label for="settingsRestore">Restore Backup</label>
             <select id="settingsRestore" style="width:250px"></select>
@@ -4661,8 +4642,8 @@ function movePanelToEdge(panel, side){
   if(!panel) return;
   const content = panel.querySelector('.panel-content');
   if(!content) return;
-  const subHead = document.querySelector('.subheader');
-  const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  const header = document.querySelector('.header');
+  const topPos = header ? header.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
   content.style.top = `${topPos}px`;
   content.style.transform = 'none';
   if(side === 'left'){
@@ -6428,47 +6409,6 @@ document.addEventListener('keydown', e=>{
       el.addEventListener('input', handler);
       if(oEl) oEl.addEventListener('input', handler);
     }
-  });
-
-  const palette = document.getElementById('fieldPalette');
-  const builder = document.getElementById('formBuilder');
-  let dragType = null;
-
-  palette && palette.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-item')){
-      dragType = e.target.dataset.type;
-    }
-  });
-
-  builder && builder.addEventListener('dragover', e=> e.preventDefault());
-
-  builder && builder.addEventListener('drop', e=>{
-    e.preventDefault();
-    if(dragType){
-      const item = document.createElement('div');
-      item.className = 'field-instance';
-      item.textContent = dragType.charAt(0).toUpperCase()+dragType.slice(1);
-      item.setAttribute('draggable','true');
-      builder.appendChild(item);
-      dragType = null;
-    }
-  });
-
-  let dragEl = null;
-  builder && builder.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-instance')){
-      dragEl = e.target;
-    }
-  });
-
-  builder && builder.addEventListener('drop', e=>{
-    if(dragEl && e.target.classList.contains('field-instance')){
-      e.preventDefault();
-      const rect = e.target.getBoundingClientRect();
-      const after = (e.clientY - rect.top) > rect.height/2;
-      builder.insertBefore(dragEl, after ? e.target.nextSibling : e.target);
-    }
-    dragEl = null;
   });
 
   window.addEventListener('resize', updateLayoutVars);
