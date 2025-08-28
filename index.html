@@ -14,6 +14,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
   <style id="layout">
+:root{
+  --header-h: 75px;
+  --subheader-h: 75px;
+  --panel-w: 260px;
+  --results-w: 520px;
+  --gap: 12px;
+  --footer-h: 70px;
+  --dropdown-radius: 6px;
+}
+
 *{
   box-sizing: border-box;
   scrollbar-width: thin;
@@ -1119,7 +1129,6 @@ body.hide-results .closed-posts{
   position:sticky;
   top:0;
   z-index:3;
-  background:var(--list-background);
 }
 
 .open-posts .body{
@@ -1949,11 +1958,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 </style>
 <style id="theme-default">
 :root{
-  --header-h: 75px;
-  --subheader-h: 75px;
-  --panel-w: 260px;
-  --results-w: 520px;
-  --gap: 12px;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -1971,7 +1975,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       --btn-2: var(--btn-hover);
       --modal-bg: rgba(0,0,0,0.62);
       --modal-text: #000000;
-      --footer-h: 70px;
       --list-background: rgba(0,0,0,0.37);
       --scrollbar-track: rgba(0,0,0,0);
       --scrollbar-thumb: rgba(0,0,0,0.3);
@@ -1990,7 +1993,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       --dropdown-hover-bg: rgba(224,224,224,1);
       --dropdown-hover-text: #000000;
       --dropdown-venue-text: #000000;
-      --dropdown-radius: 6px;
       --session-available: #0000ff;
       --session-selected: #008000;
       --filter-btn-active: #8b0000;
@@ -2083,6 +2085,148 @@ select option:hover{
   background: var(--dropdown-hover-bg);
   color: var(--dropdown-hover-text);
 }
+.open-posts-sticky-header .open-posts .detail-header{ background: var(--list-background); }
+.view-toggle button{
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
+}
+#resultsToggle{
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
+}
+</style>
+<style id="theme-clean-slate" disabled>
+:root{
+  --ink: #ffffff;
+  --ink-d: #ececec;
+  --gold: #ffc107;
+  --muted: #777;
+  --primary: #000000;
+  --secondary: #000000;
+  --accent: #000000;
+  --background: rgba(41,41,41,1);
+  --text: #ffffff;
+  --button-text: #ffffff;
+  --button-hover-text: #000000;
+  --btn: rgba(74,74,74,0.9);
+  --btn-hover: rgba(0,0,0,1);
+  --btn-active: rgba(0,0,0,1);
+  --btn-2: var(--btn-hover);
+  --modal-bg: rgba(255,255,255,1);
+  --modal-text: #000000;
+  --list-background: rgba(0,0,0,0.37);
+  --scrollbar-track: rgba(0,0,0,0);
+  --scrollbar-thumb: rgba(0,0,0,0);
+  --scrollbar-thumb-hover: rgba(0,0,0,0.48);
+  --border: rgba(173,173,173,0.31);
+  --border-hover: rgba(255,136,0,1);
+  --border-active: rgba(255,200,0,1);
+  --placeholder-text: #000000;
+  --filter-placeholder-text: #b8b8b8;
+  --filter-date-text: #ffffff;
+  --dropdown-title: #000000;
+  --dropdown-selected-bg: rgba(224,224,224,1);
+  --dropdown-selected-text: #000000;
+  --dropdown-text: #000000;
+  --dropdown-bg: rgba(255,255,255,1);
+  --dropdown-hover-bg: rgba(224,224,224,1);
+  --dropdown-hover-text: #000000;
+  --dropdown-venue-text: #ffffff;
+  --session-available: #0000ff;
+  --session-selected: #008000;
+  --filter-btn-active: #8b0000;
+}
+*{
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  border-color: var(--border) !important;
+}
+*:active,
+*[aria-pressed="true"],
+*[aria-current="page"],
+*[aria-selected="true"],
+.selected,
+.on{
+  border-color: var(--border-active) !important;
+}
+*:hover{
+  border-color: var(--border-hover) !important;
+}
+*::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+*::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+}
+*::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
+}
+body{
+  background: var(--background);
+  color: var(--text);
+  caret-color: transparent;
+}
+input,
+textarea{
+  caret-color: auto;
+}
+button,
+[role="button"]{
+  background: var(--secondary);
+  border-color: var(--secondary);
+  color: var(--button-text);
+}
+button:hover,
+[role="button"]:hover{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--button-hover-text);
+}
+a{
+  color: var(--primary);
+}
+a:hover{
+  color: var(--accent);
+}
+button:focus-visible,
+[role="button"]:focus-visible{
+  outline-color: var(--ink-d);
+}
+input::placeholder,
+textarea::placeholder{
+  color: var(--placeholder-text);
+}
+#kwInput::placeholder{ color: var(--filter-placeholder-text); }
+#filterModal #dateInput{ color: var(--filter-date-text); }
+#filterModal input[type="text"]{ background:var(--dropdown-bg); }
+#adminModal .textpicker,
+#filterModal .textpicker{ background:var(--dropdown-bg); }
+#adminModal .textpicker .text-popup select,
+#adminModal .textpicker .text-popup input[type=color]{ background:var(--dropdown-bg); }
+.field label{
+  color: var(--dropdown-title);
+}
+select{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+.venue-select{
+  color: var(--dropdown-venue-text);
+}
+select option{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
+select option:checked{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+select option:hover{
+  background: var(--dropdown-hover-bg);
+  color: var(--dropdown-hover-text);
+}
+.open-posts-sticky-header .open-posts .detail-header{ background: var(--list-background); }
 .view-toggle button{
   background: var(--btn);
   border-color: var(--btn);
