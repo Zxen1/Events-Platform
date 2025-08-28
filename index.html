@@ -669,6 +669,8 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   border:1px solid #ccc;
   min-height:80px;
   padding:8px;
+  caret-color:auto;
+  cursor:text;
 }
 .wysiwyg:empty:before{
   content:attr(data-placeholder);
@@ -679,6 +681,9 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   gap:4px;
 }
 .wysiwyg-toolbar button{
+  padding:4px 6px;
+}
+.wysiwyg-toolbar select{
   padding:4px 6px;
 }
 .panel-field input,
@@ -2532,6 +2537,16 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <button type="button" data-command="bold"><b>B</b></button>
               <button type="button" data-command="italic"><i>I</i></button>
               <button type="button" data-command="underline"><u>U</u></button>
+              <select data-command="fontName">
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+              <select data-command="fontSize">
+                <option value="3">Normal</option>
+                <option value="4">Large</option>
+                <option value="5">Larger</option>
+              </select>
             </div>
             <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome!</p>"></div>
             <textarea id="welcomeMessage" hidden></textarea>
@@ -4670,12 +4685,6 @@ function handleEsc(){
 }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
-  else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
-    const top = panelStack[panelStack.length-1];
-    if(window.innerWidth >= 650 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
-      movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
-    }
-  }
 });
 
 // Panels and admin/member interactions
@@ -6630,11 +6639,19 @@ document.addEventListener('DOMContentLoaded', () => {
     hidden.value = hidden.value || placeholder;
     editor.innerHTML = hidden.value;
     editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.execCommand(btn.dataset.command, false, null);
-        editor.focus();
-      });
+    document.querySelectorAll('.wysiwyg-toolbar [data-command]').forEach(ctrl => {
+      const cmd = ctrl.dataset.command;
+      if(ctrl.tagName === 'BUTTON'){
+        ctrl.addEventListener('click', () => {
+          document.execCommand(cmd, false, null);
+          editor.focus();
+        });
+      } else if(ctrl.tagName === 'SELECT'){
+        ctrl.addEventListener('change', () => {
+          document.execCommand(cmd, false, ctrl.value);
+          editor.focus();
+        });
+      }
     });
   }
 });
