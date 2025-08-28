@@ -1238,6 +1238,10 @@ body.hide-results .closed-posts{
   overflow:visible;
 }
 
+.open-posts-sticky-header .open-posts{
+  overflow:hidden;
+}
+
 .open-posts .detail-header{
   display:flex;
   justify-content:space-between;
@@ -1248,7 +1252,7 @@ body.hide-results .closed-posts{
 }
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
-  top:0;
+  top:-1px;
   z-index:3;
   background:var(--list-background);
 }
@@ -2097,7 +2101,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
-.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
+.open-posts-sticky-header .open-posts{overflow:hidden;}
+.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:-1px;z-index:3;background:var(--list-background);}
 .header{background-color:rgba(41,41,41,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -5824,7 +5829,7 @@ document.addEventListener('keydown', e=>{
       css += `:root{${rootVars.join('')}}\n`;
     }
     if(data['open-posts-sticky-header'] && data['open-posts-sticky-header'].value === '1'){
-      css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
+      css += '.open-posts-sticky-header .open-posts{overflow:hidden;}.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:-1px;z-index:3;background:var(--list-background);}\n';
     }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
