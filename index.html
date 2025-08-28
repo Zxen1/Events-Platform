@@ -2630,6 +2630,21 @@ select option:hover{
   </div>
 
   <script>
+  const storage = (() => {
+    try {
+      const testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    } catch (e) {
+      const store = {};
+      return {
+        getItem: key => (key in store ? store[key] : null),
+        setItem: (key, val) => { store[key] = String(val); },
+        removeItem: key => { delete store[key]; }
+      };
+    }
+  })();
   const sg = window.spinGlobals || {};
   let startPitch, startBearing;
 
@@ -2639,9 +2654,9 @@ select option:hover{
     let mode = 'map';
     const DEFAULT_SPIN_SPEED = 0.2;
     const DEFAULT_WELCOME = '<p>Welcome!</p>';
-    const firstVisit = !localStorage.getItem('hasVisited');
-    localStorage.setItem('hasVisited','1');
-    const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
+    const firstVisit = !storage.getItem('hasVisited');
+    storage.setItem('hasVisited','1');
+    const savedView = JSON.parse(storage.getItem('mapView') || 'null');
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
     const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
@@ -2662,14 +2677,14 @@ select option:hover{
     }
 
       let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false,
-          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
-          spinLoadType = localStorage.getItem('spinLoadType') || 'all',
-          spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
-          spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
+          spinLoadStart = JSON.parse(storage.getItem('spinLoadStart') ?? 'true'),
+          spinLoadType = storage.getItem('spinLoadType') || 'all',
+          spinLogoClick = JSON.parse(storage.getItem('spinLogoClick') || 'true'),
+          spinSpeed = parseFloat(storage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night';
-      localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+          mapStyle = window.mapStyle = normalizeMapStyle(storage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
+          skyStyle = window.skyStyle = storage.getItem('skyStyle') || 'night';
+      storage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEl = document.querySelector('.logo');
       const filterBtn = document.getElementById('filterBtn');
       function updateViewport(){
@@ -2715,7 +2730,7 @@ select option:hover{
 
       function openWelcome(){
         const body = document.getElementById('welcomeBody');
-        const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
+        const saved = JSON.parse(storage.getItem('admin-settings-current') || '{}');
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
         body.innerHTML = msg;
         if(!/\<img/i.test(msg)){
@@ -2744,7 +2759,7 @@ select option:hover{
         }
         if(spinLogoClick && map && map.getZoom() <= 4){
           spinEnabled = true;
-          localStorage.setItem('spinGlobe', 'true');
+          storage.setItem('spinGlobe', 'true');
           startSpin(true);
         }
         openWelcome();
@@ -3442,7 +3457,7 @@ function makePosts(){
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
       const filterModal = $('#filterModal');
-      const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
+      const storedHidden = JSON.parse(storage.getItem('resultsHidden') || 'false');
       const shouldHide = spinEnabled || (storedHidden && !window.matchMedia('(max-width:1000px)').matches);
       if(shouldHide){
         document.body.classList.add('hide-results');
@@ -3464,7 +3479,7 @@ function makePosts(){
         const hidden = document.body.classList.toggle('hide-results');
         resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
-        localStorage.setItem('resultsHidden', JSON.stringify(hidden));
+        storage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
@@ -3481,7 +3496,7 @@ function makePosts(){
           document.body.classList.add('hide-results');
           resultsToggle.setAttribute('aria-pressed','false');
           resultsCol.setAttribute('aria-hidden','true');
-          localStorage.setItem('resultsHidden','true');
+          storage.setItem('resultsHidden','true');
           setMode('map');
         }
       });
@@ -3506,7 +3521,7 @@ function makePosts(){
       }
       if(m==='posts'){
         spinEnabled = false;
-        localStorage.setItem('spinGlobe','false');
+        storage.setItem('spinGlobe','false');
         stopSpin();
       }
       applyFilters();
@@ -3567,7 +3582,7 @@ function makePosts(){
         });
         geocoder.on('result', ()=>{
           spinEnabled = false;
-          localStorage.setItem('spinGlobe','false');
+          storage.setItem('spinGlobe','false');
           stopSpin();
           setMode('map');
           if(map) map.once('moveend', () => { geocoder.clear(); applyFilters(); updatePostPanel(); });
@@ -3627,7 +3642,7 @@ function makePosts(){
       addGeocoder();
       addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
-      geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); setMode('map'); });
+      geolocate.on('geolocate', ()=>{ spinEnabled = false; storage.setItem('spinGlobe','false'); stopSpin(); setMode('map'); });
       const geoContainer = document.getElementById('geocoder');
       if(geoContainer){
         geoContainer.appendChild(geolocate.onAdd(map));
@@ -3663,7 +3678,7 @@ function makePosts(){
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
-          localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
+          storage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         });
         map.on('click', () => {
           if(mode === 'posts') setMode('map');
@@ -3714,7 +3729,7 @@ function makePosts(){
     function haltSpin(){
       if(spinEnabled || spinning){
         spinEnabled = false;
-        localStorage.setItem('spinGlobe','false');
+        storage.setItem('spinGlobe','false');
         stopSpin();
       }
     }
@@ -3727,7 +3742,7 @@ function makePosts(){
       const shouldSpin = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit));
       if(shouldSpin !== spinEnabled){
         spinEnabled = shouldSpin;
-        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        storage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) startSpin(); else stopSpin();
       }
     }
@@ -4087,8 +4102,8 @@ function makePosts(){
 
     // Footer history
     const footRow = $('#footRow');
-    function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
-    function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
+    function loadHistory(){ try{ return JSON.parse(storage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
+    function saveHistory(){ storage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
 
     function captureState(){
       return {
@@ -4214,7 +4229,7 @@ function makePosts(){
 
     async function openPost(id, fromPosts=false){
       spinEnabled = false;
-      localStorage.setItem('spinGlobe', 'false');
+      storage.setItem('spinGlobe', 'false');
       stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
       activePostId = id;
@@ -4635,13 +4650,13 @@ function saveModalState(m){
     width: content.style.width,
     height: content.style.height
   };
-  localStorage.setItem(`modal-${m.id}`, JSON.stringify(state));
+  storage.setItem(`modal-${m.id}`, JSON.stringify(state));
 }
 function loadModalState(m){
   if(!m || !m.id) return;
   const content = m.querySelector('.modal-content');
   if(!content) return;
-  const saved = JSON.parse(localStorage.getItem(`modal-${m.id}`) || 'null');
+  const saved = JSON.parse(storage.getItem(`modal-${m.id}`) || 'null');
   if(saved){
     ['width','height','left','top'].forEach(prop=>{
       if(saved[prop]) content.style[prop] = saved[prop];
@@ -4702,7 +4717,7 @@ function openModal(m){
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
-  localStorage.setItem(`modal-open-${m.id}`,'true');
+  storage.setItem(`modal-open-${m.id}`,'true');
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
     m.__bringToTopAdded = true;
@@ -4714,8 +4729,8 @@ function closeModal(m){
   saveModalState(m);
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
-  localStorage.setItem(`modal-open-${m.id}`,'false');
-  if(m.id === 'welcomeModal') localStorage.setItem('welcomeSeen','true');
+  storage.setItem(`modal-open-${m.id}`,'false');
+  if(m.id === 'welcomeModal') storage.setItem('welcomeSeen','true');
   const idx = modalStack.indexOf(m);
   if(idx!==-1) modalStack.splice(idx,1);
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
@@ -4825,11 +4840,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
   const welcomeModal = document.getElementById('welcomeModal');
   [filterModal, memberModal, adminModal, welcomeModal].forEach(m=>{
-    if(m && localStorage.getItem(`modal-open-${m.id}`) === 'true'){
+    if(m && storage.getItem(`modal-open-${m.id}`) === 'true'){
       if(m.id !== 'filterModal' || !window.matchMedia('(max-width:1000px)').matches){
         openModal(m);
       } else {
-        localStorage.setItem(`modal-open-${m.id}`,'false');
+        storage.setItem(`modal-open-${m.id}`,'false');
       }
     }
   });
@@ -4842,7 +4857,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         closeModal(welcomeModal);
       }
     });
-    if(!localStorage.getItem('welcomeSeen')) openWelcome();
+    if(!storage.getItem('welcomeSeen')) openWelcome();
   }
 
   document.querySelectorAll('.modal').forEach(modal=>{
@@ -4945,10 +4960,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
-      localStorage.setItem('adminLastTab', btn.dataset.tab);
+      storage.setItem('adminLastTab', btn.dataset.tab);
     });
   });
-  const initialTab = localStorage.getItem('adminLastTab');
+  const initialTab = storage.getItem('adminLastTab');
   const initBtn = initialTab ? document.querySelector(`#adminModal .tab-bar button[data-tab="${initialTab}"]`) : adminTabs[0];
   initBtn && initBtn.click();
 
@@ -5339,7 +5354,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         document.documentElement.classList.toggle('open-posts-sticky-header', stickyHeaderInput.checked);
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
-        localStorage.setItem('currentTheme', JSON.stringify(data));
+        storage.setItem('currentTheme', JSON.stringify(data));
         updateHistoryButtons();
       });
     }
@@ -5356,7 +5371,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
-        localStorage.setItem('currentTheme', JSON.stringify(data));
+        storage.setItem('currentTheme', JSON.stringify(data));
         updateHistoryButtons();
       });
     }
@@ -5731,7 +5746,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
         const data = collectThemeValues();
         currentState = JSON.parse(JSON.stringify(data));
-        localStorage.setItem('currentTheme', JSON.stringify(data));
+        storage.setItem('currentTheme', JSON.stringify(data));
         syncAdminControls();
         updateHistoryButtons();
         return;
@@ -5840,7 +5855,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     document.documentElement.classList.toggle('open-posts-sticky-images', stickyImages && stickyImages.checked);
     const data = collectThemeValues();
     currentState = JSON.parse(JSON.stringify(data));
-    localStorage.setItem('currentTheme', JSON.stringify(data));
+    storage.setItem('currentTheme', JSON.stringify(data));
     syncAdminControls();
     updateHistoryButtons();
   }
@@ -6022,7 +6037,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function loadPresets(){
-    const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
+    const stored = JSON.parse(storage.getItem('themePresets')||'[]');
     const defaults = [
       {name:'Default Theme', css:'theme-default'},
       {name:'Clean Slate', css:'theme-clean-slate'}
@@ -6083,11 +6098,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     document.querySelectorAll('[id^="theme-"]').forEach(el=>{ el.disabled = true; });
     if(!p) return;
     if(p.data){
-      localStorage.removeItem('selectedCssTheme');
+      storage.removeItem('selectedCssTheme');
       applyPresetData(p.data);
     } else if(p.css){
-      localStorage.setItem('selectedCssTheme', p.css);
-      localStorage.removeItem('currentTheme');
+      storage.setItem('selectedCssTheme', p.css);
+      storage.removeItem('currentTheme');
       document.documentElement.removeAttribute('style');
       colorAreas.forEach(area=>{
         Object.values(area.selectors).flat().forEach(sel=>{
@@ -6109,20 +6124,20 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function savePreset(name){
-    const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
+    const stored = JSON.parse(storage.getItem('themePresets')||'[]');
     stored.push({name,data: collectThemeValues()});
-    localStorage.setItem('themePresets', JSON.stringify(stored));
+    storage.setItem('themePresets', JSON.stringify(stored));
     loadPresets();
   }
 
   function loadSavedTheme(){
-    const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
+    const saved = JSON.parse(storage.getItem('currentTheme')||'null');
     if(saved){
-      localStorage.removeItem('selectedCssTheme');
+      storage.removeItem('selectedCssTheme');
       applyPresetData(saved);
       return true;
     }
-    const cssTheme = localStorage.getItem('selectedCssTheme');
+    const cssTheme = storage.getItem('selectedCssTheme');
     if(cssTheme){
       const idx = presets.findIndex(p=>p.css===cssTheme);
       if(idx !== -1){
@@ -6161,7 +6176,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
               mapStyle = window.mapStyle = themeSelect.value;
-              localStorage.setItem("mapStyle", mapStyle);
+              storage.setItem("mapStyle", mapStyle);
               if(map) map.setStyle(mapStyle);
           });
         }
@@ -6170,7 +6185,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           skySelect.value = skyStyle;
           skySelect.addEventListener("change", ()=>{
               skyStyle = window.skyStyle = skySelect.value;
-              localStorage.setItem("skyStyle", skyStyle);
+              storage.setItem("skyStyle", skyStyle);
               if(map) applySky(skyStyle);
           });
         }
@@ -6185,8 +6200,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           sg.spinEnabled = val > 0;
           sg.spinSpeed = val;
           speedVal.textContent = sg.spinEnabled ? val.toFixed(2) : "Off";
-          localStorage.setItem("spinGlobe", JSON.stringify(sg.spinEnabled));
-          localStorage.setItem("spinSpeed", String(sg.spinSpeed));
+          storage.setItem("spinGlobe", JSON.stringify(sg.spinEnabled));
+          storage.setItem("spinSpeed", String(sg.spinSpeed));
           if(sg.spinEnabled) sg.startSpin(); else sg.stopSpin();
         });
       }
@@ -6212,7 +6227,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         loadStartChk.checked = sg.spinLoadStart;
         loadStartChk.addEventListener("change", ()=>{
           sg.spinLoadStart = loadStartChk.checked;
-          localStorage.setItem("spinLoadStart", JSON.stringify(sg.spinLoadStart));
+          storage.setItem("spinLoadStart", JSON.stringify(sg.spinLoadStart));
           sg.updateSpinState();
         });
       }
@@ -6222,7 +6237,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           radio.addEventListener("change", ()=>{
             if(!radio.checked) return;
             sg.spinLoadType = radio.value;
-            localStorage.setItem("spinLoadType", sg.spinLoadType);
+            storage.setItem("spinLoadType", sg.spinLoadType);
             sg.updateSpinState();
           });
         });
@@ -6231,7 +6246,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         logoClickChk.checked = sg.spinLogoClick;
         logoClickChk.addEventListener("change", ()=>{
           sg.spinLogoClick = logoClickChk.checked;
-          localStorage.setItem("spinLogoClick", JSON.stringify(sg.spinLogoClick));
+          storage.setItem("spinLogoClick", JSON.stringify(sg.spinLogoClick));
           sg.updateLogoClickState();
         });
       }
@@ -6299,7 +6314,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     function populateBackups(tab){
       const select = document.getElementById(`${tab}Restore`);
       if(!select) return;
-      const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+      const backups = JSON.parse(storage.getItem(`admin-${tab}-backups`) || '[]');
       select.innerHTML = '';
       backups.slice().reverse().forEach((b,i)=>{
         const opt = document.createElement('option');
@@ -6311,7 +6326,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     function loadSaved(){
       tabPanels.forEach(tab=>{
-        const raw = localStorage.getItem(`admin-${tab}-current`);
+        const raw = storage.getItem(`admin-${tab}-current`);
         if(raw){
           savedData[tab] = JSON.parse(raw);
           applyData(tab, savedData[tab]);
@@ -6326,10 +6341,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const data = snapshot(tab);
       if(JSON.stringify(data) === JSON.stringify(savedData[tab])) return false;
       savedData[tab] = data;
-      localStorage.setItem(`admin-${tab}-current`, JSON.stringify(data));
-      const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+      storage.setItem(`admin-${tab}-current`, JSON.stringify(data));
+      const backups = JSON.parse(storage.getItem(`admin-${tab}-backups`) || '[]');
       backups.push({ name:`ADMIN ${tab} Backup ${new Date().toISOString()}`, data });
-      localStorage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
+      storage.setItem(`admin-${tab}-backups`, JSON.stringify(backups));
       populateBackups(tab);
       if(location.hostname !== 'zxen1.github.io'){
         fetch('/admin/save', {
@@ -6390,7 +6405,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         const tab = btn.dataset.restore;
         const select = document.getElementById(`${tab}Restore`);
         const idx = parseInt(select.value,10);
-        const backups = JSON.parse(localStorage.getItem(`admin-${tab}-backups`) || '[]');
+        const backups = JSON.parse(storage.getItem(`admin-${tab}-backups`) || '[]');
         const backup = backups[idx];
         if(backup){
           applyData(tab, backup.data);
@@ -6459,7 +6474,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     syncAdminControls();
     currentState = collectThemeValues();
     updateHistoryButtons();
-    localStorage.setItem('currentTheme', JSON.stringify(currentState));
+    storage.setItem('currentTheme', JSON.stringify(currentState));
   });
   undoBtn && undoBtn.addEventListener('click', ()=>{
     if(!undoStack.length) return;
@@ -6514,7 +6529,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         updateFields({ [id]: el.value });
         currentState = collectThemeValues();
         updateHistoryButtons();
-        localStorage.setItem('currentTheme', JSON.stringify(currentState));
+        storage.setItem('currentTheme', JSON.stringify(currentState));
       };
       el.addEventListener('input', handler);
       if(oEl) oEl.addEventListener('input', handler);
@@ -6598,7 +6613,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
     const svgCode = document.getElementById('balloonSvgCode');
     const copyBtn = document.getElementById('copySvgCode');
     let selectedBalloon = null;
-    const storedSize = localStorage.getItem('balloonSize');
+    const storedSize = storage.getItem('balloonSize');
     if(storedSize) sizeSlider.value = storedSize;
 
     function syncScroll(e){
@@ -6617,7 +6632,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
 
     sizeSlider.addEventListener('input', ()=>{
       sizeValue.textContent = sizeSlider.value;
-      localStorage.setItem('balloonSize', sizeSlider.value);
+      storage.setItem('balloonSize', sizeSlider.value);
       balloons.querySelectorAll('svg').forEach(svg=>{
         svg.setAttribute('width', sizeSlider.value);
         svg.setAttribute('height', sizeSlider.value);
