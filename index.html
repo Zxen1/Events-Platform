@@ -57,6 +57,11 @@
       --dropdown-radius: 6px;
       --session-available: #0000ff;
       --session-selected: #008000;
+      --filter-active-color: rgba(255,0,0,1);
+      --keyword-bg: rgba(74,74,74,0.9);
+      --date-range-bg: rgba(74,74,74,0.9);
+      --date-range-text: rgba(255,255,255,1);
+      --control-h: calc(var(--subheader-h) - 28px);
 }
 
 *{
@@ -237,6 +242,19 @@ select option:hover{
   font-weight: 600;
   cursor: pointer;
   transition: background .2s,border-color .2s;
+}
+
+.results-arrow{
+  display:inline-block;
+  font-size:20px;
+  line-height:1;
+  transition:transform .3s;
+}
+body.hide-results .results-arrow{transform:rotate(180deg);}
+
+#smallLogo{
+  display:none;
+  height:48px;
 }
 
 
@@ -718,6 +736,13 @@ select option:hover{
 .input select{
   border-radius: var(--dropdown-radius);
 }
+#kwInput{
+  background: var(--keyword-bg);
+}
+#dateInput{
+  background: var(--date-range-bg);
+  color: var(--date-range-text);
+}
 
 .input .x,.input .down{
   position: static;
@@ -924,6 +949,10 @@ body.hide-results .results-col{
 #filterBtn{
   border-radius: var(--dropdown-radius);
 }
+body.filters-active #filterBtn{
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
+}
 
 .options-dropdown{ position:relative; }
 .options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; }
@@ -1076,10 +1105,11 @@ body.hide-results .results-col{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;display:flex;gap:4px;pointer-events:auto;}
-.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:40px;display:flex;align-items:center;min-width:240px !important;}
+.geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:var(--control-h);display:flex;align-items:center;min-width:240px !important;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
-.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:40px;}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:40px;padding:0 30px;}
+.geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 30px;}
+.mapboxgl-ctrl-group button{width:var(--control-h);height:var(--control-h);}
 
 
 
@@ -1529,6 +1559,12 @@ body.hide-results .closed-posts{
   .results-col{display:none;}
   .closed-posts{left:0;}
   #resultsToggle{display:none;}
+  .results-arrow{display:none;}
+}
+
+@media (max-width:650px){
+  .logo{display:none;}
+  #smallLogo{display:block;}
 }
 
 @media (max-width:840px){
@@ -2073,8 +2109,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
-    <nav class="view-toggle" aria-label="Primary" role="tablist"><button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-        <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+    <nav class="view-toggle" aria-label="Primary" role="tablist"><span class="results-arrow" aria-hidden="true">&#9664;</span>
+      <button id="resultsToggle" aria-pressed="true">Results List</button>
+      <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
+      <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
+      <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
     </nav>
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">Members</button>
@@ -2095,7 +2134,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </div>
     </div>
     <div id="geocoder" class="geocoder"></div>
-    <button id="resultsToggle" aria-pressed="true">Results List</button>
     <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
   </div>
 
@@ -3059,6 +3097,18 @@ function makePosts(){
       dateX && dateX.classList.toggle('active', !!hasDate);
     }
 
+    function filtersActive(){
+      const kw = $('#kwInput').value.trim() !== '';
+      const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
+      const hasDate = raw && raw !== 'Today Onwards';
+      const cats = selection.cats.size > 0 || selection.subs.size > 0;
+      return kw || hasDate || cats;
+    }
+
+    function updateFilterBtnColor(){
+      document.body.classList.toggle('filters-active', filtersActive());
+    }
+
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
@@ -3075,7 +3125,7 @@ function makePosts(){
             const eIso = end.format('YYYY-MM-DD');
             const sDisp = start.format('ddd D MMM');
             const eDisp = end.format('ddd D MMM');
-            input.value = `${sDisp} to ${eDisp}`;
+            input.value = `${sDisp} - ${eDisp}`;
             input.dataset.range = `${sIso} to ${eIso}`;
             todayWasOn = todayToggle && todayToggle.checked;
             if(todayToggle) todayToggle.checked = false;
@@ -3134,6 +3184,7 @@ function makePosts(){
       }
     }
     updateClearButtons();
+    updateFilterBtnColor();
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
     const favToggle = $('#favToggle');
@@ -3173,8 +3224,9 @@ function makePosts(){
 
       const resultsToggle = $('#resultsToggle');
       const resultsCol = $('.results-col');
+      const isSmall = window.innerWidth < 1000;
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
-      if(storedHidden){
+      if(storedHidden || isSmall){
         document.body.classList.add('hide-results');
         resultsToggle.setAttribute('aria-pressed','false');
         resultsCol.setAttribute('aria-hidden','true');
@@ -3182,6 +3234,16 @@ function makePosts(){
         resultsToggle.setAttribute('aria-pressed','true');
         resultsCol.setAttribute('aria-hidden','false');
       }
+      window.addEventListener('resize', ()=>{
+        if(window.innerWidth < 1000){
+          if(!document.body.classList.contains('hide-results')){
+            document.body.classList.add('hide-results');
+            resultsToggle.setAttribute('aria-pressed','false');
+            resultsCol.setAttribute('aria-hidden','true');
+            localStorage.setItem('resultsHidden','true');
+          }
+        }
+      });
       window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
@@ -4263,6 +4325,7 @@ function makePosts(){
       filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      updateFilterBtnColor();
     }
 
     applyFilters();
@@ -4904,7 +4967,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       });
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=> updateTextPicker(id,'text'));
+    ['modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
     ['list','closed-posts'].forEach(areaKey=>{
       const twInput = document.getElementById(`${areaKey}-thumbWidth`);
       const thInput = document.getElementById(`${areaKey}-thumbHeight`);
@@ -4918,7 +4981,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         }
       }
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5213,6 +5276,36 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       }
       if(area.key === 'filter'){
         fs.appendChild(createTextPickerRow('filterPlaceholder','Keyword Placeholder','btn-c'));
+        const activeRow = document.createElement('div');
+        activeRow.className = 'control-row';
+        activeRow.innerHTML = `
+            <label>Active Button Colour</label>
+            <div class="color-group">
+              <input id="filterBtnActive-c" type="color" data-mode="${COLOR_PICKER_MODE}" value="#ff0000" />
+            </div>
+          `;
+        fs.appendChild(activeRow);
+        const kwBg = document.createElement('div');
+        kwBg.className = 'control-row';
+        kwBg.innerHTML = `
+            <label>Keyword Background</label>
+            <div class="color-group">
+              <input id="keywordBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="keywordBg-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+          `;
+        fs.appendChild(kwBg);
+        const dateBg = document.createElement('div');
+        dateBg.className = 'control-row';
+        dateBg.innerHTML = `
+            <label>Date Range Background</label>
+            <div class="color-group">
+              <input id="dateRangeBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <input id="dateRangeBg-o" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+          `;
+        fs.appendChild(dateBg);
+        fs.appendChild(createTextPickerRow('dateRangeText','Date Range Text','dateRangeBg-c'));
       }
       wrap.appendChild(fs);
     });
@@ -5340,7 +5433,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -5467,7 +5560,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         data[id] = { color: input.value };
       }
     });
-    ['btn','btnHover','btnActive','modalBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg'].forEach(id=>{
+    ['btn','btnHover','btnActive','modalBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','filterBtnActive','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -5475,7 +5568,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText'].forEach(id=>{
+    ['dropdownTitle','modalText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -5491,7 +5584,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -5621,7 +5714,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',modalBg:'--modal-bg',modalText:'--modal-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -6076,7 +6169,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') handleEsc(); });
       dropdownBg: '--dropdown-bg',
       dropdownHoverBg: '--dropdown-hover-bg',
       dropdownHoverText: '--dropdown-hover-text',
-      dropdownVenueText: '--dropdown-venue-text'
+      dropdownVenueText: '--dropdown-venue-text',
+      filterBtnActive: '--filter-active-color',
+      keywordBg: '--keyword-bg',
+      dateRangeBg: '--date-range-bg',
+      dateRangeText: '--date-range-text'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(id);
