@@ -61,7 +61,7 @@
       --keyword-bg: rgba(74,74,74,0.9);
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
-      --control-h: 40px;
+      --control-h: 35px;
 }
 
 *{
@@ -249,8 +249,8 @@ select option:hover{
 .auth button,
 .subheader button,
 .options-menu button{
-  height:40px;
-  line-height:40px;
+  height:35px;
+  line-height:35px;
 }
 
 .results-arrow{
@@ -1128,12 +1128,12 @@ body.filters-active #filterBtn{
 .geocoder .mapboxgl-ctrl-geocoder{flex:1;position:relative;height:var(--control-h);display:flex;align-items:center;min-width:240px !important;background:#fff;border:1px solid #ccc;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 30px;background:#fff;color:#000;}
-.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{display:grid;place-items:center;background:#fff;border:1px solid #ccc;color:#000;padding:0;margin:0;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff;color:#000;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ccc;color:#000;padding:0;margin:0;}
 .mapboxgl-ctrl-group button,
-.mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff;border:1px solid #ccc;color:#000;display:grid;place-items:center;padding:0;border-radius:4px;}
+.mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff;border:1px solid #ccc;color:#000;display:flex;align-items:center;justify-content:center;padding:0;border-radius:4px;}
 .mapboxgl-ctrl button svg,
-.mapboxgl-ctrl button span{display:block;}
+.mapboxgl-ctrl button span{display:block;margin:auto;}
 
 @media (max-width:999px){
   .geocoder{position:static;transform:none;margin-left:auto;}
@@ -2014,6 +2014,33 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 
+
+@media (max-width:649px){
+  #filterPanel .panel-content,
+  #adminPanel .panel-content,
+  #memberPanel .panel-content{
+    top:var(--header-h);
+    left:0;
+    right:0;
+    bottom:var(--footer-h);
+    width:100%;
+    max-width:none;
+    max-height:none;
+    border-radius:0;
+  }
+  #filterPanel .panel-content .resizer,
+  #adminPanel .panel-content .resizer,
+  #memberPanel .panel-content .resizer,
+  #filterPanel .panel-actions .move-left,
+  #filterPanel .panel-actions .move-right,
+  #adminPanel .panel-actions .move-left,
+  #adminPanel .panel-actions .move-right,
+  #memberPanel .panel-actions .move-left,
+  #memberPanel .panel-actions .move-right{
+    display:none;
+  }
+}
+
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
@@ -2210,6 +2237,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </div>
             </div>
 
+          <h3 id="addressTitle">Address</h3>
+          <div class="field" id="addressField"></div>
+
           <h3>Date Range</h3>
           <div class="field">
             <div class="input"><input id="dateInput" type="text" aria-label="Date range" readonly />
@@ -2220,9 +2250,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <label class="t">Today Onwards <input id="todayToggle" type="checkbox" checked /></label>
           </div>
           <div id="datePicker"></div>
-
-          <h3 id="addressTitle">Address</h3>
-          <div class="field" id="addressField"></div>
 
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
@@ -4468,7 +4495,17 @@ function openPanel(m){
   m.removeAttribute('aria-hidden');
   localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
-    if(m.id==='filterPanel'){
+    if(window.innerWidth < 650 && (m.id==='filterPanel' || m.id==='adminPanel' || m.id==='memberPanel')){
+      const rootStyles = getComputedStyle(document.documentElement);
+      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+      const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+      content.style.left = '0';
+      content.style.right = '0';
+      content.style.top = `${headerH}px`;
+      content.style.bottom = `${footerH}px`;
+      content.style.transform = 'none';
+      content.style.maxHeight = '';
+    } else if(m.id==='filterPanel'){
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
         const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
@@ -4476,6 +4513,8 @@ function openPanel(m){
         const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left = '0';
         content.style.top = `${topPos}px`;
+        content.style.right = '';
+        content.style.bottom = '';
         content.style.maxHeight = `${availableHeight}px`;
         content.style.transform = '';
       };
@@ -4487,7 +4526,7 @@ function openPanel(m){
       content.style.transform = 'translate(-50%, -50%)';
     }
     const loaded = m.id !== 'welcomePanel' ? loadPanelState(m) : false;
-    if(!loaded && (m.id==='adminPanel' || m.id==='memberPanel')){
+    if(window.innerWidth >= 650 && !loaded && (m.id==='adminPanel' || m.id==='memberPanel')){
       movePanelToEdge(m,'right');
     }
   }
@@ -4550,7 +4589,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
   else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
     const top = panelStack[panelStack.length-1];
-    if(top && (top.id==='adminPanel' || top.id==='memberPanel')){
+    if(window.innerWidth >= 650 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
       movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
     }
   }
@@ -4613,6 +4652,7 @@ document.addEventListener('keydown', e=>{
     let dragging = false;
     let offsetX = 0, offsetY = 0;
       header.addEventListener('mousedown', e=>{
+        if(window.innerWidth < 650) return;
         dragging = true;
         const rect = content.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
@@ -4648,7 +4688,10 @@ document.addEventListener('keydown', e=>{
       const h = document.createElement('div');
       h.className = 'resizer ' + dir;
       content.appendChild(h);
-      h.addEventListener('mousedown', e=> initResize(e, dir));
+      h.addEventListener('mousedown', e=>{
+        if(window.innerWidth < 650) return;
+        initResize(e, dir);
+      });
     });
     let startX, startY, startW, startH, startL, startT, resizeDir;
     function initResize(e, dir){
