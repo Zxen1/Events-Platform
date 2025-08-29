@@ -414,7 +414,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 .panel-content .resizer.sw{bottom:0;left:0;width:10px;height:10px;cursor:sw-resize;}
 .panel-body{
   flex:1 1 auto;
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
@@ -2601,9 +2602,21 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                   #balloonTool .shape-button.active { outline: 2px solid #000; }
                   #balloonTool .size-control { margin-bottom: 8px; }
                   #balloonTool .svg-output { display:flex; gap:8px; margin-bottom:8px; }
-                  #balloonTool .svg-output textarea{ flex:1; }
                   #balloonTool #balloonGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
                   #balloonTool #balloonGrid svg { cursor: pointer; }
+                  #balloonTool{
+                    max-width:100%;
+                  }
+                  #balloonTool .shape-buttons,
+                  #balloonTool .svg-output,
+                  #balloonTool #balloonGrid{
+                    overflow-x:auto;
+                  }
+                  #balloonTool .svg-output textarea{
+                    flex:1 1 auto;
+                    width:auto;
+                    min-width:0;
+                  }
                 </style>
                 <div class="t">Balloon Icon Generator</div>
                 <div class="shape-buttons" id="balloonShapeButtons"></div>
