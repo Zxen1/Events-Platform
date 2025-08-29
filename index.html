@@ -1559,11 +1559,9 @@ body.hide-results .closed-posts{
 .open-posts .post-calendar{
   width:auto;
   height:250px;
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-x:auto;
+  overflow-y:hidden;
   position:relative;
-  display:flex;
-  justify-content:center;
 }
 
 .open-posts .post-calendar .litepicker{
@@ -1574,11 +1572,12 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-calendar .container__months{
-  display:block;
+  display:flex;
 }
 
 .open-posts .post-calendar .container__months .month-item{
   width:100%;
+  flex:0 0 auto;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -4567,7 +4566,7 @@ function makePosts(){
           minDate: firstDate,
           maxDate: lastDate,
           numberOfMonths: monthCount,
-          numberOfColumns: 1,
+          numberOfColumns: monthCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         picker.on('render:calendar', () => {
@@ -4577,7 +4576,7 @@ function makePosts(){
           const lp = calendarEl.querySelector('.litepicker');
           if(lp){
             const w = '400px';
-            calendarEl.style.width = 'auto';
+            calendarEl.style.width = w;
             if(sessDropdown) sessDropdown.style.width = w;
             if(sessMenu) sessMenu.style.width = w;
             if(mapEl) mapEl.style.width = w;
