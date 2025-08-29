@@ -2719,10 +2719,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
-      logoEls.forEach(el=>{
-        el.style.cursor = 'pointer';
-        el.style.pointerEvents = 'auto';
-      });
+      function updateLogoClickState(){
+        logoEls.forEach(el=>{
+          el.style.cursor = 'pointer';
+          el.style.pointerEvents = 'auto';
+        });
+      }
+      updateLogoClickState();
 
       function applySky(theme){
         if(!map || typeof map.setFog !== 'function'){
