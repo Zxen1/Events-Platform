@@ -1367,12 +1367,12 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:100%;
+  width:auto;
 }
 
 .open-posts .post-map{
-  width:100%;
-  height:300px;
+  width:400px;
+  height:250px;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1516,12 +1516,13 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
-  width:100%;
+  width:auto;
 }
 
 
 .open-posts .post-calendar{
-  height:300px;
+  width:auto;
+  height:250px;
   overflow-y:auto;
   overflow-x:hidden;
   position:relative;
@@ -4375,8 +4376,8 @@ function makePosts(){
           });
           const lp = calendarEl.querySelector('.litepicker');
           if(lp){
-            const w = lp.offsetWidth + 'px';
-            calendarEl.style.width = w;
+            const w = '400px';
+            calendarEl.style.width = 'auto';
             if(sessDropdown) sessDropdown.style.width = w;
             if(sessMenu) sessMenu.style.width = w;
             if(mapEl) mapEl.style.width = w;
