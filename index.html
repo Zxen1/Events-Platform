@@ -2798,7 +2798,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
 
       logoEls.forEach(el=>{
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
           if(spinning){
             openWelcome();
             return;
