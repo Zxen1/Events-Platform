@@ -1724,6 +1724,13 @@ body.hide-results .closed-posts{
   .open-posts .img-box{
     height:auto;
   }
+  .open-posts .img-box img{
+    height:auto;
+  }
+  .open-posts .body{
+    padding:0;
+    gap:0;
+  }
 }
 
 footer{
@@ -2212,7 +2219,7 @@ body{background-color:rgba(41,41,41,1);}
 .results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
 body.hide-results .results-col{width:0;padding:0;overflow:hidden;}
 .map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
-.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;padding:0;}
+.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;padding:0;transition:top .1s linear, bottom .1s linear;}
 body.hide-results .closed-posts{left:0;}
 .mode-posts .closed-posts{display:block;z-index:1;pointer-events:auto;}
 
@@ -6796,15 +6803,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if(window.innerWidth >= 650 || !document.body.classList.contains('mode-posts')){
       subHead.style.transform = '';
       foot.style.transform = '';
+      posts.style.top = '';
+      posts.style.bottom = '';
       return;
     }
     const top = posts.scrollTop;
-    const subOffset = Math.min(top, subHead.offsetHeight);
-    const footOffset = Math.min(top, foot.offsetHeight);
+    const subH = subHead.offsetHeight;
+    const footH = foot.offsetHeight;
+    const subOffset = Math.min(top, subH);
+    const footOffset = Math.min(top, footH);
     subHead.style.transform = `translateY(-${subOffset}px)`;
     foot.style.transform = `translateY(${footOffset}px)`;
+    posts.style.top = `calc(var(--header-h) + var(--subheader-h) - ${subOffset}px)`;
+    posts.style.bottom = `calc(var(--footer-h) - ${footOffset}px)`;
   };
-  posts.addEventListener('scroll', update);
+  posts.addEventListener('scroll', update, {passive:true});
   window.addEventListener('resize', update);
   update();
 });
