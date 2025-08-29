@@ -1189,10 +1189,10 @@ body.filters-active #filterBtn{
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:0;right:0;bottom:0;width:var(--control-h);height:100%;background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;line-height:var(--control-h);text-align:center;}
-.mapboxgl-ctrl-group button,
-.mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;border-radius:4px;line-height:var(--control-h);text-align:center;}
-.mapboxgl-ctrl button svg,
-.mapboxgl-ctrl button span{display:inline-block;vertical-align:middle;}
+.geocoder .mapboxgl-ctrl-group button,
+.geocoder .mapboxgl-ctrl button{width:var(--control-h);height:var(--control-h);background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;border-radius:4px;line-height:var(--control-h);text-align:center;}
+.geocoder .mapboxgl-ctrl button svg,
+.geocoder .mapboxgl-ctrl button span{display:inline-block;vertical-align:middle;}
 .geocoder .mapboxgl-ctrl-group{background:#fff !important;border:1px solid #ccc !important;}
 
 @media (max-width:999px){
@@ -1524,8 +1524,10 @@ body.hide-results .closed-posts{
 
 
 .open-posts .post-calendar{
-  width:100%;
-  overflow:hidden;
+  width:400px;
+  max-height:400px;
+  overflow-y:auto;
+  overflow-x:hidden;
   position:relative;
   display:flex;
   justify-content:center;
@@ -1533,9 +1535,8 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
-  width:100%;
-  max-width:400px;
-  margin:0 auto;
+  width:400px;
+  margin:0;
   box-sizing:border-box;
   display:block;
 }
@@ -1681,6 +1682,9 @@ body.hide-results .closed-posts{
   .open-posts .session-dropdown{
     max-width:100%;
     width:100%;
+  }
+  .open-posts .post-calendar{
+    display:none;
   }
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
@@ -4346,6 +4350,9 @@ function makePosts(){
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
+        const first = new Date(firstDate);
+        const last = new Date(lastDate);
+        const monthCount = (last.getFullYear() - first.getFullYear()) * 12 + (last.getMonth() - first.getMonth() + 1);
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -4355,12 +4362,14 @@ function makePosts(){
           startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
-          numberOfMonths: 1,
+          numberOfMonths: monthCount,
           numberOfColumns: 1,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         const lp = calendarEl.querySelector('.litepicker');
-        if(lp && mapEl) lp.style.width = mapEl.offsetWidth + 'px';
+        if(lp){
+          lp.style.width = '400px';
+        }
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         let ignoreSelect = false;
         function highlightMonth(){
