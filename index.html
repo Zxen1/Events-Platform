@@ -391,7 +391,6 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 .panel.show{
   display:block;
-  pointer-events:auto;
 }
 .panel-content{
   position:absolute;
@@ -1603,7 +1602,7 @@ body.hide-results .closed-posts{
 
 
 
-.img-panel{
+.img-popup{
   position:fixed;
   inset:0;
   background:var(--panel-bg);
@@ -1611,11 +1610,13 @@ body.hide-results .closed-posts{
   justify-content:center;
   align-items:center;
   z-index:1000;
+  pointer-events:none;
 }
-.img-panel img{
+.img-popup img{
   max-width:90vw;
   max-height:90vh;
   cursor:pointer;
+  pointer-events:auto;
 }
 
 .pill{
@@ -2587,7 +2588,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
   </div>
 
-  <div id="welcomePanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+  <div id="welcomePopup" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content">
       <div class="panel-body" id="welcomeBody"></div>
     </div>
@@ -2672,7 +2673,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         if(!/\<img/i.test(msg)){
           body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap logo" />');
         }
-        togglePanel(document.getElementById('welcomePanel'));
+        togglePanel(document.getElementById('welcomePopup'));
         body.style.padding = '20px';
       }
 
@@ -4287,9 +4288,9 @@ function makePosts(){
           thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
         }
       });
-      function openImagePanel(start){
+      function openImagePopup(start){
         const panel = document.createElement('div');
-        panel.className = 'img-panel';
+        panel.className = 'img-popup';
         const imgEl = document.createElement('img');
         let idx = start;
         imgEl.src = imgs[idx];
@@ -4300,21 +4301,13 @@ function makePosts(){
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
-        const entry = {remove: ()=> panel.remove()};
-        panel.addEventListener('click', e=>{
-          if(e.target===panel){
-            panel.remove();
-            const i = panelStack.indexOf(entry);
-            if(i!==-1) panelStack.splice(i,1);
-          } else {
-            next();
-          }
-        });
-        imgEl.addEventListener('click', next);
+        imgEl.addEventListener('click', e=>{ e.stopPropagation(); next(); });
         document.body.appendChild(panel);
+        const entry = {remove: ()=> panel.remove()};
+        panel._entry = entry;
         panelStack.push(entry);
       }
-      mainImg.addEventListener('click', ()=> openImagePanel(parseInt(mainImg.dataset.index||'0',10)));
+      mainImg.addEventListener('click', ()=> openImagePopup(parseInt(mainImg.dataset.index||'0',10)));
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
@@ -4546,7 +4539,7 @@ function registerPopup(p){
   }
 }
 function savePanelState(m){
-  if(!m || !m.id || m.id === 'welcomePanel') return;
+  if(!m || !m.id || m.id === 'welcomePopup') return;
   const content = m.querySelector('.panel-content');
   if(!content) return;
   const state = {
@@ -4608,7 +4601,7 @@ function openPanel(m){
       };
       position();
       requestAnimationFrame(position);
-    } else if(m.id==='welcomePanel'){
+    } else if(m.id==='welcomePopup'){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const subHead = document.querySelector('.subheader');
@@ -4621,7 +4614,7 @@ function openPanel(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    const loaded = m.id !== 'welcomePanel' ? loadPanelState(m) : false;
+    const loaded = m.id !== 'welcomePopup' ? loadPanelState(m) : false;
     if(window.innerWidth >= 650 && !loaded && (m.id==='adminPanel' || m.id==='memberPanel')){
       movePanelToEdge(m,'right');
     }
@@ -4691,6 +4684,26 @@ document.addEventListener('keydown', e=>{
   }
 });
 
+document.addEventListener('click', e=>{
+  const welcome = document.getElementById('welcomePopup');
+  if(welcome && welcome.classList.contains('show')){
+    const content = welcome.querySelector('.panel-content');
+    if(content && !content.contains(e.target)){
+      closePanel(welcome);
+    }
+  }
+  document.querySelectorAll('.img-popup').forEach(p=>{
+    if(!p.contains(e.target)){
+      p.remove();
+      const entry = p._entry;
+      if(entry){
+        const i = panelStack.indexOf(entry);
+        if(i!==-1) panelStack.splice(i,1);
+      }
+    }
+  });
+}, true);
+
 // Panels and admin/member interactions
 (function(){
   const memberBtn = document.getElementById('memberBtn');
@@ -4729,18 +4742,12 @@ document.addEventListener('keydown', e=>{
     });
   });
 
-  const welcomePanel = document.getElementById('welcomePanel');
-  [filterPanel, memberPanel, adminPanel, welcomePanel].forEach(m=>{
+  const welcomePopup = document.getElementById('welcomePopup');
+  [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m=>{
     if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
       openPanel(m);
     }
   });
-  if(welcomePanel){
-    welcomePanel.addEventListener('click', e=>{
-      if(e.target === welcomePanel) closePanel(welcomePanel);
-    });
-  }
-
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
     const header = panel.querySelector('.panel-header');
@@ -4858,7 +4865,7 @@ document.addEventListener('keydown', e=>{
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
     {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
-    {key:'welcomePanel', label:'Welcome Panel', selectors:{bg:['#welcomePanel .panel-content'], text:['#welcomePanel .panel-content'], title:['#welcomePanel .panel-content .t','#welcomePanel .panel-content .title'], btn:['#welcomePanel button'], btnText:['#welcomePanel button']}},
+    {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
     {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}}
   ];
 
@@ -5575,7 +5582,7 @@ document.addEventListener('keydown', e=>{
           `;
       misc.appendChild(row);
     });
-    misc.appendChild(createTextPickerRow('panelText-text','Image Panel Text','panelBg-c'));
+    misc.appendChild(createTextPickerRow('panelText-text','Image Popup Text','panelBg-c'));
     misc.appendChild(createTextPickerRow('placeholder-text','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
