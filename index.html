@@ -4738,7 +4738,8 @@ function openPanel(m){
   m.removeAttribute('aria-hidden');
   localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
-    if(window.innerWidth < 650 && (m.id==='filterPanel' || m.id==='adminPanel' || m.id==='memberPanel')){
+    if((m.id==='filterPanel' && window.innerWidth < 650) ||
+       ((m.id==='adminPanel' || m.id==='memberPanel') && window.innerWidth < 450)){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
@@ -4778,8 +4779,8 @@ function openPanel(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    const loaded = m.id !== 'welcomePopup' ? loadPanelState(m) : false;
-    if(window.innerWidth >= 650 && !loaded && (m.id==='adminPanel' || m.id==='memberPanel')){
+    if(m.id !== 'welcomePopup') loadPanelState(m);
+    if(window.innerWidth >= 450 && (m.id==='adminPanel' || m.id==='memberPanel')){
       movePanelToEdge(m,'right');
     }
   }
@@ -4842,7 +4843,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
   else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
     const top = panelStack[panelStack.length-1];
-    if(window.innerWidth >= 650 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
+    if(window.innerWidth >= 450 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
       movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
     }
   }
@@ -4919,7 +4920,7 @@ document.addEventListener('click', e=>{
     let dragging = false;
     let offsetX = 0, offsetY = 0;
       header.addEventListener('mousedown', e=>{
-        if(window.innerWidth < 650) return;
+        if(window.innerWidth < 450) return;
         dragging = true;
         const rect = content.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
@@ -4956,7 +4957,7 @@ document.addEventListener('click', e=>{
       h.className = 'resizer ' + dir;
       content.appendChild(h);
       h.addEventListener('mousedown', e=>{
-        if(window.innerWidth < 650) return;
+        if(window.innerWidth < 450) return;
         initResize(e, dir);
       });
     });
