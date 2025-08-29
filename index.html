@@ -58,7 +58,7 @@
       --session-available: #0000ff;
       --session-selected: #008000;
       --filter-active-color: rgba(255,0,0,1);
-      --keyword-bg: rgba(74,74,74,0.9);
+      --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
       --control-h: 35px;
@@ -326,7 +326,9 @@ button[aria-expanded="true"] .dropdown-arrow{
   }
   #spinType span{
     display:block;
-    padding:6px 10px;
+    padding:0 10px;
+    height:35px;
+    line-height:35px;
     background:var(--btn);
     color:var(--button-text);
     font-weight:600;
@@ -459,6 +461,13 @@ button[aria-expanded="true"] .dropdown-arrow{
   color: var(--ink);
   border: none;
 }
+#adminPanel button{
+  height:35px;
+  line-height:35px;
+}
+#adminPanel input[type="color"]{
+  height:35px;
+}
 #filterPanel input[type="text"]{
   background: var(--panel-bg);
   color: var(--panel-text);
@@ -542,7 +551,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #adminPanel .textpicker .text-preview{
   width:100%;
-  height:40px;
+  height:35px;
   border-radius:8px;
   display:flex;
   align-items:center;
@@ -569,8 +578,9 @@ button[aria-expanded="true"] .dropdown-arrow{
   border-radius:var(--dropdown-radius);
   padding:4px;
   box-sizing:border-box;
+  height:35px;
 }
-#adminPanel .textpicker .text-popup input[type=color]{height:40px;padding:0;}
+#adminPanel .textpicker .text-popup input[type=color]{padding:0;}
 #adminPanel .textpicker .text-popup .shadow-group{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -605,7 +615,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 #adminPanel .color-group input[type=color]{
   border-radius:4px;
   padding:0;
-  height:40px;
+  height:35px;
   display:block;
   cursor:pointer;
   pointer-events:auto;
@@ -788,7 +798,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 .input input,.input select{
   flex: 1;
   width: 100%;
-  height: 40px;
+  height: 35px;
+  line-height: 35px;
   border: none;
   padding: 0 12px;
   outline: 0;
@@ -811,8 +822,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 
 .input .x,.input .down{
   position: static;
-  width: 26px;
-  height: 26px;
+  width: 35px;
+  height: 35px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -2043,7 +2054,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
-  padding-bottom: 0;
+  padding-bottom: var(--gap);
   margin-bottom: 0;
 }
 
@@ -2055,6 +2066,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   width: var(--panel-w);
   z-index: 10;
   pointer-events: none;
+  padding-bottom: var(--gap);
 }
 
 .mode-posts #postsWide{
@@ -3929,7 +3941,7 @@ function makePosts(){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
       }
-      updateResultCount(toRender.length);
+      updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
@@ -4488,7 +4500,7 @@ function makePosts(){
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
     function applyFilters(){
-      filtered = posts.filter(p => inBounds(p) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
       updateFilterBtnColor();
