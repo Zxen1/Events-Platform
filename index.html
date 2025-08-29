@@ -1367,12 +1367,11 @@ body.hide-results .closed-posts{
   flex-direction:column;
   gap:4px;
   width:100%;
-  max-width:400px;
 }
 
 .open-posts .post-map{
   width:100%;
-  max-width:400px;
+  height:300px;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1382,7 +1381,6 @@ body.hide-results .closed-posts{
 .open-posts .session-dropdown{
   position:relative;
   width:100%;
-  max-width:400px;
 }
 
 
@@ -1518,13 +1516,11 @@ body.hide-results .closed-posts{
   flex-direction:column;
   gap:4px;
   width:100%;
-  max-width:400px;
 }
 
 
 .open-posts .post-calendar{
-  width:400px;
-  max-height:400px;
+  height:300px;
   overflow-y:auto;
   overflow-x:hidden;
   position:relative;
@@ -1534,7 +1530,6 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .litepicker{
   font-size:16px;
-  width:400px;
   margin:0;
   box-sizing:border-box;
   display:block;
@@ -4359,10 +4354,20 @@ function makePosts(){
           numberOfColumns: 1,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
-        const lp = calendarEl.querySelector('.litepicker');
-        if(lp){
-          lp.style.width = '400px';
-        }
+        picker.on('render:calendar', () => {
+          calendarEl.querySelectorAll('.month-item').forEach(m => {
+            if(!m.querySelector('.litepicker-day:not(.is-locked)')) m.remove();
+          });
+          const lp = calendarEl.querySelector('.litepicker');
+          if(lp){
+            const w = lp.offsetWidth + 'px';
+            calendarEl.style.width = w;
+            if(sessDropdown) sessDropdown.style.width = w;
+            if(sessMenu) sessMenu.style.width = w;
+            if(mapEl) mapEl.style.width = w;
+          }
+          highlightMonth();
+        });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         let ignoreSelect = false;
         function highlightMonth(){
