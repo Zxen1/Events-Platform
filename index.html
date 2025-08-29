@@ -3788,7 +3788,9 @@ function makePosts(){
     applyFilters();
   }
 
-    function haltSpin(){
+    function haltSpin(e){
+      const target = (e && e.originalEvent && e.originalEvent.target) || (e && e.target);
+      if(target && logoEls.some(el=>el.contains(target))) return;
       if(spinEnabled || spinning){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
