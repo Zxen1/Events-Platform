@@ -1692,6 +1692,25 @@ body.hide-results .closed-posts{
   }
 }
 
+@media (max-width:450px){
+  .closed-posts,
+  .closed-posts .card,
+  .open-posts,
+  .open-posts .img-box{
+    width:100%;
+    max-width:100%;
+    border:none;
+    border-radius:0;
+  }
+  .closed-posts{
+    left:0;
+    right:0;
+  }
+  .open-posts .img-box{
+    height:auto;
+  }
+}
+
 footer{
   height: var(--footer-h);
   display: flex;
