@@ -1412,6 +1412,7 @@ body.hide-results .closed-posts{
   color:var(--button-text);
   display:flex;
   align-items:center;
+  justify-content:flex-start;
 }
 
 
@@ -1488,6 +1489,7 @@ body.hide-results .closed-posts{
   color:var(--button-text);
   display:flex;
   align-items:center;
+  justify-content:flex-start;
 }
 
 
@@ -1687,6 +1689,25 @@ body.hide-results .closed-posts{
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
     display:block;
+  }
+}
+
+@media (max-width:450px){
+  .closed-posts,
+  .closed-posts .card,
+  .open-posts,
+  .open-posts .img-box{
+    width:100%;
+    max-width:100%;
+    border:none;
+    border-radius:0;
+  }
+  .closed-posts{
+    left:0;
+    right:0;
+  }
+  .open-posts .img-box{
+    height:auto;
   }
 }
 
