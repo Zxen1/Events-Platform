@@ -1260,6 +1260,7 @@ body.hide-results .closed-posts{
   justify-content:space-between;
   align-items:center;
   padding:8px 12px;
+  opacity:1;
   border-top-left-radius:inherit;
   border-top-right-radius:inherit;
 }
@@ -1310,9 +1311,12 @@ body.hide-results .closed-posts{
 .open-posts .img-box img{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   object-position:center;
   display:block;
+}
+.open-posts .img-box img.ready{
+  object-fit:contain;
 }
 
 .open-posts .thumb-column{
@@ -2224,6 +2228,23 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   .open-posts .img-box{
     width:100%;
     border-radius:0;
+  }
+}
+
+@media (max-width:450px){
+  :root{
+    --subheader-h:0;
+    --footer-h:0;
+  }
+  .subheader,
+  footer{
+    display:none;
+  }
+  .open-posts .detail-header{
+    padding-bottom:0;
+  }
+  .open-posts .body{
+    padding:0;
   }
 }
 
@@ -4433,9 +4454,21 @@ function makePosts(){
         if(!t) return;
         mainImg.src = t.src;
         mainImg.dataset.index = idx;
+        mainImg.classList.remove('ready');
+        mainImg.classList.add('lqip');
         const hi = new Image();
         const full = t.dataset.full;
-        hi.onload = ()=>{ if(mainImg.dataset.index==idx) mainImg.src = full; };
+        hi.onload = ()=>{
+          const swap = ()=>{
+            if(mainImg.dataset.index==idx){
+              mainImg.src = full;
+              mainImg.classList.remove('lqip');
+              mainImg.classList.add('ready');
+            }
+          };
+          if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
+        };
+        hi.onerror = ()=>{};
         hi.src = full;
         thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
       }
