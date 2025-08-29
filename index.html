@@ -434,16 +434,14 @@ button[aria-expanded="true"] .dropdown-arrow{
   min-width:250px;
   max-width:250px;
 }
-  #adminPanel .panel-content{
-    width:auto;
+  #adminPanel .panel-content,
+  #memberPanel .panel-content{
+    width:600px;
     max-width:90%;
     max-height:90%;
   }
 
   #memberPanel .panel-content{
-    width:600px;
-    max-width:90%;
-    max-height:90%;
     background:rgba(0,0,0,0.7);
     color:#fff;
   }
@@ -508,13 +506,10 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #memberPanel .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
+  #adminPanel .panel-content,
   #memberPanel .panel-content,
   #filterPanel .panel-content{
     width:95%;
-    max-width:95%;
-    max-height:95%;
-  }
-  #adminPanel .panel-content{
     max-width:95%;
     max-height:95%;
   }
@@ -1027,6 +1022,7 @@ body.hide-results .results-col{
   right: 0;
   z-index: 3;
   pointer-events: auto;
+  transition: transform .1s linear;
 }
 
 #filterBtn{
@@ -1748,6 +1744,7 @@ footer{
   left: 0;
   right: 0;
   z-index: 10;
+  transition: transform .1s linear;
 }
 
 @media (max-width: 649px){
@@ -2200,11 +2197,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   }
 }
 
-@media (max-width:649px){
-  body, header, .subheader, footer, .panel, .map-area, .results-col, .closed-posts{ touch-action: pan-y; }
-  .open-posts .text, .img-popup{ touch-action: pinch-zoom; }
-}
-
 </style>
 <style id="theme-dark-transparency">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
@@ -2226,7 +2218,7 @@ body{background-color:rgba(41,41,41,1);}
 .results-col{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:0;width:var(--results-w);display:flex;flex-direction:column;padding:0;transition:width .3s ease, padding .3s ease;z-index:2;pointer-events:auto;}
 body.hide-results .results-col{width:0;padding:0;overflow:hidden;}
 .map-overlay{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;place-items:center;color:#fff;font-weight:700;letter-spacing:.5px;opacity:.15;pointer-events:none;}
-.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;padding:0;}
+.closed-posts{position:fixed;top:calc(var(--header-h) + var(--subheader-h));bottom:var(--footer-h);left:var(--results-w);right:0;display:none;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;padding:0;transition:top .1s linear, bottom .1s linear;}
 body.hide-results .closed-posts{left:0;}
 .mode-posts .closed-posts{display:block;z-index:1;pointer-events:auto;}
 
@@ -2770,11 +2762,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
       logoEls.forEach(el=>{
         el.addEventListener('click', () => {
-          const welcome = document.getElementById('welcomePopup');
-          if(welcome && welcome.classList.contains('show')){
-            closePanel(welcome);
-            return;
-          }
           if(spinning){
             openWelcome();
             return;
@@ -3437,8 +3424,6 @@ function makePosts(){
         sortButtons.forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
         optionsBtn.textContent = btn.textContent;
         renderLists(filtered);
-        optionsMenu.setAttribute('hidden','');
-        optionsBtn.setAttribute('aria-expanded','false');
       });
     });
 
@@ -3736,8 +3721,6 @@ function makePosts(){
       if(map.getZoom() >= 5) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
-      const rc = document.getElementById('resultCount');
-      if(rc) rc.style.visibility = 'hidden';
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
         document.body.classList.add('hide-results');
@@ -3761,8 +3744,6 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
-      const rc = document.getElementById('resultCount');
-      if(rc) rc.style.visibility = '';
       const wasHidden = resultsWasHidden;
       resultsWasHidden = null;
       if(wasHidden === false){
@@ -6837,18 +6818,25 @@ document.addEventListener('click', e=>{
 document.addEventListener('DOMContentLoaded', () => {
   const posts = document.querySelector('.closed-posts');
   const subHead = document.querySelector('.subheader');
-  if(!posts || !subHead) return;
+  const foot = document.querySelector('footer');
+  if(!posts || !subHead || !foot) return;
   const update = () => {
     if(window.innerWidth >= 650 || !document.body.classList.contains('mode-posts')){
       subHead.style.transform = '';
+      foot.style.transform = '';
       posts.style.top = '';
+      posts.style.bottom = '';
       return;
     }
     const top = posts.scrollTop;
     const subH = subHead.offsetHeight;
+    const footH = foot.offsetHeight;
     const subOffset = Math.min(top, subH);
+    const footOffset = Math.min(top, footH);
     subHead.style.transform = `translateY(-${subOffset}px)`;
+    foot.style.transform = `translateY(${footOffset}px)`;
     posts.style.top = `calc(var(--header-h) + var(--subheader-h) - ${subOffset}px)`;
+    posts.style.bottom = `calc(var(--footer-h) - ${footOffset}px)`;
   };
   posts.addEventListener('scroll', update, {passive:true});
   window.addEventListener('resize', update);
@@ -6938,20 +6926,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openImagePopup(img.src);
       }
     }, { passive: false });
-  });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  function shouldBlock(e){
-    return window.innerWidth < 650 && !e.target.closest('.open-posts .text, .img-popup');
-  }
-  document.addEventListener('wheel', e=>{
-    if(e.ctrlKey && shouldBlock(e)) e.preventDefault();
-  }, {passive:false});
-  ['gesturestart','gesturechange','gestureend'].forEach(ev=>{
-    document.addEventListener(ev, e=>{ if(shouldBlock(e)) e.preventDefault(); }, {passive:false});
   });
 });
 </script>
