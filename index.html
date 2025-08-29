@@ -1022,7 +1022,7 @@ body.hide-results .results-col{
   right: 0;
   z-index: 3;
   pointer-events: auto;
-  transition: transform .3s ease;
+  transition: transform .1s linear;
 }
 
 #filterBtn{
@@ -1329,6 +1329,19 @@ body.hide-results .closed-posts{
   border:1px solid var(--border);
   border-radius:8px;
   cursor:pointer;
+}
+
+@media (max-width: 450px){
+  .open-posts .img-area{
+    flex:1 1 100%;
+    width:100%;
+  }
+  .open-posts .img-box{
+    width:100%;
+    margin-left:-14px;
+    margin-right:-14px;
+    border-radius:0;
+  }
 }
 
 .open-posts .detail-header .title{
@@ -1725,7 +1738,7 @@ footer{
   left: 0;
   right: 0;
   z-index: 10;
-  transition: transform .3s ease;
+  transition: transform .1s linear;
 }
 
 @media (max-width: 649px){
@@ -2760,6 +2773,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
+    let touchMarker = null;
     let activePostId = null;
 
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -3872,7 +3886,26 @@ function makePosts(){
             return;
           }
         }
-        const id = f.properties.id; openPost(id);
+        const id = f.properties.id;
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if(isTouch){
+          if(touchMarker === id){
+            touchMarker = null;
+            if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+            openPost(id);
+          } else {
+            touchMarker = id;
+            if(hoverPopup) hoverPopup.remove();
+            const p = posts.find(x=>x.id===id);
+            if(p){
+              hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop'})
+                .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
+              registerPopup(hoverPopup);
+            }
+          }
+        } else {
+          openPost(id);
+        }
       });
 
       // Hover ring layer for individual points
@@ -6756,24 +6789,24 @@ document.addEventListener('click', e=>{
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const posts = document.querySelector('.closed-posts');
-  if(!posts) return;
-  let last = 0;
-  posts.addEventListener('scroll', () => {
-    if(window.innerWidth >= 650) return;
-    if(!document.body.classList.contains('mode-posts')) return;
-    const current = posts.scrollTop;
-    if(current > last + 5){
-      document.body.classList.add('hide-posts-ui');
-    } else if(current < last - 5 || current <= 0){
-      document.body.classList.remove('hide-posts-ui');
+  const subHead = document.querySelector('.subheader');
+  const foot = document.querySelector('footer');
+  if(!posts || !subHead || !foot) return;
+  const update = () => {
+    if(window.innerWidth >= 650 || !document.body.classList.contains('mode-posts')){
+      subHead.style.transform = '';
+      foot.style.transform = '';
+      return;
     }
-    last = current;
-  });
-  window.addEventListener('resize', () => {
-    if(window.innerWidth >= 650) {
-      document.body.classList.remove('hide-posts-ui');
-    }
-  });
+    const top = posts.scrollTop;
+    const subOffset = Math.min(top, subHead.offsetHeight);
+    const footOffset = Math.min(top, foot.offsetHeight);
+    subHead.style.transform = `translateY(-${subOffset}px)`;
+    foot.style.transform = `translateY(${footOffset}px)`;
+  };
+  posts.addEventListener('scroll', update);
+  window.addEventListener('resize', update);
+  update();
 });
 </script>
 
