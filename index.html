@@ -6829,5 +6829,72 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.innerWidth >= 650) return;
+
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (vp) vp.setAttribute('content', vp.getAttribute('content') + ', maximum-scale=1, user-scalable=no');
+
+  const posts = document.querySelector('.closed-posts');
+  if (!posts) return;
+
+  let defaultSize = parseFloat(getComputedStyle(posts).fontSize);
+  let startDist = null;
+  let enlarged = false;
+
+  function distance(t1, t2){
+    return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+  }
+
+  posts.addEventListener('touchstart', e => {
+    if (e.target.tagName === 'IMG') return;
+    if (e.touches.length === 2) {
+      startDist = distance(e.touches[0], e.touches[1]);
+    }
+  }, { passive: true });
+
+  posts.addEventListener('touchmove', e => {
+    if (e.target.tagName === 'IMG') return;
+    if (e.touches.length === 2 && startDist) {
+      const scale = distance(e.touches[0], e.touches[1]) / startDist;
+      if (!enlarged && scale > 1.2) {
+        posts.style.fontSize = (defaultSize * 1.2) + 'px';
+        enlarged = true;
+      } else if (enlarged && scale < 0.8) {
+        posts.style.fontSize = defaultSize + 'px';
+        enlarged = false;
+      }
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  posts.addEventListener('touchend', e => {
+    if (e.touches.length < 2) startDist = null;
+  });
+
+  function openImagePopup(src){
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    const big = document.createElement('img');
+    big.src = src;
+    big.style.cssText = 'max-width:90%;max-height:90%;touch-action:pinch-zoom;';
+    overlay.appendChild(big);
+    overlay.addEventListener('click', () => overlay.remove());
+    document.body.appendChild(overlay);
+  }
+
+  posts.querySelectorAll('img').forEach(img => {
+    img.addEventListener('click', () => openImagePopup(img.src));
+    img.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        openImagePopup(img.src);
+      }
+    }, { passive: false });
+  });
+});
+</script>
+
 </body>
 </html>
