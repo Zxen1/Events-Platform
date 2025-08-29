@@ -1723,12 +1723,22 @@ body.hide-results .closed-posts{
   }
   .open-posts .img-box{
     height:auto;
+    margin-left:0;
+    margin-right:0;
+    padding-left:0;
+    padding-right:0;
   }
   .open-posts .img-box img{
     height:auto;
+    margin-left:0;
+    margin-right:0;
+  }
+  .card .thumb,
+  .open-posts .thumb-column img{
+    padding-right:12px;
   }
   .open-posts .body{
-    padding:14px;
+    padding:14px 0;
     gap:8px;
   }
 }
@@ -2762,14 +2772,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
 
       function openWelcome(){
+        const popup = document.getElementById('welcomePopup');
         const body = document.getElementById('welcomeBody');
+        if(popup.classList.contains('show')){
+          closePanel(popup);
+          return;
+        }
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
         body.innerHTML = msg;
         if(!/\<img/i.test(msg)){
           body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap logo" />');
         }
-        togglePanel(document.getElementById('welcomePopup'));
+        openPanel(popup);
         body.style.padding = '20px';
       }
 
@@ -3166,7 +3181,10 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function randomImages(id){
-    return Array.from({length:10},(_,i)=>`https://picsum.photos/seed/${encodeURIComponent(id)}-${i}/1200/800`);
+    return Array.from({length:10},(_,i)=>{
+      const port = i % 2 === 0;
+      return `https://picsum.photos/seed/${encodeURIComponent(id)}-${i}/${port?'800/1200':'1200/800'}`;
+    });
   }
 
   function randomText(min=200,max=2000){
@@ -3280,8 +3298,9 @@ function makePosts(){
     posts = makePosts();
 
     // Image helpers (unique per post)
-    function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
-    function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
+    function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
+    function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
+    function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 
     function hoverHTML(p){
       return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
@@ -3763,11 +3782,11 @@ function makePosts(){
         const resultsToggle = document.getElementById('resultsToggle');
         const resultsCol = document.querySelector('.results-col');
         document.body.classList.remove('hide-results');
-        if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
-        if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
-      }
-      renderLists(filtered);
+      if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
+      if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
     }
+    applyFilters();
+  }
 
     function haltSpin(){
       if(spinEnabled || spinning){
@@ -3914,6 +3933,7 @@ function makePosts(){
             touchMarker = null;
             if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
             openPost(id);
+            return;
           } else {
             touchMarker = id;
             if(hoverPopup) hoverPopup.remove();
@@ -4660,8 +4680,9 @@ function makePosts(){
   })();
   
 // 0577 helpers (safety)
-function heroUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/1200/800`; }
-function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/300/200`; }
+function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
+function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
+function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
 const panelStack = [];
 function bringToTop(item){
   const idx = panelStack.indexOf(item);
