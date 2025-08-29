@@ -2737,8 +2737,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/outdoors-v12',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
+          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
       function updateLogoClickState(){
@@ -4481,7 +4481,7 @@ function makePosts(){
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
-            style: 'mapbox://styles/mapbox/streets-v11',
+            style: 'mapbox://styles/mapbox/standard',
             center: [loc.lng, loc.lat],
             zoom: 10,
             interactive: false
