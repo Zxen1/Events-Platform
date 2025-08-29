@@ -1776,7 +1776,7 @@ footer{
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  z-index: 20;
   transition: transform .1s linear;
 }
 
@@ -2162,6 +2162,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   z-index: 10;
   pointer-events: none;
   padding-bottom: var(--gap);
+}
+
+.post-panel > *{
+  pointer-events: auto;
+}
+
+.post-panel .map-overlay{
+  pointer-events: none;
 }
 
 .mode-posts #postsWide{
@@ -4372,28 +4380,26 @@ function makePosts(){
       const mapCard = document.querySelector('.mapboxgl-popup .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-      const container = target.closest('.closed-posts');
-      if(container){
-        if(!fromPosts && window.innerWidth > 450){
-          const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
-        }
-      } else if(window.innerWidth > 450) {
-        target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      }
-
+      const container = postsWideEl.closest('.closed-posts');
       const detail = buildDetail(p);
       // class already applied in buildDetail
-      target.replaceWith(detail);
+      if(fromPosts){
+        target.replaceWith(detail);
+      } else {
+        target.remove();
+        postsWideEl.prepend(detail);
+      }
       hookDetailActions(detail, p);
       if (typeof updateStickyImages === 'function') {
         updateStickyImages();
       }
 
       if(container){
-        if(!fromPosts && window.innerWidth > 450){
+        if(fromPosts && window.innerWidth > 450){
           const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
           container.scrollTop = Math.max(top, 0);
+        } else if(!fromPosts){
+          container.scrollTop = 0;
         }
         ensureGap(container, detail);
       } else if(window.innerWidth > 450) {
