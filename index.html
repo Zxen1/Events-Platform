@@ -1052,7 +1052,7 @@ body.filters-active #filterBtn{
   gap:12px;
   align-items: flex-start;
   background: var(--list-background);
-  border: 1px solid var(--border);
+  border: none;
   border-radius:16px;
   padding:12px;
   margin-bottom:12px;
@@ -1246,7 +1246,7 @@ body.hide-results .closed-posts{
 
 
 .open-posts{
-  border:1px solid var(--border);
+  border:none;
   border-radius:18px;
   margin:0 0 12px 0;
   overflow:visible;
@@ -1297,7 +1297,7 @@ body.hide-results .closed-posts{
   width:400px;
   height:400px;
   overflow:hidden;
-  border:1px solid var(--border);
+  border:none;
   border-radius:18px;
   flex-shrink:0;
   cursor:pointer;
@@ -1412,6 +1412,7 @@ body.hide-results .closed-posts{
   color:var(--button-text);
   display:flex;
   align-items:center;
+  justify-content:flex-start;
 }
 
 
@@ -1488,6 +1489,7 @@ body.hide-results .closed-posts{
   color:var(--button-text);
   display:flex;
   align-items:center;
+  justify-content:flex-start;
 }
 
 
@@ -2122,6 +2124,32 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   #memberPanel .panel-actions .move-left,
   #memberPanel .panel-actions .move-right{
     display:none;
+  }
+}
+
+@media (max-width:449px){
+  .closed-posts{
+    left:0;
+    right:0;
+  }
+  .closed-posts .res-list{
+    padding:0;
+  }
+  .closed-posts .card{
+    width:100%;
+    margin:0 0 12px;
+    border-radius:0;
+  }
+  .open-posts{
+    width:100%;
+    border-radius:0;
+  }
+  .open-posts .img-area{
+    flex:0 0 100%;
+  }
+  .open-posts .img-box{
+    width:100%;
+    border-radius:0;
   }
 }
 
