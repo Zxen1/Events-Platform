@@ -499,8 +499,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #welcomeBody img{
   max-width:400px;
+  width:100%;
   max-height:300px;
-  width:auto;
   height:auto;
   margin-bottom:10px;
 }
@@ -1624,7 +1624,7 @@ body.hide-results .closed-posts{
   justify-content:center;
   align-items:center;
   z-index:1000;
-  pointer-events:none;
+  pointer-events:auto;
 }
 .img-popup img{
   max-width:90vw;
@@ -1728,8 +1728,8 @@ body.hide-results .closed-posts{
     height:auto;
   }
   .open-posts .body{
-    padding:0;
-    gap:0;
+    padding:14px;
+    gap:8px;
   }
 }
 
@@ -2718,14 +2718,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/outdoors-v12',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'default';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-      const logoEl = document.querySelector('.logo');
-      function updateLogoClickState(){
-        if(logoEl){
-          logoEl.style.cursor = 'pointer';
-          logoEl.style.pointerEvents = 'auto';
-        }
-      }
-      updateLogoClickState();
+      const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
+      logoEls.forEach(el=>{
+        el.style.cursor = 'pointer';
+        el.style.pointerEvents = 'auto';
+      });
 
       function applySky(theme){
         if(!map || typeof map.setFog !== 'function'){
@@ -2761,17 +2758,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         body.style.padding = '20px';
       }
 
-      logoEl?.addEventListener('click', () => {
-        if(spinning){
+      logoEls.forEach(el=>{
+        el.addEventListener('click', () => {
+          if(spinning){
+            openWelcome();
+            return;
+          }
+          if(spinLogoClick && map && map.getZoom() <= 4){
+            spinEnabled = true;
+            localStorage.setItem('spinGlobe', 'true');
+            startSpin(true);
+          }
           openWelcome();
-          return;
-        }
-        if(spinLogoClick && map && map.getZoom() <= 4){
-          spinEnabled = true;
-          localStorage.setItem('spinGlobe', 'true');
-          startSpin(true);
-        }
-        openWelcome();
+        });
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
@@ -3908,10 +3907,22 @@ function makePosts(){
               hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop'})
                 .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
               registerPopup(hoverPopup);
+              const cardEl = hoverPopup.getElement().querySelector('.hover-card');
+              if(cardEl){
+                cardEl.addEventListener('click', ()=>{ touchMarker=null; openPost(id); });
+              }
             }
           }
         } else {
           openPost(id);
+        }
+      });
+
+      map.on('click', e=>{
+        const feats = map.queryRenderedFeatures(e.point);
+        if(!feats.length){
+          if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+          touchMarker = null;
         }
       });
 
@@ -4253,6 +4264,8 @@ function makePosts(){
     }
 
     async function openPost(id, fromPosts=false){
+      touchMarker = null;
+      if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
       localStorage.setItem('spinGlobe', 'false');
       stopSpin();
@@ -4287,11 +4300,11 @@ function makePosts(){
 
       const container = target.closest('.closed-posts');
       if(container){
-        if(!fromPosts){
+        if(!fromPosts && window.innerWidth > 450){
           const top = target.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
           container.scrollTop = Math.max(top, 0);
         }
-      } else {
+      } else if(window.innerWidth > 450) {
         target.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -4304,12 +4317,12 @@ function makePosts(){
       }
 
       if(container){
-        if(!fromPosts){
+        if(!fromPosts && window.innerWidth > 450){
           const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
           container.scrollTop = Math.max(top, 0);
         }
         ensureGap(container, detail);
-      } else {
+      } else if(window.innerWidth > 450) {
         detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -4405,10 +4418,11 @@ function makePosts(){
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
-        imgEl.addEventListener('click', e=>{ e.stopPropagation(); next(); });
-        document.body.appendChild(panel);
         const entry = {remove: ()=> panel.remove()};
         panel._entry = entry;
+        imgEl.addEventListener('click', e=>{ e.stopPropagation(); next(); });
+        panel.addEventListener('click', ()=>{ const i = panelStack.indexOf(entry); if(i!==-1) panelStack.splice(i,1); panel.remove(); });
+        document.body.appendChild(panel);
         panelStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImagePopup(parseInt(mainImg.dataset.index||'0',10)));
@@ -5614,15 +5628,20 @@ document.addEventListener('click', e=>{
       }
       if(area.key === 'open-posts'){
         fs.appendChild(createTextPickerRow('dropdownVenueText-text','Venue Button Text','open-posts-menu-c'));
-        const stickyRow = document.createElement('div');
-        stickyRow.className = 'control-row';
-        stickyRow.innerHTML = `
+        const stickyHeaderRow = document.createElement('div');
+        stickyHeaderRow.className = 'control-row';
+        stickyHeaderRow.innerHTML = `
             <label>Sticky Header</label>
             <input id="open-posts-sticky-header" type="checkbox" checked />
+        `;
+        fs.appendChild(stickyHeaderRow);
+        const stickyImageRow = document.createElement('div');
+        stickyImageRow.className = 'control-row';
+        stickyImageRow.innerHTML = `
             <label>Sticky Images</label>
             <input id="open-posts-sticky-images" type="checkbox" checked />
         `;
-        fs.appendChild(stickyRow);
+        fs.appendChild(stickyImageRow);
       }
       if(area.key === 'filter'){
         fs.appendChild(createTextPickerRow('filterPlaceholder-text','Keyword Placeholder','btn-c'));
