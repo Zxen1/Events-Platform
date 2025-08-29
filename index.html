@@ -1305,6 +1305,7 @@ body.hide-results .closed-posts{
   width:100%;
   height:100%;
   object-fit:contain;
+  object-position:center;
   display:block;
 }
 
@@ -1322,20 +1323,33 @@ body.hide-results .closed-posts{
   width:50px;
   height:50px;
   object-fit:cover;
+  object-position:center;
+  aspect-ratio:1/1;
   border:1px solid var(--border);
   border-radius:8px;
   cursor:pointer;
 }
 
 @media (max-width: 450px){
+  .open-posts .body{
+    padding:0;
+  }
   .open-posts .img-area{
     flex:1 1 100%;
     width:100%;
   }
+  .open-posts .text{
+    padding:14px;
+  }
   .open-posts .img-box{
     width:100%;
+    height:100vw;
     margin:0;
     border-radius:0;
+  }
+  .open-posts .img-box img{
+    object-fit:cover;
+    object-position:center;
   }
 }
 
