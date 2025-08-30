@@ -1555,14 +1555,14 @@ body.hide-results .closed-posts{
   flex-direction:column;
   gap:4px;
   width:auto;
+  position:relative;
 }
 
 
 .open-posts .post-calendar{
   width:400px;
   height:250px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  overflow:hidden;
   position:relative;
 }
 
@@ -1575,6 +1575,35 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .container__months{
   display:flex;
+  transition:transform .3s;
+}
+
+.open-posts .post-calendar .calendar-arrow{
+  position:absolute;
+  top:calc(50% - 12px);
+  width:24px;
+  height:24px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+}
+
+.open-posts .post-calendar .calendar-arrow:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+
+.open-posts .post-calendar .calendar-arrow.prev{
+  left:4px;
+}
+
+.open-posts .post-calendar .calendar-arrow.next{
+  right:4px;
 }
 
 .open-posts .post-calendar .container__months .month-item{
@@ -4531,7 +4560,11 @@ function makePosts(){
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
       let map, marker, picker, sessionHasMultiple = false;
+      let calIndex = 0, monthsCount = 1, monthsEl, prevBtn, nextBtn;
       function updateVenue(idx){
+        calIndex = 0;
+        calendarEl.querySelectorAll('.calendar-arrow').forEach(b=> b.remove());
+        monthsEl = prevBtn = nextBtn = null;
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
@@ -4571,27 +4604,58 @@ function makePosts(){
           numberOfColumns: monthCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
+        calendarEl.addEventListener('click', e=> e.stopPropagation());
+        let ignoreSelect = false;
+        function highlightMonth(){
+          const names = calendarEl.querySelectorAll('.month-name');
+          names.forEach(n=> n.classList.remove('selected-month-name'));
+          const m = names[calIndex];
+          if(m) m.classList.add('selected-month-name');
+        }
+        function shiftMonths(){
+          if(monthsEl) monthsEl.style.transform = `translateX(-${calIndex * 400}px)`;
+        }
+        function updateArrows(){
+          if(prevBtn) prevBtn.style.display = calIndex <= 0 ? 'none' : '';
+          if(nextBtn) nextBtn.style.display = calIndex >= monthsCount - 1 ? 'none' : '';
+        }
+        function setupArrows(){
+          prevBtn = document.createElement('button');
+          prevBtn.className = 'calendar-arrow prev';
+          prevBtn.setAttribute('aria-label','Previous Month');
+          prevBtn.innerHTML = '&#9664;';
+          nextBtn = document.createElement('button');
+          nextBtn.className = 'calendar-arrow next';
+          nextBtn.setAttribute('aria-label','Next Month');
+          nextBtn.innerHTML = '&#9654;';
+          calendarEl.append(prevBtn, nextBtn);
+          prevBtn.addEventListener('click',()=>{
+            calIndex = Math.max(0, calIndex - 1);
+            shiftMonths();
+            updateArrows();
+            highlightMonth();
+          });
+          nextBtn.addEventListener('click',()=>{
+            calIndex = Math.min(monthsCount - 1, calIndex + 1);
+            shiftMonths();
+            updateArrows();
+            highlightMonth();
+          });
+        }
         picker.on('render:calendar', () => {
           calendarEl.querySelectorAll('.month-item').forEach(m => {
             if(!m.querySelector('.litepicker-day:not(.is-locked)')) m.remove();
           });
-          const lp = calendarEl.querySelector('.litepicker');
-          if(lp){
-            const months = calendarEl.querySelectorAll('.month-item').length || 1;
-            calendarEl.style.width = `${months * 400}px`;
-            if(sessDropdown) sessDropdown.style.width = '400px';
-            if(sessMenu) sessMenu.style.width = '400px';
-            if(mapEl) mapEl.style.width = '400px';
-          }
+          monthsEl = calendarEl.querySelector('.container__months');
+          monthsCount = calendarEl.querySelectorAll('.month-item').length || 1;
+          if(sessDropdown) sessDropdown.style.width = '400px';
+          if(sessMenu) sessMenu.style.width = '400px';
+          if(mapEl) mapEl.style.width = '400px';
+          if(!prevBtn) setupArrows();
+          shiftMonths();
+          updateArrows();
           highlightMonth();
         });
-        calendarEl.addEventListener('click', e=> e.stopPropagation());
-        let ignoreSelect = false;
-        function highlightMonth(){
-          calendarEl.querySelectorAll('.month-name').forEach(n=> n.classList.remove('selected-month-name'));
-          const m = calendarEl.querySelector('.month-name');
-          if(m) m.classList.add('selected-month-name');
-        }
         highlightMonth();
         picker.on('render:month', highlightMonth);
         function selectSession(i){
@@ -4607,11 +4671,17 @@ function makePosts(){
               picker.setDate(dt.full);
               picker.gotoDate(dt.full);
               ignoreSelect = false;
+              calIndex = 0;
+              shiftMonths();
+              updateArrows();
               highlightMonth();
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
               if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="dropdown-arrow" aria-hidden="true"></span>' : 'Select Session';
               picker.clearSelection();
+              calIndex = 0;
+              shiftMonths();
+              updateArrows();
               highlightMonth();
             }
             sessMenu.hidden = true;
