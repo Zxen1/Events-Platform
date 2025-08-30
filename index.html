@@ -4322,8 +4322,14 @@ datePicker = flatpickr($('#datePicker'), {
         });
       });
       const nav = new mapboxgl.NavigationControl({showZoom: false});
-      map.addControl(nav, 'top-left');
-      map.addControl(geolocate, 'top-left');
+      const gc = document.getElementById('geocoder');
+      if(gc){
+        gc.appendChild(geolocate.onAdd(map));
+        gc.appendChild(nav.onAdd(map));
+      }else{
+        map.addControl(nav, 'top-left');
+        map.addControl(geolocate, 'top-left');
+      }
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
@@ -4518,19 +4524,14 @@ datePicker = flatpickr($('#datePicker'), {
         lockMap(true); lastListOpenAt = Date.now();
       });
 
-      map.on('click','clusters', (e)=>{
+      map.on('click','clusters', async (e)=>{
         stopSpin();
         const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         const clusterId = features[0].properties.cluster_id;
-        map.getSource('posts').getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          map.flyTo({
-            center: features[0].geometry.coordinates,
-            zoom,
-            pitch: 45,
-            essential: true
-          });
-        });
+        const leaves = await getClusterLeavesAll('posts', clusterId);
+        if(!leaves.length) return;
+        const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
+        map.fitBounds(bounds, { padding: 40, pitch: 45, essential: true });
       });
       
       map.on('click','unclustered', (e)=>{
