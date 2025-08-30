@@ -4752,7 +4752,10 @@ datePicker = flatpickr($('#datePicker'), {
             entries.forEach(entry => {
               if(entry.isIntersecting){
                 const img = entry.target;
-                img.loading = 'eager';
+                if(img.dataset.src){
+                  img.src = img.dataset.src;
+                  img.removeAttribute('data-src');
+                }
                 img.fetchPriority = 'high';
                 obs.unobserve(img);
               }
@@ -4760,7 +4763,13 @@ datePicker = flatpickr($('#datePicker'), {
           }, {root});
           imgs.forEach(img => obs.observe(img));
         } else {
-          imgs.forEach(img => img.loading = 'eager');
+          imgs.forEach(img => {
+            img.loading = 'lazy';
+            if(img.dataset.src){
+              img.src = img.dataset.src;
+              img.removeAttribute('data-src');
+            }
+          });
         }
       });
     }
@@ -4771,7 +4780,7 @@ datePicker = flatpickr($('#datePicker'), {
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
         el.innerHTML = `
-          <img class="thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
+          <img class="thumb" loading="lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
