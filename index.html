@@ -4694,8 +4694,10 @@ datePicker = flatpickr($('#datePicker'), {
         const f = e.features && e.features[0]; if(!f) return;
         const count = f.properties.point_count_abbreviated;
         if(hoverPopup) hoverPopup.remove();
-        hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop'})
+        hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop', offset:15})
           .setLngLat(e.lngLat).setHTML(`<div class='hover-card'><div class='t'>${count} nearby posts</div></div>`).addTo(map);
+        const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+        if(_el){ _el.style.pointerEvents = 'none'; }
         registerPopup(hoverPopup);
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
