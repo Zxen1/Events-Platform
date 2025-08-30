@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1" />
   <title>Events Platform</title>
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
@@ -1418,6 +1418,10 @@ body.hide-results .closed-posts{
   width:100%;
 }
 
+.open-posts .venue-dropdown + .session-dropdown{
+  margin-top:var(--gap);
+}
+
 
 
 .open-posts .venue-dropdown > button{
@@ -1558,16 +1562,19 @@ body.hide-results .closed-posts{
   position:relative;
 }
 
+.hide-map-calendar .open-posts .map-container,
+.hide-map-calendar .open-posts .calendar-container{
+  display:none;
+}
+
 
 .open-posts .post-calendar{
   width:400px;
-  height:250px;
   overflow:hidden;
   position:relative;
 }
 
 .open-posts .post-calendar .litepicker{
-  font-size:16px;
   margin:0;
   box-sizing:border-box;
   display:block;
@@ -1606,9 +1613,9 @@ body.hide-results .closed-posts{
   right:4px;
 }
 
+/* month width adjusts to container size */
 .open-posts .post-calendar .container__months .month-item{
-  width:400px;
-  flex:0 0 400px;
+  flex:0 0 auto;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -1728,6 +1735,18 @@ body.hide-results .closed-posts{
 @media (max-width:650px){
   .logo{display:none;}
   #smallLogo{display:block;}
+}
+
+@media (max-width:650px){
+  html{
+    touch-action:pan-x pan-y;
+  }
+  .map-container{
+    touch-action:auto;
+  }
+  .img-popup img{
+    touch-action:pinch-zoom;
+  }
 }
 
 @media (max-width:840px){
@@ -4606,6 +4625,7 @@ function makePosts(){
         });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         let ignoreSelect = false;
+        let monthWidth = 400;
         function highlightMonth(){
           const names = calendarEl.querySelectorAll('.month-name');
           names.forEach(n=> n.classList.remove('selected-month-name'));
@@ -4613,7 +4633,7 @@ function makePosts(){
           if(m) m.classList.add('selected-month-name');
         }
         function shiftMonths(){
-          if(monthsEl) monthsEl.style.transform = `translateX(-${calIndex * 400}px)`;
+          if(monthsEl) monthsEl.style.transform = `translateX(-${calIndex * monthWidth}px)`;
         }
         function updateArrows(){
           if(prevBtn) prevBtn.style.display = calIndex <= 0 ? 'none' : '';
@@ -4648,6 +4668,8 @@ function makePosts(){
           });
           monthsEl = calendarEl.querySelector('.container__months');
           monthsCount = calendarEl.querySelectorAll('.month-item').length || 1;
+          const firstMonth = calendarEl.querySelector('.month-item');
+          monthWidth = firstMonth ? firstMonth.offsetWidth : calendarEl.offsetWidth;
           if(sessDropdown) sessDropdown.style.width = '400px';
           if(sessMenu) sessMenu.style.width = '400px';
           if(mapEl) mapEl.style.width = '400px';
@@ -7029,10 +7051,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.innerWidth >= 650) return;
+  const vp = document.getElementById('viewport');
+  const updateViewport = () => {
+    if (!vp) return;
+    if (window.innerWidth < 650) {
+      vp.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    } else {
+      vp.setAttribute('content','width=device-width, initial-scale=1');
+    }
+  };
+  updateViewport();
+  window.addEventListener('resize', updateViewport);
+  window.addEventListener('orientationchange', updateViewport);
 
-  const vp = document.querySelector('meta[name="viewport"]');
-  if (vp) vp.setAttribute('content', vp.getAttribute('content') + ', maximum-scale=1, user-scalable=no');
+  if (window.innerWidth >= 650) return;
 
   const posts = document.querySelector('.closed-posts');
   if (!posts) return;
