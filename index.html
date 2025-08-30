@@ -1475,7 +1475,21 @@ body.filters-active #filterBtn{
   justify-content:center;
   flex:none;
 }
-#map .mapboxgl-ctrl-group{border-radius:12px;overflow:hidden;}
+#map .mapboxgl-ctrl button{
+  width:var(--control-h);
+  height:var(--control-h);
+  background:#fff !important;
+  border:0 !important;
+  color:#000;
+  padding:0;
+  box-shadow:none;
+}
+#map .mapboxgl-ctrl-group{
+  background:#fff !important;
+  border:1px solid #ccc !important;
+  border-radius:12px;
+  overflow:hidden;
+}
 
 @media (max-width:999px){
   .geocoder{position:static;transform:none;margin-left:auto;}
@@ -5798,7 +5812,7 @@ document.addEventListener('click', e=>{
         });
       });
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',today:'--today'};
+    const varMap = {today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const el = document.getElementById(id);
       if(el){
@@ -5990,10 +6004,6 @@ document.addEventListener('click', e=>{
     if(hb) hb.value = theme.accent;
     const ab = document.getElementById('body-activeBorder-c');
     if(ab) ab.value = theme.accent;
-    ['primary','secondary','accent'].forEach(id=>{
-      const inp = document.getElementById(id);
-      if(inp && theme[id]) inp.value = theme[id];
-    });
     applyAdmin();
   }
 
@@ -6151,7 +6161,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6257,24 +6267,6 @@ document.addEventListener('click', e=>{
       btnRow.appendChild(colBtn);
       btnRow.appendChild(txtBtn);
       fs.appendChild(btnRow);
-      if(area.key === 'body'){
-        const palette = [
-          {id:'primary', label:'Primary'},
-          {id:'secondary', label:'Secondary'},
-          {id:'accent', label:'Accent'}
-        ];
-        palette.forEach(p=>{
-          const row = document.createElement('div');
-          row.className = 'control-row';
-          row.innerHTML = `
-              <label>${p.label}</label>
-              <div class="color-group">
-                <input id="${p.id}" type="color" data-mode="${COLOR_PICKER_MODE}" />
-              </div>
-            `;
-          fs.appendChild(row);
-        });
-      }
       const types = [];
       if(area.selectors.bg) types.push('bg');
       if(area.selectors.card) types.push('card');
@@ -6592,7 +6584,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6710,9 +6702,14 @@ document.addEventListener('click', e=>{
     const stickyImages = document.getElementById('open-posts-sticky-images');
     if(stickyImages){ data['open-posts-sticky-images'] = { value: stickyImages.checked ? '1' : '0' }; }
     ['primary','secondary','accent'].forEach(id=>{
-      const input = document.getElementById(id);
-      if(input){
-        data[id] = { color: input.value };
+      const val = getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim();
+      if(val){
+        const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+        if(match){
+          data[id] = { color: rgbToHex(parseInt(match[1],10),parseInt(match[2],10),parseInt(match[3],10)) };
+        } else {
+          data[id] = { color: val };
+        }
       }
     });
     ['btn','btnHover','btnActive','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
@@ -7331,9 +7328,6 @@ document.addEventListener('click', e=>{
   });
 
     const fieldBindings = {
-      primary: '--primary',
-      secondary: '--secondary',
-      accent: '--accent',
       btn: '--btn',
       panelBg: '--panel-bg',
       panelText: '--panel-text',
