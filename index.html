@@ -57,6 +57,7 @@
       --dropdown-radius: 6px;
       --session-available: #808080;
       --session-selected: #008000;
+      --today: #ff0000;
       --filter-active-color: var(--accent);
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
@@ -550,23 +551,12 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--panel-bg);
   color: var(--panel-text);
 }
-#filterPanel .flatpickr-calendar .flatpickr-prev-month,
-#filterPanel .flatpickr-calendar .flatpickr-next-month{
-  background: initial;
-  color: initial;
-  border: none;
-}
-#filterPanel .flatpickr-calendar .flatpickr-prev-month:hover,
-#filterPanel .flatpickr-calendar .flatpickr-next-month:hover{
-  background: initial;
-  color: initial;
-  border: none;
-}
 .flatpickr-calendar .flatpickr-prev-month,
 .flatpickr-calendar .flatpickr-next-month{
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:none;
+}
+.flatpickr-day.today:not(.selected){
+  color:var(--today) !important;
 }
 #filterPanel .flatpickr-calendar{
   background: var(--dropdown-bg);
@@ -578,9 +568,18 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
+  width:400px;
+  height:300px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  touch-action:pan-x;
 }
 #filterPanel #datePicker{
   background: var(--dropdown-bg);
+}
+#filterPanel #datePicker .flatpickr-calendar{
+  width:400px;
+  height:300px;
 }
 #filterPanel #datePicker .flatpickr-months{
   display:flex;
@@ -588,7 +587,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 200px;
+  flex:0 0 400px;
   background: var(--dropdown-bg);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
@@ -1655,7 +1654,7 @@ body.hide-results .closed-posts{
 
 .open-posts .post-map{
   width:400px;
-  height:250px;
+  height:300px;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1667,7 +1666,7 @@ body.hide-results .closed-posts{
   width:100%;
 }
 
-.open-posts .venue-dropdown + .session-dropdown{
+.open-posts .calendar-container .session-dropdown{
   margin-top:var(--gap);
 }
 
@@ -1826,10 +1825,12 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:block;
+  width:400px;
+  height:300px;
 }
-.calendar-scroll{
-  max-width:400px;
-  width:100%;
+.open-posts .calendar-container .calendar-scroll{
+  width:400px;
+  height:300px;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
@@ -1842,34 +1843,17 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
-  flex:0 0 200px;
+  flex:0 0 400px;
   background:var(--dropdown-bg);
 }
 
 .open-posts .post-calendar .flatpickr-calendar{
   background:var(--dropdown-bg);
 }
-.calendar-container .cal-nav{
-  position:absolute;
-  top:10px;
-  transform:none;
-  background:var(--btn);
-  border:1px solid var(--btn);
-  color:var(--button-text);
-  border-radius:50%;
-  width:30px;
-  height:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:5;
-}
-.calendar-container .cal-prev{left:10px;}
-.calendar-container .cal-next{right:10px;}
 
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:var(--session-available) !important;
-  color:var(--button-text) !important;
+  background:var(--dropdown-hover-bg) !important;
+  color:var(--dropdown-hover-text) !important;
   font-weight:bold;
   border-radius:4px;
 }
@@ -2889,11 +2873,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </label>
           </div>
           <div id="datePickerContainer" class="calendar-container">
-            <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
             <div class="calendar-scroll">
               <div id="datePicker"></div>
             </div>
-            <button class="cal-nav cal-next" type="button" aria-label="Next month">&#8250;</button>
           </div>
 
           <h3>Categories</h3>
@@ -3869,36 +3851,26 @@ function makePosts(){
       return new Date(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
     }
 
-    function updateArrowVisibility(container, prev, next){
-      if(!container) return;
-      function check(){
-        if(prev) prev.style.display = container.scrollLeft > 0 ? 'flex' : 'none';
-        if(next) next.style.display = (container.scrollLeft + container.clientWidth) < container.scrollWidth ? 'flex' : 'none';
-      }
-      check();
-      container.addEventListener('scroll', check);
-      window.addEventListener('resize', check);
-    }
-
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
-    const allPickerDates = posts.flatMap(p=>p.dates).sort();
-    const firstPickerDate = allPickerDates[0];
-    const lastPickerDate = allPickerDates[allPickerDates.length-1] || firstPickerDate;
-    const rawMonths = ((new Date(lastPickerDate).getFullYear() - new Date(firstPickerDate).getFullYear()) * 12) + (new Date(lastPickerDate).getMonth() - new Date(firstPickerDate).getMonth()) + 1;
-    const pickerMonths = Math.min(rawMonths, 24);
-    const maxPickerDate = new Date(firstPickerDate);
-    maxPickerDate.setMonth(maxPickerDate.getMonth() + pickerMonths - 1);
+    const today = new Date();
+    const minPickerDate = new Date(today);
+    minPickerDate.setMonth(minPickerDate.getMonth() - 12);
+    const maxPickerDate = new Date(today);
+    maxPickerDate.setMonth(maxPickerDate.getMonth() + 24);
+    const pickerMonths = ((maxPickerDate.getFullYear() - minPickerDate.getFullYear()) * 12) + (maxPickerDate.getMonth() - minPickerDate.getMonth()) + 1;
+    const minPickerStr = minPickerDate.toISOString().split('T')[0];
+    const maxPickerStr = maxPickerDate.toISOString().split('T')[0];
 
 datePicker = flatpickr($('#datePicker'), {
   inline: true,
   mode: 'range',
   dateFormat: 'D d M',
-  minDate: firstPickerDate,
-  maxDate: maxPickerDate.toISOString().split('T')[0],
+  minDate: minPickerStr,
+  maxDate: maxPickerStr,
   showMonths: pickerMonths,
-  defaultDate: firstPickerDate,
+  defaultDate: minPickerStr,
   onChange: (selectedDates, dateStr, instance) => {
     const input = $('#dateInput');
     if (selectedDates.length === 2) {
@@ -3920,10 +3892,10 @@ datePicker = flatpickr($('#datePicker'), {
     updateClearButtons();
   }
 });
+    datePicker.clear();
+    datePicker.jumpToDate(minPickerStr);
     const filterCalContainer = document.getElementById('datePickerContainer');
     const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
-    const filterCalPrev = filterCalContainer ? filterCalContainer.querySelector('.cal-prev') : null;
-    const filterCalNext = filterCalContainer ? filterCalContainer.querySelector('.cal-next') : null;
     if(filterCalScroll){
       filterCalScroll.addEventListener('wheel', e=>{
         if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
@@ -3941,9 +3913,6 @@ datePicker = flatpickr($('#datePicker'), {
       }, {passive:true});
       filterCalScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
     }
-    if(filterCalPrev) filterCalPrev.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:-200, behavior:'smooth'}));
-    if(filterCalNext) filterCalNext.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:200, behavior:'smooth'}));
-    if(filterCalScroll) updateArrowVisibility(filterCalScroll, filterCalPrev, filterCalNext);
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -3970,14 +3939,16 @@ datePicker = flatpickr($('#datePicker'), {
           input.dataset.range='';
           if(datePicker) {
             datePicker.clear();
-                        datePicker.set('minDate', todayIso);
+            datePicker.set('minDate', todayIso);
             datePicker.setDate(todayIso, false);
+            datePicker.jumpToDate(todayIso);
           }
           input.value = 'Today Onwards';
         } else {
           if(datePicker) {
-            datePicker.set('minDate', firstPickerDate);
-            datePicker.setDate(firstPickerDate, false);
+            datePicker.set('minDate', minPickerStr);
+            datePicker.setDate(minPickerStr, false);
+            datePicker.jumpToDate(minPickerStr);
           }
           if(input.value === 'Today Onwards') input.value = '';
         }
@@ -4841,12 +4812,10 @@ datePicker = flatpickr($('#datePicker'), {
                 <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
-                <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
                 <div class="calendar-scroll">
                   <div id="cal-${p.id}" class="post-calendar"></div>
                 </div>
-                <button class="cal-nav cal-next" type="button" aria-label="Next month">&#8250;</button>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
@@ -5103,8 +5072,6 @@ datePicker = flatpickr($('#datePicker'), {
         const mapEl = el.querySelector(`#map-${p.id}`);
         const calContainer = el.querySelector('.calendar-container');
         const calScroll = el.querySelector('.calendar-scroll');
-        const calPrev = el.querySelector('.cal-prev');
-        const calNext = el.querySelector('.cal-next');
       if(calScroll){
         calScroll.addEventListener('wheel', e=>{
           if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
@@ -5122,12 +5089,15 @@ datePicker = flatpickr($('#datePicker'), {
         }, {passive:true});
         calScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
       }
-      if(calPrev) calPrev.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:-200, behavior:'smooth'}));
-      if(calNext) calNext.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:200, behavior:'smooth'}));
       let map, marker, picker, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+        const currentYear = new Date().getFullYear();
+        const formatDate = d => {
+          const y = new Date(d.full).getFullYear();
+          return y !== currentYear ? `${d.date}, ${y}` : d.date;
+        };
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
         sessionHasMultiple = loc.dates.length > 1;
@@ -5157,13 +5127,14 @@ datePicker = flatpickr($('#datePicker'), {
             maxDate: lastDate,
             enable: dateStrings,
             showMonths: monthsCount,
+            defaultDate: firstDate,
             onDayCreate: (dObj, dStr, fp, dayElem) => {
               const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
               if(allowedSet.has(iso)) dayElem.classList.add('available-day');
             }
           });
           picker.clear();
-          updateArrowVisibility(calScroll, calPrev, calNext);
+          picker.jumpToDate(firstDate);
           calendarEl.addEventListener('click', e=> e.stopPropagation());
           calendarEl.addEventListener('mousedown', e=>{
             const day = e.target.closest('.flatpickr-day');
@@ -5177,8 +5148,8 @@ datePicker = flatpickr($('#datePicker'), {
             if(btn) btn.classList.add('selected');
             const dt = loc.dates[i];
             if(dt){
-              sessionInfo.innerHTML = `<div><strong>${dt.date} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${dt.date}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
+              sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
               ignoreSelect = true;
               picker.setDate(dt.full);
               picker.jumpToDate(dt.full);
@@ -5226,7 +5197,7 @@ datePicker = flatpickr($('#datePicker'), {
           if(map && typeof map.resize === 'function') map.resize();
         },0);
           if(sessMenu){
-            sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${d.date}</span><span class="session-time">${d.time}</span></button>`).join('');
+            sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
             sessMenu.scrollTop = 0;
             if(sessionHasMultiple){
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
@@ -5684,7 +5655,7 @@ document.addEventListener('click', e=>{
         });
       });
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const el = document.getElementById(id);
       if(el){
@@ -6014,7 +5985,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6472,7 +6443,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6732,7 +6703,7 @@ document.addEventListener('click', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
