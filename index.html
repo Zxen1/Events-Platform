@@ -16,7 +16,7 @@
   <style>:root{
   --header-h: 75px;
   --subheader-h: 55px;
-  --panel-w: 260px;
+  --panel-w: 300px;
   --results-w: 520px;
   --gap: 12px;
     --ink: #ffffff;
@@ -38,6 +38,7 @@
       --panel-text: #000000;
       --footer-h: 70px;
       --list-background: rgba(0,0,0,0.37);
+      --closed-card-bg: rgba(0,0,0,0.37);
       --scrollbar-track: rgba(0,0,0,0);
       --scrollbar-thumb: rgba(0,0,0,0.3);
       --scrollbar-thumb-hover: rgba(0,0,0,0.5);
@@ -175,6 +176,10 @@ textarea::placeholder{
   font-size: inherit;
 }
 #filterPanel #kwInput::placeholder{
+  color: var(--filter-placeholder-text);
+  font-size: inherit;
+}
+#filterPanel #dateInput::placeholder{
   color: var(--filter-placeholder-text);
   font-size: inherit;
 }
@@ -536,17 +541,18 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:100%;
+  width:300px;
   height:300px;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
+  scroll-snap-type:x mandatory;
 }
 #filterPanel #datePicker{
   background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .flatpickr-calendar{
-  width:100%;
+  width:300px;
   height:300px;
 }
 #filterPanel #datePicker .flatpickr-months{
@@ -555,8 +561,19 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 100%;
+  flex:0 0 300px;
+  width:300px;
+  height:300px;
   background: var(--dropdown-bg);
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+#filterPanel #datePicker .flatpickr-day{
+  font-size:12px;
+  line-height:1.2;
+  margin:0;
+  width:calc(300px/7);
+  height:calc((300px - 40px)/6);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -596,8 +613,9 @@ button[aria-expanded="true"] .dropdown-arrow{
 #adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:flex-start;cursor:pointer;user-select:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;}
 #adminPanel .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
+.control-row > *:last-child{margin-left:auto;}
 #adminPanel .color-group{
   flex:1 1 220px;
   width:100%;
@@ -898,18 +916,24 @@ button[aria-expanded="true"] .dropdown-arrow{
 
 
 .field{
-  display: grid;
-  grid-template-columns: 1fr 38px;
-  gap: 8px;
-  align-items: center;
-  margin: 8px 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 0;
+  margin:0;
+}
+
+.field > *:last-child{
+  margin-left:auto;
 }
 
 .field .input{
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:1;
 }
 
 .input input,
@@ -1397,18 +1421,27 @@ body.filters-active #filterBtn{
   border-radius:12px;
   line-height:var(--control-h);
   text-align:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
 }
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg,
 .geocoder .mapboxgl-ctrl button svg,
 .geocoder .mapboxgl-ctrl button span{
   display:inline-block;
   vertical-align:middle;
+  margin:0;
 }
 .geocoder .mapboxgl-ctrl-group{background:#fff !important;border:1px solid #ccc !important;border-radius:12px;overflow:hidden;}
 .mapboxgl-ctrl button{
   line-height:var(--control-h);
   text-align:center;
   border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
 }
 #map .mapboxgl-ctrl-group{border-radius:12px;overflow:hidden;}
 
@@ -1433,11 +1466,12 @@ body.filters-active #filterBtn{
   scrollbar-gutter:stable;
   padding:0;
   color:#000;
-  background:rgba(0,0,0,0.7);
+  background:var(--panel-bg);
 }
 .closed-posts .res-list{overflow:visible;padding:12px 12px 0;margin-bottom:var(--gap);}
 .closed-posts{color:#000;padding:0;}
-.closed-posts .card{background:rgba(0,0,0,0.37);}
+.closed-posts .card,
+.closed-posts .open-posts{background:var(--closed-card-bg);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
 
@@ -2831,7 +2865,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
           <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" readonly />
+            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Select date range" readonly />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -3833,7 +3867,7 @@ function makePosts(){
     const minPickerDate = new Date(today);
     minPickerDate.setMonth(minPickerDate.getMonth() - 12);
     const maxPickerDate = new Date(today);
-    maxPickerDate.setMonth(maxPickerDate.getMonth() + 24);
+    maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const pickerMonths = ((maxPickerDate.getFullYear() - minPickerDate.getFullYear()) * 12) + (maxPickerDate.getMonth() - minPickerDate.getMonth()) + 1;
     const todayToggle = $('#todayToggle');
     todayWasOn = todayToggle && todayToggle.checked;
@@ -3845,7 +3879,7 @@ datePicker = flatpickr($('#datePicker'), {
   minDate: minPickerDate,
   maxDate: maxPickerDate,
   showMonths: pickerMonths,
-  defaultDate: minPickerDate,
+  defaultDate: today,
   onChange: (selectedDates, dateStr, instance) => {
     const input = $('#dateInput');
     if (selectedDates.length === 2) {
@@ -3878,7 +3912,7 @@ datePicker = flatpickr($('#datePicker'), {
     datePicker.clear();
     dateStart = null;
     dateEnd = null;
-    datePicker.jumpToDate(minPickerDate);
+    datePicker.jumpToDate(today);
     const filterCalContainer = document.getElementById('datePickerContainer');
     const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
     if(filterCalScroll){
@@ -3933,7 +3967,7 @@ datePicker = flatpickr($('#datePicker'), {
           if(datePicker) {
             datePicker.set('minDate', minPickerDate);
             datePicker.setDate(minPickerDate, false);
-            datePicker.jumpToDate(minPickerDate);
+            datePicker.jumpToDate(today);
           }
           if(input.value === 'Today Onwards') input.value = '';
         }
@@ -5994,7 +6028,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6313,7 +6347,8 @@ document.addEventListener('click', e=>{
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
       {id:'scrollbarThumbHover', label:'Scrollbar Thumb Hover'},
-      {id:'listBackground', label:'List Background'}
+      {id:'listBackground', label:'List Background'},
+      {id:'closedCardBg', label:'Closed Post Background'}
     ];
     miscColors.forEach(p=>{
       const row = document.createElement('div');
@@ -6413,7 +6448,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6530,7 +6565,7 @@ document.addEventListener('click', e=>{
         data[id] = { color: input.value };
       }
     });
-    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -6548,7 +6583,7 @@ document.addEventListener('click', e=>{
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -6673,7 +6708,7 @@ document.addEventListener('click', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -7149,6 +7184,7 @@ document.addEventListener('click', e=>{
       scrollbarThumb: '--scrollbar-thumb',
       scrollbarThumbHover: '--scrollbar-thumb-hover',
       listBackground: '--list-background',
+      closedCardBg: '--closed-card-bg',
       placeholder: '--placeholder-text',
       filterPlaceholder: '--filter-placeholder-text',
       dropdownTitle: '--dropdown-title',
