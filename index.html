@@ -706,11 +706,18 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #adminPanel .panel-field{margin:8px 0;max-width:none;}
 #baseColorRow{
-  flex-direction:row;
-  align-items:center;
+  flex-direction:column;
+  align-items:flex-start;
   gap:10px;
 }
 #baseColorRow .history-group{display:flex;gap:6px;}
+#baseColorRow .color-group{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:6px;
+  margin-left:0;
+}
 .preset-select{
   display:flex;
   align-items:center;
@@ -2585,13 +2592,15 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
       <button id="adminBtn" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0a1.724 1.724 0 002.693.949 1.724 1.724 0 012.45 2.45 1.724 1.724 0 00.949 2.693c.921.3.921 1.603 0 1.902a1.724 1.724 0 00-.949 2.693 1.724 1.724 0 01-2.45 2.45 1.724 1.724 0 00-2.693.949c-.3.921-1.603.921-1.902 0a1.724 1.724 0 00-2.693-.949 1.724 1.724 0 01-2.45-2.45 1.724 1.724 0 00-.949-2.693c-.921-.3-.921-1.603 0-1.902a1.724 1.724 0 00.949-2.693 1.724 1.724 0 012.45-2.45 1.724 1.724 0 002.693-.949z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 22c4.971 0 9-4.029 9-9V5a2 2 0 00-1.106-1.789l-7-3.111a2 2 0 00-1.788 0l-7 3.111A2 2 0 004 5v8c0 4.971 4.029 9 9 9z"/>
         </svg>
       </button>
     </div>
@@ -2634,7 +2643,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h));left:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
@@ -2684,7 +2693,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content">
+    <div class="panel-content" style="top:var(--header-h);right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
@@ -2723,7 +2732,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
 
   <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content">
+    <div class="panel-content" style="top:var(--header-h);right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Admin</h2>
@@ -2764,8 +2773,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <button type="button" id="redoBtn">Redo</button>
               </div>
               <div class="color-group">
-                <input type="color" id="baseColor" value="#336699" />
                 <button type="button" id="autoThemeBtn">AutoTheme</button>
+                <input type="color" id="baseColor" value="#336699" />
               </div>
             </div>
           </div>
@@ -5064,7 +5073,7 @@ function openPanel(m){
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
     }
-    if(m.id !== 'welcomePopup') loadPanelState(m);
+    if(m.id !== 'welcomePopup' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
     if(window.innerWidth >= 450 && (m.id==='adminPanel' || m.id==='memberPanel')){
       movePanelToEdge(m,'right');
     }
