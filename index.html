@@ -1919,9 +1919,9 @@ footer .foot-row .foot-item[aria-selected="true"],
 }
 
 .closed-posts .card .thumb{
-  flex-basis: 70px;
-  width: 70px;
-  height: 70px;
+  flex-basis: 80px;
+  width: 80px;
+  height: 80px;
   padding:0;
 }
 
@@ -5520,19 +5520,6 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    ['list','closed-posts'].forEach(areaKey=>{
-      const twInput = document.getElementById(`${areaKey}-thumbWidth`);
-      const thInput = document.getElementById(`${areaKey}-thumbHeight`);
-      if(twInput || thInput){
-        const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-        const elT = document.querySelector(thumbSel);
-        if(elT){
-          const cs = getComputedStyle(elT);
-          if(twInput) twInput.value = parseInt(cs.width,10) || 0;
-          if(thInput) thInput.value = parseInt(cs.height,10) || 0;
-        }
-      }
-    });
     const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
@@ -5802,18 +5789,6 @@ document.addEventListener('click', e=>{
           fs.appendChild(shadowRow);
         }
       });
-      if(area.key === 'list' || area.key === 'closed-posts'){
-        const thumbRow = document.createElement('div');
-        thumbRow.className = 'control-row';
-        thumbRow.innerHTML = `
-            <label>Thumbnail</label>
-            <div class="shadow-group">
-              <input id="${area.key}-thumbWidth" type="number" step="1" placeholder="W" />
-              <input id="${area.key}-thumbHeight" type="number" step="1" placeholder="H" />
-            </div>
-        `;
-        fs.appendChild(thumbRow);
-      }
       if(area.key === 'open-posts'){
         fs.appendChild(createTextPickerRow('dropdownVenueText-text','Venue Button Text','open-posts-menu-c'));
         const stickyHeaderRow = document.createElement('div');
@@ -6054,16 +6029,6 @@ document.addEventListener('click', e=>{
         }
       });
     });
-    ['list','closed-posts'].forEach(areaKey=>{
-      const tw = document.getElementById(`${areaKey}-thumbWidth`);
-      const th = document.getElementById(`${areaKey}-thumbHeight`);
-      const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-      document.querySelectorAll(thumbSel).forEach(el=>{
-        if(areaKey === 'list' && el.closest('.closed-posts')) return;
-        if(tw && tw.value !== '') el.style.width = `${tw.value}px`;
-        if(th && th.value !== '') el.style.height = `${th.value}px`;
-      });
-    });
     const stickyHeader = document.getElementById('open-posts-sticky-header');
     document.documentElement.classList.toggle('open-posts-sticky-header', stickyHeader && stickyHeader.checked);
     const stickyImages = document.getElementById('open-posts-sticky-images');
@@ -6130,12 +6095,6 @@ document.addEventListener('click', e=>{
       if(c){
         data[id] = { color: c.value };
       }
-    });
-    ['list','closed-posts'].forEach(areaKey=>{
-      const tw = document.getElementById(`${areaKey}-thumbWidth`);
-      if(tw){ data[`${areaKey}-thumbWidth`] = { value: tw.value }; }
-      const th = document.getElementById(`${areaKey}-thumbHeight`);
-      if(th){ data[`${areaKey}-thumbHeight`] = { value: th.value }; }
     });
     return data;
   }
@@ -6216,17 +6175,6 @@ document.addEventListener('click', e=>{
           css += selectors.map(sel=>`${sel}{${rules.join('')}}`).join('\n') + '\n';
         }
       });
-    });
-    ['list','closed-posts'].forEach(areaKey=>{
-      const tw = data[`${areaKey}-thumbWidth`];
-      const th = data[`${areaKey}-thumbHeight`];
-      if(tw || th){
-        const thumbSel = areaKey === 'list' ? '.res-list .thumb' : '.closed-posts .thumb';
-        const tRules = [];
-        if(tw) tRules.push(`width:${tw.value}px;`);
-        if(th) tRules.push(`height:${th.value}px;`);
-        if(tRules.length) css += `${thumbSel}{${tRules.join('')}}` + '\n';
-      }
     });
     return css;
   }
