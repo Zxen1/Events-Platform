@@ -518,10 +518,14 @@ button[aria-expanded="true"] .dropdown-arrow{
   color: initial;
   border: none;
 }
+#filterPanel .calendar-container{
+  background: var(--dropdown-bg);
+}
+#filterPanel .calendar-scroll{
+  background: var(--dropdown-bg);
+}
 #filterPanel #datePicker{
-  max-width:400px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .container__months{
   display:flex;
@@ -530,6 +534,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel #datePicker .container__months .month-item{
   flex:0 0 200px;
+  background: var(--dropdown-bg);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -1687,8 +1692,8 @@ body.hide-results .closed-posts{
 
 .calendar-container .cal-nav{
   position:absolute;
-  top:50%;
-  transform:translateY(-50%);
+  top:10px;
+  transform:none;
   background:var(--btn);
   border:1px solid var(--btn);
   color:var(--button-text);
@@ -1700,8 +1705,8 @@ body.hide-results .closed-posts{
   justify-content:center;
   z-index:5;
 }
-.calendar-container .cal-prev{left:-15px;}
-.calendar-container .cal-next{right:-15px;}
+.calendar-container .cal-prev{left:10px;}
+.calendar-container .cal-next{right:10px;}
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--session-available) !important;
@@ -2721,7 +2726,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div class="field">
             <label class="t">Today Onwards <input id="todayToggle" type="checkbox" checked /></label>
           </div>
-          <div id="datePicker"></div>
+          <div id="datePickerContainer" class="calendar-container">
+            <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
+            <div class="calendar-scroll">
+              <div id="datePicker"></div>
+            </div>
+            <button class="cal-nav cal-next" type="button" aria-label="Next month">&#8250;</button>
+          </div>
 
           <h3>Categories</h3>
           <div class="cats" id="cats"></div>
@@ -3719,6 +3730,30 @@ function makePosts(){
         });
       }
     });
+
+    const filterCalContainer = document.getElementById('datePickerContainer');
+    const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
+    const filterCalPrev = filterCalContainer ? filterCalContainer.querySelector('.cal-prev') : null;
+    const filterCalNext = filterCalContainer ? filterCalContainer.querySelector('.cal-next') : null;
+    if(filterCalScroll){
+      filterCalScroll.addEventListener('wheel', e=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          filterCalScroll.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      }, {passive:false});
+      let startXCal = null;
+      filterCalScroll.addEventListener('touchstart', e=>{ startXCal = e.touches[0].clientX; }, {passive:true});
+      filterCalScroll.addEventListener('touchmove', e=>{
+        if(startXCal!==null){
+          filterCalScroll.scrollLeft += startXCal - e.touches[0].clientX;
+          startXCal = e.touches[0].clientX;
+        }
+      }, {passive:true});
+      filterCalScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
+    }
+    if(filterCalPrev) filterCalPrev.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:-200, behavior:'smooth'}));
+    if(filterCalNext) filterCalNext.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:200, behavior:'smooth'}));
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
