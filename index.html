@@ -1833,14 +1833,18 @@ body.hide-results .closed-posts{
   height:200px;
 }
 .open-posts .calendar-container .calendar-scroll{
-  width:400px;
+  width:200px;
   height:200px;
-  overflow-x:auto;
-  overflow-y:hidden;
+  overflow:hidden;
   touch-action:pan-x;
   scroll-snap-type:x mandatory;
   padding-bottom:20px;
   box-sizing:content-box;
+}
+
+.open-posts .calendar-container .calendar-scroll .flatpickr-calendar{
+  transform:scale(0.5);
+  transform-origin:top left;
 }
 
 .open-posts .post-calendar .flatpickr-months{
