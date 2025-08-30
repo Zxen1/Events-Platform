@@ -55,7 +55,7 @@
       --dropdown-hover-text: #000000;
       --dropdown-venue-text: #000000;
       --dropdown-radius: 6px;
-      --session-available: #0000ff;
+      --session-available: #808080;
       --session-selected: #008000;
       --filter-active-color: var(--accent);
       --keyword-bg: #FFFFFF;
@@ -1521,7 +1521,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .venue-menu{width:100%;}
-.open-posts .session-menu{width:400px;}
+.open-posts .session-menu{width:auto;}
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
@@ -1581,7 +1581,7 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  width:400px;
+  width:auto;
   position:relative;
   align-items:flex-start;
 }
@@ -1603,27 +1603,21 @@ body.hide-results .closed-posts{
 }
 
 .calendar-scroll{
-  width:400px;
-  overflow-x:auto;
+  overflow:visible;
 }
 
-.calendar-scroll .litepicker{
+.open-posts .post-calendar .container__months{
   display:flex;
 }
 
-.calendar-scroll .litepicker .month-item{
-  flex:0 0 auto;
-}
-
-
-/* month width adjusts to container size */
 .open-posts .post-calendar .container__months .month-item{
   flex:0 0 auto;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--session-available);
-  color:var(--button-hover-text);
+  color:var(--button-text);
+  font-weight:normal;
   border-radius:4px;
 }
 
@@ -2329,7 +2323,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 </style>
 <style id="theme-default">
-:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
+:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#808080;--session-selected:#008000;}
 .header{background-color:#1d2744;}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -2728,18 +2722,19 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <button type="button" id="savePreset">Save Theme</button>
             <button type="button" id="downloadCss">Download CSS</button>
           </div>
-          <div class="panel-field" id="baseColorRow">
-            <div class="history-group">
-              <button type="button" id="undoBtn">Undo</button>
-              <button type="button" id="redoBtn">Redo</button>
-            </div>
-            <div class="color-group">
-              <input type="color" id="baseColor" value="#336699" />
-            </div>
-            <button type="button" id="autoBuildBtn">Auto Build</button>
-          </div>
           <h3>Theme Builder</h3>
-          <div id="styleControls"></div>
+          <div id="styleControls">
+            <div class="panel-field" id="baseColorRow">
+              <div class="history-group">
+                <button type="button" id="undoBtn">Undo</button>
+                <button type="button" id="redoBtn">Redo</button>
+              </div>
+              <div class="color-group">
+                <input type="color" id="baseColor" value="#336699" />
+                <button type="button" id="autoThemeBtn">AutoTheme</button>
+              </div>
+            </div>
+          </div>
           <div class="panel-field">
             <label for="themeRestore">Restore Backup</label>
             <select id="themeRestore" style="width:250px"></select>
@@ -3144,8 +3139,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     }
     
 function buildClusterListHTML(items){
-  const soonest = items.map(p=>p.dates[0]).sort()[0];
-  const head = `<h4>${items.length} events here<br><span class="soonest">Soonest: <span class="nowrap">${soonest}</span></span></h4>`;
+  const allDates = items.flatMap(p=>p.dates).sort();
+  const first = allDates[0];
+  const last = allDates[allDates.length-1] || first;
+  const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
+  const head = `<h4>${items.length} events here<br><span class="soonest"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></span></h4>`;
   const sort = currentSort;
   const arr = items.slice();
   if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -4778,10 +4776,9 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
-        const uniqueMonths = Array.from(new Set(dateStrings.map(d=> d.slice(0,7))));
-        const monthsCount = uniqueMonths.length;
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
+        const monthsCount = ((new Date(lastDate).getFullYear() - new Date(firstDate).getFullYear()) * 12) + (new Date(lastDate).getMonth() - new Date(firstDate).getMonth()) + 1;
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -4796,9 +4793,6 @@ function makePosts(){
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
-        if(sessDropdown) sessDropdown.style.width = '400px';
-        if(sessMenu) sessMenu.style.width = '400px';
-        if(mapEl) mapEl.style.width = '400px';
         let ignoreSelect = false;
         function selectSession(i){
           if(!sessMenu) return;
@@ -6700,10 +6694,10 @@ document.addEventListener('click', e=>{
   });
 
   const baseColorInput = document.getElementById('baseColor');
-  const autoBuildBtn = document.getElementById('autoBuildBtn');
+  const autoThemeBtn = document.getElementById('autoThemeBtn');
   undoBtn = document.getElementById('undoBtn');
   redoBtn = document.getElementById('redoBtn');
-  autoBuildBtn && autoBuildBtn.addEventListener('click', ()=>{
+  autoThemeBtn && autoThemeBtn.addEventListener('click', ()=>{
     undoStack.push(JSON.parse(JSON.stringify(currentState)));
     redoStack.length = 0;
     const base = baseColorInput.value;
