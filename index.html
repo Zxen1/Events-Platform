@@ -1415,7 +1415,7 @@ body.filters-active #filterBtn{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
-.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:hidden;}
+.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:visible;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
@@ -4324,12 +4324,9 @@ datePicker = flatpickr($('#datePicker'), {
           essential: true
         });
       });
-      const geoContainer = document.getElementById('geocoder');
-      if(geoContainer){
-        geoContainer.appendChild(geolocate.onAdd(map));
-        const nav = new mapboxgl.NavigationControl({showZoom: false});
-        geoContainer.appendChild(nav.onAdd(map));
-      }
+      const nav = new mapboxgl.NavigationControl({showZoom: false});
+      map.addControl(nav, 'top-left');
+      map.addControl(geolocate, 'top-left');
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
