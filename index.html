@@ -62,6 +62,12 @@
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
       --control-h: 35px;
+      --panel-label-font: Verdana;
+      --panel-label-size: 16px;
+      --panel-label-color: #ffffff;
+      --panel-title-font: Verdana;
+      --panel-title-size: 20px;
+      --panel-title-color: #ffffff;
 }
 
 *{
@@ -169,7 +175,16 @@ textarea::placeholder{
 #filterPanel #kwInput::placeholder{ color: var(--filter-placeholder-text); }
 
 .field label{
-  color: var(--dropdown-title);
+  color: var(--panel-label-color);
+  font-family: var(--panel-label-font);
+  font-size: var(--panel-label-size);
+}
+
+.panel-content .title,
+.panel-content .t{
+  color: var(--panel-title-color);
+  font-family: var(--panel-title-font);
+  font-size: var(--panel-title-size);
 }
 
 select{
@@ -544,7 +559,9 @@ button[aria-expanded="true"] .dropdown-arrow{
 .litepicker .button-prev,
 .litepicker .button-next,
 .litepicker .button-previous{
-  display:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 #filterPanel .litepicker .container__tooltip{
   background: var(--dropdown-bg);
@@ -768,27 +785,27 @@ button[aria-expanded="true"] .dropdown-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
+  max-width:300px;
+  width:100%;
 }
-#adminPanel .panel-field{margin:8px 0;max-width:none;}
+#adminPanel .panel-field{margin:8px 0;}
+#balloonTool .panel-field,
+#tab-forms .panel-field{max-width:none;}
 #baseColorRow{
-  flex-direction:column;
-  align-items:flex-start;
+  flex-direction:row;
+  align-items:center;
   gap:10px;
   width:100%;
 }
-#baseColorRow .history-group{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  gap:8px;
-}
+#baseColorRow .history-group,
 #baseColorRow .color-group{
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
+  flex-direction:row;
+  align-items:center;
   gap:8px;
-  margin-left:0;
 }
+.history-group,
+.color-group{display:flex;align-items:center;gap:4px;}
 .preset-select{
   display:flex;
   align-items:center;
@@ -1032,7 +1049,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   transition:.2s;
 }
 .switch input:checked + .slider{
-  background:var(--accent);
+  background:#008000;
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -3817,6 +3834,7 @@ function makePosts(){
       singleMode: false,
       format: 'ddd D MMM',
       minDate: firstPickerDate,
+      startDate: firstPickerDate,
       maxDate: maxPickerDate.toISOString().split('T')[0],
       numberOfMonths: pickerMonths,
       numberOfColumns: pickerMonths,
@@ -3896,11 +3914,16 @@ function makePosts(){
     if(todayToggle){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
+        const todayIso = new Date().toISOString().split('T')[0];
         if(todayToggle.checked){
           input.dataset.range='';
-          if(datePicker) datePicker.clearSelection();
+          if(datePicker) {
+            datePicker.clearSelection();
+            datePicker.setOptions({minDate: todayIso, startDate: todayIso});
+          }
           input.value = 'Today Onwards';
         } else {
+          if(datePicker) datePicker.setOptions({minDate: firstPickerDate, startDate: firstPickerDate});
           if(input.value === 'Today Onwards') input.value = '';
         }
         todayWasOn = todayToggle.checked;
@@ -4747,12 +4770,12 @@ function makePosts(){
                 <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
                 <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
                 <div class="calendar-scroll">
                   <div id="cal-${p.id}" class="post-calendar"></div>
                 </div>
                 <button class="cal-nav cal-next" type="button" aria-label="Next month">&#8250;</button>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
@@ -6589,7 +6612,7 @@ document.addEventListener('click', e=>{
   let presets = [];
   let defaultTheme = {};
 
-  function updatePresetOptions(){
+  function updatePresetOptions(idx=0){
     const sel = document.getElementById('themePreset');
     if(!sel) return;
     sel.innerHTML = '';
@@ -6599,7 +6622,7 @@ document.addEventListener('click', e=>{
       opt.textContent = p.name;
       sel.appendChild(opt);
     });
-    sel.selectedIndex = 0;
+    sel.selectedIndex = idx;
   }
 
   function loadPresets(){
@@ -6609,7 +6632,13 @@ document.addEventListener('click', e=>{
       {name:'Blue', css:'theme-blue'},
       ...stored
     ];
-    updatePresetOptions();
+    const savedCss = localStorage.getItem('selectedCssTheme');
+    let selectedIdx = 0;
+    if(savedCss){
+      const found = presets.findIndex(p=>p.css===savedCss);
+      if(found!==-1) selectedIdx = found;
+    }
+    updatePresetOptions(selectedIdx);
   }
 
   function applyPresetData(data){
