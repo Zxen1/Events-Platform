@@ -4323,11 +4323,14 @@ function makePosts(){
     }
     function renderFooter(){
       footRow.innerHTML='';
+      viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
+      saveHistory();
       if(!viewHistory.length){ return; }
       // render oldest -> newest so newest appears at the far right
       const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
         for(const v of items){
           const p = posts.find(x=>x.id===v.id);
+          if(!p) continue;
           const el = document.createElement('div');
           el.className='chip-small foot-item';
           el.dataset.id = v.id;
@@ -4341,6 +4344,8 @@ function makePosts(){
       // scroll to the far right to reveal the newest
       footRow.scrollLeft = footRow.scrollWidth;
     }
+
+    renderFooter();
 
     function buildDetail(p){
       const wrap = document.createElement('div');
@@ -4791,7 +4796,6 @@ function makePosts(){
 
     applyFilters();
     setMode('map');
-    renderFooter();
   })();
   
 // 0577 helpers (safety)
