@@ -5554,6 +5554,7 @@ document.addEventListener('keydown', e=>{
 });
 
 document.addEventListener('click', e=>{
+  if(logoEls.some(el => el.contains(e.target))) return;
   const welcome = document.getElementById('welcomePopup');
   if(welcome && welcome.classList.contains('show')){
     const content = welcome.querySelector('.panel-content');
