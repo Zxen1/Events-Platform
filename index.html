@@ -283,10 +283,21 @@ input[type="checkbox"]{
   border-radius: 12px;
   padding: 10px 14px;
   background: var(--btn);
-  color: var(--ink);
+  color: var(--button-text);
   font-weight: 600;
   cursor: pointer;
-  transition: background .2s,border-color .2s;
+  transition: background .2s,border-color .2s,color .2s;
+}
+
+.view-toggle button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+.view-toggle button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
 }
 
 .header button,
@@ -350,7 +361,11 @@ button[aria-expanded="true"] .dropdown-arrow{
 
 
 .view-toggle button[aria-current="page"],
+.view-toggle button[aria-selected="true"],
 .view-toggle button[aria-pressed="true"]{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
 }
 
 /* Spin controls */
@@ -610,11 +625,14 @@ button[aria-expanded="true"] .dropdown-arrow{
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:flex-start;cursor:pointer;user-select:none;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;}
+#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:12px;}
+#adminPanel fieldset.collapsed legend::after{content:'\25B6';}
+#adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;}
-#adminPanel .control-row label{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
+#adminPanel .control-row label:first-child{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;}
 #adminPanel .color-group{
   flex:1 1 220px;
@@ -782,17 +800,23 @@ button[aria-expanded="true"] .dropdown-arrow{
 #balloonTool .panel-field,
 #tab-forms .panel-field{max-width:none;}
 #baseColorRow{
-  flex-direction:row;
-  align-items:center;
+  flex-direction:column;
+  align-items:flex-start;
   gap:10px;
   width:100%;
 }
-#baseColorRow .history-group,
+#baseColorRow .history-group{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+}
 #baseColorRow .color-group{
   display:flex;
   flex-direction:row;
   align-items:center;
   gap:8px;
+  margin-left:0;
 }
 .history-group,
 .color-group{display:flex;align-items:center;gap:4px;}
@@ -1047,7 +1071,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   transition:.2s;
 }
 .switch input:checked + .slider{
-  background:#008000;
+  background:var(--accent);
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -2589,7 +2613,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
 .subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#main-tab-map[aria-selected="true"]{color:#ff0000;}
 body{background-color:rgba(41,41,41,1);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
@@ -3089,14 +3112,26 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 </div>
               </div>
             <div class="panel-field">
-              <label class="option-label">Spin on Load <input type="checkbox" id="spinLoadStart" /></label>
+              <div class="option-label">
+                <span>Spin on Load</span>
+                <label class="switch">
+                  <input type="checkbox" id="spinLoadStart" />
+                  <span class="slider"></span>
+                </label>
+              </div>
               <div id="spinType" class="option-group">
                 <label class="option-label"><span>Everyone</span><input type="radio" name="spinType" value="all" /></label>
                 <label class="option-label"><span>New Users</span><input type="radio" name="spinType" value="new" /></label>
               </div>
             </div>
             <div class="panel-field">
-              <label class="option-label">Spin on Logo <input type="checkbox" id="spinLogoClick" checked /></label>
+              <div class="option-label">
+                <span>Spin on Logo</span>
+                <label class="switch">
+                  <input type="checkbox" id="spinLogoClick" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
             <div class="panel-field">
               <label for="mapRestore">Restore Backup</label>
@@ -6102,6 +6137,7 @@ document.addEventListener('click', e=>{
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
       const lg = document.createElement('legend');
       lg.textContent = area.label;
+      lg.addEventListener('click', (e)=>{ e.preventDefault(); fs.classList.toggle('collapsed'); });
       fs.appendChild(lg);
       const btnRow = document.createElement('div');
       btnRow.className = 'fieldset-actions';
@@ -6309,14 +6345,20 @@ document.addEventListener('click', e=>{
         stickyHeaderRow.className = 'control-row';
         stickyHeaderRow.innerHTML = `
             <label>Sticky Header</label>
-            <input id="open-posts-sticky-header" type="checkbox" checked />
+            <label class="switch">
+              <input id="open-posts-sticky-header" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
         `;
         fs.appendChild(stickyHeaderRow);
         const stickyImageRow = document.createElement('div');
         stickyImageRow.className = 'control-row';
         stickyImageRow.innerHTML = `
             <label>Sticky Images</label>
-            <input id="open-posts-sticky-images" type="checkbox" checked />
+            <label class="switch">
+              <input id="open-posts-sticky-images" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
         `;
         fs.appendChild(stickyImageRow);
       }
