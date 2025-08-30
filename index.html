@@ -528,18 +528,20 @@ button[aria-expanded="true"] .dropdown-arrow{
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
   width:300px;
-  height:300px;
+  height:200px;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
   scroll-snap-type:x mandatory;
+  padding-bottom:20px;
+  box-sizing:content-box;
 }
 #filterPanel #datePicker{
   background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .flatpickr-calendar{
   width:max-content;
-  height:300px;
+  height:200px;
 }
 #filterPanel #datePicker .flatpickr-months{
   display:flex;
@@ -549,7 +551,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
   flex:0 0 300px;
   width:300px;
-  height:300px;
+  height:200px;
   background: var(--dropdown-bg);
   scroll-snap-align:start;
   scroll-snap-stop:always;
@@ -559,7 +561,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   line-height:1.2;
   margin:0;
   width:calc(300px/7);
-  height:calc((300px - 40px)/6);
+  height:calc((200px - 40px)/6);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -1663,7 +1665,7 @@ body.hide-results .closed-posts{
 
 .open-posts .post-map{
   width:400px;
-  height:300px;
+  height:200px;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1828,15 +1830,17 @@ body.hide-results .closed-posts{
   box-sizing:border-box;
   display:block;
   width:max-content;
-  height:300px;
+  height:200px;
 }
 .open-posts .calendar-container .calendar-scroll{
   width:400px;
-  height:300px;
+  height:200px;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
   scroll-snap-type:x mandatory;
+  padding-bottom:20px;
+  box-sizing:content-box;
 }
 
 .open-posts .post-calendar .flatpickr-months{
@@ -1861,7 +1865,7 @@ body.hide-results .closed-posts{
   line-height:1.2;
   margin:0;
   width:calc(400px/7);
-  height:calc((300px - 40px)/6);
+  height:calc((200px - 40px)/6);
 }
 
 .open-posts .post-calendar .flatpickr-days{
