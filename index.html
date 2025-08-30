@@ -3315,10 +3315,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       function openWelcome(){
         const popup = document.getElementById('welcomePopup');
         const body = document.getElementById('welcomeBody');
-        if(popup.classList.contains('show')){
-          closePanel(popup);
-          return;
-        }
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
         body.innerHTML = msg;
@@ -3329,11 +3325,20 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         body.style.padding = '20px';
       }
 
+      function toggleWelcome(){
+        const popup = document.getElementById('welcomePopup');
+        if(popup.classList.contains('show')){
+          closePanel(popup);
+        } else {
+          openWelcome();
+        }
+      }
+
       logoEls.forEach(el=>{
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           if(spinning){
-            openWelcome();
+            toggleWelcome();
             return;
           }
           if(spinLogoClick && map && map.getZoom() <= 4){
@@ -3341,7 +3346,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             localStorage.setItem('spinGlobe', 'true');
             startSpin(true);
           }
-          openWelcome();
+          toggleWelcome();
         });
       });
     // 'Post Panel' is defined as the current map bounds
@@ -5571,6 +5576,13 @@ document.addEventListener('click', e=>{
     const content = welcome.querySelector('.panel-content');
     if(content && !content.contains(e.target)){
       closePanel(welcome);
+    }
+  }
+  const filterPanel = document.getElementById('filterPanel');
+  if(filterPanel && filterPanel.classList.contains('show')){
+    const content = filterPanel.querySelector('.panel-content');
+    if(content && !content.contains(e.target)){
+      closePanel(filterPanel);
     }
   }
   document.querySelectorAll('.img-popup').forEach(p=>{
