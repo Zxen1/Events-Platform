@@ -128,7 +128,9 @@ button,
   color: var(--button-text);
   padding: 6px 10px;
   border-radius: 6px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
@@ -802,7 +804,8 @@ button[aria-expanded="true"] .dropdown-arrow{
   gap: 6px;
 }
 
-.input input,.input select{
+.input input,
+.input select{
   flex: 1;
   width: 100%;
   height: 35px;
@@ -810,6 +813,8 @@ button[aria-expanded="true"] .dropdown-arrow{
   border: none;
   padding: 0 12px;
   outline: 0;
+  display: flex;
+  align-items: center;
 }
 .input input{
   border-radius: 12px;
@@ -1589,37 +1594,6 @@ body.hide-results .closed-posts{
   display:block;
 }
 
-.open-posts .post-calendar .container__months{
-  display:flex;
-  transition:transform .3s;
-}
-
-.open-posts .post-calendar .calendar-arrow{
-  position:absolute;
-  top:calc(50% - 12px);
-  width:24px;
-  height:24px;
-  padding:0;
-  line-height:24px;
-  text-align:center;
-  background:var(--btn);
-  border:1px solid var(--btn);
-  color:var(--button-text);
-}
-
-.open-posts .post-calendar .calendar-arrow:hover{
-  background:var(--btn-hover);
-  border-color:var(--btn-hover);
-  color:var(--button-hover-text);
-}
-
-.open-posts .post-calendar .calendar-arrow.prev{
-  left:4px;
-}
-
-.open-posts .post-calendar .calendar-arrow.next{
-  right:4px;
-}
 
 /* month width adjusts to container size */
 .open-posts .post-calendar .container__months .month-item{
@@ -3914,7 +3888,7 @@ function makePosts(){
 
     function haltSpin(e){
       const target = (e && e.originalEvent && e.originalEvent.target) || (e && e.target);
-      if(target && logoEls.some(el=>el.contains(target))) return;
+      if(target instanceof Node && logoEls.some(el=>el.contains(target))) return;
       if(spinEnabled || spinning){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
@@ -4265,8 +4239,8 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      el.innerHTML = `
-        <img class="thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+        el.innerHTML = `
+          <img class="thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
@@ -4356,8 +4330,8 @@ function makePosts(){
           el.className='chip-small foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
-          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" loading="lazy" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+            const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+            el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', ()=>{ stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
           footRow.appendChild(el);
@@ -4635,11 +4609,7 @@ function makePosts(){
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
       let map, marker, picker, sessionHasMultiple = false;
-      let calIndex = 0, monthsCount = 1, monthsEl, prevBtn, nextBtn;
       function updateVenue(idx){
-        calIndex = 0;
-        calendarEl.querySelectorAll('.calendar-arrow').forEach(b=> b.remove());
-        monthsEl = prevBtn = nextBtn = null;
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
@@ -4663,9 +4633,6 @@ function makePosts(){
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
-        const first = new Date(firstDate);
-        const last = new Date(lastDate);
-        const monthCount = (last.getFullYear() - first.getFullYear()) * 12 + (last.getMonth() - first.getMonth() + 1);
         picker = new Litepicker({
           element: calendarEl,
           container: calendarEl,
@@ -4675,67 +4642,15 @@ function makePosts(){
           startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
-          numberOfMonths: monthCount,
-          numberOfColumns: monthCount,
+          numberOfMonths: 1,
+          numberOfColumns: 1,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
+        if(sessDropdown) sessDropdown.style.width = '400px';
+        if(sessMenu) sessMenu.style.width = '400px';
+        if(mapEl) mapEl.style.width = '400px';
         let ignoreSelect = false;
-        let monthWidth = 400;
-        function highlightMonth(){
-          const names = calendarEl.querySelectorAll('.month-name');
-          names.forEach(n=> n.classList.remove('selected-month-name'));
-          const m = names[calIndex];
-          if(m) m.classList.add('selected-month-name');
-        }
-        function shiftMonths(){
-          if(monthsEl) monthsEl.style.transform = `translateX(-${calIndex * monthWidth}px)`;
-        }
-        function updateArrows(){
-          if(prevBtn) prevBtn.style.display = calIndex <= 0 ? 'none' : '';
-          if(nextBtn) nextBtn.style.display = calIndex >= monthsCount - 1 ? 'none' : '';
-        }
-        function setupArrows(){
-          prevBtn = document.createElement('button');
-          prevBtn.className = 'calendar-arrow prev';
-          prevBtn.setAttribute('aria-label','Previous Month');
-          prevBtn.innerHTML = '&#9664;';
-          nextBtn = document.createElement('button');
-          nextBtn.className = 'calendar-arrow next';
-          nextBtn.setAttribute('aria-label','Next Month');
-          nextBtn.innerHTML = '&#9654;';
-          calendarEl.append(prevBtn, nextBtn);
-          prevBtn.addEventListener('click',()=>{
-            calIndex = Math.max(0, calIndex - 1);
-            shiftMonths();
-            updateArrows();
-            highlightMonth();
-          });
-          nextBtn.addEventListener('click',()=>{
-            calIndex = Math.min(monthsCount - 1, calIndex + 1);
-            shiftMonths();
-            updateArrows();
-            highlightMonth();
-          });
-        }
-        picker.on('render:calendar', () => {
-          calendarEl.querySelectorAll('.month-item').forEach(m => {
-            if(!m.querySelector('.litepicker-day:not(.is-locked)')) m.remove();
-          });
-          monthsEl = calendarEl.querySelector('.container__months');
-          monthsCount = calendarEl.querySelectorAll('.month-item').length || 1;
-          const firstMonth = calendarEl.querySelector('.month-item');
-          monthWidth = firstMonth ? firstMonth.offsetWidth : calendarEl.offsetWidth;
-          if(sessDropdown) sessDropdown.style.width = '400px';
-          if(sessMenu) sessMenu.style.width = '400px';
-          if(mapEl) mapEl.style.width = '400px';
-          if(!prevBtn) setupArrows();
-          shiftMonths();
-          updateArrows();
-          highlightMonth();
-        });
-        highlightMonth();
-        picker.on('render:month', highlightMonth);
         function selectSession(i){
           if(!sessMenu) return;
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
@@ -4749,18 +4664,10 @@ function makePosts(){
               picker.setDate(dt.full);
               picker.gotoDate(dt.full);
               ignoreSelect = false;
-              calIndex = 0;
-              shiftMonths();
-              updateArrows();
-              highlightMonth();
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
               if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="dropdown-arrow" aria-hidden="true"></span>' : 'Select Session';
               picker.clearSelection();
-              calIndex = 0;
-              shiftMonths();
-              updateArrows();
-              highlightMonth();
             }
             sessMenu.hidden = true;
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
@@ -4783,7 +4690,6 @@ function makePosts(){
               showTimePopup(matches);
             } else {
               picker.clearSelection();
-              highlightMonth();
             }
           });
         setTimeout(()=>{
