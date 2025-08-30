@@ -1359,8 +1359,7 @@ body.filters-active #filterBtn{
 
 
 #map{
-  position: absolute;
-  inset: 0;
+  height:200px;
 }
 
 .map-overlay{
@@ -1498,12 +1497,7 @@ body.hide-results .closed-posts{
   display: none;
 }
 .map-area{
-  position: fixed;
-  top: var(--header-h);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
+  height:200px;
 }
 
 
@@ -5347,7 +5341,7 @@ datePicker = flatpickr($('#datePicker'), {
             });
         setTimeout(()=>{
           const calHeight = calendarEl.offsetHeight;
-          mapEl.style.height = (calHeight || 300) + 'px';
+          mapEl.style.height = (calHeight || 200) + 'px';
           if(map && typeof map.resize === 'function') map.resize();
         },0);
           if(sessMenu){
