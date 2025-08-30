@@ -1864,12 +1864,17 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:transparent !important;
-  color:var(--dropdown-text) !important;
+  background:transparent;
+  color:var(--dropdown-text);
   font-weight:bold;
-  border:2px solid var(--session-available) !important;
+  border:2px solid var(--session-available);
   border-radius:50%;
   box-sizing:border-box;
+}
+
+.open-posts .post-calendar .flatpickr-day.available-day.selected{
+  background:var(--session-selected);
+  color:var(--button-text);
 }
 
 .open-posts .post-calendar .flatpickr-day.selected{
@@ -5241,8 +5246,10 @@ datePicker = flatpickr($('#datePicker'), {
               sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
               if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
               ignoreSelect = true;
-              picker.setDate(parseDate(dt.full));
-              picker.jumpToDate(parseDate(dt.full));
+              const selectedDateObj = parseDate(dt.full);
+              picker.setDate(selectedDateObj);
+              const monthDiff = (selectedDateObj.getFullYear() - firstDateObj.getFullYear()) * 12 + (selectedDateObj.getMonth() - firstDateObj.getMonth());
+              if(calScroll) calScroll.scrollLeft = monthDiff * 400;
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
