@@ -3863,6 +3863,9 @@ function makePosts(){
     const minPickerStr = minPickerDate.toISOString().split('T')[0];
     const maxPickerStr = maxPickerDate.toISOString().split('T')[0];
 
+    const todayToggle = $('#todayToggle');
+    todayWasOn = todayToggle && todayToggle.checked;
+
 datePicker = flatpickr($('#datePicker'), {
   inline: true,
   mode: 'range',
@@ -3870,7 +3873,7 @@ datePicker = flatpickr($('#datePicker'), {
   minDate: minPickerStr,
   maxDate: maxPickerStr,
   showMonths: pickerMonths,
-  defaultDate: minPickerStr,
+  defaultDate: minPickerDate,
   onChange: (selectedDates, dateStr, instance) => {
     const input = $('#dateInput');
     if (selectedDates.length === 2) {
@@ -3928,9 +3931,6 @@ datePicker = flatpickr($('#datePicker'), {
         updateClearButtons();
       }
     }));
-
-    const todayToggle = $('#todayToggle');
-    todayWasOn = todayToggle && todayToggle.checked;
     if(todayToggle){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
