@@ -4524,7 +4524,7 @@ datePicker = flatpickr($('#datePicker'), {
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
-        map.fitBounds(bounds, { padding: 40, pitch: 45, essential: true });
+        map.fitBounds(bounds, { padding: 40, pitch: 45, maxZoom: 20, essential: true });
       });
       
       map.on('click','unclustered', (e)=>{
