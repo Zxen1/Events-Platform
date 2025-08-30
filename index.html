@@ -3180,7 +3180,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false,
+      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
@@ -3788,7 +3788,8 @@ function makePosts(){
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
       $('#dateInput').value='';
-      $('#dateInput').dataset.range='';
+      dateStart = null;
+      dateEnd = null;
       $('#todayToggle').checked = false;
       todayWasOn = false;
       if(datePicker) datePicker.clear();
@@ -3803,14 +3804,14 @@ function makePosts(){
       kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
       const date = $('#dateInput');
       const dateX = date.parentElement.querySelector('.x');
-      const hasDate = date.dataset.range || (date.value.trim() && date.value.trim() !== 'Today Onwards');
+      const hasDate = (dateStart || dateEnd) || (date.value.trim() && date.value.trim() !== 'Today Onwards');
       dateX && dateX.classList.toggle('active', !!hasDate);
     }
 
     function filtersActive(){
       const kw = $('#kwInput').value.trim() !== '';
-      const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
-      const hasDate = raw && raw !== 'Today Onwards';
+      const raw = $('#dateInput').value.trim();
+      const hasDate = !!(dateStart || dateEnd || (raw && raw !== 'Today Onwards'));
       const cats = selection.cats.size > 0 || selection.subs.size > 0;
       return kw || hasDate || cats;
     }
@@ -3846,18 +3847,26 @@ datePicker = flatpickr($('#datePicker'), {
   onChange: (selectedDates, dateStr, instance) => {
     const input = $('#dateInput');
     if (selectedDates.length === 2) {
+      dateStart = selectedDates[0];
+      dateEnd = selectedDates[1];
       const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
       const eIso = instance.formatDate(selectedDates[1], 'Y-m-d');
       const sDisp = fmtShort(sIso);
       const eDisp = fmtShort(eIso);
       input.value = `${sDisp} - ${eDisp}`;
-      input.dataset.range = `${sIso} to ${eIso}`;
+      todayWasOn = todayToggle && todayToggle.checked;
+      if(todayToggle) todayToggle.checked = false;
+    } else if (selectedDates.length === 1) {
+      dateStart = dateEnd = selectedDates[0];
+      const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
+      input.value = fmtShort(sIso);
       todayWasOn = todayToggle && todayToggle.checked;
       if(todayToggle) todayToggle.checked = false;
     } else if (selectedDates.length === 0) {
+      dateStart = null;
+      dateEnd = null;
       if(todayWasOn && todayToggle) todayToggle.checked = true;
       input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
-      input.dataset.range = '';
       todayWasOn = todayToggle && todayToggle.checked;
     }
     applyFilters();
@@ -3865,6 +3874,8 @@ datePicker = flatpickr($('#datePicker'), {
   }
 });
     datePicker.clear();
+    dateStart = null;
+    dateEnd = null;
     datePicker.jumpToDate(minPickerDate);
     const filterCalContainer = document.getElementById('datePickerContainer');
     const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
@@ -3890,7 +3901,8 @@ datePicker = flatpickr($('#datePicker'), {
       const input = x.parentElement.querySelector('input');
       if(input){
         if(input.id==='dateInput'){
-          input.dataset.range='';
+          dateStart = null;
+          dateEnd = null;
           if(datePicker) datePicker.clear();
         } else {
           input.value='';
@@ -3906,7 +3918,8 @@ datePicker = flatpickr($('#datePicker'), {
         const todayDate = new Date();
         todayDate.setHours(0,0,0,0);
         if(todayToggle.checked){
-          input.dataset.range='';
+          dateStart = null;
+          dateEnd = null;
           if(datePicker) {
             datePicker.clear();
             datePicker.set('minDate', todayDate);
@@ -4680,7 +4693,8 @@ datePicker = flatpickr($('#datePicker'), {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
-        range: $('#dateInput').dataset.range,
+        start: dateStart ? dateStart.toISOString().slice(0,10) : null,
+        end: dateEnd ? dateEnd.toISOString().slice(0,10) : null,
         today: $('#todayToggle').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
@@ -4689,21 +4703,45 @@ datePicker = flatpickr($('#datePicker'), {
 
     function restoreState(st){
       if(!st) return;
+      if(datePicker) datePicker.clear();
       $('#kwInput').value = st.kw || '';
-      $('#dateInput').dataset.range = st.range || '';
+      dateStart = st.start ? new Date(st.start) : null;
+      dateEnd = st.end ? new Date(st.end) : null;
+      if(!st.start && st.range){
+        const parts = st.range.split(' to ').map(s=>s.trim());
+        if(parts[0]) dateStart = new Date(parts[0]);
+        if(parts[1]) dateEnd = new Date(parts[1]);
+      }
       if(st.date){
         $('#dateInput').value = st.date;
-      } else if(st.range){
-        const [sIso, eIso] = st.range.split(' to ').map(s=>s.trim());
-        $('#dateInput').value = `${fmtShort(sIso)} - ${fmtShort(eIso)}`;
+      } else if(dateStart){
+        const sIso = dateStart.toISOString().slice(0,10);
+        const sDisp = fmtShort(sIso);
+        if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
+          const eIso = dateEnd.toISOString().slice(0,10);
+          const eDisp = fmtShort(eIso);
+          $('#dateInput').value = `${sDisp} - ${eDisp}`;
+        } else {
+          $('#dateInput').value = sDisp;
+        }
       } else {
         $('#dateInput').value = '';
       }
       $('#todayToggle').checked = st.today || false;
       if($('#todayToggle').checked){
         $('#dateInput').value = 'Today Onwards';
-        $('#dateInput').dataset.range = '';
+        dateStart = null;
+        dateEnd = null;
+      } else if(datePicker){
+        if(dateStart && dateEnd){
+          datePicker.setDate([dateStart, dateEnd], false);
+          datePicker.jumpToDate(dateStart);
+        } else if(dateStart){
+          datePicker.setDate([dateStart], false);
+          datePicker.jumpToDate(dateStart);
+        }
       }
+      todayWasOn = $('#todayToggle').checked;
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -5158,7 +5196,8 @@ datePicker = flatpickr($('#datePicker'), {
               }
             });
         setTimeout(()=>{
-          mapEl.style.height = calendarEl.offsetHeight + 'px';
+          const calHeight = calendarEl.offsetHeight;
+          mapEl.style.height = (calHeight || 300) + 'px';
           if(map && typeof map.resize === 'function') map.resize();
         },0);
           if(sessMenu){
@@ -5230,18 +5269,13 @@ datePicker = flatpickr($('#datePicker'), {
         const today = new Date(); today.setHours(0,0,0,0);
         return p.dates.some(d => new Date(d) >= today);
       }
-      const raw = $('#dateInput').dataset.range || $('#dateInput').value.trim();
-      if(!raw){
+      if(!dateStart && !dateEnd){
         return true;
       }
-      let start, end;
-      const parts = raw.split(/to/i).map(s=>s.trim()).filter(Boolean);
-      if(parts[0]) start = new Date(parts[0]);
-      if(parts[1]) end = new Date(parts[1]);
       return p.dates.some(d => {
         const dt = new Date(d);
-        if(start && dt < start) return false;
-        if(end && dt > end) return false;
+        if(dateStart && dt < dateStart) return false;
+        if(dateEnd && dt > dateEnd) return false;
         return true;
       });
     }
