@@ -57,7 +57,7 @@
       --dropdown-radius: 6px;
       --session-available: #0000ff;
       --session-selected: #008000;
-      --filter-active-color: rgba(255,0,0,1);
+      --filter-active-color: var(--accent);
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -2334,7 +2334,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 </style>
-<style id="theme-dark-transparency">
+<style id="theme-default">
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#0000ff;--session-selected:#008000;}
 .header{background-color:#1d2744;}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2439,7 +2439,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
 
 </style>
-<link id="theme-readable" rel="stylesheet" href="themes/readable.css" disabled>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
@@ -4949,7 +4948,7 @@ function openPanel(m){
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const subHead = document.querySelector('.subheader');
-      const topPos = subHead ? subHead.getBoundingClientRect().top : headerH;
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH;
       content.style.left = '0';
       content.style.right = '0';
       content.style.top = `${topPos}px`;
@@ -4959,7 +4958,7 @@ function openPanel(m){
     } else if(m.id==='filterPanel'){
       const position = ()=>{
         const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().top : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+        const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
         const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-h')) || 0;
         const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left = '0';
@@ -5015,7 +5014,7 @@ function movePanelToEdge(panel, side){
   const content = panel.querySelector('.panel-content');
   if(!content) return;
   const subHead = document.querySelector('.subheader');
-  const topPos = subHead ? subHead.getBoundingClientRect().top : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
+  const topPos = subHead ? subHead.getBoundingClientRect().bottom : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0;
   content.style.top = `${topPos}px`;
   content.style.transform = 'none';
   if(side === 'left'){
@@ -5248,7 +5247,7 @@ document.addEventListener('click', e=>{
         });
       });
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const el = document.getElementById(id);
       if(el){
@@ -5440,7 +5439,7 @@ document.addEventListener('click', e=>{
     if(hb) hb.value = theme.accent;
     const ab = document.getElementById('body-activeBorder-c');
     if(ab) ab.value = theme.accent;
-    ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
+    ['primary','secondary','accent'].forEach(id=>{
       const inp = document.getElementById(id);
       if(inp && theme[id]) inp.value = theme[id];
     });
@@ -5570,7 +5569,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -5691,8 +5690,7 @@ document.addEventListener('click', e=>{
         const palette = [
           {id:'primary', label:'Primary'},
           {id:'secondary', label:'Secondary'},
-          {id:'accent', label:'Accent'},
-          {id:'buttonHoverText', label:'Button Hover Text'}
+          {id:'accent', label:'Accent'}
         ];
         palette.forEach(p=>{
           const row = document.createElement('div');
@@ -5858,15 +5856,6 @@ document.addEventListener('click', e=>{
       }
       if(area.key === 'filter'){
         fs.appendChild(createTextPickerRow('filterPlaceholder-text','Keyword Placeholder','btn-c'));
-        const activeRow = document.createElement('div');
-        activeRow.className = 'control-row';
-        activeRow.innerHTML = `
-            <label>Active Button Colour</label>
-            <div class="color-group">
-              <input id="filterBtnActive-c" type="color" data-mode="${COLOR_PICKER_MODE}" value="#ff0000" />
-            </div>
-          `;
-        fs.appendChild(activeRow);
         const kwBg = document.createElement('div');
         kwBg.className = 'control-row';
         kwBg.innerHTML = `
@@ -5908,8 +5897,6 @@ document.addEventListener('click', e=>{
     misc.appendChild(miscLg);
     const miscColors = [
       {id:'btn', label:'Button Base'},
-      {id:'btnHover', label:'Button Hover'},
-      {id:'btnActive', label:'Button Active'},
       {id:'panelBg', label:'Panel Background'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
@@ -6015,7 +6002,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6126,13 +6113,13 @@ document.addEventListener('click', e=>{
     if(stickyHeader){ data['open-posts-sticky-header'] = { value: stickyHeader.checked ? '1' : '0' }; }
     const stickyImages = document.getElementById('open-posts-sticky-images');
     if(stickyImages){ data['open-posts-sticky-images'] = { value: stickyImages.checked ? '1' : '0' }; }
-    ['primary','secondary','accent','buttonHoverText'].forEach(id=>{
+    ['primary','secondary','accent'].forEach(id=>{
       const input = document.getElementById(id);
       if(input){
         data[id] = { color: input.value };
       }
     });
-    ['btn','btnHover','btnActive','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','filterBtnActive','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -6150,7 +6137,7 @@ document.addEventListener('click', e=>{
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -6252,8 +6239,7 @@ document.addEventListener('click', e=>{
   function loadPresets(){
     const stored = JSON.parse(localStorage.getItem('themePresets')||'[]');
     presets = [
-      {name:'Dark Transparency', css:'theme-dark-transparency'},
-      {name:'Readable', css:'theme-readable'},
+      {name:'Default', css:'theme-default'},
       ...stored
     ];
     updatePresetOptions();
@@ -6269,7 +6255,7 @@ document.addEventListener('click', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',buttonHoverText:'--button-hover-text',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',filterBtnActive:'--filter-active-color',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -6705,10 +6691,7 @@ document.addEventListener('click', e=>{
       primary: '--primary',
       secondary: '--secondary',
       accent: '--accent',
-      buttonHoverText: '--button-hover-text',
       btn: '--btn',
-      btnHover: '--btn-hover',
-      btnActive: '--btn-active',
       panelBg: '--panel-bg',
       panelText: '--panel-text',
       scrollbarTrack: '--scrollbar-track',
@@ -6725,7 +6708,6 @@ document.addEventListener('click', e=>{
       dropdownHoverBg: '--dropdown-hover-bg',
       dropdownHoverText: '--dropdown-hover-text',
       dropdownVenueText: '--dropdown-venue-text',
-      filterBtnActive: '--filter-active-color',
       keywordBg: '--keyword-bg',
       dateRangeBg: '--date-range-bg',
       dateRangeText: '--date-range-text'
