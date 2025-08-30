@@ -1030,7 +1030,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   transition:.2s;
 }
 .switch input:checked + .slider{
-  background:var(--accent);
+  background:var(--session-selected);
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -7655,13 +7655,28 @@ document.addEventListener('DOMContentLoaded', () => {
     hidden.value = hidden.value || placeholder;
     editor.innerHTML = hidden.value;
     editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
+document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.execCommand(btn.dataset.command, false, null);
         editor.focus();
       });
     });
   }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#adminPanel input[type="checkbox"]').forEach(cb => {
+    if (cb.closest('.switch')) return;
+    const wrapper = document.createElement('label');
+    wrapper.className = 'switch';
+    cb.parentNode.insertBefore(wrapper, cb);
+    wrapper.appendChild(cb);
+    const slider = document.createElement('span');
+    slider.className = 'slider';
+    cb.after(slider);
+  });
 });
 </script>
 
