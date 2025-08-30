@@ -4310,7 +4310,15 @@ datePicker = flatpickr($('#datePicker'), {
       addGeocoder();
       addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
-      geolocate.on('geolocate', ()=>{ spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin(); });
+      geolocate.on('geolocate', (e)=>{
+        spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
+        map.flyTo({
+          center: [e.coords.longitude, e.coords.latitude],
+          zoom: Math.max(map.getZoom(), 12),
+          pitch: 45,
+          essential: true
+        });
+      });
       const geoContainer = document.getElementById('geocoder');
       if(geoContainer){
         geoContainer.appendChild(geolocate.onAdd(map));
@@ -4515,7 +4523,15 @@ datePicker = flatpickr($('#datePicker'), {
         stopSpin();
         const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         const clusterId = features[0].properties.cluster_id;
-        map.getSource('posts').getClusterExpansionZoom(clusterId, (err, zoom) => { if (err) return; map.easeTo({ center: features[0].geometry.coordinates, zoom }); });
+        map.getSource('posts').getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          map.flyTo({
+            center: features[0].geometry.coordinates,
+            zoom,
+            pitch: 45,
+            essential: true
+          });
+        });
       });
       
       map.on('click','unclustered', (e)=>{
