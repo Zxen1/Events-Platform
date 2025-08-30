@@ -473,43 +473,11 @@ button[aria-expanded="true"] .dropdown-arrow{
   padding:10px;
   width:250px;
 }
-.admin-fieldset legend{
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.admin-fieldset legend .fs-toggle{
-  margin:0;
-  width:var(--control-h);
-  height:var(--control-h);
-  padding:0;
-  border-radius:12px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-.admin-fieldset.collapsed{
-  border:none;
-  padding:0;
-  margin:0;
-  display:inline-block;
-  width:max-content;
-  min-width:0;
-  max-width:100%;
-}
-.admin-fieldset.collapsed > *:not(legend){display:none;}
 #adminPanel #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminPanel .admin-fieldset{
   flex:0 0 250px;
   min-width:250px;
   max-width:250px;
-}
-#adminPanel .admin-fieldset.collapsed{
-  flex:0 0 auto;
-  min-width:0;
-  max-width:none;
-  width:max-content;
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
@@ -6036,29 +6004,12 @@ document.addEventListener('click', e=>{
     if(!wrap) return;
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
-      fs.className = 'admin-fieldset collapsed';
+      fs.className = 'admin-fieldset';
       fs.dataset.key = area.key;
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
       const lg = document.createElement('legend');
-      const toggleBtn = document.createElement('button');
-      toggleBtn.type = 'button';
-      toggleBtn.className = 'fs-toggle';
-      toggleBtn.textContent = '+';
-      toggleBtn.setAttribute('aria-expanded','false');
-      function toggleFs(e){
-        e.stopPropagation();
-        fs.classList.toggle('collapsed');
-        lastFieldsetKey = area.key;
-        const collapsed = fs.classList.contains('collapsed');
-        toggleBtn.textContent = collapsed ? '+' : '−';
-        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
-      }
-      lg.addEventListener('click', toggleFs);
-      toggleBtn.addEventListener('click', toggleFs);
-      toggleBtn.dataset.bound = '1';
-      lg.appendChild(toggleBtn);
-      lg.appendChild(document.createTextNode(area.label));
+      lg.textContent = area.label;
       fs.appendChild(lg);
       const btnRow = document.createElement('div');
       btnRow.className = 'fieldset-actions';
@@ -6310,20 +6261,9 @@ document.addEventListener('click', e=>{
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
-    misc.className = 'admin-fieldset collapsed';
+    misc.className = 'admin-fieldset';
     const miscLg = document.createElement('legend');
-    const miscToggle = document.createElement('button');
-    miscToggle.type = 'button';
-    miscToggle.className = 'fs-toggle';
-    miscToggle.textContent = '+';
-    miscToggle.addEventListener('click', e=>{
-      e.stopPropagation();
-      misc.classList.toggle('collapsed');
-      miscToggle.textContent = misc.classList.contains('collapsed') ? '+' : '−';
-    });
-    miscToggle.dataset.bound = '1';
-    miscLg.appendChild(miscToggle);
-    miscLg.appendChild(document.createTextNode('Miscellaneous'));
+    miscLg.textContent = 'Miscellaneous';
     misc.appendChild(miscLg);
     const miscColors = [
       {id:'btn', label:'Button Base'},
@@ -6352,20 +6292,9 @@ document.addEventListener('click', e=>{
     misc.appendChild(createTextPickerRow('placeholder-text','Placeholder Text','btn-c'));
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
-    dropdown.className = 'admin-fieldset collapsed';
+    dropdown.className = 'admin-fieldset';
     const ddLg = document.createElement('legend');
-    const ddToggle = document.createElement('button');
-    ddToggle.type = 'button';
-    ddToggle.className = 'fs-toggle';
-    ddToggle.textContent = '+';
-    ddToggle.addEventListener('click', e=>{
-      e.stopPropagation();
-      dropdown.classList.toggle('collapsed');
-      ddToggle.textContent = dropdown.classList.contains('collapsed') ? '+' : '−';
-    });
-    ddToggle.dataset.bound = '1';
-    ddLg.appendChild(ddToggle);
-    ddLg.appendChild(document.createTextNode('Dropdown Boxes'));
+    ddLg.textContent = 'Dropdown Boxes';
     dropdown.appendChild(ddLg);
     const ddColors = [
       {id:'dropdownTitle', label:'Title'},
@@ -7584,46 +7513,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   });
 });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.admin-fieldset').forEach(fs => {
-    const legend = fs.querySelector('legend');
-    if(!legend) return;
-    let toggle = legend.querySelector('.fs-toggle');
-    if(toggle && toggle.dataset.bound === '1') return;
-    if(!toggle){
-      toggle = document.createElement('button');
-      toggle.type = 'button';
-      toggle.className = 'fs-toggle';
-      legend.prepend(toggle);
-    }
-    const update = () => {
-      const collapsed = fs.classList.contains('collapsed');
-      toggle.textContent = collapsed ? '+' : '−';
-      toggle.setAttribute('aria-expanded', String(!collapsed));
-    };
-    const handler = e => {
-      e.stopPropagation();
-      fs.classList.toggle('collapsed');
-      const collapsed = fs.classList.contains('collapsed');
-      Array.from(fs.children).forEach(child => {
-        if (child !== legend) child.hidden = collapsed;
-      });
-      update();
-    };
-    legend.addEventListener('click', handler);
-    toggle.addEventListener('click', handler);
-    fs.classList.add('collapsed');
-    Array.from(fs.children).forEach(child => {
-      if (child !== legend) child.hidden = true;
-    });
-    update();
-    toggle.dataset.bound = '1';
-  });
-});
-</script>
-
 </body>
 </html>
