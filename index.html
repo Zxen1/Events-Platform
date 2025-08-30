@@ -4956,13 +4956,13 @@ function makePosts(){
           inlineMode: true,
           selectMode: 'single',
           highlightedDates: dateStrings,
-          startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
           numberOfMonths: monthsCount,
           numberOfColumns: monthsCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
+          picker.clearSelection();
           calendarEl.addEventListener('click', e=> e.stopPropagation());
           calendarEl.addEventListener('mousedown', e=>{
             const day = e.target.closest('.litepicker-day');
