@@ -3785,6 +3785,10 @@ function makePosts(){
 
     posts = makePosts();
 
+    const resultsEl = $('#results');
+    const postsWideEl = $('#postsWide');
+    const postsModeEl = $('.closed-posts');
+
     // Image helpers (unique per post)
     function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
@@ -4603,11 +4607,6 @@ datePicker = flatpickr($('#datePicker'), {
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
 
     }
-
-    const resultsEl = $('#results');
-    const postsWideEl = $('#postsWide');
-    const postsModeEl = $('.closed-posts');
-
     function renderLists(list){
       if(spinning) return;
       const sort = currentSort;
