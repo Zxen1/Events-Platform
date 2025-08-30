@@ -472,6 +472,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 .admin-fieldset.collapsed{
   border:none;
   padding:0;
+  margin:0;
   display:inline-block;
   width:max-content;
   min-width:0;
@@ -7496,11 +7497,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const handler = e => {
       e.stopPropagation();
       fs.classList.toggle('collapsed');
+      const collapsed = fs.classList.contains('collapsed');
+      Array.from(fs.children).forEach(child => {
+        if (child !== legend) child.hidden = collapsed;
+      });
       update();
     };
     legend.addEventListener('click', handler);
     toggle.addEventListener('click', handler);
     fs.classList.add('collapsed');
+    Array.from(fs.children).forEach(child => {
+      if (child !== legend) child.hidden = true;
+    });
     update();
     toggle.dataset.bound = '1';
   });
