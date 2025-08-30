@@ -3241,9 +3241,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     }
 
       let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false, dateStart = null, dateEnd = null,
-          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'false'),
+          spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
-          spinLogoClick = JSON.parse(localStorage.getItem('spinLogoClick') || 'true'),
+          spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
@@ -3251,8 +3251,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
-      localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-      const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
+        localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
+        if(spinEnabled) document.body.classList.add('hide-results');
+        const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
       function updateLogoClickState(){
         logoEls.forEach(el=>{
           el.style.cursor = 'pointer';
@@ -4306,7 +4307,16 @@ datePicker = flatpickr($('#datePicker'), {
       map.on('style.load', () => {
         applySky(skyStyle);
       });
-      map.on('load', ()=>{ $('.map-overlay').style.display='none'; addPostSource(); if(spinEnabled) startSpin(); updatePostPanel(); applyFilters(); });
+      map.on('load', ()=>{
+        $('.map-overlay').style.display='none';
+        addPostSource();
+        if(spinEnabled){
+          document.body.classList.remove('hide-results');
+          startSpin();
+        }
+        updatePostPanel();
+        applyFilters();
+      });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
         map.on('pitch', () => {
@@ -5571,7 +5581,7 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-document.addEventListener('click', e=>{
+function handleDocInteract(e){
   if(logoEls.some(el => el.contains(e.target))) return;
   const welcome = document.getElementById('welcomePopup');
   if(welcome && welcome.classList.contains('show')){
@@ -5597,7 +5607,10 @@ document.addEventListener('click', e=>{
       }
     }
   });
-}, true);
+}
+
+document.addEventListener('click', handleDocInteract, true);
+document.addEventListener('pointerdown', handleDocInteract, true);
 
 // Panels and admin/member interactions
 (function(){
