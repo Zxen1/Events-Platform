@@ -126,8 +126,10 @@ button,
   background: var(--secondary);
   border: 1px solid var(--secondary);
   color: var(--button-text);
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-width: var(--control-h);
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -191,6 +193,23 @@ select option:hover{
   color: var(--dropdown-hover-text);
 }
 
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select{
+  height: var(--control-h);
+  border-radius: 12px;
+}
+input[type="checkbox"]{
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: 12px;
+}
+
   .header{
     height: var(--header-h);
     min-height: var(--header-h);
@@ -236,7 +255,7 @@ select option:hover{
 
 .view-toggle button{
   border: 1px solid var(--btn);
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 10px 14px;
   background: var(--btn);
   color: var(--ink);
@@ -442,9 +461,10 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 .admin-fieldset legend .fs-toggle{
   margin:0;
-  width:20px;
-  height:20px;
+  width:var(--control-h);
+  height:var(--control-h);
   padding:0;
+  border-radius:12px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -5875,6 +5895,7 @@ document.addEventListener('click', e=>{
       }
       lg.addEventListener('click', toggleFs);
       toggleBtn.addEventListener('click', toggleFs);
+      toggleBtn.dataset.bound = '1';
       lg.appendChild(toggleBtn);
       lg.appendChild(document.createTextNode(area.label));
       fs.appendChild(lg);
@@ -6139,6 +6160,7 @@ document.addEventListener('click', e=>{
       misc.classList.toggle('collapsed');
       miscToggle.textContent = misc.classList.contains('collapsed') ? '+' : '−';
     });
+    miscToggle.dataset.bound = '1';
     miscLg.appendChild(miscToggle);
     miscLg.appendChild(document.createTextNode('Miscellaneous'));
     misc.appendChild(miscLg);
@@ -6180,6 +6202,7 @@ document.addEventListener('click', e=>{
       dropdown.classList.toggle('collapsed');
       ddToggle.textContent = dropdown.classList.contains('collapsed') ? '+' : '−';
     });
+    ddToggle.dataset.bound = '1';
     ddLg.appendChild(ddToggle);
     ddLg.appendChild(document.createTextNode('Dropdown Boxes'));
     dropdown.appendChild(ddLg);
@@ -7362,6 +7385,38 @@ document.addEventListener('DOMContentLoaded', () => {
         openImagePopup(img.src);
       }
     }, { passive: false });
+  });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.admin-fieldset').forEach(fs => {
+    const legend = fs.querySelector('legend');
+    if(!legend) return;
+    let toggle = legend.querySelector('.fs-toggle');
+    if(toggle && toggle.dataset.bound === '1') return;
+    if(!toggle){
+      toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'fs-toggle';
+      legend.prepend(toggle);
+    }
+    const update = () => {
+      const collapsed = fs.classList.contains('collapsed');
+      toggle.textContent = collapsed ? '+' : '−';
+      toggle.setAttribute('aria-expanded', String(!collapsed));
+    };
+    const handler = e => {
+      e.stopPropagation();
+      fs.classList.toggle('collapsed');
+      update();
+    };
+    legend.addEventListener('click', handler);
+    toggle.addEventListener('click', handler);
+    fs.classList.add('collapsed');
+    update();
+    toggle.dataset.bound = '1';
   });
 });
 </script>
