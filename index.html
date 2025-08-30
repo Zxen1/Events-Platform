@@ -294,7 +294,7 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
 }
 
 button[aria-expanded="true"] .dropdown-arrow{
-  transform:translateY(-50%) rotate(225deg);
+  transform:translateY(-50%) rotate(-135deg);
 }
 
 #addressTitle,#addressField{display:none;}
@@ -1477,7 +1477,7 @@ body.hide-results .closed-posts{
 .open-posts .location-section .map-container{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:var(--gap);
   width:auto;
 }
 
@@ -1575,7 +1575,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .venue-menu{width:100%;}
-.open-posts .session-menu{width:auto;}
+.open-posts .session-menu{width:100%;}
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
@@ -1661,6 +1661,7 @@ body.hide-results .closed-posts{
   width:100%;
   overflow-x:auto;
   overflow-y:hidden;
+  touch-action:pan-x;
 }
 
 .open-posts .post-calendar .container__months{
@@ -1671,7 +1672,30 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .container__months .month-item{
   flex:0 0 200px;
+  background:var(--dropdown-bg);
 }
+
+.open-posts .post-calendar .litepicker{
+  background:var(--dropdown-bg);
+}
+
+.calendar-container .cal-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  border-radius:50%;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:5;
+}
+.calendar-container .cal-prev{left:-15px;}
+.calendar-container .cal-next{right:-15px;}
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--session-available) !important;
@@ -4564,9 +4588,11 @@ function makePosts(){
                 <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
+                <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
                 <div class="calendar-scroll">
                   <div id="cal-${p.id}" class="post-calendar"></div>
                 </div>
+                <button class="cal-nav cal-next" type="button" aria-label="Next month">&#8250;</button>
                 <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
@@ -4822,6 +4848,28 @@ function makePosts(){
       const sessionInfo = el.querySelector(`#session-info-${p.id}`);
       const calendarEl = el.querySelector(`#cal-${p.id}`);
       const mapEl = el.querySelector(`#map-${p.id}`);
+      const calScroll = el.querySelector('.calendar-scroll');
+      const calPrev = el.querySelector('.cal-prev');
+      const calNext = el.querySelector('.cal-next');
+      if(calScroll){
+        calScroll.addEventListener('wheel', e=>{
+          if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+            calScroll.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }
+        }, {passive:false});
+        let startXCal = null;
+        calScroll.addEventListener('touchstart', e=>{ startXCal = e.touches[0].clientX; }, {passive:true});
+        calScroll.addEventListener('touchmove', e=>{
+          if(startXCal!==null){
+            calScroll.scrollLeft += startXCal - e.touches[0].clientX;
+            startXCal = e.touches[0].clientX;
+          }
+        }, {passive:true});
+        calScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
+      }
+      if(calPrev) calPrev.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:-200, behavior:'smooth'}));
+      if(calNext) calNext.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:200, behavior:'smooth'}));
       let map, marker, picker, sessionHasMultiple = false;
       function updateVenue(idx){
         const loc = p.locations[idx];
