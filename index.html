@@ -1669,7 +1669,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .calendar-container .session-dropdown{
-  margin-top:var(--gap);
+  margin-top:0;
 }
 
 
@@ -1836,6 +1836,7 @@ body.hide-results .closed-posts{
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
+  scroll-snap-type:x mandatory;
 }
 
 .open-posts .post-calendar .flatpickr-months{
@@ -1847,10 +1848,25 @@ body.hide-results .closed-posts{
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
   flex:0 0 400px;
   background:var(--dropdown-bg);
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
 }
 
 .open-posts .post-calendar .flatpickr-calendar{
   background:var(--dropdown-bg);
+}
+
+.open-posts .post-calendar .flatpickr-day{
+  font-size:12px;
+  line-height:1.2;
+  margin:0;
+  width:calc(400px/7);
+  height:calc((300px - 40px)/6);
+}
+
+.open-posts .post-calendar .flatpickr-days{
+  padding:0;
+  margin:0;
 }
 
 .open-posts .post-calendar .flatpickr-day.available-day{
