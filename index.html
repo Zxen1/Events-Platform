@@ -1731,6 +1731,12 @@ body.hide-results .closed-posts{
 .desc{
   margin-top: 8px;
 }
+.open-posts .desc-wrap{position:relative;}
+.open-posts .desc-wrap .desc{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;padding-right:60px;}
+.open-posts .desc-wrap.expanded .desc{-webkit-line-clamp:unset;overflow:visible;padding-right:0;}
+.open-posts .desc-wrap .toggle-desc{position:absolute;bottom:0;right:0;background:none;border:none;padding:0;color:var(--muted);cursor:pointer;font:inherit;}
+.open-posts .desc-wrap.expanded .toggle-desc{position:static;display:block;text-align:right;}
+
 
 @media (max-width:1000px){
   .results-col{display:none;}
@@ -2451,10 +2457,10 @@ body{background-color:rgba(41,41,41,1);}
 .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .res-list .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.res-list button{background-color:#3e5393;border-color:#3e5393;box-shadow:0 0 0px #000000;}
-.res-list .sq{background-color:#3e5393;border-color:#3e5393;box-shadow:0 0 0px #000000;}
-.res-list .tiny{background-color:#3e5393;border-color:#3e5393;box-shadow:0 0 0px #000000;}
-.res-list .btn{background-color:#3e5393;border-color:#3e5393;box-shadow:0 0 0px #000000;}
+.res-list button{background-color:#243646;border-color:#243646;box-shadow:0 0 0px #000000;}
+.res-list .sq{background-color:#243646;border-color:#243646;box-shadow:0 0 0px #000000;}
+.res-list .tiny{background-color:#243646;border-color:#243646;box-shadow:0 0 0px #000000;}
+.res-list .btn{background-color:#243646;border-color:#243646;box-shadow:0 0 0px #000000;}
 .res-list button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .sq{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list .tiny{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2470,13 +2476,15 @@ body{background-color:rgba(41,41,41,1);}
 .closed-posts .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts button{background-color:#3b4f89;border-color:#3b4f89;box-shadow:0 0 0px #000000;}
 .closed-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.open-posts{background-color:rgba(62,83,147,1);box-shadow:0 0 0px #000000;}
-.open-posts{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.open-posts .t{color:#ffffff;font-family:Verdana;font-size:20px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.open-posts .title{color:#ffffff;font-family:Verdana;font-size:20px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
-.open-posts button{background-color:#3b4f89;border-color:#3b4f89;box-shadow:0 0 0px #000000;}
+.open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
+.open-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .venue-info{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .session-info{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
+.open-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.open-posts .detail-header{background-color:#3e5393;}
+.open-posts .detail-header{background-color:#000000;}
 .open-posts .img-box{background-color:#000000;}
 .open-posts .venue-menu button{background-color:#000000;}
 .open-posts .session-menu button{background-color:#000000;}
@@ -2489,18 +2497,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 .mapboxgl-popup .chip{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .chip-small{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .multi-item{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .hover-card{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .t{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .title{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .panel-content{background-color:rgba(145,145,145,1);}
 #filterPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .panel-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -2513,12 +2521,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #filterPanel .sq{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .tiny{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .btn{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminPanel .panel-content{background-color:rgba(0,0,0,0.44);}
+#adminPanel .panel-content{background-color:rgba(145,145,145,1);}
 #adminPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminPanel .panel-content .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminPanel .panel-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adminPanel button{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
-#adminPanel #spinType span{background-color:#165d6f;border-color:#165d6f;box-shadow:0 0 0px #000000;}
+#adminPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
+#adminPanel #spinType span{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #adminPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adminPanel #spinType span{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #welcomePopup .panel-content{background-color:rgba(0,0,0,0.48);}
@@ -2527,7 +2535,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #welcomePopup .panel-content .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #welcomePopup button{background-color:#000000;border-color:#000000;box-shadow:0 0 0px #000000;}
 #welcomePopup button{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#memberPanel .panel-content{background-color:rgba(0,0,0,0.7);}
+#memberPanel .panel-content{background-color:rgba(145,145,145,1);}
 #memberPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel .panel-content .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel .panel-content .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -4501,7 +4509,7 @@ function makePosts(){
             <div id="session-info-${p.id}" class="session-info">
               <div class="placeholder">💲 Price range | 📅 Date range</div>
             </div>
-            <div class="desc">${p.desc}</div>
+            <div class="desc-wrap"><div class="desc">${p.desc}</div><button class="toggle-desc" type="button" aria-expanded="false">See more</button></div>
           </div>
         </div>`;
         // progressive hero swap
@@ -4599,6 +4607,20 @@ function makePosts(){
     }
 
     function hookDetailActions(el, p){
+      const descWrap = el.querySelector(".desc-wrap");
+      if(descWrap){
+        const toggle = descWrap.querySelector(".toggle-desc");
+        const desc = descWrap.querySelector(".desc");
+        if(desc.scrollHeight <= desc.clientHeight + 1){
+          toggle.remove();
+        } else {
+          toggle.addEventListener("click", ()=>{
+            const expanded = descWrap.classList.toggle("expanded");
+            toggle.textContent = expanded ? "See less" : "See more";
+            toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+          });
+        }
+      }
       const favBtn = el.querySelector('.fav');
       if(favBtn){
         favBtn.addEventListener('click', (e)=>{
