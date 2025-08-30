@@ -1581,11 +1581,8 @@ body.hide-results .closed-posts{
 .hide-map-calendar .open-posts .calendar-container{
   display:none;
 }
-
-
 .open-posts .post-calendar{
-  width:400px;
-  overflow:hidden;
+  width:max-content;
   position:relative;
   font-size:16px;
 }
@@ -1594,6 +1591,19 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:block;
+}
+
+.calendar-scroll{
+  width:400px;
+  overflow-x:auto;
+}
+
+.calendar-scroll .litepicker{
+  display:flex;
+}
+
+.calendar-scroll .litepicker .month-item{
+  flex:0 0 auto;
 }
 
 
@@ -4373,7 +4383,9 @@ function makePosts(){
                 <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
-                <div id="cal-${p.id}" class="post-calendar"></div>
+                <div class="calendar-scroll">
+                  <div id="cal-${p.id}" class="post-calendar"></div>
+                </div>
                 <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
@@ -4638,6 +4650,8 @@ function makePosts(){
         if(picker){ picker.destroy(); }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
+        const uniqueMonths = Array.from(new Set(dateStrings.map(d=> d.slice(0,7))));
+        const monthsCount = uniqueMonths.length;
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
         picker = new Litepicker({
@@ -4649,8 +4663,8 @@ function makePosts(){
           startDate: firstDate,
           minDate: firstDate,
           maxDate: lastDate,
-          numberOfMonths: 1,
-          numberOfColumns: 1,
+          numberOfMonths: monthsCount,
+          numberOfColumns: monthsCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
         calendarEl.addEventListener('click', e=> e.stopPropagation());
