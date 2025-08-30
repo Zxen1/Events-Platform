@@ -1674,30 +1674,28 @@ body.hide-results .closed-posts{
 
 
 .open-posts .venue-dropdown > button{
-  width:100%;
-  height:50px;
+  width:auto;
   background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
-  padding:4px 8px;
+  padding:2px 8px;
   color:var(--button-text);
-  display:flex;
+  display:inline-flex;
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
 }
 
 .open-posts .session-dropdown > button{
-  width:100%;
-  height:50px;
+  width:auto;
   background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
   text-align:left;
-  padding:4px 8px;
+  padding:2px 8px;
   color:var(--button-text);
-  display:flex;
+  display:inline-flex;
   align-items:center;
   justify-content:flex-start;
 }
@@ -2730,6 +2728,7 @@ body{background-color:rgba(41,41,41,1);}
 .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .open-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.open-posts .toggle-desc{background:none;border:none;padding:0;cursor:pointer;}
 .open-posts .detail-header{background-color:#000000;}
 .open-posts .img-box{background-color:#000000;}
 .open-posts .venue-menu button{background-color:#000000;}
@@ -4914,7 +4913,7 @@ datePicker = flatpickr($('#datePicker'), {
             <div id="session-info-${p.id}" class="session-info">
               <div class="placeholder">💲 Price range | 📅 Date range</div>
             </div>
-            <div class="desc-wrap"><div class="desc">${p.desc}</div><button class="toggle-desc" type="button" aria-expanded="false">See more</button></div>
+            <div class="desc-wrap"><div class="desc">${p.desc}</div><span class="toggle-desc" role="button" tabindex="0" aria-expanded="false">See more</span></div>
           </div>
         </div>`;
         // progressive hero swap
@@ -5019,10 +5018,17 @@ datePicker = flatpickr($('#datePicker'), {
         if(desc.scrollHeight <= desc.clientHeight + 1){
           toggle.remove();
         } else {
-          toggle.addEventListener("click", ()=>{
+          const handleToggle = () => {
             const expanded = descWrap.classList.toggle("expanded");
             toggle.textContent = expanded ? "See less" : "See more";
             toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+          };
+          toggle.addEventListener("click", handleToggle);
+          toggle.addEventListener("keydown", (e)=>{
+            if(e.key === "Enter" || e.key === " "){
+              e.preventDefault();
+              handleToggle();
+            }
           });
         }
       }
