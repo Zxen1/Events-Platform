@@ -540,6 +540,15 @@ button[aria-expanded="true"] .dropdown-arrow{
   color: initial;
   border: none;
 }
+.litepicker .button-prev,
+.litepicker .button-next,
+.litepicker .button-previous{
+  display:none;
+}
+#filterPanel .litepicker .container__tooltip{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
@@ -941,7 +950,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   color: var(--date-range-text);
 }
 
-.input .x,.input .down{
+.input .down{
   position: static;
   width: 35px;
   height: 35px;
@@ -954,11 +963,16 @@ button[aria-expanded="true"] .dropdown-arrow{
   border: 1px solid var(--btn);
 }
 .input .x{
+  position: static;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  background: var(--btn);
+  cursor: pointer;
+  border: 1px solid var(--btn);
   margin-left: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  line-height: 35px;
+  text-align: center;
 }
 .input .x.active{
   background: red;
@@ -971,6 +985,56 @@ button[aria-expanded="true"] .dropdown-arrow{
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.today-field{
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:8px;
+}
+.today-text{
+  font-family: Verdana;
+  color:#fff;
+  font-size:16px;
+}
+.switch{
+  position:relative;
+  display:inline-block;
+  width:48px;
+  height:24px;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.switch .slider{
+  position:absolute;
+  cursor:pointer;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:var(--btn);
+  border-radius:24px;
+  transition:.2s;
+}
+.switch .slider:before{
+  position:absolute;
+  content:'';
+  height:20px;
+  width:20px;
+  left:2px;
+  top:2px;
+  background:var(--button-text);
+  border-radius:50%;
+  transition:.2s;
+}
+.switch input:checked + .slider{
+  background:var(--accent);
+}
+.switch input:checked + .slider:before{
+  transform:translateX(24px);
 }
 
 .tiny{
@@ -1748,7 +1812,7 @@ body.hide-results .closed-posts{
 .open-posts .post-calendar .litepicker-day.is-highlighted{
   background:var(--session-available) !important;
   color:var(--button-text) !important;
-  font-weight:normal;
+  font-weight:bold;
   border-radius:4px;
 }
 
@@ -2760,8 +2824,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
-          <div class="field">
-            <label class="t">Today Onwards <input id="todayToggle" type="checkbox" checked /></label>
+          <div class="field today-field">
+            <span class="today-text">Today Onwards</span>
+            <label class="switch">
+              <input id="todayToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
           </div>
           <div id="datePickerContainer" class="calendar-container">
             <button class="cal-nav cal-prev" type="button" aria-label="Previous month">&#8249;</button>
@@ -3721,20 +3789,34 @@ function makePosts(){
       return new Date(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
     }
 
+    function updateArrowVisibility(container, prev, next){
+      if(!container) return;
+      function check(){
+        if(prev) prev.style.display = container.scrollLeft > 0 ? 'flex' : 'none';
+        if(next) next.style.display = (container.scrollLeft + container.clientWidth) < container.scrollWidth ? 'flex' : 'none';
+      }
+      check();
+      container.addEventListener('scroll', check);
+      window.addEventListener('resize', check);
+    }
+
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
     const allPickerDates = posts.flatMap(p=>p.dates).sort();
     const firstPickerDate = allPickerDates[0];
     const lastPickerDate = allPickerDates[allPickerDates.length-1] || firstPickerDate;
-    const pickerMonths = ((new Date(lastPickerDate).getFullYear() - new Date(firstPickerDate).getFullYear()) * 12) + (new Date(lastPickerDate).getMonth() - new Date(firstPickerDate).getMonth()) + 1;
+    const rawMonths = ((new Date(lastPickerDate).getFullYear() - new Date(firstPickerDate).getFullYear()) * 12) + (new Date(lastPickerDate).getMonth() - new Date(firstPickerDate).getMonth()) + 1;
+    const pickerMonths = Math.min(rawMonths, 24);
+    const maxPickerDate = new Date(firstPickerDate);
+    maxPickerDate.setMonth(maxPickerDate.getMonth() + pickerMonths - 1);
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
       singleMode: false,
       format: 'ddd D MMM',
       minDate: firstPickerDate,
-      maxDate: lastPickerDate,
+      maxDate: maxPickerDate.toISOString().split('T')[0],
       numberOfMonths: pickerMonths,
       numberOfColumns: pickerMonths,
       setup: (picker) => {
@@ -3791,6 +3873,7 @@ function makePosts(){
     }
     if(filterCalPrev) filterCalPrev.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:-200, behavior:'smooth'}));
     if(filterCalNext) filterCalNext.addEventListener('click', ()=> filterCalScroll && filterCalScroll.scrollBy({left:200, behavior:'smooth'}));
+    if(filterCalScroll) updateArrowVisibility(filterCalScroll, filterCalPrev, filterCalNext);
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -4946,7 +5029,7 @@ function makePosts(){
       }
       if(calPrev) calPrev.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:-200, behavior:'smooth'}));
       if(calNext) calNext.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:200, behavior:'smooth'}));
-        let map, marker, picker, sessionHasMultiple = false, lastClickedCell = null;
+      let map, marker, picker, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
@@ -4984,6 +5067,7 @@ function makePosts(){
           numberOfColumns: monthsCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
+        updateArrowVisibility(calScroll, calPrev, calNext);
           picker.clearSelection();
           calendarEl.addEventListener('click', e=> e.stopPropagation());
           calendarEl.addEventListener('mousedown', e=>{
