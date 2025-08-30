@@ -260,8 +260,9 @@ select option:hover{
   display:inline-block;
   width:8px;
   height:8px;
-  border:solid currentColor;
+  border-style:solid;
   border-width:0 2px 2px 0;
+  border-color:currentColor !important;
   color:inherit;
 }
 
@@ -1885,22 +1886,7 @@ footer .foot-row .foot-item{
 .card,
 footer .foot-row .foot-item,
 .mapboxgl-popup.hover-pop .hover-card{
-  transition: filter .2s, box-shadow .2s;
-}
-
-.card:hover,
-footer .foot-row .foot-item:hover,
-.mapboxgl-popup.hover-pop .hover-card:hover{
-  filter: brightness(1.05);
-}
-
-.card.selected,
-.card[aria-selected="true"],
-footer .foot-row .foot-item.selected,
-footer .foot-row .foot-item[aria-selected="true"],
-.mapboxgl-popup.hover-pop .hover-card.selected,
-.mapboxgl-popup.hover-pop .hover-card[aria-selected="true"]{
-  filter: brightness(0.95);
+  transition: box-shadow .2s;
 }
 
 .card .thumb{
