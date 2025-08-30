@@ -1381,6 +1381,7 @@ body.filters-active #filterBtn{
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
 .geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 10px;background:#fff !important;color:#000;font-family:inherit;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+#geocoder input::placeholder{font-family:Verdana,sans-serif;font-size:10px;}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
   position:absolute;
   top:0;
@@ -4104,10 +4105,18 @@ datePicker = flatpickr($('#datePicker'), {
         if(e.target === resList){
           document.body.classList.add('hide-results');
           resultsToggle.setAttribute('aria-pressed','false');
-      resultsCol.setAttribute('aria-hidden','true');
-      localStorage.setItem('resultsHidden','true');
-    }
-  });
+          resultsCol.setAttribute('aria-hidden','true');
+          localStorage.setItem('resultsHidden','true');
+          setMode('map');
+        }
+      });
+
+      const postsWide = $('#postsWide');
+      postsWide && postsWide.addEventListener('click', e=>{
+        if(e.target === postsWide && postsWide.querySelector('.open-posts')){
+          setMode('map');
+        }
+      });
 
       const geoWrap = document.getElementById('geocoder');
       const addressTitle = document.getElementById('addressTitle');
