@@ -3086,6 +3086,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                     <input type="number" id="clusterRadius" min="10" max="100" step="1" />
                   </div>
                   <div class="marker-options">
+                    <label for="clusterMaxZoom">Max Zoom</label>
+                    <input type="number" id="clusterMaxZoom" min="0" max="18" step="1" />
+                  </div>
+                  <div class="marker-options">
                     <label for="clusterIconType">Icon Type</label>
                     <select id="clusterIconType">
                       <option value="circle">Circle</option>
@@ -3259,6 +3263,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
+          clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
@@ -4454,11 +4459,12 @@ datePicker = flatpickr($('#datePicker'), {
       if(!map) return;
       ['cluster-count','clusters','unclustered','posts-heat'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
       if(map.getSource('posts')) map.removeSource('posts');
-      map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster:true, clusterRadius: clusterRadius });
+      const shouldCluster = posts.length > 1 && clusterRadius > 0;
+      map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
-      if(clusterIconType === 'svg' && clusterSvg){
+      if(shouldCluster && clusterIconType === 'svg' && clusterSvg){
         const imgId = 'cluster-svg';
         if(map.hasImage(imgId)) map.removeImage(imgId);
         const img = new Image();
@@ -4471,16 +4477,20 @@ datePicker = flatpickr($('#datePicker'), {
             'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
-      } else {
-        map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
-          'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-          'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
-          'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
+        } else if(shouldCluster){
+          map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
+            'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
+            'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
+            'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
         map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-        map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
-          'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-          'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
-      }
+          map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
+            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
+            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+        } else {
+          map.addLayer({ id:'unclustered', type:'circle', source:'posts', paint:{
+            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
+            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+        }
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -4528,7 +4538,7 @@ datePicker = flatpickr($('#datePicker'), {
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
-        map.fitBounds(bounds, { padding: 40, pitch: 45, maxZoom: 20, essential: true });
+        map.fitBounds(bounds, { padding: 40, pitch: 45, maxZoom: 18, essential: true });
       });
       
       map.on('click','unclustered', (e)=>{
@@ -6038,6 +6048,8 @@ document.addEventListener('pointerdown', handleDocInteract, true);
       }
       const radiusInput = document.getElementById('clusterRadius');
       if(radiusInput) radiusInput.value = clusterRadius;
+      const maxZoomInput = document.getElementById('clusterMaxZoom');
+      if(maxZoomInput) maxZoomInput.value = clusterMaxZoom;
       const iconSelect = document.getElementById('clusterIconType');
       if(iconSelect) iconSelect.value = clusterIconType;
       const svgInput = document.getElementById('clusterSvg');
@@ -6982,6 +6994,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
           const bearingInput = document.getElementById("mapBearing");
           const bearingVal = document.getElementById("bearingVal");
           const radiusInput = document.getElementById("clusterRadius");
+          const maxZoomInput = document.getElementById("clusterMaxZoom");
           const iconSelect = document.getElementById("clusterIconType");
           const svgInput = document.getElementById("clusterSvg");
           const svgRow = document.getElementById("clusterSvgRow");
@@ -7041,6 +7054,16 @@ document.addEventListener('pointerdown', handleDocInteract, true);
           addPostSource();
         });
       }
+      if(maxZoomInput){
+        maxZoomInput.value = clusterMaxZoom;
+        maxZoomInput.addEventListener("change", ()=>{
+          let val = parseInt(maxZoomInput.value,10);
+          if(isNaN(val)) val = 14;
+          clusterMaxZoom = Math.max(0, Math.min(18, val));
+          localStorage.setItem("clusterMaxZoom", String(clusterMaxZoom));
+          addPostSource();
+        });
+      }
       if(iconSelect){
         iconSelect.value = clusterIconType;
         iconSelect.addEventListener("change", ()=>{
@@ -7087,12 +7110,12 @@ document.addEventListener('pointerdown', handleDocInteract, true);
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterIconType","clusterSvg"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterMaxZoom","clusterIconType","clusterSvg"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterIconType","clusterSvg"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterMaxZoom","clusterIconType","clusterSvg"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
