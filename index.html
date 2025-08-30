@@ -1467,7 +1467,7 @@ body.filters-active #filterBtn{
   color:#000;
   background:var(--panel-bg);
 }
-.closed-posts .res-list{overflow:visible;padding:12px 12px 0;margin-bottom:var(--gap);}
+.closed-posts .res-list{overflow:visible;padding:12px 12px var(--gap);margin:0;}
 .closed-posts{color:#000;padding:0;}
 .closed-posts .card,
 .closed-posts .open-posts{background:var(--closed-card-bg);}
@@ -2443,8 +2443,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
-  padding-bottom: var(--gap);
-  margin-bottom: 0;
+  padding: var(--gap) 0;
+  margin: 0;
 }
 
 .post-panel{
@@ -2510,7 +2510,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     right:0;
   }
   .closed-posts .res-list{
-    padding:0;
+    padding:12px 12px var(--gap);
+    margin:0;
   }
   .closed-posts .card{
     width:100%;
@@ -2670,7 +2671,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:0px;padding-left:12px;margin-left:0px;}
 .res-list .thumb{width:80px;height:80px;}
-@media (min-width:450px){.closed-posts .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:0px;margin-bottom:var(--gap);padding-left:12px;margin-left:0px;}}
+@media (min-width:450px){.closed-posts .res-list{padding:12px 12px var(--gap);margin:0;}}
 .closed-posts .thumb{width:80px;height:80px;padding:0;}
 
 
