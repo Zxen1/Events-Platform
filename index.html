@@ -1392,7 +1392,7 @@ body.filters-active #filterBtn{
 .geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:hidden;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 30px;background:#fff !important;color:#000;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{position:absolute;top:50%;right:0;width:var(--control-h);height:var(--control-h);background:#fff !important;border:1px solid #ccc !important;color:#000;padding:0;margin:0;display:flex;align-items:center;justify-content:center;line-height:1;text-align:center;transform:translateY(-50%);border-radius:0 12px 12px 0;}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);}
 .geocoder .mapboxgl-ctrl-group button,
@@ -3022,9 +3022,29 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               </div>
               <div class="panel-field">
                 <label for="mapBearing">Bearing</label>
-                <div class="range-wrap">
+              <div class="range-wrap">
                   <input type="range" id="mapBearing" min="-180" max="180" step="1" />
                   <span id="bearingVal"></span>
+                </div>
+              </div>
+              <div class="panel-field">
+                <label>Markercluster</label>
+                <div class="marker-grid">
+                  <div class="marker-options">
+                    <label for="clusterRadius">Radius</label>
+                    <input type="number" id="clusterRadius" min="10" max="100" step="1" />
+                  </div>
+                  <div class="marker-options">
+                    <label for="clusterIconType">Icon Type</label>
+                    <select id="clusterIconType">
+                      <option value="circle">Circle</option>
+                      <option value="svg">SVG</option>
+                    </select>
+                  </div>
+                  <div class="marker-options" id="clusterSvgRow">
+                    <label for="clusterSvg">SVG Icon</label>
+                    <textarea id="clusterSvg" rows="3" placeholder="<svg>...</svg>"></textarea>
+                  </div>
                 </div>
               </div>
             <div class="panel-field">
@@ -3178,7 +3198,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night';
+          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
+          clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
+          clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
+          clusterSvg = localStorage.getItem('clusterSvg') || '';
       localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
       const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
       function updateLogoClickState(){
@@ -4332,15 +4355,35 @@ function makePosts(){
 
     function addPostSource(){
       if(!map) return;
-      map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster:true, clusterRadius: 52 });
+      ['cluster-count','clusters','unclustered','posts-heat'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+      if(map.getSource('posts')) map.removeSource('posts');
+      map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster:true, clusterRadius: clusterRadius });
       map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
-      map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
-        'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-        'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
-        'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-      map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+      if(clusterIconType === 'svg' && clusterSvg){
+        const imgId = 'cluster-svg';
+        if(map.hasImage(imgId)) map.removeImage(imgId);
+        const img = new Image();
+        img.onload = ()=>{
+          if(!map.hasImage(imgId)) map.addImage(imgId, img);
+          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'icon-image': imgId }, paint:{} });
+          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+          map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
+            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
+            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+        };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
+      } else {
+        map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
+          'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
+          'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
+          'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
+        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
+          'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
+          'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+      }
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -4353,10 +4396,6 @@ function makePosts(){
         if(!within){ hoverPopup.remove(); hoverPopup=null; lockMap(false); }
       });
       window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
-
-      map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
-        'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-        'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
       // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
       map.on('contextmenu','unclustered', (e)=>{
         const f = e.features && e.features[0]; if(!f) return;
@@ -5834,6 +5873,14 @@ document.addEventListener('click', e=>{
         bearingInput.value = b;
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
+      const radiusInput = document.getElementById('clusterRadius');
+      if(radiusInput) radiusInput.value = clusterRadius;
+      const iconSelect = document.getElementById('clusterIconType');
+      if(iconSelect) iconSelect.value = clusterIconType;
+      const svgInput = document.getElementById('clusterSvg');
+      const svgRow = document.getElementById('clusterSvgRow');
+      if(svgInput) svgInput.value = clusterSvg;
+      if(svgRow) svgRow.style.display = clusterIconType === 'svg' ? 'flex' : 'none';
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
@@ -6765,6 +6812,10 @@ document.addEventListener('click', e=>{
           const pitchVal = document.getElementById("pitchVal");
           const bearingInput = document.getElementById("mapBearing");
           const bearingVal = document.getElementById("bearingVal");
+          const radiusInput = document.getElementById("clusterRadius");
+          const iconSelect = document.getElementById("clusterIconType");
+          const svgInput = document.getElementById("clusterSvg");
+          const svgRow = document.getElementById("clusterSvgRow");
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
@@ -6813,6 +6864,32 @@ document.addEventListener('click', e=>{
           bearingVal.textContent = val.toFixed(0);
         });
       }
+      if(radiusInput){
+        radiusInput.value = clusterRadius;
+        radiusInput.addEventListener("change", ()=>{
+          clusterRadius = parseInt(radiusInput.value,10) || 52;
+          localStorage.setItem("clusterRadius", String(clusterRadius));
+          addPostSource();
+        });
+      }
+      if(iconSelect){
+        iconSelect.value = clusterIconType;
+        iconSelect.addEventListener("change", ()=>{
+          clusterIconType = iconSelect.value;
+          localStorage.setItem("clusterIconType", clusterIconType);
+          if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
+          addPostSource();
+        });
+      }
+      if(svgInput){
+        svgInput.value = clusterSvg;
+        svgInput.addEventListener("change", ()=>{
+          clusterSvg = svgInput.value;
+          localStorage.setItem("clusterSvg", clusterSvg);
+          if(clusterIconType === "svg") addPostSource();
+        });
+        if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
+      }
       if(loadStartChk){
         loadStartChk.checked = sg.spinLoadStart;
         loadStartChk.addEventListener("change", ()=>{
@@ -6841,12 +6918,12 @@ document.addEventListener('click', e=>{
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterIconType","clusterSvg"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterIconType","clusterSvg"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
