@@ -148,8 +148,8 @@ button,
 
 button:hover,
 [role="button"]:hover{
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
 
@@ -163,6 +163,8 @@ a:hover{
 button:active,
 [role="button"]:active{
   transform: scale(0.97);
+  background: var(--btn-active);
+  border-color: var(--btn-active);
 }
 button:focus-visible,
 [role="button"]:focus-visible{
@@ -6114,7 +6116,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6436,6 +6438,8 @@ document.addEventListener('click', e=>{
     misc.appendChild(miscLg);
     const miscColors = [
       {id:'btn', label:'Button Base'},
+      {id:'btnHover', label:'Button Hover'},
+      {id:'btnActive', label:'Button Active'},
       {id:'panelBg', label:'Panel Background'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
@@ -6553,7 +6557,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6676,7 +6680,7 @@ document.addEventListener('click', e=>{
         data[id] = { color: input.value };
       }
     });
-    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','btnHover','btnActive','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -6694,7 +6698,7 @@ document.addEventListener('click', e=>{
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -6823,7 +6827,7 @@ document.addEventListener('click', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
