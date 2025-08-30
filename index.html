@@ -1480,7 +1480,6 @@ body.hide-results .closed-posts{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  width:100%;
   max-height:400px;
   overflow-y:auto;
   background:var(--dropdown-bg);
@@ -1493,6 +1492,9 @@ body.hide-results .closed-posts{
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
   z-index:30;
 }
+
+.open-posts .venue-menu{width:100%;}
+.open-posts .session-menu{width:400px;}
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
@@ -1576,8 +1578,8 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-calendar .container__months .month-item{
-  width:100%;
-  flex:0 0 auto;
+  width:400px;
+  flex:0 0 400px;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
@@ -4575,11 +4577,11 @@ function makePosts(){
           });
           const lp = calendarEl.querySelector('.litepicker');
           if(lp){
-            const w = '400px';
-            calendarEl.style.width = w;
-            if(sessDropdown) sessDropdown.style.width = w;
-            if(sessMenu) sessMenu.style.width = w;
-            if(mapEl) mapEl.style.width = w;
+            const months = calendarEl.querySelectorAll('.month-item').length || 1;
+            calendarEl.style.width = `${months * 400}px`;
+            if(sessDropdown) sessDropdown.style.width = '400px';
+            if(sessMenu) sessMenu.style.width = '400px';
+            if(mapEl) mapEl.style.width = '400px';
           }
           highlightMonth();
         });
