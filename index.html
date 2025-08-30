@@ -518,6 +518,19 @@ button[aria-expanded="true"] .dropdown-arrow{
   color: initial;
   border: none;
 }
+#filterPanel #datePicker{
+  max-width:400px;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+#filterPanel #datePicker .container__months{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+#filterPanel #datePicker .container__months .month-item{
+  flex:0 0 200px;
+}
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
   border-radius:4px;
@@ -1644,20 +1657,25 @@ body.hide-results .closed-posts{
 }
 
 .calendar-scroll{
-  overflow:visible;
+  max-width:400px;
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
 }
 
 .open-posts .post-calendar .container__months{
   display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
 }
 
 .open-posts .post-calendar .container__months .month-item{
-  flex:0 0 auto;
+  flex:0 0 200px;
 }
 
 .open-posts .post-calendar .litepicker-day.is-highlighted{
-  background:var(--session-available);
-  color:var(--button-text);
+  background:var(--session-available) !important;
+  color:var(--button-text) !important;
   font-weight:normal;
   border-radius:4px;
 }
@@ -3631,11 +3649,19 @@ function makePosts(){
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
+    const allPickerDates = posts.flatMap(p=>p.dates).sort();
+    const firstPickerDate = allPickerDates[0];
+    const lastPickerDate = allPickerDates[allPickerDates.length-1] || firstPickerDate;
+    const pickerMonths = ((new Date(lastPickerDate).getFullYear() - new Date(firstPickerDate).getFullYear()) * 12) + (new Date(lastPickerDate).getMonth() - new Date(firstPickerDate).getMonth()) + 1;
     datePicker = new Litepicker({
       element: $('#datePicker'),
       inlineMode: true,
       singleMode: false,
       format: 'ddd D MMM',
+      minDate: firstPickerDate,
+      maxDate: lastPickerDate,
+      numberOfMonths: pickerMonths,
+      numberOfColumns: pickerMonths,
       setup: (picker) => {
         picker.on('selected', (start, end) => {
           const input = $('#dateInput');
