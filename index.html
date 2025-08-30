@@ -536,7 +536,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:400px;
+  width:100%;
   height:300px;
   overflow-x:auto;
   overflow-y:hidden;
@@ -546,7 +546,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .flatpickr-calendar{
-  width:400px;
+  width:100%;
   height:300px;
 }
 #filterPanel #datePicker .flatpickr-months{
@@ -555,7 +555,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 400px;
+  flex:0 0 100%;
   background: var(--dropdown-bg);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
@@ -1820,16 +1820,18 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:var(--dropdown-hover-bg) !important;
-  color:var(--dropdown-hover-text) !important;
+  background:transparent !important;
+  color:var(--dropdown-text) !important;
   font-weight:bold;
-  border-radius:4px;
+  border:2px solid var(--session-available) !important;
+  border-radius:50%;
+  box-sizing:border-box;
 }
 
 .open-posts .post-calendar .flatpickr-day.selected{
   background:var(--session-selected);
   color:var(--button-text);
-  border-radius:4px;
+  border-radius:50%;
 }
 
 .open-posts .post-calendar .selected-month-name{
@@ -5097,8 +5099,12 @@ datePicker = flatpickr($('#datePicker'), {
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         const currentYear = new Date().getFullYear();
+        const parseDate = s => {
+          const [yy, mm, dd] = s.split('-').map(Number);
+          return new Date(yy, mm - 1, dd);
+        };
         const formatDate = d => {
-          const y = new Date(d.full).getFullYear();
+          const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
         };
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
@@ -5122,22 +5128,24 @@ datePicker = flatpickr($('#datePicker'), {
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
-        const monthsCount = ((new Date(lastDate).getFullYear() - new Date(firstDate).getFullYear()) * 12) + (new Date(lastDate).getMonth() - new Date(firstDate).getMonth()) + 1;
+        const firstDateObj = parseDate(firstDate);
+        const lastDateObj = parseDate(lastDate);
+        const monthsCount = ((lastDateObj.getFullYear() - firstDateObj.getFullYear()) * 12) + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
           picker = flatpickr(calendarEl, {
             inline: true,
             mode: 'single',
-            minDate: firstDate,
-            maxDate: lastDate,
-            enable: dateStrings,
+            minDate: firstDateObj,
+            maxDate: lastDateObj,
+            enable: dateStrings.map(parseDate),
             showMonths: monthsCount,
-            defaultDate: firstDate,
+            defaultDate: firstDateObj,
             onDayCreate: (dObj, dStr, fp, dayElem) => {
               const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
               if(allowedSet.has(iso)) dayElem.classList.add('available-day');
             }
           });
           picker.clear();
-          picker.jumpToDate(firstDate);
+          picker.jumpToDate(firstDateObj);
           calendarEl.addEventListener('click', e=> e.stopPropagation());
           calendarEl.addEventListener('mousedown', e=>{
             const day = e.target.closest('.flatpickr-day');
@@ -5154,8 +5162,8 @@ datePicker = flatpickr($('#datePicker'), {
               sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
               if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
               ignoreSelect = true;
-              picker.setDate(dt.full);
-              picker.jumpToDate(dt.full);
+              picker.setDate(parseDate(dt.full));
+              picker.jumpToDate(parseDate(dt.full));
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
