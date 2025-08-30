@@ -4917,15 +4917,11 @@ function openPanel(m){
       };
       position();
       requestAnimationFrame(position);
-    } else if(m.id==='welcomePopup'){
-      const rootStyles = getComputedStyle(document.documentElement);
-      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-      const subHead = document.querySelector('.subheader');
-      const baseTop = subHead ? subHead.getBoundingClientRect().bottom : headerH;
-      content.style.left = '50%';
-      content.style.top = `${baseTop + 20}px`;
-      content.style.transform = 'translateX(-50%)';
-    } else {
+      } else if(m.id==='welcomePopup'){
+        content.style.left = '50%';
+        content.style.top = '300px';
+        content.style.transform = 'translateX(-50%)';
+      } else {
       content.style.left = '50%';
       content.style.top = '50%';
       content.style.transform = 'translate(-50%, -50%)';
