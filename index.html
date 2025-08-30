@@ -29,11 +29,7 @@
       --background: rgba(41,41,41,1);
       --text: #ffffff;
       --button-text: #ffffff;
-      --button-hover-text: #000000;
       --btn: rgba(74,74,74,0.9);
-      --btn-hover: rgba(0,0,0,1);
-      --btn-active: rgba(0,0,0,1);
-      --btn-2: var(--btn-hover);
       --panel-bg: rgba(0,0,0,0.62);
       --panel-text: #000000;
       --footer-h: 70px;
@@ -149,13 +145,6 @@ button,
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
-button:hover,
-[role="button"]:hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
 a{
   color: var(--primary);
 }
@@ -166,8 +155,6 @@ a:hover{
 button:active,
 [role="button"]:active{
   transform: scale(0.97);
-  background: var(--btn-active);
-  border-color: var(--btn-active);
 }
 button:focus-visible,
 [role="button"]:focus-visible{
@@ -294,16 +281,6 @@ input[type="checkbox"]{
   transition: background .2s,border-color .2s,color .2s;
 }
 
-.view-toggle button:hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
-.view-toggle button:active{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-}
 
 .header button,
 .view-toggle button,
@@ -365,14 +342,6 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 
 
-.view-toggle button[aria-current="page"],
-.view-toggle button[aria-selected="true"],
-.view-toggle button[aria-pressed="true"]{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
 /* Spin controls */
 .range-wrap{
   display:flex;
@@ -409,11 +378,6 @@ button[aria-expanded="true"] .dropdown-arrow{
     transition:background .2s,border-color .2s,color .2s;
     border:1px solid var(--btn);
     border-radius:6px;
-  }
-  #spinType input:checked + span{
-    background:var(--btn-hover);
-    border-color:var(--btn-hover);
-    color:var(--button-hover-text);
   }
 
 .auth{
@@ -493,7 +457,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 .admin-fieldset{
   margin:10px 0;
-  border:1px solid var(--btn);
+  border:0;
   border-radius:8px;
   padding:10px;
   width:300px;
@@ -768,19 +732,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   color:var(--button-text);
   cursor:pointer;
 }
-#adminPanel .tab-bar button:hover{
-  background:var(--btn-hover);
-  border-color:var(--btn-hover);
-  color:var(--button-hover-text);
-}
-#adminPanel .tab-bar button:active{
-  background:var(--btn-active);
-  border-color:var(--btn-active);
-}
 #adminPanel .tab-bar button[aria-selected="true"]{
-  background:var(--btn-hover);
-  border-color:var(--btn-hover);
-  color:var(--button-hover-text);
   font-weight:600;
 }
 #adminPanel .tab-panel{display:none;}
@@ -1475,7 +1427,21 @@ body.filters-active #filterBtn{
   justify-content:center;
   flex:none;
 }
-#map .mapboxgl-ctrl-group{border-radius:12px;overflow:hidden;}
+#map .mapboxgl-ctrl button{
+  width:var(--control-h);
+  height:var(--control-h);
+  background:#fff !important;
+  border:0 !important;
+  color:#000;
+  padding:0;
+  box-shadow:none;
+}
+#map .mapboxgl-ctrl-group{
+  background:#fff !important;
+  border:1px solid #ccc !important;
+  border-radius:12px;
+  overflow:hidden;
+}
 
 @media (max-width:999px){
   .geocoder{position:static;transform:none;margin-left:auto;}
@@ -1918,7 +1884,7 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .selected-month-name{
   background:var(--accent);
-  color:var(--button-hover-text);
+  color:var(--button-text);
   border-radius:4px;
   padding:0 4px;
 }
@@ -2608,7 +2574,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 </style>
 <style id="theme-default">
-:root{--primary:#000000;--secondary:#000000;--accent:#000000;--button-hover-text:#000000;--btn:rgba(74,74,74,0.9);--btn-hover:rgba(0,0,0,1);--btn-active:rgba(0,0,0,1);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#808080;--session-selected:#008000;}
+:root{--primary:#000000;--secondary:#000000;--accent:#000000;--btn:rgba(74,74,74,0.9);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#d1d1d1;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--border:rgba(173,173,173,0.31);--border-hover:rgba(255,136,0,0.43);--border-active:rgba(255,200,0,0.45);--session-available:#808080;--session-selected:#008000;}
 .header{background-color:#1d2744;}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
@@ -5798,7 +5764,7 @@ document.addEventListener('click', e=>{
         });
       });
     });
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',today:'--today'};
+    const varMap = {today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const el = document.getElementById(id);
       if(el){
@@ -5961,8 +5927,7 @@ document.addEventListener('click', e=>{
     const background = adjust(baseColor, 60);
     const text = luminance(background) > 0.5 ? '#000000' : '#ffffff';
     const buttonText = luminance(secondary) > 0.5 ? '#000000' : '#ffffff';
-    const buttonHoverText = luminance(accent) > 0.5 ? '#000000' : '#ffffff';
-    return { primary, secondary, accent, background, text, buttonText, buttonHoverText };
+    return { primary, secondary, accent, background, text, buttonText };
   }
 
   function updateFields(theme){
@@ -5990,10 +5955,6 @@ document.addEventListener('click', e=>{
     if(hb) hb.value = theme.accent;
     const ab = document.getElementById('body-activeBorder-c');
     if(ab) ab.value = theme.accent;
-    ['primary','secondary','accent'].forEach(id=>{
-      const inp = document.getElementById(id);
-      if(inp && theme[id]) inp.value = theme[id];
-    });
     applyAdmin();
   }
 
@@ -6151,7 +6112,7 @@ document.addEventListener('click', e=>{
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6257,24 +6218,6 @@ document.addEventListener('click', e=>{
       btnRow.appendChild(colBtn);
       btnRow.appendChild(txtBtn);
       fs.appendChild(btnRow);
-      if(area.key === 'body'){
-        const palette = [
-          {id:'primary', label:'Primary'},
-          {id:'secondary', label:'Secondary'},
-          {id:'accent', label:'Accent'}
-        ];
-        palette.forEach(p=>{
-          const row = document.createElement('div');
-          row.className = 'control-row';
-          row.innerHTML = `
-              <label>${p.label}</label>
-              <div class="color-group">
-                <input id="${p.id}" type="color" data-mode="${COLOR_PICKER_MODE}" />
-              </div>
-            `;
-          fs.appendChild(row);
-        });
-      }
       const types = [];
       if(area.selectors.bg) types.push('bg');
       if(area.selectors.card) types.push('card');
@@ -6470,11 +6413,10 @@ document.addEventListener('click', e=>{
     misc.className = 'admin-fieldset collapsed';
     const miscLg = document.createElement('legend');
     miscLg.textContent = 'Miscellaneous';
+    miscLg.addEventListener('click', (e)=>{ e.preventDefault(); misc.classList.toggle('collapsed'); });
     misc.appendChild(miscLg);
     const miscColors = [
       {id:'btn', label:'Button Base'},
-      {id:'btnHover', label:'Button Hover'},
-      {id:'btnActive', label:'Button Active'},
       {id:'panelBg', label:'Panel Background'},
       {id:'scrollbarTrack', label:'Scrollbar Track'},
       {id:'scrollbarThumb', label:'Scrollbar Thumb'},
@@ -6504,6 +6446,7 @@ document.addEventListener('click', e=>{
     dropdown.className = 'admin-fieldset collapsed';
     const ddLg = document.createElement('legend');
     ddLg.textContent = 'Dropdown Boxes';
+    ddLg.addEventListener('click', (e)=>{ e.preventDefault(); dropdown.classList.toggle('collapsed'); });
     dropdown.appendChild(ddLg);
     const ddColors = [
       {id:'dropdownTitle', label:'Title'},
@@ -6592,7 +6535,7 @@ document.addEventListener('click', e=>{
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -6710,12 +6653,17 @@ document.addEventListener('click', e=>{
     const stickyImages = document.getElementById('open-posts-sticky-images');
     if(stickyImages){ data['open-posts-sticky-images'] = { value: stickyImages.checked ? '1' : '0' }; }
     ['primary','secondary','accent'].forEach(id=>{
-      const input = document.getElementById(id);
-      if(input){
-        data[id] = { color: input.value };
+      const val = getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim();
+      if(val){
+        const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+        if(match){
+          data[id] = { color: rgbToHex(parseInt(match[1],10),parseInt(match[2],10),parseInt(match[3],10)) };
+        } else {
+          data[id] = { color: val };
+        }
       }
     });
-    ['btn','btnHover','btnActive','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -6733,7 +6681,7 @@ document.addEventListener('click', e=>{
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -6862,7 +6810,7 @@ document.addEventListener('click', e=>{
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',btnHover:'--btn-hover',btnActive:'--btn-active',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -7300,12 +7248,9 @@ document.addEventListener('click', e=>{
     root.style.setProperty('--background', theme.background);
     root.style.setProperty('--text', theme.text);
     root.style.setProperty('--btn', theme.secondary);
-    root.style.setProperty('--btn-hover', theme.accent);
-    root.style.setProperty('--btn-active', theme.accent);
     root.style.setProperty('--ink', theme.text);
     root.style.setProperty('--ink-d', theme.text);
     root.style.setProperty('--button-text', theme.buttonText);
-    root.style.setProperty('--button-hover-text', theme.buttonHoverText);
     updateFields(theme);
     spreadTheme(theme);
     syncAdminControls();
@@ -7331,9 +7276,6 @@ document.addEventListener('click', e=>{
   });
 
     const fieldBindings = {
-      primary: '--primary',
-      secondary: '--secondary',
-      accent: '--accent',
       btn: '--btn',
       panelBg: '--panel-bg',
       panelText: '--panel-text',
