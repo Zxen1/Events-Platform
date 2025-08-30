@@ -3705,7 +3705,8 @@ function uniqueTitle(seed, cityName, idx){
       const d = new Date(+now + Math.floor(rnd()*365)*86400000);
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
-      return {date, time, full: d.toISOString().slice(0,10)};
+      const full = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return {date, time, full};
     });
   }
 
@@ -4187,7 +4188,7 @@ datePicker = flatpickr($('#datePicker'), {
     $('#main-tab-map').addEventListener('click',()=> setMode('map'));
 
     $('.closed-posts').addEventListener('click', (e)=>{
-      if(!e.target.closest('.card, .open-posts, .flatpickr-calendar')) setMode('map');
+      if(!e.target.closest('.card, .open-posts, .flatpickr-calendar, .time-popup, .flatpickr-time')) setMode('map');
     });
 
     // Mapbox
@@ -4244,7 +4245,12 @@ datePicker = flatpickr($('#datePicker'), {
           if(map) map.once('moveend', () => { applyFilters(); updatePostPanel(); });
         });
         const gc = document.getElementById('geocoder');
-        if(gc) gc.appendChild(geocoder.onAdd(map));
+        if(gc){
+          const control = geocoder.onAdd(map);
+          gc.appendChild(control);
+          const input = control.querySelector('input[type="text"]');
+          if(input) input.setAttribute('autocomplete','street-address');
+        }
       } else {
         const script = document.createElement('script');
         script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js';
@@ -4274,7 +4280,12 @@ datePicker = flatpickr($('#datePicker'), {
           if(info) info.innerHTML='';
         });
         const container = document.getElementById('mLocation');
-        if(container) container.appendChild(memberGeocoder.onAdd(map));
+        if(container){
+          const control = memberGeocoder.onAdd(map);
+          container.appendChild(control);
+          const input = control.querySelector('input[type="text"]');
+          if(input) input.setAttribute('autocomplete','street-address');
+        }
       }
     }
 
@@ -4335,6 +4346,7 @@ datePicker = flatpickr($('#datePicker'), {
           const bearing = map.getBearing();
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         });
+        map.on('dragend', () => { if(geocoder) geocoder.clear(); });
         map.on('click', () => {
           if(mode === 'posts') setMode('map');
         });
