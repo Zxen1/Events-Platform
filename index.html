@@ -722,13 +722,19 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-direction:column;
   align-items:flex-start;
   gap:10px;
+  width:100%;
 }
-#baseColorRow .history-group{display:flex;gap:6px;}
+#baseColorRow .history-group{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
 #baseColorRow .color-group{
   display:flex;
-  flex-direction:row;
-  align-items:center;
-  gap:6px;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
   margin-left:0;
 }
 .preset-select{
@@ -1718,16 +1724,12 @@ body.hide-results .closed-posts{
   padding:0 4px;
 }
 
-.open-posts .post-calendar .time-popup{
+.open-posts .calendar-container .time-popup{
   position:absolute;
-  inset:0;
-  background:var(--panel-bg);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  z-index:10;
 }
 
-.open-posts .post-calendar .time-popup .time-list{
+.open-posts .calendar-container .time-popup .time-list{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
   padding:8px;
@@ -1735,9 +1737,10 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:4px;
+  box-shadow:0 2px 6px var(--border);
 }
 
-.open-posts .post-calendar .time-popup .time-list button{
+.open-posts .calendar-container .time-popup .time-list button{
   background:var(--btn);
   border:1px solid var(--btn);
   color:var(--button-text);
@@ -4845,12 +4848,13 @@ function makePosts(){
       const sessDropdown = el.querySelector(`#sess-${p.id}`);
       const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
       const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
-      const sessionInfo = el.querySelector(`#session-info-${p.id}`);
-      const calendarEl = el.querySelector(`#cal-${p.id}`);
-      const mapEl = el.querySelector(`#map-${p.id}`);
-      const calScroll = el.querySelector('.calendar-scroll');
-      const calPrev = el.querySelector('.cal-prev');
-      const calNext = el.querySelector('.cal-next');
+        const sessionInfo = el.querySelector(`#session-info-${p.id}`);
+        const calendarEl = el.querySelector(`#cal-${p.id}`);
+        const mapEl = el.querySelector(`#map-${p.id}`);
+        const calContainer = el.querySelector('.calendar-container');
+        const calScroll = el.querySelector('.calendar-scroll');
+        const calPrev = el.querySelector('.cal-prev');
+        const calNext = el.querySelector('.cal-next');
       if(calScroll){
         calScroll.addEventListener('wheel', e=>{
           if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
@@ -4870,7 +4874,7 @@ function makePosts(){
       }
       if(calPrev) calPrev.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:-200, behavior:'smooth'}));
       if(calNext) calNext.addEventListener('click', ()=> calScroll && calScroll.scrollBy({left:200, behavior:'smooth'}));
-      let map, marker, picker, sessionHasMultiple = false;
+        let map, marker, picker, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
@@ -4909,8 +4913,12 @@ function makePosts(){
           numberOfColumns: monthsCount,
           lockDaysFilter: (date)=> !allowedSet.has(date.format('YYYY-MM-DD'))
         });
-        calendarEl.addEventListener('click', e=> e.stopPropagation());
-        let ignoreSelect = false;
+          calendarEl.addEventListener('click', e=> e.stopPropagation());
+          calendarEl.addEventListener('mousedown', e=>{
+            const day = e.target.closest('.litepicker-day');
+            if(day) lastClickedCell = day;
+          });
+          let ignoreSelect = false;
         function selectSession(i){
           if(!sessMenu) return;
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
@@ -4933,12 +4941,20 @@ function makePosts(){
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
           }
         function showTimePopup(matches){
+          const existing = calContainer.querySelector('.time-popup');
+          if(existing) existing.remove();
           const popup = document.createElement('div');
           popup.className = 'time-popup';
           popup.innerHTML = `<div class="time-list">${matches.map(m=>`<button data-index="${m.i}">${m.d.time}</button>`).join('')}</div>`;
-          calendarEl.appendChild(popup);
+          calContainer.appendChild(popup);
+          if(lastClickedCell){
+            const rect = lastClickedCell.getBoundingClientRect();
+            const containerRect = calContainer.getBoundingClientRect();
+            popup.style.left = (rect.left - containerRect.left) + 'px';
+            popup.style.top = (rect.bottom - containerRect.top + 4) + 'px';
+          }
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
-          popup.addEventListener('click', e=>{ if(e.target===popup) popup.remove(); });
+          setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
         }
           picker.on('selected', (date)=>{
             if(ignoreSelect) return;
@@ -5794,17 +5810,21 @@ document.addEventListener('click', e=>{
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
       const lg = document.createElement('legend');
-      lg.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
       toggleBtn.className = 'fs-toggle';
       toggleBtn.textContent = '+';
-      toggleBtn.addEventListener('click', e=>{
+      toggleBtn.setAttribute('aria-expanded','false');
+      function toggleFs(e){
         e.stopPropagation();
         fs.classList.toggle('collapsed');
         lastFieldsetKey = area.key;
-        toggleBtn.textContent = fs.classList.contains('collapsed') ? '+' : '−';
-      });
+        const collapsed = fs.classList.contains('collapsed');
+        toggleBtn.textContent = collapsed ? '+' : '−';
+        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+      }
+      lg.addEventListener('click', toggleFs);
+      toggleBtn.addEventListener('click', toggleFs);
       lg.appendChild(toggleBtn);
       lg.appendChild(document.createTextNode(area.label));
       fs.appendChild(lg);
