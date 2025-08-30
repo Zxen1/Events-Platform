@@ -6008,6 +6008,29 @@ document.addEventListener('click', e=>{
         if(area.key==='body' && ['border','hoverBorder','activeBorder'].includes(type)){
           const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
           const val = getComputedStyle(document.documentElement).getPropertyValue(varMap[type]).trim();
+          if(type==='hoverBorder' || type==='activeBorder'){
+            if(cInput){
+              if(cInput.dataset.custom === 'true'){
+                if(val){
+                  const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
+                  if(match){
+                    const r = parseInt(match[1],10);
+                    const g = parseInt(match[2],10);
+                    const bVal = parseInt(match[3],10);
+                    const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
+                    cInput.value = rgbToHex(r,g,bVal);
+                    cInput.placeholder = '';
+                    if(oInput){ oInput.value = alpha; updateOpacityDisplay(oInput); }
+                  }
+                }
+              } else {
+                cInput.value = '';
+                cInput.placeholder = 'default';
+                delete cInput.dataset.custom;
+              }
+            }
+            return;
+          }
           if(cInput && val){
             const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
             if(match){
@@ -6483,22 +6506,32 @@ document.addEventListener('click', e=>{
       if(areaKey === 'body' && ['border','hoverBorder','activeBorder'].includes(type)){
         const colorInput = document.getElementById(`${areaKey}-${type}-c`);
         const opacityInput = document.getElementById(`${areaKey}-${type}-o`);
-        const color = colorInput ? colorInput.value : '#ffffff';
-        const opacity = opacityInput ? opacityInput.value : 1;
-        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
-        document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
-        const data = collectThemeValues();
-        currentState = JSON.parse(JSON.stringify(data));
-        localStorage.setItem('currentTheme', JSON.stringify(data));
-        syncAdminControls();
-        updateHistoryButtons();
-        return;
+        if((type==='hoverBorder' || type==='activeBorder') && colorInput && colorInput.dataset.custom !== 'true' && !targetInput.id.endsWith('-c')){
+          // not a custom override; allow sliders to handle
+        } else {
+          const color = colorInput ? colorInput.value : '#ffffff';
+          const opacity = opacityInput ? opacityInput.value : 1;
+          const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
+          document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
+          if(colorInput && (type==='hoverBorder' || type==='activeBorder')){
+            if(targetInput.id.endsWith('-c') || (targetInput.id.endsWith('-o') && colorInput.value)){
+              colorInput.dataset.custom = 'true';
+            }
+          }
+          const data = collectThemeValues();
+          currentState = JSON.parse(JSON.stringify(data));
+          localStorage.setItem('currentTheme', JSON.stringify(data));
+          syncAdminControls();
+          updateHistoryButtons();
+          return;
+        }
       }
     }
     ['border','hoverBorder','activeBorder'].forEach(type=>{
       const c = document.getElementById(`body-${type}-c`);
       const o = document.getElementById(`body-${type}-o`);
       if(c){
+        if((type==='hoverBorder' || type==='activeBorder') && c.dataset.custom !== 'true') return;
         const rgba = hexToRgba(c.value, o ? o.value : 1);
         const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
         document.documentElement.style.setProperty(varMap[type], rgba);
@@ -6509,12 +6542,14 @@ document.addEventListener('click', e=>{
     const baseColor = borderC ? borderC.value : '#ffffff';
     const baseOpacity = borderO ? borderO.value : 1;
     const hoverAdj = document.getElementById('body-hoverAdjust');
-    if(hoverAdj && (!document.getElementById('body-hoverBorder-c') || !document.getElementById('body-hoverBorder-c').value)){
+    const hoverColorInput = document.getElementById('body-hoverBorder-c');
+    if(hoverAdj && (!hoverColorInput || hoverColorInput.dataset.custom !== 'true')){
       const col = adjust(baseColor, parseInt(hoverAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-hover', hexToRgba(col, baseOpacity));
     }
     const activeAdj = document.getElementById('body-activeAdjust');
-    if(activeAdj && (!document.getElementById('body-activeBorder-c') || !document.getElementById('body-activeBorder-c').value)){
+    const activeColorInput = document.getElementById('body-activeBorder-c');
+    if(activeAdj && (!activeColorInput || activeColorInput.dataset.custom !== 'true')){
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
@@ -6609,8 +6644,12 @@ document.addEventListener('click', e=>{
         const v = document.getElementById(`${area.key}-${type}`);
         if(c || f || s || v || w || sc){
           const entry = {};
-          if(c){ entry.color = c.value; }
-          if((['bg','card','border','hoverBorder','activeBorder','optionsMenu'].includes(type)) && o){ entry.opacity = o.value; }
+          if(c && (!(['hoverBorder','activeBorder'].includes(type)) || c.dataset.custom === 'true') && c.value){
+            entry.color = c.value;
+          }
+          if((['bg','card','border','hoverBorder','activeBorder','optionsMenu'].includes(type)) && o && (!(['hoverBorder','activeBorder'].includes(type)) || (c && c.dataset.custom === 'true'))){
+            entry.opacity = o.value;
+          }
           if(v){ entry.value = v.value; }
           if(f){ entry.font = f.value; }
           if(s){ entry.size = s.value; }
@@ -6621,7 +6660,9 @@ document.addEventListener('click', e=>{
             if(sy) entry.shadow.y = sy.value;
             if(sb) entry.shadow.blur = sb.value;
           }
-          data[`${area.key}-${type}`] = entry;
+          if(Object.keys(entry).length){
+            data[`${area.key}-${type}`] = entry;
+          }
         }
       });
     });
@@ -6769,6 +6810,10 @@ document.addEventListener('click', e=>{
   }
 
   function applyPresetData(data){
+      ['hoverBorder','activeBorder'].forEach(t=>{
+        const inp = document.getElementById(`body-${t}-c`);
+        if(inp) delete inp.dataset.custom;
+      });
       Object.entries(data).forEach(([key,val])=>{
         const parts = key.split('-');
         const areaKey = parts.shift();
@@ -6800,7 +6845,10 @@ document.addEventListener('click', e=>{
         const sy = document.getElementById(`${areaKey}-${type}-shadow-y`);
         const sb = document.getElementById(`${areaKey}-${type}-shadow-blur`);
         const v = document.getElementById(`${areaKey}-${type}`);
-        if(c && val.color){ c.value = val.color; }
+        if(c && val.color){
+          c.value = val.color;
+          if(areaKey==='body' && (type==='hoverBorder' || type==='activeBorder')) c.dataset.custom = 'true';
+        }
         if((['bg','card','border','hoverBorder','activeBorder'].includes(type)) && o && val.opacity!==undefined){ o.value = val.opacity; }
         if(v && val.value!==undefined){ v.value = val.value; }
         if(f && val.font){ f.value = val.font; }
