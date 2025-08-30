@@ -3864,9 +3864,6 @@ function makePosts(){
     const maxPickerDate = new Date(today);
     maxPickerDate.setMonth(maxPickerDate.getMonth() + 24);
     const pickerMonths = ((maxPickerDate.getFullYear() - minPickerDate.getFullYear()) * 12) + (maxPickerDate.getMonth() - minPickerDate.getMonth()) + 1;
-    const minPickerStr = minPickerDate.toISOString().split('T')[0];
-    const maxPickerStr = maxPickerDate.toISOString().split('T')[0];
-
     const todayToggle = $('#todayToggle');
     todayWasOn = todayToggle && todayToggle.checked;
 
@@ -3874,8 +3871,8 @@ datePicker = flatpickr($('#datePicker'), {
   inline: true,
   mode: 'range',
   dateFormat: 'D d M',
-  minDate: minPickerStr,
-  maxDate: maxPickerStr,
+  minDate: minPickerDate,
+  maxDate: maxPickerDate,
   showMonths: pickerMonths,
   defaultDate: minPickerDate,
   onChange: (selectedDates, dateStr, instance) => {
@@ -3900,7 +3897,7 @@ datePicker = flatpickr($('#datePicker'), {
   }
 });
     datePicker.clear();
-    datePicker.jumpToDate(minPickerStr);
+    datePicker.jumpToDate(minPickerDate);
     const filterCalContainer = document.getElementById('datePickerContainer');
     const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
     if(filterCalScroll){
@@ -3938,21 +3935,22 @@ datePicker = flatpickr($('#datePicker'), {
     if(todayToggle){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
-        const todayIso = new Date().toISOString().split('T')[0];
+        const todayDate = new Date();
+        todayDate.setHours(0,0,0,0);
         if(todayToggle.checked){
           input.dataset.range='';
           if(datePicker) {
             datePicker.clear();
-            datePicker.set('minDate', todayIso);
-            datePicker.setDate(todayIso, false);
-            datePicker.jumpToDate(todayIso);
+            datePicker.set('minDate', todayDate);
+            datePicker.setDate(todayDate, false);
+            datePicker.jumpToDate(todayDate);
           }
           input.value = 'Today Onwards';
         } else {
           if(datePicker) {
-            datePicker.set('minDate', minPickerStr);
-            datePicker.setDate(minPickerStr, false);
-            datePicker.jumpToDate(minPickerStr);
+            datePicker.set('minDate', minPickerDate);
+            datePicker.setDate(minPickerDate, false);
+            datePicker.jumpToDate(minPickerDate);
           }
           if(input.value === 'Today Onwards') input.value = '';
         }
@@ -5214,38 +5212,40 @@ datePicker = flatpickr($('#datePicker'), {
             });
           }
       }
-      if(mapEl){
-        setTimeout(()=>{
-          updateVenue(0);
-          if(venueMenu && venueBtn){
-            venueMenu.querySelectorAll('button').forEach(btn=>{
-              if(btn.dataset.index==='0') btn.classList.add('selected');
-              btn.addEventListener('click', ()=>{
-                venueMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-                btn.classList.add('selected');
-                updateVenue(parseInt(btn.dataset.index,10));
-                venueMenu.hidden = true;
-                venueBtn.setAttribute('aria-expanded','false');
-              });
+        if(mapEl){
+          setTimeout(()=>{
+            loadMapbox(()=>{
+              updateVenue(0);
+              if(venueMenu && venueBtn){
+                venueMenu.querySelectorAll('button').forEach(btn=>{
+                  if(btn.dataset.index==='0') btn.classList.add('selected');
+                  btn.addEventListener('click', ()=>{
+                    venueMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    updateVenue(parseInt(btn.dataset.index,10));
+                    venueMenu.hidden = true;
+                    venueBtn.setAttribute('aria-expanded','false');
+                  });
+                });
+                venueBtn.addEventListener('click', ()=>{
+                  const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
+                  venueBtn.setAttribute('aria-expanded', String(!expanded));
+                  venueMenu.hidden = expanded;
+                });
+                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
+              }
+              if(sessBtn && sessMenu){
+                sessBtn.addEventListener('click', ()=>{
+                  const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
+                  sessBtn.setAttribute('aria-expanded', String(!expanded));
+                  sessMenu.hidden = expanded;
+                });
+                document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
+              }
+              if(map && typeof map.resize === 'function') map.resize();
             });
-            venueBtn.addEventListener('click', ()=>{
-              const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
-              venueBtn.setAttribute('aria-expanded', String(!expanded));
-              venueMenu.hidden = expanded;
-            });
-            document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
-          }
-          if(sessBtn && sessMenu){
-            sessBtn.addEventListener('click', ()=>{
-              const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-              sessBtn.setAttribute('aria-expanded', String(!expanded));
-              sessMenu.hidden = expanded;
-            });
-            document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
-          }
-          if(map && typeof map.resize === 'function') map.resize();
-        },0);
-      }
+          },0);
+        }
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
