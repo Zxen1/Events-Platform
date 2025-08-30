@@ -505,6 +505,11 @@ button[aria-expanded="true"] .dropdown-arrow{
   height:auto;
   margin-bottom:10px;
 }
+#welcomePopup .panel-content{
+  top:200px;
+  left:50%;
+  transform:translateX(-50%);
+}
 #memberPanel .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
   #adminPanel .panel-content,
@@ -2284,8 +2289,15 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     flex:0 0 100%;
   }
   .open-posts .img-box{
-    width:100%;
+    width:100vw;
+    height:100vw;
+    flex:0 0 100vw;
     border-radius:0;
+  }
+  .open-posts .img-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
   }
 }
 
@@ -2297,6 +2309,21 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   .subheader,
   footer{
     display:none;
+  }
+  body.mode-map{
+    --subheader-h:55px;
+    --footer-h:70px;
+  }
+  body.mode-map .subheader,
+  body.mode-map footer{
+    display:flex;
+  }
+  #filterPanel .panel-content,
+  #memberPanel .panel-content,
+  #adminPanel .panel-content{
+    top:var(--header-h);
+    left:50%;
+    transform:translateX(-50%);
   }
   .open-posts .detail-header{
     padding-bottom:0;
@@ -4560,14 +4587,41 @@ function makePosts(){
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
+        function prev(){
+          idx = (idx-1+imgs.length)%imgs.length;
+          imgEl.src = imgs[idx];
+          imgEl.dataset.index = idx;
+        }
         const entry = {remove: ()=> panel.remove()};
         panel._entry = entry;
         imgEl.addEventListener('click', e=>{ e.stopPropagation(); next(); });
+        let startX = null;
+        imgEl.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
+        imgEl.addEventListener('touchend', e=>{
+          if(startX===null) return;
+          const diff = e.changedTouches[0].clientX - startX;
+          if(Math.abs(diff) > 50){
+            diff < 0 ? next() : prev();
+          }
+          startX = null;
+        }, {passive:true});
         panel.addEventListener('click', ()=>{ const i = panelStack.indexOf(entry); if(i!==-1) panelStack.splice(i,1); panel.remove(); });
         document.body.appendChild(panel);
         panelStack.push(entry);
       }
       mainImg.addEventListener('click', ()=> openImagePopup(parseInt(mainImg.dataset.index||'0',10)));
+      let startX = null;
+      mainImg.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
+      mainImg.addEventListener('touchend', e=>{
+        if(startX===null) return;
+        const diff = e.changedTouches[0].clientX - startX;
+        if(Math.abs(diff) > 50){
+          const cur = parseInt(mainImg.dataset.index||'0',10);
+          if(diff < 0 && cur < imgs.length-1){ show(cur+1); }
+          else if(diff > 0 && cur > 0){ show(cur-1); }
+        }
+        startX = null;
+      }, {passive:true});
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
