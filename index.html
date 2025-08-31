@@ -546,6 +546,10 @@ button[aria-expanded="true"] .results-arrow{
 .flatpickr-calendar .flatpickr-next-month{
   display:block;
 }
+#filterPanel .flatpickr-calendar .flatpickr-prev-month,
+#filterPanel .flatpickr-calendar .flatpickr-next-month{
+  display:none;
+}
 .flatpickr-day.today:not(.selected){
   color:var(--today) !important;
 }
@@ -561,7 +565,8 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--dropdown-bg);
   width:auto;
   height:auto;
-  overflow:hidden;
+  overflow-x:auto;
+  overflow-y:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
 }
@@ -569,13 +574,17 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .flatpickr-calendar{
-  width:auto;
+  width:max-content;
   height:auto;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top left;
 }
 #filterPanel #datePicker .flatpickr-months{
-  display:block;
+  display:flex;
+  flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
+  flex:0 0 auto;
   width:auto;
   height:auto;
   background: var(--dropdown-bg);
@@ -586,6 +595,10 @@ button[aria-expanded="true"] .results-arrow{
   margin:0;
   width:auto;
   height:auto;
+}
+#filterPanel .flatpickr-current-month .numInputWrapper span.arrowUp,
+#filterPanel .flatpickr-current-month .numInputWrapper span.arrowDown{
+  display:none;
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -1008,7 +1021,7 @@ button[aria-expanded="true"] .results-arrow{
   margin-left: 6px;
   line-height: 35px;
   text-align: center;
-  color: var(--text);
+  color: var(--dropdown-text);
 }
 #filterPanel .input .x.active{
   color: var(--accent);
@@ -2169,6 +2182,7 @@ footer{
   }
 }
 
+
 .foot-row{
   overflow-x: auto;
   overflow-y: hidden;
@@ -2179,7 +2193,11 @@ footer{
   flex:1;
 }
 
-footer .fullscreen-btn{
+.fullscreen-btn{
+  position:fixed;
+  bottom:var(--gap);
+  right:var(--gap);
+  z-index:1000;
   flex:0 0 auto;
 }
 
@@ -3001,8 +3019,9 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
   <footer>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
-    <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
   </footer>
+
+  <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));left:0;transform:none;">
@@ -3038,7 +3057,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div class="field today-field">
             <span class="today-text">Today Onwards</span>
             <label class="switch">
-              <input id="todayToggle" type="checkbox" checked />
+              <input id="todayToggle" type="checkbox" />
               <span class="slider"></span>
             </label>
           </div>
@@ -4070,6 +4089,7 @@ function makePosts(){
     const maxPickerDate = new Date(today);
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const todayToggle = $('#todayToggle');
+    const calendarScroll = $('#datePickerContainer .calendar-scroll');
     todayWasOn = todayToggle && todayToggle.checked;
 
     datePicker = flatpickr($('#datePicker'), {
@@ -4079,6 +4099,9 @@ function makePosts(){
       minDate: minPickerDate,
       maxDate: maxPickerDate,
       defaultDate: today,
+      showMonths: 36,
+      prevArrow: '',
+      nextArrow: '',
       onChange: (selectedDates, dateStr, instance) => {
         const input = $('#dateInput');
         if (selectedDates.length === 2) {
@@ -4111,7 +4134,8 @@ function makePosts(){
     datePicker.clear();
     dateStart = null;
     dateEnd = null;
-    datePicker.jumpToDate(today);
+    datePicker.jumpToDate(minPickerDate);
+    if(calendarScroll) calendarScroll.scrollLeft = 0;
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -4139,16 +4163,22 @@ function makePosts(){
           if(datePicker) {
             datePicker.clear();
             datePicker.set('minDate', todayDate);
+            datePicker.set('maxDate', maxPickerDate);
+            datePicker.set('showMonths', 24);
             datePicker.setDate(todayDate, false);
             datePicker.jumpToDate(todayDate);
           }
+          if(calendarScroll) calendarScroll.scrollLeft = 0;
           input.value = 'Today Onwards';
         } else {
           if(datePicker) {
+            datePicker.clear();
             datePicker.set('minDate', minPickerDate);
-            datePicker.setDate(minPickerDate, false);
-            datePicker.jumpToDate(today);
+            datePicker.set('maxDate', maxPickerDate);
+            datePicker.set('showMonths', 36);
+            datePicker.jumpToDate(minPickerDate);
           }
+          if(calendarScroll) calendarScroll.scrollLeft = 0;
           if(input.value === 'Today Onwards') input.value = '';
         }
         todayWasOn = todayToggle.checked;
@@ -4156,7 +4186,7 @@ function makePosts(){
         updateClearButtons();
       });
       if(todayToggle.checked){
-        $('#dateInput').value = 'Today Onwards';
+        todayToggle.dispatchEvent(new Event('change'));
       }
     }
     updateClearButtons();
