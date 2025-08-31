@@ -1242,9 +1242,9 @@ body.hide-results .results-col{
   width:20px; height:20px;
 }
 body.filters-active #filterBtn{
-  background: var(--filter-active-color);
-  border-color: var(--filter-active-color);
-  box-shadow:0 0 6px 2px var(--filter-active-color);
+  background: red;
+  border-color: red;
+  box-shadow: none;
 }
 
 .options-dropdown{ position:relative; }
@@ -1689,7 +1689,6 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-map{
-  width:400px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1699,8 +1698,6 @@ body.hide-results .closed-posts{
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  width:100%;
-  max-width:400px;
 }
 
 .open-posts .calendar-container .session-dropdown{
@@ -1710,7 +1707,6 @@ body.hide-results .closed-posts{
 
 
 .open-posts .venue-dropdown > button{
-  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1725,7 +1721,6 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .session-dropdown > button{
-  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1780,15 +1775,12 @@ body.hide-results .closed-posts{
   gap:6px;
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
   z-index:30;
-  width:100%;
-  max-width:400px;
 }
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
 
 .open-posts .venue-menu button{
-  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1803,7 +1795,6 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .session-menu button{
-  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1837,8 +1828,6 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  width:100%;
-  max-width:400px;
   position:relative;
   align-items:flex-start;
 }
@@ -2039,13 +2028,7 @@ body.hide-results .closed-posts{
   .open-posts .text .location-section{
     order:-1;
   }
-  .open-posts .img-box,
-  .open-posts .location-section .map-container,
-  .open-posts .location-section .calendar-container,
-  .open-posts .post-map,
-  .open-posts .post-calendar,
-  .open-posts .venue-dropdown,
-  .open-posts .session-dropdown{
+  .open-posts .img-box{
     max-width:100%;
     width:100%;
   }
@@ -2101,7 +2084,6 @@ body.hide-results .closed-posts{
 @media (max-width:450px){
   .open-posts .venue-dropdown > button,
   .open-posts .session-dropdown > button{
-    width:400px;
     height:50px;
   }
 }
@@ -2894,7 +2876,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
   <footer>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
-    <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
+    <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
   </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
@@ -3940,7 +3922,7 @@ function makePosts(){
     function filtersActive(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
-      const hasDate = !!(dateStart || dateEnd || (raw && raw !== 'Today Onwards') || (todayToggle && todayToggle.checked));
+      const hasDate = !!(dateStart || dateEnd || (raw && raw !== 'Today Onwards'));
       const cats = selection.cats.size > 0 || selection.subs.size > 0;
       return kw || hasDate || cats;
     }
