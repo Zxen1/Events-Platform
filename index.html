@@ -1209,7 +1209,7 @@ button[aria-expanded="true"] .results-arrow{
   position: fixed;
   top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: var(--footer-h);
-  left: 0;
+  left: var(--gap);
   width: var(--results-w);
   display: flex;
   flex-direction: column;
@@ -1501,8 +1501,8 @@ body.filters-active #filterBtn{
   position: fixed;
   top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: var(--footer-h);
-  left: var(--results-w);
-  right: 0;
+  left: calc(var(--results-w) + var(--gap) * 2);
+  right: var(--gap);
   overflow-y:scroll;
   overflow-x:hidden;
   scrollbar-gutter:stable;
@@ -1516,10 +1516,10 @@ body.filters-active #filterBtn{
 .closed-posts .open-posts{background:var(--closed-card-bg);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
-.closed-posts.ad-space{right:400px;}
+.closed-posts.ad-space{right:calc(400px + var(--gap) * 2);}
 
 body.hide-results .closed-posts{
-  left:0;
+  left:var(--gap);
 }
 
 .mode-posts .closed-posts{
@@ -2555,7 +2555,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   position:absolute;
   inset:0;
   opacity:0;
-  transition:opacity 1s;
+  transition:opacity 1.5s ease-in-out;
 }
 
 .ad-panel .ad-slide.active{opacity:1;}
@@ -4943,12 +4943,11 @@ function makePosts(){
     }
     function startAdCycle(){
       const panel = document.getElementById('adPanel');
-      if(!panel.classList.contains('show') || !adPosts.length) return;
-      clearInterval(adTimer);
+      if(!panel.classList.contains('show') || !adPosts.length || adTimer) return;
       showNextAd();
       adTimer = setInterval(showNextAd,20000);
     }
-    function stopAdCycle(){ clearInterval(adTimer); }
+    function stopAdCycle(){ clearInterval(adTimer); adTimer = null; }
     function showNextAd(){
       const panel = document.getElementById('adPanel');
       if(!panel.classList.contains('show') || !adPosts.length) return;
@@ -4971,6 +4970,7 @@ function makePosts(){
         </div>`;
       slide.appendChild(img);
       slide.appendChild(cap);
+      slide.addEventListener('click', e => { e.stopPropagation(); openPost(p.id); });
       img.decode().catch(() => {}).then(() => {
         panel.appendChild(slide);
         requestAnimationFrame(()=> slide.classList.add('active'));
@@ -4978,7 +4978,7 @@ function makePosts(){
         if(slides.length > 1){
           const old = slides[0];
           old.classList.remove('active');
-          setTimeout(()=> old.remove(),1000);
+          setTimeout(()=> old.remove(),1500);
         }
       });
     }
@@ -8048,15 +8048,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const postsPanel = document.querySelector('.closed-posts');
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
-    postsPanel.classList.remove('ad-space');
-    adPanel.classList.remove('show');
-    stopAdCycle();
     const width = postsPanel.getBoundingClientRect().width;
     const hasPosts = !!postsPanel.querySelector('.card');
-    if(document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts){
+    const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
+    const isShown = adPanel.classList.contains('show');
+    if(shouldShow === isShown) return;
+    if(shouldShow){
       adPanel.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
+    } else {
+      adPanel.classList.remove('show');
+      postsPanel.classList.remove('ad-space');
+      stopAdCycle();
     }
   };
   window.addEventListener('resize', updateAdVisibility);
