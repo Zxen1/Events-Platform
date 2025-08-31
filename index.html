@@ -1475,7 +1475,7 @@ body.filters-active #filterBtn{
   bottom: var(--footer-h);
   left: var(--results-w);
   width: calc(100vw - var(--results-w));
-  max-width: 736px;
+  max-width: 800px;
   overflow-y:scroll;
   overflow-x:hidden;
   scrollbar-gutter:stable;
@@ -1534,11 +1534,11 @@ body.hide-results .closed-posts{
   position:sticky;
   top:0;
   z-index:3;
-  background:var(--list-background);
+  background:var(--closed-card-bg);
 }
 
 .open-posts .body{
-  padding:14px;
+  padding:0;
   display:flex;
   flex-wrap:wrap;
   gap:8px;
@@ -2080,10 +2080,10 @@ body.hide-results .closed-posts{
     margin-left:0;
     margin-right:0;
   }
-  .open-posts .body{
-    padding:14px 0;
-    gap:8px;
-  }
+    .open-posts .body{
+      padding:0;
+      gap:8px;
+    }
   .open-posts .text{
     padding-left:12px;
     padding-right:12px;
@@ -2481,7 +2481,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
-  padding: var(--gap) 0;
+  padding: var(--gap) 0 var(--gap) 12px;
   margin: 0;
   background: var(--list-background);
 }
@@ -2700,7 +2700,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 </style>
 <style id="theme-blue" disabled>
 :root{--primary:#000000;--secondary:#000000;--accent:#000000;--btn:rgba(74,74,74,0.9);--panel-bg:rgba(0,0,0,0.62);--panel-text:#000000;--scrollbar-track:rgba(0,0,0,0);--scrollbar-thumb:rgba(0,0,0,0.3);--scrollbar-thumb-hover:rgba(0,0,0,0.5);--list-background:rgba(0,0,0,0.37);--placeholder-text:#000000;--filter-placeholder-text:#000000;--dropdown-title:#000000;--dropdown-selected-bg:rgba(224,224,224,1);--dropdown-selected-text:#000000;--dropdown-text:#000000;--dropdown-bg:rgba(255,255,255,1);--dropdown-hover-bg:rgba(224,224,224,1);--dropdown-hover-text:#000000;--dropdown-venue-text:#000000;--keyword-bg:rgba(255,255,255,1);--date-range-bg:rgba(255,255,255,1);--date-range-text:#000000;--border:rgba(173,173,173,0);--border-hover:rgba(255,255,255,0.43);--border-active:rgba(255,174,0,0.45);}
-.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}
+.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--closed-card-bg);}
 .header{background-color:rgba(62,83,147,1);}
 .header{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header button{background-color:#3e5393;border-color:#3e5393;box-shadow:0 0 0px #000000;}
@@ -4781,13 +4781,8 @@ function makePosts(){
           const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if(entry.isIntersecting){
-                const img = entry.target;
-                if(img.dataset.src){
-                  img.src = img.dataset.src;
-                  img.removeAttribute('data-src');
-                }
-                img.fetchPriority = 'high';
-                obs.unobserve(img);
+                entry.target.fetchPriority = 'high';
+                obs.unobserve(entry.target);
               }
             });
           }, {root});
@@ -4795,10 +4790,6 @@ function makePosts(){
         } else {
           imgs.forEach(img => {
             img.loading = 'lazy';
-            if(img.dataset.src){
-              img.src = img.dataset.src;
-              img.removeAttribute('data-src');
-            }
           });
         }
       });
@@ -4810,7 +4801,7 @@ function makePosts(){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
         el.innerHTML = `
-          <img class="thumb" loading="lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
+          <img class="thumb" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
@@ -6826,7 +6817,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
       css += `:root{${rootVars.join('')}}\n`;
     }
     if(data['open-posts-sticky-header'] && data['open-posts-sticky-header'].value === '1'){
-      css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--list-background);}\n';
+      css += '.open-posts-sticky-header .open-posts .detail-header{position:sticky;top:0;z-index:3;background:var(--closed-card-bg);}\n';
     }
     colorAreas.forEach(area=>{
       ['bg','card','text','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
