@@ -3883,6 +3883,13 @@ function makePosts(){
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
     function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 
+    function svgPlaceholder(id){
+      const colors = ['#FFADAD','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF'];
+      const hash = String(id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+      const color = colors[hash % colors.length];
+      return `data:image/svg+xml;charset=UTF-8,` + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1'><rect width='1' height='1' fill='${color}'/></svg>`);
+    }
+
     function hoverHTML(p){
       return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
@@ -4817,7 +4824,7 @@ function makePosts(){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
         el.innerHTML = `
-          <img class="thumb" loading="lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
+          <img class="thumb" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
@@ -4963,7 +4970,7 @@ function makePosts(){
         </div>
         <div class="body">
           <div class="img-area">
-            <div class="img-box"><img id="hero-img" class="lqip" src="${thumbUrl(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
+            <div class="img-box"><img id="hero-img" class="lqip" src="${svgPlaceholder(p.id)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
             <div class="thumb-column"></div>
           </div>
           <div class="text">
