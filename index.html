@@ -474,9 +474,10 @@ button[aria-expanded="true"] .dropdown-arrow{
   width:300px;
 }
 #adminPanel .admin-fieldset{
-  flex:0 0 300px;
-  min-width:300px;
-  max-width:300px;
+  width:300px;
+}
+#adminPanel .admin-fieldset.collapsed{
+  padding:0;
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
@@ -624,6 +625,22 @@ button[aria-expanded="true"] .dropdown-arrow{
   align-items:stretch;
   position:relative;
   margin-left:auto;
+}
+#autoTheme-row{
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+  margin-left:0;
+  width:300px;
+  max-width:300px;
+}
+#autoTheme-row button{
+  flex:1 1 auto;
+}
+#autoTheme-row input[type=color]{
+  flex:0 0 35px;
+  width:35px;
+  padding:0;
 }
 #adminPanel .shadow-group{
   flex:1 1 220px;
