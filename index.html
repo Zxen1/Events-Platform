@@ -982,12 +982,12 @@ button[aria-expanded="true"] .results-arrow{
 .input .down svg{
   vertical-align:middle;
 }
-.input .x{
+#filterPanel .input .x{
   position: static;
   width: 35px;
   height: 35px;
   border-radius: 8px;
-  background: none;
+  background: rgba(255,255,255,1);
   cursor: pointer;
   border: 0;
   margin-left: 6px;
@@ -995,7 +995,7 @@ button[aria-expanded="true"] .results-arrow{
   text-align: center;
   color: var(--text);
 }
-.input .x.active{
+#filterPanel .input .x.active{
   color: var(--accent);
 }
 
@@ -4292,8 +4292,14 @@ function makePosts(){
         if(container){
           const control = memberGeocoder.onAdd(map);
           container.appendChild(control);
+          const buttons = control.querySelectorAll('button.mapboxgl-ctrl-geocoder--button');
+          if(buttons[0]) buttons[0].style.display='none';
           const input = control.querySelector('input[type="text"]');
           if(input) input.setAttribute('autocomplete','street-address');
+          const nav = new mapboxgl.NavigationControl();
+          container.appendChild(nav.onAdd(map));
+          const geo = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true}, trackUserLocation:true});
+          container.appendChild(geo.onAdd(map));
         }
       }
     }
@@ -4805,8 +4811,11 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
+      const thumb = wide
+        ? `<img class="thumb" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`
+        : `<img class="thumb" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
-          <img class="thumb" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />
+          ${thumb}
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
@@ -5623,6 +5632,7 @@ document.addEventListener('keydown', e=>{
 });
 
 function handleDocInteract(e){
+  if(e.target.closest('.img-popup')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
   const welcome = document.getElementById('welcomePopup');
   if(welcome && welcome.classList.contains('show')){
@@ -5650,8 +5660,8 @@ function handleDocInteract(e){
   });
 }
 
-document.addEventListener('click', handleDocInteract, true);
-document.addEventListener('pointerdown', handleDocInteract, true);
+document.addEventListener('click', handleDocInteract);
+document.addEventListener('pointerdown', handleDocInteract);
 
 // Panels and admin/member interactions
 (function(){
