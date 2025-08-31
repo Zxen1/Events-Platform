@@ -11,15 +11,8 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link rel="stylesheet" href="https://unpkg.com/react-day-picker@8/dist/style.css" />
-  <script type="module">
-    import React from "https://esm.sh/react@18";
-    import ReactDOM from "https://esm.sh/react-dom@18";
-    import { DayPicker } from "https://esm.sh/react-day-picker@8";
-    window.React = React;
-    window.ReactDOM = ReactDOM;
-    window.DayPicker = DayPicker;
-  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <style>:root{
   --header-h: 75px;
   --subheader-h: 55px;
@@ -533,14 +526,24 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--panel-bg);
   color: var(--panel-text);
 }
+ .flatpickr-calendar .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-next-month{
+  display:none;
+}
+.flatpickr-day.today:not(.selected){
+  color:var(--today) !important;
+}
+#filterPanel .flatpickr-calendar{
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+}
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
-  width:100%;
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:100%;
+  width:300px;
   height:200px;
   overflow-x:auto;
   overflow-y:hidden;
@@ -551,6 +554,30 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel #datePicker{
   background: var(--dropdown-bg);
+}
+#filterPanel #datePicker .flatpickr-calendar{
+  width:max-content;
+  height:200px;
+}
+#filterPanel #datePicker .flatpickr-months{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+#filterPanel #datePicker .flatpickr-months .flatpickr-month{
+  flex:0 0 300px;
+  width:300px;
+  height:200px;
+  background: var(--dropdown-bg);
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+#filterPanel #datePicker .flatpickr-day{
+  font-size:12px;
+  line-height:1.2;
+  margin:0;
+  width:calc(300px/7);
+  height:calc((200px - 40px)/6);
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -1809,15 +1836,64 @@ body.hide-results .closed-posts{
   font-size:16px;
 }
 
+.open-posts .post-calendar .flatpickr-calendar{
+  margin:0;
+  box-sizing:border-box;
+  display:block;
+  width:max-content;
+  height:200px;
+}
 .open-posts .calendar-container .calendar-scroll{
   width:400px;
-  height:300px;
+  height:200px;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
   scroll-snap-type:x mandatory;
   padding-bottom:20px;
   box-sizing:content-box;
+}
+.open-posts .post-calendar .flatpickr-months{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+.open-posts .post-calendar .flatpickr-months .flatpickr-month{
+  flex:0 0 400px;
+  background:var(--dropdown-bg);
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+.open-posts .post-calendar .flatpickr-calendar{
+  background:var(--dropdown-bg);
+}
+.open-posts .post-calendar .flatpickr-day{
+  font-size:12px;
+  line-height:1.2;
+  margin:0;
+  width:calc(400px/7);
+  height:calc((200px - 40px)/6);
+}
+.open-posts .post-calendar .flatpickr-days{
+  padding:0;
+  margin:0;
+}
+.open-posts .post-calendar .flatpickr-day.available-day{
+  background:transparent;
+  color:var(--dropdown-text);
+  font-weight:bold;
+  border:2px solid var(--session-available);
+  border-radius:50%;
+  box-sizing:border-box;
+}
+.open-posts .post-calendar .flatpickr-day.available-day.selected{
+  background:var(--session-selected);
+  color:var(--button-text);
+}
+.open-posts .post-calendar .flatpickr-day.selected{
+  background:var(--session-selected);
+  color:var(--button-text);
+  border-radius:50%;
 }
 
 .open-posts .post-calendar .selected-month-name{
@@ -3194,7 +3270,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePickerUpdate = null, todayWasOn = false, dateStart = null, dateEnd = null,
+      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -3814,7 +3890,7 @@ function makePosts(){
       dateEnd = null;
       $('#todayToggle').checked = false;
       todayWasOn = false;
-      if(datePickerUpdate) datePickerUpdate(undefined);
+      if(datePicker) datePicker.clear();
       if(geocoder) geocoder.clear();
       applyFilters();
       updateClearButtons();
@@ -3858,49 +3934,75 @@ function makePosts(){
     const todayToggle = $('#todayToggle');
     todayWasOn = todayToggle && todayToggle.checked;
 
-    const container = document.getElementById('datePicker');
-    if(container && window.React && window.ReactDOM && window.DayPicker){
-      const FilterCalendar = () => {
-        const [range, setRange] = React.useState();
-        datePickerUpdate = setRange;
-        const handleSelect = (r) => {
-          setRange(r);
-          const input = document.getElementById('dateInput');
-          if(r?.from && r.to){
-            dateStart = r.from;
-            dateEnd = r.to;
-            input.value = `${fmtShort(r.from.toISOString().slice(0,10))} - ${fmtShort(r.to.toISOString().slice(0,10))}`;
-            todayWasOn = todayToggle && todayToggle.checked;
-            if(todayToggle) todayToggle.checked = false;
-          } else if(r?.from){
-            dateStart = dateEnd = r.from;
-            input.value = fmtShort(r.from.toISOString().slice(0,10));
-            todayWasOn = todayToggle && todayToggle.checked;
-            if(todayToggle) todayToggle.checked = false;
-          } else {
-            dateStart = null;
-            dateEnd = null;
-            if(todayWasOn && todayToggle) todayToggle.checked = true;
-            input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
-            todayWasOn = todayToggle && todayToggle.checked;
-          }
-          applyFilters();
-          updateClearButtons();
-        };
-        return React.createElement(DayPicker, { mode: 'range', onSelect: handleSelect, selected: range });
-      };
-      ReactDOM.createRoot(container).render(React.createElement(FilterCalendar));
-    }
-    if(datePickerUpdate) datePickerUpdate(undefined);
+    const pickerMonths = ((maxPickerDate.getFullYear() - minPickerDate.getFullYear()) * 12) + (maxPickerDate.getMonth() - minPickerDate.getMonth()) + 1;
+    datePicker = flatpickr($('#datePicker'), {
+      inline: true,
+      mode: 'range',
+      dateFormat: 'D d M',
+      minDate: minPickerDate,
+      maxDate: maxPickerDate,
+      showMonths: pickerMonths,
+      defaultDate: today,
+      onChange: (selectedDates, dateStr, instance) => {
+        const input = $('#dateInput');
+        if (selectedDates.length === 2) {
+          dateStart = selectedDates[0];
+          dateEnd = selectedDates[1];
+          const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
+          const eIso = instance.formatDate(selectedDates[1], 'Y-m-d');
+          const sDisp = fmtShort(sIso);
+          const eDisp = fmtShort(eIso);
+          input.value = `${sDisp} - ${eDisp}`;
+          todayWasOn = todayToggle && todayToggle.checked;
+          if(todayToggle) todayToggle.checked = false;
+        } else if (selectedDates.length === 1) {
+          dateStart = dateEnd = selectedDates[0];
+          const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
+          input.value = fmtShort(sIso);
+          todayWasOn = todayToggle && todayToggle.checked;
+          if(todayToggle) todayToggle.checked = false;
+        } else if (selectedDates.length === 0) {
+          dateStart = null;
+          dateEnd = null;
+          if(todayWasOn && todayToggle) todayToggle.checked = true;
+          input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
+          todayWasOn = todayToggle && todayToggle.checked;
+        }
+        applyFilters();
+        updateClearButtons();
+      }
+    });
+    datePicker.clear();
     dateStart = null;
     dateEnd = null;
+    datePicker.jumpToDate(today);
+    const filterCalContainer = document.getElementById('datePickerContainer');
+    const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
+    if(filterCalScroll){
+      filterCalScroll.addEventListener('wheel', e=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          filterCalScroll.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      }, {passive:false});
+      let startXCal = null;
+      filterCalScroll.addEventListener('touchstart', e=>{ startXCal = e.touches[0].clientX; }, {passive:true});
+      filterCalScroll.addEventListener('touchmove', e=>{
+        if(startXCal!==null){
+          filterCalScroll.scrollLeft += startXCal - e.touches[0].clientX;
+          startXCal = e.touches[0].clientX;
+        }
+      }, {passive:true});
+      filterCalScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
+    }
+
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
       if(input){
         if(input.id==='dateInput'){
           dateStart = null;
           dateEnd = null;
-          if(datePickerUpdate) datePickerUpdate(undefined);
+          if(datePicker) datePicker.clear();
         } else {
           input.value='';
         }
@@ -3912,12 +4014,24 @@ function makePosts(){
     if(todayToggle){
       todayToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
+        const todayDate = new Date();
+        todayDate.setHours(0,0,0,0);
         if(todayToggle.checked){
           dateStart = null;
           dateEnd = null;
-          if(datePickerUpdate) datePickerUpdate(undefined);
+          if(datePicker) {
+            datePicker.clear();
+            datePicker.set('minDate', todayDate);
+            datePicker.setDate(todayDate, false);
+            datePicker.jumpToDate(todayDate);
+          }
           input.value = 'Today Onwards';
         } else {
+          if(datePicker) {
+            datePicker.set('minDate', minPickerDate);
+            datePicker.setDate(minPickerDate, false);
+            datePicker.jumpToDate(today);
+          }
           if(input.value === 'Today Onwards') input.value = '';
         }
         todayWasOn = todayToggle.checked;
@@ -4741,7 +4855,7 @@ function makePosts(){
 
     function restoreState(st){
       if(!st) return;
-      if(datePickerUpdate) datePickerUpdate(undefined);
+      if(datePicker) datePicker.clear();
       $('#kwInput').value = st.kw || '';
       dateStart = st.start ? new Date(st.start) : null;
       dateEnd = st.end ? new Date(st.end) : null;
@@ -4770,13 +4884,13 @@ function makePosts(){
         $('#dateInput').value = 'Today Onwards';
         dateStart = null;
         dateEnd = null;
-      } else if(datePickerUpdate){
+      } else if(datePicker){
         if(dateStart && dateEnd){
-          datePickerUpdate({from: dateStart, to: dateEnd});
+          datePicker.setDate([dateStart, dateEnd], false);
+          datePicker.jumpToDate(dateStart);
         } else if(dateStart){
-          datePickerUpdate({from: dateStart, to: dateStart});
-        } else {
-          datePickerUpdate(undefined);
+          datePicker.setDate([dateStart], false);
+          datePicker.jumpToDate(dateStart);
         }
       }
       todayWasOn = $('#todayToggle').checked;
@@ -5137,7 +5251,7 @@ function makePosts(){
         }, {passive:true});
         calScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
       }
-        let map, marker, calendarRoot = null, calendarSetDate = null, sessionHasMultiple = false, lastClickedCell = null;
+        let map, marker, picker = null, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
@@ -5166,48 +5280,32 @@ function makePosts(){
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
         }
-        if(calendarRoot){ calendarRoot.unmount(); calendarRoot = null; }
+        if(picker){ picker.destroy(); }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
         const firstDate = dateStrings[0];
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
         const firstDateObj = parseDate(firstDate);
         const lastDateObj = parseDate(lastDate);
-        const disabled = date => !allowedSet.has(date.toISOString().slice(0,10));
-        const Calendar = () => {
-          const [selected, setSelected] = React.useState();
-          calendarSetDate = setSelected;
-          return React.createElement(DayPicker, {
-            mode: 'single',
-            selected,
-            onSelect: (date) => {
-              setSelected(date);
-              if(ignoreSelect) return;
-              if(date){
-                const ds = date.toISOString().slice(0,10);
-                const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
-                if(matches.length===1){
-                  selectSession(matches[0].i);
-                } else if(matches.length>1){
-                  showTimePopup(matches);
-                } else {
-                  setSelected(undefined);
-                }
-              }
-            },
-            fromDate: firstDateObj,
-            toDate: lastDateObj,
-            disabled,
-            modifiers: { available: date => allowedSet.has(date.toISOString().slice(0,10)) },
-            modifiersClassNames: { available: 'available-day' }
-          });
-        };
-        calendarRoot = ReactDOM.createRoot(calendarEl);
-        calendarRoot.render(React.createElement(Calendar));
-        calendarSetDate(null);
+        const monthsCount = ((lastDateObj.getFullYear() - firstDateObj.getFullYear()) * 12) + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
+        picker = flatpickr(calendarEl, {
+          inline: true,
+          mode: 'single',
+          minDate: firstDateObj,
+          maxDate: lastDateObj,
+          enable: dateStrings.map(parseDate),
+          showMonths: monthsCount,
+          defaultDate: firstDateObj,
+          onDayCreate: (dObj, dStr, fp, dayElem) => {
+            const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
+            if(allowedSet.has(iso)) dayElem.classList.add('available-day');
+          }
+        });
+        picker.clear();
+        picker.jumpToDate(firstDateObj);
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         calendarEl.addEventListener('mousedown', e=>{
-          const day = e.target.closest('.rdp-day');
+          const day = e.target.closest('.flatpickr-day');
           if(day) lastClickedCell = day;
         });
         let ignoreSelect = false;
@@ -5222,12 +5320,14 @@ function makePosts(){
               if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
               ignoreSelect = true;
               const selectedDateObj = parseDate(dt.full);
-              if(calendarSetDate) calendarSetDate(selectedDateObj);
+              picker.setDate(selectedDateObj);
+              const monthDiff = (selectedDateObj.getFullYear() - firstDateObj.getFullYear()) * 12 + (selectedDateObj.getMonth() - firstDateObj.getMonth());
+              if(calScroll) calScroll.scrollLeft = monthDiff * 400;
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
               if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="dropdown-arrow" aria-hidden="true"></span>' : 'Select Session';
-              if(calendarSetDate) calendarSetDate(null);
+              picker.clear();
             }
             sessMenu.hidden = true;
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
@@ -5248,6 +5348,20 @@ function makePosts(){
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
           setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
         }
+        picker.config.onChange.push((selectedDates, dateStr, instance) => {
+          if(ignoreSelect) return;
+          if(selectedDates.length){
+            const ds = instance.formatDate(selectedDates[0], 'Y-m-d');
+            const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
+            if(matches.length===1){
+              selectSession(matches[0].i);
+            } else if(matches.length>1){
+              showTimePopup(matches);
+            } else {
+              instance.clear();
+            }
+          }
+        });
         setTimeout(()=>{
           const calHeight = calendarEl.offsetHeight;
           mapEl.style.height = (calHeight || 300) + 'px';
