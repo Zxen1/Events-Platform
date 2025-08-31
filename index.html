@@ -1397,10 +1397,11 @@ body.filters-active #filterBtn{
 #geocoder input::placeholder{font-family:Verdana,sans-serif;font-size:16px;color:grey;}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
   position:absolute;
-  top:0;
-  bottom:0;
   right:0;
+  top:50%;
+  transform:translateY(-50%);
   width:var(--control-h);
+  height:var(--control-h);
   background:transparent!important;
   border:0;
   border-left:1px solid #ccc;
@@ -4260,7 +4261,11 @@ function makePosts(){
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
-          if(map) map.once('moveend', () => { applyFilters(); updatePostPanel(); });
+          if(map) map.once('moveend', () => {
+            applyFilters();
+            updatePostPanel();
+            geocoder.clear();
+          });
         });
         const gc = document.getElementById('geocoder');
         if(gc){
