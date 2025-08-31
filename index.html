@@ -1507,7 +1507,7 @@ body.filters-active #filterBtn{
   color:#000;
   background:var(--panel-bg);
 }
-.closed-posts .res-list{overflow:visible;padding:12px 12px var(--gap);margin:0;}
+.closed-posts .posts{overflow:visible;padding:12px 12px var(--gap);margin:0;}
 .closed-posts{color:#000;padding:0;}
 .closed-posts .card,
 .closed-posts .open-posts{background:var(--closed-card-bg);}
@@ -2518,7 +2518,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: transparent;
 }
 
-.mode-posts #postsWide .res-list{
+.mode-posts #postsWide.posts{
   background: transparent;
 }
 
@@ -2555,7 +2555,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     left:0;
     right:0;
   }
-  .closed-posts .res-list{
+  .closed-posts .posts{
     padding:12px 12px var(--gap);
     margin:0;
   }
@@ -2653,7 +2653,7 @@ body{background-color:rgba(41,41,41,1);}
 .closed-posts .card{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
 .closed-posts .open-posts{background-color:rgba(0,0,0,0.52);box-shadow:0 0 0px #000000;}
 .closed-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.closed-posts .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts .posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
@@ -2717,7 +2717,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:0px;padding-left:12px;margin-left:0px;}
 .res-list .thumb{width:80px;height:80px;}
-@media (min-width:450px){.closed-posts .res-list{padding:12px 12px var(--gap);margin:0;}}
+@media (min-width:450px){.closed-posts .posts{padding:12px 12px var(--gap);margin:0;}}
 .closed-posts .thumb{width:80px;height:80px;padding:0;}
 
 
@@ -2761,7 +2761,7 @@ body{background-color:rgba(41,41,41,1);}
 .closed-posts .card{background-color:rgba(62,83,147,1);box-shadow:0 0 0px #000000;}
 .closed-posts .open-posts{background-color:rgba(62,83,147,1);box-shadow:0 0 0px #000000;}
 .closed-posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.closed-posts .res-list{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.closed-posts .posts{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .card .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .closed-posts .open-posts .t{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
@@ -2894,7 +2894,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </section>
 
   <section class="closed-posts" aria-label="Closed Posts">
-    <div class="res-list" id="postsWide"></div>
+    <div class="posts" id="postsWide"></div>
   </section>
 
   <section class="post-panel" aria-label="Map Controls">
@@ -3409,7 +3409,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.res-list').forEach(list=>{
+      document.querySelectorAll('.res-list, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
@@ -5851,7 +5851,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader > button','.options-dropdown > button'], btnText:['.subheader > button','.options-dropdown > button'], optionsMenu:['.options-menu']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
-    {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .res-list'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
+    {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .posts'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
