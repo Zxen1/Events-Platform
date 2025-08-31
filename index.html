@@ -5540,8 +5540,8 @@ function openPanel(m){
       } else {
         const topPos = headerH + subH;
         const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left='0';
-        content.style.right='';
+        content.style.left='';
+        content.style.right='0';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
         content.style.transform='';
@@ -5598,6 +5598,20 @@ function movePanelToEdge(panel, side){
     content.style.left = '';
     content.style.right = '0';
   }
+}
+function repositionPanels(){
+  ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
+    const panel = document.getElementById(id);
+    if(panel && panel.classList.contains('show')){
+      const content = panel.querySelector('.panel-content');
+      if(!content) return;
+      const w = content.style.width;
+      const h = content.style.height;
+      openPanel(panel);
+      content.style.width = w;
+      content.style.height = h;
+    }
+  });
 }
 function handleEsc(){
   const top = panelStack[panelStack.length-1];
@@ -6919,6 +6933,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
         }
       });
       applyAdmin();
+      repositionPanels();
     }
 
   function applyPreset(p){
@@ -6948,6 +6963,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
       const styleEl = document.getElementById(p.css);
       if(styleEl) styleEl.disabled = false;
     }
+    repositionPanels();
   }
 
   function savePreset(name){
