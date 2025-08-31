@@ -8089,7 +8089,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const postsPanel = document.querySelector('.closed-posts');
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
-    const width = postsPanel.getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
+    const width = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
     const hasPosts = !!postsPanel.querySelector('.card');
     const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
     const isShown = adPanel.classList.contains('show');
