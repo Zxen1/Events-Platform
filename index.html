@@ -1223,7 +1223,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .results-col{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
   bottom: var(--footer-h);
   left: var(--gap);
   width: var(--results-w);
@@ -1239,6 +1239,7 @@ body.hide-results .results-col{
   width: 0;
   padding: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .subheader{
@@ -1515,7 +1516,7 @@ body.filters-active #filterBtn{
 .closed-posts{
   display:none;
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
   bottom: var(--footer-h);
   left: calc(var(--results-w) + var(--gap) * 2);
   right: var(--gap);
@@ -1571,7 +1572,7 @@ body.hide-results .closed-posts{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:8px 12px;
+  padding:6px 12px;
   opacity:1;
   border-top-left-radius:inherit;
   border-top-right-radius:inherit;
@@ -2568,7 +2569,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius:16px;
   overflow:hidden;
   pointer-events:none;
-  transform:translateX(100%);
+  padding:8px;
+  transform:translateX(calc(100% + var(--gap)));
   transition:transform .3s ease;
   cursor:pointer;
 }
@@ -2584,6 +2586,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   opacity:0;
   transition:opacity 1.5s ease-in-out;
   cursor:pointer;
+  border-radius:8px;
+  overflow:hidden;
 }
 
 .ad-panel .ad-slide.active{opacity:1;}
@@ -4134,7 +4138,7 @@ function makePosts(){
     datePicker.clear();
     dateStart = null;
     dateEnd = null;
-    datePicker.jumpToDate(minPickerDate);
+    datePicker.jumpToDate(today);
     if(calendarScroll) calendarScroll.scrollLeft = 0;
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
@@ -4971,15 +4975,17 @@ function makePosts(){
     }
 
     function updateAds(list){
+      const panel = document.getElementById('adPanel');
+      stopAdCycle();
       adPosts = list.slice();
       adIndex = -1;
-      const panel = document.getElementById('adPanel');
       panel.innerHTML = '';
       if(!adPosts.length){
-        stopAdCycle();
         if(typeof updateAdVisibility === 'function') updateAdVisibility();
         return;
       }
+      const preload = new Image();
+      preload.src = imgHero(adPosts[0]);
       startAdCycle();
     }
     function startAdCycle(){
