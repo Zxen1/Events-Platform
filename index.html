@@ -5581,15 +5581,13 @@ function makePosts(){
           }
         });
         setTimeout(()=>{
-          const calHeight = calendarEl.offsetHeight;
-          mapEl.style.height = (calHeight || 300) + 'px';
           if(map && typeof map.resize === 'function') map.resize();
         },0);
-          if(sessMenu){
-            sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
-            sessMenu.scrollTop = 0;
-            if(sessionHasMultiple){
-              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+        if(sessMenu){
+          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+          sessMenu.scrollTop = 0;
+          if(sessionHasMultiple){
+            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
               if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
             } else {
               if(loc.dates.length){
