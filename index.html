@@ -7768,6 +7768,17 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', updateViewport);
   window.addEventListener('orientationchange', updateViewport);
 
+  const fsBtn = document.getElementById('fullscreenBtn');
+  if(fsBtn){
+    fsBtn.addEventListener('click', () => {
+      if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(()=>{});
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  }
+
   if (window.innerWidth >= 650) return;
 
   const posts = document.querySelector('.closed-posts');
@@ -7816,17 +7827,6 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.appendChild(big);
     overlay.addEventListener('click', () => overlay.remove());
     document.body.appendChild(overlay);
-  }
-
-  const fsBtn = document.getElementById('fullscreenBtn');
-  if(fsBtn){
-    fsBtn.addEventListener('click', () => {
-      if(!document.fullscreenElement){
-        document.documentElement.requestFullscreen().catch(()=>{});
-      } else {
-        document.exitFullscreen();
-      }
-    });
   }
 
   posts.querySelectorAll('img').forEach(img => {
