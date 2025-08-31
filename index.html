@@ -1231,8 +1231,11 @@ body.hide-results .results-col{
 #filterBtn{
   border-radius:12px;
 }
-#filterBtn img{
+.icon-filters{
+  display:inline-block;
   vertical-align:middle;
+  color: currentColor;
+  width:20px; height:20px;
 }
 body.filters-active #filterBtn{
   background: var(--filter-active-color);
@@ -2844,7 +2847,34 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </header>
   <div class="subheader">
-    <button id="filterBtn" aria-label="Open filters panel"><img src="assets/filters%20icon.png" width="20" height="20" alt="" /></button>
+    <button id="filterBtn" aria-label="Open filters panel">
+      <!-- Filters / Sliders icon (SVG) -->
+      <svg class="icon-filters" width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Filters">
+        <defs>
+          <!-- Cut the lines under the knobs so the circles look like real handles -->
+          <mask id="knobCut">
+            <rect x="0" y="0" width="24" height="24" fill="white"/>
+            <circle cx="8"  cy="6"  r="3.2" fill="black"/>
+            <circle cx="15" cy="12" r="3.2" fill="black"/>
+            <circle cx="6"  cy="18" r="3.2" fill="black"/>
+          </mask>
+        </defs>
+
+        <!-- Lines (sliders) -->
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" mask="url(#knobCut)">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </g>
+
+        <!-- Knobs -->
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="8"  cy="6"  r="3"/>
+          <circle cx="15" cy="12" r="3"/>
+          <circle cx="6"  cy="18" r="3"/>
+        </g>
+      </svg>
+    </button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
       <div id="optionsMenu" class="options-menu" hidden>
