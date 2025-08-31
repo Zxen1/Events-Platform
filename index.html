@@ -1198,15 +1198,13 @@ button[aria-expanded="true"] .dropdown-arrow{
   width: var(--results-w);
   display: flex;
   flex-direction: column;
-  padding: 0;
-  transition: width .3s ease, padding .3s ease;
+  transition: width .3s ease;
   z-index: 2;
   pointer-events: auto;
 }
 
 body.hide-results .results-col{
   width: 0;
-  padding: 0;
   overflow: hidden;
 }
 
@@ -1475,7 +1473,7 @@ body.filters-active #filterBtn{
   bottom: var(--footer-h);
   left: var(--results-w);
   width: calc(100vw - var(--results-w));
-  max-width: 800px;
+  max-width: 900px;
   overflow-y:scroll;
   overflow-x:hidden;
   scrollbar-gutter:stable;
@@ -1518,7 +1516,7 @@ body.hide-results .closed-posts{
   border-radius:18px;
   margin:0 0 12px 0;
   overflow:visible;
-  max-width:800px;
+  max-width:900px;
 }
 
 .open-posts .detail-header{
@@ -1538,7 +1536,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .body{
-  padding:0;
+  padding-left: var(--gap);
   display:flex;
   flex-wrap:wrap;
   gap:8px;
@@ -1608,14 +1606,14 @@ body.hide-results .closed-posts{
 
 @media (max-width: 450px){
   .open-posts .body{
-    padding:0;
+    padding-left: var(--gap);
   }
   .open-posts .img-area{
     flex:1 1 100%;
     width:100%;
   }
   .open-posts .text{
-    padding:14px;
+    padding:14px 14px 14px 0;
   }
   .open-posts .img-box{
     width:100%;
@@ -2081,11 +2079,10 @@ body.hide-results .closed-posts{
     margin-right:0;
   }
     .open-posts .body{
-      padding:0;
+      padding-left: var(--gap);
       gap:8px;
     }
   .open-posts .text{
-    padding-left:12px;
     padding-right:12px;
   }
 }
@@ -2481,7 +2478,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
-  padding: var(--gap) 0 var(--gap) 12px;
   margin: 0;
   background: var(--list-background);
 }
@@ -2585,13 +2581,13 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     left:50%;
     transform:translateX(-50%);
   }
-  .open-posts .detail-header{
-    padding-bottom:0;
+    .open-posts .detail-header{
+      padding-bottom:0;
+    }
+    .open-posts .body{
+      padding-left: var(--gap);
+    }
   }
-  .open-posts .body{
-    padding:0;
-  }
-}
 
 </style>
 <style id="theme-default">
@@ -2688,7 +2684,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel .panel-content .title{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:0px;padding-left:12px;margin-left:0px;}
+.res-list{margin:0;padding:0;}
 .res-list .thumb{width:80px;height:80px;}
 @media (min-width:450px){.closed-posts .res-list{padding:12px 12px var(--gap);margin:0;}}
 .closed-posts .thumb{width:80px;height:80px;padding:0;}
