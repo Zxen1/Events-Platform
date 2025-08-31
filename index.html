@@ -1878,17 +1878,19 @@ body.hide-results .closed-posts{
 .open-posts .calendar-container .calendar-scroll{
   width:auto;
   height:auto;
-  overflow:hidden;
+  overflow-x:auto;
+  overflow-y:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
 }
 .open-posts .post-calendar .flatpickr-months{
-  display:block;
+  display:flex;
 }
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
   width:auto;
   height:auto;
   background:var(--dropdown-bg);
+  flex:0 0 auto;
 }
 .open-posts .post-calendar .flatpickr-calendar{
   background:var(--dropdown-bg);
@@ -1908,9 +1910,12 @@ body.hide-results .closed-posts{
   background:transparent;
   color:var(--dropdown-text);
   font-weight:bold;
-  border:2px solid var(--session-available);
+  border:2px solid var(--session-available) !important;
   border-radius:50%;
   box-sizing:border-box;
+}
+.open-posts .post-calendar .flatpickr-day.available-day:hover{
+  border-color:var(--session-available) !important;
 }
 .open-posts .post-calendar .flatpickr-day.available-day.selected{
   background:var(--session-selected);
@@ -1920,6 +1925,13 @@ body.hide-results .closed-posts{
   background:var(--session-selected);
   color:var(--button-text);
   border-radius:50%;
+}
+
+.open-posts .post-calendar .flatpickr-prev-month,
+.open-posts .post-calendar .flatpickr-next-month,
+.open-posts .post-calendar .flatpickr-monthDropdown-months,
+.open-posts .post-calendar .numInputWrapper{
+  display:none;
 }
 
 .open-posts .post-calendar .selected-month-name{
@@ -5267,6 +5279,14 @@ function makePosts(){
         const calendarEl = el.querySelector(`#cal-${p.id}`);
         const mapEl = el.querySelector(`#map-${p.id}`);
         const calContainer = el.querySelector('.calendar-container');
+        const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
+        if(calScroll){
+          calScroll.addEventListener('wheel', e=>{
+            if(e.deltaY === 0) return;
+            e.preventDefault();
+            calScroll.scrollLeft += e.deltaY;
+          }, {passive:false});
+        }
         let map, marker, picker = null, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
@@ -5303,6 +5323,7 @@ function makePosts(){
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
         const firstDateObj = parseDate(firstDate);
         const lastDateObj = parseDate(lastDate);
+        const monthsDiff = (lastDateObj.getFullYear() - firstDateObj.getFullYear()) * 12 + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
         picker = flatpickr(calendarEl, {
           inline: true,
           mode: 'single',
@@ -5310,6 +5331,8 @@ function makePosts(){
           maxDate: lastDateObj,
           enable: dateStrings.map(parseDate),
           defaultDate: firstDateObj,
+          showMonths: monthsDiff,
+          monthSelectorType: 'static',
           onDayCreate: (dObj, dStr, fp, dayElem) => {
             const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
             if(allowedSet.has(iso)) dayElem.classList.add('available-day');
