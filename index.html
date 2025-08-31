@@ -4211,12 +4211,14 @@ function makePosts(){
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
+        if(window.updateAdVisibility) updateAdVisibility();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
             applyFilters();
           }
+          if(window.updateAdVisibility) updateAdVisibility();
         }, 310);
       });
 
@@ -4295,6 +4297,7 @@ function makePosts(){
         stopSpin();
       }
       applyFilters();
+      if(window.updateAdVisibility) updateAdVisibility();
     }
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
     $('#main-tab-map').addEventListener('click',()=> setMode('map'));
@@ -8024,19 +8027,23 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.closed-posts');
-  function updateAdVisibility(){
+  window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
     postsPanel.classList.remove('ad-space');
     adPanel.classList.remove('show');
     stopAdCycle();
     const width = postsPanel.getBoundingClientRect().width;
-    if(width >= 1200){
+    if(document.body.classList.contains('mode-posts') && width >= 1200){
       adPanel.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
     }
-  }
+  };
   window.addEventListener('resize', updateAdVisibility);
+  if(postsPanel && 'ResizeObserver' in window){
+    const ro = new ResizeObserver(() => updateAdVisibility());
+    ro.observe(postsPanel);
+  }
   updateAdVisibility();
 });
 </script>
