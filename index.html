@@ -19,6 +19,8 @@
   --panel-w: 300px;
   --results-w: 520px;
   --gap: 12px;
+    --media-h: 200px;
+    --calendar-scale: 0.67;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -1712,7 +1714,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-map{
-  height:200px;
+  height:var(--media-h);
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1881,10 +1883,12 @@ body.hide-results .closed-posts{
   display:block;
   width:auto;
   height:auto;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top center;
 }
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
-  height:auto;
+  height:var(--media-h);
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:20px;
