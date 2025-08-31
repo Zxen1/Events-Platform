@@ -1381,21 +1381,6 @@ body.filters-active #filterBtn{
   inset: 0;
 }
 
-.map-overlay{
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: .5px;
-  opacity: .15;
-  pointer-events: none;
-}
-
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
 .geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:visible;font-size:16px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
@@ -1489,7 +1474,8 @@ body.filters-active #filterBtn{
   top: calc(var(--header-h) + var(--subheader-h));
   bottom: var(--footer-h);
   left: var(--results-w);
-  right: 0;
+  width: calc(100vw - var(--results-w));
+  max-width: 736px;
   overflow-y:scroll;
   overflow-x:hidden;
   scrollbar-gutter:stable;
@@ -1532,6 +1518,7 @@ body.hide-results .closed-posts{
   border-radius:18px;
   margin:0 0 12px 0;
   overflow:visible;
+  max-width:736px;
 }
 
 .open-posts .detail-header{
@@ -2499,27 +2486,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background: var(--list-background);
 }
 
-.post-panel{
-  position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h));
-  bottom: var(--footer-h);
-  left: var(--results-w);
-  width: var(--panel-w);
-  max-width: 736px;
-  z-index: 10;
-  pointer-events: none;
-  margin-bottom: 12px;
-  padding-bottom: var(--gap);
-}
-
-.post-panel > *{
-  pointer-events: auto;
-}
-
-.post-panel .map-overlay{
-  pointer-events: none;
-}
-
 .mode-posts #postsWide{
   border: none;
   background: transparent;
@@ -2901,10 +2867,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
   <section class="closed-posts" aria-label="Closed Posts">
     <div class="res-list" id="postsWide"></div>
-  </section>
-
-  <section class="post-panel" aria-label="Map Controls">
-    <div class="map-overlay">Loading Map…</div>
   </section>
 
   <footer>
@@ -4217,10 +4179,6 @@ function makePosts(){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
       document.body.classList.add('mode-'+m);
-      const panel = document.querySelector('.post-panel');
-      if(panel){
-        panel.style.pointerEvents = 'none';
-      }
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
       $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
@@ -4388,7 +4346,8 @@ function makePosts(){
         applySky(skyStyle);
       });
       map.on('load', ()=>{
-        $('.map-overlay').style.display='none';
+        const overlay = $('.map-overlay');
+        if(overlay) overlay.style.display='none';
         addPostSource();
         if(spinEnabled){
           document.body.classList.remove('hide-results');
