@@ -7771,10 +7771,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const fsBtn = document.getElementById('fullscreenBtn');
   if(fsBtn){
     fsBtn.addEventListener('click', () => {
-      if(!document.fullscreenElement){
-        document.documentElement.requestFullscreen().catch(()=>{});
+      const docEl = document.documentElement;
+      const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      if(!isFull){
+        const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+        if(req) req.call(docEl).catch(()=>{});
       } else {
-        document.exitFullscreen();
+        const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+        if(exit) exit.call(document);
       }
     });
   }
