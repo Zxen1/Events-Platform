@@ -4273,6 +4273,7 @@ function makePosts(){
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
+          if(mode!=='map') setMode('map');
           if(map) map.once('moveend', () => {
             applyFilters();
             updatePostPanel();
@@ -4351,6 +4352,7 @@ function makePosts(){
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
       geolocate.on('geolocate', (e)=>{
         spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
+        if(mode!=='map') setMode('map');
         map.flyTo({
           center: [e.coords.longitude, e.coords.latitude],
           zoom: Math.max(map.getZoom(), 12),
@@ -4398,7 +4400,7 @@ function makePosts(){
           if(bIn) bIn.value = map.getBearing();
           if(bVal) bVal.textContent = map.getBearing().toFixed(0);
         });
-        map.on('moveend', () => {
+        const refreshMapView = () => {
           applyFilters();
           updatePostPanel();
           const center = map.getCenter().toArray();
@@ -4406,7 +4408,8 @@ function makePosts(){
           const pitch = map.getPitch();
           const bearing = map.getBearing();
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
-        });
+        };
+        ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
         map.on('dragend', () => { if(geocoder) geocoder.clear(); });
         map.on('click', () => {
           if(mode === 'posts') setMode('map');
