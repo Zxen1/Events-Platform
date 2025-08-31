@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Events Platform</title>
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
@@ -119,20 +119,21 @@ html,body{
   background:var(--scrollbar-thumb-hover);
 }
 
-body{
-  margin: 0 auto;
-  max-width: 1920px;
-  font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
-  background: var(--background);
-  color: var(--text);
-  overflow: hidden;
-  cursor: default;
-  caret-color: transparent;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  user-select: none;
-}
+  body{
+    margin: 0 auto;
+    max-width: 1920px;
+    font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
+    background: var(--background);
+    color: var(--text);
+    overflow: hidden;
+    cursor: default;
+    caret-color: transparent;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    user-select: none;
+    touch-action: manipulation;
+  }
 
 input,
 textarea,
@@ -2195,12 +2196,12 @@ footer{
 }
 
 .fullscreen-btn{
-  position:fixed;
-  bottom:var(--gap);
-  right:var(--gap);
-  z-index:1000;
-  flex:0 0 auto;
-}
+    width:50px;
+    height:50px;
+    padding:0;
+    margin-left:auto;
+    flex:0 0 auto;
+  }
 
 
 .chip-small{
@@ -3021,11 +3022,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="map-overlay">Loading Map…</div>
   </section>
 
-  <footer>
-    <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
-  </footer>
-
-  <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
+    <footer>
+      <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
+      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
+    </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));left:0;transform:none;">
@@ -4974,20 +4974,19 @@ function makePosts(){
       });
     }
 
-    function updateAds(list){
-      const panel = document.getElementById('adPanel');
-      stopAdCycle();
-      adPosts = list.slice();
-      adIndex = -1;
-      panel.innerHTML = '';
-      if(!adPosts.length){
-        if(typeof updateAdVisibility === 'function') updateAdVisibility();
-        return;
+      function updateAds(list){
+        const panel = document.getElementById('adPanel');
+        stopAdCycle();
+        panel.innerHTML = '';
+        if(window.innerWidth < 1200 || !list.length){
+          adPosts = [];
+          if(typeof updateAdVisibility === 'function') updateAdVisibility();
+          return;
+        }
+        adPosts = list.slice();
+        adIndex = -1;
+        startAdCycle();
       }
-      const preload = new Image();
-      preload.src = imgHero(adPosts[0]);
-      startAdCycle();
-    }
     function startAdCycle(){
       const panel = document.getElementById('adPanel');
       if(!panel.classList.contains('show') || !adPosts.length || adTimer) return;
@@ -5938,15 +5937,19 @@ document.addEventListener('pointerdown', handleDocInteract);
     });
   });
 
-  const welcomePopup = document.getElementById('welcomePopup');
-  [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m=>{
-    if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
-      openPanel(m);
+    const welcomePopup = document.getElementById('welcomePopup');
+    [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m=>{
+      if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
+        openPanel(m);
+      }
+    });
+    if(welcomePopup && !localStorage.getItem('welcome-seen')){
+      openWelcome();
+      localStorage.setItem('welcome-seen','true');
     }
-  });
-  if(filterPanel && window.innerWidth >= 450 && !filterPanel.classList.contains('show') && localStorage.getItem('panel-open-filterPanel') !== 'false'){
-    openPanel(filterPanel);
-  }
+    if(filterPanel && window.innerWidth >= 450 && !filterPanel.classList.contains('show') && localStorage.getItem('panel-open-filterPanel') !== 'false'){
+      openPanel(filterPanel);
+    }
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
     const header = panel.querySelector('.panel-header');
