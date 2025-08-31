@@ -20,7 +20,7 @@
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
-    --calendar-scale: 0.67;
+    --calendar-scale: 0.6;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -53,12 +53,14 @@
       --dropdown-bg: rgba(255,255,255,1);
       --dropdown-hover-bg: rgba(224,224,224,1);
       --dropdown-hover-text: #000000;
-      --dropdown-venue-text: #000000;
-      --dropdown-radius: 6px;
-      --session-available: #808080;
-      --session-selected: #008000;
-      --today: #ff0000;
-      --filter-active-color: var(--accent);
+        --dropdown-venue-text: #000000;
+        --dropdown-radius: 6px;
+        --session-available: #808080;
+        --session-selected: #008000;
+        --today: #ff0000;
+        --ad-panel-bg: rgba(0,0,0,0.5);
+        --image-panel-bg: rgba(0,0,0,0.7);
+        --filter-active-color: var(--accent);
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -118,7 +120,8 @@ html,body{
 }
 
 body{
-  margin: 0;
+  margin: 0 auto;
+  max-width: 1920px;
   font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
   background: var(--background);
   color: var(--text);
@@ -1918,15 +1921,15 @@ body.hide-results .closed-posts{
   margin:0;
 }
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:transparent;
-  color:var(--dropdown-text);
+  background:var(--session-available);
+  color:var(--button-text);
   font-weight:bold;
   border:2px solid var(--session-available) !important;
   border-radius:50%;
   box-sizing:border-box;
 }
 .open-posts .post-calendar .flatpickr-day.available-day:hover{
-  border-color:var(--session-available) !important;
+  background:var(--session-available);
 }
 .open-posts .post-calendar .flatpickr-day.available-day.selected{
   background:var(--session-selected);
@@ -1991,7 +1994,7 @@ body.hide-results .closed-posts{
 .img-popup{
   position:fixed;
   inset:0;
-  background:var(--panel-bg);
+  background:var(--image-panel-bg);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -2512,8 +2515,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .results-col .res-list{
   border-radius: inherit;
-  padding: var(--gap) 0;
-  margin: 0;
+  padding: var(--gap);
+  margin: 0 calc(-1 * var(--gap));
 }
 
 .post-panel{
@@ -2537,25 +2540,32 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 .ad-panel{
-  display:none;
   position:fixed;
   top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: calc(var(--footer-h) + var(--gap));
   width:400px;
   right: var(--gap);
-  background:var(--panel-bg);
+  background:var(--ad-panel-bg);
   z-index:5;
   border-radius:16px;
   overflow:hidden;
+  pointer-events:none;
+  transform:translateX(100%);
+  transition:transform .3s ease;
+  cursor:pointer;
 }
 
-.ad-panel.show{display:block;}
+.ad-panel.show{
+  pointer-events:auto;
+  transform:translateX(0);
+}
 
 .ad-panel .ad-slide{
   position:absolute;
   inset:0;
   opacity:0;
   transition:opacity 1.5s ease-in-out;
+  cursor:pointer;
 }
 
 .ad-panel .ad-slide.active{opacity:1;}
@@ -4242,6 +4252,7 @@ function makePosts(){
           resultsToggle.setAttribute('aria-pressed','false');
           resultsCol.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
+          if(window.updateAdVisibility) updateAdVisibility();
           setMode('map');
         }
       });
@@ -4991,9 +5002,7 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = wide
-        ? `<img class="thumb" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`
-        : `<img class="thumb" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const thumb = `<img class="thumb" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
           ${thumb}
         <div class="meta">
@@ -6018,10 +6027,12 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
-    {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
-    {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
-    {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}}
-  ];
+  {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
+  {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
+  {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
+  {key:'adPanel', label:'Ad Panel', selectors:{bg:['#adPanel']}},
+  {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
+];
 
   function storeTitleDefaults(){
     colorAreas.forEach(area=>{
