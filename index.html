@@ -1514,6 +1514,7 @@ body.filters-active #filterBtn{
 .closed-posts .open-posts{background:var(--closed-card-bg);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:6px}
+.closed-posts.ad-space{right:400px;}
 
 body.hide-results .closed-posts{
   left:0;
@@ -2526,6 +2527,19 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   pointer-events: none;
 }
 
+.ad-panel{
+  display:none;
+  position:fixed;
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  bottom: var(--footer-h);
+  width:400px;
+  right:0;
+  background:var(--panel-bg);
+  z-index:5;
+}
+
+.ad-panel.show{display:block;}
+
 .mode-posts #postsWide{
   border: none;
   background: transparent;
@@ -2909,6 +2923,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   <section class="closed-posts" aria-label="Closed Posts">
     <div class="posts" id="postsWide"></div>
   </section>
+
+  <section id="adPanel" class="ad-panel" aria-label="Advertisement"></section>
 
   <section class="post-panel" aria-label="Map Controls">
     <div class="map-overlay">Loading Map…</div>
@@ -7904,5 +7920,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   });
 });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const adPanel = document.getElementById('adPanel');
+  const postsPanel = document.querySelector('.closed-posts');
+  function updateAdPanel(){
+    if(!adPanel || !postsPanel) return;
+    postsPanel.classList.remove('ad-space');
+    adPanel.classList.remove('show');
+    const width = postsPanel.getBoundingClientRect().width;
+    if(width >= 1200){
+      adPanel.classList.add('show');
+      postsPanel.classList.add('ad-space');
+    }
+  }
+  window.addEventListener('resize', updateAdPanel);
+  updateAdPanel();
+});
+</script>
 </body>
 </html>
