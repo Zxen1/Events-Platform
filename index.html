@@ -472,6 +472,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   border-radius:8px;
   padding:10px;
   width:300px;
+  box-sizing:border-box;
 }
 #adminPanel .admin-fieldset{
   width:300px;
@@ -615,16 +616,15 @@ button[aria-expanded="true"] .dropdown-arrow{
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
-.control-row > *:last-child{margin-left:auto;}
+.control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
-  flex:1 1 220px;
+  flex:0 0 200px;
   width:100%;
-  max-width:220px;
+  max-width:200px;
   display:flex;
   flex-direction:column;
   align-items:stretch;
   position:relative;
-  margin-left:auto;
 }
 #autoTheme-row{
   flex-direction:row;
@@ -635,17 +635,19 @@ button[aria-expanded="true"] .dropdown-arrow{
   max-width:300px;
 }
 #autoTheme-row button{
-  flex:1 1 auto;
+  flex:0 0 auto;
+  height:35px;
 }
 #autoTheme-row input[type=color]{
-  flex:0 0 35px;
-  width:35px;
+  flex:0 0 200px;
+  width:200px;
+  height:35px;
   padding:0;
 }
 #adminPanel .shadow-group{
-  flex:1 1 220px;
+  flex:0 0 200px;
   width:100%;
-  max-width:220px;
+  max-width:200px;
   display:flex;
   gap:4px;
   align-items:center;
@@ -713,14 +715,13 @@ button[aria-expanded="true"] .dropdown-arrow{
 #adminPanel .admin-fieldset input,
 #adminPanel .admin-fieldset select,
 #adminPanel .admin-fieldset textarea{
-  width:100%;
-  max-width:100%;
+  max-width:200px;
   box-sizing:border-box;
 }
 #adminPanel .control-row select{
-  flex:1 1 220px;
-  width:100%;
-  max-width:220px;
+  flex:0 0 200px;
+  width:200px;
+  max-width:200px;
   margin-left:auto;
   border-radius:var(--dropdown-radius);
   padding:4px;
