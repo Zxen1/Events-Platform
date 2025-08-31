@@ -308,6 +308,7 @@ input[type="checkbox"]{
   border-width:0 2px 2px 0;
   border-color:currentColor !important;
   color:inherit;
+  transition:transform .3s;
 }
 
 .results-arrow{
@@ -327,12 +328,11 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   position:absolute;
   top:50%;
   right:10px;
-  transform:translateY(-50%) rotate(45deg);
-  transition:transform .3s;
+  transform:translateY(-50%) rotate(135deg);
 }
 
 button[aria-expanded="true"] .dropdown-arrow{
-  transform:translateY(-50%) rotate(-135deg);
+  transform:translateY(-50%) rotate(-45deg);
 }
 
 #addressTitle,#addressField{display:none;}
@@ -534,10 +534,11 @@ button[aria-expanded="true"] .dropdown-arrow{
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
+  width:100%;
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:300px;
+  width:100%;
   height:200px;
   overflow-x:auto;
   overflow-y:hidden;
@@ -551,6 +552,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel #datePicker .flatpickr-calendar{
   width:max-content;
+  min-width:100%;
   height:200px;
 }
 #filterPanel #datePicker .flatpickr-months{
@@ -559,8 +561,8 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 300px;
-  width:300px;
+  flex:0 0 100%;
+  width:100%;
   height:200px;
   background: var(--dropdown-bg);
   scroll-snap-align:start;
@@ -1837,13 +1839,14 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:block;
-  width:max-content;
-  height:200px;
+  width:400px;
+  height:300px;
 }
 .open-posts .calendar-container .calendar-scroll{
-  width:200px;
-  height:200px;
-  overflow:hidden;
+  width:400px;
+  height:300px;
+  overflow-x:auto;
+  overflow-y:hidden;
   touch-action:pan-x;
   scroll-snap-type:x mandatory;
   padding-bottom:20px;
@@ -1851,8 +1854,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .calendar-container .calendar-scroll .flatpickr-calendar{
-  transform:scale(0.5);
-  transform-origin:top left;
+  transform:none;
 }
 
 .open-posts .post-calendar .flatpickr-months{
@@ -1863,6 +1865,7 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
   flex:0 0 400px;
+  height:300px;
   background:var(--dropdown-bg);
   scroll-snap-align:start;
   scroll-snap-stop:always;
@@ -1877,7 +1880,7 @@ body.hide-results .closed-posts{
   line-height:1.2;
   margin:0;
   width:calc(400px/7);
-  height:calc((200px - 40px)/6);
+  height:calc((300px - 40px)/6);
 }
 
 .open-posts .post-calendar .flatpickr-days{
@@ -2093,6 +2096,14 @@ body.hide-results .closed-posts{
   .open-posts .text{
     padding-left:12px;
     padding-right:12px;
+  }
+}
+
+@media (max-width:450px){
+  .open-posts .venue-dropdown > button,
+  .open-posts .session-dropdown > button{
+    width:400px;
+    height:50px;
   }
 }
 
@@ -5541,9 +5552,9 @@ function openPanel(m){
         content.style.maxHeight='';
       }
     } else if(m.id==='filterPanel'){
-      if(window.innerWidth < 650){
-        const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH;
+      const subHead = document.querySelector('.subheader');
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + subH;
+      if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
         content.style.top=`${topPos}px`;
@@ -5551,13 +5562,12 @@ function openPanel(m){
         content.style.transform='none';
         content.style.maxHeight='';
       } else {
-        const topPos = headerH + subH;
         const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left='';
-        content.style.right='0';
+        content.style.left='0';
+        content.style.right='';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
-        content.style.transform='';
+        content.style.transform='none';
         content.style.maxHeight=`${availableHeight}px`;
       }
     } else if(m.id==='welcomePopup'){
@@ -5724,6 +5734,9 @@ document.addEventListener('pointerdown', handleDocInteract, true);
       openPanel(m);
     }
   });
+  if(filterPanel && window.innerWidth >= 450 && !filterPanel.classList.contains('show') && localStorage.getItem('panel-open-filterPanel') !== 'false'){
+    openPanel(filterPanel);
+  }
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
     const header = panel.querySelector('.panel-header');
