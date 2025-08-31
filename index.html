@@ -543,8 +543,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:300px;
-  height:200px;
+  width:auto;
+  height:auto;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
@@ -556,8 +556,8 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--dropdown-bg);
 }
 #filterPanel #datePicker .flatpickr-calendar{
-  width:max-content;
-  height:200px;
+  width:auto;
+  height:auto;
 }
 #filterPanel #datePicker .flatpickr-months{
   display:flex;
@@ -565,9 +565,9 @@ button[aria-expanded="true"] .dropdown-arrow{
   flex-wrap:nowrap;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 300px;
-  width:300px;
-  height:200px;
+  flex:0 0 auto;
+  width:auto;
+  height:auto;
   background: var(--dropdown-bg);
   scroll-snap-align:start;
   scroll-snap-stop:always;
@@ -576,8 +576,8 @@ button[aria-expanded="true"] .dropdown-arrow{
   font-size:12px;
   line-height:1.2;
   margin:0;
-  width:calc(300px/7);
-  height:calc((200px - 40px)/6);
+  width:auto;
+  height:auto;
 }
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
@@ -1413,6 +1413,7 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   justify-content:center;
+  opacity:0;
 }
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{display:none;}
 .geocoder .mapboxgl-ctrl-group button,
@@ -1831,7 +1832,7 @@ body.hide-results .closed-posts{
   display:none;
 }
 .open-posts .post-calendar{
-  width:max-content;
+  width:auto;
   position:relative;
   font-size:16px;
 }
@@ -1840,12 +1841,12 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:block;
-  width:max-content;
-  height:200px;
+  width:auto;
+  height:auto;
 }
 .open-posts .calendar-container .calendar-scroll{
-  width:400px;
-  height:200px;
+  width:auto;
+  height:auto;
   overflow-x:auto;
   overflow-y:hidden;
   touch-action:pan-x;
@@ -1859,7 +1860,9 @@ body.hide-results .closed-posts{
   flex-wrap:nowrap;
 }
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
-  flex:0 0 400px;
+  flex:0 0 auto;
+  width:auto;
+  height:auto;
   background:var(--dropdown-bg);
   scroll-snap-align:start;
   scroll-snap-stop:always;
@@ -1871,8 +1874,8 @@ body.hide-results .closed-posts{
   font-size:12px;
   line-height:1.2;
   margin:0;
-  width:calc(400px/7);
-  height:calc((200px - 40px)/6);
+  width:auto;
+  height:auto;
 }
 .open-posts .post-calendar .flatpickr-days{
   padding:0;
