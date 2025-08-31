@@ -745,7 +745,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 #adminPanel .marker-set svg.shadow{filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));}
 #adminPanel .marker-set svg.outline *{stroke:#000;stroke-width:1;}
 #adminPanel input[type=range]{width:100%;}
-#adminPanel .preset-actions{display:flex;gap:6px;margin:6px 0;}
+#adminPanel .preset-actions{display:flex;gap:6px;margin:0;}
 #adminPanel .preset-actions input{flex:1;padding:6px;border-radius:4px;}
 #adminPanel .preset-actions button{padding:6px 10px;}
 .panel-field{
@@ -756,8 +756,9 @@ button[aria-expanded="true"] .dropdown-arrow{
   max-width:300px;
   width:100%;
 }
-#adminPanel .panel-field{margin:4px 0;}
-#adminPanel h3{margin:4px 0;}
+#adminPanel .panel-field{margin:0;}
+#adminPanel h3{margin:0;}
+.admin-section{display:flex;flex-direction:column;gap:var(--gap);}
 #balloonTool .panel-field,
 #tab-forms .panel-field{max-width:none;}
 #baseColorRow{
@@ -2969,7 +2970,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="panel-content" style="top:var(--header-h);right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
-          <h2>Admin</h2>
+          <h2 class="title">Admin</h2>
           <div class="panel-actions">
             <button type="button" id="discardChanges">Discard Changes</button>
             <button type="button" id="saveNow">Save Now</button>
@@ -2987,35 +2988,42 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </div>
       <form id="adminForm" class="panel-body">
         <div id="tab-theme" class="tab-panel active">
-          <div class="panel-field">
-            <label for="themePreset">Themes</label>
-            <div class="preset-select">
-              <select id="themePreset" style="width:250px"></select>
-              <button type="button" id="refreshTheme">Refresh</button>
-            </div>
-          </div>
-          <div class="preset-actions">
-            <input id="newPresetName" type="text" placeholder="Name of your new theme" />
-            <button type="button" id="savePreset">Save Theme</button>
-            <button type="button" id="downloadCss">Download CSS</button>
-          </div>
-          <h3>Theme Builder</h3>
-          <div id="styleControls">
-            <div class="panel-field" id="baseColorRow">
-              <div class="history-group">
-                <button type="button" id="undoBtn">Undo</button>
-                <button type="button" id="redoBtn">Redo</button>
-              </div>
-              <div class="color-group">
-                <button type="button" id="autoThemeBtn">AutoTheme</button>
-                <input type="color" id="baseColor" value="#336699" />
+          <div id="themePresetsContainer" class="admin-section">
+            <h3 class="title">Theme Presets</h3>
+            <div class="panel-field">
+              <label for="themePreset">Themes</label>
+              <div class="preset-select">
+                <select id="themePreset" style="width:250px"></select>
+                <button type="button" id="refreshTheme">Refresh</button>
               </div>
             </div>
+            <div class="preset-actions">
+              <input id="newPresetName" type="text" placeholder="Name of your new theme" />
+              <button type="button" id="savePreset">Save Theme</button>
+              <button type="button" id="downloadCss">Download CSS</button>
+            </div>
           </div>
-          <div class="panel-field">
-            <label for="themeRestore">Restore Backup</label>
-            <select id="themeRestore" style="width:250px"></select>
-            <button type="button" data-restore="theme">Restore</button>
+          <div id="themeBuilderContainer" class="admin-section">
+            <h3 class="title">Theme Builder</h3>
+            <div id="styleControls">
+              <div class="panel-field" id="baseColorRow">
+                <div class="history-group">
+                  <button type="button" id="undoBtn">Undo</button>
+                  <button type="button" id="redoBtn">Redo</button>
+                </div>
+                <div class="color-group">
+                  <button type="button" id="autoThemeBtn">AutoTheme</button>
+                  <input type="color" id="baseColor" value="#336699" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="backupRestoreContainer" class="admin-section">
+            <div class="panel-field">
+              <label for="themeRestore">Restore Backup</label>
+              <select id="themeRestore" style="width:250px"></select>
+              <button type="button" data-restore="theme">Restore</button>
+            </div>
           </div>
         </div>
           <div id="tab-map" class="tab-panel">
