@@ -334,11 +334,11 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   position:absolute;
   top:50%;
   right:10px;
-  transform:translateY(-50%) rotate(135deg);
+  transform:translateY(-50%) rotate(45deg);
 }
 
 button[aria-expanded="true"] .dropdown-arrow{
-  transform:translateY(-50%) rotate(-45deg);
+  transform:translateY(-50%) rotate(-135deg);
 }
 
 #addressTitle,#addressField{display:none;}
@@ -1231,6 +1231,9 @@ body.hide-results .results-col{
 
 #filterBtn{
   border-radius:12px;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 .icon-filters{
   display:inline-block;
@@ -2004,7 +2007,7 @@ body.hide-results .closed-posts{
   margin-top: 8px;
 }
 .open-posts .desc-wrap{position:relative;}
-.open-posts .desc-wrap .desc{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;padding-right:60px;}
+.open-posts .desc-wrap .desc{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;padding-right:60px;cursor:pointer;}
 .open-posts .desc-wrap.expanded .desc{-webkit-line-clamp:unset;overflow:visible;padding-right:0;}
 .open-posts .desc-wrap .toggle-desc{position:absolute;bottom:0;right:0;background:none;border:none;padding:0;color:var(--muted);cursor:pointer;font:inherit;}
 .open-posts .desc-wrap.expanded .toggle-desc{position:static;display:block;text-align:right;}
@@ -2869,32 +2872,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
   <div class="subheader">
     <button id="filterBtn" aria-label="Open filters panel">
-      <!-- Filters / Sliders icon (SVG) -->
-      <svg class="icon-filters" width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Filters">
-        <defs>
-          <!-- Cut the lines under the knobs so the circles look like real handles -->
-          <mask id="knobCut">
-            <rect x="0" y="0" width="24" height="24" fill="white"/>
-            <circle cx="8"  cy="6"  r="3.2" fill="black"/>
-            <circle cx="15" cy="12" r="3.2" fill="black"/>
-            <circle cx="6"  cy="18" r="3.2" fill="black"/>
-          </mask>
-        </defs>
-
-        <!-- Lines (sliders) -->
-        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" mask="url(#knobCut)">
-          <line x1="3" y1="6"  x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </g>
-
-        <!-- Knobs -->
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="8"  cy="6"  r="3"/>
-          <circle cx="15" cy="12" r="3"/>
-          <circle cx="6"  cy="18" r="3"/>
-        </g>
+      <svg class="icon-filters" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V17l-6 3v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
       </svg>
+      <span id="resultCount" aria-live="polite"><strong>0</strong></span>
     </button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
@@ -2908,7 +2889,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </div>
     </div>
     <div id="geocoder" class="geocoder"></div>
-    <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
   </div>
 
   <section class="map-area" aria-label="Map">
@@ -4824,7 +4804,7 @@ function makePosts(){
       updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
     }
-    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
+    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong>`; }
     function formatDates(d){
       if(!d || !d.length) return '';
       const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
@@ -5156,6 +5136,7 @@ function makePosts(){
               handleToggle();
             }
           });
+          desc.addEventListener("click", handleToggle);
         }
       }
       const favBtn = el.querySelector('.fav');
