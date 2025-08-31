@@ -1205,7 +1205,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .results-col{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: var(--footer-h);
   left: 0;
   width: var(--results-w);
@@ -1497,7 +1497,7 @@ body.filters-active #filterBtn{
 .closed-posts{
   display:none;
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: var(--footer-h);
   left: var(--results-w);
   right: 0;
@@ -1576,6 +1576,7 @@ body.hide-results .closed-posts{
 .open-posts .text{
   margin-top:0;
   flex:1 1 300px;
+  min-width:300px;
 }
 
 .open-posts .text .info{
@@ -1859,6 +1860,10 @@ body.hide-results .closed-posts{
   align-items:flex-start;
   width:100%;
 }
+.open-posts .location-section .options-menu{
+  width:100%;
+  box-sizing:border-box;
+}
 
 .hide-map-calendar .open-posts .map-container,
 .hide-map-calendar .open-posts .calendar-container{
@@ -1878,12 +1883,12 @@ body.hide-results .closed-posts{
   height:auto;
 }
 .open-posts .calendar-container .calendar-scroll{
-  width:auto;
+  width:100%;
   height:auto;
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:20px;
-  box-sizing:content-box;
+  box-sizing:border-box;
 }
 .open-posts .post-calendar .flatpickr-months{
   display:flex;
@@ -2530,7 +2535,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .ad-panel{
   display:none;
   position:fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
   bottom: calc(var(--footer-h) + var(--gap));
   width:400px;
   right: var(--gap);
