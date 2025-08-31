@@ -76,6 +76,12 @@
   border-color: var(--border) !important;
 }
 
+fieldset{
+  margin:0;
+  padding:0;
+  border:0 !important;
+}
+
 *:active,
 *[aria-pressed="true"],
 *[aria-current="page"],
@@ -639,10 +645,12 @@ button[aria-expanded="true"] .dropdown-arrow{
 #autoTheme-row button{
   flex:0 0 auto;
   height:35px;
+  padding:0 8px;
+  min-width:0;
 }
 #autoTheme-row input[type=color]{
-  flex:0 0 200px;
-  width:200px;
+  flex:0 0 35px;
+  width:35px;
   height:35px;
   padding:0;
 }
@@ -983,17 +991,16 @@ button[aria-expanded="true"] .dropdown-arrow{
   width: 35px;
   height: 35px;
   border-radius: 8px;
-  background: var(--btn);
+  background: none;
   cursor: pointer;
-  border: 1px solid var(--btn);
+  border: 0;
   margin-left: 6px;
   line-height: 35px;
   text-align: center;
+  color: var(--text);
 }
 .input .x.active{
-  background: red;
-  border-color: red;
-  color: #fff;
+  color: var(--accent);
 }
 
 #filterPanel .field label.t{
