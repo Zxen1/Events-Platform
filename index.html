@@ -1494,7 +1494,7 @@ body.filters-active #filterBtn{
   color:#000;
   background:var(--panel-bg);
 }
-.closed-posts .res-list{overflow:visible;padding:12px 12px var(--gap);margin:0;}
+.closed-posts .res-list{overflow:visible;padding:12px 12px var(--gap);margin:0;background:var(--panel-bg);}
 .closed-posts{color:#000;padding:0;}
 .closed-posts .card,
 .closed-posts .open-posts{background:var(--closed-card-bg);}
@@ -1682,6 +1682,7 @@ body.hide-results .closed-posts{
 
 .open-posts .post-map{
   width:400px;
+  min-width:300px;
   height:200px;
   border:1px solid var(--border);
   border-radius:8px;
@@ -1760,7 +1761,7 @@ body.hide-results .closed-posts{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  max-height:400px;
+  max-height:100px;
   overflow-y:auto;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
@@ -1771,14 +1772,15 @@ body.hide-results .closed-posts{
   gap:6px;
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
   z-index:30;
-  width:400px;
+  min-width:300px;
 }
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
 
 .open-posts .venue-menu button{
-  width:400px;
+  width:100%;
+  min-width:300px;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1793,7 +1795,8 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .session-menu button{
-  width:400px;
+  width:100%;
+  min-width:300px;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1829,6 +1832,7 @@ body.hide-results .closed-posts{
   gap:var(--gap);
   width:100%;
   max-width:400px;
+  min-width:300px;
   position:relative;
   align-items:flex-start;
 }
@@ -2101,6 +2105,20 @@ body.hide-results .closed-posts{
   .open-posts .session-dropdown > button{
     width:400px;
     height:50px;
+  }
+}
+
+@media (min-width:1000px){
+  .results-col{
+    left: var(--gap);
+  }
+  .closed-posts{
+    left: calc(var(--results-w) + var(--gap) * 2);
+    right: var(--gap);
+  }
+  body.hide-results .closed-posts{
+    left: var(--gap);
+    right: var(--gap);
   }
 }
 
@@ -2475,6 +2493,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius: inherit;
   padding: var(--gap) 0;
   margin: 0;
+  background: var(--list-background);
 }
 
 .post-panel{
@@ -2483,6 +2502,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   bottom: var(--footer-h);
   left: var(--results-w);
   width: var(--panel-w);
+  max-width: 736px;
   z-index: 10;
   pointer-events: none;
   margin-bottom: 12px;
@@ -5214,6 +5234,12 @@ function makePosts(){
           thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
         }
       });
+      thumbCol.addEventListener('wheel', e=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          e.preventDefault();
+          thumbCol.scrollLeft += e.deltaY;
+        }
+      }, {passive:false});
       function openImagePopup(start){
         const panel = document.createElement('div');
         panel.className = 'img-popup';
