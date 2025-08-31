@@ -337,14 +337,17 @@ body.hide-results .results-arrow{transform:rotate(-45deg);}
   padding-right:30px;
 }
 
-.open-posts .options-dropdown .dropdown-arrow{
+.open-posts .options-dropdown .dropdown-arrow,
+.open-posts .options-dropdown .results-arrow{
   position:absolute;
   top:50%;
   right:10px;
   transform:translateY(-50%) rotate(135deg);
+  margin-right:0;
 }
 
-button[aria-expanded="true"] .dropdown-arrow{
+button[aria-expanded="true"] .dropdown-arrow,
+button[aria-expanded="true"] .results-arrow{
   transform:translateY(-50%) rotate(-45deg);
 }
 
@@ -1696,7 +1699,8 @@ body.hide-results .closed-posts{
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  width:400px;
+  width:100%;
+  max-width:400px;
 }
 
 .open-posts .calendar-container .session-dropdown{
@@ -1706,7 +1710,7 @@ body.hide-results .closed-posts{
 
 
 .open-posts .venue-dropdown > button{
-  width:400px;
+  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1721,7 +1725,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .session-dropdown > button{
-  width:400px;
+  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1765,7 +1769,7 @@ body.hide-results .closed-posts{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
-  max-height:400px;
+  max-height:250px;
   overflow-y:auto;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
@@ -1776,14 +1780,15 @@ body.hide-results .closed-posts{
   gap:6px;
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
   z-index:30;
-  width:400px;
+  width:100%;
+  max-width:400px;
 }
 
 .open-posts .venue-menu[hidden],
 .open-posts .session-menu[hidden]{display:none;}
 
 .open-posts .venue-menu button{
-  width:400px;
+  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -1798,7 +1803,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .session-menu button{
-  width:400px;
+  width:100%;
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -4965,13 +4970,13 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
                 <div class="calendar-scroll">
                   <div id="cal-${p.id}" class="post-calendar"></div>
                 </div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="dropdown-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="results-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
@@ -5248,7 +5253,7 @@ function makePosts(){
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
         };
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
+        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         sessionHasMultiple = loc.dates.length > 1;
         if(!map){
           map = new mapboxgl.Map({
@@ -5298,14 +5303,14 @@ function makePosts(){
             const dt = loc.dates[i];
             if(dt){
               sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="dropdown-arrow" aria-hidden="true"></span>':''}`;
+              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
               ignoreSelect = true;
               const selectedDateObj = parseDate(dt.full);
               picker.setDate(selectedDateObj);
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="dropdown-arrow" aria-hidden="true"></span>' : 'Select Session';
+              if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
               picker.clear();
             }
             sessMenu.hidden = true;
@@ -5351,7 +5356,7 @@ function makePosts(){
             sessMenu.scrollTop = 0;
             if(sessionHasMultiple){
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="dropdown-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
             } else {
               if(loc.dates.length){
                 selectSession(0);
