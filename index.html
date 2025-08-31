@@ -3467,6 +3467,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
+    let adPosts = [], adIndex = -1, adTimer;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -4912,7 +4913,6 @@ function makePosts(){
       });
     }
 
-    let adPosts = [], adIndex = -1, adTimer;
     function updateAds(list){
       adPosts = list.slice();
       adIndex = -1;
@@ -4960,6 +4960,9 @@ function makePosts(){
         setTimeout(()=> old.remove(),1000);
       }
     }
+
+    window.startAdCycle = startAdCycle;
+    window.stopAdCycle = stopAdCycle;
 
     function card(p, wide=false){
       const el = document.createElement('article');
