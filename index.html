@@ -527,9 +527,9 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--panel-bg);
   color: var(--panel-text);
 }
- .flatpickr-calendar .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-prev-month,
 .flatpickr-calendar .flatpickr-next-month{
-  display:none;
+  display:block;
 }
 .flatpickr-day.today:not(.selected){
   color:var(--today) !important;
@@ -546,10 +546,7 @@ button[aria-expanded="true"] .dropdown-arrow{
   background: var(--dropdown-bg);
   width:auto;
   height:auto;
-  overflow-x:auto;
-  overflow-y:hidden;
-  touch-action:pan-x;
-  scroll-snap-type:x mandatory;
+  overflow:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
 }
@@ -561,17 +558,12 @@ button[aria-expanded="true"] .dropdown-arrow{
   height:auto;
 }
 #filterPanel #datePicker .flatpickr-months{
-  display:flex;
-  flex-direction:row;
-  flex-wrap:nowrap;
+  display:block;
 }
 #filterPanel #datePicker .flatpickr-months .flatpickr-month{
-  flex:0 0 auto;
   width:auto;
   height:auto;
   background: var(--dropdown-bg);
-  scroll-snap-align:start;
-  scroll-snap-stop:always;
 }
 #filterPanel #datePicker .flatpickr-day{
   font-size:12px;
@@ -1231,8 +1223,9 @@ body.hide-results .results-col{
 
 #filterBtn{
   border-radius:12px;
+  gap:4px;
 }
-.icon-filters{
+.icon-search{
   display:inline-block;
   vertical-align:middle;
   color: currentColor;
@@ -1853,25 +1846,17 @@ body.hide-results .closed-posts{
 .open-posts .calendar-container .calendar-scroll{
   width:auto;
   height:auto;
-  overflow-x:auto;
-  overflow-y:hidden;
-  touch-action:pan-x;
-  scroll-snap-type:x mandatory;
+  overflow:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
 }
 .open-posts .post-calendar .flatpickr-months{
-  display:flex;
-  flex-direction:row;
-  flex-wrap:nowrap;
+  display:block;
 }
 .open-posts .post-calendar .flatpickr-months .flatpickr-month{
-  flex:0 0 auto;
   width:auto;
   height:auto;
   background:var(--dropdown-bg);
-  scroll-snap-align:start;
-  scroll-snap-stop:always;
 }
 .open-posts .post-calendar .flatpickr-calendar{
   background:var(--dropdown-bg);
@@ -2849,32 +2834,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
   <div class="subheader">
     <button id="filterBtn" aria-label="Open filters panel">
-      <!-- Filters / Sliders icon (SVG) -->
-      <svg class="icon-filters" width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="Filters">
-        <defs>
-          <!-- Cut the lines under the knobs so the circles look like real handles -->
-          <mask id="knobCut">
-            <rect x="0" y="0" width="24" height="24" fill="white"/>
-            <circle cx="8"  cy="6"  r="3.2" fill="black"/>
-            <circle cx="15" cy="12" r="3.2" fill="black"/>
-            <circle cx="6"  cy="18" r="3.2" fill="black"/>
-          </mask>
-        </defs>
-
-        <!-- Lines (sliders) -->
-        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" mask="url(#knobCut)">
-          <line x1="3" y1="6"  x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </g>
-
-        <!-- Knobs -->
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="8"  cy="6"  r="3"/>
-          <circle cx="15" cy="12" r="3"/>
-          <circle cx="6"  cy="18" r="3"/>
-        </g>
+      <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
+      <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
     </button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
@@ -2888,7 +2852,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </div>
     </div>
     <div id="geocoder" class="geocoder"></div>
-    <div id="resultCount" aria-live="polite"><strong>0</strong> Results</div>
   </div>
 
   <section class="map-area" aria-label="Map">
@@ -3970,14 +3933,12 @@ function makePosts(){
     const todayToggle = $('#todayToggle');
     todayWasOn = todayToggle && todayToggle.checked;
 
-    const pickerMonths = ((maxPickerDate.getFullYear() - minPickerDate.getFullYear()) * 12) + (maxPickerDate.getMonth() - minPickerDate.getMonth()) + 1;
     datePicker = flatpickr($('#datePicker'), {
       inline: true,
       mode: 'range',
       dateFormat: 'D d M',
       minDate: minPickerDate,
       maxDate: maxPickerDate,
-      showMonths: pickerMonths,
       defaultDate: today,
       onChange: (selectedDates, dateStr, instance) => {
         const input = $('#dateInput');
@@ -4012,25 +3973,6 @@ function makePosts(){
     dateStart = null;
     dateEnd = null;
     datePicker.jumpToDate(today);
-    const filterCalContainer = document.getElementById('datePickerContainer');
-    const filterCalScroll = filterCalContainer ? filterCalContainer.querySelector('.calendar-scroll') : null;
-    if(filterCalScroll){
-      filterCalScroll.addEventListener('wheel', e=>{
-        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-          filterCalScroll.scrollLeft += e.deltaY;
-          e.preventDefault();
-        }
-      }, {passive:false});
-      let startXCal = null;
-      filterCalScroll.addEventListener('touchstart', e=>{ startXCal = e.touches[0].clientX; }, {passive:true});
-      filterCalScroll.addEventListener('touchmove', e=>{
-        if(startXCal!==null){
-          filterCalScroll.scrollLeft += startXCal - e.touches[0].clientX;
-          startXCal = e.touches[0].clientX;
-        }
-      }, {passive:true});
-      filterCalScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
-    }
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -5273,24 +5215,6 @@ function makePosts(){
         const calendarEl = el.querySelector(`#cal-${p.id}`);
         const mapEl = el.querySelector(`#map-${p.id}`);
         const calContainer = el.querySelector('.calendar-container');
-        const calScroll = el.querySelector('.calendar-scroll');
-      if(calScroll){
-        calScroll.addEventListener('wheel', e=>{
-          if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-            calScroll.scrollLeft += e.deltaY;
-            e.preventDefault();
-          }
-        }, {passive:false});
-        let startXCal = null;
-        calScroll.addEventListener('touchstart', e=>{ startXCal = e.touches[0].clientX; }, {passive:true});
-        calScroll.addEventListener('touchmove', e=>{
-          if(startXCal!==null){
-            calScroll.scrollLeft += startXCal - e.touches[0].clientX;
-            startXCal = e.touches[0].clientX;
-          }
-        }, {passive:true});
-        calScroll.addEventListener('touchend', ()=>{ startXCal = null; }, {passive:true});
-      }
         let map, marker, picker = null, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
@@ -5327,14 +5251,12 @@ function makePosts(){
         const lastDate = dateStrings[dateStrings.length-1] || firstDate;
         const firstDateObj = parseDate(firstDate);
         const lastDateObj = parseDate(lastDate);
-        const monthsCount = ((lastDateObj.getFullYear() - firstDateObj.getFullYear()) * 12) + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
         picker = flatpickr(calendarEl, {
           inline: true,
           mode: 'single',
           minDate: firstDateObj,
           maxDate: lastDateObj,
           enable: dateStrings.map(parseDate),
-          showMonths: monthsCount,
           defaultDate: firstDateObj,
           onDayCreate: (dObj, dStr, fp, dayElem) => {
             const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
@@ -5361,8 +5283,6 @@ function makePosts(){
               ignoreSelect = true;
               const selectedDateObj = parseDate(dt.full);
               picker.setDate(selectedDateObj);
-              const monthDiff = (selectedDateObj.getFullYear() - firstDateObj.getFullYear()) * 12 + (selectedDateObj.getMonth() - firstDateObj.getMonth());
-              if(calScroll) calScroll.scrollLeft = monthDiff * 400;
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
