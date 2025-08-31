@@ -457,14 +457,22 @@ button[aria-expanded="true"] .dropdown-arrow{
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
+#adminPanel #styleControls{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:12px;
+}
+#adminPanel #styleControls > *{
+  width:300px;
+}
 .admin-fieldset{
-  margin:10px 0;
+  margin:0;
   border:0;
   border-radius:8px;
   padding:10px;
   width:300px;
 }
-#adminPanel #styleControls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
 #adminPanel .admin-fieldset{
   flex:0 0 300px;
   min-width:300px;
@@ -761,27 +769,8 @@ button[aria-expanded="true"] .dropdown-arrow{
 .admin-section{display:flex;flex-direction:column;gap:var(--gap);}
 #balloonTool .panel-field,
 #tab-forms .panel-field{max-width:none;}
-#baseColorRow{
-  flex-direction:column;
-  align-items:flex-start;
-  gap:10px;
-  width:100%;
-}
-#baseColorRow .history-group{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  gap:8px;
-}
-#baseColorRow .color-group{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  gap:8px;
-  margin-left:0;
-}
 .history-group,
-.color-group{display:flex;align-items:center;gap:4px;}
+.color-group{display:flex;align-items:center;gap:8px;}
 .preset-select{
   display:flex;
   align-items:center;
@@ -3006,15 +2995,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div id="themeBuilderContainer" class="admin-section">
             <h3 class="title">Theme Builder</h3>
             <div id="styleControls">
-              <div class="panel-field" id="baseColorRow">
-                <div class="history-group">
-                  <button type="button" id="undoBtn">Undo</button>
-                  <button type="button" id="redoBtn">Redo</button>
-                </div>
-                <div class="color-group">
-                  <button type="button" id="autoThemeBtn">AutoTheme</button>
-                  <input type="color" id="baseColor" value="#336699" />
-                </div>
+              <div id="undo-row" class="history-group">
+                <button type="button" id="undoBtn">Undo</button>
+                <button type="button" id="redoBtn">Redo</button>
+              </div>
+              <div id="autoTheme-row" class="color-group">
+                <button type="button" id="autoThemeBtn">AutoTheme</button>
+                <input type="color" id="baseColor" value="#336699" />
               </div>
             </div>
           </div>
@@ -6257,6 +6244,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
     colorAreas.forEach(area=>{
       const fs = document.createElement('fieldset');
       fs.className = 'admin-fieldset collapsed';
+      fs.id = `${area.key}-fieldset`;
       fs.dataset.key = area.key;
       fs.addEventListener('click',()=>{ lastFieldsetKey = area.key; });
       fs.addEventListener('input',()=>{ lastFieldsetKey = area.key; });
@@ -6503,6 +6491,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
     });
     const misc = document.createElement('fieldset');
     misc.className = 'admin-fieldset collapsed';
+    misc.id = 'misc-fieldset';
     const miscLg = document.createElement('legend');
     miscLg.textContent = 'Miscellaneous';
     miscLg.addEventListener('click', (e)=>{ e.preventDefault(); misc.classList.toggle('collapsed'); });
@@ -6536,6 +6525,7 @@ document.addEventListener('pointerdown', handleDocInteract, true);
     wrap.appendChild(misc);
     const dropdown = document.createElement('fieldset');
     dropdown.className = 'admin-fieldset collapsed';
+    dropdown.id = 'dropdown-fieldset';
     const ddLg = document.createElement('legend');
     ddLg.textContent = 'Dropdown Boxes';
     ddLg.addEventListener('click', (e)=>{ e.preventDefault(); dropdown.classList.toggle('collapsed'); });
