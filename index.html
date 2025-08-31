@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Events Platform</title>
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
@@ -67,6 +67,7 @@
       --panel-title-font: Verdana;
       --panel-title-size: 20px;
       --panel-title-color: #ffffff;
+      --safe-top: env(safe-area-inset-top, 0px);
 }
 
 *{
@@ -135,7 +136,7 @@ textarea,
   user-select: text;
 }
 
-button,
+button:not(.mapboxgl-ctrl-attrib-button),
 [role="button"]{
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -150,6 +151,12 @@ button,
   text-align: center;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s,transform .05s;
+}
+
+.mapboxgl-ctrl-attrib-button,
+.mapboxgl-ctrl-attrib-button:hover,
+.mapboxgl-ctrl-attrib-button:active{
+  all: revert !important;
 }
 
 a{
@@ -235,13 +242,13 @@ input[type="checkbox"]{
 }
 
   .header{
-    height: var(--header-h);
-    min-height: var(--header-h);
-    max-height: var(--header-h);
+    height: calc(var(--header-h) + var(--safe-top));
+    min-height: calc(var(--header-h) + var(--safe-top));
+    max-height: calc(var(--header-h) + var(--safe-top));
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0 20px;
+    padding: var(--safe-top) 20px 0 20px;
     position: fixed;
     top: 0;
     left: 0;
@@ -1184,7 +1191,7 @@ button[aria-expanded="true"] .dropdown-arrow{
 
 .results-col{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: 0;
   width: var(--results-w);
@@ -1213,7 +1220,7 @@ body.hide-results .results-col{
   max-height: var(--subheader-h);
   padding: 14px 20px;
   position: fixed;
-  top: var(--header-h);
+  top: calc(var(--header-h) + var(--safe-top));
   left: 0;
   right: 0;
   z-index: 3;
@@ -1247,7 +1254,7 @@ body.filters-active #filterBtn{
   flex: 1;
   min-height: 0;
   scrollbar-gutter: stable;
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
+  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
 }
 
 .card{
@@ -1476,7 +1483,7 @@ body.filters-active #filterBtn{
 .closed-posts{
   display:none;
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: var(--results-w);
   right: 0;
@@ -1509,7 +1516,7 @@ body.hide-results .closed-posts{
 }
 .map-area{
   position: fixed;
-  top: var(--header-h);
+  top: calc(var(--header-h) + var(--safe-top));
   left: 0;
   right: 0;
   bottom: 0;
@@ -1522,6 +1529,9 @@ body.hide-results .closed-posts{
   border-radius:18px;
   margin:0 0 12px 0;
   overflow:visible;
+  color:#fff;
+  font-family: Verdana;
+  font-size:16px;
 }
 
 .open-posts .detail-header{
@@ -1562,7 +1572,7 @@ body.hide-results .closed-posts{
 
 .open-posts-sticky-images .open-posts .img-area{
   position:sticky;
-  top:calc(var(--header-h) + 8px);
+  top:calc(var(--header-h) + var(--safe-top) + 8px);
   align-self:start;
 }
 
@@ -1636,6 +1646,8 @@ body.hide-results .closed-posts{
   margin:0;
   font-size:20px;
   line-height:1.2;
+  color:#fff;
+  font-family: Verdana;
 }
 
 .open-posts .detail-header .title-block{
@@ -2054,7 +2066,7 @@ body.hide-results .closed-posts{
   .closed-posts{
     left:0;
     right:0;
-    top:var(--header-h);
+    top:calc(var(--header-h) + var(--safe-top));
   }
   .open-posts .img-box{
     height:auto;
@@ -2112,7 +2124,7 @@ footer{
     transform: translateY(100%);
   }
   body.mode-posts.hide-posts-ui .closed-posts{
-    top: var(--header-h);
+    top: calc(var(--header-h) + var(--safe-top));
     bottom: 0;
   }
 }
@@ -2124,6 +2136,11 @@ footer{
   display: flex;
   gap: 8px;
   width: 100%;
+  flex:1;
+}
+
+footer .fullscreen-btn{
+  flex:0 0 auto;
 }
 
 
@@ -2464,7 +2481,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .post-panel{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: var(--results-w);
   width: var(--panel-w);
@@ -2497,7 +2514,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   #filterPanel .panel-content,
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    top:var(--header-h);
+    top:calc(var(--header-h) + var(--safe-top));
     left:0;
     right:0;
     bottom:var(--footer-h);
@@ -2577,7 +2594,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   #filterPanel .panel-content,
   #memberPanel .panel-content,
   #adminPanel .panel-content{
-    top:var(--header-h);
+    top:calc(var(--header-h) + var(--safe-top));
     left:50%;
     transform:translateX(-50%);
   }
@@ -2872,10 +2889,11 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 
   <footer>
     <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
+    <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
   </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h));left:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));left:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
@@ -2933,7 +2951,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:var(--header-h);right:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
@@ -2972,7 +2990,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
 
   <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:var(--header-h);right:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2 class="title">Admin</h2>
@@ -3375,7 +3393,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-      const availableHeight = window.innerHeight - headerH - subH - footerH;
+      const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+      const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
       document.querySelectorAll('.res-list').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
@@ -5482,10 +5501,11 @@ function openPanel(m){
     const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
     const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
     const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
       if(window.innerWidth < 450){
         const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH;
+        const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + safeTop;
         content.style.left='0';
         content.style.right='0';
         content.style.top=`${topPos}px`;
@@ -5495,14 +5515,14 @@ function openPanel(m){
       } else {
         content.style.left='';
         content.style.right='0';
-        content.style.top=`${headerH}px`;
+        content.style.top=`${headerH + safeTop}px`;
         content.style.bottom='';
         content.style.transform='none';
         content.style.maxHeight='';
       }
     } else if(m.id==='filterPanel'){
       const subHead = document.querySelector('.subheader');
-      const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + subH;
+      const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + subH + safeTop;
       if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
@@ -7685,7 +7705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const footOffset = Math.min(top, footH);
     subHead.style.transform = `translateY(-${subOffset}px)`;
     foot.style.transform = `translateY(${footOffset}px)`;
-    posts.style.top = `calc(var(--header-h) + var(--subheader-h) - ${subOffset}px)`;
+    posts.style.top = `calc(var(--header-h) + var(--subheader-h) + var(--safe-top) - ${subOffset}px)`;
     posts.style.bottom = `calc(var(--footer-h) - ${footOffset}px)`;
   };
   posts.addEventListener('scroll', update, {passive:true});
@@ -7791,6 +7811,17 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.appendChild(big);
     overlay.addEventListener('click', () => overlay.remove());
     document.body.appendChild(overlay);
+  }
+
+  const fsBtn = document.getElementById('fullscreenBtn');
+  if(fsBtn){
+    fsBtn.addEventListener('click', () => {
+      if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(()=>{});
+      } else {
+        document.exitFullscreen();
+      }
+    });
   }
 
   posts.querySelectorAll('img').forEach(img => {
