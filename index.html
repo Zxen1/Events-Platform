@@ -2555,7 +2555,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   width:100%;
   height:100%;
   object-fit:cover;
-  animation:pan 5s linear forwards;
+  animation:pan 20s linear forwards;
 }
 
 .ad-panel .caption{
@@ -2568,6 +2568,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,0.8);
   font-size:13px;
+  display:flex;
+  flex-direction:column;
+  text-align:left;
 }
 
 .ad-panel .caption .title{
@@ -2579,6 +2582,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   display:flex;
   flex-direction:column;
   gap:4px;
+  align-items:flex-start;
 }
 
 @keyframes pan{
@@ -4405,7 +4409,7 @@ function makePosts(){
           if(input) input.setAttribute('autocomplete','street-address');
           const nav = new mapboxgl.NavigationControl();
           container.appendChild(nav.onAdd(map));
-          const geo = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true}, trackUserLocation:true});
+          const geo = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true}, trackUserLocation:false});
           container.appendChild(geo.onAdd(map));
         }
       }
@@ -4429,7 +4433,7 @@ function makePosts(){
           });
       addGeocoder();
       addMemberGeocoder();
-      const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true });
+      const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
       geolocate.on('geolocate', (e)=>{
         spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
         if(mode!=='map') setMode('map');
@@ -4921,7 +4925,11 @@ function makePosts(){
       adIndex = -1;
       const panel = document.getElementById('adPanel');
       panel.innerHTML = '';
-      if(!adPosts.length){ stopAdCycle(); return; }
+      if(!adPosts.length){
+        stopAdCycle();
+        if(typeof updateAdVisibility === 'function') updateAdVisibility();
+        return;
+      }
       startAdCycle();
     }
     function startAdCycle(){
@@ -4929,7 +4937,7 @@ function makePosts(){
       if(!panel.classList.contains('show') || !adPosts.length) return;
       clearInterval(adTimer);
       showNextAd();
-      adTimer = setInterval(showNextAd,5000);
+      adTimer = setInterval(showNextAd,20000);
     }
     function stopAdCycle(){ clearInterval(adTimer); }
     function showNextAd(){
@@ -4942,8 +4950,7 @@ function makePosts(){
       const img = new Image();
       img.src = imgHero(p);
       img.alt = '';
-      img.loading = 'lazy';
-      slide.appendChild(img);
+      img.loading = 'eager';
       const cap = document.createElement('div');
       cap.className = 'caption';
       cap.innerHTML = `
@@ -4953,15 +4960,18 @@ function makePosts(){
           <div>📍 ${p.city}</div>
           <div>📅 ${formatDates(p.dates)}</div>
         </div>`;
+      slide.appendChild(img);
       slide.appendChild(cap);
-      panel.appendChild(slide);
-      requestAnimationFrame(()=> slide.classList.add('active'));
-      const slides = panel.querySelectorAll('.ad-slide');
-      if(slides.length > 1){
-        const old = slides[0];
-        old.classList.remove('active');
-        setTimeout(()=> old.remove(),1000);
-      }
+      img.decode().catch(() => {}).then(() => {
+        panel.appendChild(slide);
+        requestAnimationFrame(()=> slide.classList.add('active'));
+        const slides = panel.querySelectorAll('.ad-slide');
+        if(slides.length > 1){
+          const old = slides[0];
+          old.classList.remove('active');
+          setTimeout(()=> old.remove(),1000);
+        }
+      });
     }
 
     window.startAdCycle = startAdCycle;
@@ -8033,7 +8043,8 @@ document.addEventListener('DOMContentLoaded', () => {
     adPanel.classList.remove('show');
     stopAdCycle();
     const width = postsPanel.getBoundingClientRect().width;
-    if(document.body.classList.contains('mode-posts') && width >= 1200){
+    const hasPosts = !!postsPanel.querySelector('.card');
+    if(document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts){
       adPanel.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
