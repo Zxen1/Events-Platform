@@ -6881,6 +6881,13 @@ document.addEventListener('pointerdown', handleDocInteract);
         const font = f ? f.value : null;
         const size = s ? s.value : null;
         const weight = w ? w.value : null;
+        if(area.key==='imagePanel' && type==='bg'){
+          if(color){
+            document.documentElement.style.setProperty('--image-panel-bg', hexToRgba(color, opacity));
+            document.querySelectorAll('.img-popup').forEach(el=>el.style.removeProperty('background-color'));
+          }
+          return;
+        }
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
