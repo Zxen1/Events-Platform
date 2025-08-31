@@ -5213,7 +5213,7 @@ function makePosts(){
         document.body.appendChild(panel);
         panelStack.push(entry);
       }
-      mainImg.addEventListener('click', ()=> openImagePopup(parseInt(mainImg.dataset.index||'0',10)));
+      mainImg.addEventListener('click', e=>{ e.stopPropagation(); openImagePopup(parseInt(mainImg.dataset.index||'0',10)); });
       let startX = null;
       mainImg.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
       mainImg.addEventListener('touchend', e=>{
@@ -7833,10 +7833,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   posts.querySelectorAll('img').forEach(img => {
-    img.addEventListener('click', () => openImagePopup(img.src));
+    img.addEventListener('click', e => { e.stopPropagation(); openImagePopup(img.src); });
     img.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
         e.preventDefault();
+        e.stopPropagation();
         openImagePopup(img.src);
       }
     }, { passive: false });
