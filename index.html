@@ -1401,7 +1401,7 @@ body.filters-active #filterBtn{
   bottom:0;
   right:0;
   width:var(--control-h);
-  background:#fff !important;
+  background:transparent!important;
   border:0;
   border-left:1px solid #ccc;
   color:#000;
@@ -1413,9 +1413,8 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   justify-content:center;
-  opacity:0;
 }
-.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{display:none;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{display:block;}
 .geocoder .mapboxgl-ctrl-group button,
 .geocoder .mapboxgl-ctrl button{
   width:var(--control-h);
@@ -1822,7 +1821,8 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  width:auto;
+  width:100%;
+  max-width:400px;
   position:relative;
   align-items:flex-start;
 }
