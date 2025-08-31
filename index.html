@@ -2531,14 +2531,60 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   display:none;
   position:fixed;
   top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
-  bottom: var(--footer-h);
+  bottom: calc(var(--footer-h) + var(--gap));
   width:400px;
-  right:0;
+  right: var(--gap);
   background:var(--panel-bg);
   z-index:5;
+  border-radius:16px;
+  overflow:hidden;
 }
 
 .ad-panel.show{display:block;}
+
+.ad-panel .ad-slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 1s;
+}
+
+.ad-panel .ad-slide.active{opacity:1;}
+
+.ad-panel .ad-slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:pan 5s linear forwards;
+}
+
+.ad-panel .caption{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:12px;
+  background:linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+  color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,0.8);
+  font-size:13px;
+}
+
+.ad-panel .caption .title{
+  font-weight:900;
+  margin:0 0 4px;
+}
+
+.ad-panel .caption .info{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+@keyframes pan{
+  from{transform:scale(1) translateX(0);}
+  to{transform:scale(1.1) translateX(-5%);}
+}
 
 .mode-posts #postsWide{
   border: none;
@@ -4823,6 +4869,7 @@ function makePosts(){
       }
       updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
+      updateAds(arr);
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
@@ -4863,6 +4910,55 @@ function makePosts(){
           });
         }
       });
+    }
+
+    let adPosts = [], adIndex = -1, adTimer;
+    function updateAds(list){
+      adPosts = list.slice();
+      adIndex = -1;
+      const panel = document.getElementById('adPanel');
+      panel.innerHTML = '';
+      if(!adPosts.length){ stopAdCycle(); return; }
+      startAdCycle();
+    }
+    function startAdCycle(){
+      const panel = document.getElementById('adPanel');
+      if(!panel.classList.contains('show') || !adPosts.length) return;
+      clearInterval(adTimer);
+      showNextAd();
+      adTimer = setInterval(showNextAd,5000);
+    }
+    function stopAdCycle(){ clearInterval(adTimer); }
+    function showNextAd(){
+      const panel = document.getElementById('adPanel');
+      if(!panel.classList.contains('show') || !adPosts.length) return;
+      adIndex = (adIndex + 1) % adPosts.length;
+      const p = adPosts[adIndex];
+      const slide = document.createElement('div');
+      slide.className = 'ad-slide';
+      const img = new Image();
+      img.src = imgHero(p);
+      img.alt = '';
+      img.loading = 'lazy';
+      slide.appendChild(img);
+      const cap = document.createElement('div');
+      cap.className = 'caption';
+      cap.innerHTML = `
+        <div class="title">${p.title}</div>
+        <div class="info">
+          <div>${p.category} &gt; ${p.subcategory}</div>
+          <div>📍 ${p.city}</div>
+          <div>📅 ${formatDates(p.dates)}</div>
+        </div>`;
+      slide.appendChild(cap);
+      panel.appendChild(slide);
+      requestAnimationFrame(()=> slide.classList.add('active'));
+      const slides = panel.querySelectorAll('.ad-slide');
+      if(slides.length > 1){
+        const old = slides[0];
+        old.classList.remove('active');
+        setTimeout(()=> old.remove(),1000);
+      }
     }
 
     function card(p, wide=false){
@@ -7925,18 +8021,20 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.closed-posts');
-  function updateAdPanel(){
+  function updateAdVisibility(){
     if(!adPanel || !postsPanel) return;
     postsPanel.classList.remove('ad-space');
     adPanel.classList.remove('show');
+    stopAdCycle();
     const width = postsPanel.getBoundingClientRect().width;
     if(width >= 1200){
       adPanel.classList.add('show');
       postsPanel.classList.add('ad-space');
+      startAdCycle();
     }
   }
-  window.addEventListener('resize', updateAdPanel);
-  updateAdPanel();
+  window.addEventListener('resize', updateAdVisibility);
+  updateAdVisibility();
 });
 </script>
 </body>
