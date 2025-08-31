@@ -3244,7 +3244,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </div>
 
   <script>
-  let startPitch, startBearing;
+  let startPitch, startBearing, logoEls = [];
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -3288,7 +3288,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           clusterSvg = localStorage.getItem('clusterSvg') || '';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
-        const logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
+        logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
       function updateLogoClickState(){
         logoEls.forEach(el=>{
           el.style.cursor = 'pointer';
