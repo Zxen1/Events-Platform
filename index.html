@@ -5664,6 +5664,7 @@ document.addEventListener('keydown', e=>{
 function handleDocInteract(e){
   if(e.target.closest('.img-popup')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
+  if(e.target.closest('#filterBtn')) return;
   const welcome = document.getElementById('welcomePopup');
   if(welcome && welcome.classList.contains('show')){
     const content = welcome.querySelector('.panel-content');
