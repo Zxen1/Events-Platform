@@ -20,7 +20,7 @@
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
-    --calendar-scale: 0.6;
+    --calendar-scale: 0.5;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -1899,8 +1899,10 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:block;
-  width:auto;
+  width:max-content;
   height:auto;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top left;
 }
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
@@ -1956,9 +1958,23 @@ body.hide-results .closed-posts{
 
 .open-posts .post-calendar .flatpickr-prev-month,
 .open-posts .post-calendar .flatpickr-next-month,
-.open-posts .post-calendar .flatpickr-monthDropdown-months,
-.open-posts .post-calendar .numInputWrapper{
+.open-posts .post-calendar .flatpickr-monthDropdown-months{
   display:none;
+}
+
+.open-posts .post-calendar .flatpickr-current-month .numInputWrapper span.arrowUp,
+.open-posts .post-calendar .flatpickr-current-month .numInputWrapper span.arrowDown{
+  display:none;
+}
+
+.open-posts .post-calendar .flatpickr-current-month .cur-year{
+  -moz-appearance: textfield;
+}
+
+.open-posts .post-calendar .flatpickr-current-month .cur-year::-webkit-inner-spin-button,
+.open-posts .post-calendar .flatpickr-current-month .cur-year::-webkit-outer-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .open-posts .post-calendar .selected-month-name{
@@ -5538,11 +5554,15 @@ function makePosts(){
               ignoreSelect = true;
               const selectedDateObj = parseDate(dt.full);
               picker.setDate(selectedDateObj);
+              picker.jumpToDate(firstDateObj);
+              if(calScroll) calScroll.scrollLeft = 0;
               ignoreSelect = false;
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
               if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
               picker.clear();
+              picker.jumpToDate(firstDateObj);
+              if(calScroll) calScroll.scrollLeft = 0;
             }
             sessMenu.hidden = true;
             sessBtn && sessBtn.setAttribute('aria-expanded','false');
