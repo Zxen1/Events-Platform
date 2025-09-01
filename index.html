@@ -54,8 +54,12 @@
       --dropdown-hover-text: #000000;
         --dropdown-venue-text: #000000;
         --dropdown-radius: 6px;
-        --session-available: #808080;
-        --session-selected: #008000;
+        --calendar-width: 210px;
+        --calendar-cell: calc(var(--calendar-width) / 7);
+        --calendar-past-bg: #d3d3d3;
+        --calendar-future-bg: #ffffff;
+        --session-available: #add8e6;
+        --session-selected: #00008b;
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
@@ -557,8 +561,8 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:content-box;
 }
 #filterPanel .calendar{
-  width:300px;
-  height:300px;
+  width:var(--calendar-width);
+  height:calc(var(--calendar-width) + var(--calendar-cell));
   transform:scale(var(--filter-calendar-scale));
   transform-origin:top left;
   background:var(--dropdown-bg);
@@ -566,33 +570,43 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .calendar .month{
   flex:0 0 auto;
-  width:300px;
-  height:300px;
+  width:var(--calendar-width);
+  height:calc(var(--calendar-width) + var(--calendar-cell));
   display:flex;
   flex-direction:column;
 }
 #filterPanel .calendar .header{
+  width:100%;
+  height:var(--calendar-cell);
+  line-height:var(--calendar-cell);
   text-align:center;
-  font-weight:bold;
-  margin-bottom:4px;
+  font-family:Verdana;
+  font-size:20px;
+  color:#fff;
 }
 #filterPanel .calendar .grid{
+  width:var(--calendar-width);
+  height:var(--calendar-width);
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-auto-rows:1fr;
-  flex:1;
+  grid-template-rows:repeat(7,1fr);
 }
+#filterPanel .calendar .weekday,
 #filterPanel .calendar .day{
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
-  font-size:12px;
+  font-family:Verdana;
+  font-size:16px;
 }
-#filterPanel .calendar .day.empty{cursor:default;}
-#filterPanel .calendar .day.in-range{background:var(--session-available); color:#fff;}
-#filterPanel .calendar .day.selected{background:var(--session-selected); color:#fff;}
-#filterPanel .calendar .day.today{color:var(--today);}
+#filterPanel .calendar .weekday{font-weight:bold;}
+#filterPanel .calendar .day{cursor:pointer;}
+#filterPanel .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
+#filterPanel .calendar .day.past{background:var(--calendar-past-bg);}
+#filterPanel .calendar .day.future{background:var(--calendar-future-bg);}
+#filterPanel .calendar .day.today{color:var(--today);font-weight:bold;}
+#filterPanel .calendar .day.in-range{background:var(--session-available);}
+#filterPanel .calendar .day.selected{background:var(--session-selected);color:#fff;}
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
   border-radius:4px;
@@ -4085,7 +4099,6 @@ function makePosts(){
       $('#todayToggle').checked = false;
       todayWasOn = false;
       buildFilterCalendar(minPickerDate, maxPickerDate);
-      if(calendarScroll) calendarScroll.scrollLeft = 0;
       updateRangeClasses();
       updateInput();
       if(geocoder) geocoder.clear();
@@ -4183,6 +4196,10 @@ function makePosts(){
       cal.className='calendar';
       let current = new Date(minDate.getFullYear(), minDate.getMonth(),1);
       const end = new Date(maxDate.getFullYear(), maxDate.getMonth(),1);
+      const todayDate = new Date();
+      todayDate.setHours(0,0,0,0);
+      let monthIndex = 0;
+      let currentMonthIndex = 0;
       while(current <= end){
         const monthEl = document.createElement('div');
         monthEl.className='month';
@@ -4191,18 +4208,31 @@ function makePosts(){
         header.textContent=current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
         const grid = document.createElement('div');
         grid.className='grid';
+
+        const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        weekdays.forEach(wd=>{
+          const w=document.createElement('div');
+          w.className='weekday';
+          w.textContent=wd;
+          grid.appendChild(w);
+        });
+
         const firstDay = new Date(current.getFullYear(), current.getMonth(),1);
-        let startDow = (firstDay.getDay()+6)%7;
-        for(let i=0;i<startDow;i++){ const empty=document.createElement('div'); empty.className='day empty'; grid.appendChild(empty); }
+        const startDow = firstDay.getDay();
         const daysInMonth = new Date(current.getFullYear(), current.getMonth()+1,0).getDate();
-        for(let d=1; d<=daysInMonth; d++){
-          const date = new Date(current.getFullYear(), current.getMonth(), d);
+        const totalCells = 42;
+        for(let i=0;i<totalCells;i++){
           const cell=document.createElement('div');
           cell.className='day';
-          cell.textContent=d;
-          if(date<minDate || date>maxDate){ cell.classList.add('empty'); }
-          else {
+          const dayNum=i-startDow+1;
+          if(i<startDow || dayNum>daysInMonth){
+            cell.classList.add('empty');
+          }else{
+            cell.textContent=dayNum;
+            const date=new Date(current.getFullYear(), current.getMonth(), dayNum);
             cell.dataset.iso = date.toISOString().slice(0,10);
+            if(date < todayDate) cell.classList.add('past');
+            else cell.classList.add('future');
             if(isToday(date)) cell.classList.add('today');
             cell.addEventListener('click', ()=> selectRangeDate(date));
           }
@@ -4210,14 +4240,21 @@ function makePosts(){
         }
         monthEl.append(header, grid);
         cal.appendChild(monthEl);
+        if(current.getFullYear() === todayDate.getFullYear() && current.getMonth() === todayDate.getMonth()){
+          currentMonthIndex = monthIndex;
+        }
         current.setMonth(current.getMonth()+1);
+        monthIndex++;
       }
       container.appendChild(cal);
       updateRangeClasses();
+      if(calendarScroll){
+        const monthWidth = cal.querySelector('.month').offsetWidth;
+        calendarScroll.scrollLeft = monthWidth * currentMonthIndex;
+      }
     }
 
     buildFilterCalendar(minPickerDate, maxPickerDate);
-    if(calendarScroll) calendarScroll.scrollLeft = 0;
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -4244,11 +4281,9 @@ function makePosts(){
         dateEnd = null;
         if(todayToggle.checked){
           buildFilterCalendar(todayDate, maxPickerDate);
-          if(calendarScroll) calendarScroll.scrollLeft = 0;
           input.value = 'Today Onwards';
         } else {
           buildFilterCalendar(minPickerDate, maxPickerDate);
-          if(calendarScroll) calendarScroll.scrollLeft = 0;
           if(input.value === 'Today Onwards') input.value = '';
         }
         todayWasOn = todayToggle.checked;
@@ -5161,13 +5196,11 @@ function makePosts(){
       $('#todayToggle').checked = st.today || false;
       if($('#todayToggle').checked){
         buildFilterCalendar(today, maxPickerDate);
-        if(calendarScroll) calendarScroll.scrollLeft = 0;
         $('#dateInput').value = 'Today Onwards';
         dateStart = null;
         dateEnd = null;
       } else {
         buildFilterCalendar(minPickerDate, maxPickerDate);
-        if(calendarScroll) calendarScroll.scrollLeft = 0;
         if(dateStart){
           const sIso = dateStart.toISOString().slice(0,10);
           const sDisp = fmtShort(sIso);
