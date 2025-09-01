@@ -4185,6 +4185,11 @@ function makePosts(){
       });
       let t;
       scroller.addEventListener('scroll', ()=>{
+        const marker = scroller.querySelector('.today-marker');
+        if(marker){
+          const base = parseFloat(marker.dataset.pos || '0');
+          marker.style.left = `${base + scroller.scrollLeft}px`;
+        }
         if(t) clearTimeout(t);
         t = setTimeout(()=>{
           const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
@@ -4317,14 +4322,17 @@ function makePosts(){
       updateRangeClasses();
       if(calendarScroll){
         const monthWidth = cal.querySelector('.month').offsetWidth;
-        calendarScroll.scrollLeft = monthWidth * currentMonthIndex;
+        const scrollPos = monthWidth * currentMonthIndex;
+        calendarScroll.scrollLeft = scrollPos;
+        calendarScroll.dataset.todayScroll = scrollPos;
         const maxScroll = calendarScroll.scrollWidth - calendarScroll.clientWidth;
-        const pos = maxScroll ? (monthWidth * currentMonthIndex) / maxScroll * calendarScroll.clientWidth : 0;
+        const pos = maxScroll ? scrollPos / maxScroll * calendarScroll.clientWidth : 0;
         calendarScroll.querySelector('.today-marker')?.remove();
         const marker = document.createElement('div');
         marker.className = 'today-marker';
-        marker.style.left = `${pos}px`;
-        marker.addEventListener('click', ()=> calendarScroll.scrollTo({left: monthWidth * currentMonthIndex, behavior:'smooth'}));
+        marker.dataset.pos = pos;
+        marker.style.left = `${pos + calendarScroll.scrollLeft}px`;
+        marker.addEventListener('click', ()=> calendarScroll.scrollTo({left: scrollPos, behavior:'smooth'}));
         calendarScroll.appendChild(marker);
       }
     }
@@ -5982,6 +5990,16 @@ function openPanel(m){
         content.style.bottom='';
         content.style.transform='none';
         content.style.maxHeight=`${availableHeight}px`;
+      }
+      const calScroll = document.getElementById('datePickerContainer');
+      if(calScroll){
+        const baseScroll = parseFloat(calScroll.dataset.todayScroll || '0');
+        calScroll.scrollLeft = baseScroll;
+        const marker = calScroll.querySelector('.today-marker');
+        if(marker){
+          const base = parseFloat(marker.dataset.pos || '0');
+          marker.style.left = `${base + calScroll.scrollLeft}px`;
+        }
       }
     } else if(m.id==='welcomePopup'){
       content.style.left='50%';
