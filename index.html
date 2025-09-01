@@ -20,8 +20,8 @@
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
-    --calendar-scale: 0.4;
-    --filter-calendar-scale: 1;
+    --calendar-scale: 0.2;
+    --filter-calendar-scale: 0.3;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -1686,6 +1686,9 @@ body.hide-results .closed-posts{
   .open-posts .body{
     padding:0;
   }
+  .open-posts .detail-header{
+    padding:6px 0;
+  }
   .open-posts .img-area,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
@@ -1712,12 +1715,12 @@ body.hide-results .closed-posts{
   }
   .open-posts .thumb-column{
     width:auto;
-    padding:0 12px;
+    padding:0;
   }
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
     width:auto;
-    padding:0 12px;
+    padding:0;
   }
   body.mode-posts .subheader,
   body.mode-posts footer{
@@ -1981,7 +1984,7 @@ body.hide-results .closed-posts{
   margin:0;
 }
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:transparent;
+  background:var(--session-available);
   color:var(--button-text);
   font-weight:bold;
   border:2px solid var(--session-available) !important;
@@ -4086,7 +4089,7 @@ function makePosts(){
     }
 
     function hoverHTML(p){
-      return `<div class="hover-card"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
+      return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
     // Categories UI
@@ -5361,6 +5364,14 @@ function makePosts(){
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
     }
+
+    document.addEventListener('click', (ev)=>{
+      const card = ev.target.closest('.mapboxgl-popup .hover-card');
+      if(card){
+        const pid = card.getAttribute('data-id') || (card.closest('.multi-item') && card.closest('.multi-item').getAttribute('data-id'));
+        if(pid){ touchMarker = null; stopSpin(); openPost(pid); }
+      }
+    });
 
     function ensureGap(container, el){
       const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
