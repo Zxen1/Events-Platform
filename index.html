@@ -11,8 +11,6 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <style>:root{
   --header-h: 75px;
   --subheader-h: 55px;
@@ -20,8 +18,8 @@
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
-    --calendar-scale: 0.2;
-    --filter-calendar-scale: 0.3;
+    --calendar-scale: 1;
+    --filter-calendar-scale: 1;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -544,26 +542,12 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--panel-bg);
   color: var(--panel-text);
 }
-.flatpickr-calendar .flatpickr-prev-month,
-.flatpickr-calendar .flatpickr-next-month{
-  display:block;
-}
-#filterPanel .flatpickr-calendar .flatpickr-prev-month,
-#filterPanel .flatpickr-calendar .flatpickr-next-month{
-  display:none;
-}
-.flatpickr-day.today:not(.selected){
-  color:var(--today) !important;
-}
-#filterPanel .flatpickr-calendar{
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-}
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
 }
 #filterPanel .calendar-scroll{
+  display:flex;
   background: var(--dropdown-bg);
   width:max-content;
   height:auto;
@@ -572,36 +556,43 @@ button[aria-expanded="true"] .results-arrow{
   padding-bottom:20px;
   box-sizing:content-box;
 }
-#filterPanel #datePicker{
-  background: var(--dropdown-bg);
-}
-#filterPanel #datePicker .flatpickr-calendar{
-  width:max-content;
-  height:auto;
+#filterPanel .calendar{
+  width:300px;
+  height:300px;
   transform:scale(var(--filter-calendar-scale));
   transform-origin:top left;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
 }
-#filterPanel #datePicker .flatpickr-months{
-  display:flex;
-  flex-wrap:nowrap;
-}
-#filterPanel #datePicker .flatpickr-months .flatpickr-month{
+#filterPanel .calendar .month{
   flex:0 0 auto;
-  width:auto;
-  height:auto;
-  background: var(--dropdown-bg);
+  width:300px;
+  height:300px;
+  display:flex;
+  flex-direction:column;
 }
-#filterPanel #datePicker .flatpickr-day{
+#filterPanel .calendar .header{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:4px;
+}
+#filterPanel .calendar .grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:1fr;
+  flex:1;
+}
+#filterPanel .calendar .day{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
   font-size:12px;
-  line-height:1.2;
-  margin:0;
-  width:auto;
-  height:auto;
 }
-#filterPanel .flatpickr-current-month .numInputWrapper span.arrowUp,
-#filterPanel .flatpickr-current-month .numInputWrapper span.arrowDown{
-  display:none;
-}
+#filterPanel .calendar .day.empty{cursor:default;}
+#filterPanel .calendar .day.in-range{background:var(--session-available); color:#fff;}
+#filterPanel .calendar .day.selected{background:var(--session-selected); color:#fff;}
+#filterPanel .calendar .day.today{color:var(--today);}
 #memberPanel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #memberPanel input[type=color]{
   border-radius:4px;
@@ -1943,15 +1934,7 @@ body.hide-results .closed-posts{
   font-size:16px;
 }
 
-.open-posts .post-calendar .flatpickr-calendar{
-  margin:0;
-  box-sizing:border-box;
-  display:block;
-  width:max-content;
-  height:auto;
-  transform:scale(var(--calendar-scale));
-  transform-origin:top left;
-}
+
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
   height:auto;
@@ -1960,70 +1943,53 @@ body.hide-results .closed-posts{
   padding-bottom:20px;
   box-sizing:border-box;
 }
-.open-posts .post-calendar .flatpickr-months{
+.open-posts .post-calendar .calendar{
+  margin:0;
+  box-sizing:border-box;
   display:flex;
-}
-.open-posts .post-calendar .flatpickr-months .flatpickr-month{
-  width:auto;
+  width:max-content;
   height:auto;
+  transform:scale(var(--calendar-scale));
+  transform-origin:top left;
   background:var(--dropdown-bg);
+}
+.open-posts .post-calendar .month{
+  width:300px;
+  height:300px;
   flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
 }
-.open-posts .post-calendar .flatpickr-calendar{
-  background:var(--dropdown-bg);
+.open-posts .post-calendar .header{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:4px;
 }
-.open-posts .post-calendar .flatpickr-day{
+.open-posts .post-calendar .grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-auto-rows:1fr;
+  flex:1;
+}
+.open-posts .post-calendar .day{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
   font-size:12px;
-  line-height:1.2;
-  margin:0;
-  width:auto;
-  height:auto;
+  border-radius:50%;
 }
-.open-posts .post-calendar .flatpickr-days{
-  padding:0;
-  margin:0;
-}
-.open-posts .post-calendar .flatpickr-day.available-day{
+.open-posts .post-calendar .day.available-day{
   background:var(--session-available);
   color:var(--button-text);
   font-weight:bold;
-  border:2px solid var(--session-available) !important;
-  border-radius:50%;
-  box-sizing:border-box;
 }
-.open-posts .post-calendar .flatpickr-day.available-day:hover{
-  background:var(--session-available);
-}
-.open-posts .post-calendar .flatpickr-day.available-day.selected{
+.open-posts .post-calendar .day.available-day.selected{
   background:var(--session-selected);
   color:var(--button-text);
 }
-.open-posts .post-calendar .flatpickr-day.selected{
-  background:var(--session-selected);
-  color:var(--button-text);
-  border-radius:50%;
-}
+.open-posts .post-calendar .day.today{color:var(--today);}
 
-.open-posts .post-calendar .flatpickr-prev-month,
-.open-posts .post-calendar .flatpickr-next-month,
-.open-posts .post-calendar .flatpickr-monthDropdown-months{
-  display:none;
-}
-
-.open-posts .post-calendar .flatpickr-current-month .numInputWrapper span.arrowUp,
-.open-posts .post-calendar .flatpickr-current-month .numInputWrapper span.arrowDown{
-  display:none;
-}
-
-.open-posts .post-calendar .flatpickr-current-month .cur-year{
-  -moz-appearance: textfield;
-}
-
-.open-posts .post-calendar .flatpickr-current-month .cur-year::-webkit-inner-spin-button,
-.open-posts .post-calendar .flatpickr-current-month .cur-year::-webkit-outer-spin-button{
-  -webkit-appearance: none;
-  margin: 0;
-}
 
 .open-posts .post-calendar .selected-month-name{
   background:var(--accent);
@@ -3488,7 +3454,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, datePicker, todayWasOn = false, dateStart = null, dateEnd = null,
+      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, todayWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -4118,7 +4084,10 @@ function makePosts(){
       dateEnd = null;
       $('#todayToggle').checked = false;
       todayWasOn = false;
-      if(datePicker) datePicker.clear();
+      buildFilterCalendar(minPickerDate, maxPickerDate);
+      if(calendarScroll) calendarScroll.scrollLeft = 0;
+      updateRangeClasses();
+      updateInput();
       if(geocoder) geocoder.clear();
       applyFilters();
       updateClearButtons();
@@ -4163,49 +4132,91 @@ function makePosts(){
     const calendarScroll = $('#datePickerContainer .calendar-scroll');
     todayWasOn = todayToggle && todayToggle.checked;
 
-    datePicker = flatpickr($('#datePicker'), {
-      inline: true,
-      mode: 'range',
-      dateFormat: 'D d M',
-      minDate: minPickerDate,
-      maxDate: maxPickerDate,
-      defaultDate: today,
-      showMonths: 36,
-      prevArrow: '',
-      nextArrow: '',
-      onChange: (selectedDates, dateStr, instance) => {
-        const input = $('#dateInput');
-        if (selectedDates.length === 2) {
-          dateStart = selectedDates[0];
-          dateEnd = selectedDates[1];
-          const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
-          const eIso = instance.formatDate(selectedDates[1], 'Y-m-d');
-          const sDisp = fmtShort(sIso);
-          const eDisp = fmtShort(eIso);
-          input.value = `${sDisp} - ${eDisp}`;
-          todayWasOn = todayToggle && todayToggle.checked;
-          if(todayToggle) todayToggle.checked = false;
-        } else if (selectedDates.length === 1) {
-          dateStart = dateEnd = selectedDates[0];
-          const sIso = instance.formatDate(selectedDates[0], 'Y-m-d');
-          input.value = fmtShort(sIso);
-          todayWasOn = todayToggle && todayToggle.checked;
-          if(todayToggle) todayToggle.checked = false;
-        } else if (selectedDates.length === 0) {
-          dateStart = null;
-          dateEnd = null;
-          if(todayWasOn && todayToggle) todayToggle.checked = true;
-          input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
-          todayWasOn = todayToggle && todayToggle.checked;
-        }
-        applyFilters();
-        updateClearButtons();
+    function formatDisplay(date){
+      const opts = {weekday:'short', day:'numeric', month:'short'};
+      let str = date.toLocaleDateString('en-GB', opts);
+      if(date.getFullYear() !== today.getFullYear()) str += `, ${date.getFullYear()}`;
+      return str;
+    }
+
+    function sameDay(a,b){ return a.toDateString()===b.toDateString(); }
+    function isToday(d){ return sameDay(d,today); }
+
+    function updateRangeClasses(){
+      $('#datePicker').querySelectorAll('.day').forEach(day=>{
+        const iso = day.dataset.iso;
+        if(!iso) return;
+        const d = new Date(iso);
+        day.classList.remove('selected','in-range');
+        if(dateStart && sameDay(d, dateStart)) day.classList.add('selected');
+        if(dateEnd && sameDay(d, dateEnd)) day.classList.add('selected');
+        if(dateStart && dateEnd && d>dateStart && d<dateEnd) day.classList.add('in-range');
+      });
+    }
+
+    function updateInput(){
+      const input = $('#dateInput');
+      if(dateStart && dateEnd){
+        input.value = `${formatDisplay(dateStart)} - ${formatDisplay(dateEnd)}`;
+      } else if(dateStart){
+        input.value = formatDisplay(dateStart);
+      } else {
+        input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
       }
-    });
-    datePicker.clear();
-    dateStart = null;
-    dateEnd = null;
-    datePicker.jumpToDate(today);
+      applyFilters();
+      updateClearButtons();
+    }
+
+    function selectRangeDate(date){
+      if(!dateStart || dateEnd){ dateStart = date; dateEnd = null; }
+      else if(date < dateStart){ dateStart = date; }
+      else { dateEnd = date; }
+      updateRangeClasses();
+      updateInput();
+      if(todayToggle && todayToggle.checked){ todayToggle.checked = false; todayWasOn = false; }
+    }
+
+    function buildFilterCalendar(minDate, maxDate){
+      const container = $('#datePicker');
+      container.innerHTML='';
+      const cal = document.createElement('div');
+      cal.className='calendar';
+      let current = new Date(minDate.getFullYear(), minDate.getMonth(),1);
+      const end = new Date(maxDate.getFullYear(), maxDate.getMonth(),1);
+      while(current <= end){
+        const monthEl = document.createElement('div');
+        monthEl.className='month';
+        const header = document.createElement('div');
+        header.className='header';
+        header.textContent=current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+        const grid = document.createElement('div');
+        grid.className='grid';
+        const firstDay = new Date(current.getFullYear(), current.getMonth(),1);
+        let startDow = (firstDay.getDay()+6)%7;
+        for(let i=0;i<startDow;i++){ const empty=document.createElement('div'); empty.className='day empty'; grid.appendChild(empty); }
+        const daysInMonth = new Date(current.getFullYear(), current.getMonth()+1,0).getDate();
+        for(let d=1; d<=daysInMonth; d++){
+          const date = new Date(current.getFullYear(), current.getMonth(), d);
+          const cell=document.createElement('div');
+          cell.className='day';
+          cell.textContent=d;
+          if(date<minDate || date>maxDate){ cell.classList.add('empty'); }
+          else {
+            cell.dataset.iso = date.toISOString().slice(0,10);
+            if(isToday(date)) cell.classList.add('today');
+            cell.addEventListener('click', ()=> selectRangeDate(date));
+          }
+          grid.appendChild(cell);
+        }
+        monthEl.append(header, grid);
+        cal.appendChild(monthEl);
+        current.setMonth(current.getMonth()+1);
+      }
+      container.appendChild(cal);
+      updateRangeClasses();
+    }
+
+    buildFilterCalendar(minPickerDate, maxPickerDate);
     if(calendarScroll) calendarScroll.scrollLeft = 0;
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
@@ -4214,7 +4225,8 @@ function makePosts(){
         if(input.id==='dateInput'){
           dateStart = null;
           dateEnd = null;
-          if(datePicker) datePicker.clear();
+          updateRangeClasses();
+          updateInput();
         } else {
           input.value='';
         }
@@ -4228,33 +4240,20 @@ function makePosts(){
         const input = $('#dateInput');
         const todayDate = new Date();
         todayDate.setHours(0,0,0,0);
+        dateStart = null;
+        dateEnd = null;
         if(todayToggle.checked){
-          dateStart = null;
-          dateEnd = null;
-          if(datePicker) {
-            datePicker.clear();
-            datePicker.set('minDate', todayDate);
-            datePicker.set('maxDate', maxPickerDate);
-            datePicker.set('showMonths', 24);
-            datePicker.setDate(todayDate, false);
-            datePicker.jumpToDate(todayDate);
-          }
+          buildFilterCalendar(todayDate, maxPickerDate);
           if(calendarScroll) calendarScroll.scrollLeft = 0;
           input.value = 'Today Onwards';
         } else {
-          if(datePicker) {
-            datePicker.clear();
-            datePicker.set('minDate', minPickerDate);
-            datePicker.set('maxDate', maxPickerDate);
-            datePicker.set('showMonths', 36);
-            datePicker.jumpToDate(minPickerDate);
-          }
+          buildFilterCalendar(minPickerDate, maxPickerDate);
           if(calendarScroll) calendarScroll.scrollLeft = 0;
           if(input.value === 'Today Onwards') input.value = '';
         }
         todayWasOn = todayToggle.checked;
-        applyFilters();
-        updateClearButtons();
+        updateRangeClasses();
+        updateInput();
       });
       if(todayToggle.checked){
         todayToggle.dispatchEvent(new Event('change'));
@@ -5150,7 +5149,6 @@ function makePosts(){
 
     function restoreState(st){
       if(!st) return;
-      if(datePicker) datePicker.clear();
       $('#kwInput').value = st.kw || '';
       dateStart = st.start ? new Date(st.start) : null;
       dateEnd = st.end ? new Date(st.end) : null;
@@ -5159,36 +5157,33 @@ function makePosts(){
         if(parts[0]) dateStart = new Date(parts[0]);
         if(parts[1]) dateEnd = new Date(parts[1]);
       }
-      if(st.date){
-        $('#dateInput').value = st.date;
-      } else if(dateStart){
-        const sIso = dateStart.toISOString().slice(0,10);
-        const sDisp = fmtShort(sIso);
-        if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
-          const eIso = dateEnd.toISOString().slice(0,10);
-          const eDisp = fmtShort(eIso);
-          $('#dateInput').value = `${sDisp} - ${eDisp}`;
-        } else {
-          $('#dateInput').value = sDisp;
-        }
-      } else {
-        $('#dateInput').value = '';
-      }
       $('#todayToggle').checked = st.today || false;
       if($('#todayToggle').checked){
+        buildFilterCalendar(today, maxPickerDate);
+        if(calendarScroll) calendarScroll.scrollLeft = 0;
         $('#dateInput').value = 'Today Onwards';
         dateStart = null;
         dateEnd = null;
-      } else if(datePicker){
-        if(dateStart && dateEnd){
-          datePicker.setDate([dateStart, dateEnd], false);
-          datePicker.jumpToDate(dateStart);
-        } else if(dateStart){
-          datePicker.setDate([dateStart], false);
-          datePicker.jumpToDate(dateStart);
+      } else {
+        buildFilterCalendar(minPickerDate, maxPickerDate);
+        if(calendarScroll) calendarScroll.scrollLeft = 0;
+        if(dateStart){
+          const sIso = dateStart.toISOString().slice(0,10);
+          const sDisp = fmtShort(sIso);
+          if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
+            const eIso = dateEnd.toISOString().slice(0,10);
+            const eDisp = fmtShort(eIso);
+            $('#dateInput').value = `${sDisp} - ${eDisp}`;
+          } else {
+            $('#dateInput').value = sDisp;
+          }
+        } else {
+          $('#dateInput').value = '';
         }
       }
       todayWasOn = $('#todayToggle').checked;
+      updateRangeClasses();
+      updateInput();
       selection.cats = new Set(st.cats || []);
       selection.subs = new Set(st.subs || []);
       $$('.cat').forEach(el=>{
@@ -5544,7 +5539,7 @@ function makePosts(){
             calScroll.scrollLeft += e.deltaY;
           }, {passive:false});
         }
-        let map, marker, picker = null, sessionHasMultiple = false, lastClickedCell = null;
+        let map, marker, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
@@ -5573,61 +5568,83 @@ function makePosts(){
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
         }
-        if(picker){ picker.destroy(); }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
-        const firstDate = dateStrings[0];
-        const lastDate = dateStrings[dateStrings.length-1] || firstDate;
-        const firstDateObj = parseDate(firstDate);
-        const lastDateObj = parseDate(lastDate);
-        const monthsDiff = (lastDateObj.getFullYear() - firstDateObj.getFullYear()) * 12 + (lastDateObj.getMonth() - firstDateObj.getMonth()) + 1;
-        picker = flatpickr(calendarEl, {
-          inline: true,
-          mode: 'single',
-          minDate: firstDateObj,
-          maxDate: lastDateObj,
-          enable: dateStrings.map(parseDate),
-          defaultDate: firstDateObj,
-          showMonths: monthsDiff,
-          monthSelectorType: 'static',
-          onDayCreate: (dObj, dStr, fp, dayElem) => {
-            const iso = fp.formatDate(dayElem.dateObj, 'Y-m-d');
-            if(allowedSet.has(iso)) dayElem.classList.add('available-day');
+        const months = Array.from(new Set(dateStrings.map(ds=> ds.slice(0,7))));
+        calendarEl.innerHTML='';
+        const cal = document.createElement('div');
+        cal.className='calendar';
+        months.forEach(m=>{
+          const [yy,mm] = m.split('-').map(Number);
+          const monthStart = new Date(yy, mm-1,1);
+          const daysInMonth = new Date(yy, mm,0).getDate();
+          const monthEl=document.createElement('div');
+          monthEl.className='month';
+          const header=document.createElement('div');
+          header.className='header';
+          header.textContent=monthStart.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+          const grid=document.createElement('div');
+          grid.className='grid';
+          let startDow=(monthStart.getDay()+6)%7;
+          for(let i=0;i<startDow;i++){ const empty=document.createElement('div'); empty.className='day empty'; grid.appendChild(empty); }
+          for(let d=1; d<=daysInMonth; d++){
+            const dateObj=new Date(yy, mm-1, d);
+            const iso=dateObj.toISOString().slice(0,10);
+            const cell=document.createElement('div');
+            cell.className='day';
+            cell.textContent=d;
+            if(allowedSet.has(iso)){
+              cell.classList.add('available-day');
+              cell.dataset.iso = iso;
+              cell.addEventListener('mousedown',()=>{ lastClickedCell = cell; });
+              cell.addEventListener('click',()=>{
+                const matches = loc.dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
+                if(matches.length===1){ selectSession(matches[0].i); }
+                else if(matches.length>1){ showTimePopup(matches); }
+              });
+            } else {
+              cell.classList.add('empty');
+            }
+            if(isToday(dateObj)) cell.classList.add('today');
+            grid.appendChild(cell);
           }
+          monthEl.append(header,grid);
+          cal.appendChild(monthEl);
         });
-        picker.clear();
-        picker.jumpToDate(firstDateObj);
+        calendarEl.appendChild(cal);
+        if(calScroll) calScroll.scrollLeft = 0;
+        let selectedIndex = null;
         calendarEl.addEventListener('click', e=> e.stopPropagation());
-        calendarEl.addEventListener('mousedown', e=>{
-          const day = e.target.closest('.flatpickr-day');
-          if(day) lastClickedCell = day;
-        });
-        let ignoreSelect = false;
+        function markSelected(){
+          calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
+          if(selectedIndex!==null){
+            const dt = loc.dates[selectedIndex];
+            const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
+            if(cell) cell.classList.add('selected');
+          }
+        }
         function selectSession(i){
           if(!sessMenu) return;
+          selectedIndex = i;
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
           const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
-            if(btn) btn.classList.add('selected');
-            const dt = loc.dates[i];
-            if(dt){
-              sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-              if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
-              ignoreSelect = true;
-              const selectedDateObj = parseDate(dt.full);
-              picker.setDate(selectedDateObj);
-              picker.jumpToDate(firstDateObj);
-              if(calScroll) calScroll.scrollLeft = 0;
-              ignoreSelect = false;
-            } else {
-              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
-              picker.clear();
-              picker.jumpToDate(firstDateObj);
-              if(calScroll) calScroll.scrollLeft = 0;
-            }
-            sessMenu.hidden = true;
-            sessBtn && sessBtn.setAttribute('aria-expanded','false');
+          if(btn) btn.classList.add('selected');
+          const dt = loc.dates[i];
+          if(dt){
+            sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            markSelected();
+            if(calScroll) calScroll.scrollLeft = 0;
+          } else {
+            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+            if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
+            selectedIndex = null;
+            markSelected();
+            if(calScroll) calScroll.scrollLeft = 0;
           }
+          sessMenu.hidden = true;
+          sessBtn && sessBtn.setAttribute('aria-expanded','false');
+        }
         function showTimePopup(matches){
           const existing = calContainer.querySelector('.time-popup');
           if(existing) existing.remove();
@@ -5644,20 +5661,6 @@ function makePosts(){
           popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
           setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
         }
-        picker.config.onChange.push((selectedDates, dateStr, instance) => {
-          if(ignoreSelect) return;
-          if(selectedDates.length){
-            const ds = instance.formatDate(selectedDates[0], 'Y-m-d');
-            const matches = loc.dates.map((d,i)=>({i,d})).filter(o=> o.d.full===ds);
-            if(matches.length===1){
-              selectSession(matches[0].i);
-            } else if(matches.length>1){
-              showTimePopup(matches);
-            } else {
-              instance.clear();
-            }
-          }
-        });
         setTimeout(()=>{
           if(map && typeof map.resize === 'function') map.resize();
         },0);
@@ -6143,6 +6146,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
+    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], title:['.calendar .header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
   {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
@@ -6163,7 +6167,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         });
       });
     });
-    const varMap = {today:'--today'};
+    const varMap = {'today-c':'--today', 'sessionAvailable-c':'--session-available', 'sessionSelected-c':'--session-selected'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const el = document.getElementById(id);
       if(el){
@@ -6514,7 +6518,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       ['text','title','btnText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -6810,6 +6814,32 @@ document.addEventListener('pointerdown', handleDocInteract);
         fs.appendChild(dateBg);
         fs.appendChild(createTextPickerRow('dateRangeText-text','Date Range Text','dateRangeBg-c'));
       }
+      if(area.key === 'calendar'){
+        const availRow = document.createElement('div');
+        availRow.className = 'control-row';
+        availRow.innerHTML = `
+            <label>Available Day</label>
+            <div class="color-group">
+              <input id="sessionAvailable-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(availRow);
+        const selRow = document.createElement('div');
+        selRow.className = 'control-row';
+        selRow.innerHTML = `
+            <label>Selected Day</label>
+            <div class="color-group">
+              <input id="sessionSelected-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(selRow);
+        const todayRow = document.createElement('div');
+        todayRow.className = 'control-row';
+        todayRow.innerHTML = `
+            <label>Today</label>
+            <div class="color-group">
+              <input id="today-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(todayRow);
+      }
       wrap.appendChild(fs);
     });
     const misc = document.createElement('fieldset');
@@ -6940,7 +6970,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -7075,7 +7105,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         }
       }
     });
-    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg'].forEach(id=>{
+    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg','sessionAvailable','sessionSelected','today'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -7093,7 +7123,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -7222,7 +7252,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',today:'--today'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
