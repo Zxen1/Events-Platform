@@ -20,7 +20,8 @@
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
-    --calendar-scale: 0.5;
+    --calendar-scale: 0.4;
+    --filter-calendar-scale: 1;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -60,7 +61,7 @@
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: var(--accent);
+        --filter-active-color: #ff0000;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -564,7 +565,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .calendar-scroll{
   background: var(--dropdown-bg);
-  width:auto;
+  width:max-content;
   height:auto;
   overflow-x:auto;
   overflow-y:hidden;
@@ -577,7 +578,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel #datePicker .flatpickr-calendar{
   width:max-content;
   height:auto;
-  transform:scale(var(--calendar-scale));
+  transform:scale(var(--filter-calendar-scale));
   transform-origin:top left;
 }
 #filterPanel #datePicker .flatpickr-months{
@@ -1016,16 +1017,19 @@ button[aria-expanded="true"] .results-arrow{
   width: 35px;
   height: 35px;
   border-radius: 8px;
-  background: rgba(255,255,255,1);
+  background: var(--dropdown-bg);
   cursor: pointer;
   border: 0;
   margin-left: 6px;
   line-height: 35px;
   text-align: center;
   color: var(--dropdown-text);
+  opacity:1;
 }
 #filterPanel .input .x.active{
-  color: var(--accent);
+  background: var(--filter-active-color);
+  color: var(--button-text);
+  opacity:1;
 }
 
 #filterPanel .field label.t{
@@ -1528,7 +1532,7 @@ body.filters-active #filterBtn{
   color:#000;
   background:var(--panel-bg);
 }
-.closed-posts .posts{overflow:visible;padding:12px 12px var(--gap);margin:0;}
+.closed-posts .posts{overflow:visible;padding:6px 12px var(--gap);margin:0;}
 .closed-posts{color:#000;padding:0;}
 .closed-posts .card,
 .closed-posts .open-posts{background:var(--closed-card-bg);}
@@ -1537,7 +1541,7 @@ body.filters-active #filterBtn{
 .closed-posts.ad-space{right:calc(400px + var(--gap) * 2);}
 
 body.hide-results .closed-posts{
-  left:var(--gap);
+  left:0;
 }
 
 .mode-posts .closed-posts{
@@ -1936,7 +1940,7 @@ body.hide-results .closed-posts{
   margin:0;
 }
 .open-posts .post-calendar .flatpickr-day.available-day{
-  background:var(--session-available);
+  background:transparent;
   color:var(--button-text);
   font-weight:bold;
   border:2px solid var(--session-available) !important;
@@ -2563,6 +2567,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   pointer-events: none;
   margin-bottom: 12px;
   padding-bottom: var(--gap);
+}
+
+body.hide-results .post-panel{
+  left:0;
 }
 
 .post-panel > *{
