@@ -554,6 +554,16 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
+  height:auto;
+}
+#filterPanel .calendar-container .today-marker{
+  position:absolute;
+  bottom:4px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--today);
+  cursor:pointer;
 }
 #filterPanel #datePicker{
   width:max-content;
@@ -4131,7 +4141,15 @@ function makePosts(){
 
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
-    $('#dateInput').addEventListener('keydown', e=> e.preventDefault());
+    $('#dateInput').addEventListener('keydown', e=>{
+      const scroll = $('#datePickerContainer');
+      if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+        const month = scroll.querySelector('.month');
+        const w = month ? month.offsetWidth : 0;
+        scroll.scrollBy({left:e.key==='ArrowLeft'?-w:w, behavior:'smooth'});
+      }
+      e.preventDefault();
+    });
     const today = new Date();
     const minPickerDate = new Date(today);
     minPickerDate.setMonth(minPickerDate.getMonth() - 12);
@@ -4139,36 +4157,79 @@ function makePosts(){
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const todayToggle = $('#todayToggle');
     const calendarScroll = $('#datePickerContainer');
+
+    function setupCalendarScroll(scroller){
+      if(!scroller) return;
+      scroller.setAttribute('tabindex','0');
+      scroller.addEventListener('wheel', e=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          scroller.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      }, {passive:false});
+      scroller.addEventListener('keydown', e=>{
+        if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
+          const w = m ? m.offsetWidth : 0;
+          scroller.scrollBy({left:e.key==='ArrowLeft'?-w:w, behavior:'smooth'});
+          e.preventDefault();
+        }
+      });
+      let t;
+      scroller.addEventListener('scroll', ()=>{
+        if(t) clearTimeout(t);
+        t = setTimeout(()=>{
+          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
+          const w = m ? m.offsetWidth : 0;
+          if(w){
+            const i = Math.round(scroller.scrollLeft / w);
+            scroller.scrollTo({left:w*i, behavior:'smooth'});
+          }
+        },100);
+      });
+    }
+    setupCalendarScroll(calendarScroll);
     todayWasOn = todayToggle && todayToggle.checked;
 
     function formatDisplay(date){
-      const opts = {weekday:'short', day:'numeric', month:'short'};
-      let str = date.toLocaleDateString('en-GB', opts);
+      const wd = date.toLocaleDateString('en-GB',{weekday:'short'});
+      const day = date.getDate();
+      const mon = date.toLocaleDateString('en-GB',{month:'short'});
+      let str = `${wd} ${day} ${mon}`;
       if(date.getFullYear() !== today.getFullYear()) str += `, ${date.getFullYear()}`;
       return str;
+    }
+
+    function orderedRange(){
+      if(dateStart && dateEnd){
+        return dateStart <= dateEnd ? {start:dateStart,end:dateEnd} : {start:dateEnd,end:dateStart};
+      }
+      return {start:dateStart,end:dateEnd};
     }
 
     function sameDay(a,b){ return a.toDateString()===b.toDateString(); }
     function isToday(d){ return sameDay(d,today); }
 
     function updateRangeClasses(){
+      const {start,end} = orderedRange();
       $('#datePicker').querySelectorAll('.day').forEach(day=>{
         const iso = day.dataset.iso;
         if(!iso) return;
         const d = new Date(iso);
         day.classList.remove('selected','in-range');
-        if(dateStart && sameDay(d, dateStart)) day.classList.add('selected');
-        if(dateEnd && sameDay(d, dateEnd)) day.classList.add('selected');
-        if(dateStart && dateEnd && d>dateStart && d<dateEnd) day.classList.add('in-range');
+        if(start && sameDay(d, start)) day.classList.add('selected');
+        if(end && sameDay(d, end)) day.classList.add('selected');
+        if(start && end && d>start && d<end) day.classList.add('in-range');
       });
     }
 
     function updateInput(){
       const input = $('#dateInput');
-      if(dateStart && dateEnd){
-        input.value = `${formatDisplay(dateStart)} - ${formatDisplay(dateEnd)}`;
-      } else if(dateStart){
-        input.value = formatDisplay(dateStart);
+      const {start,end} = orderedRange();
+      if(start && end){
+        input.value = `${formatDisplay(start)} - ${formatDisplay(end)}`;
+      } else if(start){
+        input.value = formatDisplay(start);
       } else {
         input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
       }
@@ -4178,7 +4239,6 @@ function makePosts(){
 
     function selectRangeDate(date){
       if(!dateStart || dateEnd){ dateStart = date; dateEnd = null; }
-      else if(date < dateStart){ dateStart = date; }
       else { dateEnd = date; }
       updateRangeClasses();
       updateInput();
@@ -4249,6 +4309,14 @@ function makePosts(){
       if(calendarScroll){
         const monthWidth = cal.querySelector('.month').offsetWidth;
         calendarScroll.scrollLeft = monthWidth * currentMonthIndex;
+        const maxScroll = calendarScroll.scrollWidth - calendarScroll.clientWidth;
+        const pos = maxScroll ? (monthWidth * currentMonthIndex) / maxScroll * (calendarScroll.clientWidth - 8) : 0;
+        calendarScroll.querySelector('.today-marker')?.remove();
+        const marker = document.createElement('div');
+        marker.className = 'today-marker';
+        marker.style.left = `${pos}px`;
+        marker.addEventListener('click', ()=> calendarScroll.scrollTo({left: monthWidth * currentMonthIndex, behavior:'smooth'}));
+        calendarScroll.appendChild(marker);
       }
     }
 
@@ -5169,12 +5237,13 @@ function makePosts(){
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
 
     function captureState(){
+      const {start,end} = orderedRange();
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
-        start: dateStart ? dateStart.toISOString().slice(0,10) : null,
-        end: dateEnd ? dateEnd.toISOString().slice(0,10) : null,
+        start: start ? start.toISOString().slice(0,10) : null,
+        end: end ? end.toISOString().slice(0,10) : null,
         today: $('#todayToggle').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
@@ -5565,11 +5634,7 @@ function makePosts(){
         const calContainer = el.querySelector('.calendar-container');
         const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
         if(calScroll){
-          calScroll.addEventListener('wheel', e=>{
-            if(e.deltaY === 0) return;
-            e.preventDefault();
-            calScroll.scrollLeft += e.deltaY;
-          }, {passive:false});
+          setupCalendarScroll(calScroll);
         }
         let map, marker, sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
@@ -5765,13 +5830,14 @@ function makePosts(){
         const today = new Date(); today.setHours(0,0,0,0);
         return p.dates.some(d => new Date(d) >= today);
       }
-      if(!dateStart && !dateEnd){
+      const {start,end} = orderedRange();
+      if(!start && !end){
         return true;
       }
       return p.dates.some(d => {
         const dt = new Date(d);
-        if(dateStart && dt < dateStart) return false;
-        if(dateEnd && dt > dateEnd) return false;
+        if(start && dt < start) return false;
+        if(end && dt > end) return false;
         return true;
       });
     }
