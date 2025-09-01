@@ -4423,6 +4423,7 @@ function makePosts(){
       applyFilters();
       if(window.updateAdVisibility) updateAdVisibility();
     }
+    window.setMode = setMode;
     $('#tab-posts').addEventListener('click',()=> setMode('posts'));
     $('#main-tab-map').addEventListener('click',()=> setMode('map'));
 
