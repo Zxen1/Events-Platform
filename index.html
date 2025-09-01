@@ -1666,15 +1666,39 @@ body.hide-results .closed-posts{
 }
 
 @media (max-width: 450px){
+  .closed-posts .posts{padding:0;}
+  .closed-posts .card{
+    grid-template-columns:1fr;
+    gap:0;
+    padding:0;
+    margin:0 0 var(--gap) 0;
+    border-radius:0;
+  }
+  .closed-posts .card .thumb{
+    width:100%;
+    height:100vw;
+    border-radius:0;
+  }
+  .closed-posts .card .meta{padding:12px;}
+  .open-posts{
+    margin:0;
+  }
   .open-posts .body{
     padding:0;
+  }
+  .open-posts .img-area,
+  .open-posts .venue-dropdown,
+  .open-posts .session-dropdown,
+  .open-posts .text{
+    margin-bottom:var(--gap);
+  }
+  .open-posts .text{
+    padding:14px;
+    margin-bottom:0;
   }
   .open-posts .img-area{
     flex:1 1 100%;
     width:100%;
-  }
-  .open-posts .text{
-    padding:14px;
   }
   .open-posts .img-box{
     width:100%;
@@ -1685,6 +1709,23 @@ body.hide-results .closed-posts{
   .open-posts .img-box img{
     object-fit:cover;
     object-position:center;
+  }
+  .open-posts .thumb-column{
+    width:auto;
+    padding:0 12px;
+  }
+  .open-posts .venue-dropdown,
+  .open-posts .session-dropdown{
+    width:auto;
+    padding:0 12px;
+  }
+  body.mode-posts .subheader,
+  body.mode-posts footer{
+    display:none;
+  }
+  body.mode-posts .post-panel{
+    top:calc(var(--header-h) + var(--safe-top));
+    bottom:0;
   }
 }
 
@@ -4358,10 +4399,10 @@ function makePosts(){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
       document.body.classList.add('mode-'+m);
-      const panel = document.querySelector('.post-panel');
-      if(panel){
-        panel.style.pointerEvents = 'none';
-      }
+        const panel = document.querySelector('.post-panel');
+        if(panel){
+          panel.style.pointerEvents = m === 'posts' ? 'auto' : 'none';
+        }
       $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
       $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
       $('#tab-posts').setAttribute('aria-selected', m==='posts');
@@ -8128,6 +8169,17 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.closed-posts');
+  const postPanel = document.querySelector('.post-panel');
+  if(postPanel){
+    postPanel.addEventListener('click', e => {
+      if(e.target === postPanel) setMode('map');
+    });
+  }
+  if(adPanel){
+    adPanel.addEventListener('click', e => {
+      if(e.target === adPanel) setMode('map');
+    });
+  }
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
