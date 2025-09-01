@@ -549,11 +549,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
-}
-#filterPanel .calendar-scroll{
-  background: var(--dropdown-bg);
-  width:var(--calendar-width);
-  height:calc(var(--calendar-width) + var(--calendar-cell));
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:20px;
@@ -565,7 +560,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar{
   display:flex;
   width:max-content;
-  height:calc(var(--calendar-width) + var(--calendar-cell));
   transform:scale(var(--filter-calendar-scale));
   transform-origin:top left;
   background:var(--dropdown-bg);
@@ -574,7 +568,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
-  height:calc(var(--calendar-width) + var(--calendar-cell));
   display:flex;
   flex-direction:column;
 }
@@ -588,6 +581,7 @@ button[aria-expanded="true"] .results-arrow{
   font-family:inherit;
   font-size:inherit;
   color:inherit;
+  flex-shrink:0;
 }
 #filterPanel .calendar .grid{
   width:var(--calendar-width);
@@ -3117,9 +3111,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             </label>
           </div>
           <div id="datePickerContainer" class="calendar-container">
-            <div class="calendar-scroll">
-              <div id="datePicker"></div>
-            </div>
+            <div id="datePicker"></div>
           </div>
 
           <h3>Categories</h3>
@@ -4147,7 +4139,7 @@ function makePosts(){
     const maxPickerDate = new Date(today);
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const todayToggle = $('#todayToggle');
-    const calendarScroll = $('#datePickerContainer .calendar-scroll');
+    const calendarScroll = $('#datePickerContainer');
     todayWasOn = todayToggle && todayToggle.checked;
 
     function formatDisplay(date){
@@ -4214,7 +4206,7 @@ function makePosts(){
         const grid = document.createElement('div');
         grid.className='grid';
 
-        const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const weekdays=['S','M','T','W','T','F','S'];
         weekdays.forEach(wd=>{
           const w=document.createElement('div');
           w.className='weekday';
