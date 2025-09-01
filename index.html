@@ -577,7 +577,7 @@ button[aria-expanded="true"] .results-arrow{
   grid-template-columns:repeat(7,1fr);
   grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,var(--calendar-cell));
 }
-#filterPanel .calendar .header{
+#filterPanel .calendar .calendar-header{
   grid-column:1 / span 7;
   grid-row:1;
   height:var(--calendar-header-h);
@@ -1972,7 +1972,7 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
 }
-.open-posts .post-calendar .header{
+.open-posts .post-calendar .calendar-header{
   text-align:center;
   font-weight:bold;
   margin-bottom:4px;
@@ -4203,7 +4203,7 @@ function makePosts(){
         grid.className='grid';
 
         const header = document.createElement('div');
-        header.className='header';
+        header.className='calendar-header';
         header.textContent=current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
         grid.appendChild(header);
 
@@ -5613,7 +5613,7 @@ function makePosts(){
           const monthEl=document.createElement('div');
           monthEl.className='month';
           const header=document.createElement('div');
-          header.className='header';
+          header.className='calendar-header';
           header.textContent=monthStart.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
           const grid=document.createElement('div');
           grid.className='grid';
@@ -6178,7 +6178,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
     {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
-    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], title:['.calendar .header']}},
+    {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar'], title:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
   {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
