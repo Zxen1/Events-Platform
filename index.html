@@ -568,12 +568,16 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
-  display:flex;
-  flex-direction:column;
+}
+#filterPanel .calendar .grid{
+  width:var(--calendar-width);
+  height:calc(var(--calendar-width) + var(--calendar-cell));
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-template-rows:repeat(8,1fr);
 }
 #filterPanel .calendar .header{
-  width:var(--calendar-width);
-  height:var(--calendar-cell);
+  grid-column:1 / span 7;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -581,14 +585,6 @@ button[aria-expanded="true"] .results-arrow{
   font-family:inherit;
   font-size:inherit;
   color:inherit;
-  flex-shrink:0;
-}
-#filterPanel .calendar .grid{
-  width:var(--calendar-width);
-  height:var(--calendar-width);
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  grid-template-rows:repeat(7,1fr);
 }
 #filterPanel .calendar .weekday,
 #filterPanel .calendar .day{
@@ -4200,11 +4196,13 @@ function makePosts(){
       while(current <= end){
         const monthEl = document.createElement('div');
         monthEl.className='month';
+        const grid = document.createElement('div');
+        grid.className='grid';
+
         const header = document.createElement('div');
         header.className='header';
         header.textContent=current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-        const grid = document.createElement('div');
-        grid.className='grid';
+        grid.appendChild(header);
 
         const weekdays=['S','M','T','W','T','F','S'];
         weekdays.forEach(wd=>{
@@ -4235,7 +4233,7 @@ function makePosts(){
           }
           grid.appendChild(cell);
         }
-        monthEl.append(header, grid);
+        monthEl.appendChild(grid);
         cal.appendChild(monthEl);
         if(current.getFullYear() === todayDate.getFullYear() && current.getMonth() === todayDate.getMonth()){
           currentMonthIndex = monthIndex;
