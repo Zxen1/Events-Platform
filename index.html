@@ -56,6 +56,7 @@
         --dropdown-radius: 6px;
         --calendar-width: 210px;
         --calendar-cell: calc(var(--calendar-width) / 7);
+        --calendar-header-h: 30px;
         --calendar-past-bg: #d3d3d3;
         --calendar-future-bg: #ffffff;
         --session-available: #add8e6;
@@ -571,13 +572,15 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .calendar .grid{
   width:var(--calendar-width);
-  height:calc(var(--calendar-width) + var(--calendar-cell));
+  height:calc(var(--calendar-header-h)*2 + var(--calendar-cell)*6);
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-template-rows:repeat(8,1fr);
+  grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,var(--calendar-cell));
 }
 #filterPanel .calendar .header{
   grid-column:1 / span 7;
+  grid-row:1;
+  height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
