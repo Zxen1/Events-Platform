@@ -551,17 +551,20 @@ button[aria-expanded="true"] .results-arrow{
   position:relative;
 }
 #filterPanel .calendar-scroll{
-  display:flex;
   background: var(--dropdown-bg);
-  width:max-content;
-  height:auto;
+  width:var(--calendar-width);
+  height:calc(var(--calendar-width) + var(--calendar-cell));
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:20px;
   box-sizing:content-box;
 }
+#filterPanel #datePicker{
+  width:max-content;
+}
 #filterPanel .calendar{
-  width:var(--calendar-width);
+  display:flex;
+  width:max-content;
   height:calc(var(--calendar-width) + var(--calendar-cell));
   transform:scale(var(--filter-calendar-scale));
   transform-origin:top left;
@@ -576,13 +579,15 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
 }
 #filterPanel .calendar .header{
-  width:100%;
+  width:var(--calendar-width);
   height:var(--calendar-cell);
-  line-height:var(--calendar-cell);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   text-align:center;
-  font-family:Verdana;
-  font-size:20px;
-  color:#fff;
+  font-family:inherit;
+  font-size:inherit;
+  color:inherit;
 }
 #filterPanel .calendar .grid{
   width:var(--calendar-width);
@@ -596,8 +601,8 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-family:Verdana;
-  font-size:16px;
+  font-family:inherit;
+  font-size:inherit;
 }
 #filterPanel .calendar .weekday{font-weight:bold;}
 #filterPanel .calendar .day{cursor:pointer;}
