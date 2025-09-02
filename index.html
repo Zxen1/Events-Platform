@@ -19,7 +19,6 @@
   --gap: 12px;
     --media-h: 200px;
     --calendar-scale: 1;
-    --filter-calendar-scale: 1;
     --ink: #ffffff;
     --ink-d: #ececec;
     --gold: #ffc107;
@@ -556,8 +555,8 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  width:calc(var(--calendar-width) * var(--filter-calendar-scale));
-  height:calc(var(--calendar-height) * var(--filter-calendar-scale));
+  width:calc(var(--calendar-width) * var(--calendar-scale));
+  height:calc(var(--calendar-height) * var(--calendar-scale));
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -577,7 +576,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar{
   display:flex;
   width:max-content;
-  transform:scale(var(--filter-calendar-scale));
+  transform:scale(var(--calendar-scale));
   transform-origin:top left;
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
@@ -630,6 +629,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.today{color:var(--today);font-weight:bold;}
 .calendar .day.in-range{background:var(--session-available);border-radius:0;}
 .calendar .day.selected{background:var(--session-selected);color:#fff;}
+.calendar .day.selected.today{color:var(--today);}
 .calendar .day.range-start{border-radius:8px 0 0 8px;}
 .calendar .day.range-end{border-radius:0 8px 8px 0;}
 .calendar .day.range-start.range-end{border-radius:8px;}
@@ -2010,7 +2010,7 @@ body.hide-results .closed-posts{
   align-items:flex-start;
   flex:1 1 300px;
   min-width:300px;
-  width:auto;
+  width:calc(var(--calendar-width) * var(--calendar-scale));
   height:calc(var(--calendar-height) * var(--calendar-scale));
 }
 .open-posts .location-section .options-menu{
@@ -2099,6 +2099,9 @@ body.hide-results .closed-posts{
   color:#fff;
 }
 .open-posts .post-calendar .day.today{color:var(--today);}
+.open-posts .post-calendar .day.available-day.today,
+.open-posts .post-calendar .day.available-day.selected.today,
+.open-posts .post-calendar .day.selected.today{color:var(--today);}
 
 
 .open-posts .post-calendar .selected-month-name{
@@ -4267,10 +4270,8 @@ function makePosts(){
 
     function setupHorizontalWheel(scroller){
       if(!scroller) return;
-      const outer = scroller.closest('.panel-body') || scroller.closest('.closed-posts');
       scroller.addEventListener('wheel', e=>{
         const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-        if(Math.abs(e.deltaY) > Math.abs(e.deltaX) && outer && verticalCanScroll(outer, e.deltaY)) return;
         if(delta !== 0){
           scroller.scrollBy({left: delta, behavior:'smooth'});
           e.preventDefault();
