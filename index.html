@@ -383,15 +383,15 @@ input[type="checkbox"]{
   transition:transform .3s;
   vertical-align:middle;
 }
-body.hide-results .results-arrow{transform:rotate(-45deg);}
+body.hide-results #resultsToggle .results-arrow{transform:rotate(-45deg);}
 
-.open-posts .options-dropdown button{
+.options-dropdown > button{
   position:relative;
   padding-right:30px;
 }
 
-.open-posts .options-dropdown .dropdown-arrow,
-.open-posts .options-dropdown .results-arrow{
+.options-dropdown .dropdown-arrow,
+.options-dropdown .results-arrow{
   position:absolute;
   top:50%;
   right:10px;
@@ -4498,6 +4498,17 @@ function makePosts(){
     const favToggle = $('#favToggle');
     const sortButtons = $$('.sort-option');
 
+    function updateSortBtnLabel(text){
+      const hasMultiple = optionsMenu.querySelectorAll('button').length > 1;
+      if(hasMultiple){
+        optionsBtn.innerHTML = `${text}<span class="results-arrow" aria-hidden="true"></span>`;
+      } else {
+        optionsBtn.textContent = text;
+      }
+    }
+
+    updateSortBtnLabel(optionsBtn.textContent);
+
     favToggle.addEventListener('click', ()=>{
       favToTop = !favToTop;
       favToggle.setAttribute('aria-pressed', favToTop);
@@ -4508,7 +4519,7 @@ function makePosts(){
       btn.addEventListener('click', ()=>{
         currentSort = btn.dataset.sort;
         sortButtons.forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
-        optionsBtn.textContent = btn.textContent;
+        updateSortBtnLabel(btn.textContent);
         renderLists(filtered);
       });
     });
@@ -5475,13 +5486,13 @@ function makePosts(){
             <div class="location-section">
               <div class="map-container">
                 <div id="map-${p.id}" class="post-map"></div>
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
               </div>
               <div class="calendar-container">
                 <div class="calendar-scroll">
                   <div id="cal-${p.id}" class="post-calendar"></div>
                 </div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session<span class="results-arrow" aria-hidden="true"></span></button><div class="session-menu options-menu" hidden></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
