@@ -13,7 +13,7 @@
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
   <style>:root{
   --header-h: 75px;
-  --subheader-h: 55px;
+  --subheader-h: 0;
   --panel-w: 300px;
   --results-w: 520px;
   --gap: 12px;
@@ -318,15 +318,13 @@ input[type="checkbox"]{
 .header button,
 .view-toggle button,
 .auth button,
-.subheader button,
 .options-menu button{
   height:35px;
   line-height:35px;
   border-radius:12px;
 }
 .header .gear,
-.header a,
-.subheader .options-dropdown > button{
+.header a{
   border-radius:12px;
 }
 
@@ -370,7 +368,6 @@ button[aria-expanded="true"] .results-arrow{
   transform:translateY(-50%) rotate(-45deg);
 }
 
-#addressTitle,#addressField{display:none;}
 
 #smallLogo{
   display:none;
@@ -1289,24 +1286,6 @@ body.hide-results .results-col{
   pointer-events: none;
 }
 
-.subheader{
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  color: var(--ink-d);
-  height: var(--subheader-h);
-  min-height: var(--subheader-h);
-  max-height: var(--subheader-h);
-  padding: 14px 20px;
-  position: fixed;
-  top: calc(var(--header-h) + var(--safe-top));
-  left: 0;
-  right: 0;
-  z-index: 3;
-  pointer-events: auto;
-  transition: transform .1s linear;
-}
 
 #filterBtn{
   border-radius:12px;
@@ -1479,7 +1458,18 @@ body.filters-active #filterBtn{
   pointer-events: none;
 }
 
-.geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
+.geocoder{
+  position:static;
+  transform:none;
+  z-index:10;
+  min-width:240px;
+  pointer-events:auto;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  margin-bottom:var(--gap);
+}
 .geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:var(--control-text-bg) !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:visible;font-size:16px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
@@ -1582,12 +1572,6 @@ body.filters-active #filterBtn{
   margin:0;
 }
 
-@media (max-width:999px){
-  .geocoder{position:static;transform:none;margin-left:auto;}
-}
-@media (max-width:649px){
-  .geocoder{width:100%;margin-left:0;}
-}
 
 
 
@@ -1808,7 +1792,6 @@ body.hide-results .closed-posts{
     min-width:0;
     width:100%;
   }
-  body.mode-posts .subheader,
   body.mode-posts footer{
     display:none;
   }
@@ -2315,9 +2298,6 @@ footer{
 }
 
 @media (max-width: 649px){
-  body.mode-posts.hide-posts-ui .subheader{
-    transform: translateY(-100%);
-  }
   body.mode-posts.hide-posts-ui footer{
     transform: translateY(100%);
   }
@@ -2834,18 +2814,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 @media (max-width:450px){
   :root{
-    --subheader-h:0;
     --footer-h:0;
   }
-  .subheader,
   footer{
     display:none;
   }
   body.mode-map{
-    --subheader-h:0;
     --footer-h:0;
   }
-  body.mode-map .subheader,
   body.mode-map footer{
     display:none;
   }
@@ -2876,10 +2852,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .header button{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header .gear{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.subheader{background-color:rgba(0,0,0,0.5);}
-.subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.subheader button{background-color:#292929;border-color:#292929;box-shadow:0 0 0px #000000;}
-.subheader button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 body{background-color:rgba(41,41,41,1);}
 .res-list{background-color:rgba(0,0,0,0);}
 .res-list .card{background-color:rgba(41,41,41,1);box-shadow:0 0 0px #000000;}
@@ -2981,11 +2953,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 .header button{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header .gear{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.subheader{background-color:rgba(0,0,0,0.5);}
-.subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.subheader > button{background-color:#3a3a3a;border-color:#3a3a3a;box-shadow:0 0 0px #000000;}
 .options-dropdown > button{background-color:#3a3a3a;border-color:#3a3a3a;box-shadow:0 0 0px #000000;}
-.subheader > button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .options-dropdown > button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .options-menu{background-color:rgba(255,255,255,1);}
 body{background-color:rgba(41,41,41,1);}
@@ -3101,6 +3069,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </svg>
         <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
       </button>
+      <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
+        <span class="results-arrow" aria-hidden="true"></span> List
+      </button>
+      <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
     </nav>
     <div class="auth">
@@ -3119,13 +3091,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       </button>
     </div>
   </header>
-  <div class="subheader">
-    <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
-      <span class="results-arrow" aria-hidden="true"></span> List
-    </button>
-    <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
-    <div id="geocoder" class="geocoder"></div>
-  </div>
+  
 
   <section class="map-area" aria-label="Map">
     <div id="map"></div>
@@ -3160,6 +3126,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         </div>
       </div>
       <div class="panel-body">
+        <div id="geocoder" class="geocoder"></div>
         <section class="filters-col" aria-label="Filters">
           <div class="options-dropdown">
             <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
@@ -3179,9 +3146,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <div class="x" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
-
-          <h3 id="addressTitle">Address</h3>
-          <div class="field" id="addressField"></div>
 
           <h3>Date Range</h3>
           <div class="field">
@@ -3653,7 +3617,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
 
-    // Ensure result lists occupy space between the subheader and footer
+    // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
@@ -3709,12 +3673,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     function updateLayoutVars(){
       const root = document.documentElement;
       const header = document.querySelector('.header');
-      const subHead = document.querySelector('.subheader');
       if(header){
         root.style.setProperty('--header-h', `${header.offsetHeight}px`);
-      }
-      if(subHead){
-        root.style.setProperty('--subheader-h', `${subHead.offsetHeight}px`);
       }
       if(typeof window.adjustListHeight === 'function'){
         window.adjustListHeight();
@@ -4609,38 +4569,6 @@ function makePosts(){
         }
       });
 
-      const geoWrap = document.getElementById('geocoder');
-      const addressTitle = document.getElementById('addressTitle');
-      const addressField = document.getElementById('addressField');
-      function placeGeocoder(){
-        if(!geoWrap || !addressTitle || !addressField) return;
-        const w = window.innerWidth;
-        if(w < 650){
-          addressTitle.style.display = 'block';
-          addressField.style.display = 'block';
-          addressField.appendChild(geoWrap);
-          geoWrap.style.position = 'static';
-          geoWrap.style.transform = 'none';
-          geoWrap.style.marginLeft = '0';
-        } else {
-          addressTitle.style.display = 'none';
-          addressField.style.display = 'none';
-          document.querySelector('.subheader').appendChild(geoWrap);
-          if(w < 1000){
-            geoWrap.style.position = 'static';
-            geoWrap.style.transform = 'none';
-            geoWrap.style.marginLeft = 'auto';
-          } else {
-            geoWrap.style.position = 'absolute';
-            geoWrap.style.top = '50%';
-            geoWrap.style.left = '50%';
-            geoWrap.style.transform = 'translate(-50%, -50%)';
-            geoWrap.style.marginLeft = '';
-          }
-        }
-      }
-      window.addEventListener('resize', placeGeocoder);
-      placeGeocoder();
 
       function setMode(m){
         mode = m;
@@ -6067,8 +5995,7 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
       if(window.innerWidth < 450){
-        const subHead = document.querySelector('.subheader');
-        const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + safeTop;
+        const topPos = headerH + safeTop;
         content.style.left='0';
         content.style.right='0';
         content.style.top=`${topPos}px`;
@@ -6084,8 +6011,7 @@ function openPanel(m){
         content.style.maxHeight='';
       }
     } else if(m.id==='filterPanel'){
-      const subHead = document.querySelector('.subheader');
-      const topPos = subHead ? subHead.getBoundingClientRect().bottom : headerH + subH + safeTop;
+      const topPos = headerH + subH + safeTop;
       if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
@@ -6380,7 +6306,6 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
-    {key:'subheader', label:'Subheader', selectors:{bg:['.subheader'], text:['.subheader'], btn:['.subheader > button','.options-dropdown > button'], btnText:['.subheader > button','.options-dropdown > button'], optionsMenu:['.options-menu']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.res-list'], text:['.res-list'], title:['.res-list .card .t','.res-list .card .title'], btn:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], btnText:['.res-list button','.res-list .sq','.res-list .tiny','.res-list .btn'], card:['.res-list .card']}},
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .posts'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
@@ -8376,35 +8301,6 @@ document.addEventListener('pointerdown', handleDocInteract);
 })();
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const posts = document.querySelector('.closed-posts');
-  const subHead = document.querySelector('.subheader');
-  const foot = document.querySelector('footer');
-  if(!posts || !subHead || !foot) return;
-  const update = () => {
-    if(window.innerWidth >= 650 || !document.body.classList.contains('mode-posts')){
-      subHead.style.transform = '';
-      foot.style.transform = '';
-      posts.style.top = '';
-      posts.style.bottom = '';
-      return;
-    }
-    const top = posts.scrollTop;
-    const subH = subHead.offsetHeight;
-    const footH = foot.offsetHeight;
-    const subOffset = Math.min(top, subH);
-    const footOffset = Math.min(top, footH);
-    subHead.style.transform = `translateY(-${subOffset}px)`;
-    foot.style.transform = `translateY(${footOffset}px)`;
-    posts.style.top = `calc(var(--header-h) + var(--subheader-h) + var(--safe-top) - ${subOffset}px)`;
-    posts.style.bottom = `calc(var(--footer-h) - ${footOffset}px)`;
-  };
-  posts.addEventListener('scroll', update, {passive:true});
-  window.addEventListener('resize', update);
-  update();
-});
-</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
