@@ -581,23 +581,22 @@ button[aria-expanded="true"] .results-arrow{
 }
 .calendar .month{
   flex:0 0 auto;
-  width:var(--calendar-width);
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
 }
 .calendar .month:not(:first-child){
   border-left:1px solid var(--calendar-past-bg);
 }
 .calendar .grid{
-  width:var(--calendar-width);
-  height:calc(var(--calendar-header-h)*2 + var(--calendar-cell)*6);
+  flex:1 1 auto;
+  width:100%;
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,var(--calendar-cell));
+  grid-template-rows:repeat(7,1fr);
 }
 .calendar .calendar-header{
-  grid-column:1 / span 7;
-  grid-row:1;
-  height:var(--calendar-header-h);
-  line-height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1375,6 +1374,12 @@ body.filters-active #filterBtn{
   gap: 4px;
 }
 
+.closed-posts .info{
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
 .res-list .info > div{
   display: flex;
   align-items: center;
@@ -1515,11 +1520,17 @@ body.filters-active #filterBtn{
   align-items:center;
   justify-content:center;
   flex:none;
+  width:var(--control-h);
+  height:var(--control-h);
+  margin:0;
+  padding:0;
 }
+.mapboxgl-ctrl-group{overflow:hidden;}
 .mapboxgl-ctrl-geolocate,
 .mapboxgl-ctrl-compass{
-  width:35px;
-  height:35px;
+  width:var(--control-h);
+  height:var(--control-h);
+  overflow:hidden;
 }
 .mapboxgl-ctrl-geolocate button,
 .mapboxgl-ctrl-compass button{
@@ -1548,6 +1559,12 @@ body.filters-active #filterBtn{
   border:1px solid #ccc !important;
   border-radius:12px;
   overflow:hidden;
+}
+.mapboxgl-ctrl-top-left,
+.mapboxgl-ctrl-top-right,
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right{
+  margin:0;
 }
 
 @media (max-width:999px){
@@ -1734,7 +1751,7 @@ body.hide-results .closed-posts{
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
   .open-posts .text{
-    margin-bottom:var(--gap);
+    margin-bottom:6px;
   }
   .open-posts .text{
     padding:14px;
@@ -1832,7 +1849,8 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .post-map{
-  height:var(--media-h);
+  flex:1 1 auto;
+  height:100%;
   border:1px solid var(--border);
   border-radius:8px;
   min-width:300px;
@@ -1998,12 +2016,13 @@ body.hide-results .closed-posts{
   position:relative;
   font-size:16px;
   min-width:300px;
+  height:100%;
 }
 
 
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
-  height:auto;
+  height:100%;
   overflow-x:auto;
   overflow-y:auto;
   padding-bottom:20px;
@@ -2011,13 +2030,14 @@ body.hide-results .closed-posts{
   background:var(--dropdown-bg);
   border:1px solid var(--border);
   border-radius:8px;
+  flex:1 1 auto;
 }
 .open-posts .post-calendar .calendar{
   margin:0;
   box-sizing:border-box;
   display:flex;
   width:max-content;
-  height:auto;
+  height:100%;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
   background:var(--dropdown-bg);
@@ -2025,19 +2045,19 @@ body.hide-results .closed-posts{
 }
 .open-posts .post-calendar .month{
   flex:0 0 auto;
-  width:var(--calendar-width);
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
 }
 .open-posts .post-calendar .grid{
-  width:var(--calendar-width);
-  height:calc(var(--calendar-header-h)*2 + var(--calendar-cell)*6);
+  flex:1 1 auto;
+  width:100%;
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,var(--calendar-cell));
+  grid-template-rows:repeat(7,1fr);
 }
 .open-posts .post-calendar .calendar-header{
-  grid-column:1 / span 7;
-  grid-row:1;
-  height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -3073,8 +3093,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <button id="resultsToggle" aria-pressed="true"><span class="results-arrow" aria-hidden="true"></span> List</button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
-      <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-      <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+      <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
     </nav>
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">
@@ -4237,9 +4256,10 @@ function makePosts(){
       if(!scroller) return;
       const outer = scroller.closest('.panel-body') || scroller.closest('.closed-posts');
       scroller.addEventListener('wheel', e=>{
-        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-          if(outer && verticalCanScroll(outer, e.deltaY)) return;
-          scroller.scrollLeft += e.deltaY;
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX) && outer && verticalCanScroll(outer, e.deltaY)) return;
+        if(delta !== 0){
+          scroller.scrollLeft += delta;
           e.preventDefault();
         }
       }, {passive:false});
@@ -4370,13 +4390,12 @@ function makePosts(){
       while(current <= end){
         const monthEl = document.createElement('div');
         monthEl.className='month';
-        const grid = document.createElement('div');
-        grid.className='grid';
-
         const header = document.createElement('div');
         header.className='calendar-header';
         header.textContent=current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-        grid.appendChild(header);
+        monthEl.appendChild(header);
+        const grid = document.createElement('div');
+        grid.className='grid';
 
         const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         weekdays.forEach(wd=>{
@@ -4561,6 +4580,12 @@ function makePosts(){
 
       const resList = $('.res-list');
       resList && resList.addEventListener('click', e=>{
+        const cardEl = e.target.closest('.card');
+        if(cardEl){
+          const id = cardEl.getAttribute('data-id');
+          if(id) { stopSpin(); openPost(id); }
+          return;
+        }
         if(e.target === resList){
           document.body.classList.add('hide-results');
           resultsToggle.setAttribute('aria-pressed','false');
@@ -4573,6 +4598,12 @@ function makePosts(){
 
       const postsWide = $('#postsWide');
       postsWide && postsWide.addEventListener('click', e=>{
+        const cardEl = e.target.closest('.card');
+        if(cardEl){
+          const id = cardEl.getAttribute('data-id');
+          if(id){ stopSpin(); openPost(id, true); }
+          return;
+        }
         if(e.target === postsWide && postsWide.querySelector('.open-posts')){
           setMode('map');
         }
@@ -4619,10 +4650,11 @@ function makePosts(){
         if(panel){
           panel.style.pointerEvents = m === 'posts' ? 'auto' : 'none';
         }
-      $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
-      $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
-      $('#tab-posts').setAttribute('aria-selected', m==='posts');
-      $('#main-tab-map').setAttribute('aria-selected', m==='map');
+      const toggle = $('#mapPostsToggle');
+      if(toggle){
+        toggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
+        toggle.setAttribute('aria-pressed', m === 'posts');
+      }
       if(map){
         if(typeof map.resize === 'function'){
           map.resize();
@@ -4638,8 +4670,7 @@ function makePosts(){
       if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
-    $('#tab-posts').addEventListener('click',()=> setMode('posts'));
-    $('#main-tab-map').addEventListener('click',()=> setMode('map'));
+    $('#mapPostsToggle').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
 
     // Mapbox
     function loadMapbox(cb){
@@ -5333,7 +5364,6 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; e.stopPropagation(); stopSpin(); openPost(p.id, wide); });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
         document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
@@ -5791,13 +5821,12 @@ function makePosts(){
         while(current <= end){
           const monthEl = document.createElement('div');
           monthEl.className='month';
-          const grid = document.createElement('div');
-          grid.className='grid';
-
           const header = document.createElement('div');
           header.className='calendar-header';
           header.textContent = current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-          grid.appendChild(header);
+          monthEl.appendChild(header);
+          const grid = document.createElement('div');
+          grid.className='grid';
 
           const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
           weekdays.forEach(wd=>{
@@ -8445,7 +8474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const postPanel = document.querySelector('.post-panel');
   if(postPanel){
     postPanel.addEventListener('click', e => {
-      if(e.target === postPanel) setMode('map');
+      if(e.target.classList && e.target.classList.contains('map-overlay')) setMode('map');
     });
   }
   if(adPanel){
