@@ -23,14 +23,18 @@
     --ink-d: #ececec;
     --gold: #ffc107;
     --muted: #777;
-      --primary: #000000;
+      --primary: #3E5393;
       --secondary: #000000;
-      --accent: #000000;
+      --accent: #5C6FB1;
+      --active: #2E3A72;
       --background: rgba(41,41,41,1);
       --text: #ffffff;
       --button-text: #ffffff;
       --button-hover-text: #000000;
+      --button-active-text: #ffffff;
       --btn: #3E5393;
+      --btn-hover: #5C6FB1;
+      --btn-active: #2E3A72;
       --panel-bg: rgba(0,0,0,1);
       --panel-text: #000000;
       --footer-h: 70px;
@@ -100,17 +104,21 @@ fieldset{
   border:0 !important;
 }
 
-*:active,
+*:hover{
+  border-color: var(--border-hover) !important;
+}
+
+*:active{
+  border-color: var(--border-active) !important;
+}
+
 *[aria-pressed="true"],
 *[aria-current="page"],
 *[aria-selected="true"],
 .selected,
 .on{
   border-color: var(--border-active) !important;
-}
-
-*:hover{
-  border-color: var(--border-hover) !important;
+  color: var(--active);
 }
 
 html,body{
@@ -172,6 +180,30 @@ button:not(.mapboxgl-ctrl-attrib-button),
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
+button:hover,
+[role="button"]:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+
+button:active,
+[role="button"]:active,
+button[aria-pressed="true"],
+[role="button"][aria-pressed="true"],
+button[aria-current="page"],
+[role="button"][aria-current="page"],
+button[aria-selected="true"],
+[role="button"][aria-selected="true"],
+button.selected,
+[role="button"].selected,
+button.on,
+[role="button"].on{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+}
+
 .mapboxgl-ctrl-attrib-button,
 .mapboxgl-ctrl-attrib-button:hover,
 .mapboxgl-ctrl-attrib-button:active{
@@ -184,6 +216,10 @@ a{
 
 a:hover{
   color: var(--accent);
+}
+
+a:active{
+  color: var(--active);
 }
 button:active,
 [role="button"]:active{
