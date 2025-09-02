@@ -3028,18 +3028,18 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 .mapboxgl-popup .chip{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .chip-small{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
 .mapboxgl-popup .multi-item{background-color:rgba(0,0,0,1);box-shadow:0 0 0px #000000;}
-.mapboxgl-popup .hover-card{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .hover-card .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .chip-small .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.mapboxgl-popup .multi-item .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .hover-card .title{color:#FE4D4D;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip .title{color:#FE4D4D;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .chip-small .title{color:#FE4D4D;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .t{color:#ffffff;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
+.mapboxgl-popup .multi-item .title{color:#FE4D4D;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .panel-content{background-color:rgba(145,145,145,1);}
 #filterPanel .panel-content{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #filterPanel .panel-content .t{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
@@ -3088,7 +3088,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-      <button id="resultsToggle" aria-pressed="true"><span class="results-arrow" aria-hidden="true"></span> List</button>
+      <button id="filterBtn" aria-label="Open filters panel"><span class="results-arrow" aria-hidden="true"></span> Filters</button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
       <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
     </nav>
@@ -3109,7 +3109,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </div>
   </header>
   <div class="subheader">
-    <button id="filterBtn" aria-label="Open filters panel">
+    <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
       <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -3151,7 +3151,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));left:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
