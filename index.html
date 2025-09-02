@@ -17,7 +17,7 @@
   --panel-w: 300px;
   --results-w: 520px;
   --gap: 12px;
-    --media-h: 200px;
+    --media-h: 250px;
     --calendar-scale: 1;
     --filter-calendar-scale: 1;
     --ink: #ffffff;
@@ -129,14 +129,12 @@ html,body{
     font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
     background: var(--background);
     color: var(--text);
-    overflow: hidden;
     cursor: default;
     caret-color: transparent;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     user-select: none;
-    touch-action: manipulation;
   }
 
 input,
@@ -1993,7 +1991,7 @@ body.hide-results .closed-posts{
   display:none;
 }
 .open-posts .post-calendar{
-  width:auto;
+  width:100%;
   position:relative;
   font-size:16px;
   min-width:300px;
@@ -2002,9 +2000,8 @@ body.hide-results .closed-posts{
 
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
-  overflow-x:auto;
-  overflow-y:auto;
-  height:250px;
+  overflow:auto;
+  height:var(--media-h);
   box-sizing:border-box;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
@@ -2014,23 +2011,21 @@ body.hide-results .closed-posts{
   margin:0;
   box-sizing:border-box;
   display:flex;
-  width:max-content;
-  height:auto;
-  transform:scale(var(--calendar-scale));
-  transform-origin:top left;
+  width:100%;
+  height:100%;
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
 }
 .open-posts .post-calendar .month{
-  flex:0 0 auto;
-  width:var(--calendar-width);
+  flex:1 1 100%;
+  width:100%;
 }
 .open-posts .post-calendar .grid{
-  width:var(--calendar-width);
-  height:calc(var(--calendar-header-h)*2 + var(--calendar-cell)*6);
+  width:100%;
+  height:100%;
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,var(--calendar-cell));
+  grid-template-rows:var(--calendar-header-h) var(--calendar-header-h) repeat(6,1fr);
 }
 .open-posts .post-calendar .calendar-header{
   grid-column:1 / span 7;
@@ -3068,11 +3063,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
-    <nav class="view-toggle" aria-label="Primary" role="tablist">
+    <nav class="view-toggle" aria-label="Primary">
       <button id="resultsToggle" aria-pressed="true"><span class="results-arrow" aria-hidden="true"></span> List</button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
-      <button id="tab-posts" role="tab" aria-selected="false">Posts</button>
-      <button id="main-tab-map" role="tab" aria-selected="true" aria-current="page">Map</button>
+      <button id="modeToggle">Show Posts</button>
     </nav>
     <div class="auth">
       <button id="memberBtn" aria-label="Open members area">
@@ -4232,51 +4226,11 @@ function makePosts(){
     }
 
     function setupHorizontalWheel(scroller){
-      if(!scroller) return;
-      const outer = scroller.closest('.panel-body') || scroller.closest('.closed-posts');
-      scroller.addEventListener('wheel', e=>{
-        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-          if(outer && verticalCanScroll(outer, e.deltaY)) return;
-          scroller.scrollLeft += e.deltaY;
-          e.preventDefault();
-        }
-      }, {passive:false});
+      // custom scroll handling removed
     }
 
     function setupCalendarScroll(scroller){
       if(!scroller) return;
-      scroller.setAttribute('tabindex','0');
-      setupHorizontalWheel(scroller);
-      scroller.addEventListener('keydown', e=>{
-        if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
-          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
-          const w = m ? m.offsetWidth : 0;
-          scroller.scrollBy({left:e.key==='ArrowLeft'?-w:w, behavior:'smooth'});
-          e.preventDefault();
-        }
-      });
-      let t;
-      scroller.addEventListener('scroll', ()=>{
-        const marker = scroller.querySelector('.today-marker');
-        if(marker){
-          const base = parseFloat(marker.dataset.pos || '0');
-          marker.style.left = `${base + scroller.scrollLeft}px`;
-        }
-        if(t) clearTimeout(t);
-        t = setTimeout(()=>{
-          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
-          const w = m ? m.offsetWidth : 0;
-          if(w){
-            const max = scroller.scrollWidth - scroller.clientWidth;
-            if(scroller.scrollLeft >= max - 1){
-              scroller.scrollLeft = max;
-            } else {
-              const i = Math.round(scroller.scrollLeft / w);
-              scroller.scrollTo({left:w*i, behavior:'smooth'});
-            }
-          }
-        },100);
-      });
     }
     setupCalendarScroll(calendarScroll);
     todayWasOn = todayToggle && todayToggle.checked;
@@ -4557,24 +4511,7 @@ function makePosts(){
         }, 310);
       });
 
-      const resList = $('.res-list');
-      resList && resList.addEventListener('click', e=>{
-        if(e.target === resList){
-          document.body.classList.add('hide-results');
-          resultsToggle.setAttribute('aria-pressed','false');
-          resultsCol.setAttribute('aria-hidden','true');
-          localStorage.setItem('resultsHidden','true');
-          if(window.updateAdVisibility) updateAdVisibility();
-          setMode('map');
-        }
-      });
-
-      const postsWide = $('#postsWide');
-      postsWide && postsWide.addEventListener('click', e=>{
-        if(e.target === postsWide && postsWide.querySelector('.open-posts')){
-          setMode('map');
-        }
-      });
+      // Removed automatic mode switches on panel clicks
 
       const geoWrap = document.getElementById('geocoder');
       const addressTitle = document.getElementById('addressTitle');
@@ -4617,10 +4554,11 @@ function makePosts(){
         if(panel){
           panel.style.pointerEvents = m === 'posts' ? 'auto' : 'none';
         }
-      $('#tab-posts').setAttribute('aria-current', m==='posts'?'page':'');
-      $('#main-tab-map').setAttribute('aria-current', m==='map'?'page':'');
-      $('#tab-posts').setAttribute('aria-selected', m==='posts');
-      $('#main-tab-map').setAttribute('aria-selected', m==='map');
+      const modeToggle = document.getElementById('modeToggle');
+      if(modeToggle){
+        modeToggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
+        modeToggle.setAttribute('aria-pressed', m === 'posts' ? 'true' : 'false');
+      }
       if(map){
         if(typeof map.resize === 'function'){
           map.resize();
@@ -4636,8 +4574,8 @@ function makePosts(){
       if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
-    $('#tab-posts').addEventListener('click',()=> setMode('posts'));
-    $('#main-tab-map').addEventListener('click',()=> setMode('map'));
+    const modeToggle = document.getElementById('modeToggle');
+    modeToggle && modeToggle.addEventListener('click', ()=> setMode(mode === 'map' ? 'posts' : 'map'));
 
     // Mapbox
     function loadMapbox(cb){
@@ -8441,16 +8379,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.closed-posts');
   const postPanel = document.querySelector('.post-panel');
-  if(postPanel){
-    postPanel.addEventListener('click', e => {
-      if(e.target === postPanel) setMode('map');
-    });
-  }
-  if(adPanel){
-    adPanel.addEventListener('click', e => {
-      if(e.target === adPanel) setMode('map');
-    });
-  }
+  // Removed automatic map mode switch when clicking panels
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
