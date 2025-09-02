@@ -97,21 +97,21 @@
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  border-color: var(--border) !important;
+  border-color: var(--border);
 }
 
 fieldset{
   margin:0;
   padding:6px 0 0;
-  border:0 !important;
+  border:0;
 }
 
 *:hover{
-  border-color: var(--border-hover) !important;
+  border-color: var(--border-hover);
 }
 
 *:active{
-  border-color: var(--border-active) !important;
+  border-color: var(--border-active);
 }
 
 *[aria-pressed="true"],
@@ -119,7 +119,7 @@ fieldset{
 *[aria-selected="true"],
 .selected,
 .on{
-  border-color: var(--border-active) !important;
+  border-color: var(--border-active);
   color: var(--active);
 }
 
@@ -204,12 +204,6 @@ button.on,
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
-}
-
-.mapboxgl-ctrl-attrib-button,
-.mapboxgl-ctrl-attrib-button:hover,
-.mapboxgl-ctrl-attrib-button:active{
-  all: revert !important;
 }
 
 a{
