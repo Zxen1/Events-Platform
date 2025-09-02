@@ -8479,5 +8479,37 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAdVisibility();
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let activePanelScroller = null;
+
+  function getScrollable(el){
+    while(el && el !== document.body){
+      const style = getComputedStyle(el);
+      if(/auto|scroll/.test(style.overflowY + style.overflowX)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  document.addEventListener('pointerdown', e => {
+    const panel = e.target.closest('.panel');
+    if(!panel){
+      activePanelScroller = null;
+      return;
+    }
+    activePanelScroller = getScrollable(e.target);
+  }, true);
+
+  document.addEventListener('wheel', e => {
+    const panel = e.target.closest('.panel');
+    if(!panel) return;
+    if(!activePanelScroller || !activePanelScroller.contains(e.target)){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, {capture:true, passive:false});
+});
+</script>
 </body>
 </html>
