@@ -1380,6 +1380,11 @@ body.filters-active #filterBtn{
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
+  transition: filter .22s ease;
+}
+
+.thumb.lqip{
+  filter: blur(10px);
 }
 
 .meta{
@@ -5253,6 +5258,7 @@ function makePosts(){
               if(entry.isIntersecting){
                 const img = entry.target;
                 if(img.dataset.src){
+                  img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
                   img.src = img.dataset.src;
                   img.removeAttribute('data-src');
                 }
@@ -5266,6 +5272,7 @@ function makePosts(){
           imgs.forEach(img => {
             img.loading = 'lazy';
             if(img.dataset.src){
+              img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
               img.src = img.dataset.src;
               img.removeAttribute('data-src');
             }
@@ -5337,7 +5344,7 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = `<img class="thumb" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
           ${thumb}
         <div class="meta">
