@@ -1009,6 +1009,14 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
 }
 
+.field .options-dropdown{
+  flex:1;
+}
+
+.field .options-dropdown > button{
+  width:100%;
+}
+
 .input input,
 .input select{
   flex: 1;
@@ -1147,7 +1155,7 @@ button[aria-expanded="true"] .results-arrow{
 
 
 .cats{
-  margin-top: 10px;
+  margin:8px 0;
 }
 
 .cat{
@@ -1232,7 +1240,7 @@ button[aria-expanded="true"] .results-arrow{
   grid-template-columns: 1fr 38px;
   gap: 8px;
   align-items: center;
-  margin-top: 10px;
+  margin:8px 0;
 }
 
 .reset-box .btn{
@@ -2666,8 +2674,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .ad-panel{
   position:fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap));
-  bottom: calc(var(--footer-h) + var(--gap));
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  bottom: var(--footer-h);
   width:400px;
   right: var(--gap);
   background:var(--ad-panel-bg);
@@ -3051,7 +3059,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel .panel-content .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adPanel{background-color:rgba(0,0,0,0.5);}
+#adPanel{background-color:var(--ad-panel-bg);}
 .img-popup{background-color:rgba(0,0,0,1);}
 
 </style>
@@ -3128,28 +3136,27 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <div class="panel-body">
         <div id="geocoder" class="geocoder"></div>
         <section class="filters-col" aria-label="Filters">
-          <div class="options-dropdown">
-            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
-            <div id="optionsMenu" class="options-menu" hidden>
-              <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-              <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-                <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-                <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+          <div class="field sort-field">
+            <label for="optionsBtn">Sort Results</label>
+            <div class="options-dropdown">
+              <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
+              <div id="optionsMenu" class="options-menu" hidden>
+                <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+                <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+                  <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
+                  <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
+                  <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+                </div>
               </div>
             </div>
           </div>
-          <div>
-            <h3>Keywords</h3>
-            <div class="field">
-              <div class="input"><input id="kwInput" type="text" placeholder="Search keywords" aria-label="Keywords" />
-                <div class="x" role="button" aria-label="Clear keywords">X</div>
-              </div>
-            </div>
-
-          <h3>Date Range</h3>
           <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Select date range" readonly />
+            <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
+              <div class="x" role="button" aria-label="Clear keywords">X</div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Date Range" readonly />
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
@@ -3163,14 +3170,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           <div id="datePickerContainer" class="calendar-container">
             <div id="datePicker"></div>
           </div>
-
-          <h3>Categories</h3>
-          <div class="cats" id="cats"></div>
-
-            <div class="reset-box">
-              <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-                Reset All Filters
-              </div>
+          <div class="cats" id="cats" aria-label="Categories"></div>
+          <div class="reset-box">
+            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+              Reset All Filters
             </div>
           </div>
         </section>
@@ -4644,7 +4647,7 @@ function makePosts(){
           accessToken: mapboxgl.accessToken,
           mapboxgl,
           marker: false,
-          placeholder: 'Search Location',
+          placeholder: 'Location',
           reverseGeocode: true,
           collapsed: false
         });
@@ -4681,7 +4684,7 @@ function makePosts(){
           accessToken: mapboxgl.accessToken,
           mapboxgl,
           marker:false,
-          placeholder:'Search Location'
+          placeholder:'Location'
         });
         memberGeocoder.on('result', e=>{
           const info = document.getElementById('mLocationInfo');
