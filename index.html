@@ -2818,19 +2818,20 @@ body.hide-results .post-panel{
     display:none;
   }
   body.mode-map{
-    --subheader-h:55px;
-    --footer-h:70px;
+    --subheader-h:0;
+    --footer-h:0;
   }
   body.mode-map .subheader,
   body.mode-map footer{
-    display:flex;
+    display:none;
   }
   #filterPanel .panel-content,
   #memberPanel .panel-content,
   #adminPanel .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
-    left:50%;
-    transform:translateX(-50%);
+    left:0;
+    right:0;
+    transform:none;
   }
   .open-posts .detail-header{
     padding-bottom:0;
@@ -4260,6 +4261,23 @@ function makePosts(){
     setupCalendarScroll(calendarScroll);
     todayWasOn = todayToggle && todayToggle.checked;
 
+    function scrollCalendarToToday(behavior='auto'){
+      const calScroll = $('#datePickerContainer');
+      if(!calScroll) return;
+      const todayCell = calScroll.querySelector('.day.today');
+      if(todayCell){
+        const month = todayCell.closest('.month');
+        const left = month ? month.offsetLeft : 0;
+        calScroll.dataset.todayScroll = left;
+        calScroll.scrollTo({left, behavior});
+        const marker = calScroll.querySelector('.today-marker');
+        if(marker){
+          const base = parseFloat(marker.dataset.pos || '0');
+          marker.style.left = `${base + left}px`;
+        }
+      }
+    }
+
     function formatDisplay(date){
       const wd = date.toLocaleDateString('en-GB',{weekday:'short'});
       const day = date.getDate();
@@ -4379,8 +4397,6 @@ function makePosts(){
       if(calendarScroll){
         const monthWidth = cal.querySelector('.month').offsetWidth;
         const scrollPos = monthWidth * currentMonthIndex;
-        calendarScroll.scrollLeft = scrollPos;
-        calendarScroll.dataset.todayScroll = scrollPos;
         const maxScroll = calendarScroll.scrollWidth - calendarScroll.clientWidth;
         const track = calendarScroll.clientWidth - 20;
         const pos = maxScroll ? scrollPos / maxScroll * track + 10 : 10;
@@ -4388,12 +4404,9 @@ function makePosts(){
         const marker = document.createElement('div');
         marker.className = 'today-marker';
         marker.dataset.pos = pos;
-        marker.style.left = `${pos + calendarScroll.scrollLeft}px`;
-        marker.addEventListener('click', ()=> {
-          const target = parseFloat(calendarScroll.dataset.todayScroll || '0');
-          calendarScroll.scrollTo({left: target, behavior:'smooth'});
-        });
         calendarScroll.appendChild(marker);
+        scrollCalendarToToday();
+        marker.addEventListener('click', ()=> scrollCalendarToToday('smooth'));
       }
     }
 
@@ -4760,7 +4773,7 @@ function makePosts(){
         applySky(skyStyle);
       });
       map.on('load', ()=>{
-        $('.map-overlay').style.display='none';
+        $$('.map-overlay').forEach(el=>el.remove());
         addPostSource();
         if(spinEnabled){
           document.body.classList.remove('hide-results');
@@ -4984,7 +4997,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item').forEach(n => n.addEventListener('click', ()=>{ const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id); }));
+            root.querySelectorAll('.multi-item').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -5022,7 +5035,7 @@ function makePosts(){
               registerPopup(hoverPopup);
               const cardEl = hoverPopup.getElement().querySelector('.hover-card');
               if(cardEl){
-                cardEl.addEventListener('click', ()=>{ touchMarker=null; openPost(id); });
+                cardEl.addEventListener('click', (e)=>{ e.stopPropagation(); touchMarker=null; openPost(id); });
               }
             }
           }
@@ -5297,7 +5310,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; stopSpin(); openPost(p.id, wide); });
+      el.addEventListener('click', (e)=>{ if(e.target.closest('.fav')) return; e.stopPropagation(); stopSpin(); openPost(p.id, wide); });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
         document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
@@ -5400,7 +5413,7 @@ function makePosts(){
             const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
             el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', ()=>{ stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
+          el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
           footRow.appendChild(el);
         }
       // scroll to the far right to reveal the newest
@@ -6053,13 +6066,7 @@ function openPanel(m){
       }
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
-        const baseScroll = parseFloat(calScroll.dataset.todayScroll || '0');
-        calScroll.scrollLeft = baseScroll;
-        const marker = calScroll.querySelector('.today-marker');
-        if(marker){
-          const base = parseFloat(marker.dataset.pos || '0');
-          marker.style.left = `${base + calScroll.scrollLeft}px`;
-        }
+        scrollCalendarToToday();
       }
     } else if(m.id==='welcomePopup'){
       content.style.left='50%';
