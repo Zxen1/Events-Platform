@@ -4686,20 +4686,25 @@ function makePosts(){
     // Mapbox
     function loadMapbox(cb){
       if(window.mapboxgl && window.MapboxGeocoder) return cb();
-      const link = document.createElement('link');
-      link.rel='stylesheet';
-      link.href='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
-      document.head.appendChild(link);
-      const gLink = document.createElement('link');
-      gLink.rel='stylesheet';
-      gLink.href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css';
-      gLink.onerror = ()=>{
-        const alt = document.createElement('link');
-        alt.rel='stylesheet';
-        alt.href='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.css';
-        document.head.appendChild(alt);
-      };
-      document.head.appendChild(gLink);
+
+      function injectCleanCSS(url, fallback){
+        fetch(url).then(r=>r.text()).then(css=>{
+          css = css.replace(/-ms-high-contrast/g,'forced-colors');
+          const style = document.createElement('style');
+          style.textContent = css;
+          document.head.appendChild(style);
+        }).catch(()=>{
+          const link = document.createElement('link');
+          link.rel='stylesheet';
+          link.href = fallback || url;
+          document.head.appendChild(link);
+        });
+      }
+
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css');
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css',
+        'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.css');
+
       const s = document.createElement('script');
       s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
       s.onload = ()=>{
@@ -4960,7 +4965,16 @@ function makePosts(){
 
     // Map layers
     function postsToGeoJSON(list){
-      return { type:'FeatureCollection', features: list.map(p => ({ type:'Feature', properties:{id:p.id, title:p.title, city:p.city, cat:p.category}, geometry:{type:'Point', coordinates:[p.lng,p.lat]} })) };
+      return {
+        type:'FeatureCollection',
+        features: list
+          .filter(p => typeof p.lng === 'number' && typeof p.lat === 'number')
+          .map(p => ({
+            type:'Feature',
+            properties:{id:p.id, title:p.title, city:p.city, cat:p.category},
+            geometry:{type:'Point', coordinates:[p.lng, p.lat]}
+          }))
+      };
     }
 
     function addPostSource(){
