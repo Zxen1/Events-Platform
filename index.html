@@ -7658,12 +7658,16 @@ document.addEventListener('pointerdown', handleDocInteract);
   function loadSavedTheme(){
     const cssTheme = localStorage.getItem('selectedCssTheme');
     if(cssTheme){
-      const idx = presets.findIndex(p=>p.css===cssTheme);
-      if(idx !== -1){
-        const sel = document.getElementById('themePreset');
-        if(sel) sel.value = idx;
-        applyPreset(presets[idx]);
-        return;
+      if(!document.getElementById(cssTheme)){
+        localStorage.removeItem('selectedCssTheme');
+      } else {
+        const idx = presets.findIndex(p=>p.css===cssTheme);
+        if(idx !== -1){
+          const sel = document.getElementById('themePreset');
+          if(sel) sel.value = idx;
+          applyPreset(presets[idx]);
+          return;
+        }
       }
     }
     const saved = JSON.parse(localStorage.getItem('currentTheme')||'null');
