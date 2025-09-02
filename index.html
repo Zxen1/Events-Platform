@@ -1672,7 +1672,7 @@ body.filters-active #filterBtn{
 .closed-posts .open-posts{background:var(--closed-card-bg);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .closed-posts .open-posts{margin-top:12px}
-.closed-posts.ad-space{right:calc(400px + var(--gap) * 2);}
+.closed-posts.ad-space{right:calc(400px + var(--gap));}
 
 body.hide-results .closed-posts{
   left:0;
@@ -2750,11 +2750,11 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   bottom: var(--footer-h);
   width:400px;
   right:0;
-  margin:var(--gap) 0 var(--gap) var(--gap);
+  margin:var(--gap);
+  margin-left:0;
   background:var(--ad-panel-bg);
-  box-shadow:0 0 0 var(--gap) var(--ad-panel-bg);
   z-index:5;
-  border-radius:8px;
+  border-radius:0;
   overflow:hidden;
   pointer-events:none;
   padding:8px;
@@ -2774,7 +2774,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   opacity:0;
   transition:opacity 1.5s ease-in-out;
   cursor:pointer;
-  border-radius:8px;
+  border-radius:0;
   overflow:hidden;
 }
 
@@ -3125,7 +3125,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel .panel-content .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adPanel{background-color:var(--ad-panel-bg);}
 .img-popup{background-color:rgba(0,0,0,1);}
 
 </style>
@@ -3225,7 +3224,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel .panel-content .title{color:#000000;font-family:Verdana;font-size:10px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #memberPanel button{background-color:#16596a;border-color:#16596a;box-shadow:0 0 0px #000000;}
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-#adPanel{background-color:rgba(0,0,0,0.5);}
 .img-popup{background-color:rgba(0,0,0,0.5);}
 </style>
 </head>
