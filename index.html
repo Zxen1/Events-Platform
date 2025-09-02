@@ -45,6 +45,11 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: gray;
       --filter-placeholder-text: var(--placeholder-text);
+      --control-text-bg: #ffffff;
+      --control-placeholder-text: var(--placeholder-text);
+      --control-geolocate-bg: #ffffff;
+      --control-compass-bg: #ffffff;
+      --control-clear-bg: rgba(0,0,0,0);
       --dropdown-title: #000000;
       --dropdown-selected-bg: rgba(224,224,224,1);
       --dropdown-selected-text: #000000;
@@ -1470,11 +1475,11 @@ body.filters-active #filterBtn{
 }
 
 .geocoder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;min-width:240px;pointer-events:auto;display:flex;align-items:center;gap:6px;}
-.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:#fff !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:visible;font-size:16px;}
+.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:var(--control-text-bg) !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:12px;overflow:visible;font-size:16px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 10px;background:#fff !important;color:#000;font-family:inherit;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
-#geocoder input::placeholder{font-family:Verdana,sans-serif;font-size:16px;color:grey;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 10px;background:var(--control-text-bg) !important;color:#000;font-family:inherit;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+.geocoder input::placeholder{font-family:Verdana,sans-serif;font-size:16px;color:var(--control-placeholder-text);}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
   position:absolute;
   right:0;
@@ -1482,7 +1487,7 @@ body.filters-active #filterBtn{
   transform:translateY(-50%);
   width:var(--control-h);
   height:var(--control-h);
-  background:transparent!important;
+  background:var(--control-clear-bg) !important;
   border:0;
   border-left:1px solid #ccc;
   color:#000;
@@ -1494,14 +1499,16 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   justify-content:center;
+  opacity:1;
 }
-#geocoder .mapboxgl-ctrl-geocoder--icon,
-#geocoder .mapboxgl-ctrl-geocoder--icon-search{display:none !important;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg{opacity:1;}
+.geocoder .mapboxgl-ctrl-geocoder--icon,
+.geocoder .mapboxgl-ctrl-geocoder--icon-search{display:none !important;}
 .geocoder .mapboxgl-ctrl-group button,
 .geocoder .mapboxgl-ctrl button{
   width:var(--control-h);
   height:var(--control-h);
-  background:#fff !important;
+  background:var(--control-text-bg) !important;
   border:0;
   color:#000;
   padding:0;
@@ -1521,7 +1528,12 @@ body.filters-active #filterBtn{
   vertical-align:middle;
   margin:0;
 }
-.geocoder .mapboxgl-ctrl-group{background:#fff !important;border:1px solid #ccc !important;border-radius:12px;overflow:hidden;}
+.geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg,
+.geocoder .mapboxgl-ctrl button svg{
+  width:20px;
+  height:20px;
+}
+.geocoder .mapboxgl-ctrl-group{background:var(--control-text-bg) !important;border:1px solid #ccc !important;border-radius:12px;overflow:hidden;}
 .mapboxgl-ctrl button{
   line-height:var(--control-h);
   text-align:center;
@@ -1550,22 +1562,30 @@ body.filters-active #filterBtn{
   align-items:center;
   justify-content:center;
 }
+.mapboxgl-ctrl-geolocate button{background:var(--control-geolocate-bg) !important;}
+.mapboxgl-ctrl-compass button{background:var(--control-compass-bg) !important;}
 .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
 .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon,
 .mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
   margin:0;
+  width:20px;
+  height:20px;
 }
 #map .mapboxgl-ctrl button{
   width:var(--control-h);
   height:var(--control-h);
-  background:#fff !important;
+  background:var(--control-text-bg) !important;
   border:0 !important;
   color:#000;
   padding:0 !important;
   box-shadow:none;
 }
+#map .mapboxgl-ctrl button svg{
+  width:20px;
+  height:20px;
+}
 #map .mapboxgl-ctrl-group{
-  background:#fff !important;
+  background:var(--control-text-bg) !important;
   border:1px solid #ccc !important;
   border-radius:12px;
   overflow:hidden;
@@ -2674,6 +2694,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 .results-col .res-list{
   border-radius: inherit;
   padding: var(--gap);
+  padding-right: 0;
   margin: 0 calc(-1 * var(--gap));
 }
 
@@ -6748,8 +6769,8 @@ document.addEventListener('pointerdown', handleDocInteract);
       });
       ['text','title','btnText','weekday','popupText'].forEach(t=> updateTextPicker(area.key, t));
     });
-    ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
+    ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText','controlPlaceholder'].forEach(id=> updateTextPicker(id,'text'));
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
@@ -7022,6 +7043,45 @@ document.addEventListener('pointerdown', handleDocInteract);
         `;
         fs.appendChild(stickyImageRow);
       }
+      if(area.key === 'map'){
+        const textBg = document.createElement('div');
+        textBg.className = 'control-row';
+        textBg.innerHTML = `
+            <label>Control Text Background</label>
+            <div class="color-group">
+              <input id="controlTextBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(textBg);
+        fs.appendChild(createTextPickerRow('controlPlaceholder-text','Control Placeholder Text','controlTextBg-c'));
+        const geoBg = document.createElement('div');
+        geoBg.className = 'control-row';
+        geoBg.innerHTML = `
+            <label>Geolocate Button Background</label>
+            <div class="color-group">
+              <input id="geoBtnBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(geoBg);
+        const compassBg = document.createElement('div');
+        compassBg.className = 'control-row';
+        compassBg.innerHTML = `
+            <label>Compass Button Background</label>
+            <div class="color-group">
+              <input id="compassBtnBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+            </div>`;
+        fs.appendChild(compassBg);
+        const clearBg = document.createElement('div');
+        clearBg.className = 'control-row';
+        clearBg.innerHTML = `
+            <label>Clear X Button Background</label>
+            <div class="color-group">
+              <input id="clearBtnBg-c" type="color" data-mode="${COLOR_PICKER_MODE}" />
+              <div class="range-group">
+                <input id="clearBtnBg-o" type="range" min="0" max="1" step="0.01" value="0" />
+                <span id="clearBtnBg-o-v">0.00</span>
+              </div>
+            </div>`;
+        fs.appendChild(clearBg);
+      }
       if(area.key === 'filter'){
         fs.appendChild(createTextPickerRow('filterPlaceholder-text','Keyword Placeholder','btn-c'));
         const kwBg = document.createElement('div');
@@ -7220,7 +7280,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
+    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg'};
     Object.entries(varMap).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
@@ -7359,7 +7419,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         }
       }
     });
-    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg','sessionAvailable','sessionSelected','today'].forEach(id=>{
+    ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg','sessionAvailable','sessionSelected','today','controlTextBg','geoBtnBg','compassBtnBg','clearBtnBg'].forEach(id=>{
       const c = document.getElementById(`${id}-c`);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -7367,7 +7427,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         if(o) data[id].opacity = o.value;
       }
     });
-    ['dropdownTitle','panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=>{
+    ['dropdownTitle','panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText','controlPlaceholder'].forEach(id=>{
       const c = document.getElementById(`${id}-text-c`) || document.getElementById(`${id}-c`);
       if(c){
         data[id] = { color: c.value };
@@ -7381,7 +7441,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -7514,7 +7574,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           const opacityInput = document.getElementById(`${key}-o`);
           if(colorInput && val.color){ colorInput.value = val.color; }
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
-        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
+        const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg'};
           if(varMap[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
             document.documentElement.style.setProperty(varMap[key], color);
@@ -8014,7 +8074,12 @@ document.addEventListener('pointerdown', handleDocInteract);
       dropdownVenueText: '--dropdown-venue-text',
       keywordBg: '--keyword-bg',
       dateRangeBg: '--date-range-bg',
-      dateRangeText: '--date-range-text'
+      dateRangeText: '--date-range-text',
+      controlTextBg: '--control-text-bg',
+      controlPlaceholder: '--control-placeholder-text',
+      geoBtnBg: '--control-geolocate-bg',
+      compassBtnBg: '--control-compass-bg',
+      clearBtnBg: '--control-clear-bg'
     };
   Object.entries(fieldBindings).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
@@ -8475,6 +8540,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if(adPanel){
     adPanel.addEventListener('click', e => {
       if(e.target === adPanel) setMode('map');
+    });
+  }
+  if(postsPanel){
+    postsPanel.addEventListener('click', e => {
+      if(e.target === postsPanel) setMode('map');
     });
   }
   window.updateAdVisibility = function(){
