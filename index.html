@@ -55,8 +55,10 @@
         --dropdown-venue-text: #000000;
         --dropdown-radius: 6px;
         --calendar-width: 300px;
-        --calendar-cell: calc(var(--calendar-width) / 7);
-        --calendar-header-h: 30px;
+        --calendar-height: 300px;
+        --calendar-cell-w: calc(var(--calendar-width) / 7);
+        --calendar-cell-h: calc(var(--calendar-height) / 8);
+        --calendar-header-h: var(--calendar-cell-h);
         --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
         --session-available: #92D0F7;
@@ -581,8 +583,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 .calendar .month{
   flex:0 0 auto;
-  width:100%;
-  height:100%;
+  width:var(--calendar-width);
+  height:var(--calendar-height);
   display:flex;
   flex-direction:column;
 }
@@ -592,11 +594,13 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .grid{
   flex:1 1 auto;
   width:100%;
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
   display:grid;
-  grid-template-columns:repeat(7,1fr);
-  grid-template-rows:repeat(7,1fr);
+  grid-template-columns:repeat(7,var(--calendar-cell-w));
+  grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
 .calendar .calendar-header{
+  height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -607,6 +611,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 .calendar .weekday,
 .calendar .day{
+  width:var(--calendar-cell-w);
+  height:var(--calendar-cell-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1523,7 +1529,7 @@ body.filters-active #filterBtn{
   width:var(--control-h);
   height:var(--control-h);
   margin:0;
-  padding:0;
+  padding:0 !important;
 }
 .mapboxgl-ctrl-group{overflow:hidden;}
 .mapboxgl-ctrl-geolocate,
@@ -1551,7 +1557,7 @@ body.filters-active #filterBtn{
   background:#fff !important;
   border:0 !important;
   color:#000;
-  padding:0;
+  padding:0 !important;
   box-shadow:none;
 }
 #map .mapboxgl-ctrl-group{
@@ -1590,12 +1596,12 @@ body.filters-active #filterBtn{
   color:#000;
   background:var(--panel-bg);
 }
-.closed-posts .posts{overflow:visible;padding:6px 12px var(--gap);margin:0;}
+.closed-posts .posts{overflow:visible;padding:12px;margin:0;}
 .closed-posts{color:#000;padding:0;}
 .closed-posts .card,
 .closed-posts .open-posts{background:var(--closed-card-bg);}
 .closed-posts button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.closed-posts .open-posts{margin-top:6px}
+.closed-posts .open-posts{margin-top:12px}
 .closed-posts.ad-space{right:calc(400px + var(--gap) * 2);}
 
 body.hide-results .closed-posts{
@@ -1854,6 +1860,7 @@ body.hide-results .closed-posts{
   border:1px solid var(--border);
   border-radius:8px;
   min-width:300px;
+  min-height:200px;
 }
 
 
@@ -2045,29 +2052,36 @@ body.hide-results .closed-posts{
 }
 .open-posts .post-calendar .month{
   flex:0 0 auto;
-  width:100%;
-  height:100%;
+  width:var(--calendar-width);
+  height:var(--calendar-height);
   display:flex;
   flex-direction:column;
 }
 .open-posts .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
   display:grid;
-  grid-template-columns:repeat(7,1fr);
-  grid-template-rows:repeat(7,1fr);
+  grid-template-columns:repeat(7,var(--calendar-cell-w));
+  grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
 .open-posts .post-calendar .calendar-header{
+  height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
   text-align:center;
   font-weight:bold;
 }
+.open-posts .post-calendar .weekday,
 .open-posts .post-calendar .day{
+  width:var(--calendar-cell-w);
+  height:var(--calendar-cell-h);
   display:flex;
   align-items:center;
   justify-content:center;
+}
+.open-posts .post-calendar .day{
   cursor:pointer;
   font-size:12px;
   border-radius:50%;
@@ -2179,11 +2193,7 @@ body.hide-results .closed-posts{
 .desc{
   margin-top: 8px;
 }
-.open-posts .desc-wrap{position:relative;}
-.open-posts .desc-wrap .desc{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;padding-right:60px;}
-.open-posts .desc-wrap.expanded .desc{-webkit-line-clamp:unset;overflow:visible;padding-right:0;}
-.open-posts .desc-wrap .toggle-desc{position:absolute;bottom:0;right:0;background:none;border:none;padding:0;color:var(--muted);cursor:pointer;font:inherit;}
-.open-posts .desc-wrap.expanded .toggle-desc{position:static;display:block;text-align:right;}
+.open-posts .desc-wrap .desc{overflow:visible;}
 
 
 @media (max-width:1000px){
@@ -2962,7 +2972,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .res-list{padding-top:12px;margin-top:0px;padding-right:12px;margin-right:0px;padding-bottom:12px;margin-bottom:0px;padding-left:12px;margin-left:0px;}
 .res-list .thumb{width:80px;height:80px;}
-@media (min-width:450px){.closed-posts .posts{padding:12px 12px var(--gap);margin:0;}}
+@media (min-width:450px){.closed-posts .posts{padding:12px;margin:0;}}
 .closed-posts .thumb{width:80px;height:80px;padding:0;}
 
 
@@ -4259,7 +4269,7 @@ function makePosts(){
         const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
         if(Math.abs(e.deltaY) > Math.abs(e.deltaX) && outer && verticalCanScroll(outer, e.deltaY)) return;
         if(delta !== 0){
-          scroller.scrollLeft += delta;
+          scroller.scrollBy({left: delta, behavior:'smooth'});
           e.preventDefault();
         }
       }, {passive:false});
@@ -5513,7 +5523,7 @@ function makePosts(){
             <div id="session-info-${p.id}" class="session-info">
               <div class="placeholder">💲 Price range | 📅 Date range</div>
             </div>
-            <div class="desc-wrap"><div class="desc">${p.desc}</div><span class="toggle-desc" role="button" tabindex="0" aria-expanded="false">See more</span></div>
+            <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
           </div>
         </div>`;
         // progressive hero swap
@@ -5587,9 +5597,9 @@ function makePosts(){
       if(container){
         if(fromPosts && window.innerWidth > 450){
           const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
-          container.scrollTop = Math.max(top, 0);
+          container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
         } else if(!fromPosts){
-          container.scrollTop = 0;
+          container.scrollTo({top: 0, behavior:'smooth'});
         }
         ensureGap(container, detail);
       } else if(window.innerWidth > 450) {
@@ -5621,24 +5631,8 @@ function makePosts(){
     function hookDetailActions(el, p){
       const descWrap = el.querySelector(".desc-wrap");
       if(descWrap){
-        const toggle = descWrap.querySelector(".toggle-desc");
         const desc = descWrap.querySelector(".desc");
-        if(desc.scrollHeight <= desc.clientHeight + 1){
-          toggle.remove();
-        } else {
-          const handleToggle = () => {
-            const expanded = descWrap.classList.toggle("expanded");
-            toggle.textContent = expanded ? "See less" : "See more";
-            toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-          };
-          toggle.addEventListener("click", handleToggle);
-          toggle.addEventListener("keydown", (e)=>{
-            if(e.key === "Enter" || e.key === " "){
-              e.preventDefault();
-              handleToggle();
-            }
-          });
-        }
+        if(desc) desc.style.overflow = 'visible';
       }
       const favBtn = el.querySelector('.fav');
       if(favBtn){
