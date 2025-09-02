@@ -338,13 +338,14 @@ input[type="checkbox"]{
   top: 50%;
   transform: translateY(-50%);
   display: flex;
+  height: 35px;
   gap: 8px;
   }
 
 .view-toggle button{
   border: 1px solid var(--btn);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 0 14px;
   background: var(--btn);
   color: var(--button-text);
   font-weight: 600;
@@ -358,8 +359,12 @@ input[type="checkbox"]{
 .auth button,
 .options-menu button{
   height:35px;
-  line-height:35px;
   border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  line-height:1;
 }
 .header .gear,
 .header a{
@@ -461,7 +466,7 @@ button[aria-expanded="true"] .results-arrow{
 .auth button{
   border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 0 14px;
   background: rgba(255,255,255,0.2);
   color: inherit;
   font-weight: 600;
@@ -2256,7 +2261,7 @@ body.hide-results .closed-posts{
 
 @media (max-width:650px){
   .logo{display:none;}
-  #smallLogo{display:block;}
+  #smallLogo{display:block;height:35px;}
 }
 
 @media (max-width:650px){
