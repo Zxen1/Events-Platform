@@ -556,7 +556,8 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  height:auto;
+  width:calc(var(--calendar-width) * var(--filter-calendar-scale));
+  height:calc(var(--calendar-height) * var(--filter-calendar-scale));
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -2010,6 +2011,7 @@ body.hide-results .closed-posts{
   flex:1 1 300px;
   min-width:300px;
   width:auto;
+  height:calc(var(--calendar-height) * var(--calendar-scale));
 }
 .open-posts .location-section .options-menu{
   width:100%;
@@ -3306,7 +3308,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
                 <button type="button" id="undoBtn">Undo</button>
                 <button type="button" id="redoBtn">Redo</button>
               </div>
-              <div id="autoTheme-row" class="color-group">
+              <div id="autoTheme-row">
                 <button type="button" id="autoThemeBtn">AutoTheme</button>
                 <input type="color" id="baseColor" value="#336699" />
               </div>
@@ -6649,6 +6651,16 @@ document.addEventListener('pointerdown', handleDocInteract);
       const svgRow = document.getElementById('clusterSvgRow');
       if(svgInput) svgInput.value = clusterSvg;
       if(svgRow) svgRow.style.display = clusterIconType === 'svg' ? 'flex' : 'none';
+      const calWidthInput = document.getElementById('calendar-width');
+      if(calWidthInput){
+        const w = getComputedStyle(document.documentElement).getPropertyValue('--calendar-width').trim();
+        calWidthInput.value = parseInt(w) || 0;
+      }
+      const calHeightInput = document.getElementById('calendar-height');
+      if(calHeightInput){
+        const h = getComputedStyle(document.documentElement).getPropertyValue('--calendar-height').trim();
+        calHeightInput.value = parseInt(h) || 0;
+      }
     colorAreas.forEach(area=>{
       ['bg','card','text','weekday','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
@@ -7071,6 +7083,18 @@ document.addEventListener('pointerdown', handleDocInteract);
         fs.appendChild(createTextPickerRow('dateRangeText-text','Date Range Text','dateRangeBg-c'));
       }
       if(area.key === 'calendar'){
+        const widthRow = document.createElement('div');
+        widthRow.className = 'control-row';
+        widthRow.innerHTML = `
+            <label>Width</label>
+            <input id="calendar-width" type="number" value="300" />`;
+        fs.appendChild(widthRow);
+        const heightRow = document.createElement('div');
+        heightRow.className = 'control-row';
+        heightRow.innerHTML = `
+            <label>Height</label>
+            <input id="calendar-height" type="number" value="250" />`;
+        fs.appendChild(heightRow);
         const availRow = document.createElement('div');
         availRow.className = 'control-row';
         availRow.innerHTML = `
@@ -7236,6 +7260,10 @@ document.addEventListener('pointerdown', handleDocInteract);
         document.documentElement.style.setProperty(varName, hexToRgba(color, opacity));
       }
     });
+    const calW = document.getElementById('calendar-width');
+    const calH = document.getElementById('calendar-height');
+    if(calW){ document.documentElement.style.setProperty('--calendar-width', `${calW.value}px`); }
+    if(calH){ document.documentElement.style.setProperty('--calendar-height', `${calH.value}px`); }
     colorAreas.forEach(area=>{
       ['bg','card','text','weekday','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
@@ -7375,6 +7403,10 @@ document.addEventListener('pointerdown', handleDocInteract);
         data[id] = { color: c.value };
       }
     });
+    const calWidth = document.getElementById('calendar-width');
+    if(calWidth){ data['calendar-width'] = { value: calWidth.value }; }
+    const calHeight = document.getElementById('calendar-height');
+    if(calHeight){ data['calendar-height'] = { value: calHeight.value }; }
     return data;
   }
 
@@ -7412,6 +7444,10 @@ document.addEventListener('pointerdown', handleDocInteract);
         rootVars.push(`--border-active:${col};`);
       }
     }
+    const calW = data['calendar-width'];
+    if(calW && calW.value){ rootVars.push(`--calendar-width:${calW.value}px;`); }
+    const calH = data['calendar-height'];
+    if(calH && calH.value){ rootVars.push(`--calendar-height:${calH.value}px;`); }
     if(rootVars.length){
       css += `:root{${rootVars.join('')}}\n`;
     }
