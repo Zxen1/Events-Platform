@@ -4224,15 +4224,29 @@ function makePosts(){
     const todayToggle = $('#todayToggle');
     const calendarScroll = $('#datePickerContainer');
 
-    function setupCalendarScroll(scroller){
+    function verticalCanScroll(el, delta){
+      if(!el) return false;
+      if(delta < 0) return el.scrollTop > 0;
+      if(delta > 0) return el.scrollTop < el.scrollHeight - el.clientHeight;
+      return false;
+    }
+
+    function setupHorizontalWheel(scroller){
       if(!scroller) return;
-      scroller.setAttribute('tabindex','0');
+      const outer = scroller.closest('.panel-body') || scroller.closest('.closed-posts');
       scroller.addEventListener('wheel', e=>{
         if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          if(outer && verticalCanScroll(outer, e.deltaY)) return;
           scroller.scrollLeft += e.deltaY;
           e.preventDefault();
         }
       }, {passive:false});
+    }
+
+    function setupCalendarScroll(scroller){
+      if(!scroller) return;
+      scroller.setAttribute('tabindex','0');
+      setupHorizontalWheel(scroller);
       scroller.addEventListener('keydown', e=>{
         if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
           const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
@@ -5647,15 +5661,16 @@ function makePosts(){
           };
           if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
         };
-        hi.onerror = ()=>{};
-        hi.src = full;
-        thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
-      }
-      show(0);
-      thumbCol.addEventListener('click', e=>{
-        const t = e.target.closest('img');
-        if(t) show(parseInt(t.dataset.index,10));
-      });
+      hi.onerror = ()=>{};
+      hi.src = full;
+      thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
+    }
+    show(0);
+    setupHorizontalWheel(thumbCol);
+    thumbCol.addEventListener('click', e=>{
+      const t = e.target.closest('img');
+      if(t) show(parseInt(t.dataset.index,10));
+    });
       thumbCol.addEventListener('keydown', e=>{
         const cur = parseInt(mainImg.dataset.index||'0',10);
         if(e.key==='ArrowDown'){
