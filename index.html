@@ -2961,8 +2961,8 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 .header a{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .subheader{background-color:rgba(0,0,0,0.5);}
 .subheader{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.subheader > button{background-color:#fd0101;border-color:#fd0101;box-shadow:0 0 0px #000000;}
-.options-dropdown > button{background-color:#fd0101;border-color:#fd0101;box-shadow:0 0 0px #000000;}
+.subheader > button{background-color:#3a3a3a;border-color:#3a3a3a;box-shadow:0 0 0px #000000;}
+.options-dropdown > button{background-color:#3a3a3a;border-color:#3a3a3a;box-shadow:0 0 0px #000000;}
 .subheader > button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .options-dropdown > button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 .options-menu{background-color:rgba(255,255,255,1);}
@@ -2999,7 +2999,7 @@ body{background-color:rgba(41,41,41,1);}
 .open-posts .title{color:#ffffff;font-family:Verdana;font-size:16px;font-weight:bold;text-shadow:0px 0px 0px #000000;}
 .open-posts button{background-color:#22343f;border-color:#22343f;box-shadow:0 0 0px #000000;}
 .open-posts button{color:#ffffff;font-family:Verdana;font-size:14px;font-weight:normal;text-shadow:0px 0px 0px #000000;}
-.open-posts .detail-header{background-color:#000000;}
+.open-posts .detail-header{background-color:#3e5393;}
 .open-posts .img-box{background-color:#000000;}
 .open-posts .venue-menu button{background-color:#000000;}
 .open-posts .session-menu button{background-color:#000000;}
@@ -3061,7 +3061,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
 #memberPanel button{color:#ffffff;font-family:Arial;font-weight:normal;text-shadow:0px 0px 0px #000000;}
 #adPanel{background-color:rgba(0,0,0,0.5);}
 .img-popup{background-color:rgba(0,0,0,1);}
-
 </style>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
@@ -4284,6 +4283,7 @@ function makePosts(){
         }
       }
     }
+    window.scrollCalendarToToday = scrollCalendarToToday;
 
     function formatDisplay(date){
       const wd = date.toLocaleDateString('en-GB',{weekday:'short'});
