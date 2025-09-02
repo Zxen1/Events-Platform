@@ -1129,15 +1129,18 @@ button[aria-expanded="true"] .results-arrow{
   gap: 6px;
 }
 
-.today-field{
+.expired-field{
   grid-template-columns:1fr auto;
   align-items:center;
   gap:8px;
 }
-.today-text{
+.expired-text{
   font-family: Verdana;
   color:#fff;
   font-size:16px;
+}
+.filter-summary{
+  margin-bottom:8px;
 }
 .switch{
   position:relative;
@@ -1175,6 +1178,9 @@ button[aria-expanded="true"] .results-arrow{
 }
 .switch input:checked + .slider{
   background:var(--session-selected);
+}
+#expiredToggle:checked + .slider{
+  background:var(--filter-active-color);
 }
 .switch input:checked + .slider:before{
   transform:translateX(24px);
@@ -1299,6 +1305,10 @@ button[aria-expanded="true"] .results-arrow{
   letter-spacing: .2px;
   color: var(--ink);
   cursor: pointer;
+}
+.reset-box .btn.active{
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
 }
 
 .reset-box .btn svg{
@@ -3190,6 +3200,12 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <div class="panel-body">
         <div id="geocoder" class="geocoder"></div>
         <section class="filters-col" aria-label="Filters">
+          <div id="filterSummary" class="filter-summary"></div>
+          <div class="reset-box">
+            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+              Reset All Filters
+            </div>
+          </div>
           <div class="field sort-field">
             <label for="optionsBtn">Sort Results</label>
             <div class="options-dropdown">
@@ -3214,10 +3230,10 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
               <div class="x" role="button" aria-label="Clear date">X</div>
             </div>
           </div>
-          <div class="field today-field">
-            <span class="today-text">Today Onwards</span>
+          <div class="field expired-field">
+            <span class="expired-text">Show Expired Events</span>
             <label class="switch">
-              <input id="todayToggle" type="checkbox" />
+              <input id="expiredToggle" type="checkbox" />
               <span class="slider"></span>
             </label>
           </div>
@@ -3225,11 +3241,6 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
             <div id="datePicker"></div>
           </div>
           <div class="cats" id="cats" aria-label="Categories"></div>
-          <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
-            </div>
-          </div>
         </section>
       </div>
     </div>
@@ -3572,7 +3583,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       }
     }
 
-      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, todayWasOn = false, dateStart = null, dateEnd = null,
+      let map, geocoder, memberGeocoder, spinning = false, resultsWasHidden = null, expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -4208,9 +4219,9 @@ function makePosts(){
       $('#dateInput').value='';
       dateStart = null;
       dateEnd = null;
-      $('#todayToggle').checked = false;
-      todayWasOn = false;
-      buildFilterCalendar(minPickerDate, maxPickerDate);
+      $('#expiredToggle').checked = false;
+      expiredWasOn = false;
+      buildFilterCalendar(today, maxPickerDate);
       updateRangeClasses();
       updateInput();
       if(geocoder) geocoder.clear();
@@ -4224,7 +4235,7 @@ function makePosts(){
       kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
       const date = $('#dateInput');
       const dateX = date.parentElement.querySelector('.x');
-      const hasDate = (dateStart || dateEnd) || (date.value.trim() && date.value.trim() !== 'Today Onwards');
+      const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
       dateX && dateX.classList.toggle('active', !!hasDate);
       updateFilterBtnColor();
     }
@@ -4232,13 +4243,17 @@ function makePosts(){
     function filtersActive(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
-      const hasDate = !!(dateStart || dateEnd || (raw && raw !== 'Today Onwards'));
+      const hasDate = !!(dateStart || dateEnd || raw);
       const cats = selection.cats.size > 0 || selection.subs.size > 0;
-      return kw || hasDate || cats;
+      const expired = $('#expiredToggle').checked;
+      return kw || hasDate || cats || expired;
     }
 
     function updateFilterBtnColor(){
-      document.body.classList.toggle('filters-active', filtersActive());
+      const active = filtersActive();
+      document.body.classList.toggle('filters-active', active);
+      const reset = $('#resetBtn');
+      reset && reset.classList.toggle('active', active);
     }
 
     function fmtShort(iso){
@@ -4261,7 +4276,7 @@ function makePosts(){
     minPickerDate.setMonth(minPickerDate.getMonth() - 12);
     const maxPickerDate = new Date(today);
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
-    const todayToggle = $('#todayToggle');
+    const expiredToggle = $('#expiredToggle');
     const calendarScroll = $('#datePickerContainer');
 
     function verticalCanScroll(el, delta){
@@ -4318,7 +4333,7 @@ function makePosts(){
       });
     }
     setupCalendarScroll(calendarScroll);
-    todayWasOn = todayToggle && todayToggle.checked;
+    expiredWasOn = expiredToggle && expiredToggle.checked;
 
     function scrollCalendarToToday(behavior='auto'){
       const calScroll = $('#datePickerContainer');
@@ -4379,7 +4394,7 @@ function makePosts(){
       } else if(start){
         input.value = formatDisplay(start);
       } else {
-        input.value = todayToggle && todayToggle.checked ? 'Today Onwards' : '';
+        input.value = '';
       }
       applyFilters();
       updateClearButtons();
@@ -4390,7 +4405,7 @@ function makePosts(){
       else { dateEnd = date; }
       updateRangeClasses();
       updateInput();
-      if(todayToggle && todayToggle.checked){ todayToggle.checked = false; todayWasOn = false; }
+      if(expiredToggle && expiredToggle.checked){ expiredToggle.checked = false; expiredWasOn = false; }
     }
 
     function buildFilterCalendar(minDate, maxDate){
@@ -4439,7 +4454,7 @@ function makePosts(){
             if(date < todayDate) cell.classList.add('past');
             else cell.classList.add('future');
             if(isToday(date)) cell.classList.add('today');
-            cell.addEventListener('click', ()=> selectRangeDate(date));
+            if(date >= minDate) cell.addEventListener('click', ()=> selectRangeDate(date));
           }
           grid.appendChild(cell);
         }
@@ -4469,7 +4484,7 @@ function makePosts(){
       }
     }
 
-    buildFilterCalendar(minPickerDate, maxPickerDate);
+    buildFilterCalendar(today, maxPickerDate);
 
     $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
       const input = x.parentElement.querySelector('input');
@@ -4479,6 +4494,7 @@ function makePosts(){
           dateEnd = null;
           updateRangeClasses();
           updateInput();
+          if(expiredToggle && expiredToggle.checked){ expiredToggle.checked = false; expiredWasOn = false; }
         } else {
           input.value='';
         }
@@ -4487,26 +4503,24 @@ function makePosts(){
         updateClearButtons();
       }
     }));
-    if(todayToggle){
-      todayToggle.addEventListener('change', ()=>{
+    if(expiredToggle){
+      expiredToggle.addEventListener('change', ()=>{
         const input = $('#dateInput');
         const todayDate = new Date();
         todayDate.setHours(0,0,0,0);
         dateStart = null;
         dateEnd = null;
-        if(todayToggle.checked){
-          buildFilterCalendar(todayDate, maxPickerDate);
-          input.value = 'Today Onwards';
-        } else {
+        if(expiredToggle.checked){
           buildFilterCalendar(minPickerDate, maxPickerDate);
-          if(input.value === 'Today Onwards') input.value = '';
+        } else {
+          buildFilterCalendar(todayDate, maxPickerDate);
         }
-        todayWasOn = todayToggle.checked;
+        expiredWasOn = expiredToggle.checked;
         updateRangeClasses();
         updateInput();
       });
-      if(todayToggle.checked){
-        todayToggle.dispatchEvent(new Event('change'));
+      if(expiredToggle.checked){
+        expiredToggle.dispatchEvent(new Event('change'));
       }
     }
     updateClearButtons();
@@ -5401,7 +5415,7 @@ function makePosts(){
         date: $('#dateInput').value,
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
-        today: $('#todayToggle').checked,
+        expired: $('#expiredToggle').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
       };
@@ -5417,29 +5431,26 @@ function makePosts(){
         if(parts[0]) dateStart = parseISODate(parts[0]);
         if(parts[1]) dateEnd = parseISODate(parts[1]);
       }
-      $('#todayToggle').checked = st.today || false;
-      if($('#todayToggle').checked){
-        buildFilterCalendar(today, maxPickerDate);
-        $('#dateInput').value = 'Today Onwards';
-        dateStart = null;
-        dateEnd = null;
-      } else {
+      $('#expiredToggle').checked = st.expired || false;
+      if($('#expiredToggle').checked){
         buildFilterCalendar(minPickerDate, maxPickerDate);
-        if(dateStart){
-          const sIso = toISODate(dateStart);
-          const sDisp = fmtShort(sIso);
-          if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
-            const eIso = toISODate(dateEnd);
-            const eDisp = fmtShort(eIso);
-            $('#dateInput').value = `${sDisp} - ${eDisp}`;
-          } else {
-            $('#dateInput').value = sDisp;
-          }
-        } else {
-          $('#dateInput').value = '';
-        }
+      } else {
+        buildFilterCalendar(today, maxPickerDate);
       }
-      todayWasOn = $('#todayToggle').checked;
+      if(dateStart){
+        const sIso = toISODate(dateStart);
+        const sDisp = fmtShort(sIso);
+        if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
+          const eIso = toISODate(dateEnd);
+          const eDisp = fmtShort(eIso);
+          $('#dateInput').value = `${sDisp} - ${eDisp}`;
+        } else {
+          $('#dateInput').value = sDisp;
+        }
+      } else {
+        $('#dateInput').value = '';
+      }
+      expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
       updateInput();
       selection.cats = new Set(st.cats || []);
@@ -5986,13 +5997,13 @@ function makePosts(){
     function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const {start,end} = orderedRange();
-      const todayChk = $('#todayToggle');
-      if(todayChk && todayChk.checked && !start && !end){
+      const expiredChk = $('#expiredToggle');
+      if(!start && !end){
+        if(expiredChk && expiredChk.checked){
+          return true;
+        }
         const today = new Date(); today.setHours(0,0,0,0);
         return p.dates.some(d => parseISODate(d) >= today);
-      }
-      if(!start && !end){
-        return true;
       }
       return p.dates.some(d => {
         const dt = parseISODate(d);
@@ -6007,6 +6018,10 @@ function makePosts(){
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      const today = new Date(); today.setHours(0,0,0,0);
+      const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
+      const summary = $('#filterSummary');
+      if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
       updateFilterBtnColor();
     }
 
