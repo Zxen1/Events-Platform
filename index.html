@@ -6419,6 +6419,49 @@ document.addEventListener('pointerdown', handleDocInteract);
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
 
+  const VAR_MAP = {
+    primary: '--primary',
+    secondary: '--secondary',
+    accent: '--accent',
+    btn: '--btn',
+    panelBg: '--panel-bg',
+    panelText: '--panel-text',
+    scrollbarTrack: '--scrollbar-track',
+    scrollbarThumb: '--scrollbar-thumb',
+    scrollbarThumbHover: '--scrollbar-thumb-hover',
+    listBackground: '--list-background',
+    closedCardBg: '--closed-card-bg',
+    placeholder: '--placeholder-text',
+    filterPlaceholder: '--filter-placeholder-text',
+    dropdownTitle: '--dropdown-title',
+    dropdownSelectedBg: '--dropdown-selected-bg',
+    dropdownSelectedText: '--dropdown-selected-text',
+    dropdownText: '--dropdown-text',
+    dropdownBg: '--dropdown-bg',
+    dropdownHoverBg: '--dropdown-hover-bg',
+    dropdownHoverText: '--dropdown-hover-text',
+    dropdownVenueText: '--dropdown-venue-text',
+    keywordBg: '--keyword-bg',
+    dateRangeBg: '--date-range-bg',
+    dateRangeText: '--date-range-text',
+    sessionAvailable: '--session-available',
+    sessionSelected: '--session-selected',
+    today: '--today',
+    controlTextBg: '--control-text-bg',
+    controlPlaceholder: '--control-placeholder-text',
+    popupBg: '--popup-bg',
+    popupText: '--popup-text',
+    geoBtnBg: '--control-geolocate-bg',
+    compassBtnBg: '--control-compass-bg',
+    clearBtnBg: '--control-clear-bg'
+  };
+
+  const BORDER_VAR_MAP = {
+    border: '--border',
+    hoverBorder: '--border-hover',
+    activeBorder: '--border-active'
+  };
+
   function storeTitleDefaults(){
     colorAreas.forEach(area=>{
       (area.selectors.title||[]).forEach(sel=>{
@@ -6686,8 +6729,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         if(!cInput && !fontSel && !sizeSel && !weightSel && !shColor) return;
         let selectors = area.selectors[type] || [];
         if(area.key==='body' && ['border','hoverBorder','activeBorder'].includes(type)){
-          const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
-          const val = getComputedStyle(document.documentElement).getPropertyValue(varMap[type]).trim();
+          const val = getComputedStyle(document.documentElement).getPropertyValue(BORDER_VAR_MAP[type]).trim();
           if(type==='hoverBorder' || type==='activeBorder'){
             if(cInput){
               if(cInput.dataset.custom === 'true'){
@@ -6804,8 +6846,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       cpSize.value = parseInt(val) || cpSize.value;
     }
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText','controlPlaceholder','popupText'].forEach(id=> updateTextPicker(id,'text'));
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',popupBg:'--popup-bg',popupText:'--popup-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg'};
-    Object.entries(varMap).forEach(([id,varName])=>{
+    Object.entries(VAR_MAP).forEach(([id,varName])=>{
       const cInput = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const oInput = document.getElementById(`${id}-o`);
       if(cInput){
@@ -7272,8 +7313,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         } else {
           const color = colorInput ? colorInput.value : '#ffffff';
           const opacity = opacityInput ? opacityInput.value : 1;
-          const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
-          document.documentElement.style.setProperty(varMap[type], hexToRgba(color, opacity));
+          document.documentElement.style.setProperty(BORDER_VAR_MAP[type], hexToRgba(color, opacity));
           if(colorInput && (type==='hoverBorder' || type==='activeBorder')){
             if(targetInput.id.endsWith('-c') || (targetInput.id.endsWith('-o') && colorInput.value)){
               colorInput.dataset.custom = 'true';
@@ -7294,8 +7334,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       if(c){
         if((type==='hoverBorder' || type==='activeBorder') && c.dataset.custom !== 'true') return;
         const rgba = hexToRgba(c.value, o ? o.value : 1);
-        const varMap = {border:'--border', hoverBorder:'--border-hover', activeBorder:'--border-active'};
-        document.documentElement.style.setProperty(varMap[type], rgba);
+        document.documentElement.style.setProperty(BORDER_VAR_MAP[type], rgba);
       }
     });
     const borderC = document.getElementById('body-border-c');
@@ -7314,18 +7353,12 @@ document.addEventListener('pointerdown', handleDocInteract);
       const col = adjust(baseColor, parseInt(activeAdj.value,10)||0);
       document.documentElement.style.setProperty('--border-active', hexToRgba(col, baseOpacity));
     }
-    const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',popupBg:'--popup-bg',popupText:'--popup-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg',controlPlaceholderFont:'--control-placeholder-font',controlPlaceholderSize:'--control-placeholder-size'};
-    Object.entries(varMap).forEach(([id,varName])=>{
-      if(id==='controlPlaceholderFont'){
-        const f = document.getElementById('controlPlaceholder-text-font');
-        if(f) document.documentElement.style.setProperty(varName, f.value);
-        return;
-      }
-      if(id==='controlPlaceholderSize'){
-        const s = document.getElementById('controlPlaceholder-text-size');
-        if(s) document.documentElement.style.setProperty(varName, s.value + 'px');
-        return;
-      }
+    const cpFont = document.getElementById('controlPlaceholder-text-font');
+    if(cpFont) document.documentElement.style.setProperty('--control-placeholder-font', cpFont.value);
+    const cpSize = document.getElementById('controlPlaceholder-text-size');
+    if(cpSize) document.documentElement.style.setProperty('--control-placeholder-size', cpSize.value + 'px');
+
+    Object.entries(VAR_MAP).forEach(([id,varName])=>{
       const c = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
       const o = document.getElementById(`${id}-o`);
       if(c){
@@ -7680,10 +7713,9 @@ document.addEventListener('pointerdown', handleDocInteract);
           if(opacityInput && val.opacity!==undefined){ opacityInput.value = val.opacity; }
           if(fontInput && val.font){ fontInput.value = val.font; }
           if(sizeInput && val.size){ sizeInput.value = val.size; }
-          const varMap = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',popupBg:'--popup-bg',popupText:'--popup-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg'};
-          if(varMap[key]){
+          if(VAR_MAP[key]){
             const color = val.opacity!==undefined ? hexToRgba(val.color, val.opacity) : val.color;
-            document.documentElement.style.setProperty(varMap[key], color);
+            document.documentElement.style.setProperty(VAR_MAP[key], color);
           }
           if(key==='controlPlaceholder'){
             if(val.font) document.documentElement.style.setProperty('--control-placeholder-font', val.font);
@@ -8192,37 +8224,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     updateHistoryButtons();
   });
 
-    const fieldBindings = {
-      btn: '--btn',
-      panelBg: '--panel-bg',
-      panelText: '--panel-text',
-      scrollbarTrack: '--scrollbar-track',
-      scrollbarThumb: '--scrollbar-thumb',
-      scrollbarThumbHover: '--scrollbar-thumb-hover',
-      listBackground: '--list-background',
-      closedCardBg: '--closed-card-bg',
-      placeholder: '--placeholder-text',
-      filterPlaceholder: '--filter-placeholder-text',
-      dropdownTitle: '--dropdown-title',
-      dropdownSelectedBg: '--dropdown-selected-bg',
-      dropdownSelectedText: '--dropdown-selected-text',
-      dropdownText: '--dropdown-text',
-      dropdownBg: '--dropdown-bg',
-      dropdownHoverBg: '--dropdown-hover-bg',
-      dropdownHoverText: '--dropdown-hover-text',
-      dropdownVenueText: '--dropdown-venue-text',
-      keywordBg: '--keyword-bg',
-      dateRangeBg: '--date-range-bg',
-      dateRangeText: '--date-range-text',
-      controlTextBg: '--control-text-bg',
-      controlPlaceholder: '--control-placeholder-text',
-      popupBg: '--popup-bg',
-      popupText: '--popup-text',
-      geoBtnBg: '--control-geolocate-bg',
-      compassBtnBg: '--control-compass-bg',
-      clearBtnBg: '--control-clear-bg'
-    };
-  Object.entries(fieldBindings).forEach(([id, varName])=>{
+  Object.entries(VAR_MAP).forEach(([id, varName])=>{
     const el = document.getElementById(`${id}-c`) || document.getElementById(`${id}-text-c`) || document.getElementById(id);
     const oEl = document.getElementById(`${id}-o`);
     if(el){
@@ -8234,7 +8236,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         updateHistoryButtons();
         localStorage.setItem('currentTheme', JSON.stringify(currentState));
       };
-      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
       if(oEl) oEl.addEventListener('input', handler);
     }
   });
