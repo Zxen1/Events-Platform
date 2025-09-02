@@ -7554,15 +7554,21 @@ document.addEventListener('pointerdown', handleDocInteract);
     if(stickyHeader){ data['open-posts-sticky-header'] = { value: stickyHeader.checked ? '1' : '0' }; }
     const stickyImages = document.getElementById('open-posts-sticky-images');
     if(stickyImages){ data['open-posts-sticky-images'] = { value: stickyImages.checked ? '1' : '0' }; }
-    ['primary','secondary','accent'].forEach(id=>{
-      const val = getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim();
+    [
+      ['primary','--primary'],
+      ['secondary','--secondary'],
+      ['accent','--accent'],
+      ['background','--background'],
+      ['text','--text'],
+      ['buttonText','--button-text'],
+      ['buttonHoverText','--button-hover-text']
+    ].forEach(([key,varName])=>{
+      const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
       if(val){
         const match = val.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d*\.?\d+))?\)/);
-        if(match){
-          data[id] = { color: rgbToHex(parseInt(match[1],10),parseInt(match[2],10),parseInt(match[3],10)) };
-        } else {
-          data[id] = { color: val };
-        }
+        data[key] = {
+          color: match ? rgbToHex(parseInt(match[1],10),parseInt(match[2],10),parseInt(match[3],10)) : val
+        };
       }
     });
     ['btn','panelBg','scrollbarTrack','scrollbarThumb','scrollbarThumbHover','listBackground','closedCardBg','dropdownBg','dropdownSelectedBg','dropdownHoverBg','keywordBg','dateRangeBg','sessionAvailable','sessionSelected','today','controlTextBg','popupBg','popupText','geoBtnBg','compassBtnBg','clearBtnBg'].forEach(id=>{
@@ -7592,7 +7598,49 @@ document.addEventListener('pointerdown', handleDocInteract);
   }
 
   function generateCss(data){
-    const varNames = {primary:'--primary',secondary:'--secondary',accent:'--accent',btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today',controlTextBg:'--control-text-bg',controlPlaceholder:'--control-placeholder-text',popupBg:'--popup-bg',popupText:'--popup-text',geoBtnBg:'--control-geolocate-bg',compassBtnBg:'--control-compass-bg',clearBtnBg:'--control-clear-bg',border:'--border',hoverBorder:'--border-hover',activeBorder:'--border-active'};
+    const varNames = {
+      primary:'--primary',
+      secondary:'--secondary',
+      accent:'--accent',
+      background:'--background',
+      text:'--text',
+      buttonText:'--button-text',
+      buttonHoverText:'--button-hover-text',
+      btn:'--btn',
+      panelBg:'--panel-bg',
+      panelText:'--panel-text',
+      scrollbarTrack:'--scrollbar-track',
+      scrollbarThumb:'--scrollbar-thumb',
+      scrollbarThumbHover:'--scrollbar-thumb-hover',
+      listBackground:'--list-background',
+      closedCardBg:'--closed-card-bg',
+      placeholder:'--placeholder-text',
+      filterPlaceholder:'--filter-placeholder-text',
+      dropdownTitle:'--dropdown-title',
+      dropdownSelectedBg:'--dropdown-selected-bg',
+      dropdownSelectedText:'--dropdown-selected-text',
+      dropdownText:'--dropdown-text',
+      dropdownBg:'--dropdown-bg',
+      dropdownHoverBg:'--dropdown-hover-bg',
+      dropdownHoverText:'--dropdown-hover-text',
+      dropdownVenueText:'--dropdown-venue-text',
+      keywordBg:'--keyword-bg',
+      dateRangeBg:'--date-range-bg',
+      dateRangeText:'--date-range-text',
+      sessionAvailable:'--session-available',
+      sessionSelected:'--session-selected',
+      today:'--today',
+      controlTextBg:'--control-text-bg',
+      controlPlaceholder:'--control-placeholder-text',
+      popupBg:'--popup-bg',
+      popupText:'--popup-text',
+      geoBtnBg:'--control-geolocate-bg',
+      compassBtnBg:'--control-compass-bg',
+      clearBtnBg:'--control-clear-bg',
+      border:'--border',
+      hoverBorder:'--border-hover',
+      activeBorder:'--border-active'
+    };
     let css = '';
     const rootVars = [];
     Object.entries(varNames).forEach(([key,varName])=>{
@@ -8189,7 +8237,9 @@ document.addEventListener('pointerdown', handleDocInteract);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'theme.css';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 
