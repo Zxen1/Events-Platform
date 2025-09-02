@@ -3109,7 +3109,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-2025-08-25.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-      <button id="filterBtn" aria-label="Open filters panel"><span class="results-arrow" aria-hidden="true"></span> Filters</button>
+      <button id="filterBtn" aria-label="Open filters panel">
+        <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
+      </button>
       <img id="smallLogo" src="assets/funmap logo 2011-09-30h.png" alt="FunMap.com logo" />
       <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
     </nav>
@@ -3131,11 +3137,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
   </header>
   <div class="subheader">
     <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
-      <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
+      <span class="results-arrow" aria-hidden="true"></span> List
     </button>
     <div class="options-dropdown">
       <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
