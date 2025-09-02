@@ -1739,6 +1739,15 @@ body.hide-results .closed-posts{
     width:auto;
     padding:0;
   }
+  .open-posts .location-section .map-container,
+  .open-posts .location-section .calendar-container,
+  .open-posts .post-map,
+  .open-posts .post-calendar,
+  .open-posts .venue-dropdown,
+  .open-posts .session-dropdown{
+    min-width:0;
+    width:100%;
+  }
   body.mode-posts .subheader,
   body.mode-posts footer{
     display:none;
@@ -1790,7 +1799,9 @@ body.hide-results .closed-posts{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  width:100%;
+  flex:1 1 300px;
+  min-width:300px;
+  width:auto;
 }
 .open-posts .map-container .venue-dropdown{
   width:100%;
@@ -1800,12 +1811,14 @@ body.hide-results .closed-posts{
   height:var(--media-h);
   border:1px solid var(--border);
   border-radius:8px;
+  min-width:300px;
 }
 
 
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
+  min-width:300px;
 }
 
 .open-posts .calendar-container .session-dropdown{
@@ -1943,7 +1956,9 @@ body.hide-results .closed-posts{
   gap:var(--gap);
   position:relative;
   align-items:flex-start;
-  width:100%;
+  flex:1 1 300px;
+  min-width:300px;
+  width:auto;
 }
 .open-posts .location-section .options-menu{
   width:100%;
@@ -1958,6 +1973,7 @@ body.hide-results .closed-posts{
   width:auto;
   position:relative;
   font-size:16px;
+  min-width:300px;
 }
 
 
@@ -3688,7 +3704,7 @@ function buildClusterListHTML(items){
   const allDates = items.flatMap(p=>p.dates).sort();
   const first = allDates[0];
   const last = allDates[allDates.length-1] || first;
-  const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
+  const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
   const head = `<h4>${items.length} events here<br><span class="soonest"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></span></h4>`;
   const sort = currentSort;
   const arr = items.slice();
@@ -3904,13 +3920,25 @@ function uniqueTitle(seed, cityName, idx){
   return title;
 }function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
     function jitter([lng,lat]){ return [lng + (rnd()-0.5)*8, clamp(lat + (rnd()-0.5)*8,-80,80)]; }
-    
+
+  function toISODate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function parseISODate(s){
+    const [yy, mm, dd] = s.split('-').map(Number);
+    return new Date(yy, mm - 1, dd);
+  }
+
   function randomDates(){
     const count = 1 + Math.floor(rnd()*30);
     const now = new Date();
     return Array.from({length:count}, ()=>{
       const d = new Date(+now + Math.floor(rnd()*365)*86400000);
-      return d.toISOString().slice(0,10);
+      return toISODate(d);
     }).sort();
   }
 
@@ -4144,7 +4172,7 @@ function makePosts(){
     }
 
     function fmtShort(iso){
-      return new Date(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      return parseISODate(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
     }
 
     $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
@@ -4302,7 +4330,7 @@ function makePosts(){
           }else{
             cell.textContent=dayNum;
             const date=new Date(current.getFullYear(), current.getMonth(), dayNum);
-            cell.dataset.iso = date.toISOString().slice(0,10);
+            cell.dataset.iso = toISODate(date);
             if(date < todayDate) cell.classList.add('past');
             else cell.classList.add('future');
             if(isToday(date)) cell.classList.add('today');
@@ -5121,7 +5149,7 @@ function makePosts(){
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
       if(!d || !d.length) return '';
-      const fmt = iso => new Date(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       if(d.length===1) return fmt(d[0]);
       return `${fmt(d[0])} + ${d.length-1} more`;
     }
@@ -5259,8 +5287,8 @@ function makePosts(){
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#kwInput').value,
         date: $('#dateInput').value,
-        start: start ? start.toISOString().slice(0,10) : null,
-        end: end ? end.toISOString().slice(0,10) : null,
+        start: start ? toISODate(start) : null,
+        end: end ? toISODate(end) : null,
         today: $('#todayToggle').checked,
         cats: [...selection.cats],
         subs: [...selection.subs]
@@ -5270,12 +5298,12 @@ function makePosts(){
     function restoreState(st){
       if(!st) return;
       $('#kwInput').value = st.kw || '';
-      dateStart = st.start ? new Date(st.start) : null;
-      dateEnd = st.end ? new Date(st.end) : null;
+      dateStart = st.start ? parseISODate(st.start) : null;
+      dateEnd = st.end ? parseISODate(st.end) : null;
       if(!st.start && st.range){
         const parts = st.range.split(' to ').map(s=>s.trim());
-        if(parts[0]) dateStart = new Date(parts[0]);
-        if(parts[1]) dateEnd = new Date(parts[1]);
+        if(parts[0]) dateStart = parseISODate(parts[0]);
+        if(parts[1]) dateEnd = parseISODate(parts[1]);
       }
       $('#todayToggle').checked = st.today || false;
       if($('#todayToggle').checked){
@@ -5286,10 +5314,10 @@ function makePosts(){
       } else {
         buildFilterCalendar(minPickerDate, maxPickerDate);
         if(dateStart){
-          const sIso = dateStart.toISOString().slice(0,10);
+          const sIso = toISODate(dateStart);
           const sDisp = fmtShort(sIso);
           if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
-            const eIso = dateEnd.toISOString().slice(0,10);
+            const eIso = toISODate(dateEnd);
             const eDisp = fmtShort(eIso);
             $('#dateInput').value = `${sDisp} - ${eDisp}`;
           } else {
@@ -5723,7 +5751,7 @@ function makePosts(){
             }else{
               cell.textContent=dayNum;
               const dateObj=new Date(current.getFullYear(), current.getMonth(), dayNum);
-              const iso=dateObj.toISOString().slice(0,10);
+              const iso=toISODate(dateObj);
               cell.dataset.iso = iso;
               if(allowedSet.has(iso)){
                 cell.classList.add('available-day');
@@ -5864,14 +5892,14 @@ function makePosts(){
       const todayChk = $('#todayToggle');
       if(todayChk && todayChk.checked){
         const today = new Date(); today.setHours(0,0,0,0);
-        return p.dates.some(d => new Date(d) >= today);
+        return p.dates.some(d => parseISODate(d) >= today);
       }
       const {start,end} = orderedRange();
       if(!start && !end){
         return true;
       }
       return p.dates.some(d => {
-        const dt = new Date(d);
+        const dt = parseISODate(d);
         if(start && dt < start) return false;
         if(end && dt > end) return false;
         return true;
