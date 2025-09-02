@@ -6364,7 +6364,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'closed-posts', label:'Closed Posts', selectors:{bg:['.closed-posts'], text:['.closed-posts','.closed-posts .posts'], title:['.closed-posts .card .t','.closed-posts .card .title','.closed-posts .open-posts .t','.closed-posts .open-posts .title'], btn:['.closed-posts button'], btnText:['.closed-posts button'], card:['.closed-posts .card','.closed-posts .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .foot-item']}},
-    {key:'map', label:'Map', selectors:{bg:['.map-area'], card:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], text:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
+    {key:'map', label:'Map', selectors:{bg:['.map-area'], popupBg:['.mapboxgl-popup .mapboxgl-popup-content','.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], popupText:['.mapboxgl-popup .hover-card','.mapboxgl-popup .chip','.mapboxgl-popup .chip-small','.mapboxgl-popup .multi-item'], title:['.mapboxgl-popup .hover-card .t','.mapboxgl-popup .hover-card .title','.mapboxgl-popup .chip .t','.mapboxgl-popup .chip .title','.mapboxgl-popup .chip-small .t','.mapboxgl-popup .chip-small .title','.mapboxgl-popup .multi-item .t','.mapboxgl-popup .multi-item .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
@@ -6420,7 +6420,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   const COLOR_PICKER_MODE = 'hex';
   const FONT_OPTIONS = ['Verdana','Inter','Roboto','Montserrat','Arial','Helvetica','Georgia','Times New Roman','Courier New','Trebuchet MS','Tahoma','Comic Sans MS'];
   const FONT_SIZE_OPTIONS = ['10','12','14','16','18','20','24','32'];
-  const TEXT_BG_MAP = {text:'bg', weekday:'bg', title:'card', btnText:'btn'};
+  const TEXT_BG_MAP = {text:'bg', weekday:'bg', title:'card', btnText:'btn', popupText:'popupBg'};
 
   function updateTextPicker(areaKey, type){
     const picker = document.getElementById(`${areaKey}-${type}-picker`);
@@ -6628,7 +6628,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         calHeightInput.value = parseInt(h) || 0;
       }
     colorAreas.forEach(area=>{
-      ['bg','card','text','weekday','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','weekday','title','btn','btnText','border','hoverBorder','activeBorder','header','image','optionsMenu','menu','popupBg','popupText'].forEach(type=>{
         const cInput = document.getElementById(`${area.key}-${type}-c`);
         const oInput = document.getElementById(`${area.key}-${type}-o`);
         const fontSel = document.getElementById(`${area.key}-${type}-font`);
@@ -6689,16 +6689,16 @@ document.addEventListener('pointerdown', handleDocInteract);
           if(!el) return false;
           const cs = getComputedStyle(el);
           if(cInput){
-            if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image' || type === 'optionsMenu') col = cs.backgroundColor;
-            else if(type === 'text' || type === 'btnText' || type === 'title' || type === 'weekday') col = cs.color;
+            if(type === 'bg' || type === 'btn' || type === 'card' || type === 'header' || type === 'image' || type === 'optionsMenu' || type === 'popupBg') col = cs.backgroundColor;
+            else if(type === 'text' || type === 'btnText' || type === 'title' || type === 'weekday' || type === 'popupText') col = cs.color;
             else if(type === 'border' || type === 'hoverBorder' || type === 'activeBorder') col = cs.borderColor;
           }
           if(fontSel) font = cs.fontFamily.split(',')[0].replace(/"/g,'').trim();
           if(sizeSel) size = parseInt(cs.fontSize,10);
           if(weightSel) weight = cs.fontWeight;
           if(shColor){
-            if(type==='text' || type==='title' || type==='btnText' || type==='weekday') shadow = cs.textShadow;
-            else if(type==='card' || type==='btn') shadow = cs.boxShadow;
+            if(type==='text' || type==='title' || type==='btnText' || type==='weekday' || type==='popupText') shadow = cs.textShadow;
+            else if(type==='card' || type==='btn' || type==='popupBg') shadow = cs.boxShadow;
           }
           return true;
         });
@@ -6710,7 +6710,7 @@ document.addEventListener('pointerdown', handleDocInteract);
             const bVal = parseInt(match[3],10);
             const alpha = match[4] !== undefined ? parseFloat(match[4]) : 1;
             cInput.value = rgbToHex(r,g,bVal);
-            if((type==='bg' || type==='card' || type==='header' || type==='image' || type==='border' || type==='hoverBorder' || type==='activeBorder' || type==='optionsMenu') && oInput){ oInput.value = alpha; updateOpacityDisplay(oInput); }
+            if((type==='bg' || type==='card' || type==='header' || type==='image' || type==='border' || type==='hoverBorder' || type==='activeBorder' || type==='optionsMenu' || type==='popupBg') && oInput){ oInput.value = alpha; updateOpacityDisplay(oInput); }
           }
         }
         if(fontSel && font){
@@ -6746,7 +6746,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           v.value = currentState[`${area.key}-${type}`].value;
         }
       });
-      ['text','title','btnText','weekday'].forEach(t=> updateTextPicker(area.key, t));
+      ['text','title','btnText','weekday','popupText'].forEach(t=> updateTextPicker(area.key, t));
     });
     ['panelText','placeholder','filterPlaceholder','dropdownSelectedText','dropdownText','dropdownHoverText','dropdownVenueText','dateRangeText'].forEach(id=> updateTextPicker(id,'text'));
     const varMap = {btn:'--btn',panelBg:'--panel-bg',panelText:'--panel-text',scrollbarTrack:'--scrollbar-track',scrollbarThumb:'--scrollbar-thumb',scrollbarThumbHover:'--scrollbar-thumb-hover',listBackground:'--list-background',closedCardBg:'--closed-card-bg',placeholder:'--placeholder-text',filterPlaceholder:'--filter-placeholder-text',dropdownTitle:'--dropdown-title',dropdownSelectedBg:'--dropdown-selected-bg',dropdownSelectedText:'--dropdown-selected-text',dropdownText:'--dropdown-text',dropdownBg:'--dropdown-bg',dropdownHoverBg:'--dropdown-hover-bg',dropdownHoverText:'--dropdown-hover-text',dropdownVenueText:'--dropdown-venue-text',keywordBg:'--keyword-bg',dateRangeBg:'--date-range-bg',dateRangeText:'--date-range-text',sessionAvailable:'--session-available',sessionSelected:'--session-selected',today:'--today'};
@@ -6819,7 +6819,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       colBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['bg','card','btn','border','hoverBorder','activeBorder','header','image','optionsMenu'].forEach(type=>{
+        ['bg','card','btn','border','hoverBorder','activeBorder','header','image','optionsMenu','popupBg'].forEach(type=>{
           const fromC = document.getElementById(`${lastFieldsetKey}-${type}-c`);
           const fromO = document.getElementById(`${lastFieldsetKey}-${type}-o`);
           const toC = document.getElementById(`${area.key}-${type}-c`);
@@ -6832,7 +6832,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           const toV = document.getElementById(`${area.key}-${type}`);
           if(fromV && toV){ toV.value = fromV.value; }
         });
-        ['text','title','btnText','weekday'].forEach(t=> updateTextPicker(area.key, t));
+        ['text','title','btnText','weekday','popupText'].forEach(t=> updateTextPicker(area.key, t));
         applyAdmin();
       });
       const txtBtn = document.createElement('button');
@@ -6842,7 +6842,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       txtBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
         if(!lastFieldsetKey || lastFieldsetKey === area.key) return;
-        ['text','title','btnText','weekday'].forEach(type=>{
+        ['text','title','btnText','weekday','popupText'].forEach(type=>{
           const fields = ['c','font','size','weight','shadow-color','shadow-x','shadow-y','shadow-blur'];
           fields.forEach(suf=>{
             const from = document.getElementById(`${lastFieldsetKey}-${type}-${suf}`);
@@ -6860,6 +6860,8 @@ document.addEventListener('pointerdown', handleDocInteract);
       if(area.selectors.bg) types.push('bg');
       if(area.selectors.card) types.push('card');
       if(area.selectors.text) types.push('text');
+      if(area.selectors.popupBg) types.push('popupBg');
+      if(area.selectors.popupText) types.push('popupText');
       if(area.selectors.weekday) types.push('weekday');
       if(area.selectors.title) types.push('title');
       if(area.selectors.btn) types.push('btn','btnText');
@@ -6887,11 +6889,13 @@ document.addEventListener('pointerdown', handleDocInteract);
             header: 'Header',
             image: 'Image Box',
             optionsMenu: 'Options Menu',
-            menu: 'Menu Background'
+            menu: 'Menu Background',
+            popupBg: 'Marker Popup Background',
+            popupText: 'Marker Popup Text'
           };
           let label = labelMap[type] || type;
           if(area.key === 'calendar' && type === 'text') label = 'Date Text';
-        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'weekday'){
+        if(type === 'text' || type === 'title' || type === 'btnText' || type === 'weekday' || type === 'popupText'){
           const row = document.createElement('div');
           row.className = 'control-row';
           const labelEl = document.createElement('label');
@@ -6955,7 +6959,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         }
         const row = document.createElement('div');
         row.className = 'control-row';
-        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu' || type === 'menu'){
+        if(type === 'bg' || type === 'card' || type === 'border' || type === 'hoverBorder' || type === 'activeBorder' || type === 'header' || type === 'image' || type === 'optionsMenu' || type === 'menu' || type === 'popupBg'){
           row.innerHTML = `
               <label>${label}</label>
               <div class="color-group">
@@ -7231,7 +7235,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     if(calW){ document.documentElement.style.setProperty('--calendar-width', `${calW.value}px`); }
     if(calH){ document.documentElement.style.setProperty('--calendar-height', `${calH.value}px`); }
     colorAreas.forEach(area=>{
-      ['bg','card','text','weekday','title','btn','btnText','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','weekday','title','btn','btnText','header','image','optionsMenu','menu','popupBg','popupText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -7257,14 +7261,14 @@ document.addEventListener('pointerdown', handleDocInteract);
         const targets = area.selectors[type] || [];
         targets.forEach(sel=>{
           document.querySelectorAll(sel).forEach(el=>{
-            if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu'){
+            if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu' || type==='popupBg'){
               if(color) el.style.backgroundColor = hexToRgba(color, opacity);
-              if(type==='card'){
+              if(type==='card' || type==='popupBg'){
                 const shadowColor = sc ? sc.value : null;
                 const blur = sb ? sb.value : 0;
                 if(shadowColor) el.style.boxShadow = `0 0 ${blur}px ${shadowColor}`;
               }
-            } else if(type==='text' || type==='btnText' || type==='title' || type==='weekday'){
+            } else if(type==='text' || type==='btnText' || type==='title' || type==='weekday' || type==='popupText'){
               if(color) el.style.color = color;
               if(font) el.style.fontFamily = font;
               if(size) el.style.fontSize = `${size}px`;
@@ -7305,7 +7309,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   function collectThemeValues(){
     const data = {};
     colorAreas.forEach(area=>{
-      ['bg','card','text','weekday','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','menu'].forEach(type=>{
+      ['bg','card','text','weekday','title','btn','btnText','border','hoverBorder','activeBorder','hoverAdjust','activeAdjust','header','image','optionsMenu','menu','popupBg','popupText'].forEach(type=>{
         const c = document.getElementById(`${area.key}-${type}-c`);
         const o = document.getElementById(`${area.key}-${type}-o`);
         const f = document.getElementById(`${area.key}-${type}-font`);
@@ -7427,16 +7431,16 @@ document.addEventListener('pointerdown', handleDocInteract);
         const selectors = area.selectors[type] || [];
         if(!selectors.length) return;
         const rules = [];
-        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu' || type==='menu'){
+        if(type==='bg' || type==='card' || type==='header' || type==='image' || type==='optionsMenu' || type==='menu' || type==='popupBg'){
           if(entry.color){
             const color = entry.opacity!==undefined ? hexToRgba(entry.color, entry.opacity) : entry.color;
             rules.push(`background-color:${color};`);
           }
-          if(type==='card' && entry.shadow){
+          if((type==='card' || type==='popupBg') && entry.shadow){
             const s = entry.shadow; const blur = s.blur || 0;
             rules.push(`box-shadow:0 0 ${blur}px ${s.color};`);
           }
-        } else if(type==='text' || type==='title' || type==='btnText' || type==='weekday'){
+        } else if(type==='text' || type==='title' || type==='btnText' || type==='weekday' || type==='popupText'){
           if(entry.color) rules.push(`color:${entry.color};`);
           if(entry.font) rules.push(`font-family:${entry.font};`);
           if(entry.size) rules.push(`font-size:${entry.size}px;`);
