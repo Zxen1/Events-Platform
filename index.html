@@ -5585,12 +5585,21 @@ function makePosts(){
         updateStickyImages();
       }
 
+      await nextFrame();
+      const header = detail.querySelector('.detail-header');
+      const stickyHeaderActive = document.documentElement.classList.contains('open-posts-sticky-header');
+      if(stickyHeaderActive && header){
+        const h = header.offsetHeight;
+        header.style.scrollMarginTop = h + 'px';
+      }
+
       if(container){
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12;
+        const headerHeight = (stickyHeaderActive && header) ? header.offsetHeight : 0;
+        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
         container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
         ensureGap(container, detail);
       } else if(window.innerWidth > 450) {
-        detail.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+        (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
 
