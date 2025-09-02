@@ -57,7 +57,7 @@
         --calendar-width: 210px;
         --calendar-cell: calc(var(--calendar-width) / 7);
         --calendar-header-h: 30px;
-        --calendar-past-bg: #d3d3d3;
+        --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
         --session-available: #92D0F7;
         --session-selected: #009FFF;
@@ -555,6 +555,8 @@ button[aria-expanded="true"] .results-arrow{
   padding-bottom:20px;
   box-sizing:content-box;
   height:auto;
+  border:1px solid var(--border);
+  border-radius:8px;
 }
 #filterPanel .calendar-container .today-marker{
   position:absolute;
@@ -582,7 +584,7 @@ button[aria-expanded="true"] .results-arrow{
   width:var(--calendar-width);
 }
 .calendar .month:not(:first-child){
-  border-left:1px solid var(--border);
+  border-left:1px solid var(--calendar-past-bg);
 }
 .calendar .grid{
   width:var(--calendar-width);
@@ -614,7 +616,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
-.calendar .day.past{background:var(--calendar-past-bg);}
+.calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today);font-weight:bold;}
 .calendar .day.in-range{background:var(--session-available);}
@@ -1984,6 +1986,9 @@ body.hide-results .closed-posts{
   overflow-y:auto;
   padding-bottom:20px;
   box-sizing:border-box;
+  background:var(--dropdown-bg);
+  border:1px solid var(--border);
+  border-radius:8px;
 }
 .open-posts .post-calendar .calendar{
   margin:0;
@@ -4223,8 +4228,13 @@ function makePosts(){
           const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
           const w = m ? m.offsetWidth : 0;
           if(w){
-            const i = Math.round(scroller.scrollLeft / w);
-            scroller.scrollTo({left:w*i, behavior:'smooth'});
+            const max = scroller.scrollWidth - scroller.clientWidth;
+            if(scroller.scrollLeft >= max - 1){
+              scroller.scrollLeft = max;
+            } else {
+              const i = Math.round(scroller.scrollLeft / w);
+              scroller.scrollTo({left:w*i, behavior:'smooth'});
+            }
           }
         },100);
       });
@@ -4354,13 +4364,17 @@ function makePosts(){
         calendarScroll.scrollLeft = scrollPos;
         calendarScroll.dataset.todayScroll = scrollPos;
         const maxScroll = calendarScroll.scrollWidth - calendarScroll.clientWidth;
-        const pos = maxScroll ? scrollPos / maxScroll * calendarScroll.clientWidth : 0;
+        const track = calendarScroll.clientWidth - 20;
+        const pos = maxScroll ? scrollPos / maxScroll * track + 10 : 10;
         calendarScroll.querySelector('.today-marker')?.remove();
         const marker = document.createElement('div');
         marker.className = 'today-marker';
         marker.dataset.pos = pos;
         marker.style.left = `${pos + calendarScroll.scrollLeft}px`;
-        marker.addEventListener('click', ()=> calendarScroll.scrollTo({left: scrollPos, behavior:'smooth'}));
+        marker.addEventListener('click', ()=> {
+          const target = parseFloat(calendarScroll.dataset.todayScroll || '0');
+          calendarScroll.scrollTo({left: target, behavior:'smooth'});
+        });
         calendarScroll.appendChild(marker);
       }
     }
