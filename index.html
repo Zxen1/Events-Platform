@@ -55,7 +55,7 @@
         --dropdown-venue-text: #000000;
         --dropdown-radius: 6px;
         --calendar-width: 300px;
-        --calendar-height: 300px;
+        --calendar-height: 250px;
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc(var(--calendar-height) / 8);
         --calendar-header-h: var(--calendar-cell-h);
@@ -554,7 +554,7 @@ button[aria-expanded="true"] .results-arrow{
   position:relative;
   overflow-x:auto;
   overflow-y:hidden;
-  padding-bottom:20px;
+  padding-bottom:0;
   box-sizing:content-box;
   height:auto;
   border:1px solid var(--border);
@@ -601,6 +601,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .calendar .calendar-header{
   height:var(--calendar-header-h);
+  line-height:var(--calendar-header-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -616,6 +617,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:center;
   justify-content:center;
+  line-height:var(--calendar-cell-h);
   font-family:inherit;
   font-size:inherit;
 }
@@ -2019,11 +2021,10 @@ body.hide-results .closed-posts{
   display:none;
 }
 .open-posts .post-calendar{
-  width:auto;
+  width:var(--calendar-width);
+  height:var(--calendar-height);
   position:relative;
   font-size:16px;
-  min-width:300px;
-  height:100%;
 }
 
 
@@ -2032,7 +2033,7 @@ body.hide-results .closed-posts{
   height:100%;
   overflow-x:auto;
   overflow-y:auto;
-  padding-bottom:20px;
+  padding-bottom:0;
   box-sizing:border-box;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
