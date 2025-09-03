@@ -82,6 +82,55 @@
       bottom: 80px;
       width: 100%;
     }
+    #fullscreen-button {
+      position: absolute;
+      right: 0;
+      top: 80px;
+      width: 80px;
+      height: 80px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 1001;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    #recent-posts-container {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      height: 60px;
+      width: 100%;
+    }
+    .recent-post-card {
+      flex: 0 0 auto;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      color: #000;
+      padding: 0 5px;
+      border-radius: 4px;
+    }
+    .recent-post-card img {
+      height: 100%;
+      width: auto;
+      margin-right: 5px;
+    }
+    .recent-post-card .star {
+      margin-left: auto;
+    }
     #welcome-modal {
       width: 600px;
       margin: 0 auto;
@@ -107,17 +156,64 @@
     <button id="settings-button" aria-label="Settings"></button>
   </header>
   <div id="map"></div>
+  <button id="fullscreen-button" aria-label="Fullscreen"></button>
   <div id="welcome-modal" class="hidden">
     <img src="assets/funmap-logo-big.png" alt="FunMap logo" style="max-width:100%;height:auto;">
     <p>Welcome to FunMap!</p>
   </div>
   <div id="panels"></div>
-  <footer id="footer"></footer>
+  <footer id="footer">
+    <div id="recent-posts-container"></div>
+  </footer>
 
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.Xo14KJtnMhLy2RpQeyWNLw';
     const welcomeModal = document.getElementById('welcome-modal');
     const headerLogo = document.getElementById('header-logo');
+    const recentPostsContainer = document.getElementById('recent-posts-container');
+    const fullscreenButton = document.getElementById('fullscreen-button');
+    const recentPosts = [];
+
+    fullscreenButton.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    function addRecentPost(post) {
+      const existingIndex = recentPosts.findIndex(p => p.id === post.id);
+      if (existingIndex !== -1) recentPosts.splice(existingIndex, 1);
+      recentPosts.unshift(post);
+      if (recentPosts.length > 100) recentPosts.pop();
+      renderRecentPosts();
+    }
+
+    function renderRecentPosts() {
+      if (!recentPostsContainer) return;
+      recentPostsContainer.innerHTML = '';
+      recentPosts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'recent-post-card';
+
+        const img = document.createElement('img');
+        img.src = post.thumbnail;
+        img.alt = post.title;
+
+        const title = document.createElement('span');
+        title.textContent = post.title;
+
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.textContent = '☆';
+
+        card.appendChild(img);
+        card.appendChild(title);
+        card.appendChild(star);
+        recentPostsContainer.appendChild(card);
+      });
+    }
 
     function toggleModal() {
       welcomeModal.classList.toggle('hidden');
@@ -238,11 +334,17 @@
         });
       });
 
-      map.on('click', 'unclustered-point', () => {
+      map.on('click', 'unclustered-point', (e) => {
         const postsPanel = document.getElementById('posts-panel');
         if (postsPanel) postsPanel.classList.remove('hidden');
         const listPanel = document.getElementById('list-panel');
         if (listPanel) listPanel.scrollTo({ top: 0, behavior: 'smooth' });
+        const feature = e.features[0];
+        addRecentPost({
+          id: feature.properties.id,
+          title: `Post ${feature.properties.id}`,
+          thumbnail: 'assets/funmap-logo-big.png'
+        });
       });
 
       map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
