@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funmap</title>
+<link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
+<link rel="manifest" href="assets/favicons/site.webmanifest">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;font-family:Verdana,sans-serif;font-size:14px;overflow:hidden;}
+  body{position:relative;}
+  header{
+    position:absolute;top:0;left:0;right:0;height:80px;background:navy;color:#fff;display:flex;align-items:center;justify-content:space-between;z-index:10;
+  }
+  header .group{display:flex;}
+  header button{
+    width:80px;height:80px;background:navy;color:#fff;border:none;cursor:pointer;font-size:14px;position:relative;}
+  #filter-button .icon{font-size:24px;display:block;margin-top:10px;}
+  #filter-button .count{display:block;font-size:12px;}
+  #settings-button .icon{font-size:24px;}
+  header img.logo{height:60px;cursor:pointer;}
+  .panel{
+    position:absolute;top:80px;bottom:80px;background:#fff;overflow:auto;padding:10px;box-sizing:border-box;z-index:5;transition:transform 0.3s;
+  }
+  .left.panel{left:0;transform:translateX(-100%);} 
+  .right.panel{right:0;transform:translateX(100%);} 
+  .panel.open{transform:translateX(0);} 
+  #filter-panel{width:420px;}
+  #list-panel{width:520px;}
+  #posts-panel{width:auto;max-width:420px;}
+  #member-panel,#admin-panel,#settings-panel{width:420px;}
+  #map{position:absolute;top:80px;bottom:80px;left:0;right:0;}
+  footer{
+    position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(0,0,0,0.5);z-index:10;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;}
+  footer .cards{flex:1;overflow-x:auto;white-space:nowrap;height:60px;}
+  footer .card{display:inline-block;height:60px;width:200px;background:#222;color:#fff;margin-right:10px;padding:10px;box-sizing:border-box;}
+  footer button#fullscreen-button{width:80px;height:80px;background:navy;color:#fff;border:none;cursor:pointer;}
+  .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:20;}
+  .modal-content{background:#fff;width:600px;padding:20px;box-sizing:border-box;text-align:center;}
+  .modal-content img{max-width:100%;height:auto;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);border-radius:5px;}
+  ::-webkit-scrollbar-track{background:rgba(0,0,0,0.1);}
+</style>
+</head>
+<body>
+<header>
+  <div class="group left-buttons">
+    <button id="filter-button"><span class="icon">🔍</span><span class="count">1000</span></button>
+    <button id="list-button">List</button>
+    <button id="posts-button">Posts</button>
+  </div>
+  <img src="assets/funmap-logo-big.png" alt="Funmap" class="logo" id="logo">
+  <div class="group right-buttons">
+    <button id="member-button">Members</button>
+    <button id="admin-button">Admin</button>
+    <button id="settings-button"><span class="icon">⚙️</span></button>
+  </div>
+</header>
+<div id="map"></div>
+<div id="filter-panel" class="panel left"></div>
+<div id="list-panel" class="panel left"></div>
+<div id="posts-panel" class="panel left"></div>
+<div id="member-panel" class="panel right"></div>
+<div id="admin-panel" class="panel right"></div>
+<div id="settings-panel" class="panel right"></div>
+<footer>
+  <div class="cards" id="recent-cards"></div>
+  <button id="fullscreen-button">⛶</button>
+</footer>
+<div id="welcome-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <img src="assets/funmap-logo-big.png" alt="Funmap">
+    <p>Welcome to Funmap! Choose an area on the map to search for events and posts. Click <span style="font-size:16px;">🔍</span> to refine your search.</p>
+  </div>
+</div>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
+const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/streets-v11',center:[0,0],zoom:1});
+map.on('load',()=>{
+  map.addSource('points',{
+    type:'geojson',
+    data:{
+      type:'FeatureCollection',
+      features:[
+        {type:'Feature',properties:{},geometry:{type:'Point',coordinates:[0,0]}},
+        {type:'Feature',properties:{},geometry:{type:'Point',coordinates:[10,0]}},
+        {type:'Feature',properties:{},geometry:{type:'Point',coordinates:[20,0]}}
+      ]
+    },
+    cluster:true,
+    clusterMaxZoom:14,
+    clusterRadius:50
+  });
+  map.addLayer({id:'clusters',type:'circle',source:'points',filter:['has','point_count'],paint:{'circle-color':'#51bbd6','circle-radius':['step',['get','point_count'],20,100,30,750,40]}});
+  map.addLayer({id:'cluster-count',type:'symbol',source:'points',filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-font':['DIN Offc Pro Medium','Arial Unicode MS Bold'],'text-size':12}});
+  map.addLayer({id:'unclustered-point',type:'symbol',source:'points',filter:['!has','point_count'],layout:{'icon-image':'marker-15','icon-size':2}});
+  map.on('click','clusters',function(e){const features=map.queryRenderedFeatures(e.point,{layers:['clusters']});const clusterId=features[0].properties.cluster_id;map.getSource('points').getClusterExpansionZoom(clusterId,function(err,zoom){if(err)return;map.easeTo({center:features[0].geometry.coordinates,zoom:zoom,pitch:45});});});
+  map.on('click','unclustered-point',function(e){openPanel('posts');});
+});
+function togglePanel(btn,panel){btn.addEventListener('click',()=>{panel.classList.toggle('open');if(btn.id==='posts-button'){btn.textContent=panel.classList.contains('open')?'Posts':'Map';}});}
+const filterBtn=document.getElementById('filter-button');
+const listBtn=document.getElementById('list-button');
+const postsBtn=document.getElementById('posts-button');
+const memberBtn=document.getElementById('member-button');
+const adminBtn=document.getElementById('admin-button');
+const settingsBtn=document.getElementById('settings-button');
+function openPanel(name){document.getElementById(name+'-panel').classList.add('open');if(name==='posts'){postsBtn.textContent='Posts';}}
+const filterPanel=document.getElementById('filter-panel');
+const listPanel=document.getElementById('list-panel');
+const postsPanel=document.getElementById('posts-panel');
+const memberPanel=document.getElementById('member-panel');
+const adminPanel=document.getElementById('admin-panel');
+const settingsPanel=document.getElementById('settings-panel');
+togglePanel(filterBtn,filterPanel);
+togglePanel(listBtn,listPanel);
+togglePanel(postsBtn,postsPanel);
+togglePanel(memberBtn,memberPanel);
+togglePanel(adminBtn,adminPanel);
+togglePanel(settingsBtn,settingsPanel);
+const logo=document.getElementById('logo');
+const modal=document.getElementById('welcome-modal');
+logo.addEventListener('click',()=>{modal.style.display='flex';});
+modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none';});
+if(!localStorage.getItem('welcomeShown')){modal.style.display='flex';localStorage.setItem('welcomeShown','true');}
+const fsBtn=document.getElementById('fullscreen-button');
+fsBtn.addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();}});
+</script>
+</body>
+</html>
