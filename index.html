@@ -394,6 +394,147 @@
       .list-card.highlight {
         outline: 2px solid yellow;
       }
+      #posts-panel {
+        width: auto;
+        background: rgba(0,0,0,0.5);
+        overflow-y: auto;
+      }
+      .post-card {
+        margin: 0 auto 10px;
+        padding: 10px;
+        background: #444;
+        display: flex;
+        gap: 10px;
+        box-sizing: border-box;
+        position: relative;
+        cursor: pointer;
+      }
+      .post-card img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+      }
+      .post-card .post-content { flex: 1; }
+      .post-card .post-title {
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .post-card .post-category,
+      .post-card .post-venue,
+      .post-card .post-date {
+        font-size: 12px;
+      }
+      .post-card .favorite-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .post-header {
+        position: sticky;
+        top: 0;
+        background: #333;
+        padding: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1;
+      }
+      .post-header-info { display: flex; flex-direction: column; }
+      .post-header button {
+        background: transparent;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .post-header-actions button { font-size: 20px; margin-left: 5px; }
+      .post-body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+      }
+      .post-section {
+        background: #444;
+        padding: 10px;
+        box-sizing: border-box;
+        flex: 1 1 300px;
+      }
+      .image-container .hero {
+        width: 100%;
+        max-width: 400px;
+        height: 400px;
+        object-fit: cover;
+      }
+      .thumbs {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+        overflow-x: auto;
+      }
+      .thumbs img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        cursor: pointer;
+      }
+      .venue-map,
+      .session-calendar {
+        width: 100%;
+        height: 200px;
+        background: #222;
+        margin-bottom: 5px;
+      }
+      .session-menu li {
+        list-style: none;
+        padding: 5px;
+        cursor: pointer;
+      }
+      .session-menu li.selected { background: #666; }
+      #image-viewer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #image-viewer img {
+        max-width: 90%;
+        max-height: 90%;
+      }
+      #image-viewer.hidden { display: none; }
+      #copy-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #222;
+        color: #fff;
+        padding: 20px;
+      }
+      #copy-modal.hidden { display: none; }
+      @media (max-width: 900px) {
+        .post-section { flex: 1 1 100%; }
+      }
+      @media (min-width: 901px) and (max-width: 1200px) {
+        .post-section { flex: 1 1 45%; }
+      }
+      @media (min-width: 1201px) {
+        .post-section { flex: 1 1 30%; }
+      }
+      @media (max-width: 600px) {
+        .venue-map,
+        .session-calendar { display: none; }
+      }
     </style>
 </head>
 <body>
@@ -412,6 +553,8 @@
     <img src="assets/funmap-logo-big.png" alt="FunMap logo" style="max-width:100%;height:auto;">
     <p>Welcome to FunMap!</p>
   </div>
+  <div id="copy-modal" class="hidden">Link copied!</div>
+  <div id="image-viewer" class="hidden"><img id="viewer-image" alt="Full Image"></div>
   <div id="panels">
     <div id="filter-panel" class="panel">
       <div class="panel-header">
@@ -519,6 +662,70 @@
         <div>
           <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
           <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div id="posts-container">
+        <div class="post-card" data-id="1">
+          <img src="assets/funmap-logo-big.png" alt="Post 1" class="thumbnail">
+          <div class="post-content">
+            <div class="post-title">Post 1</div>
+            <div class="post-category">Category A / SubA1</div>
+            <div class="post-venue">Venue 1</div>
+            <div class="post-date">Jan 1 - Jan 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
+        </div>
+        <div class="post-card" data-id="2">
+          <img src="assets/funmap-logo-big.png" alt="Post 2" class="thumbnail">
+          <div class="post-content">
+            <div class="post-title">Post 2</div>
+            <div class="post-category">Category B / SubB1</div>
+            <div class="post-venue">Venue 2</div>
+            <div class="post-date">Feb 1 - Feb 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
+        </div>
+        <div class="post-card" data-id="3">
+          <img src="assets/funmap-logo-big.png" alt="Post 3" class="thumbnail">
+          <div class="post-content">
+            <div class="post-title">Post 3</div>
+            <div class="post-category">Category C / SubC1</div>
+            <div class="post-venue">Venue 3</div>
+            <div class="post-date">Mar 1 - Mar 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
+        </div>
+      </div>
+      <div id="post-view" class="hidden">
+        <div class="post-header">
+          <button id="close-post-btn" aria-label="Back">&#8592;</button>
+          <div class="post-header-info">
+            <div id="post-header-title"></div>
+            <div id="post-header-category"></div>
+          </div>
+          <div class="post-header-actions">
+            <button id="post-favorite" class="favorite-btn" aria-label="Favorite">&#9733;</button>
+            <button id="copy-link-btn" aria-label="Copy Link">&#128279;</button>
+          </div>
+        </div>
+        <div class="post-body">
+          <div class="post-section image-container">
+            <img id="hero-image" class="hero" src="assets/funmap-logo-big.png" alt="Hero">
+            <div id="image-thumbnails" class="thumbs"></div>
+          </div>
+          <div class="post-section venue-container">
+            <div id="venue-map" class="venue-map"></div>
+            <div id="venue-menu"></div>
+          </div>
+          <div class="post-section session-container">
+            <div id="session-calendar" class="session-calendar"></div>
+            <ul id="session-menu" class="session-menu"></ul>
+          </div>
+          <div class="post-section post-description">
+            <div id="post-author"></div>
+            <div id="post-details"></div>
+            <div id="post-text"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -697,6 +904,65 @@
   const newPostBtn = document.getElementById('new-post-btn');
   const listButton = document.getElementById('list-button');
   const listPanel = document.getElementById('list-panel');
+  const postsPanel = document.getElementById('posts-panel');
+  const postsContainer = document.getElementById('posts-container');
+  const postView = document.getElementById('post-view');
+  const heroImage = document.getElementById('hero-image');
+  const imageThumbnails = document.getElementById('image-thumbnails');
+  const postHeaderTitle = document.getElementById('post-header-title');
+  const postHeaderCategory = document.getElementById('post-header-category');
+  const postFavorite = document.getElementById('post-favorite');
+  const copyLinkBtn = document.getElementById('copy-link-btn');
+  const sessionMenu = document.getElementById('session-menu');
+  const copyModal = document.getElementById('copy-modal');
+  const imageViewer = document.getElementById('image-viewer');
+  const viewerImage = document.getElementById('viewer-image');
+  const closePostBtn = document.getElementById('close-post-btn');
+
+  const postsData = {
+    1: { title: 'Event 1', category: 'Category A / SubA1', venue: 'Venue 1', date: 'Jan 1 - Jan 2', author: 'Author 1', description: 'Description for event 1', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] },
+    2: { title: 'Event 2', category: 'Category B / SubB1', venue: 'Venue 2', date: 'Feb 1 - Feb 2', author: 'Author 2', description: 'Description for event 2', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] },
+    3: { title: 'Event 3', category: 'Category C / SubC1', venue: 'Venue 3', date: 'Mar 1 - Mar 2', author: 'Author 3', description: 'Description for event 3', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] }
+  };
+
+  let currentPostId = null;
+
+  document.querySelectorAll('.list-card').forEach(card => {
+    card.addEventListener('click', () => openPost(card.dataset.id));
+  });
+
+  document.querySelectorAll('#posts-container .post-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.classList.contains('favorite-btn')) return;
+      openPost(card.dataset.id);
+    });
+    const fav = card.querySelector('.favorite-btn');
+    if (fav) fav.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fav.classList.toggle('active');
+    });
+  });
+
+  if (postFavorite) postFavorite.addEventListener('click', () => postFavorite.classList.toggle('active'));
+  if (closePostBtn) closePostBtn.addEventListener('click', closePost);
+  if (copyLinkBtn) copyLinkBtn.addEventListener('click', () => {
+    if (!currentPostId) return;
+    navigator.clipboard.writeText(window.location.href + '#post-' + currentPostId).then(() => {
+      copyModal.classList.remove('hidden');
+      setTimeout(() => copyModal.classList.add('hidden'), 2000);
+    });
+  });
+  if (heroImage) heroImage.addEventListener('click', () => {
+    viewerImage.src = heroImage.src;
+    imageViewer.classList.remove('hidden');
+  });
+  if (imageViewer) imageViewer.addEventListener('click', () => imageViewer.classList.add('hidden'));
+  if (sessionMenu) sessionMenu.addEventListener('click', (e) => {
+    if (e.target.tagName === 'LI') {
+      sessionMenu.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
+      e.target.classList.add('selected');
+    }
+  });
 
   const activeFilters = {
     keywords: '',
@@ -839,9 +1105,13 @@
     const isActive = panel.classList.contains('active');
     if (isActive) {
       panel.classList.remove('active');
+      if (id === 'posts-panel') closePost();
       activePanel = null;
     } else {
-      if (activePanel) activePanel.classList.remove('active');
+      if (activePanel) {
+        if (activePanel.id === 'posts-panel') closePost();
+        activePanel.classList.remove('active');
+      }
       panel.classList.add('active');
       activePanel = panel;
     }
@@ -941,6 +1211,41 @@
         target.classList.add('highlight');
         listPanel.scrollTo({ top: target.offsetTop - 10, behavior: 'smooth' });
       }
+    }
+
+    function openPost(id) {
+      const data = postsData[id];
+      if (!data) return;
+      currentPostId = id;
+      postsContainer.classList.add('hidden');
+      postView.classList.remove('hidden');
+      postHeaderTitle.textContent = data.title;
+      postHeaderCategory.textContent = data.category;
+      heroImage.src = data.images[0];
+      imageThumbnails.innerHTML = '';
+      data.images.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = data.title;
+        img.addEventListener('click', () => { heroImage.src = src; });
+        imageThumbnails.appendChild(img);
+      });
+      sessionMenu.innerHTML = '';
+      data.sessions.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = s;
+        sessionMenu.appendChild(li);
+      });
+      document.getElementById('post-author').textContent = data.author;
+      document.getElementById('post-details').textContent = `${data.venue} | ${data.date}`;
+      document.getElementById('post-text').textContent = data.description;
+      if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
+    }
+
+    function closePost() {
+      postView.classList.add('hidden');
+      postsContainer.classList.remove('hidden');
+      currentPostId = null;
     }
 
     function toggleModal() {
@@ -1074,11 +1379,10 @@
       });
 
       map.on('click', 'unclustered-point', (e) => {
-        const postsPanel = document.getElementById('posts-panel');
-        if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
         if (listPanel && !listPanel.classList.contains('active') && window.innerWidth >= 450) togglePanel('list-panel');
         const feature = e.features[0];
         highlightListCard(feature.properties.id);
+        openPost(feature.properties.id);
         addRecentPost({
           id: feature.properties.id,
           title: `Post ${feature.properties.id}`,
