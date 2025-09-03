@@ -37,8 +37,8 @@
   footer .cards{overflow-x:auto;white-space:nowrap;height:80px;margin-right:80px;}
   footer .card{display:inline-block;height:60px;width:200px;background:#222;color:#fff;margin-right:10px;padding:10px;box-sizing:border-box;}
   footer button#fullscreen-button{position:absolute;right:0;bottom:0;width:80px;height:80px;background:#333;color:#fff;border:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
-  .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:20;}
-  .modal-content{background:#fff;width:600px;padding:20px;box-sizing:border-box;text-align:center;}
+  .modal{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:20;background:transparent;}
+  .modal-content{background:rgba(0,0,0,0.5);color:#fff;width:600px;padding:20px;box-sizing:border-box;text-align:center;}
   .modal-content img{max-width:100%;height:auto;}
   .icon-inline{width:16px;height:16px;fill:#fff;vertical-align:middle;background:#000;border-radius:2px;}
   ::-webkit-scrollbar{width:10px;height:10px;}
@@ -80,7 +80,7 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
-const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/standard',center:[0,0],zoom:1});
+const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/streets-v11',center:[0,0],zoom:1});
 map.on('load',()=>{
   map.setConfigProperty('sky','theme','night');
   map.addSource('points',{
