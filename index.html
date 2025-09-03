@@ -180,6 +180,104 @@
       .hidden {
         display: none;
       }
+      #filter-panel { overflow-y: auto; }
+      #sort-menu { margin-bottom: 10px; }
+      #sort-menu-button {
+        width: 100%;
+        background: #444;
+        color: #fff;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .menu-arrow { transition: transform 0.3s ease; }
+      #sort-menu.open .menu-arrow { transform: rotate(180deg); }
+      #sort-menu-items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        background: #555;
+        display: none;
+      }
+      #sort-menu.open #sort-menu-items { display: block; }
+      #sort-menu-items li { padding: 5px; cursor: pointer; }
+      #sort-menu-items li:hover { background: #666; }
+      #map-controls-row {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+      }
+      #map-controls-row input { flex: 1; }
+      #map-controls-row button {
+        background: #444;
+        border: none;
+        color: #fff;
+        padding: 0 8px;
+        cursor: pointer;
+      }
+      #filter-message { margin-bottom: 10px; min-height: 20px; }
+      .row { display: flex; align-items: center; margin-bottom: 10px; }
+      .row input[type="text"], .row input[type="date"] { flex: 1; }
+      .clear-btn {
+        margin-left: 5px;
+        background: #444;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .clear-btn.active { background: red; }
+      #expired-events-row label { display: flex; align-items: center; gap: 5px; }
+      #filter-calendar-container {
+        width: 400px;
+        height: 200px;
+        overflow-x: auto;
+        background: #222;
+        margin-bottom: 10px;
+      }
+      #calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-auto-rows: 1fr;
+        width: 800px;
+      }
+      .calendar-day {
+        border: 1px solid #444;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #filter-categories-container {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+      }
+      .filter-category-row { border-top: 1px solid #444; }
+      .filter-category-row button.category-toggle {
+        width: 100%;
+        text-align: left;
+        background: #444;
+        color: #fff;
+        border: none;
+        padding: 5px;
+        cursor: pointer;
+      }
+      .subcategory-list { display: none; padding-left: 10px; }
+      .filter-category-row.open .subcategory-list { display: block; }
+      .subcategory-list label { display: flex; align-items: center; gap: 5px; padding: 2px 0; }
+      #filter-reset-button {
+        width: 100%;
+        padding: 10px;
+        background: #444;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      #filter-reset-button.active { background: red; }
+      #filter-button.active { background: red; }
     </style>
 </head>
 <body>
@@ -208,6 +306,53 @@
           <button class="panel-close" aria-label="Close">&times;</button>
         </div>
       </div>
+      <div id="sort-menu">
+        <button id="sort-menu-button">Sort <span class="menu-arrow">&#9660;</span></button>
+        <ul id="sort-menu-items">
+          <li data-sort="newest">Newest</li>
+          <li data-sort="oldest">Oldest</li>
+          <li data-sort="popular">Most Popular</li>
+          <li data-sort="nearby">Nearby</li>
+        </ul>
+      </div>
+      <div id="map-controls-row">
+        <input id="address-input" type="text" placeholder="Address">
+        <button id="geolocate-btn">📍</button>
+        <button id="compass-btn">🧭</button>
+      </div>
+      <div id="filter-message">No filters applied</div>
+      <div id="keywords-row" class="row">
+        <input id="keywords-input" type="text" placeholder="Keywords">
+        <button id="keywords-clear" class="clear-btn">&#10006;</button>
+      </div>
+      <div id="daterange-row" class="row">
+        <input id="start-date" type="date">
+        <input id="end-date" type="date">
+        <button id="date-clear" class="clear-btn">&#10006;</button>
+      </div>
+      <div id="expired-events-row" class="row">
+        <label><input type="checkbox" id="include-expired">Include expired events</label>
+      </div>
+      <div id="filter-calendar-container">
+        <div id="calendar-grid"></div>
+      </div>
+      <div id="filter-categories-container">
+        <div class="filter-category-row">
+          <button class="category-toggle">Category A</button>
+          <div class="subcategory-list">
+            <label><input type="checkbox" class="subcategory" value="SubA1">SubA1</label>
+            <label><input type="checkbox" class="subcategory" value="SubA2">SubA2</label>
+          </div>
+        </div>
+        <div class="filter-category-row">
+          <button class="category-toggle">Category B</button>
+          <div class="subcategory-list">
+            <label><input type="checkbox" class="subcategory" value="SubB1">SubB1</label>
+            <label><input type="checkbox" class="subcategory" value="SubB2">SubB2</label>
+          </div>
+        </div>
+      </div>
+      <button id="filter-reset-button">Reset Filters</button>
     </div>
     <div id="list-panel" class="panel">
       <div class="panel-header">
@@ -273,6 +418,146 @@
   const recentPosts = [];
 
   let activePanel = null;
+
+  const sortMenu = document.getElementById('sort-menu');
+  const sortMenuButton = document.getElementById('sort-menu-button');
+  const sortMenuItems = document.querySelectorAll('#sort-menu-items li');
+  const keywordsInput = document.getElementById('keywords-input');
+  const keywordsClear = document.getElementById('keywords-clear');
+  const startDateInput = document.getElementById('start-date');
+  const endDateInput = document.getElementById('end-date');
+  const dateClear = document.getElementById('date-clear');
+  const expiredSwitch = document.getElementById('include-expired');
+  const filterMessage = document.getElementById('filter-message');
+  const filterResetButton = document.getElementById('filter-reset-button');
+  const subcategoryCheckboxes = document.querySelectorAll('.subcategory');
+  const categoryToggles = document.querySelectorAll('.category-toggle');
+  const geolocateBtn = document.getElementById('geolocate-btn');
+  const compassBtn = document.getElementById('compass-btn');
+
+  const activeFilters = {
+    keywords: '',
+    startDate: '',
+    endDate: '',
+    includeExpired: false,
+    categories: [],
+    sort: ''
+  };
+
+  function hasActiveFilters() {
+    return activeFilters.keywords || activeFilters.startDate || activeFilters.endDate ||
+           activeFilters.includeExpired || activeFilters.categories.length || activeFilters.sort;
+  }
+
+  function updateFilterButtonState() {
+    const filterBtn = document.getElementById('filter-button');
+    if (hasActiveFilters()) {
+      filterBtn.classList.add('active');
+      filterResetButton.classList.add('active');
+    } else {
+      filterBtn.classList.remove('active');
+      filterResetButton.classList.remove('active');
+    }
+  }
+
+  function updateFilterMessage() {
+    const parts = [];
+    if (activeFilters.keywords) parts.push(`Keywords: ${activeFilters.keywords}`);
+    if (activeFilters.startDate || activeFilters.endDate) {
+      const range = [activeFilters.startDate, activeFilters.endDate].filter(Boolean).join(' to ');
+      parts.push(`Dates: ${range}`);
+    }
+    if (activeFilters.includeExpired) parts.push('Including expired');
+    if (activeFilters.categories.length) parts.push(`Categories: ${activeFilters.categories.join(', ')}`);
+    if (activeFilters.sort) parts.push(`Sort: ${activeFilters.sort}`);
+    filterMessage.textContent = parts.length ? parts.join('; ') : 'No filters applied';
+  }
+
+  function updateFilters() {
+    activeFilters.keywords = keywordsInput.value.trim();
+    activeFilters.startDate = startDateInput.value;
+    activeFilters.endDate = endDateInput.value;
+    activeFilters.includeExpired = expiredSwitch.checked;
+    activeFilters.categories = Array.from(subcategoryCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+    activeFilters.sort = sortMenu.dataset.sort || '';
+    updateFilterButtonState();
+    updateFilterMessage();
+  }
+
+  function toggleClear(btn, condition) {
+    if (condition) btn.classList.add('active'); else btn.classList.remove('active');
+  }
+
+  sortMenuButton.addEventListener('click', () => sortMenu.classList.toggle('open'));
+  sortMenuItems.forEach(item => {
+    item.addEventListener('click', () => {
+      sortMenu.dataset.sort = item.dataset.sort;
+      sortMenuButton.innerHTML = item.textContent + ' <span class="menu-arrow">&#9660;</span>';
+      sortMenu.classList.remove('open');
+      updateFilters();
+    });
+  });
+
+  keywordsInput.addEventListener('input', () => {
+    toggleClear(keywordsClear, keywordsInput.value);
+    updateFilters();
+  });
+  keywordsClear.addEventListener('click', () => {
+    keywordsInput.value = '';
+    toggleClear(keywordsClear, '');
+    updateFilters();
+  });
+
+  function handleDateChange() {
+    toggleClear(dateClear, startDateInput.value || endDateInput.value);
+    updateFilters();
+  }
+  startDateInput.addEventListener('change', handleDateChange);
+  endDateInput.addEventListener('change', handleDateChange);
+  dateClear.addEventListener('click', () => {
+    startDateInput.value = '';
+    endDateInput.value = '';
+    toggleClear(dateClear, '');
+    updateFilters();
+  });
+
+  expiredSwitch.addEventListener('change', updateFilters);
+
+  categoryToggles.forEach(btn => {
+    btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
+  });
+  subcategoryCheckboxes.forEach(cb => cb.addEventListener('change', updateFilters));
+
+  filterResetButton.addEventListener('click', () => {
+    keywordsInput.value = '';
+    startDateInput.value = '';
+    endDateInput.value = '';
+    expiredSwitch.checked = false;
+    sortMenu.dataset.sort = '';
+    sortMenuButton.innerHTML = 'Sort <span class="menu-arrow">&#9660;</span>';
+    subcategoryCheckboxes.forEach(cb => cb.checked = false);
+    toggleClear(keywordsClear, '');
+    toggleClear(dateClear, '');
+    updateFilters();
+  });
+
+  function populateCalendar(date) {
+    const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const days = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= days; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'calendar-day';
+      cell.textContent = d;
+      grid.appendChild(cell);
+    }
+  }
+
+  populateCalendar(new Date());
+  updateFilters();
 
   function togglePanel(id) {
     const panel = document.getElementById(id);
@@ -410,6 +695,16 @@
       center: [-122.447303, 37.753574],
       zoom: 10
     });
+
+    geolocateBtn.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 13 });
+        });
+      }
+    });
+
+    compassBtn.addEventListener('click', () => map.resetNorth());
 
     map.on('load', () => {
       const standardCanvas = document.createElement('canvas');
