@@ -131,19 +131,56 @@
     .recent-post-card .star {
       margin-left: auto;
     }
-    #welcome-modal {
-      width: 600px;
-      margin: 0 auto;
-      background: var(--color-background);
-      color: var(--color-text);
-      border: 1px solid #ccc;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
+      #welcome-modal {
+        width: 600px;
+        margin: 0 auto;
+        background: var(--color-background);
+        color: var(--color-text);
+        border: 1px solid #ccc;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      }
+      .panel {
+        position: absolute;
+        top: 80px;
+        left: 0;
+        width: 420px;
+        height: calc(100vh - 160px);
+        background: #333;
+        color: #fff;
+        padding: 10px;
+        box-sizing: border-box;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 1002;
+      }
+      .panel.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+      .panel-header {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: Verdana, sans-serif;
+        font-size: 24px;
+        cursor: move;
+      }
+      .panel-header button {
+        background: transparent;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        font-size: 24px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
 </head>
 <body>
   <header id="header">
@@ -161,7 +198,68 @@
     <img src="assets/funmap-logo-big.png" alt="FunMap logo" style="max-width:100%;height:auto;">
     <p>Welcome to FunMap!</p>
   </div>
-  <div id="panels"></div>
+  <div id="panels">
+    <div id="filter-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>Filter</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div id="list-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>List</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div id="posts-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>Posts</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div id="member-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>Member</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div id="admin-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>Admin</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div id="settings-panel" class="panel">
+      <div class="panel-header">
+        <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
+        <span>Settings</span>
+        <div>
+          <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
+          <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <footer id="footer">
     <div id="recent-posts-container"></div>
   </footer>
@@ -170,9 +268,69 @@
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.Xo14KJtnMhLy2RpQeyWNLw';
     const welcomeModal = document.getElementById('welcome-modal');
     const headerLogo = document.getElementById('header-logo');
-    const recentPostsContainer = document.getElementById('recent-posts-container');
-    const fullscreenButton = document.getElementById('fullscreen-button');
-    const recentPosts = [];
+  const recentPostsContainer = document.getElementById('recent-posts-container');
+  const fullscreenButton = document.getElementById('fullscreen-button');
+  const recentPosts = [];
+
+  let activePanel = null;
+
+  function togglePanel(id) {
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    const isActive = panel.classList.contains('active');
+    if (isActive) {
+      panel.classList.remove('active');
+      activePanel = null;
+    } else {
+      if (activePanel) activePanel.classList.remove('active');
+      panel.classList.add('active');
+      activePanel = panel;
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activePanel) {
+      togglePanel(activePanel.id);
+    }
+  });
+
+  function makePanelDraggable(panel) {
+    const header = panel.querySelector('.panel-header');
+    if (!header) return;
+    let startX = 0, startY = 0, origX = 0, origY = 0, dragging = false;
+
+    header.addEventListener('mousedown', (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      origX = panel.offsetLeft;
+      origY = panel.offsetTop;
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    function onMouseMove(e) {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      let newLeft = origX + dx;
+      let newTop = origY + dy;
+      const maxLeft = window.innerWidth - panel.offsetWidth;
+      const maxTop = window.innerHeight - header.offsetHeight;
+      if (newLeft < 0) newLeft = 0;
+      if (newTop < 0) newTop = 0;
+      if (newLeft > maxLeft) newLeft = maxLeft;
+      if (newTop > maxTop) newTop = maxTop;
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    }
+
+    function onMouseUp() {
+      dragging = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+  }
 
     fullscreenButton.addEventListener('click', () => {
       if (!document.fullscreenElement) {
@@ -225,25 +383,26 @@
 
     headerLogo.addEventListener('click', toggleModal);
 
-    const buttonPanelMap = {
-      'filter-button': 'filter-panel',
-      'list-button': 'list-panel',
-      'posts-button': 'posts-panel',
-      'member-button': 'member-panel',
-      'admin-button': 'admin-panel',
-      'settings-button': 'settings-panel'
-    };
+  const buttonPanelMap = {
+    'filter-button': 'filter-panel',
+    'list-button': 'list-panel',
+    'posts-button': 'posts-panel',
+    'member-button': 'member-panel',
+    'admin-button': 'admin-panel',
+    'settings-button': 'settings-panel'
+  };
 
-    Object.keys(buttonPanelMap).forEach(buttonId => {
-      const btn = document.getElementById(buttonId);
-      const panelId = buttonPanelMap[buttonId];
-      btn.addEventListener('click', () => {
-        const panel = document.getElementById(panelId);
-        if (panel) {
-          panel.classList.toggle('hidden');
-        }
-      });
-    });
+  Object.keys(buttonPanelMap).forEach(buttonId => {
+    const btn = document.getElementById(buttonId);
+    const panelId = buttonPanelMap[buttonId];
+    btn.addEventListener('click', () => togglePanel(panelId));
+  });
+
+  document.querySelectorAll('.panel').forEach(panel => {
+    const closeBtn = panel.querySelector('.panel-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => togglePanel(panel.id));
+    makePanelDraggable(panel);
+  });
 
     const map = new mapboxgl.Map({
       container: 'map',
@@ -335,8 +494,8 @@
       });
 
       map.on('click', 'unclustered-point', (e) => {
-        const postsPanel = document.getElementById('posts-panel');
-        if (postsPanel) postsPanel.classList.remove('hidden');
+      const postsPanel = document.getElementById('posts-panel');
+      if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
         const listPanel = document.getElementById('list-panel');
         if (listPanel) listPanel.scrollTo({ top: 0, behavior: 'smooth' });
         const feature = e.features[0];
