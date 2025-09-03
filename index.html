@@ -165,6 +165,10 @@
         left: auto;
         right: 0;
       }
+      #admin-panel {
+        left: auto;
+        right: 0;
+      }
       .member-row {
         width: 400px;
         height: 40px;
@@ -293,6 +297,53 @@
       }
       #filter-reset-button.active { background: red; }
       #filter-button.active { background: red; }
+
+      #admin-panel .tab-header {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+      }
+      #admin-panel .tab-header button {
+        flex: 1;
+        background: #444;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 6px;
+      }
+      #admin-panel .tab-header button.active {
+        background: #666;
+      }
+      #admin-panel .tab-content { display: none; }
+      #admin-panel .tab-content.active { display: block; }
+      #formbuilder-container .form-category { margin-bottom: 10px; }
+      #formbuilder-container .category-toggle {
+        width: 100%;
+        text-align: left;
+        background: #444;
+        border: none;
+        color: #fff;
+        padding: 5px;
+        cursor: pointer;
+      }
+      #formbuilder-container .subcategory-menu { display: none; padding-left: 10px; }
+      #formbuilder-container .form-category.open .subcategory-menu { display: block; }
+      #formbuilder-container .field {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #555;
+        padding: 5px;
+        margin-bottom: 5px;
+        cursor: move;
+      }
+      #formbuilder-container .delete-field {
+        margin-left: auto;
+        background: #666;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
     </style>
 </head>
 <body>
@@ -434,6 +485,84 @@
         <div>
           <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
           <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div class="tab-header">
+        <button data-tab="admin-settings" class="active">Settings</button>
+        <button data-tab="admin-theme">Theme</button>
+        <button data-tab="admin-map">Map</button>
+        <button data-tab="admin-forms">Forms</button>
+      </div>
+      <div id="admin-settings" class="tab-content active">
+        <div class="row"><label for="admin-username">Username</label><input id="admin-username" type="text"></div>
+        <div class="row"><label for="admin-avatar">Avatar</label><input id="admin-avatar" type="file"><svg id="avatar-placeholder" width="40" height="40"><circle cx="20" cy="20" r="18" fill="#777"/></svg></div>
+        <div class="row"><label for="site-name">Site Name</label><input id="site-name" type="text"></div>
+        <div class="row"><label for="site-logo">Logo</label><input id="site-logo" type="file"></div>
+        <div class="row"><label for="favicon-link">Favicon Link</label><input id="favicon-link" type="text"></div>
+        <div class="row"><label for="welcome-message">Welcome Message</label><textarea id="welcome-message" placeholder="WYSIWYG editor placeholder"></textarea></div>
+      </div>
+      <div id="admin-theme" class="tab-content">
+        <div class="row">
+          <label for="theme-preset">Preset</label>
+          <div style="flex:1;position:relative;">
+            <select id="theme-preset" style="width:100%;">
+              <option>Default</option>
+            </select>
+            <span class="menu-arrow" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);">&#9662;</span>
+          </div>
+          <button id="theme-refresh">&#8635;</button>
+        </div>
+      </div>
+      <div id="admin-map" class="tab-content">
+        <div id="map-settings-container">
+          <div class="row"><label for="map-token">Token</label><input id="map-token" type="text"></div>
+          <div class="row"><label for="map-theme">Theme</label><select id="map-theme"></select></div>
+          <div class="row"><label for="map-sky">Sky</label><select id="map-sky"></select></div>
+        </div>
+        <div id="map-spin-container">
+          <div class="row"><label for="spin-toggle">Spin Map</label><input id="spin-toggle" type="checkbox"></div>
+          <div class="row"><label for="marker-spin-toggle">Spin Markers</label><input id="marker-spin-toggle" type="checkbox"></div>
+          <div class="row"><label for="spin-speed">Speed</label><input id="spin-speed" type="range" min="0" max="10"></div>
+          <div class="row"><label for="min-zoom">Min Zoom</label><input id="min-zoom" type="range" min="0" max="20"></div>
+        </div>
+        <div id="markercluster-container">
+          <div class="row"><label for="cluster-style">Cluster Style</label><input id="cluster-style" type="text"></div>
+        </div>
+      </div>
+      <div id="admin-forms" class="tab-content">
+        <div id="formbuilder-container">
+          <div class="form-category">
+            <button class="category-toggle">General</button>
+            <div class="subcategory-menu">
+              <div class="field" draggable="true"><span>Title</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+              <div class="field" draggable="true"><span>Description</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+            </div>
+          </div>
+          <div class="form-category">
+            <button class="category-toggle">Media</button>
+            <div class="subcategory-menu">
+              <div class="field" draggable="true"><span>Images</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+            </div>
+          </div>
+          <div class="form-category">
+            <button class="category-toggle">Venues &amp; Sessions</button>
+            <div class="subcategory-menu">
+              <div class="field" draggable="true"><span>Venues</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+              <div class="field" draggable="true"><span>Sessions</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+            </div>
+          </div>
+          <div class="form-category">
+            <button class="category-toggle">Pricing</button>
+            <div class="subcategory-menu">
+              <div class="field" draggable="true"><span>Pricing</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+            </div>
+          </div>
+          <div class="form-category">
+            <button class="category-toggle">Contact</button>
+            <div class="subcategory-menu">
+              <div class="field" draggable="true"><span>Contact Info</span><input class="icon-input" type="text" placeholder="icon"><button class="delete-field">Delete</button></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -879,6 +1008,46 @@
   function handleCreatePost() {
     console.log('create post');
   }
+
+  const adminTabButtons = document.querySelectorAll('#admin-panel .tab-header button');
+  const adminTabContents = document.querySelectorAll('#admin-panel .tab-content');
+  adminTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      adminTabButtons.forEach(b => b.classList.remove('active'));
+      adminTabContents.forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const target = document.getElementById(btn.dataset.tab);
+      if (target) target.classList.add('active');
+    });
+  });
+  document.querySelectorAll('#formbuilder-container .category-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.classList.toggle('open');
+    });
+  });
+  let dragSrcEl = null;
+  document.querySelectorAll('#formbuilder-container .field').forEach(field => {
+    field.addEventListener('dragstart', e => {
+      dragSrcEl = field;
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    field.addEventListener('dragover', e => e.preventDefault());
+    field.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragSrcEl && dragSrcEl !== field) {
+        const parent = field.parentElement;
+        const after = (dragSrcEl.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING) ? field.nextSibling : field;
+        parent.insertBefore(dragSrcEl, after);
+      }
+    });
+  });
+  document.querySelectorAll('#formbuilder-container .delete-field').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('Delete this field?')) {
+        btn.closest('.field').remove();
+      }
+    });
+  });
 
   if (loginBtn) loginBtn.addEventListener('click', handleLogin);
   if (registerBtn) registerBtn.addEventListener('click', handleRegister);
