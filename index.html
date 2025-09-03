@@ -9,7 +9,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
 <link rel="manifest" href="assets/favicons/site.webmanifest">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css">
 <style>
+  *{border-radius:8px;box-sizing:border-box;}
   html,body{margin:0;height:100%;font-family:Verdana,sans-serif;font-size:14px;overflow:hidden;}
   body{position:relative;}
   :root{
@@ -51,9 +53,9 @@
   .panel{
     position:absolute;top:80px;bottom:80px;background:#fff;overflow:auto;padding:10px;box-sizing:border-box;z-index:5;transition:transform 0.3s;
   }
-  .left.panel{left:0;transform:translateX(-100%);} 
-  .right.panel{right:0;transform:translateX(100%);} 
-  .panel.open{transform:translateX(0);} 
+  .left.panel{left:0;transform:translateX(-100%);}
+  .right.panel{right:0;transform:translateX(100%);}
+  .panel.open{transform:translateX(0);}
   #filter-panel{width:420px;}
   #list-panel{width:520px;}
   #posts-panel{width:auto;max-width:420px;}
@@ -71,6 +73,28 @@
   ::-webkit-scrollbar{width:10px;height:10px;}
   ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);border-radius:5px;}
   ::-webkit-scrollbar-track{background:rgba(0,0,0,0.1);}
+
+  /* Filter panel specific styles */
+  #filter-panel{background:#444;color:#fff;width:420px;}
+  #filter-panel .panel-header{height:60px;display:flex;align-items:center;justify-content:center;position:relative;font-size:24px;}
+  #filter-panel .panel-header .title{flex:1;text-align:center;}
+  #filter-panel .panel-header .header-right{position:absolute;right:10px;display:flex;gap:10px;}
+  #filter-panel .panel-header .snap-left{position:absolute;left:10px;}
+  #filter-panel .panel-header button{background:#333;color:#fff;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;}
+  #filter-panel .row{width:400px;height:40px;margin:10px 0;display:flex;align-items:center;justify-content:space-between;position:relative;}
+  #filter-panel input{width:300px;height:40px;border:none;padding:0 10px;}
+  #filter-panel input::placeholder{color:grey;}
+  #filter-panel button.icon-button{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;}
+  #filter-panel #sort-menu{width:300px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
+  #filter-panel .menu-arrow{transition:transform 0.3s;}
+  #filter-panel .menu{display:none;position:absolute;top:50px;left:0;background:#222;flex-direction:column;width:300px;z-index:10;}
+  #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#333;color:#fff;}
+  #filter-panel .menu.open{display:flex;}
+  #filter-panel .star{color:yellow;}
+  #filter-panel #map-controls-row .mapboxgl-ctrl-geocoder{width:300px;}
+  #map-controls-row .mapboxgl-ctrl-geolocate,#map-controls-row .mapboxgl-ctrl-compass{width:40px;height:40px;}
+  #filter-panel #clear-filters{width:400px;height:40px;}
+  .active-filter{background:red !important;}
 </style>
 </head>
 <body>
@@ -88,7 +112,40 @@
   </div>
 </header>
 <div id="map"></div>
-<div id="filter-panel" class="panel left"></div>
+<div id="filter-panel" class="panel left">
+  <div class="panel-header">
+    <button class="icon-button snap-left" aria-label="Snap left">◀</button>
+    <div class="title">Filters</div>
+    <div class="header-right">
+      <button class="icon-button snap-right" aria-label="Snap right">▶</button>
+      <button class="icon-button close" aria-label="Close">✕</button>
+    </div>
+  </div>
+  <div class="row" id="sort-row">
+    <button id="sort-menu">Title A-Z <span class="menu-arrow">▼</span></button>
+    <div id="sort-options" class="menu">
+      <button data-sort="favourites" id="favourites-option">Favourites on top <span class="star">☆</span></button>
+      <button data-sort="title">Title A-Z</button>
+      <button data-sort="closest">Closest</button>
+      <button data-sort="soonest">Soonest</button>
+    </div>
+  </div>
+  <div class="row" id="map-controls-row">
+    <div id="geocoder"></div>
+    <div style="display:flex;gap:10px;">
+      <div id="geolocate-btn"></div>
+      <div id="compass-btn"></div>
+    </div>
+  </div>
+  <div class="row" id="filter-message">0 results showing out of 0 results in the area.</div>
+  <div class="row" id="keywords-row">
+    <input type="text" id="keywords-input" placeholder="Keywords">
+    <button id="keywords-clear" class="icon-button">✕</button>
+  </div>
+  <div class="row">
+    <button id="clear-filters">Clear Filters</button>
+  </div>
+</div>
 <div id="list-panel" class="panel left"></div>
 <div id="posts-panel" class="panel left"></div>
 <div id="member-panel" class="panel right"></div>
@@ -105,6 +162,7 @@
   </div>
 </div>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
 const map = new mapboxgl.Map({
@@ -114,6 +172,18 @@ const map = new mapboxgl.Map({
   center: [0, 0],
   zoom: 1
 });
+const geocoder = new MapboxGeocoder({
+  accessToken: mapboxgl.accessToken,
+  mapboxgl: mapboxgl,
+  placeholder: 'Location'
+});
+document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+const geolocateControl = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:true});
+const geoContainer = geolocateControl.onAdd(map);
+document.getElementById('geolocate-btn').appendChild(geoContainer);
+const navControl = new mapboxgl.NavigationControl({showCompass:true,showZoom:false});
+const navContainer = navControl.onAdd(map);
+document.getElementById('compass-btn').appendChild(navContainer.querySelector('.mapboxgl-ctrl-compass'));
 map.on('load',()=>{
   map.setFog({
     'color': '#0b1d51',
@@ -183,6 +253,86 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none
 if(!localStorage.getItem('welcomeShown')){modal.style.display='flex';localStorage.setItem('welcomeShown','true');}
 const fsBtn=document.getElementById('fullscreen-button');
 fsBtn.addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();}});
+
+/* Filter panel interactions */
+const sortMenu=document.getElementById('sort-menu');
+const sortOptions=document.getElementById('sort-options');
+const menuArrow=sortMenu.querySelector('.menu-arrow');
+const favOption=document.getElementById('favourites-option');
+let favouritesOnTop=false;
+let sortOrder='Title A-Z';
+sortMenu.addEventListener('click',()=>{
+  sortOptions.classList.toggle('open');
+  menuArrow.style.transform=sortOptions.classList.contains('open')?'rotate(180deg)':'rotate(0deg)';
+});
+sortOptions.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const type=btn.dataset.sort;
+    if(type==='favourites'){
+      favouritesOnTop=!favouritesOnTop;
+      favOption.querySelector('.star').textContent=favouritesOnTop?'★':'☆';
+      updateFilterState();
+      return;
+    }
+    sortOrder=btn.textContent;
+    sortMenu.firstChild.textContent=sortOrder+' ';
+    sortOptions.classList.remove('open');
+    menuArrow.style.transform='rotate(0deg)';
+    updateFilterState();
+  });
+});
+const keywordsInput=document.getElementById('keywords-input');
+const keywordsClear=document.getElementById('keywords-clear');
+const clearFiltersBtn=document.getElementById('clear-filters');
+function updateFilterState(){
+  const active=keywordsInput.value.trim()!==''||favouritesOnTop||sortOrder!=='Title A-Z';
+  filterBtn.classList.toggle('active-filter',active);
+  keywordsClear.classList.toggle('active-filter',keywordsInput.value.trim()!=='');
+  clearFiltersBtn.classList.toggle('active-filter',active);
+}
+keywordsInput.addEventListener('input',updateFilterState);
+keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
+clearFiltersBtn.addEventListener('click',()=>{
+  keywordsInput.value='';
+  favouritesOnTop=false;
+  favOption.querySelector('.star').textContent='☆';
+  sortOrder='Title A-Z';
+  sortMenu.firstChild.textContent=sortOrder+' ';
+  updateFilterState();
+});
+document.querySelector('#filter-panel .close').addEventListener('click',()=>{
+  filterPanel.classList.remove('open');
+  filterBtn.classList.remove('selected');
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && filterPanel.classList.contains('open')){
+    filterPanel.classList.remove('open');
+    filterBtn.classList.remove('selected');
+  }
+});
+document.querySelector('#filter-panel .snap-left').addEventListener('click',()=>{
+  filterPanel.style.left='0';filterPanel.style.right='auto';
+});
+document.querySelector('#filter-panel .snap-right').addEventListener('click',()=>{
+  filterPanel.style.right='0';filterPanel.style.left='auto';
+});
+let dragging=false,offsetX=0;
+const header=document.querySelector('#filter-panel .panel-header');
+header.addEventListener('mousedown',e=>{dragging=true;offsetX=e.clientX-filterPanel.offsetLeft;});
+document.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  let newLeft=e.clientX-offsetX;
+  const maxLeft=window.innerWidth-filterPanel.offsetWidth;
+  if(newLeft<0)newLeft=0; if(newLeft>maxLeft)newLeft=maxLeft;
+  filterPanel.style.left=newLeft+'px';
+  filterPanel.style.right='auto';
+});
+document.addEventListener('mouseup',()=>{dragging=false;});
+window.addEventListener('resize',()=>{
+  const maxLeft=window.innerWidth-filterPanel.offsetWidth;
+  const left=parseInt(getComputedStyle(filterPanel).left)||0;
+  if(left>maxLeft)filterPanel.style.left=maxLeft+'px';
+});
 </script>
 </body>
 </html>
