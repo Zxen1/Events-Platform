@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funmap</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicons/site.webmanifest">
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    :root {
+      --header-height:80px;
+      --footer-height:80px;
+      --panel-width:420px;
+      --list-width:520px;
+      --ad-width:400px;
+      --gap:10px;
+      --navy:#001f3f;
+      --black:rgba(0,0,0,0.5);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family: Verdana, sans-serif;
+      font-size:14px;
+      overflow:hidden;
+    }
+    header {
+      position:absolute;
+      top:0; left:0; right:0;
+      height:var(--header-height);
+      background:var(--navy);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color:#fff;
+      z-index:1000;
+    }
+    header .btn-group { display:flex; }
+    .nav-btn {
+      width:80px; height:80px;
+      background:var(--navy);
+      color:#fff;
+      border:none;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:14px;
+    }
+    #logo {
+      height:60px;
+      cursor:pointer;
+    }
+    #map {
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      left:0; right:0;
+    }
+    footer {
+      position:absolute;
+      bottom:0; left:0; right:0;
+      height:var(--footer-height);
+      background:var(--black);
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      z-index:1000;
+    }
+    #fullscreen-btn {
+      width:80px; height:80px;
+      background:#000;
+      color:#fff;
+      opacity:0.8;
+      border:none;
+      cursor:pointer;
+    }
+    /* Panels */
+    .panel {
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      width:var(--panel-width);
+      background:#2f2f2f;
+      color:#fff;
+      padding:10px;
+      display:none;
+      overflow:auto;
+    }
+    .panel.show { display:block; }
+    .panel-header {
+      height:60px;
+      font-size:24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    #filter-panel { left:0; }
+    #member-panel,
+    #admin-panel,
+    #settings-panel { right:0; }
+    /* List panel */
+    #list-panel {
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      width:var(--list-width);
+      background:var(--black);
+      padding:10px;
+      display:none;
+      overflow:auto;
+      z-index:500;
+    }
+    #list-panel.show { display:block; }
+    /* Posts panel */
+    #posts-panel {
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      left:0; right:0;
+      padding:10px;
+      display:none;
+      overflow:auto;
+      background:var(--black);
+      z-index:400;
+    }
+    #posts-panel.show { display:block; }
+    /* Ad panel */
+    #ad-panel {
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      width:var(--ad-width);
+      right:0;
+      padding:10px;
+      background:#111;
+      color:#fff;
+      display:none;
+      overflow:hidden;
+    }
+    #ad-panel.show { display:block; }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width:8px;
+      height:8px;
+    }
+    ::-webkit-scrollbar-track {
+      background:transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background:rgba(0,0,0,0.5);
+      border-radius:4px;
+    }
+    ::-webkit-scrollbar-corner { background: transparent; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="btn-group">
+    <button id="filter-button" class="nav-btn">
+      🔍<div id="result-count">1000</div>
+    </button>
+    <button id="list-button" class="nav-btn">List</button>
+    <button id="posts-button" class="nav-btn">Posts</button>
+  </div>
+  <img src="assets/funmap-logo-big.png" id="logo" alt="Funmap">
+  <div class="btn-group">
+    <button id="member-button" class="nav-btn">Members</button>
+    <button id="admin-button" class="nav-btn">Admin</button>
+    <button id="settings-button" class="nav-btn">⚙️</button>
+  </div>
+</header>
+<div id="map"></div>
+<footer>
+  <button id="fullscreen-btn">⛶</button>
+</footer>
+<!-- Panels -->
+<div id="filter-panel" class="panel">
+  <div class="panel-header">Filter</div>
+  <!-- Filter content placeholder -->
+</div>
+<div id="member-panel" class="panel">
+  <div class="panel-header">Members</div>
+  <p>Placeholder</p>
+</div>
+<div id="admin-panel" class="panel">
+  <div class="panel-header">Admin</div>
+  <p>Placeholder</p>
+</div>
+<div id="settings-panel" class="panel">
+  <div class="panel-header">Style</div>
+  <p>Placeholder</p>
+</div>
+<div id="list-panel"></div>
+<div id="posts-panel"></div>
+<div id="ad-panel"></div>
+<!-- Welcome Modal -->
+<div id="welcome-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;background:white;padding:20px;z-index:2000;text-align:center;">
+  <img src="assets/funmap-logo-big.png" alt="Funmap" style="max-width:100%;height:auto;">
+  <p>Welcome to Funmap!<br>Choose an area on the map to search for events and posts.<br>Click 🔍 to refine your search.</p>
+  <button onclick="toggleWelcome(false)">Close</button>
+</div>
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [0,0],
+    zoom: 2
+  });
+  map.addControl(new mapboxgl.NavigationControl());
+  map.on('load', () => {
+    map.addSource('points', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [
+          { type:'Feature', properties:{premium:false}, geometry:{ type:'Point', coordinates:[-77.04,38.907] } },
+          { type:'Feature', properties:{premium:true}, geometry:{ type:'Point', coordinates:[-77.034,38.91] } },
+          { type:'Feature', properties:{premium:false}, geometry:{ type:'Point', coordinates:[-77.02,38.91] } }
+        ]
+      },
+      cluster: true,
+      clusterRadius: 50
+    });
+    map.addLayer({
+      id:'clusters',
+      type:'circle',
+      source:'points',
+      filter:['has','point_count'],
+      paint:{'circle-color':'#51bbd6','circle-radius':20}
+    });
+    map.addLayer({
+      id:'cluster-count',
+      type:'symbol',
+      source:'points',
+      filter:['has','point_count'],
+      layout:{'text-field':['get','point_count_abbreviated'],'text-font':['DIN Offc Pro Medium','Arial Unicode MS Bold'],'text-size':12}
+    });
+    map.loadImage('assets/filters icon.png', (err, image) => {
+      if(err) return;
+      map.addImage('standard-icon', image);
+      map.addLayer({
+        id:'unclustered',
+        type:'symbol',
+        source:'points',
+        filter:['!', ['has','point_count']],
+        layout:{'icon-image':['case',['==',['get','premium'],true],'standard-icon','standard-icon'], 'icon-size':['case',['==',['get','premium'],true],2,1]}
+      });
+    });
+  });
+  // Panel toggles
+  const buttons = {
+    'filter-button':'filter-panel',
+    'member-button':'member-panel',
+    'admin-button':'admin-panel',
+    'settings-button':'settings-panel',
+    'list-button':'list-panel',
+    'posts-button':'posts-panel'
+  };
+  Object.keys(buttons).forEach(id => {
+    const btn = document.getElementById(id);
+    const panel = document.getElementById(buttons[id]);
+    if(!btn || !panel) return;
+    btn.addEventListener('click', () => {
+      panel.classList.toggle('show');
+      if(id === 'posts-button') {
+        btn.textContent = panel.classList.contains('show') ? 'Posts' : 'Map';
+      }
+    });
+  });
+  function toggleWelcome(show){
+    document.getElementById('welcome-modal').style.display = show ? 'block' : 'none';
+  }
+  document.getElementById('logo').addEventListener('click', () => toggleWelcome(true));
+  window.addEventListener('load', () => toggleWelcome(true));
+</script>
+</body>
+</html>
