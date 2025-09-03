@@ -161,6 +161,21 @@
         visibility: visible;
         pointer-events: auto;
       }
+      #member-panel {
+        left: auto;
+        right: 0;
+      }
+      .member-row {
+        width: 400px;
+        height: 40px;
+        margin-bottom: 10px;
+        background: #444;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 5px;
+        box-sizing: border-box;
+      }
       .panel-header {
         height: 60px;
         display: flex;
@@ -383,6 +398,34 @@
           <button class="panel-close" aria-label="Close">&times;</button>
         </div>
       </div>
+      <div id="auth-row" class="member-row">
+        <button id="login-btn">Login</button>
+        <button id="register-btn">Register</button>
+        <button id="logout-btn">Logout</button>
+      </div>
+      <div id="profile-row" class="member-row">
+        <span id="username-display">Guest</span>
+        <img id="avatar-display" src="" alt="Avatar" style="width:40px;height:40px;background:#666;">
+      </div>
+      <div id="password-row" class="member-row">
+        <input id="password-input" type="password" placeholder="Password" style="flex:1;">
+      </div>
+      <div id="currency-row" class="member-row">
+        <select id="currency-selector" style="flex:1;">
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+      <div id="language-row" class="member-row">
+        <select id="language-selector" style="flex:1;">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+      </div>
+      <div id="posts-list" class="member-row">Your Posts</div>
+      <div id="new-post-form" class="member-row">
+        <button id="new-post-btn">Create New Post</button>
+      </div>
     </div>
     <div id="admin-panel" class="panel">
       <div class="panel-header">
@@ -434,6 +477,12 @@
   const categoryToggles = document.querySelectorAll('.category-toggle');
   const geolocateBtn = document.getElementById('geolocate-btn');
   const compassBtn = document.getElementById('compass-btn');
+  const loginBtn = document.getElementById('login-btn');
+  const registerBtn = document.getElementById('register-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const currencySelector = document.getElementById('currency-selector');
+  const languageSelector = document.getElementById('language-selector');
+  const newPostBtn = document.getElementById('new-post-btn');
 
   const activeFilters = {
     keywords: '',
@@ -806,6 +855,37 @@
       map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
     });
+
+  function handleLogin() {
+    console.log('login');
+  }
+
+  function handleRegister() {
+    console.log('register');
+  }
+
+  function handleLogout() {
+    console.log('logout');
+  }
+
+  function handleCurrencyChange(e) {
+    console.log('currency', e.target.value);
+  }
+
+  function handleLanguageChange(e) {
+    console.log('language', e.target.value);
+  }
+
+  function handleCreatePost() {
+    console.log('create post');
+  }
+
+  if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+  if (registerBtn) registerBtn.addEventListener('click', handleRegister);
+  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+  if (currencySelector) currencySelector.addEventListener('change', handleCurrencyChange);
+  if (languageSelector) languageSelector.addEventListener('change', handleLanguageChange);
+  if (newPostBtn) newPostBtn.addEventListener('click', handleCreatePost);
   </script>
 </body>
 </html>
