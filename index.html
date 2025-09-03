@@ -399,6 +399,41 @@
         background: rgba(0,0,0,0.5);
         overflow-y: auto;
       }
+      #posts-panel.with-ad { width: calc(100% - 400px); }
+      #ad-panel {
+        width: 400px;
+        left: auto;
+        right: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      #ad-panel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #ad-panel .ad-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+      }
+      #ad-panel .ad-info .list-card {
+        width: 100%;
+        margin: 0;
+        background: rgba(0,0,0,0.7);
+      }
+      #ad-panel .ad-info .list-card img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+      }
+      .ad-anim { animation: adZoom 20s linear forwards; }
+      @keyframes adZoom {
+        from { transform: scale(1); }
+        to { transform: scale(1.1); }
+      }
       .post-card {
         margin: 0 auto 10px;
         padding: 10px;
@@ -729,6 +764,20 @@
         </div>
       </div>
     </div>
+    <div id="ad-panel" class="panel">
+      <img id="ad-image" alt="Advertisement">
+      <div class="ad-info">
+        <div class="list-card">
+          <img id="ad-thumb" alt="Ad thumbnail">
+          <div class="list-content">
+            <div class="list-title"></div>
+            <div class="list-category"></div>
+            <div class="list-venue"></div>
+            <div class="list-date"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="member-panel" class="panel">
       <div class="panel-header">
         <button class="panel-arrow-left" aria-label="Previous">&#9664;</button>
@@ -920,10 +969,67 @@
   const closePostBtn = document.getElementById('close-post-btn');
 
   const postsData = {
-    1: { title: 'Event 1', category: 'Category A / SubA1', venue: 'Venue 1', date: 'Jan 1 - Jan 2', author: 'Author 1', description: 'Description for event 1', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] },
-    2: { title: 'Event 2', category: 'Category B / SubB1', venue: 'Venue 2', date: 'Feb 1 - Feb 2', author: 'Author 2', description: 'Description for event 2', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] },
-    3: { title: 'Event 3', category: 'Category C / SubC1', venue: 'Venue 3', date: 'Mar 1 - Mar 2', author: 'Author 3', description: 'Description for event 3', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'] }
+    1: { title: 'Event 1', category: 'Category A / SubA1', venue: 'Venue 1', date: 'Jan 1 - Jan 2', author: 'Author 1', description: 'Description for event 1', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'], premium: true },
+    2: { title: 'Event 2', category: 'Category B / SubB1', venue: 'Venue 2', date: 'Feb 1 - Feb 2', author: 'Author 2', description: 'Description for event 2', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'], premium: true },
+    3: { title: 'Event 3', category: 'Category C / SubC1', venue: 'Venue 3', date: 'Mar 1 - Mar 2', author: 'Author 3', description: 'Description for event 3', images: ['assets/funmap-logo-big.png','assets/funmap-logo-big.png'], sessions: ['Session 1','Session 2'], premium: true }
   };
+
+  const adPanel = document.getElementById('ad-panel');
+  const adImage = document.getElementById('ad-image');
+  const adThumb = document.getElementById('ad-thumb');
+  const adTitle = adPanel.querySelector('.list-title');
+  const adCategory = adPanel.querySelector('.list-category');
+  const adVenue = adPanel.querySelector('.list-venue');
+  const adDate = adPanel.querySelector('.list-date');
+  const premiumPosts = Object.entries(postsData)
+    .filter(([id, data]) => data.premium)
+    .map(([id, data]) => ({ id, ...data }));
+  const adSources = premiumPosts.map(p => p.images[0]);
+  adSources.slice(0, 3).forEach(src => { const img = new Image(); img.src = src; });
+  let adIndex = 0;
+
+  function updateAd() {
+    if (!premiumPosts.length) return;
+    const post = premiumPosts[adIndex];
+    adPanel.dataset.postId = post.id;
+    adImage.src = post.images[0];
+    adImage.classList.remove('ad-anim');
+    void adImage.offsetWidth;
+    adImage.classList.add('ad-anim');
+    adThumb.src = post.images[0];
+    adTitle.textContent = post.title;
+    adCategory.textContent = post.category;
+    adVenue.textContent = post.venue;
+    adDate.textContent = post.date;
+  }
+  updateAd();
+  setInterval(() => {
+    adIndex = (adIndex + 1) % premiumPosts.length;
+    updateAd();
+  }, 20000);
+
+  adPanel.addEventListener('click', () => {
+    const id = adPanel.dataset.postId;
+    if (!id) return;
+    if (!postsPanel.classList.contains('active')) togglePanel('posts-panel');
+    postsContainer.classList.remove('hidden');
+    postView.classList.add('hidden');
+    const card = document.querySelector(`#posts-container .post-card[data-id="${id}"]`);
+    if (card) card.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  function checkAdPanel() {
+    if (postsPanel.classList.contains('active') && window.innerWidth >= 1200) {
+      adPanel.classList.add('active');
+      postsPanel.classList.add('with-ad');
+    } else {
+      adPanel.classList.remove('active');
+      postsPanel.classList.remove('with-ad');
+    }
+  }
+
+  window.addEventListener('resize', checkAdPanel);
+  checkAdPanel();
 
   let currentPostId = null;
 
@@ -1115,6 +1221,7 @@
       panel.classList.add('active');
       activePanel = panel;
     }
+    checkAdPanel();
   }
 
   document.addEventListener('keydown', (e) => {
