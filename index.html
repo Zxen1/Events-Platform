@@ -13,14 +13,13 @@
   html,body{margin:0;height:100%;font-family:Verdana,sans-serif;font-size:14px;overflow:hidden;}
   body{position:relative;}
   header{
-    position:absolute;top:0;left:0;right:0;height:80px;background:navy;color:#fff;display:flex;align-items:center;justify-content:space-between;z-index:10;
+    position:absolute;top:0;left:0;right:0;height:80px;background:#333;color:#fff;display:flex;align-items:center;justify-content:space-between;z-index:10;
   }
   header .group{display:flex;}
   header button{
-    width:80px;height:80px;background:navy;color:#fff;border:none;cursor:pointer;font-size:14px;position:relative;}
-  #filter-button .icon{font-size:24px;display:block;margin-top:10px;}
-  #filter-button .count{display:block;font-size:12px;}
-  #settings-button .icon{font-size:24px;}
+    width:80px;height:80px;background:#333;color:#fff;border:none;cursor:pointer;font-size:14px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  header button .icon{width:24px;height:24px;fill:#fff;}
+  #filter-button .count{font-size:12px;}
   header img.logo{height:60px;cursor:pointer;}
   .panel{
     position:absolute;top:80px;bottom:80px;background:#fff;overflow:auto;padding:10px;box-sizing:border-box;z-index:5;transition:transform 0.3s;
@@ -32,15 +31,16 @@
   #list-panel{width:520px;}
   #posts-panel{width:auto;max-width:420px;}
   #member-panel,#admin-panel,#settings-panel{width:420px;}
-  #map{position:absolute;top:80px;bottom:80px;left:0;right:0;}
+  #map{position:absolute;top:80px;bottom:0;left:0;right:0;}
   footer{
-    position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(0,0,0,0.5);z-index:10;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;}
-  footer .cards{flex:1;overflow-x:auto;white-space:nowrap;height:60px;}
+    position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(0,0,0,0.5);z-index:10;box-sizing:border-box;}
+  footer .cards{overflow-x:auto;white-space:nowrap;height:80px;margin-right:80px;}
   footer .card{display:inline-block;height:60px;width:200px;background:#222;color:#fff;margin-right:10px;padding:10px;box-sizing:border-box;}
-  footer button#fullscreen-button{width:80px;height:80px;background:navy;color:#fff;border:none;cursor:pointer;}
+  footer button#fullscreen-button{position:absolute;right:0;bottom:0;width:80px;height:80px;background:#333;color:#fff;border:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
   .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:20;}
   .modal-content{background:#fff;width:600px;padding:20px;box-sizing:border-box;text-align:center;}
   .modal-content img{max-width:100%;height:auto;}
+  .icon-inline{width:16px;height:16px;fill:#fff;vertical-align:middle;background:#000;border-radius:2px;}
   ::-webkit-scrollbar{width:10px;height:10px;}
   ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);border-radius:5px;}
   ::-webkit-scrollbar-track{background:rgba(0,0,0,0.1);}
@@ -49,7 +49,7 @@
 <body>
 <header>
   <div class="group left-buttons">
-    <button id="filter-button"><span class="icon">🔍</span><span class="count">1000</span></button>
+    <button id="filter-button"><svg class="icon" viewBox="0 0 24 24"><path d="M10 2a8 8 0 105.293 14.293l5.707 5.707-1.414 1.414-5.707-5.707A8 8 0 1010 2zm0 2a6 6 0 110 12 6 6 0 010-12z"/></svg><span class="count">1000</span></button>
     <button id="list-button">List</button>
     <button id="posts-button">Posts</button>
   </div>
@@ -57,7 +57,7 @@
   <div class="group right-buttons">
     <button id="member-button">Members</button>
     <button id="admin-button">Admin</button>
-    <button id="settings-button"><span class="icon">⚙️</span></button>
+    <button id="settings-button"><svg class="icon" viewBox="0 0 24 24"><path d="M11.983 2c-.552 0-1.003.45-1.003 1v1.07a7.985 7.985 0 00-2.269.946l-.76-.76a1 1 0 00-1.414 0L5.293 5.5a1 1 0 000 1.414l.76.76A7.985 7.985 0 004.77 9.978H3.7c-.55 0-1 .451-1 1.003v2.038c0 .552.45 1.003 1 1.003h1.07a7.985 7.985 0 00.946 2.269l-.76.76a1 1 0 000 1.414l1.414 1.414a1 1 0 001.414 0l.76-.76a7.985 7.985 0 002.269.946V21c0 .55.451 1 1.003 1h2.038c.552 0 1.003-.45 1.003-1v-1.07a7.985 7.985 0 002.269-.946l.76.76a1 1 0 001.414 0l1.414-1.414a1 1 0 000-1.414l-.76-.76a7.985 7.985 0 00.946-2.269H20.3c.55 0 1-.451 1-1.003v-2.038c0-.552-.45-1.003-1-1.003h-1.07a7.985 7.985 0 00-.946-2.269l.76-.76a1 1 0 000-1.414L17.63 3.646a1 1 0 00-1.414 0l-.76.76a7.985 7.985 0 00-2.269-.946V3c0-.55-.451-1-1.003-1h-2.038zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg></button>
   </div>
 </header>
 <div id="map"></div>
@@ -69,19 +69,20 @@
 <div id="settings-panel" class="panel right"></div>
 <footer>
   <div class="cards" id="recent-cards"></div>
-  <button id="fullscreen-button">⛶</button>
-</footer>
+  <button id="fullscreen-button"><svg class="icon" viewBox="0 0 24 24"><path d="M3 3h6v2H5v4H3V3zm18 0v6h-2V5h-4V3h6zm0 18h-6v-2h4v-4h2v6zM3 21v-6h2v4h4v2H3z"/></svg></button>
+  </footer>
 <div id="welcome-modal" class="modal" style="display:none;">
   <div class="modal-content">
     <img src="assets/funmap-logo-big.png" alt="Funmap">
-    <p>Welcome to Funmap! Choose an area on the map to search for events and posts. Click <span style="font-size:16px;">🔍</span> to refine your search.</p>
+    <p>Welcome to Funmap! Choose an area on the map to search for events and posts. Click <svg class="icon-inline" viewBox="0 0 24 24"><path d="M10 2a8 8 0 105.293 14.293l5.707 5.707-1.414 1.414-5.707-5.707A8 8 0 1010 2zm0 2a6 6 0 110 12 6 6 0 010-12z"/></svg> to refine your search.</p>
   </div>
 </div>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
-const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/streets-v11',center:[0,0],zoom:1});
+const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/standard',center:[0,0],zoom:1});
 map.on('load',()=>{
+  map.setConfigProperty('sky','theme','night');
   map.addSource('points',{
     type:'geojson',
     data:{
