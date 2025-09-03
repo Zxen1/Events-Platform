@@ -80,9 +80,21 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
-const map = new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/streets-v11',center:[0,0],zoom:1});
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/standard',
+  projection: 'globe',
+  center: [0, 0],
+  zoom: 1
+});
 map.on('load',()=>{
-  map.setConfigProperty('sky','theme','night');
+  map.setFog({
+    'color': '#0b1d51',
+    'high-color': '#1a2849',
+    'space-color': '#000000',
+    'horizon-blend': 0.1,
+    'star-intensity': 0.8
+  });
   map.addSource('points',{
     type:'geojson',
     data:{
