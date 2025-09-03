@@ -18,6 +18,7 @@
       --color-background: #fff;
       --color-text: #000;
       --scrollbar-thumb: #888;
+      --gap: 10px;
     }
     body {
       font-family: Verdana, sans-serif;
@@ -26,11 +27,17 @@
       padding-top: 80px;
       color: var(--color-text);
       background: var(--color-background);
-      scrollbar-gutter: stable both-edges;
+      scrollbar-gutter: auto;
     }
     * {
       scrollbar-width: thin;
       scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+    button {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    button:hover, button:focus {
+      background-color: rgba(255,255,255,0.1);
     }
     ::-webkit-scrollbar {
       width: 10px;
@@ -108,7 +115,7 @@
     }
     #recent-posts-container {
       display: flex;
-      gap: 10px;
+      gap: var(--gap);
       overflow-x: auto;
       height: 60px;
       width: 100%;
@@ -153,13 +160,15 @@
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateY(10px);
         z-index: 1002;
       }
       .panel.active {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
+        transform: translateY(0);
       }
       #member-panel {
         left: auto;
@@ -176,11 +185,11 @@
       .member-row {
         width: 400px;
         height: 40px;
-        margin-bottom: 10px;
+        margin-bottom: var(--gap);
         background: #444;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: var(--gap);
         padding: 0 5px;
         box-sizing: border-box;
       }
@@ -242,7 +251,7 @@
         cursor: pointer;
       }
       #filter-message { margin-bottom: 10px; min-height: 20px; }
-      .row { display: flex; align-items: center; margin-bottom: 10px; }
+      .row { display: flex; align-items: center; margin-bottom: var(--gap); }
       .row input[type="text"], .row input[type="date"] { flex: 1; }
       .clear-btn {
         margin-left: 5px;
@@ -356,10 +365,10 @@
       .list-card {
         width: 500px;
         padding: 10px;
-        margin: 0 auto 10px;
+        margin: 0 auto var(--gap);
         background: #444;
         display: flex;
-        gap: 10px;
+        gap: var(--gap);
         box-sizing: border-box;
         position: relative;
       }
@@ -435,11 +444,11 @@
         to { transform: scale(1.1); }
       }
       .post-card {
-        margin: 0 auto 10px;
+        margin: 0 auto var(--gap);
         padding: 10px;
         background: #444;
         display: flex;
-        gap: 10px;
+        gap: var(--gap);
         box-sizing: border-box;
         position: relative;
         cursor: pointer;
@@ -611,18 +620,18 @@
       </div>
       <div id="map-controls-row">
         <input id="address-input" type="text" placeholder="Address">
-        <button id="geolocate-btn">📍</button>
-        <button id="compass-btn">🧭</button>
+        <button id="geolocate-btn" aria-label="Geolocate">📍</button>
+        <button id="compass-btn" aria-label="Compass">🧭</button>
       </div>
       <div id="filter-message">No filters applied</div>
       <div id="keywords-row" class="row">
         <input id="keywords-input" type="text" placeholder="Keywords">
-        <button id="keywords-clear" class="clear-btn">&#10006;</button>
+        <button id="keywords-clear" class="clear-btn" aria-label="Clear keywords">&#10006;</button>
       </div>
       <div id="daterange-row" class="row">
         <input id="start-date" type="date">
         <input id="end-date" type="date">
-        <button id="date-clear" class="clear-btn">&#10006;</button>
+        <button id="date-clear" class="clear-btn" aria-label="Clear dates">&#10006;</button>
       </div>
       <div id="expired-events-row" class="row">
         <label><input type="checkbox" id="include-expired">Include expired events</label>
@@ -848,7 +857,7 @@
             </select>
             <span class="menu-arrow" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);">&#9662;</span>
           </div>
-          <button id="theme-refresh">&#8635;</button>
+          <button id="theme-refresh" aria-label="Refresh theme">&#8635;</button>
         </div>
       </div>
       <div id="admin-map" class="tab-content">
@@ -952,6 +961,7 @@
   const currencySelector = document.getElementById('currency-selector');
   const languageSelector = document.getElementById('language-selector');
   const newPostBtn = document.getElementById('new-post-btn');
+  const headerButtons = Array.from(document.querySelectorAll('header button'));
   const listButton = document.getElementById('list-button');
   const listPanel = document.getElementById('list-panel');
   const postsPanel = document.getElementById('posts-panel');
@@ -1298,6 +1308,14 @@
         return;
       }
       if (activePanel) togglePanel(activePanel.id);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const index = headerButtons.indexOf(document.activeElement);
+      if (index !== -1) {
+        e.preventDefault();
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        const next = (index + dir + headerButtons.length) % headerButtons.length;
+        headerButtons[next].focus();
+      }
     }
   });
 
