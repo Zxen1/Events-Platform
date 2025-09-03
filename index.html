@@ -76,6 +76,12 @@
       height: 60px;
       cursor: pointer;
     }
+    #map {
+      position: absolute;
+      top: 80px;
+      bottom: 80px;
+      width: 100%;
+    }
     #welcome-modal {
       width: 600px;
       margin: 0 auto;
@@ -100,11 +106,11 @@
     <button id="admin-button" aria-label="Admin"></button>
     <button id="settings-button" aria-label="Settings"></button>
   </header>
+  <div id="map"></div>
   <div id="welcome-modal" class="hidden">
     <img src="assets/funmap-logo-big.png" alt="FunMap logo" style="max-width:100%;height:auto;">
     <p>Welcome to FunMap!</p>
   </div>
-  <div id="map"></div>
   <div id="panels"></div>
   <footer id="footer"></footer>
 
@@ -141,6 +147,108 @@
           panel.classList.toggle('hidden');
         }
       });
+    });
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [-122.447303, 37.753574],
+      zoom: 10
+    });
+
+    map.on('load', () => {
+      const standardCanvas = document.createElement('canvas');
+      standardCanvas.width = 40;
+      standardCanvas.height = 40;
+      const stdCtx = standardCanvas.getContext('2d');
+      stdCtx.fillStyle = '#3FB1CE';
+      stdCtx.beginPath();
+      stdCtx.arc(20, 20, 20, 0, Math.PI * 2);
+      stdCtx.fill();
+
+      const premiumCanvas = document.createElement('canvas');
+      premiumCanvas.width = 80;
+      premiumCanvas.height = 80;
+      const premCtx = premiumCanvas.getContext('2d');
+      premCtx.fillStyle = '#fbb03b';
+      premCtx.beginPath();
+      premCtx.arc(40, 40, 40, 0, Math.PI * 2);
+      premCtx.fill();
+
+      map.addImage('standard-icon', standardCanvas, { pixelRatio: 1 });
+      map.addImage('premium-icon', premiumCanvas, { pixelRatio: 1 });
+
+      const geojson = {
+        type: 'FeatureCollection',
+        features: [
+          { type: 'Feature', properties: { id: 1, premium: false }, geometry: { type: 'Point', coordinates: [-122.447303, 37.753574] } },
+          { type: 'Feature', properties: { id: 2, premium: true }, geometry: { type: 'Point', coordinates: [-122.457303, 37.763574] } },
+          { type: 'Feature', properties: { id: 3, premium: false }, geometry: { type: 'Point', coordinates: [-122.467303, 37.773574] } }
+        ]
+      };
+
+      map.addSource('events', {
+        type: 'geojson',
+        data: geojson,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50
+      });
+
+      map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'events',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#51bbd6',
+          'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40]
+        }
+      });
+
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'events',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12
+        }
+      });
+
+      map.addLayer({
+        id: 'unclustered-point',
+        type: 'symbol',
+        source: 'events',
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'icon-image': ['case', ['==', ['get', 'premium'], true], 'premium-icon', 'standard-icon'],
+          'icon-allow-overlap': true
+        }
+      });
+
+      map.on('click', 'clusters', (e) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource('events').getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          map.easeTo({ center: features[0].geometry.coordinates, zoom, pitch: 45 });
+        });
+      });
+
+      map.on('click', 'unclustered-point', () => {
+        const postsPanel = document.getElementById('posts-panel');
+        if (postsPanel) postsPanel.classList.remove('hidden');
+        const listPanel = document.getElementById('list-panel');
+        if (listPanel) listPanel.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = ''; });
+      map.on('mouseenter', 'unclustered-point', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'unclustered-point', () => { map.getCanvas().style.cursor = ''; });
     });
   </script>
 </body>
