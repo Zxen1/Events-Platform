@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events Platform</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+  <link rel="manifest" href="/favicons/site.webmanifest">
+  <link rel="shortcut icon" href="/favicons/favicon.ico">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <style>
+    :root {
+      --color-header: navy;
+      --color-footer: #000;
+      --color-background: #fff;
+      --color-text: #000;
+      --scrollbar-thumb: #888;
+    }
+    body {
+      font-family: Verdana, sans-serif;
+      font-size: 14px;
+      margin: 0;
+      color: var(--color-text);
+      background: var(--color-background);
+      scrollbar-gutter: stable both-edges;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 5px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+  </style>
+</head>
+<body>
+  <header id="header"></header>
+  <div id="map"></div>
+  <div id="panels"></div>
+  <footer id="footer"></footer>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.Xo14KJtnMhLy2RpQeyWNLw';
+    // TODO: add page scripts
+  </script>
+</body>
+</html>
