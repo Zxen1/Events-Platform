@@ -71,6 +71,37 @@
   ::-webkit-scrollbar{width:10px;height:10px;}
   ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);border-radius:5px;}
   ::-webkit-scrollbar-track{background:rgba(0,0,0,0.1);}
+  #filter-panel{background:#333;color:#fff;display:flex;flex-direction:column;padding:10px;width:420px;box-sizing:border-box;gap:10px;}
+  #filter-panel .panel-header{height:60px;display:flex;align-items:center;justify-content:space-between;cursor:move;font-size:24px;}
+  #filter-panel .panel-header .title{flex:1;text-align:center;}
+  #filter-panel .header-buttons{display:flex;gap:10px;}
+  #filter-panel .icon-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;}
+  #filter-panel .row{width:400px;height:40px;display:flex;align-items:center;justify-content:space-between;}
+  #filter-panel input[type=text]{width:300px;height:40px;box-sizing:border-box;padding:0 10px;color:#000;}
+  #filter-panel .menu-btn{width:300px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
+  #filter-panel .menu-options{position:absolute;top:40px;left:0;background:#444;width:300px;z-index:1;display:flex;flex-direction:column;}
+  #filter-panel .menu-options button{width:100%;height:40px;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 10px;}
+  #filter-panel .menu-arrow{transition:transform 0.3s;}
+  #filter-panel .menu-open .menu-arrow{transform:rotate(180deg);}
+  #filter-panel #filter-calendar-container{width:400px;height:200px;background:#222;color:#fff;overflow-x:auto;}
+  #filter-panel #filter-categories-container{width:400px;display:flex;flex-direction:column;gap:10px;}
+  #filter-panel .category{width:400px;display:flex;flex-direction:column;}
+  #filter-panel .category-header{width:400px;height:40px;display:flex;align-items:center;justify-content:space-between;background:#444;padding:0 10px;box-sizing:border-box;cursor:pointer;}
+  #filter-panel .category-header .left{display:flex;align-items:center;gap:10px;}
+  #filter-panel .subcategories{display:none;flex-direction:column;gap:10px;padding:10px 0;}
+  #filter-panel .category.open .subcategories{display:flex;}
+  #filter-panel .subcategories .row{width:400px;height:40px;}
+  #filter-reset-button{width:400px;height:40px;background:#001f5f;color:#fff;margin-top:auto;}
+  .switch{position:relative;display:inline-block;width:40px;height:20px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#777;transition:.2s;border-radius:20px;}
+  .slider:before{position:absolute;content:"";height:16px;width:16px;left:2px;bottom:2px;background:white;transition:.2s;border-radius:50%;}
+  .switch input:checked + .slider{background:#0a0;}
+  .switch input:checked + .slider:before{transform:translateX(20px);}
+  .switch.red input:checked + .slider{background:#c00;}
+  .switch.grey .slider{background:#555;}
+  .red{background:#c00!important;}
+  .hidden{display:none;}
 </style>
 </head>
 <body>
@@ -88,7 +119,48 @@
   </div>
 </header>
 <div id="map"></div>
-<div id="filter-panel" class="panel left"></div>
+<div id="filter-panel" class="panel left">
+  <div class="panel-header">
+    <button id="snap-left" class="icon-btn">◀</button>
+    <span class="title">Filters</span>
+    <div class="header-buttons">
+      <button id="snap-right" class="icon-btn">▶</button>
+      <button id="filter-close" class="icon-btn">✖</button>
+    </div>
+  </div>
+  <div class="row relative">
+    <button id="sort-menu" class="menu-btn">Title A-Z <span class="menu-arrow">▼</span></button>
+    <div id="sort-options" class="menu-options hidden">
+      <button data-value="favourites"><span class="star">☆</span> Favourites on top</button>
+      <button data-value="title">Title A-Z</button>
+      <button data-value="closest">Closest</button>
+      <button data-value="soonest">Soonest</button>
+    </div>
+  </div>
+  <div class="row map-controls-row">
+    <input id="address-input" type="text" placeholder="Location">
+    <button id="geolocate-btn" class="icon-btn">📍</button>
+    <button id="compass-btn" class="icon-btn">🧭</button>
+  </div>
+  <div class="row" id="filter-message">0 results showing out of 0 results in the area.</div>
+  <div class="row keywords-row">
+    <input id="keywords" type="text" placeholder="Keywords">
+    <button class="icon-btn clear-keywords">✖</button>
+  </div>
+  <div class="row daterange-row">
+    <input id="daterange" type="text" placeholder="Date Range" readonly>
+    <button class="icon-btn clear-daterange">✖</button>
+  </div>
+  <div class="row expired-events-row">
+    <span>Show Expired Events</span>
+    <label class="switch"><input type="checkbox" id="expired-switch"><span class="slider"></span></label>
+  </div>
+  <div id="filter-calendar-container">
+    <div id="filter-calendar">Calendar placeholder</div>
+  </div>
+  <div id="filter-categories-container"></div>
+  <button id="filter-reset-button">Reset Filters</button>
+</div>
 <div id="list-panel" class="panel left"></div>
 <div id="posts-panel" class="panel left"></div>
 <div id="member-panel" class="panel right"></div>
@@ -183,6 +255,114 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none
 if(!localStorage.getItem('welcomeShown')){modal.style.display='flex';localStorage.setItem('welcomeShown','true');}
 const fsBtn=document.getElementById('fullscreen-button');
 fsBtn.addEventListener('click',()=>{if(!document.fullscreenElement){document.documentElement.requestFullscreen();}else{document.exitFullscreen();}});
+const keywordsInput=document.getElementById('keywords');
+const keywordsClear=document.querySelector('.clear-keywords');
+const daterangeInput=document.getElementById('daterange');
+const daterangeClear=document.querySelector('.clear-daterange');
+const expiredSwitch=document.getElementById('expired-switch');
+const resetBtn=document.getElementById('filter-reset-button');
+const categoriesContainer=document.getElementById('filter-categories-container');
+function computeResetNeeded(){
+  let need=keywordsInput.value||daterangeInput.value||expiredSwitch.checked;
+  categoriesContainer.querySelectorAll('.category').forEach(cat=>{
+    const catSwitch=cat.querySelector('.category-header input');
+    const subs=cat.querySelectorAll('.subcategories input');
+    if(!catSwitch.checked||Array.from(subs).some(s=>!s.checked))need=true;
+  });
+  resetBtn.classList.toggle('red',!!need);
+}
+function updateFilterState(){
+  const active=keywordsInput.value||daterangeInput.value||expiredSwitch.checked;
+  filterBtn.classList.toggle('red',!!active);
+  keywordsClear.classList.toggle('red',keywordsInput.value);
+  daterangeClear.classList.toggle('red',daterangeInput.value);
+  expiredSwitch.parentElement.classList.toggle('red',expiredSwitch.checked);
+  computeResetNeeded();
+}
+keywordsInput.addEventListener('input',updateFilterState);
+keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
+daterangeClear.addEventListener('click',()=>{daterangeInput.value='';updateFilterState();});
+expiredSwitch.addEventListener('change',updateFilterState);
+resetBtn.addEventListener('click',()=>{
+  keywordsInput.value='';
+  daterangeInput.value='';
+  expiredSwitch.checked=false;
+  expiredSwitch.parentElement.classList.remove('red');
+  categoriesContainer.querySelectorAll('.category').forEach(cat=>{
+    const catSwitch=cat.querySelector('.category-header input');
+    const subs=cat.querySelectorAll('.subcategories input');
+    catSwitch.checked=true;
+    cat.querySelector('.category-header .switch').classList.remove('grey');
+    subs.forEach(s=>{s.checked=true;s.disabled=false;});
+    cat.querySelector('.count').textContent=`${subs.length}/${subs.length}`;
+  });
+  updateFilterState();
+});
+function closeFilterPanel(){filterPanel.classList.remove('open');filterBtn.classList.remove('selected');}
+document.getElementById('filter-close').addEventListener('click',closeFilterPanel);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFilterPanel();});
+document.getElementById('snap-left').addEventListener('click',()=>{filterPanel.style.left='0';filterPanel.style.right='auto';});
+document.getElementById('snap-right').addEventListener('click',()=>{filterPanel.style.right='0';filterPanel.style.left='auto';});
+const headerDrag=filterPanel.querySelector('.panel-header');
+let drag=false,offx=0;
+headerDrag.addEventListener('mousedown',e=>{drag=true;offx=e.clientX-filterPanel.offsetLeft;});
+document.addEventListener('mousemove',e=>{if(drag){let x=e.clientX-offx;x=Math.max(0,Math.min(window.innerWidth-filterPanel.offsetWidth,x));filterPanel.style.left=x+'px';filterPanel.style.right='auto';}});
+document.addEventListener('mouseup',()=>{drag=false;});
+const sortMenuBtn=document.getElementById('sort-menu');
+const sortOptions=document.getElementById('sort-options');
+sortMenuBtn.addEventListener('click',()=>{sortOptions.classList.toggle('hidden');sortMenuBtn.classList.toggle('menu-open');});
+sortOptions.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const val=btn.dataset.value;
+    if(val==='favourites'){
+      btn.classList.toggle('selected');
+      btn.querySelector('.star').textContent=btn.classList.contains('selected')?'★':'☆';
+    }else{
+      sortMenuBtn.firstChild.textContent=btn.textContent.trim();
+      sortOptions.classList.add('hidden');
+      sortMenuBtn.classList.remove('menu-open');
+    }
+  });
+});
+const categoryData=[
+  {name:'Music',icon:'🎵',subs:['Rock','Jazz','Pop']},
+  {name:'Sports',icon:'⚽',subs:['Football','Basketball','Tennis']}
+];
+categoryData.forEach(cat=>{
+  const catDiv=document.createElement('div');
+  catDiv.className='category';
+  const header=document.createElement('div');
+  header.className='category-header';
+  header.innerHTML=`<div class="left">${cat.icon} ${cat.name} <span class="count">${cat.subs.length}/${cat.subs.length}</span></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label>`;
+  catDiv.appendChild(header);
+  const subs=document.createElement('div');
+  subs.className='subcategories';
+  cat.subs.forEach(sub=>{
+    const r=document.createElement('div');
+    r.className='row';
+    r.innerHTML=`<span>${sub}</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label>`;
+    subs.appendChild(r);
+  });
+  catDiv.appendChild(subs);
+  header.addEventListener('click',()=>{catDiv.classList.toggle('open');});
+  categoriesContainer.appendChild(catDiv);
+});
+categoriesContainer.addEventListener('change',e=>{
+  const cat=e.target.closest('.category');
+  if(e.target.closest('.subcategories')){
+    const subs=cat.querySelectorAll('.subcategories input');
+    const checked=Array.from(subs).filter(s=>s.checked).length;
+    cat.querySelector('.count').textContent=`${checked}/${subs.length}`;
+    const catSwitch=cat.querySelector('.category-header input');
+    cat.querySelector('.category-header .switch').classList.toggle('grey',checked!==subs.length);
+  }
+  if(e.target.closest('.category-header') && e.target.type==='checkbox'){
+    const subs=cat.querySelectorAll('.subcategories input');
+    subs.forEach(s=>{s.disabled=!e.target.checked;});
+  }
+  updateFilterState();
+});
+updateFilterState();
 </script>
 </body>
 </html>
