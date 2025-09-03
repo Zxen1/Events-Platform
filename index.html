@@ -926,7 +926,8 @@
     const headerLogo = document.getElementById('header-logo');
   const recentPostsContainer = document.getElementById('recent-posts-container');
   const fullscreenButton = document.getElementById('fullscreen-button');
-  const recentPosts = [];
+  const favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
+  let recentPosts = JSON.parse(localStorage.getItem('recentPosts') || '[]');
 
   let activePanel = null;
 
@@ -1008,6 +1009,22 @@
     updateAd();
   }, 20000);
 
+  function setMode(mode) {
+    const m = mode === 'posts' ? 'posts' : 'map';
+    if (m === 'map') {
+      if (listPanel) listPanel.classList.remove('hidden');
+      if (postsPanel) postsPanel.classList.add('hidden');
+      if (adPanel) adPanel.classList.add('hidden');
+    } else {
+      if (listPanel) listPanel.classList.add('hidden');
+      if (postsPanel) postsPanel.classList.remove('hidden');
+      if (adPanel) adPanel.classList.remove('hidden');
+    }
+    localStorage.setItem('mode', m);
+    adjustScrollbars();
+  }
+  setMode(localStorage.getItem('mode') || 'map');
+
   adPanel.addEventListener('click', () => {
     const id = adPanel.dataset.postId;
     if (!id) return;
@@ -1028,13 +1045,20 @@
     }
   }
 
-  window.addEventListener('resize', checkAdPanel);
-  checkAdPanel();
 
   let currentPostId = null;
 
   document.querySelectorAll('.list-card').forEach(card => {
-    card.addEventListener('click', () => openPost(card.dataset.id));
+    const id = card.dataset.id;
+    const fav = card.querySelector('.favorite-btn');
+    if (fav && favorites.has(id)) fav.classList.add('active');
+    if (fav) fav.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fav.classList.toggle('active');
+      if (fav.classList.contains('active')) favorites.add(id); else favorites.delete(id);
+      localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
+    });
+    card.addEventListener('click', () => openPost(id));
   });
 
   document.querySelectorAll('#posts-container .post-card').forEach(card => {
@@ -1043,13 +1067,23 @@
       openPost(card.dataset.id);
     });
     const fav = card.querySelector('.favorite-btn');
+    const id = card.dataset.id;
+    if (fav && favorites.has(id)) fav.classList.add('active');
     if (fav) fav.addEventListener('click', (e) => {
       e.stopPropagation();
       fav.classList.toggle('active');
+      if (fav.classList.contains('active')) favorites.add(id); else favorites.delete(id);
+      localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
     });
   });
 
-  if (postFavorite) postFavorite.addEventListener('click', () => postFavorite.classList.toggle('active'));
+  if (postFavorite) postFavorite.addEventListener('click', () => {
+    postFavorite.classList.toggle('active');
+    if (currentPostId) {
+      if (postFavorite.classList.contains('active')) favorites.add(currentPostId); else favorites.delete(currentPostId);
+      localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
+    }
+  });
   if (closePostBtn) closePostBtn.addEventListener('click', closePost);
   if (copyLinkBtn) copyLinkBtn.addEventListener('click', () => {
     if (!currentPostId) return;
@@ -1079,6 +1113,11 @@
     sort: ''
   };
 
+  function adjustScrollbars() {
+    const sw = window.innerWidth - document.documentElement.clientWidth;
+    document.querySelectorAll('.panel').forEach(p => p.style.right = sw + 'px');
+  }
+
   function handleViewport() {
     if (window.innerWidth < 450) {
       if (listButton) listButton.style.display = 'none';
@@ -1086,6 +1125,8 @@
     } else {
       if (listButton) listButton.style.display = '';
     }
+    adjustScrollbars();
+    checkAdPanel();
   }
   window.addEventListener('resize', handleViewport);
   handleViewport();
@@ -1128,10 +1169,30 @@
     activeFilters.sort = sortMenu.dataset.sort || '';
     updateFilterButtonState();
     updateFilterMessage();
+    localStorage.setItem('filters', JSON.stringify(activeFilters));
   }
 
   function toggleClear(btn, condition) {
     if (condition) btn.classList.add('active'); else btn.classList.remove('active');
+  }
+
+  function restoreFilters() {
+    const saved = JSON.parse(localStorage.getItem('filters') || '{}');
+    Object.assign(activeFilters, saved);
+    keywordsInput.value = activeFilters.keywords || '';
+    startDateInput.value = activeFilters.startDate || '';
+    endDateInput.value = activeFilters.endDate || '';
+    expiredSwitch.checked = !!activeFilters.includeExpired;
+    subcategoryCheckboxes.forEach(cb => cb.checked = (activeFilters.categories || []).includes(cb.value));
+    if (activeFilters.sort) {
+      sortMenu.dataset.sort = activeFilters.sort;
+      const selected = document.querySelector(`#sort-menu-items li[data-sort='${activeFilters.sort}']`);
+      if (selected) sortMenuButton.innerHTML = selected.textContent + ' <span class="menu-arrow">&#9660;</span>';
+    }
+    toggleClear(keywordsClear, keywordsInput.value);
+    toggleClear(dateClear, startDateInput.value || endDateInput.value);
+    updateFilterButtonState();
+    updateFilterMessage();
   }
 
   sortMenuButton.addEventListener('click', () => sortMenu.classList.toggle('open'));
@@ -1202,8 +1263,10 @@
     }
   }
 
+  restoreFilters();
   populateCalendar(new Date());
   updateFilters();
+  renderRecentPosts();
 
   function togglePanel(id) {
     const panel = document.getElementById(id);
@@ -1211,7 +1274,10 @@
     const isActive = panel.classList.contains('active');
     if (isActive) {
       panel.classList.remove('active');
-      if (id === 'posts-panel') closePost();
+      if (id === 'posts-panel') {
+        closePost();
+        setMode('map');
+      }
       activePanel = null;
     } else {
       if (activePanel) {
@@ -1220,13 +1286,18 @@
       }
       panel.classList.add('active');
       activePanel = panel;
+      if (id === 'posts-panel') setMode('posts'); else setMode('map');
     }
     checkAdPanel();
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && activePanel) {
-      togglePanel(activePanel.id);
+    if (e.key === 'Escape') {
+      if (welcomeModal && !welcomeModal.classList.contains('hidden')) {
+        welcomeModal.classList.add('hidden');
+        return;
+      }
+      if (activePanel) togglePanel(activePanel.id);
     }
   });
 
@@ -1282,6 +1353,7 @@
       recentPosts.unshift(post);
       if (recentPosts.length > 100) recentPosts.pop();
       renderRecentPosts();
+      localStorage.setItem('recentPosts', JSON.stringify(recentPosts));
     }
 
     function renderRecentPosts() {
@@ -1324,6 +1396,12 @@
       const data = postsData[id];
       if (!data) return;
       currentPostId = id;
+      highlightListCard(id);
+      if (map && map.getSource('events')) {
+        const src = map.getSource('events');
+        const feature = src._data && src._data.features.find(f => f.properties.id == id);
+        if (feature) map.flyTo({ center: feature.geometry.coordinates, zoom: 13 });
+      }
       postsContainer.classList.add('hidden');
       postView.classList.remove('hidden');
       postHeaderTitle.textContent = data.title;
@@ -1346,24 +1424,31 @@
       document.getElementById('post-author').textContent = data.author;
       document.getElementById('post-details').textContent = `${data.venue} | ${data.date}`;
       document.getElementById('post-text').textContent = data.description;
+      if (postFavorite) postFavorite.classList.toggle('active', favorites.has(id));
+      addRecentPost({ id, title: data.title, thumbnail: data.images[0] });
       if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
+      setMode('posts');
     }
 
     function closePost() {
       postView.classList.add('hidden');
       postsContainer.classList.remove('hidden');
       currentPostId = null;
+      setMode('map');
     }
 
     function toggleModal() {
-      welcomeModal.classList.toggle('hidden');
+      if (welcomeModal) welcomeModal.classList.toggle('hidden');
     }
-
+    if (welcomeModal) welcomeModal.addEventListener('click', toggleModal);
     window.addEventListener('load', () => {
-      welcomeModal.classList.remove('hidden');
+      if (welcomeModal && !localStorage.getItem('welcomeShown')) {
+        welcomeModal.classList.remove('hidden');
+        localStorage.setItem('welcomeShown', 'true');
+      }
     });
 
-    headerLogo.addEventListener('click', toggleModal);
+    if (headerLogo) headerLogo.addEventListener('click', toggleModal);
 
   const buttonPanelMap = {
     'filter-button': 'filter-panel',
@@ -1485,16 +1570,23 @@
         });
       });
 
+      let lastMarkerTap = { id: null, time: 0 };
       map.on('click', 'unclustered-point', (e) => {
-        if (listPanel && !listPanel.classList.contains('active') && window.innerWidth >= 450) togglePanel('list-panel');
         const feature = e.features[0];
-        highlightListCard(feature.properties.id);
-        openPost(feature.properties.id);
-        addRecentPost({
-          id: feature.properties.id,
-          title: `Post ${feature.properties.id}`,
-          thumbnail: 'assets/funmap-logo-big.png'
-        });
+        const id = feature.properties.id;
+        if ('ontouchstart' in window) {
+          const now = Date.now();
+          if (lastMarkerTap.id === id && now - lastMarkerTap.time < 300) {
+            openPost(id);
+            lastMarkerTap = { id: null, time: 0 };
+          } else {
+            highlightListCard(id);
+            lastMarkerTap = { id, time: now };
+          }
+        } else {
+          openPost(id);
+        }
+        if (listPanel && !listPanel.classList.contains('active') && window.innerWidth >= 450) togglePanel('list-panel');
       });
 
       map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
