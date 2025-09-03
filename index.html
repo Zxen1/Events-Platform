@@ -23,6 +23,7 @@
       font-family: Verdana, sans-serif;
       font-size: 14px;
       margin: 0;
+      padding-top: 80px;
       color: var(--color-text);
       background: var(--color-background);
       scrollbar-gutter: stable both-edges;
@@ -44,17 +45,103 @@
       border: 3px solid transparent;
       background-clip: content-box;
     }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: var(--color-header);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    header button {
+      position: absolute;
+      top: 0;
+      width: 80px;
+      height: 80px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    #filter-button { left: 0; }
+    #list-button { left: 80px; }
+    #posts-button { left: 160px; }
+    #settings-button { right: 0; }
+    #admin-button { right: 80px; }
+    #member-button { right: 160px; }
+    #header-logo {
+      height: 60px;
+      cursor: pointer;
+    }
+    #welcome-modal {
+      width: 600px;
+      margin: 0 auto;
+      background: var(--color-background);
+      color: var(--color-text);
+      border: 1px solid #ccc;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <header id="header"></header>
+  <header id="header">
+    <button id="filter-button" aria-label="Filter"></button>
+    <button id="list-button" aria-label="List"></button>
+    <button id="posts-button" aria-label="Posts"></button>
+    <img id="header-logo" src="assets/funmap-logo-big.png" alt="FunMap logo">
+    <button id="member-button" aria-label="Member"></button>
+    <button id="admin-button" aria-label="Admin"></button>
+    <button id="settings-button" aria-label="Settings"></button>
+  </header>
+  <div id="welcome-modal" class="hidden">
+    <img src="assets/funmap-logo-big.png" alt="FunMap logo" style="max-width:100%;height:auto;">
+    <p>Welcome to FunMap!</p>
+  </div>
   <div id="map"></div>
   <div id="panels"></div>
   <footer id="footer"></footer>
 
   <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.Xo14KJtnMhLy2RpQeyWNLw';
-    // TODO: add page scripts
+    const welcomeModal = document.getElementById('welcome-modal');
+    const headerLogo = document.getElementById('header-logo');
+
+    function toggleModal() {
+      welcomeModal.classList.toggle('hidden');
+    }
+
+    window.addEventListener('load', () => {
+      welcomeModal.classList.remove('hidden');
+    });
+
+    headerLogo.addEventListener('click', toggleModal);
+
+    const buttonPanelMap = {
+      'filter-button': 'filter-panel',
+      'list-button': 'list-panel',
+      'posts-button': 'posts-panel',
+      'member-button': 'member-panel',
+      'admin-button': 'admin-panel',
+      'settings-button': 'settings-panel'
+    };
+
+    Object.keys(buttonPanelMap).forEach(buttonId => {
+      const btn = document.getElementById(buttonId);
+      const panelId = buttonPanelMap[buttonId];
+      btn.addEventListener('click', () => {
+        const panel = document.getElementById(panelId);
+        if (panel) {
+          panel.classList.toggle('hidden');
+        }
+      });
+    });
   </script>
 </body>
 </html>
