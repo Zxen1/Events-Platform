@@ -348,6 +348,52 @@
         color: #fff;
         cursor: pointer;
       }
+      #list-panel {
+        width: 520px;
+        background: rgba(0,0,0,0.5);
+        overflow-y: auto;
+      }
+      .list-card {
+        width: 500px;
+        padding: 10px;
+        margin: 0 auto 10px;
+        background: #444;
+        display: flex;
+        gap: 10px;
+        box-sizing: border-box;
+        position: relative;
+      }
+      .list-card img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+      }
+      .list-card .list-content {
+        flex: 1;
+      }
+      .list-title {
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .list-category,
+      .list-venue,
+      .list-date {
+        font-size: 12px;
+      }
+      .favorite-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+      }
+      .list-card.highlight {
+        outline: 2px solid yellow;
+      }
     </style>
 </head>
 <body>
@@ -431,6 +477,38 @@
         <div>
           <button class="panel-arrow-right" aria-label="Next">&#9654;</button>
           <button class="panel-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div id="list-container">
+        <div class="list-card" data-id="1">
+          <img src="assets/funmap-logo-big.png" alt="Event 1" class="thumbnail">
+          <div class="list-content">
+            <div class="list-title">Event 1</div>
+            <div class="list-category">Category A / SubA1</div>
+            <div class="list-venue">Venue 1</div>
+            <div class="list-date">Jan 1 - Jan 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
+        </div>
+        <div class="list-card" data-id="2">
+          <img src="assets/funmap-logo-big.png" alt="Event 2" class="thumbnail">
+          <div class="list-content">
+            <div class="list-title">Event 2</div>
+            <div class="list-category">Category B / SubB1</div>
+            <div class="list-venue">Venue 2</div>
+            <div class="list-date">Feb 1 - Feb 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
+        </div>
+        <div class="list-card" data-id="3">
+          <img src="assets/funmap-logo-big.png" alt="Event 3" class="thumbnail">
+          <div class="list-content">
+            <div class="list-title">Event 3</div>
+            <div class="list-category">Category C / SubC1</div>
+            <div class="list-venue">Venue 3</div>
+            <div class="list-date">Mar 1 - Mar 2</div>
+          </div>
+          <button class="favorite-btn" aria-label="Favorite">&#9733;</button>
         </div>
       </div>
     </div>
@@ -617,6 +695,8 @@
   const currencySelector = document.getElementById('currency-selector');
   const languageSelector = document.getElementById('language-selector');
   const newPostBtn = document.getElementById('new-post-btn');
+  const listButton = document.getElementById('list-button');
+  const listPanel = document.getElementById('list-panel');
 
   const activeFilters = {
     keywords: '',
@@ -626,6 +706,17 @@
     categories: [],
     sort: ''
   };
+
+  function handleViewport() {
+    if (window.innerWidth < 450) {
+      if (listButton) listButton.style.display = 'none';
+      if (listPanel) listPanel.classList.remove('active');
+    } else {
+      if (listButton) listButton.style.display = '';
+    }
+  }
+  window.addEventListener('resize', handleViewport);
+  handleViewport();
 
   function hasActiveFilters() {
     return activeFilters.keywords || activeFilters.startDate || activeFilters.endDate ||
@@ -841,6 +932,17 @@
       });
     }
 
+    function highlightListCard(id) {
+      if (!listPanel) return;
+      const cards = listPanel.querySelectorAll('.list-card');
+      cards.forEach(c => c.classList.remove('highlight'));
+      const target = listPanel.querySelector(`.list-card[data-id='${id}']`);
+      if (target) {
+        target.classList.add('highlight');
+        listPanel.scrollTo({ top: target.offsetTop - 10, behavior: 'smooth' });
+      }
+    }
+
     function toggleModal() {
       welcomeModal.classList.toggle('hidden');
     }
@@ -972,11 +1074,11 @@
       });
 
       map.on('click', 'unclustered-point', (e) => {
-      const postsPanel = document.getElementById('posts-panel');
-      if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
-        const listPanel = document.getElementById('list-panel');
-        if (listPanel) listPanel.scrollTo({ top: 0, behavior: 'smooth' });
+        const postsPanel = document.getElementById('posts-panel');
+        if (postsPanel && !postsPanel.classList.contains('active')) togglePanel('posts-panel');
+        if (listPanel && !listPanel.classList.contains('active') && window.innerWidth >= 450) togglePanel('list-panel');
         const feature = e.features[0];
+        highlightListCard(feature.properties.id);
         addRecentPost({
           id: feature.properties.id,
           title: `Post ${feature.properties.id}`,
