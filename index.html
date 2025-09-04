@@ -67,7 +67,7 @@
       --dropdown-hover-text: #000000;
         --dropdown-venue-text: #000000;
         --dropdown-radius: 8px;
-        --calendar-width: 300px;
+        --calendar-width: 250px;
         --calendar-height: 200px;
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
@@ -1613,19 +1613,25 @@ body.filters-active #filterBtn{
   top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   right:0;
-  width:400px;
-  overflow-y:auto;
+  width:420px;
+  overflow:hidden;
   z-index:2;
 }
 .ad-panel .ad-entry{
-  position:relative;
-  display:block;
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 1.5s ease-in-out;
   color:inherit;
 }
+.ad-panel .ad-entry.active{opacity:1;}
 .ad-panel .ad-entry img{
-  display:block;
   width:100%;
-  height:auto;
+  height:100%;
+  object-fit:cover;
+}
+.ad-panel .ad-entry.active img{
+  animation:adZoom 20s linear forwards;
 }
 .ad-panel .ad-info{
   position:absolute;
@@ -1636,6 +1642,11 @@ body.filters-active #filterBtn{
   color:#fff;
   padding:12px;
   box-shadow:0 -4px 10px rgba(0,0,0,0.5);
+}
+
+@keyframes adZoom{
+  from{transform:scale(1);}
+  to{transform:scale(1.1);}
 }
 
 body.hide-results .post-panel{
@@ -3977,6 +3988,16 @@ function makePosts(){
 
     function setupCalendarScroll(scroller){
       if(!scroller) return;
+      const fit = () => {
+        const total = scroller.scrollWidth;
+        if(total < scroller.clientWidth){
+          scroller.style.width = total + 'px';
+        } else {
+          scroller.style.width = '';
+        }
+      };
+      fit();
+      window.addEventListener('resize', fit);
       scroller.setAttribute('tabindex','0');
       setupHorizontalWheel(scroller);
       scroller.addEventListener('keydown', e=>{
@@ -4350,6 +4371,7 @@ function makePosts(){
         localStorage.removeItem('activePostId');
       }
       localStorage.setItem('mode', m);
+      updateAdPanelVisibility();
     }
     window.setMode = setMode;
     $('#mapPostsToggle').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
@@ -4936,7 +4958,7 @@ function makePosts(){
         if(renderResults) resultsEl.appendChild(card(p));
         postsWideEl.appendChild(card(p, true));
       });
-      buildAdPanel(arr.filter(p=>p.ad));
+      buildAdPanel(arr);
       if(renderResults && activePostId){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
@@ -4964,6 +4986,7 @@ function makePosts(){
       });
     }
 
+    let adInterval;
     function buildAdPanel(paid){
       const panel = $('#ad-panel');
       panel.innerHTML = '';
@@ -4975,6 +4998,37 @@ function makePosts(){
         a.addEventListener('click', e => { e.preventDefault(); openPost(p.id); });
         panel.appendChild(a);
       });
+      const entries = panel.querySelectorAll('.ad-entry');
+      entries.forEach((entry, idx)=>{
+        const img = entry.querySelector('img');
+        if(idx < 3 && img){ const pre = new Image(); pre.src = img.src; }
+      });
+      let idx = 0;
+      const activate = i => {
+        entries.forEach((en,j)=>{
+          if(j === i){
+            en.classList.add('active');
+            const img = en.querySelector('img');
+            if(img){
+              img.style.animation = 'none';
+              void img.offsetWidth;
+              img.style.animation = 'adZoom 20s linear forwards';
+            }
+          } else {
+            en.classList.remove('active');
+          }
+        });
+      };
+      if(entries.length){
+        activate(0);
+        if(adInterval) clearInterval(adInterval);
+        if(entries.length > 1){
+          adInterval = setInterval(()=>{
+            idx = (idx + 1) % entries.length;
+            activate(idx);
+          },20000);
+        }
+      }
     }
 
     function postPanelIsWide(){
@@ -4986,12 +5040,12 @@ function makePosts(){
     function updateAdPanelVisibility(){
       const panel = $('#ad-panel');
       const postPanel = document.querySelector('.post-panel');
-      if(postPanelIsWide() && panel.children.length){
+      if(mode === 'posts' && postPanelIsWide() && panel.children.length){
         panel.style.display = 'block';
-        postPanel.style.right = '400px';
+        postPanel.style.right = '420px';
       } else {
         panel.style.display = 'none';
-        postPanel.style.right = '0';
+        if(postPanel) postPanel.style.right = '0';
       }
     }
 
@@ -5001,7 +5055,7 @@ function makePosts(){
       const el = document.createElement('article');
       el.className = 'card';
       el.dataset.id = p.id;
-      if(p.ad) el.dataset.ad = 'true';
+      el.dataset.ad = 'true';
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       let thumb;
       if(thumbCache[p.id]){
