@@ -25,6 +25,10 @@
     --btn-disabled-bg:#777;
     --btn-disabled-color:#ccc;
     --btn-focus-outline:2px solid #fff;
+    --btn:var(--btn-bg);
+    --button-text:var(--btn-color);
+    --session-selected:var(--btn-selected-bg);
+    --filter-active-color:red;
   }
 
   button{
@@ -100,15 +104,17 @@
   #filter-panel #clear-filters{width:400px;height:40px;}
   #date-range-input{background:#fff;cursor:pointer;}
   #daterange-row{gap:60px;}
-  #expired-events-row{color:#fff;display:flex;align-items:center;gap:10px;}
-  #expired-events-row label{cursor:pointer;}
-  #expired-events-switch{width:40px;height:20px;appearance:none;background:grey;border-radius:10px;position:relative;cursor:pointer;}
-  #expired-events-switch::before{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:0.3s;}
-  #expired-events-switch:checked{background:red;}
-  #expired-events-switch:checked::before{left:22px;}
-  #filter-calendar-container{width:400px;height:200px;overflow-x:auto;position:relative;background:#fff;color:#000;margin:10px 0;}
-  #today-dot{position:absolute;bottom:0;width:6px;height:6px;background:red;border-radius:50%;cursor:pointer;}
-  #filter-calendar{display:flex;height:194px;}
+  .expired-field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;color:#fff;}
+  .expired-text{font-family:Verdana;color:#fff;font-size:16px;}
+  .switch{position:relative;display:inline-block;width:48px;height:24px;flex:0 0 48px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn);border-radius:24px;transition:.2s;}
+  .switch .slider:before{position:absolute;content:'';height:20px;width:20px;left:2px;top:2px;background:var(--button-text);border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:var(--session-selected);}
+  #expiredToggle:checked + .slider{background:var(--filter-active-color);}
+  .switch input:checked + .slider:before{transform:translateX(24px);}
+  #datePickerContainer{width:400px;height:200px;overflow-x:auto;position:relative;background:#fff;color:#000;margin:10px 0;}
+  #datePicker{display:flex;height:194px;}
   .filter-month{width:250px;height:194px;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:30px 20px repeat(6,1fr);}
   .filter-calendar-header{grid-column:1/8;background:navy;color:white;font-size:16px;text-align:center;line-height:30px;}
   .filter-calendar-weekdays{grid-column:1/8;display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:lightgrey;text-align:center;line-height:20px;}
@@ -166,22 +172,24 @@
     <input type="text" id="keywords-input" placeholder="Keywords">
     <button id="keywords-clear" class="icon-button">✕</button>
   </div>
-  <div class="row" id="daterange-row">
-    <input type="text" id="date-range-input" placeholder="Date Range" readonly>
-    <button id="daterange-clear" class="icon-button">✕</button>
+    <div class="row" id="daterange-row">
+      <input type="text" id="date-range-input" placeholder="Date Range" readonly>
+      <button id="daterange-clear" class="icon-button">✕</button>
+    </div>
+    <div class="row expired-field">
+      <span class="expired-text">Show Expired Events</span>
+      <label class="switch">
+        <input id="expiredToggle" type="checkbox">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="datePickerContainer" class="calendar-container">
+      <div id="datePicker"></div>
+    </div>
+    <div class="row">
+      <button id="clear-filters">Clear Filters</button>
+    </div>
   </div>
-  <div class="row" id="expired-events-row">
-    <label for="expired-events-switch">Show Expired Events</label>
-    <input type="checkbox" id="expired-events-switch">
-  </div>
-  <div id="filter-calendar-container">
-    <div id="today-dot"></div>
-    <div id="filter-calendar"></div>
-  </div>
-  <div class="row">
-    <button id="clear-filters">Clear Filters</button>
-  </div>
-</div>
 <div id="list-panel" class="panel left"></div>
 <div id="posts-panel" class="panel left"></div>
 <div id="member-panel" class="panel right"></div>
@@ -345,10 +353,9 @@ const keywordsInput=document.getElementById('keywords-input');
 const keywordsClear=document.getElementById('keywords-clear');
 const dateRangeInput=document.getElementById('date-range-input');
 const dateRangeClear=document.getElementById('daterange-clear');
-const expiredSwitch=document.getElementById('expired-events-switch');
-const filterCalendarContainer=document.getElementById('filter-calendar-container');
-const filterCalendar=document.getElementById('filter-calendar');
-const todayDot=document.getElementById('today-dot');
+const expiredSwitch=document.getElementById('expiredToggle');
+const filterCalendarContainer=document.getElementById('datePickerContainer');
+const filterCalendar=document.getElementById('datePicker');
 const clearFiltersBtn=document.getElementById('clear-filters');
 let startDate=null,endDate=null;
 generateCalendar(false);
@@ -394,9 +401,8 @@ function generateCalendar(includePast){
     for(let k=totalCells;k<42;k++){monthEl.appendChild(document.createElement('div'));}
     filterCalendar.appendChild(monthEl);
   }
-  todayDot.style.left=includePast?(filterCalendarContainer.clientWidth/3)+'px':'0';
-  filterCalendarContainer.scrollLeft=(includePast?12:0)*250;
-}
+    filterCalendarContainer.scrollLeft=(includePast?12:0)*250;
+  }
 
 function selectDate(date){
   const time=date.getTime();
@@ -409,7 +415,7 @@ function selectDate(date){
 }
 
 function highlightRange(){
-  document.querySelectorAll('#filter-calendar .day').forEach(d=>{
+    document.querySelectorAll('#datePicker .day').forEach(d=>{
     const t=new Date(d.dataset.date).getTime();
     d.classList.remove('start-date','end-date','in-range');
     if(startDate && t===startDate)d.classList.add('start-date');
@@ -453,7 +459,6 @@ keywordsInput.addEventListener('input',updateFilterState);
 keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
 dateRangeClear.addEventListener('click',()=>{startDate=endDate=null;updateDateRangeInput();highlightRange();updateFilterState();});
 expiredSwitch.addEventListener('change',()=>{generateCalendar(expiredSwitch.checked);updateFilterState();});
-todayDot.addEventListener('click',()=>{const idx=expiredSwitch.checked?12:0;filterCalendarContainer.scrollTo({left:idx*250,behavior:'smooth'});});
 clearFiltersBtn.addEventListener('click',()=>{
   keywordsInput.value='';
   startDate=endDate=null;
