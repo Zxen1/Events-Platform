@@ -73,8 +73,8 @@
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
         --calendar-header-h: var(--calendar-cell-h);
-        --calendar-past-bg: #f0f0f0;
-        --calendar-future-bg: #ffffff;
+        --calendar-past-bg: #222222;
+        --calendar-future-bg: #222222;
         --session-available: #92D0F7;
         --session-selected: #009FFF;
         --today: #ff0000;
@@ -564,7 +564,7 @@ button[aria-expanded="true"] .results-arrow{
     width:420px;
     max-width:90%;
     max-height:90%;
-    background:rgba(0,0,0,0.7);
+    background:#222222;
     color:#fff;
     transition:transform 0.3s ease;
   }
@@ -7016,16 +7016,16 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   const adPanel = document.getElementById('ad-panel');
   const postsPanel = document.querySelector('.post-panel');
-  if(adPanel){
-    adPanel.addEventListener('click', e => {
-      if(e.target === adPanel) setMode('map');
-    });
-  }
-  if(postsPanel){
-    postsPanel.addEventListener('click', e => {
-      if(e.target === postsPanel) setMode('map');
-    });
-  }
+  const listPanel = document.querySelector('.list-panel');
+  const header = document.querySelector('.header');
+  const footer = document.querySelector('footer');
+  [adPanel, postsPanel, listPanel, header, footer].forEach(el => {
+    if(el){
+      el.addEventListener('click', e => {
+        if(e.target === el) setMode('map');
+      });
+    }
+  });
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
