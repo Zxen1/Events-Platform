@@ -73,8 +73,8 @@
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
         --calendar-header-h: var(--calendar-cell-h);
-        --calendar-past-bg: #0000E6;
-        --calendar-future-bg: #0000E6;
+        --calendar-past-bg: #222222;
+        --calendar-future-bg: #222222;
         --session-available: #92D0F7;
         --session-selected: #009FFF;
         --today: #ff0000;
@@ -589,7 +589,7 @@ button[aria-expanded="true"] .results-arrow{
   height:35px;
 }
 #filter-panel{
-  --calendar-width:250px;
+  --calendar-width:400px;
   --calendar-height:200px;
   --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
   --calendar-header-h: var(--calendar-cell-h);
@@ -600,7 +600,7 @@ button[aria-expanded="true"] .results-arrow{
   color: var(--panel-text);
 }
 #filter-panel .calendar-container{
-  background: #0000E6;
+  background: #222222;
   position:relative;
   overflow-x:auto;
   overflow-y:hidden;
@@ -629,7 +629,7 @@ button[aria-expanded="true"] .results-arrow{
   width:max-content;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:#0000E6;
+  background:#222222;
   color:var(--dropdown-text);
 }
 .calendar .month{
@@ -2182,7 +2182,7 @@ body.hide-results .post-panel{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  background:#0000E6;
+  background:#222222;
   border:1px solid var(--border);
   border-radius:8px;
   flex:1 1 auto;
@@ -2195,7 +2195,7 @@ body.hide-results .post-panel{
   height:100%;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:#0000E6;
+  background:#222222;
   color:var(--dropdown-text);
 }
 .open-posts .post-calendar .month{
@@ -3083,7 +3083,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
             </div>
           </div>
           <div class="field sort-field">
-            <label for="optionsBtn">Sort Results</label>
             <div class="options-dropdown">
               <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
               <div id="optionsMenu" class="options-menu" hidden>
@@ -3167,8 +3166,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         <div class="header-top">
           <h2 class="title">Admin</h2>
           <div class="panel-actions">
-            <button type="button" id="discardChanges">Discard Changes</button>
-            <button type="button" id="saveNow">Save Now</button>
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
             <button type="button" class="close-panel">Close</button>
@@ -6451,8 +6448,6 @@ document.addEventListener('pointerdown', handleDocInteract);
     }
 
     // Save/Discard/Restore logic
-    const saveBtn = document.getElementById('saveNow');
-    const discardBtn = document.getElementById('discardChanges');
     const adminClose = document.querySelector('#admin-panel .close-panel');
     const tabPanels = ['map','settings','form'];
     const savedData = {};
@@ -6577,13 +6572,6 @@ document.addEventListener('pointerdown', handleDocInteract);
       return changed;
     }
     window.saveAdminChanges = saveAllTabs;
-
-    saveBtn && saveBtn.addEventListener('click', saveAllTabs);
-
-    discardBtn && discardBtn.addEventListener('click', ()=>{
-      if(!confirm('Are you sure you want to Discard Your Changes? Y/N')) return;
-      tabPanels.forEach(tab=> applyData(tab, savedData[tab]));
-    });
 
     adminClose && adminClose.addEventListener('click', ()=>{
       saveAllTabs();
