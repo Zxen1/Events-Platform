@@ -82,18 +82,21 @@
   #filter-panel .panel-header .header-right{position:absolute;right:10px;display:flex;gap:10px;}
   #filter-panel .panel-header .snap-left{position:absolute;left:10px;}
   #filter-panel .panel-header button{background:#333;color:#fff;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;}
+  #filter-panel .panel-header .close{width:auto;padding:0 10px;}
   #filter-panel .row{width:400px;height:40px;margin:10px 0;display:flex;align-items:center;justify-content:space-between;position:relative;}
   #filter-panel input{width:300px;height:40px;border:none;padding:0 10px;}
   #filter-panel input::placeholder{color:grey;}
   #filter-panel button.icon-button{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;}
   #filter-panel #sort-menu{width:300px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
   #filter-panel .menu-arrow{transition:transform 0.3s;}
-  #filter-panel .menu{display:none;position:absolute;top:50px;left:0;background:#222;flex-direction:column;width:300px;z-index:10;}
+  #filter-panel .menu{display:flex;flex-direction:column;position:absolute;top:50px;left:0;background:#222;width:300px;z-index:10;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.3s ease,opacity 0.3s ease;}
   #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#333;color:#fff;}
-  #filter-panel .menu.open{display:flex;}
+  #filter-panel .menu.open{max-height:200px;opacity:1;pointer-events:auto;}
   #filter-panel .star{color:yellow;}
   #filter-panel #map-controls-row .mapboxgl-ctrl-geocoder{width:300px;}
-  #map-controls-row .mapboxgl-ctrl-geolocate,#map-controls-row .mapboxgl-ctrl-compass{width:40px;height:40px;}
+  #map-controls-row .mapboxgl-ctrl-geolocate,#map-controls-row .mapboxgl-ctrl-compass,#map-controls-row .mapboxgl-ctrl-group{width:40px;height:40px;}
+  #map-controls-row .mapboxgl-ctrl-compass{display:flex !important;}
+  #filter-panel .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search{display:none;}
   #filter-panel #clear-filters{width:400px;height:40px;}
   .active-filter{background:red !important;}
 </style>
@@ -119,7 +122,7 @@
     <div class="title">Filters</div>
     <div class="header-right">
       <button class="icon-button snap-right" aria-label="Snap right">▶</button>
-      <button class="icon-button close" aria-label="Close">✕</button>
+      <button class="icon-button close" aria-label="Close">Close</button>
     </div>
   </div>
   <div class="row" id="sort-row">
@@ -188,7 +191,14 @@ const geoContainer = geolocateControl.onAdd(map);
 document.getElementById('geolocate-btn').appendChild(geoContainer);
 const navControl = new mapboxgl.NavigationControl({showCompass:true,showZoom:false});
 const navContainer = navControl.onAdd(map);
-document.getElementById('compass-btn').appendChild(navContainer.querySelector('.mapboxgl-ctrl-compass'));
+document.getElementById('compass-btn').appendChild(navContainer);
+map.on('styleimagemissing',e=>{
+  if(e.id==='marker-15'){
+    map.loadImage('https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',(err,image)=>{
+      if(!err && !map.hasImage('marker-15')){map.addImage('marker-15',image);}
+    });
+  }
+});
 map.on('load',()=>{
   map.setFog({
     'color': '#0b1d51',
@@ -245,7 +255,14 @@ const postsPanel=document.getElementById('posts-panel');
 const memberPanel=document.getElementById('member-panel');
 const adminPanel=document.getElementById('admin-panel');
 const settingsPanel=document.getElementById('settings-panel');
-togglePanel(filterBtn,filterPanel);
+filterBtn.addEventListener('click',()=>{
+  if(filterPanel.classList.contains('open')){
+    closeFilterPanel();
+  }else{
+    filterPanel.classList.add('open');
+    filterBtn.classList.add('selected');
+  }
+});
 togglePanel(listBtn,listPanel);
 togglePanel(postsBtn,postsPanel);
 togglePanel(memberBtn,memberPanel);
@@ -266,9 +283,15 @@ const menuArrow=sortMenu.querySelector('.menu-arrow');
 const favOption=document.getElementById('favourites-option');
 let favouritesOnTop=false;
 let sortOrder='Title A-Z';
-sortMenu.addEventListener('click',()=>{
+sortMenu.addEventListener('click',e=>{
+  e.stopPropagation();
   sortOptions.classList.toggle('open');
   menuArrow.style.transform=sortOptions.classList.contains('open')?'rotate(180deg)':'rotate(0deg)';
+});
+sortOptions.addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>{
+  sortOptions.classList.remove('open');
+  menuArrow.style.transform='rotate(0deg)';
 });
 sortOptions.querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -276,51 +299,47 @@ sortOptions.querySelectorAll('button').forEach(btn=>{
     if(type==='favourites'){
       favouritesOnTop=!favouritesOnTop;
       favOption.querySelector('.star').textContent=favouritesOnTop?'★':'☆';
-      updateFilterState();
       return;
     }
     sortOrder=btn.textContent;
     sortMenu.firstChild.textContent=sortOrder+' ';
     sortOptions.classList.remove('open');
     menuArrow.style.transform='rotate(0deg)';
-    updateFilterState();
   });
 });
 const keywordsInput=document.getElementById('keywords-input');
 const keywordsClear=document.getElementById('keywords-clear');
 const clearFiltersBtn=document.getElementById('clear-filters');
 function updateFilterState(){
-  const active=keywordsInput.value.trim()!==''||favouritesOnTop||sortOrder!=='Title A-Z';
+  const active=keywordsInput.value.trim()!=='';
   filterBtn.classList.toggle('active-filter',active);
-  keywordsClear.classList.toggle('active-filter',keywordsInput.value.trim()!=='');
+  keywordsClear.classList.toggle('active-filter',active);
   clearFiltersBtn.classList.toggle('active-filter',active);
 }
 keywordsInput.addEventListener('input',updateFilterState);
 keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
 clearFiltersBtn.addEventListener('click',()=>{
   keywordsInput.value='';
-  favouritesOnTop=false;
-  favOption.querySelector('.star').textContent='☆';
-  sortOrder='Title A-Z';
-  sortMenu.firstChild.textContent=sortOrder+' ';
   updateFilterState();
 });
-document.querySelector('#filter-panel .close').addEventListener('click',()=>{
-  filterPanel.classList.remove('open');
-  filterBtn.classList.remove('selected');
-});
+document.querySelector('#filter-panel .close').addEventListener('click',closeFilterPanel);
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && filterPanel.classList.contains('open')){
-    filterPanel.classList.remove('open');
-    filterBtn.classList.remove('selected');
+    closeFilterPanel();
   }
 });
 document.querySelector('#filter-panel .snap-left').addEventListener('click',()=>{
-  filterPanel.style.left='0';filterPanel.style.right='auto';
-});
+  filterPanel.classList.add('left');
+  filterPanel.classList.remove('right');
+  filterPanel.style.left='0';
+  filterPanel.style.right='auto';
+  });
 document.querySelector('#filter-panel .snap-right').addEventListener('click',()=>{
-  filterPanel.style.right='0';filterPanel.style.left='auto';
-});
+  filterPanel.classList.add('right');
+  filterPanel.classList.remove('left');
+  filterPanel.style.right='0';
+  filterPanel.style.left='auto';
+  });
 let dragging=false,offsetX=0;
 const header=document.querySelector('#filter-panel .panel-header');
 header.addEventListener('mousedown',e=>{dragging=true;offsetX=e.clientX-filterPanel.offsetLeft;});
@@ -338,6 +357,26 @@ window.addEventListener('resize',()=>{
   const left=parseInt(getComputedStyle(filterPanel).left)||0;
   if(left>maxLeft)filterPanel.style.left=maxLeft+'px';
 });
+
+function closeFilterPanel(){
+  const left=filterPanel.getBoundingClientRect().left;
+  const right=window.innerWidth-left-filterPanel.offsetWidth;
+  if(left<=right){
+    filterPanel.classList.add('left');
+    filterPanel.classList.remove('right');
+    filterPanel.style.left='0';
+    filterPanel.style.right='auto';
+  }else{
+    filterPanel.classList.add('right');
+    filterPanel.classList.remove('left');
+    filterPanel.style.right='0';
+    filterPanel.style.left='auto';
+  }
+  sortOptions.classList.remove('open');
+  menuArrow.style.transform='rotate(0deg)';
+  filterPanel.classList.remove('open');
+  filterBtn.classList.remove('selected');
+}
 </script>
 </body>
 </html>
