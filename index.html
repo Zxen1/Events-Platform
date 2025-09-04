@@ -1613,7 +1613,7 @@ body.filters-active #filterBtn{
   top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   right:0;
-  width:400px;
+  width:420px;
   overflow-y:auto;
   z-index:2;
 }
@@ -4341,6 +4341,7 @@ function makePosts(){
         }
         updatePostPanel();
       }
+      updateAdPanelVisibility();
       if(m==='posts'){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
@@ -4936,7 +4937,7 @@ function makePosts(){
         if(renderResults) resultsEl.appendChild(card(p));
         postsWideEl.appendChild(card(p, true));
       });
-      buildAdPanel(arr.filter(p=>p.ad));
+      buildAdPanel(arr);
       if(renderResults && activePostId){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
@@ -4990,9 +4991,9 @@ function makePosts(){
     function updateAdPanelVisibility(){
       const panel = $('#ad-panel');
       const postPanel = document.querySelector('.post-panel');
-      if(postPanelHasTwoColumns() && panel.children.length){
+      if(mode === 'posts' && postPanelHasTwoColumns() && panel.children.length){
         panel.style.display = 'block';
-        postPanel.style.right = '400px';
+        postPanel.style.right = '420px';
       } else {
         panel.style.display = 'none';
         postPanel.style.right = '0';
@@ -5005,7 +5006,7 @@ function makePosts(){
       const el = document.createElement('article');
       el.className = 'card';
       el.dataset.id = p.id;
-      if(p.ad) el.dataset.ad = 'true';
+      el.dataset.ad = 'true';
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       let thumb;
       if(thumbCache[p.id]){
