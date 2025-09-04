@@ -584,7 +584,9 @@ button[aria-expanded="true"] .results-arrow{
   }
   #filter-panel .panel-content{
     width:420px;
-    height:2500px;
+    top:calc(var(--header-h) + var(--safe-top));
+    bottom:var(--footer-h);
+    height:calc(100vh - var(--header-h) - var(--footer-h));
     padding:10px;
     box-sizing:border-box;
     background:#333333;
@@ -612,13 +614,15 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filter-panel .panel-body{
   display:flex;
+  flex-direction:column;
   align-items:flex-start;
   gap:10px;
+  padding:0 0 20px;
 }
 
 #filter-panel .panel-body > *,
 #filter-panel .field{
-  width:300px;
+  width:100%;
 }
 #admin-panel button{
   height:35px;
@@ -2860,7 +2864,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     </footer>
 
   <div id="filter-panel" class="panel filter-panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));bottom:var(--footer-h);left:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
@@ -5809,21 +5813,12 @@ function openPanel(m){
         content.style.maxHeight='';
       }
     } else if(m.id==='filter-panel'){
-      if(window.innerWidth < 450){
-        content.style.left='0';
-        content.style.right='0';
-        content.style.top='0';
-        content.style.bottom='0';
-        content.style.transform='none';
-        content.style.maxHeight='';
-      } else {
-        content.style.left='0';
-        content.style.right='';
-        content.style.top='0';
-        content.style.bottom='';
-        content.style.transform='none';
-        content.style.maxHeight='';
-      }
+      content.style.left='0';
+      content.style.right='';
+      content.style.top=`${headerH + safeTop}px`;
+      content.style.bottom=`${footerH}px`;
+      content.style.transform='none';
+      content.style.maxHeight='';
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
         scrollCalendarToToday();
@@ -5881,11 +5876,14 @@ function movePanelToEdge(panel, side){
   const content = panel.querySelector('.panel-content');
   if(!content) return;
   const header = document.querySelector('.header');
+  const rootStyles = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
   const rect = content.getBoundingClientRect();
   const targetLeft = side === 'left' ? 0 : window.innerWidth - rect.width;
   const delta = targetLeft - rect.left;
   content.style.top = `${topPos}px`;
+  content.style.bottom = `${footerH}px`;
   content.style.transition = 'transform 0.3s ease';
   content.style.transform = `translateX(${delta}px)`;
   content.addEventListener('transitionend', ()=>{
@@ -6021,7 +6019,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0, startTop = 0;
-    const lockY = ['admin-panel','member-panel'].includes(panel.id);
+    const lockY = ['admin-panel','member-panel','filter-panel'].includes(panel.id);
       header.addEventListener('mousedown', e=>{
         if(window.innerWidth < 450) return;
         dragging = true;
@@ -6057,7 +6055,7 @@ document.addEventListener('pointerdown', handleDocInteract);
         savePanelState(panel);
       }
 
-    const handles = ['n','e','s','w','ne','nw','se','sw'];
+    const handles = panel.id === 'filter-panel' ? [] : ['n','e','s','w','ne','nw','se','sw'];
     handles.forEach(dir=>{
       const h = document.createElement('div');
       h.className = 'resizer ' + dir;
