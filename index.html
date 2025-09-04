@@ -3205,6 +3205,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
 
+    const thumbCache = {};
+
     function normalizeMapStyle(style){
       switch(style){
         case 'mapbox://styles/mapbox/standard-dark':
@@ -4930,6 +4932,7 @@ function makePosts(){
                 if(img.dataset.src){
                   img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
                   img.src = img.dataset.src;
+                  thumbCache[img.closest('.card').dataset.id] = img.src;
                   img.removeAttribute('data-src');
                 }
                 img.fetchPriority = 'high';
@@ -4944,6 +4947,7 @@ function makePosts(){
             if(img.dataset.src){
               img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
               img.src = img.dataset.src;
+              thumbCache[img.closest('.card').dataset.id] = img.src;
               img.removeAttribute('data-src');
             }
           });
@@ -4956,7 +4960,12 @@ function makePosts(){
       el.className = 'card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      let thumb;
+      if(thumbCache[p.id]){
+        thumb = `<img class="thumb" loading="lazy" src="${thumbCache[p.id]}" alt="" referrerpolicy="no-referrer" />`;
+      } else {
+        thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      }
         el.innerHTML = `
           ${thumb}
         <div class="meta">
