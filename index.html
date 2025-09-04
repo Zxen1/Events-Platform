@@ -4959,7 +4959,7 @@ function makePosts(){
         if(renderResults) resultsEl.appendChild(card(p));
         postsWideEl.appendChild(card(p, true));
       });
-      buildAdPanel(arr);
+      maybeUpdateAdPanel(arr);
       if(renderResults && activePostId){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
@@ -4988,6 +4988,7 @@ function makePosts(){
     }
 
     let adInterval;
+    let lastAdUpdateCenter;
     function buildAdPanel(paid){
       const panel = $('#ad-panel');
       panel.innerHTML = '';
@@ -5029,6 +5030,16 @@ function makePosts(){
             activate(idx);
           },20000);
         }
+      }
+    }
+
+    function maybeUpdateAdPanel(paid){
+      if(!map) return;
+      const c = map.getCenter();
+      const current = {lng:c.lng, lat:c.lat};
+      if(!lastAdUpdateCenter || distKm(current, lastAdUpdateCenter) > 50){
+        buildAdPanel(paid);
+        lastAdUpdateCenter = current;
       }
     }
 
