@@ -167,18 +167,19 @@
     <input type="text" id="keywords-input" placeholder="Keywords">
     <button id="keywords-clear" class="icon-button">✕</button>
   </div>
-    <div class="row" id="daterange-row">
-      <input type="text" id="date-range-input" placeholder="Date Range" readonly>
-      <button id="daterange-clear" class="icon-button">✕</button>
+    <div class="field">
+      <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Date Range" readonly />
+        <div class="x" role="button" aria-label="Clear date">X</div>
+      </div>
     </div>
-    <div class="row expired-field">
+    <div class="field expired-field">
       <span class="expired-text">Show Expired Events</span>
       <label class="switch">
-        <input id="expiredToggle" type="checkbox">
+        <input id="expiredToggle" type="checkbox" />
         <span class="slider"></span>
       </label>
     </div>
-    <div id="datePickerContainer" class="calendar-container" style="margin-top:10px;">
+    <div id="datePickerContainer" class="calendar-container">
       <div id="datePicker"></div>
     </div>
     <div class="row">
