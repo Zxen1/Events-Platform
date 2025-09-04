@@ -14,7 +14,7 @@
   <style>:root{
   --header-h: 75px;
   --subheader-h: 0;
-  --panel-w: 300px;
+  --panel-w: 420px;
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
@@ -540,18 +540,18 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #admin-panel #styleControls > *{
-  width:300px;
+  width:400px;
 }
 .admin-fieldset{
   margin:0;
   border:0;
   border-radius:8px;
   padding:0;
-  width:300px;
+  width:400px;
   box-sizing:border-box;
 }
 #admin-panel .admin-fieldset{
-  width:300px;
+  width:400px;
 }
 #admin-panel .admin-fieldset.collapsed{
   padding:0;
@@ -560,11 +560,15 @@ button[aria-expanded="true"] .results-arrow{
   #member-panel .panel-content,
   #filter-panel .panel-content{
     width:420px;
-    max-width:90%;
-    max-height:90%;
+    height:calc(100vh - var(--header-h) - var(--safe-top));
+    padding:10px;
+    box-sizing:border-box;
     background:#333333;
     color:#fff;
     transition:transform 0.3s ease;
+  }
+  #filter-panel .panel-content{
+    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
   }
 
 #filter-panel button,
@@ -576,6 +580,17 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--btn);
   color: var(--ink);
   border: none;
+}
+
+#filter-panel .panel-body{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+
+#filter-panel .panel-body > *,
+#filter-panel .field{
+  width:400px;
 }
 #admin-panel button{
   height:35px;
@@ -700,22 +715,13 @@ button[aria-expanded="true"] .results-arrow{
   transform:translateX(-50%);
 }
 #member-panel .location-info{margin-top:4px;font-size:13px;}
-  @media (max-width:600px){
-  #admin-panel .panel-content,
-  #member-panel .panel-content,
-  #filter-panel .panel-content{
-    width:95%;
-    max-width:95%;
-    max-height:95%;
-  }
-}
-#admin-panel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#admin-panel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
 #admin-panel legend::after{content:'\25BC';margin-left:auto;font-size:12px;}
 #admin-panel fieldset.collapsed legend::after{content:'\25B6';}
 #admin-panel fieldset.collapsed > :not(legend){display:none;}
 #admin-panel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #admin-panel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#admin-panel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
+#admin-panel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:400px;width:100%;}
 #admin-panel .control-row label:first-child{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #admin-panel .color-group{
@@ -862,7 +868,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
-  max-width:300px;
+  max-width:400px;
   width:100%;
 }
 #admin-panel .panel-field{margin:0;}
@@ -915,6 +921,15 @@ button[aria-expanded="true"] .results-arrow{
   margin-top:10px;
   display:flex;
   gap:10px;
+}
+
+#admin-panel .panel-header,
+#member-panel .panel-header,
+#filter-panel .panel-header,
+#admin-panel .panel-body,
+#member-panel .panel-body,
+#filter-panel .panel-body{
+  padding:0;
 }
 .panel-header{
   position:sticky;
@@ -2788,31 +2803,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 
 
-@media (max-width:649px){
-  #filter-panel .panel-content,
-  #admin-panel .panel-content,
-  #member-panel .panel-content{
-    top:calc(var(--header-h) + var(--safe-top));
-    left:0;
-    right:0;
-    bottom:var(--footer-h);
-    width:100%;
-    max-width:none;
-    max-height:none;
-    border-radius:0;
-  }
-  #filter-panel .panel-content .resizer,
-  #admin-panel .panel-content .resizer,
-  #member-panel .panel-content .resizer,
-  #filter-panel .panel-actions .move-left,
-  #filter-panel .panel-actions .move-right,
-  #admin-panel .panel-actions .move-left,
-  #admin-panel .panel-actions .move-right,
-  #member-panel .panel-actions .move-left,
-  #member-panel .panel-actions .move-right{
-    display:none;
-  }
-}
 
 @media (max-width:449px){
   .post-panel{
@@ -2864,14 +2854,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   }
   body.mode-map footer{
     display:none;
-  }
-  #filter-panel .panel-content,
-  #member-panel .panel-content,
-  #admin-panel .panel-content{
-    top:calc(var(--header-h) + var(--safe-top));
-    left:0;
-    right:0;
-    transform:none;
   }
   .open-posts .detail-header{
     padding-bottom:0;
@@ -3046,8 +3028,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         <div class="header-top">
           <h2 class="title">Admin</h2>
           <div class="panel-actions">
-            <button type="button" id="discardChanges">Discard Changes</button>
-            <button type="button" id="saveNow">Save Now</button>
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
             <button type="button" class="close-panel">Close</button>
@@ -5943,9 +5923,6 @@ function handleEsc(){
   const top = panelStack[panelStack.length-1];
   if(!top) return;
   if(top instanceof Element){
-    if(top.id === 'admin-panel' && typeof window.saveAdminChanges === 'function'){
-      window.saveAdminChanges();
-    }
     requestClosePanel(top);
   } else if(typeof top.remove==='function'){
     panelStack.pop();
@@ -5962,8 +5939,8 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-function syncAdminControls(){
-  // Placeholder to prevent errors if admin sync logic is not loaded
+if (typeof window.syncAdminControls !== 'function'){
+  window.syncAdminControls = function(){};
 }
 
 function handleDocInteract(e){
@@ -6299,10 +6276,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       }
     }
 
-    // Save/Discard/Restore logic
-    const saveBtn = document.getElementById('saveNow');
-    const discardBtn = document.getElementById('discardChanges');
-    const adminClose = document.querySelector('#admin-panel .close-panel');
+    // Restore logic
     const tabPanels = ['map','settings','form'];
     const savedData = {};
 
@@ -6394,50 +6368,6 @@ document.addEventListener('pointerdown', handleDocInteract);
       }
       return true;
     }
-
-    function showSaveMessage(msg){
-      let box = document.getElementById('saveStatus');
-      if(!box){
-        box = document.createElement('div');
-        box.id = 'saveStatus';
-        box.style.position = 'fixed';
-        box.style.top = '50%';
-        box.style.left = '50%';
-        box.style.transform = 'translate(-50%, -50%)';
-        box.style.fontFamily = 'Arial, sans-serif';
-        box.style.fontSize = '32px';
-        box.style.background = 'rgba(0,0,0,0.7)';
-        box.style.color = '#fff';
-        box.style.padding = '10px 20px';
-        box.style.borderRadius = '4px';
-        box.style.zIndex = '10000';
-        box.style.display = 'none';
-        document.body.appendChild(box);
-      }
-      box.textContent = msg;
-      box.style.display = 'block';
-      setTimeout(()=>{ box.style.display = 'none'; }, 1500);
-    }
-
-    function saveAllTabs(){
-      let changed = false;
-      tabPanels.forEach(tab=>{ if(saveTab(tab)) changed = true; });
-      showSaveMessage(changed ? 'Saved' : 'No changes were made');
-      return changed;
-    }
-    window.saveAdminChanges = saveAllTabs;
-
-    saveBtn && saveBtn.addEventListener('click', saveAllTabs);
-
-    discardBtn && discardBtn.addEventListener('click', ()=>{
-      if(!confirm('Are you sure you want to Discard Your Changes? Y/N')) return;
-      tabPanels.forEach(tab=> applyData(tab, savedData[tab]));
-    });
-
-    adminClose && adminClose.addEventListener('click', ()=>{
-      saveAllTabs();
-      requestClosePanel(adminClose.closest('.panel'));
-    });
 
     document.querySelectorAll('button[data-restore]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
