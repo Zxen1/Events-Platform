@@ -5999,46 +5999,43 @@ document.addEventListener('pointerdown', handleDocInteract);
   const filterPanel = document.getElementById('filter-panel');
   const sg = window.spinGlobals || {};
 
-  memberBtn && memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
-    adminBtn && adminBtn.addEventListener('click', ()=>{
-      syncAdminControls();
-      togglePanel(adminPanel);
+  memberBtn && memberBtn.addEventListener('click', () => togglePanel(memberPanel));
+  adminBtn && adminBtn.addEventListener('click', () => {
+    syncAdminControls();
+    togglePanel(adminPanel);
+  });
+  filterBtn && filterBtn.addEventListener('click', () => togglePanel(filterPanel));
+  document.querySelectorAll('.panel .close-panel').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.closest('.panel');
+      requestClosePanel(panel);
     });
-  filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
-    document.querySelectorAll('.panel .close-panel').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const panel = btn.closest('.panel');
-        requestClosePanel(panel);
-      });
-    });
-  document.querySelectorAll('.panel .move-left').forEach(btn=>{
-    btn.addEventListener('click', e=>{
+  });
+  document.querySelectorAll('.panel .move-left').forEach(btn => {
+    btn.addEventListener('click', e => {
       e.stopPropagation();
       const panel = btn.closest('.panel');
       movePanelToEdge(panel, 'left');
     });
   });
-  document.querySelectorAll('.panel .move-right').forEach(btn=>{
-    btn.addEventListener('click', e=>{
+  document.querySelectorAll('.panel .move-right').forEach(btn => {
+    btn.addEventListener('click', e => {
       e.stopPropagation();
       const panel = btn.closest('.panel');
       movePanelToEdge(panel, 'right');
     });
   });
 
-    const welcomePopup = document.getElementById('welcomePopup');
-    [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m=>{
-      if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
-        openPanel(m);
-      }
-    });
-    if(welcomePopup && !localStorage.getItem('welcome-seen')){
-      openWelcome();
-      localStorage.setItem('welcome-seen','true');
+  const welcomePopup = document.getElementById('welcomePopup');
+  [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m => {
+    if (m && localStorage.getItem(`panel-open-${m.id}`) === 'true') {
+      openPanel(m);
     }
-    if(filterPanel && window.innerWidth >= 450 && !filterPanel.classList.contains('show') && localStorage.getItem('panel-open-filter-panel') !== 'false'){
-      openPanel(filterPanel);
-    }
+  });
+  if (welcomePopup && !localStorage.getItem('welcome-seen')) {
+    openWelcome();
+    localStorage.setItem('welcome-seen', 'true');
+  }
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
     const header = panel.querySelector('.panel-header');
@@ -6046,40 +6043,40 @@ document.addEventListener('pointerdown', handleDocInteract);
     let dragging = false;
     let offsetX = 0, offsetY = 0, startTop = 0;
     const lockY = ['admin-panel','member-panel','filter-panel'].includes(panel.id);
-      header.addEventListener('mousedown', e=>{
-        if(window.innerWidth < 450) return;
-        dragging = true;
-        const rect = content.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        startTop = rect.top;
-        content.style.left = `${rect.left}px`;
-        content.style.top = `${rect.top}px`;
-        content.style.transform = 'none';
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        e.preventDefault();
-      });
-      function onMouseMove(e){
-        if(!dragging) return;
-        let newLeft = e.clientX - offsetX;
-        let newTop = lockY ? startTop : e.clientY - offsetY;
-        const rect = content.getBoundingClientRect();
-        const maxLeft = window.innerWidth - rect.width;
-        newLeft = Math.min(Math.max(newLeft, 0), Math.max(maxLeft, 0));
-        if(!lockY){
-          const maxTop = window.innerHeight - header.offsetHeight;
-          newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
-        }
-        content.style.left = `${newLeft}px`;
-        content.style.top = `${lockY ? startTop : newTop}px`;
+    header.addEventListener('mousedown', e=>{
+      if(window.innerWidth < 450) return;
+      dragging = true;
+      const rect = content.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      startTop = rect.top;
+      content.style.left = `${rect.left}px`;
+      content.style.top = `${rect.top}px`;
+      content.style.transform = 'none';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      e.preventDefault();
+    });
+    function onMouseMove(e){
+      if(!dragging) return;
+      let newLeft = e.clientX - offsetX;
+      let newTop = lockY ? startTop : e.clientY - offsetY;
+      const rect = content.getBoundingClientRect();
+      const maxLeft = window.innerWidth - rect.width;
+      newLeft = Math.min(Math.max(newLeft, 0), Math.max(maxLeft, 0));
+      if(!lockY){
+        const maxTop = window.innerHeight - header.offsetHeight;
+        newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
       }
-      function onMouseUp(){
-        dragging = false;
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        savePanelState(panel);
-      }
+      content.style.left = `${newLeft}px`;
+      content.style.top = `${lockY ? startTop : newTop}px`;
+    }
+    function onMouseUp(){
+      dragging = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      savePanelState(panel);
+    }
 
     const handles = ['n','e','s','w','ne','nw','se','sw'];
     handles.forEach(dir=>{
