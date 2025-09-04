@@ -9,9 +9,10 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
 <link rel="manifest" href="assets/favicons/site.webmanifest">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css">
+<link rel="stylesheet" href="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.css">
 <style>
   *{border-radius:8px;box-sizing:border-box;}
+  header,footer,#map,.panel{border-radius:0;}
   html,body{margin:0;height:100%;font-family:Verdana,sans-serif;font-size:14px;overflow:hidden;}
   body{position:relative;}
   :root{
@@ -162,7 +163,7 @@
   </div>
 </div>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js"></script>
+<script src="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.min.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
 const map = new mapboxgl.Map({
@@ -172,12 +173,16 @@ const map = new mapboxgl.Map({
   center: [0, 0],
   zoom: 1
 });
-const geocoder = new MapboxGeocoder({
-  accessToken: mapboxgl.accessToken,
-  mapboxgl: mapboxgl,
-  placeholder: 'Location'
-});
-document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+if (typeof MapboxGeocoder !== 'undefined') {
+  const geocoder = new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken,
+    mapboxgl: mapboxgl,
+    placeholder: 'Location'
+  });
+  document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+} else {
+  console.warn('MapboxGeocoder is not available. Geocoding disabled.');
+}
 const geolocateControl = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:true});
 const geoContainer = geolocateControl.onAdd(map);
 document.getElementById('geolocate-btn').appendChild(geoContainer);
