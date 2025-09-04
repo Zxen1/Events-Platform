@@ -2888,32 +2888,32 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         <div id="geocoder" class="geocoder"></div>
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
-          <div class="field">
-            <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
-              <div class="x" role="button" aria-label="Clear keywords">X</div>
+            <div class="field">
+              <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Date Range" readonly />
+                <div class="x" role="button" aria-label="Clear date">X</div>
+              </div>
             </div>
-          </div>
-          <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Date Range" readonly />
-              <div class="x" role="button" aria-label="Clear date">X</div>
+            <div id="datePickerContainer" class="calendar-container">
+              <div id="datePicker"></div>
             </div>
-          </div>
-          <div class="field expired-field">
-            <span class="expired-text">Show Expired Events</span>
-            <label class="switch">
-              <input id="expiredToggle" type="checkbox" />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div id="datePickerContainer" class="calendar-container">
-            <div id="datePicker"></div>
-          </div>
-          <div class="cats" id="cats" aria-label="Categories"></div>
-          <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
+            <div class="field">
+              <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
+                <div class="x" role="button" aria-label="Clear keywords">X</div>
+              </div>
             </div>
-          </div>
+            <div class="field expired-field">
+              <span class="expired-text">Show Expired Events</span>
+              <label class="switch">
+                <input id="expiredToggle" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="cats" id="cats" aria-label="Categories"></div>
+            <div class="reset-box">
+              <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+                Reset All Filters
+              </div>
+            </div>
         </section>
       </div>
     </div>
