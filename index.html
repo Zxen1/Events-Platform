@@ -1328,7 +1328,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction: column;
   justify-content: flex-start;
   padding: 10px;
-  background: rgba(0,0,0,0.5);
+  background: var(--list-background);
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
   pointer-events: auto;
@@ -2743,7 +2743,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   padding:0;
   margin:0;
   flex:1;
-  overflow-y:auto;
+  overflow:auto;
+  min-height:0;
+  scrollbar-gutter: stable;
+  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
 }
 
 
