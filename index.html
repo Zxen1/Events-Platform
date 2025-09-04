@@ -587,6 +587,7 @@ button[aria-expanded="true"] .results-arrow{
   height:35px;
 }
 #filter-panel{
+  --calendar-width:250px;
   --calendar-height:200px;
   --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
   --calendar-header-h: var(--calendar-cell-h);
@@ -597,7 +598,7 @@ button[aria-expanded="true"] .results-arrow{
   color: var(--panel-text);
 }
 #filter-panel .calendar-container{
-  background: var(--dropdown-bg);
+  background: #333333;
   position:relative;
   overflow-x:auto;
   overflow-y:hidden;
@@ -626,7 +627,7 @@ button[aria-expanded="true"] .results-arrow{
   width:max-content;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:var(--dropdown-bg);
+  background:#333333;
   color:var(--dropdown-text);
 }
 .calendar .month{
