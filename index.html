@@ -11,7 +11,7 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.1/dist/mapbox-gl-geocoder.css">
 <style>
-  *{border-radius:8px;box-sizing:border-box;}
+  *{box-sizing:border-box;}
   header,footer,#map,.panel{border-radius:0;}
   html,body{margin:0;height:100%;font-family:Verdana,sans-serif;font-size:14px;overflow:hidden;}
   body{position:relative;}
@@ -32,6 +32,7 @@
   }
 
   button{
+    border-radius:8px;
     background:var(--btn-bg);
     color:var(--btn-color);
     border:none;
@@ -74,9 +75,9 @@
   .modal{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:20;background:transparent;}
   .modal-content{background:rgba(0,0,0,0.5);color:#fff;width:600px;padding:20px;box-sizing:border-box;text-align:center;}
   .modal-content img{max-width:100%;height:auto;}
-  .icon-inline{width:16px;height:16px;fill:#fff;vertical-align:middle;background:#000;border-radius:2px;}
+  .icon-inline{width:16px;height:16px;fill:#fff;vertical-align:middle;background:#000;}
   ::-webkit-scrollbar{width:10px;height:10px;}
-  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);border-radius:5px;}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.5);}
   ::-webkit-scrollbar-track{background:rgba(0,0,0,0.1);}
 
   /* Filter panel specific styles */
@@ -93,8 +94,8 @@
   #filter-panel button.icon-button{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;}
   #filter-panel #sort-menu{width:300px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
   #filter-panel .menu-arrow{transition:transform 0.3s;}
-  #filter-panel .menu{display:flex;flex-direction:column;position:absolute;top:50px;left:0;background:#222;width:300px;z-index:10;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.3s ease,opacity 0.3s ease;}
-  #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:10px;background:#333;color:#fff;}
+  #filter-panel .menu{display:flex;flex-direction:column;position:absolute;top:50px;left:0;background:#222;width:300px;z-index:10;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.3s ease,opacity 0.3s ease;padding:10px;gap:10px;}
+  #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#333;color:#fff;}
   #filter-panel .menu.open{max-height:200px;opacity:1;pointer-events:auto;}
   #filter-panel .star{color:yellow;}
   #filter-panel #map-controls-row .mapboxgl-ctrl-geocoder{width:300px;}
@@ -108,22 +109,11 @@
   .expired-text{font-family:Verdana;color:#fff;font-size:16px;}
   .switch{position:relative;display:inline-block;width:48px;height:24px;flex:0 0 48px;}
   .switch input{opacity:0;width:0;height:0;}
-  .switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn);border-radius:24px;transition:.2s;}
-  .switch .slider:before{position:absolute;content:'';height:20px;width:20px;left:2px;top:2px;background:var(--button-text);border-radius:50%;transition:.2s;}
+  .switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn);transition:.2s;}
+  .switch .slider:before{position:absolute;content:'';height:20px;width:20px;left:2px;top:2px;background:var(--button-text);transition:.2s;}
   .switch input:checked + .slider{background:var(--session-selected);}
   #expiredToggle:checked + .slider{background:var(--filter-active-color);}
   .switch input:checked + .slider:before{transform:translateX(24px);}
-  #datePickerContainer{width:400px;height:200px;overflow-x:auto;position:relative;background:#fff;color:#000;margin:10px 0;}
-  #datePicker{display:flex;height:194px;}
-  .filter-month{width:250px;height:194px;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:30px 20px repeat(6,1fr);}
-  .filter-calendar-header{grid-column:1/8;background:navy;color:white;font-size:16px;text-align:center;line-height:30px;}
-  .filter-calendar-weekdays{grid-column:1/8;display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:lightgrey;text-align:center;line-height:20px;}
-  .day{display:flex;align-items:center;justify-content:center;font-size:12px;}
-  .past{background:#eee;}
-  .start-date{background:navy;color:#fff;border-radius:4px 0 0 4px;}
-  .end-date{background:navy;color:#fff;border-radius:0 4px 4px 0;}
-  .in-range{background:#b0c4de;}
-  .today{color:red;}
   .active-filter{background:red !important;}
 </style>
 </head>
@@ -182,9 +172,6 @@
         <input id="expiredToggle" type="checkbox">
         <span class="slider"></span>
       </label>
-    </div>
-    <div id="datePickerContainer" class="calendar-container">
-      <div id="datePicker"></div>
     </div>
     <div class="row">
       <button id="clear-filters">Clear Filters</button>
@@ -354,75 +341,9 @@ const keywordsClear=document.getElementById('keywords-clear');
 const dateRangeInput=document.getElementById('date-range-input');
 const dateRangeClear=document.getElementById('daterange-clear');
 const expiredSwitch=document.getElementById('expiredToggle');
-const filterCalendarContainer=document.getElementById('datePickerContainer');
-const filterCalendar=document.getElementById('datePicker');
 const clearFiltersBtn=document.getElementById('clear-filters');
 let startDate=null,endDate=null;
-generateCalendar(false);
 updateFilterState();
-
-function generateCalendar(includePast){
-  filterCalendar.innerHTML='';
-  const today=new Date();
-  today.setHours(0,0,0,0);
-  let start=new Date(today);
-  if(includePast){start.setMonth(start.getMonth()-12);}
-  const months=includePast?36:24;
-  for(let i=0;i<months;i++){
-    const monthDate=new Date(start);
-    monthDate.setMonth(start.getMonth()+i);
-    const month=monthDate.getMonth();
-    const year=monthDate.getFullYear();
-    const monthEl=document.createElement('div');
-    monthEl.className='filter-month';
-    const header=document.createElement('div');
-    header.className='filter-calendar-header';
-    header.textContent=monthDate.toLocaleString('en-US',{month:'long',year:'numeric'});
-    monthEl.appendChild(header);
-    const weekdays=document.createElement('div');
-    weekdays.className='filter-calendar-weekdays';
-    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{const s=document.createElement('span');s.textContent=d;weekdays.appendChild(s);});
-    monthEl.appendChild(weekdays);
-    const firstDay=new Date(year,month,1).getDay();
-    const daysInMonth=new Date(year,month+1,0).getDate();
-    for(let j=0;j<firstDay;j++){monthEl.appendChild(document.createElement('div'));}
-    for(let d=1;d<=daysInMonth;d++){
-      const date=new Date(year,month,d);
-      const dayEl=document.createElement('div');
-      dayEl.className='day';
-      dayEl.textContent=d;
-      dayEl.dataset.date=date.toISOString();
-      if(date<today)dayEl.classList.add('past');
-      if(date.getTime()===today.getTime())dayEl.classList.add('today');
-      dayEl.addEventListener('click',()=>selectDate(date));
-      monthEl.appendChild(dayEl);
-    }
-    const totalCells=firstDay+daysInMonth;
-    for(let k=totalCells;k<42;k++){monthEl.appendChild(document.createElement('div'));}
-    filterCalendar.appendChild(monthEl);
-  }
-    filterCalendarContainer.scrollLeft=(includePast?12:0)*250;
-  }
-
-function selectDate(date){
-  const time=date.getTime();
-  if(!startDate || (startDate && endDate)){startDate=time;endDate=null;}
-  else if(time<startDate){endDate=startDate;startDate=time;}
-  else{endDate=time;}
-  highlightRange();
-  updateDateRangeInput();
-  updateFilterState();
-}
-
-function highlightRange(){
-    document.querySelectorAll('#datePicker .day').forEach(d=>{
-    const t=new Date(d.dataset.date).getTime();
-    d.classList.remove('start-date','end-date','in-range');
-    if(startDate && t===startDate)d.classList.add('start-date');
-    if(endDate && t===endDate)d.classList.add('end-date');
-    if(startDate && endDate && t>startDate && t<endDate)d.classList.add('in-range');
-  });
-}
 
 function formatDateRange(start,end){
   const opts={weekday:'short',day:'numeric',month:'short'};
@@ -457,14 +378,13 @@ function updateFilterState(){
 
 keywordsInput.addEventListener('input',updateFilterState);
 keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
-dateRangeClear.addEventListener('click',()=>{startDate=endDate=null;updateDateRangeInput();highlightRange();updateFilterState();});
-expiredSwitch.addEventListener('change',()=>{generateCalendar(expiredSwitch.checked);updateFilterState();});
+dateRangeClear.addEventListener('click',()=>{startDate=endDate=null;updateDateRangeInput();updateFilterState();});
+expiredSwitch.addEventListener('change',updateFilterState);
 clearFiltersBtn.addEventListener('click',()=>{
   keywordsInput.value='';
   startDate=endDate=null;
   updateDateRangeInput();
   expiredSwitch.checked=false;
-  generateCalendar(false);
   updateFilterState();
 });
 document.querySelector('#filter-panel .close').addEventListener('click',closeFilterPanel);
