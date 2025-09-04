@@ -5962,6 +5962,10 @@ document.addEventListener('keydown', e=>{
   }
 });
 
+function syncAdminControls(){
+  // Placeholder to prevent errors if admin sync logic is not loaded
+}
+
 function handleDocInteract(e){
   if(e.target.closest('.img-popup')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
