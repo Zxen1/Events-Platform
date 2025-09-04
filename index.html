@@ -7974,8 +7974,10 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   const downloadCssBtn = document.getElementById('downloadCss');
   downloadCssBtn && downloadCssBtn.addEventListener('click', ()=>{
-    const css = generateCss(collectThemeValues());
-    const blob = new Blob([css], { type:'text/css' });
+    const data = collectThemeValues();
+    const css = generateCss(data);
+    const metadata = `/*THEMEBUILDER_FIELDSETS\n${JSON.stringify(data, null, 2)}\n*/\n`;
+    const blob = new Blob([metadata, css], { type:'text/css' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
