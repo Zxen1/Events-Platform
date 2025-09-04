@@ -557,23 +557,15 @@ button[aria-expanded="true"] .results-arrow{
   padding:0;
 }
   #admin-panel .panel-content,
-  #member-panel .panel-content{
-    width:600px;
+  #member-panel .panel-content,
+  #filter-panel .panel-content{
+    width:420px;
     max-width:90%;
     max-height:90%;
-  }
-
-  #member-panel .panel-content{
-    background:rgba(0,0,0,0.7);
+    background:#333333;
     color:#fff;
+    transition:transform 0.3s ease;
   }
-#filter-panel .panel-content{
-  width:350px;
-  max-width:600px;
-  max-height:90%;
-  background:rgba(0,0,0,0.7);
-  color:#fff;
-}
 
 #filter-panel button,
 #filter-panel .sq,
@@ -5883,9 +5875,25 @@ function closePanel(m){
   if(idx!==-1) panelStack.splice(idx,1);
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
-function requestClosePanel(m){
-  closePanel(m);
-}
+  function requestClosePanel(m){
+    const content = m && m.querySelector('.panel-content');
+    if(content && ['admin-panel','member-panel','filter-panel'].includes(m.id)){
+      const rect = content.getBoundingClientRect();
+      const distLeft = rect.left;
+      const distRight = window.innerWidth - rect.right;
+      const direction = distLeft < distRight ? -1 : 1;
+      const distance = direction === -1 ? rect.right : window.innerWidth - rect.left;
+      content.style.transition = 'transform 0.3s ease';
+      content.style.transform = `translateX(${direction * (distance + 20)}px)`;
+      content.addEventListener('transitionend', ()=>{
+        content.style.transition = '';
+        content.style.transform = '';
+        closePanel(m);
+      }, {once:true});
+    } else {
+      closePanel(m);
+    }
+  }
 function togglePanel(m){
   if(m.classList.contains('show')){
     requestClosePanel(m);
@@ -5988,13 +5996,12 @@ document.addEventListener('pointerdown', handleDocInteract);
       togglePanel(adminPanel);
     });
   filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
-  document.querySelectorAll('.panel .close-panel').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const panel = btn.closest('.panel');
-      if(panel && panel.id === 'admin-panel') return;
-      requestClosePanel(panel);
+    document.querySelectorAll('.panel .close-panel').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const panel = btn.closest('.panel');
+        requestClosePanel(panel);
+      });
     });
-  });
   document.querySelectorAll('.panel .move-left').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
@@ -6028,13 +6035,15 @@ document.addEventListener('pointerdown', handleDocInteract);
     const header = panel.querySelector('.panel-header');
     if(!content || !header) return;
     let dragging = false;
-    let offsetX = 0, offsetY = 0;
+    let offsetX = 0, offsetY = 0, startTop = 0;
+    const lockY = ['admin-panel','member-panel','filter-panel'].includes(panel.id);
       header.addEventListener('mousedown', e=>{
         if(window.innerWidth < 450) return;
         dragging = true;
         const rect = content.getBoundingClientRect();
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
+        startTop = rect.top;
         content.style.left = `${rect.left}px`;
         content.style.top = `${rect.top}px`;
         content.style.transform = 'none';
@@ -6045,14 +6054,16 @@ document.addEventListener('pointerdown', handleDocInteract);
       function onMouseMove(e){
         if(!dragging) return;
         let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
+        let newTop = lockY ? startTop : e.clientY - offsetY;
         const rect = content.getBoundingClientRect();
         const maxLeft = window.innerWidth - rect.width;
-        const maxTop = window.innerHeight - header.offsetHeight;
         newLeft = Math.min(Math.max(newLeft, 0), Math.max(maxLeft, 0));
-        newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
+        if(!lockY){
+          const maxTop = window.innerHeight - header.offsetHeight;
+          newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
+        }
         content.style.left = `${newLeft}px`;
-        content.style.top = `${newTop}px`;
+        content.style.top = `${lockY ? startTop : newTop}px`;
       }
       function onMouseUp(){
         dragging = false;
