@@ -90,7 +90,7 @@
   #filter-panel #sort-menu{width:300px;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
   #filter-panel .menu-arrow{transition:transform 0.3s;}
   #filter-panel .menu{display:flex;flex-direction:column;position:absolute;top:50px;left:0;background:#222;width:300px;z-index:10;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.3s ease,opacity 0.3s ease;}
-  #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#333;color:#fff;}
+  #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:10px;background:#333;color:#fff;}
   #filter-panel .menu.open{max-height:200px;opacity:1;pointer-events:auto;}
   #filter-panel .star{color:yellow;}
   #filter-panel #map-controls-row .mapboxgl-ctrl-geocoder{width:300px;}
@@ -98,6 +98,26 @@
   #map-controls-row .mapboxgl-ctrl-compass{display:flex !important;}
   #filter-panel .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search{display:none;}
   #filter-panel #clear-filters{width:400px;height:40px;}
+  #date-range-input{background:#fff;cursor:pointer;}
+  #daterange-row{gap:60px;}
+  #expired-events-row{color:#fff;display:flex;align-items:center;gap:10px;}
+  #expired-events-row label{cursor:pointer;}
+  #expired-events-switch{width:40px;height:20px;appearance:none;background:grey;border-radius:10px;position:relative;cursor:pointer;}
+  #expired-events-switch::before{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:0.3s;}
+  #expired-events-switch:checked{background:red;}
+  #expired-events-switch:checked::before{left:22px;}
+  #filter-calendar-container{width:400px;height:200px;overflow-x:auto;position:relative;background:#fff;color:#000;margin:10px 0;}
+  #today-dot{position:absolute;bottom:0;width:6px;height:6px;background:red;border-radius:50%;cursor:pointer;}
+  #filter-calendar{display:flex;height:194px;}
+  .filter-month{width:250px;height:194px;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:30px 20px repeat(6,1fr);}
+  .filter-calendar-header{grid-column:1/8;background:navy;color:white;font-size:16px;text-align:center;line-height:30px;}
+  .filter-calendar-weekdays{grid-column:1/8;display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:lightgrey;text-align:center;line-height:20px;}
+  .day{display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .past{background:#eee;}
+  .start-date{background:navy;color:#fff;border-radius:4px 0 0 4px;}
+  .end-date{background:navy;color:#fff;border-radius:0 4px 4px 0;}
+  .in-range{background:#b0c4de;}
+  .today{color:red;}
   .active-filter{background:red !important;}
 </style>
 </head>
@@ -146,6 +166,18 @@
     <input type="text" id="keywords-input" placeholder="Keywords">
     <button id="keywords-clear" class="icon-button">✕</button>
   </div>
+  <div class="row" id="daterange-row">
+    <input type="text" id="date-range-input" placeholder="Date Range" readonly>
+    <button id="daterange-clear" class="icon-button">✕</button>
+  </div>
+  <div class="row" id="expired-events-row">
+    <label for="expired-events-switch">Show Expired Events</label>
+    <input type="checkbox" id="expired-events-switch">
+  </div>
+  <div id="filter-calendar-container">
+    <div id="today-dot"></div>
+    <div id="filter-calendar"></div>
+  </div>
   <div class="row">
     <button id="clear-filters">Clear Filters</button>
   </div>
@@ -183,12 +215,14 @@ if (typeof MapboxGeocoder !== 'undefined') {
     placeholder: 'Location'
   });
   document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+  geocoder.on('result',e=>{map.easeTo({center:e.result.center,zoom:map.getZoom(),pitch:45});});
 } else {
   console.warn('MapboxGeocoder is not available. Geocoding disabled.');
 }
 const geolocateControl = new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:true});
 const geoContainer = geolocateControl.onAdd(map);
 document.getElementById('geolocate-btn').appendChild(geoContainer);
+geolocateControl.on('geolocate',e=>{map.easeTo({center:[e.coords.longitude,e.coords.latitude],zoom:14,pitch:45});});
 const navControl = new mapboxgl.NavigationControl({showCompass:true,showZoom:false});
 const navContainer = navControl.onAdd(map);
 document.getElementById('compass-btn').appendChild(navContainer);
@@ -309,17 +343,123 @@ sortOptions.querySelectorAll('button').forEach(btn=>{
 });
 const keywordsInput=document.getElementById('keywords-input');
 const keywordsClear=document.getElementById('keywords-clear');
+const dateRangeInput=document.getElementById('date-range-input');
+const dateRangeClear=document.getElementById('daterange-clear');
+const expiredSwitch=document.getElementById('expired-events-switch');
+const filterCalendarContainer=document.getElementById('filter-calendar-container');
+const filterCalendar=document.getElementById('filter-calendar');
+const todayDot=document.getElementById('today-dot');
 const clearFiltersBtn=document.getElementById('clear-filters');
-function updateFilterState(){
-  const active=keywordsInput.value.trim()!=='';
-  filterBtn.classList.toggle('active-filter',active);
-  keywordsClear.classList.toggle('active-filter',active);
-  clearFiltersBtn.classList.toggle('active-filter',active);
+let startDate=null,endDate=null;
+generateCalendar(false);
+updateFilterState();
+
+function generateCalendar(includePast){
+  filterCalendar.innerHTML='';
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  let start=new Date(today);
+  if(includePast){start.setMonth(start.getMonth()-12);}
+  const months=includePast?36:24;
+  for(let i=0;i<months;i++){
+    const monthDate=new Date(start);
+    monthDate.setMonth(start.getMonth()+i);
+    const month=monthDate.getMonth();
+    const year=monthDate.getFullYear();
+    const monthEl=document.createElement('div');
+    monthEl.className='filter-month';
+    const header=document.createElement('div');
+    header.className='filter-calendar-header';
+    header.textContent=monthDate.toLocaleString('en-US',{month:'long',year:'numeric'});
+    monthEl.appendChild(header);
+    const weekdays=document.createElement('div');
+    weekdays.className='filter-calendar-weekdays';
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{const s=document.createElement('span');s.textContent=d;weekdays.appendChild(s);});
+    monthEl.appendChild(weekdays);
+    const firstDay=new Date(year,month,1).getDay();
+    const daysInMonth=new Date(year,month+1,0).getDate();
+    for(let j=0;j<firstDay;j++){monthEl.appendChild(document.createElement('div'));}
+    for(let d=1;d<=daysInMonth;d++){
+      const date=new Date(year,month,d);
+      const dayEl=document.createElement('div');
+      dayEl.className='day';
+      dayEl.textContent=d;
+      dayEl.dataset.date=date.toISOString();
+      if(date<today)dayEl.classList.add('past');
+      if(date.getTime()===today.getTime())dayEl.classList.add('today');
+      dayEl.addEventListener('click',()=>selectDate(date));
+      monthEl.appendChild(dayEl);
+    }
+    const totalCells=firstDay+daysInMonth;
+    for(let k=totalCells;k<42;k++){monthEl.appendChild(document.createElement('div'));}
+    filterCalendar.appendChild(monthEl);
+  }
+  todayDot.style.left=includePast?(filterCalendarContainer.clientWidth/3)+'px':'0';
+  filterCalendarContainer.scrollLeft=(includePast?12:0)*250;
 }
+
+function selectDate(date){
+  const time=date.getTime();
+  if(!startDate || (startDate && endDate)){startDate=time;endDate=null;}
+  else if(time<startDate){endDate=startDate;startDate=time;}
+  else{endDate=time;}
+  highlightRange();
+  updateDateRangeInput();
+  updateFilterState();
+}
+
+function highlightRange(){
+  document.querySelectorAll('#filter-calendar .day').forEach(d=>{
+    const t=new Date(d.dataset.date).getTime();
+    d.classList.remove('start-date','end-date','in-range');
+    if(startDate && t===startDate)d.classList.add('start-date');
+    if(endDate && t===endDate)d.classList.add('end-date');
+    if(startDate && endDate && t>startDate && t<endDate)d.classList.add('in-range');
+  });
+}
+
+function formatDateRange(start,end){
+  const opts={weekday:'short',day:'numeric',month:'short'};
+  const startStr=start.toLocaleDateString('en-US',opts);
+  const endStr=end.toLocaleDateString('en-US',opts);
+  const currentYear=(new Date()).getFullYear();
+  const startYear=start.getFullYear()!==currentYear?`, ${start.getFullYear()}`:'';
+  const endYear=end.getFullYear()!==currentYear?`, ${end.getFullYear()}`:'';
+  return `${startStr}${startYear} – ${endStr}${endYear}`;
+}
+
+function updateDateRangeInput(){
+  if(startDate && endDate){
+    const start=new Date(startDate);
+    const end=new Date(endDate);
+    dateRangeInput.value=formatDateRange(start,end);
+  }else{
+    dateRangeInput.value='';
+  }
+}
+
+function updateFilterState(){
+  const keywordActive=keywordsInput.value.trim()!=='';
+  const dateActive=dateRangeInput.value.trim()!=='';
+  const expiredActive=expiredSwitch.checked;
+  filterBtn.classList.toggle('active-filter',keywordActive||dateActive||expiredActive);
+  keywordsClear.classList.toggle('active-filter',keywordActive);
+  dateRangeClear.classList.toggle('active-filter',dateActive);
+  expiredSwitch.classList.toggle('active-filter',expiredActive);
+  clearFiltersBtn.classList.toggle('active-filter',keywordActive||dateActive||expiredActive);
+}
+
 keywordsInput.addEventListener('input',updateFilterState);
 keywordsClear.addEventListener('click',()=>{keywordsInput.value='';updateFilterState();});
+dateRangeClear.addEventListener('click',()=>{startDate=endDate=null;updateDateRangeInput();highlightRange();updateFilterState();});
+expiredSwitch.addEventListener('change',()=>{generateCalendar(expiredSwitch.checked);updateFilterState();});
+todayDot.addEventListener('click',()=>{const idx=expiredSwitch.checked?12:0;filterCalendarContainer.scrollTo({left:idx*250,behavior:'smooth'});});
 clearFiltersBtn.addEventListener('click',()=>{
   keywordsInput.value='';
+  startDate=endDate=null;
+  updateDateRangeInput();
+  expiredSwitch.checked=false;
+  generateCalendar(false);
   updateFilterState();
 });
 document.querySelector('#filter-panel .close').addEventListener('click',closeFilterPanel);
