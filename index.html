@@ -584,6 +584,11 @@ button[aria-expanded="true"] .results-arrow{
   width:35px;
   height:35px;
 }
+#filter-panel{
+  --calendar-height:200px;
+  --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
+  --calendar-header-h: var(--calendar-cell-h);
+}
 #filter-panel input[type="text"]{
   background: var(--panel-bg);
   color: var(--panel-text);
@@ -646,9 +651,10 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   text-align:center;
-  font-family:inherit;
-  font-size:inherit;
-  color:inherit;
+  background:#00008b;
+  color:#fff;
+  font-family:Verdana, sans-serif;
+  font-size:14px;
 }
 .calendar .weekday,
 .calendar .day{
@@ -658,11 +664,18 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   line-height:var(--calendar-cell-h);
-  font-family:inherit;
-  font-size:inherit;
 }
-.calendar .weekday{font-weight:bold;}
-.calendar .day{cursor:pointer;}
+.calendar .weekday{
+  font-weight:bold;
+  color:grey;
+  font-family:Verdana, sans-serif;
+  font-size:10px;
+}
+.calendar .day{
+  cursor:pointer;
+  font-family:Verdana, sans-serif;
+  font-size:12px;
+}
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
 .calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
 .calendar .day.future{background:var(--calendar-future-bg);}
