@@ -1607,6 +1607,37 @@ body.filters-active #filterBtn{
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-panel .open-posts{margin-top:12px}
 
+.ad-panel{
+  display:none;
+  position:fixed;
+  top:calc(var(--header-h) + var(--safe-top));
+  bottom:var(--footer-h);
+  right:0;
+  width:400px;
+  overflow-y:auto;
+  z-index:2;
+}
+.ad-panel .ad-entry{
+  position:relative;
+  display:block;
+  color:inherit;
+}
+.ad-panel .ad-entry img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.ad-panel .ad-info{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.6);
+  color:#fff;
+  padding:12px;
+  box-shadow:0 -4px 10px rgba(0,0,0,0.5);
+}
+
 body.hide-results .post-panel{
   left:0;
 }
@@ -2801,6 +2832,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   <section id="post-panel" class="post-panel" aria-label="Closed Posts">
     <div class="posts" id="postsWide"></div>
   </section>
+
+  <aside id="ad-panel" class="ad-panel" aria-label="Sponsored Posts"></aside>
 
 
 
@@ -4903,12 +4936,14 @@ function makePosts(){
         if(renderResults) resultsEl.appendChild(card(p));
         postsWideEl.appendChild(card(p, true));
       });
+      buildAdPanel(arr.filter(p=>p.ad));
       if(renderResults && activePostId){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
       }
       if(renderResults) updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
+      updateAdPanelVisibility();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
@@ -4929,10 +4964,48 @@ function makePosts(){
       });
     }
 
+    function buildAdPanel(paid){
+      const panel = $('#ad-panel');
+      panel.innerHTML = '';
+      paid.forEach(p => {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'ad-entry';
+        a.innerHTML = `<img src="${imgHero(p)}" alt="" referrerpolicy="no-referrer"/><div class="ad-info"><div class="title">${p.title}</div><div class="info"><div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div><div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div><div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div></div></div>`;
+        a.addEventListener('click', e => { e.preventDefault(); openPost(p.id); });
+        panel.appendChild(a);
+      });
+    }
+
+    function postPanelHasTwoColumns(){
+      const postsEl = document.querySelector('.post-panel .posts');
+      if(!postsEl) return false;
+      const first = postsEl.querySelector('.card');
+      if(!first) return false;
+      const cardWidth = first.getBoundingClientRect().width;
+      const containerWidth = postsEl.getBoundingClientRect().width;
+      return containerWidth >= cardWidth * 2;
+    }
+
+    function updateAdPanelVisibility(){
+      const panel = $('#ad-panel');
+      const postPanel = document.querySelector('.post-panel');
+      if(postPanelHasTwoColumns() && panel.children.length){
+        panel.style.display = 'block';
+        postPanel.style.right = '400px';
+      } else {
+        panel.style.display = 'none';
+        postPanel.style.right = '0';
+      }
+    }
+
+    window.addEventListener('resize', updateAdPanelVisibility);
+
     function card(p, wide=false){
       const el = document.createElement('article');
       el.className = 'card';
       el.dataset.id = p.id;
+      if(p.ad) el.dataset.ad = 'true';
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       let thumb;
       if(thumbCache[p.id]){
