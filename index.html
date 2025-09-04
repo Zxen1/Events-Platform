@@ -5148,7 +5148,7 @@ function makePosts(){
         return wrap;
     }
 
-    async function openPost(id, fromPosts=false){
+    async function openPost(id, fromPosts=false, skipScroll=false){
       touchMarker = null;
       if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
@@ -5182,7 +5182,9 @@ function makePosts(){
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
         resCard.setAttribute('aria-selected','true');
-        resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+        if(!skipScroll){
+          resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+        }
       }
       const mapCard = document.querySelector('.mapboxgl-popup .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
@@ -5205,10 +5207,12 @@ function makePosts(){
 
       if(container){
         const headerHeight = (stickyHeaderActive && header) ? header.offsetHeight : 0;
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
-        container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
-        ensureGap(container, detail);
-      } else if(window.innerWidth > 450) {
+        if(!skipScroll){
+          const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
+          container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
+          ensureGap(container, detail);
+        }
+      } else if(window.innerWidth > 450 && !skipScroll) {
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
@@ -5625,7 +5629,7 @@ function makePosts(){
     const savedMode = localStorage.getItem('mode');
     if(savedMode){ setMode(savedMode); }
     const savedPostId = localStorage.getItem('activePostId');
-    if(savedPostId){ openPost(savedPostId); }
+    if(savedPostId){ openPost(savedPostId, false, true); }
   })();
   
 // 0577 helpers (safety)
