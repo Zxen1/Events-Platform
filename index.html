@@ -66,6 +66,7 @@
   #list-panel{width:520px;}
   #posts-panel{width:auto;max-width:420px;}
   #member-panel,#admin-panel,#settings-panel{width:420px;}
+  #filter-panel,#admin-panel,#member-panel,#settings-panel{z-index:6;}
   #map{position:absolute;top:80px;bottom:0;left:0;right:0;}
   footer{
     position:absolute;left:0;right:0;bottom:0;height:80px;background:rgba(0,0,0,0.5);z-index:10;box-sizing:border-box;}
@@ -97,7 +98,9 @@
   #filter-panel .menu{display:flex;flex-direction:column;position:absolute;top:50px;left:0;background:#222;width:300px;z-index:10;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:max-height 0.3s ease,opacity 0.3s ease;padding:10px;gap:10px;}
   #filter-panel .menu button{width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#333;color:#fff;}
   #filter-panel .menu.open{max-height:200px;opacity:1;pointer-events:auto;}
-  #filter-panel .star{color:yellow;}
+  #favourites-option{white-space:nowrap;}
+  #favourites-option .star-icon{width:18px;height:18px;fill:none;stroke:#ffc107;stroke-width:1.5;vertical-align:middle;margin-left:6px;}
+  #favourites-option[aria-pressed="true"] .star-icon{fill:#ffc107;}
   #filter-panel #map-controls-row .mapboxgl-ctrl-geocoder{width:300px;}
   #map-controls-row .mapboxgl-ctrl-geolocate,#map-controls-row .mapboxgl-ctrl-compass,#map-controls-row .mapboxgl-ctrl-group{width:40px;height:40px;}
   #map-controls-row .mapboxgl-ctrl-compass{display:flex !important;}
@@ -109,12 +112,14 @@
   .expired-text{font-family:Verdana;color:#fff;font-size:16px;}
   .switch{position:relative;display:inline-block;width:48px;height:24px;flex:0 0 48px;}
   .switch input{opacity:0;width:0;height:0;}
-  .switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn);transition:.2s;}
-  .switch .slider:before{position:absolute;content:'';height:20px;width:20px;left:2px;top:2px;background:var(--button-text);transition:.2s;}
+  .switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn);border-radius:24px;transition:.2s;}
+  .switch .slider:before{position:absolute;content:'';height:20px;width:20px;left:2px;top:2px;background:var(--button-text);border-radius:50%;transition:.2s;}
   .switch input:checked + .slider{background:var(--session-selected);}
   #expiredToggle:checked + .slider{background:var(--filter-active-color);}
   .switch input:checked + .slider:before{transform:translateX(24px);}
   .active-filter{background:red !important;}
+  #filter-panel .calendar-container{background:var(--dropdown-bg);position:relative;overflow-x:auto;overflow-y:hidden;padding-bottom:0;box-sizing:content-box;width:calc(var(--calendar-width) * var(--calendar-scale));height:calc(var(--calendar-height) * var(--calendar-scale));border:1px solid var(--border);border-radius:8px;}
+  #filter-panel .calendar-container .today-marker{position:absolute;bottom:0;width:8px;height:8px;border-radius:50%;background:var(--today);cursor:pointer;transform:translateX(-50%);}
 </style>
 </head>
 <body>
@@ -144,7 +149,7 @@
   <div class="row" id="sort-row">
     <button id="sort-menu">Title A-Z <span class="menu-arrow">▼</span></button>
     <div id="sort-options" class="menu">
-      <button data-sort="favourites" id="favourites-option">Favourites on top <span class="star">☆</span></button>
+      <button data-sort="favourites" id="favourites-option" aria-pressed="false">Favourites on top<svg class="star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
       <button data-sort="title">Title A-Z</button>
       <button data-sort="closest">Closest</button>
       <button data-sort="soonest">Soonest</button>
@@ -172,6 +177,9 @@
         <input id="expiredToggle" type="checkbox">
         <span class="slider"></span>
       </label>
+    </div>
+    <div id="datePickerContainer" class="calendar-container" style="margin-top:10px;">
+      <div id="datePicker"></div>
     </div>
     <div class="row">
       <button id="clear-filters">Clear Filters</button>
@@ -263,6 +271,9 @@ function togglePanel(btn,panel){
     if(btn.id==='posts-button'){
       btn.textContent=panel.classList.contains('open')?'Posts':'Map';
     }
+    if(panel.classList.contains('open') && priorityPanels.includes(panel)){
+      bringToFront(panel);
+    }
   });
 }
 const filterBtn=document.getElementById('filter-button');
@@ -276,6 +287,9 @@ function openPanel(name){
   panel.classList.add('open');
   const btn=document.getElementById(name+'-button');
   if(btn) btn.classList.add('selected');
+  if(priorityPanels.includes(panel)){
+    bringToFront(panel);
+  }
   if(name==='posts'){postsBtn.textContent='Posts';}
 }
 const filterPanel=document.getElementById('filter-panel');
@@ -284,12 +298,22 @@ const postsPanel=document.getElementById('posts-panel');
 const memberPanel=document.getElementById('member-panel');
 const adminPanel=document.getElementById('admin-panel');
 const settingsPanel=document.getElementById('settings-panel');
+const priorityPanels=[filterPanel,adminPanel,memberPanel,settingsPanel];
+let zCounter=6;
+function bringToFront(panel){
+  if(!priorityPanels.includes(panel)) return;
+  panel.style.zIndex=++zCounter;
+}
+priorityPanels.forEach(p=>{
+  p.addEventListener('mousedown',()=>bringToFront(p));
+});
 filterBtn.addEventListener('click',()=>{
   if(filterPanel.classList.contains('open')){
     closeFilterPanel();
   }else{
     filterPanel.classList.add('open');
     filterBtn.classList.add('selected');
+    bringToFront(filterPanel);
   }
 });
 togglePanel(listBtn,listPanel);
@@ -327,7 +351,7 @@ sortOptions.querySelectorAll('button').forEach(btn=>{
     const type=btn.dataset.sort;
     if(type==='favourites'){
       favouritesOnTop=!favouritesOnTop;
-      favOption.querySelector('.star').textContent=favouritesOnTop?'★':'☆';
+      favOption.setAttribute('aria-pressed',favouritesOnTop);
       return;
     }
     sortOrder=btn.textContent;
@@ -389,8 +413,17 @@ clearFiltersBtn.addEventListener('click',()=>{
 });
 document.querySelector('#filter-panel .close').addEventListener('click',closeFilterPanel);
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape' && filterPanel.classList.contains('open')){
-    closeFilterPanel();
+  if(e.key==='Escape'){
+    const openPriority=priorityPanels.filter(p=>p.classList.contains('open'));
+    if(!openPriority.length) return;
+    const panelToClose=openPriority.reduce((max,p)=>((parseInt(p.style.zIndex)||0)>(parseInt(max.style.zIndex)||0)?p:max),openPriority[0]);
+    if(panelToClose===filterPanel){
+      closeFilterPanel();
+    }else{
+      panelToClose.classList.remove('open');
+      const btn=document.getElementById(panelToClose.id.replace('-panel','-button'));
+      if(btn) btn.classList.remove('selected');
+    }
   }
 });
 document.querySelector('#filter-panel .snap-left').addEventListener('click',()=>{
