@@ -1838,13 +1838,13 @@ body.hide-results .post-panel{
 
 .open-posts .img-box{
   width:400px;
-  height:400px;
+  aspect-ratio:1/1;
   overflow:hidden;
   border:none;
   border-radius:8px;
   flex-shrink:0;
   cursor:pointer;
-  background:var(--list-background);
+  background:rgba(0,0,0,0);
 }
 
 .open-posts .img-box img{
@@ -1853,9 +1853,10 @@ body.hide-results .post-panel{
   object-fit:cover;
   object-position:center;
   display:block;
+  aspect-ratio:1/1;
 }
 .open-posts .img-box img.ready{
-  object-fit:contain;
+  object-fit:cover;
 }
 
 .open-posts .thumb-column{
@@ -1922,13 +1923,17 @@ body.hide-results .post-panel{
   }
   .open-posts .img-box{
     width:100%;
-    height:100vw;
+    aspect-ratio:1/1;
     margin:0;
     border-radius:8px;
+    background:rgba(0,0,0,0);
   }
   .open-posts .img-box img{
+    width:100%;
+    height:100%;
     object-fit:cover;
     object-position:center;
+    aspect-ratio:1/1;
   }
   .open-posts .thumb-column{
     width:auto;
@@ -2381,6 +2386,8 @@ body.hide-results .post-panel{
   .open-posts .img-box{
     max-width:100%;
     width:100%;
+    aspect-ratio:1/1;
+    background:rgba(0,0,0,0);
   }
   .open-posts .post-calendar{
     display:none;
@@ -2413,6 +2420,8 @@ body.hide-results .post-panel{
     margin-right:0;
     padding-left:0;
     padding-right:0;
+    aspect-ratio:1/1;
+    background:rgba(0,0,0,0);
   }
   .open-posts .img-box img{
     width:100%;
@@ -2420,6 +2429,7 @@ body.hide-results .post-panel{
     object-fit:cover;
     margin-left:0;
     margin-right:0;
+    aspect-ratio:1/1;
   }
   .open-posts .body{
     padding:14px 0;
@@ -2962,14 +2972,16 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   }
   .open-posts .img-box{
     width:100vw;
-    height:100vw;
+    aspect-ratio:1/1;
     flex:0 0 100vw;
     border-radius:8px;
+    background:rgba(0,0,0,0);
   }
   .open-posts .img-box img{
     width:100%;
     height:100%;
     object-fit:cover;
+    aspect-ratio:1/1;
   }
 }
 
@@ -4034,10 +4046,7 @@ function makePosts(){
     function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 
     function svgPlaceholder(id){
-      const colors = ['#FFADAD','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF'];
-      const hash = String(id).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-      const color = colors[hash % colors.length];
-      return `data:image/svg+xml;charset=UTF-8,` + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='${color}'/></svg>`);
+      return 'assets/balloons/balloons-icon-16185.png';
     }
 
     function hoverHTML(p){
