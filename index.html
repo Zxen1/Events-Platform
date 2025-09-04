@@ -1695,7 +1695,7 @@ body.filters-active #filterBtn{
 }
 .post-panel .posts{overflow:visible;padding:12px;margin:0;}
 .post-panel .card,
-.post-panel .open-posts{background:var(--closed-card-bg);}
+.post-panel .open-posts{background:rgba(0,0,0,0.7);}
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-panel .open-posts{margin-top:12px}
 .post-panel .card{
@@ -3437,7 +3437,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/dark-v11',
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
           dynamicSun = localStorage.getItem('dynamicSun') === 'true',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
