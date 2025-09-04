@@ -13,7 +13,6 @@
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
   <style>:root{
   --header-h: 75px;
-  --subheader-h: 0;
   --panel-w: 420px;
   --results-w: 520px;
   --gap: 12px;
@@ -1320,7 +1319,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .list-panel{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  top: calc(var(--header-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: 0;
   width: var(--results-w);
@@ -1648,7 +1647,7 @@ body.filters-active #filterBtn{
 .post-panel{
   display:none;
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  top: calc(var(--header-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: var(--results-w);
   right: var(--gap);
@@ -2746,7 +2745,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   overflow:auto;
   min-height:0;
   scrollbar-gutter: stable;
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
+  height: calc(100vh - var(--header-h) - var(--footer-h) - var(--safe-top));
 }
 
 
@@ -3417,10 +3416,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     function adjustListHeight(){
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-      const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
     const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-    const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
+    const availableHeight = window.innerHeight - headerH - footerH - safeTop;
       document.querySelectorAll('.res-list, .posts').forEach(list=>{
         list.style.height = `${availableHeight}px`;
         list.style.maxHeight = `${availableHeight}px`;
@@ -3457,12 +3455,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           }
         }
       }
-      const stickyInput = document.getElementById('open-posts-sticky-images');
-      if(!(stickyInput && stickyInput.checked) || !body || !imgArea || !text){
-        root.classList.remove('open-posts-sticky-images');
+      if(!body || !imgArea || !text){
+        root.classList.remove('open-posts-sticky-images','open-posts-sticky-header');
         return;
       }
       root.classList.toggle('open-posts-sticky-images', !isBelow);
+      root.classList.toggle('open-posts-sticky-header', !isBelow);
     }
 
     window.updateStickyImages = updateStickyImages;
@@ -5828,7 +5826,6 @@ function openPanel(m){
   if(content){
     const rootStyles = getComputedStyle(document.documentElement);
     const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-    const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
     const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='admin-panel' || m.id==='member-panel'){
@@ -5849,7 +5846,7 @@ function openPanel(m){
         content.style.maxHeight='';
       }
     } else if(m.id==='filter-panel'){
-      const topPos = headerH + subH + safeTop;
+      const topPos = headerH + safeTop;
       if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
