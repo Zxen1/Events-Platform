@@ -592,10 +592,13 @@ button[aria-expanded="true"] .results-arrow{
   border: none;
 }
 
-#filter-panel .panel-body{
+#filter-panel .panel-body,
+#member-panel .panel-body,
+#admin-panel .panel-body{
   display:flex;
   flex-direction:column;
   align-items:flex-start;
+  gap:10px;
 }
 
 #filter-panel .panel-body > *,
@@ -625,6 +628,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--calendar-height) * var(--calendar-scale));
   border:1px solid var(--border);
   border-radius:8px;
+  z-index:1;
 }
 #filter-panel .calendar-container .today-marker{
   position:absolute;
@@ -1316,13 +1320,13 @@ button[aria-expanded="true"] .results-arrow{
 
 .list-panel{
   position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
+  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
   bottom: var(--footer-h);
   left: var(--gap);
   width: var(--results-w);
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 10px;
   background: rgba(0,0,0,0.5);
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
@@ -1363,7 +1367,6 @@ body.filters-active #filterBtn{
   flex: 1;
   min-height: 0;
   scrollbar-gutter: stable;
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
 }
 
 .card{
@@ -2738,9 +2741,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .list-panel .res-list{
   border-radius: inherit;
-  padding: var(--gap);
-  padding-right: 0;
-  margin: 0 calc(-1 * var(--gap));
+  padding:0;
+  margin:0;
 }
 
 
