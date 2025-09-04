@@ -13,7 +13,6 @@
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
   <style>:root{
   --header-h: 75px;
-  --subheader-h: 0;
   --panel-w: 300px;
   --results-w: 520px;
   --gap: 12px;
@@ -835,8 +834,8 @@ button[aria-expanded="true"] .results-arrow{
   text-align:right;
   font-size:12px;
 }
-#admin-panel .panel-subheader{display:flex;gap:6px;}
-#admin-panel .panel-subheader button{
+  #admin-panel .tab-bar{display:flex;gap:6px;}
+  #admin-panel .tab-bar button{
   flex:1;
   padding:6px 10px;
   border-radius:8px;
@@ -1286,12 +1285,12 @@ button[aria-expanded="true"] .results-arrow{
   border: 1px solid var(--btn);
 }
 
-.list-panel{
-  position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
-  bottom: var(--footer-h);
-  left: var(--gap);
-  width: var(--results-w);
+  .list-panel{
+    position: fixed;
+    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
+    bottom: var(--footer-h);
+    left: var(--gap);
+    width: var(--results-w);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -1330,13 +1329,13 @@ body.filters-active #filterBtn{
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
-.res-list{
-  overflow: auto;
-  flex: 1;
-  min-height: 0;
-  scrollbar-gutter: stable;
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
-}
+  .res-list{
+    overflow: auto;
+    flex: 1;
+    min-height: 0;
+    scrollbar-gutter: stable;
+    height: calc(100vh - var(--header-h) - var(--footer-h) - var(--safe-top));
+  }
 
 .card{
   display: grid;
@@ -1613,13 +1612,13 @@ body.filters-active #filterBtn{
 
 
 
-.post-panel{
-  display:none;
-  position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
-  bottom: var(--footer-h);
-  left: calc(var(--results-w) + var(--gap) * 2);
-  right: var(--gap);
+  .post-panel{
+    display:none;
+    position: fixed;
+    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
+    bottom: var(--footer-h);
+    left: calc(var(--results-w) + var(--gap) * 2);
+    right: var(--gap);
   overflow-y:scroll;
   overflow-x:hidden;
   scrollbar-gutter:stable;
@@ -3053,11 +3052,11 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
-        <div class="panel-subheader">
-          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
-          <button type="button" class="tab-btn" data-tab="form">Forms</button>
-        </div>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
+            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+            <button type="button" class="tab-btn" data-tab="form">Forms</button>
+          </div>
       </div>
       <form id="adminForm" class="panel-body">
         <div id="map-tab" class="tab-panel active">
@@ -3403,17 +3402,16 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
 
     // Ensure result lists occupy available space between the header and footer
-    function adjustListHeight(){
-      const rootStyles = getComputedStyle(document.documentElement);
-      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-      const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
-      const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-      const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-      const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.res-list, .posts').forEach(list=>{
-        list.style.maxHeight = `${availableHeight}px`;
-      });
-    }
+      function adjustListHeight(){
+        const rootStyles = getComputedStyle(document.documentElement);
+        const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+        const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+        const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+        const availableHeight = window.innerHeight - headerH - footerH - safeTop;
+        document.querySelectorAll('.res-list, .posts').forEach(list=>{
+          list.style.maxHeight = `${availableHeight}px`;
+        });
+      }
     window.adjustListHeight = adjustListHeight;
 
     function updateStickyImages(){
@@ -5797,26 +5795,25 @@ function loadPanelState(m){
 }
 function openPanel(m){
   const content = m.querySelector('.panel-content');
-  if(content){
-    content.style.width = '';
-    content.style.height = '';
-  }
-  m.classList.add('show');
-  m.removeAttribute('aria-hidden');
-  localStorage.setItem(`panel-open-${m.id}`,'true');
-  if(content){
-    const rootStyles = getComputedStyle(document.documentElement);
-    const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-    const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
-    const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-    if(m.id==='admin-panel' || m.id==='member-panel'){
-      if(window.innerWidth < 450){
-        const topPos = headerH + safeTop;
-        content.style.left='0';
-        content.style.right='0';
-        content.style.top=`${topPos}px`;
-        content.style.bottom=`${footerH}px`;
+    if(content){
+      content.style.width = '';
+      content.style.height = '';
+    }
+    m.classList.add('show');
+    m.removeAttribute('aria-hidden');
+    localStorage.setItem(`panel-open-${m.id}`,'true');
+    if(content){
+      const rootStyles = getComputedStyle(document.documentElement);
+      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+      const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+      const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+      if(m.id==='admin-panel' || m.id==='member-panel'){
+        if(window.innerWidth < 450){
+          const topPos = headerH + safeTop;
+          content.style.left='0';
+          content.style.right='0';
+          content.style.top=`${topPos}px`;
+          content.style.bottom=`${footerH}px`;
         content.style.transform='none';
         content.style.maxHeight='';
       } else {
@@ -5827,24 +5824,24 @@ function openPanel(m){
         content.style.transform='none';
         content.style.maxHeight='';
       }
-    } else if(m.id==='filter-panel'){
-      const topPos = headerH + subH + safeTop;
-      if(window.innerWidth < 450){
-        content.style.left='0';
-        content.style.right='0';
-        content.style.top=`${topPos}px`;
-        content.style.bottom=`${footerH}px`;
-        content.style.transform='none';
-        content.style.maxHeight='';
-      } else {
-        const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left='0';
-        content.style.right='';
-        content.style.top=`${topPos}px`;
-        content.style.bottom='';
-        content.style.transform='none';
-        content.style.maxHeight=`${availableHeight}px`;
-      }
+      } else if(m.id==='filter-panel'){
+        const topPos = headerH + safeTop;
+        if(window.innerWidth < 450){
+          content.style.left='0';
+          content.style.right='0';
+          content.style.top=`${topPos}px`;
+          content.style.bottom=`${footerH}px`;
+          content.style.transform='none';
+          content.style.maxHeight='';
+        } else {
+          const availableHeight = window.innerHeight - footerH - topPos;
+          content.style.left='0';
+          content.style.right='';
+          content.style.top=`${topPos}px`;
+          content.style.bottom='';
+          content.style.transform='none';
+          content.style.maxHeight=`${availableHeight}px`;
+        }
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
         scrollCalendarToToday();
@@ -6140,7 +6137,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     }
   });
 
-  const adminTabs = document.querySelectorAll('#admin-panel .panel-subheader button');
+  const adminTabs = document.querySelectorAll('#admin-panel .tab-bar button');
   const adminPanels = document.querySelectorAll('#admin-panel .tab-panel');
   adminTabs.forEach(btn=>{
     btn.addEventListener('click', ()=>{
