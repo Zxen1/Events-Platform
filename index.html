@@ -3141,8 +3141,17 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
                 <option value="storm">Storm</option>
                 <option value="twilight">Twilight</option>
                 <option value="sunrise">Sunrise</option>
-                <option value="rainbow">Rainbow</option>
+              <option value="rainbow">Rainbow</option>
               </select>
+            </div>
+            <div class="panel-field">
+              <div class="option-label">
+                <span>Dynamic Sunlight</span>
+                <label class="switch">
+                  <input type="checkbox" id="dynamicSun" />
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
             <div class="panel-field">
               <label for="spinSpeed">Spin speed</label>
@@ -3350,10 +3359,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
+          dynamicSun = localStorage.getItem('dynamicSun') !== 'false',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '';
+          clusterSvg = localStorage.getItem('clusterSvg') || '',
+          updateSunLight = () => {};
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
         logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
@@ -4572,13 +4583,25 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
-      function updateSunLight(){
-        if(typeof SunCalc === 'undefined' || typeof map.setLight !== 'function') return;
+      updateSunLight = function(){
+        if(!map || typeof map.setLight !== 'function') return;
+        if(!dynamicSun){
+          map.setLight({anchor:'map', position:[180,50]});
+          if(mapStyle.endsWith('/standard')){
+            try{ map.setConfigProperty('basemap','lightPreset','day'); }catch{}
+          }
+          return;
+        }
+        if(typeof SunCalc === 'undefined') return;
         const center = map.getCenter();
         const pos = SunCalc.getPosition(new Date(), center.lat, center.lng);
         const azimuth = 180 + pos.azimuth * 180 / Math.PI;
         const altitude = 90 - pos.altitude * 180 / Math.PI;
         map.setLight({anchor:'map', position:[azimuth, altitude]});
+        if(mapStyle.endsWith('/standard')){
+          const preset = pos.altitude <= 0 ? 'night' : 'day';
+          try{ map.setConfigProperty('basemap','lightPreset', preset); }catch{}
+        }
       }
       addGeocoder();
       addMemberGeocoder();
@@ -6229,6 +6252,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           const typeRadios = document.querySelectorAll("#spinType input");
           const logoClickChk = document.getElementById("spinLogoClick");
           const themeSelect = document.getElementById("mapTheme");
+          const sunChk = document.getElementById("dynamicSun");
           const pitchInput = document.getElementById("mapPitch");
           const pitchVal = document.getElementById("pitchVal");
           const bearingInput = document.getElementById("mapBearing");
@@ -6253,6 +6277,14 @@ document.addEventListener('pointerdown', handleDocInteract);
               skyStyle = window.skyStyle = skySelect.value;
               localStorage.setItem("skyStyle", skyStyle);
               if(map) applySky(skyStyle);
+          });
+        }
+        if(sunChk){
+          sunChk.checked = dynamicSun;
+          sunChk.addEventListener("change", ()=>{
+            dynamicSun = sunChk.checked;
+            localStorage.setItem("dynamicSun", JSON.stringify(dynamicSun));
+            updateSunLight();
           });
         }
         if(speedInput && speedVal){
