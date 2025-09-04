@@ -3834,6 +3834,69 @@ function makePosts(){
       return `data:image/svg+xml;charset=UTF-8,` + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='${color}'/></svg>`);
     }
 
+    const lazyLoader = (()=>{
+      const queues = Array.from({length:7},()=>[]);
+      const obs = new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            const img = entry.target;
+            const pr = parseInt(img.dataset.priority||'7',10);
+            queues[pr-1].push(img);
+            obs.unobserve(img);
+          }
+        });
+        process();
+      },{rootMargin:'0px 0px 200px 0px'});
+      function process(){
+        for(let i=0;i<queues.length;i++){
+          const img = queues[i].shift();
+          if(img){
+            const src = img.dataset.src || img.dataset.full;
+            if(src){
+              img.addEventListener('load',process,{once:true});
+              img.src = src;
+              img.removeAttribute('data-src');
+              img.removeAttribute('data-full');
+              img.classList.remove('lqip');
+            } else {
+              process();
+            }
+            return;
+          }
+        }
+      }
+      function add(img, priority){
+        if(!img) return;
+        img.dataset.priority = priority;
+        if(img.dataset.preload==='true'){
+          queues[priority-1].push(img);
+          process();
+        } else {
+          obs.observe(img);
+        }
+      }
+      function preload(src, priority){
+        const img = new Image();
+        img.dataset.src = src;
+        img.dataset.preload = 'true';
+        add(img, priority);
+      }
+      function scan(){
+        document.querySelectorAll('img[data-src][data-priority]').forEach(img=> add(img, parseInt(img.dataset.priority,10)));
+      }
+      return {add, preload, scan};
+    })();
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      lazyLoader.scan();
+      const adImgs = document.querySelectorAll('.ad-panel img');
+      adImgs.forEach((img,idx)=>{
+        const pr = 7;
+        if(idx < 3) img.dataset.preload='true';
+        lazyLoader.add(img, pr);
+      });
+    });
+
     function hoverHTML(p){
       return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
@@ -4924,39 +4987,13 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
-      roots.forEach(root => {
-        if(!root) return;
-        const imgs = root.querySelectorAll('img.thumb');
-        if(!imgs.length) return;
-        if('IntersectionObserver' in window){
-          const obs = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-              if(entry.isIntersecting){
-                const img = entry.target;
-                if(img.dataset.src){
-                  img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
-                  img.src = img.dataset.src;
-                  thumbCache[img.closest('.card').dataset.id] = img.src;
-                  img.removeAttribute('data-src');
-                }
-                img.fetchPriority = 'high';
-                obs.unobserve(img);
-              }
-            });
-          }, {root});
-          imgs.forEach(img => obs.observe(img));
-        } else {
-          imgs.forEach(img => {
-            img.loading = 'lazy';
-            if(img.dataset.src){
-              img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
-              img.src = img.dataset.src;
-              thumbCache[img.closest('.card').dataset.id] = img.src;
-              img.removeAttribute('data-src');
-            }
-          });
-        }
+      document.querySelectorAll('.post-panel img.thumb').forEach(img=>{
+        if(img.dataset.src) img.classList.add('lqip');
+        lazyLoader.add(img,3);
+      });
+      document.querySelectorAll('.list-panel img.thumb').forEach(img=>{
+        if(img.dataset.src) img.classList.add('lqip');
+        lazyLoader.add(img,4);
       });
     }
 
@@ -5081,11 +5118,12 @@ function makePosts(){
           el.className='chip-small foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
-            const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-            el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
-          if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
-          footRow.appendChild(el);
+        const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+        el.innerHTML = `<img class="mini lqip" src="${svgPlaceholder(v.id)}" data-src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+        if(v.id===activePostId) el.setAttribute('aria-selected','true');
+        el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
+        footRow.appendChild(el);
+        lazyLoader.add(el.querySelector('img'),5);
         }
       // scroll to the far right to reveal the newest
       footRow.scrollLeft = footRow.scrollWidth;
@@ -5109,7 +5147,7 @@ function makePosts(){
         </div>
         <div class="body">
           <div class="img-area">
-            <div class="img-box"><img id="hero-img" class="lqip" src="${svgPlaceholder(p.id)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
+            <div class="img-box"><img id="hero-img" class="lqip" src="${svgPlaceholder(p.id)}" data-src="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
             <div class="thumb-column"></div>
           </div>
           <div class="text">
@@ -5134,22 +5172,11 @@ function makePosts(){
             <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
           </div>
         </div>`;
-        // progressive hero swap
-        (function(){
-          const img = wrap.querySelector('#hero-img');
-          if(img){
-            const full = img.getAttribute('data-full');
-            const hi = new Image();
-            hi.referrerPolicy = 'no-referrer';
-            hi.fetchPriority = 'high';
-            hi.onload = ()=>{
-              const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
-              if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-            };
-            hi.onerror = ()=>{};
-            hi.src = full;
-          }
-        })();
+        const hero = wrap.querySelector('#hero-img');
+        if(hero){
+          hero.addEventListener('load',()=> hero.classList.add('ready'));
+          lazyLoader.add(hero,1);
+        }
         return wrap;
     }
 
@@ -5277,41 +5304,29 @@ function makePosts(){
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
-        t.src = url;
-        t.dataset.full = url;
+        t.className = 'lqip';
+        t.src = svgPlaceholder(p.id);
+        t.dataset.src = url;
         t.dataset.index = i;
         t.tabIndex = 0;
         thumbCol.appendChild(t);
+        lazyLoader.add(t,2);
+        if(i>0) lazyLoader.preload(url,6);
       });
+      mainImg.dataset.index = 0;
+      const firstThumb = thumbCol.querySelector('img[data-index="0"]');
+      if(firstThumb) firstThumb.classList.add('selected');
+      setupHorizontalWheel(thumbCol);
       function show(idx){
-        const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
-        if(!t) return;
-        mainImg.src = t.src;
+        const url = imgs[idx];
+        mainImg.src = url;
         mainImg.dataset.index = idx;
-        mainImg.classList.remove('ready');
-        mainImg.classList.add('lqip');
-        const hi = new Image();
-        const full = t.dataset.full;
-        hi.onload = ()=>{
-          const swap = ()=>{
-            if(mainImg.dataset.index==idx){
-              mainImg.src = full;
-              mainImg.classList.remove('lqip');
-              mainImg.classList.add('ready');
-            }
-          };
-          if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-        };
-      hi.onerror = ()=>{};
-      hi.src = full;
-      thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
-    }
-    show(0);
-    setupHorizontalWheel(thumbCol);
-    thumbCol.addEventListener('click', e=>{
-      const t = e.target.closest('img');
-      if(t) show(parseInt(t.dataset.index,10));
-    });
+        thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', parseInt(im.dataset.index,10)===idx));
+      }
+      thumbCol.addEventListener('click', e=>{
+        const t = e.target.closest('img');
+        if(t) show(parseInt(t.dataset.index,10));
+      });
       thumbCol.addEventListener('keydown', e=>{
         const cur = parseInt(mainImg.dataset.index||'0',10);
         if(e.key==='ArrowDown'){
