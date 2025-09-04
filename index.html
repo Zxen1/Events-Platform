@@ -3362,7 +3362,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       function toggleWelcome(){
         const popup = document.getElementById('welcomePopup');
         if(popup.classList.contains('show')){
-          closePanel(popup);
+          requestClosePanel(popup);
         } else {
           openWelcome();
         }
@@ -4604,7 +4604,7 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 5) return;
-      if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
+      if(typeof filterPanel !== 'undefined' && filterPanel) requestClosePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
@@ -5877,7 +5877,7 @@ function closePanel(m){
 }
   function requestClosePanel(m){
     const content = m && m.querySelector('.panel-content');
-    if(content && ['admin-panel','member-panel','filter-panel'].includes(m.id)){
+    if(content){
       const rect = content.getBoundingClientRect();
       const distLeft = rect.left;
       const distRight = window.innerWidth - rect.right;
@@ -5907,15 +5907,23 @@ function movePanelToEdge(panel, side){
   if(!content) return;
   const header = document.querySelector('.header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
+  const rect = content.getBoundingClientRect();
+  const targetLeft = side === 'left' ? 0 : window.innerWidth - rect.width;
+  const delta = targetLeft - rect.left;
   content.style.top = `${topPos}px`;
-  content.style.transform = 'none';
-  if(side === 'left'){
-    content.style.left = '0';
-    content.style.right = '';
-  } else {
-    content.style.left = '';
-    content.style.right = '0';
-  }
+  content.style.transition = 'transform 0.3s ease';
+  content.style.transform = `translateX(${delta}px)`;
+  content.addEventListener('transitionend', ()=>{
+    content.style.transition = '';
+    content.style.transform = '';
+    if(side === 'left'){
+      content.style.left = '0';
+      content.style.right = '';
+    } else {
+      content.style.left = '';
+      content.style.right = '0';
+    }
+  }, {once:true});
 }
 function repositionPanels(){
   ['admin-panel','member-panel','filter-panel'].forEach(id=>{
@@ -5962,7 +5970,7 @@ function handleDocInteract(e){
   if(welcome && welcome.classList.contains('show')){
     const content = welcome.querySelector('.panel-content');
     if(content && !content.contains(e.target)){
-      closePanel(welcome);
+      requestClosePanel(welcome);
     }
   }
   document.querySelectorAll('.img-popup').forEach(p=>{
