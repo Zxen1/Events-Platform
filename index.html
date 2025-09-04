@@ -76,7 +76,7 @@
         --session-available: #92D0F7;
         --session-selected: #009FFF;
         --today: #ff0000;
-        --ad-panel-bg: rgba(0,0,0,0.5);
+        --ad-panel-bg: rgba(0,0,0,1);
         --image-panel-bg: rgba(0,0,0,0.7);
         --filter-active-color: #ff0000;
       --keyword-bg: #FFFFFF;
@@ -2755,12 +2755,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   bottom: var(--footer-h);
   width:400px;
   right: var(--gap);
-  background: rgba(0,0,0,0.5);
+  background: var(--ad-panel-bg);
   z-index:5;
   border-radius:8px;
   overflow:hidden;
   pointer-events:none;
-  padding:8px;
+  padding:10px;
   transform:translateX(calc(100% + var(--gap)));
   transition:transform .3s ease;
   cursor:pointer;
