@@ -5878,7 +5878,12 @@ function openPanel(m){
       content.style.top='50%';
       content.style.transform='translate(-50%, -50%)';
     }
-    if(m.id !== 'welcomePopup' && !['admin-panel','member-panel','filter-panel'].includes(m.id)) loadPanelState(m);
+    if(
+      m.id !== 'welcomePopup' &&
+      (window.innerWidth >= 450 || !['admin-panel','member-panel','filter-panel'].includes(m.id))
+    ){
+      loadPanelState(m);
+    }
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
