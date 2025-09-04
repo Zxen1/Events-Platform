@@ -4304,7 +4304,7 @@ function makePosts(){
         localStorage.setItem('spinGlobe','false');
         stopSpin();
       }
-      applyFilters();
+      localStorage.setItem('mode', m);
     }
     window.setMode = setMode;
     $('#mapPostsToggle').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
@@ -4867,7 +4867,7 @@ function makePosts(){
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
 
     }
-    function renderLists(list){
+    function renderLists(list, renderResults = true){
       if(spinning) return;
       const sort = currentSort;
       const arr = list.slice();
@@ -4892,14 +4892,17 @@ function makePosts(){
         toRender = arr.slice(0, max);
       }
 
-      resultsEl.innerHTML = '';
+      if(renderResults) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
-      toRender.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
-      if(activePostId){
+      toRender.forEach(p => {
+        if(renderResults) resultsEl.appendChild(card(p));
+        postsWideEl.appendChild(card(p, true));
+      });
+      if(renderResults && activePostId){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
       }
-      updateResultCount(spinning ? arr.length : toRender.length);
+      if(renderResults) updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
@@ -5149,7 +5152,7 @@ function makePosts(){
         await nextFrame();
       }
 
-      if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
+      if(!postsWideEl.children.length){ renderLists(filtered, false); await nextFrame(); }
 
       (function(){
         const ex = postsWideEl.querySelector('.open-posts');
@@ -5161,7 +5164,7 @@ function makePosts(){
       })();
 
       let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
+      if(!target){ renderLists(filtered, false); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
       if(!target){ return; }
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
@@ -5606,7 +5609,8 @@ function makePosts(){
     }
 
     applyFilters();
-    setMode('map');
+    const savedMode = localStorage.getItem('mode');
+    if(savedMode){ setMode(savedMode); }
   })();
   
 // 0577 helpers (safety)
