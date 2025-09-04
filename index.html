@@ -1326,6 +1326,7 @@ button[aria-expanded="true"] .results-arrow{
   width: var(--results-w);
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   padding: 10px;
   background: rgba(0,0,0,0.5);
   transition: width .3s ease, padding .3s ease;
@@ -1366,6 +1367,7 @@ body.filters-active #filterBtn{
   overflow: auto;
   flex: 1;
   min-height: 0;
+  height: 100%;
   scrollbar-gutter: stable;
 }
 
@@ -3414,14 +3416,15 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       const rootStyles = getComputedStyle(document.documentElement);
       const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
       const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
-      const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-      const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-      const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
+    const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+    const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
       document.querySelectorAll('.res-list, .posts').forEach(list=>{
+        list.style.height = `${availableHeight}px`;
         list.style.maxHeight = `${availableHeight}px`;
       });
-    }
-    window.adjustListHeight = adjustListHeight;
+  }
+  window.adjustListHeight = adjustListHeight;
 
     function updateStickyImages(){
       const root = document.documentElement;
