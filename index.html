@@ -69,7 +69,7 @@
         --dropdown-venue-text: #ffffff;
         --dropdown-radius: 4px;
         --calendar-width: 400px;
-        --calendar-height: 250px;
+        --calendar-height: 200px;
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
         --calendar-header-h: var(--calendar-cell-h);
@@ -2224,7 +2224,8 @@ body.hide-results .post-panel{
   align-items:center;
   justify-content:center;
   text-align:center;
-  font-weight:bold;
+  font-size:14px;
+  font-weight:normal;
 }
 .open-posts .post-calendar .weekday,
 .open-posts .post-calendar .day{
@@ -2233,6 +2234,9 @@ body.hide-results .post-panel{
   display:flex;
   align-items:center;
   justify-content:center;
+}
+.open-posts .post-calendar .weekday{
+  font-size:10px;
 }
 .open-posts .post-calendar .day{
   cursor:pointer;
