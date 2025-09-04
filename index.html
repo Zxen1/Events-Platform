@@ -3139,12 +3139,13 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     const DEFAULT_WELCOME = '<p>Welcome to Funmap!</p><p>Choose an area on the map to search for events and listings.</p><p>Click the Filters button to refine your search.</p>';
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
-    const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
-    const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
-    const startCenter = savedView?.center || defaultCenter;
-    const startZoom = savedView?.zoom || 1.5;
-    startPitch = window.startPitch = savedView?.pitch || 0;
-    startBearing = window.startBearing = savedView?.bearing || 0;
+      let savedView;
+      try{ savedView = JSON.parse(localStorage.getItem('mapView') || 'null'); }catch{ savedView = null; }
+      const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
+      const startCenter = (savedView && Array.isArray(savedView.center) && savedView.center.length===2 && savedView.center.every(Number.isFinite)) ? savedView.center : defaultCenter;
+      const startZoom = (savedView && Number.isFinite(savedView.zoom)) ? savedView.zoom : 1.5;
+      startPitch = window.startPitch = (savedView && Number.isFinite(savedView.pitch)) ? savedView.pitch : 0;
+      startBearing = window.startBearing = (savedView && Number.isFinite(savedView.bearing)) ? savedView.bearing : 0;
 
     const thumbCache = {};
 
