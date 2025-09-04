@@ -667,14 +667,11 @@ button[aria-expanded="true"] .results-arrow{
   flex:0 0 auto;
   width:var(--calendar-width);
   height:var(--calendar-height);
-  display:flex;
-  flex-direction:column;
 }
 .calendar .month:not(:first-child){
   border-left:1px solid var(--calendar-past-bg);
 }
 .calendar .grid{
-  flex:1 1 auto;
   width:100%;
   height:calc(var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h));
   display:grid;
