@@ -573,8 +573,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:0;
 }
   #admin-panel .panel-content,
-  #member-panel .panel-content,
-  #filter-panel .panel-content{
+  #member-panel .panel-content{
     width:420px;
     height:calc(100vh - var(--header-h) - var(--safe-top));
     padding:10px;
@@ -584,7 +583,13 @@ button[aria-expanded="true"] .results-arrow{
     transition:transform 0.3s ease;
   }
   #filter-panel .panel-content{
-    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+    width:420px;
+    height:100vh;
+    padding:10px;
+    box-sizing:border-box;
+    background:#333333;
+    color:#fff;
+    transition:transform 0.3s ease;
   }
 
 #filter-panel button,
@@ -3335,14 +3340,16 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       const root = document.documentElement;
       const body = document.querySelector('.open-posts .body');
       const imgArea = body ? body.querySelector('.img-area') : null;
+      const mapContainer = body ? body.querySelector('.map-container') : null;
+      const calContainer = body ? body.querySelector('.calendar-container') : null;
       const text = body ? body.querySelector('.text') : null;
-      const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
+      const mapBelow = mapContainer && imgArea ? mapContainer.offsetTop > imgArea.offsetTop : false;
+      const calBelow = calContainer && imgArea ? calContainer.offsetTop > imgArea.offsetTop : false;
+      const isBelow = mapBelow && calBelow;
       root.classList.toggle('hide-map-calendar', isBelow);
       if(body && text){
         const venueDropdown = body.querySelector('.venue-dropdown');
         const sessionDropdown = body.querySelector('.session-dropdown');
-        const mapContainer = body.querySelector('.map-container');
-        const calContainer = body.querySelector('.calendar-container');
         const titleEl = text.querySelector('.title');
         if(isBelow){
           if(venueDropdown && venueDropdown.parentElement !== text && titleEl){
@@ -5802,22 +5809,20 @@ function openPanel(m){
         content.style.maxHeight='';
       }
     } else if(m.id==='filter-panel'){
-      const topPos = headerH + safeTop;
       if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
-        content.style.top=`${topPos}px`;
-        content.style.bottom=`${footerH}px`;
+        content.style.top='0';
+        content.style.bottom='0';
         content.style.transform='none';
         content.style.maxHeight='';
       } else {
-        const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left='0';
         content.style.right='';
-        content.style.top=`${topPos}px`;
+        content.style.top='0';
         content.style.bottom='';
         content.style.transform='none';
-        content.style.maxHeight=`${availableHeight}px`;
+        content.style.maxHeight='';
       }
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
@@ -6016,7 +6021,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     if(!content || !header) return;
     let dragging = false;
     let offsetX = 0, offsetY = 0, startTop = 0;
-    const lockY = ['admin-panel','member-panel','filter-panel'].includes(panel.id);
+    const lockY = ['admin-panel','member-panel'].includes(panel.id);
       header.addEventListener('mousedown', e=>{
         if(window.innerWidth < 450) return;
         dragging = true;
