@@ -4531,9 +4531,9 @@ function makePosts(){
       }
 
     function startSpin(fromCurrent=false){
-      if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 5) return;
+      if(mode!=='map') setMode('map');
       if(typeof filterPanel !== 'undefined' && filterPanel) requestClosePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
