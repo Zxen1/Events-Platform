@@ -37,7 +37,7 @@
       --panel-bg: #444444;
       --panel-text: #000000;
       --footer-h: 70px;
-      --list-background: #555555;
+      --list-background: rgba(0,0,0,0.5);
       --closed-card-bg: #555555;
       --scrollbar-track: rgba(0,0,0,0);
       --scrollbar-thumb: rgba(0,0,0,0.3);
@@ -3318,10 +3318,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
-          clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
-          clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
+          clusterRadius = parseInt(localStorage.getItem('clusterRadius'), 10),
+          clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom'), 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
+        if(isNaN(clusterRadius)) clusterRadius = 52;
+        if(isNaN(clusterMaxZoom)) clusterMaxZoom = 14;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
         logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
