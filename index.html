@@ -3404,14 +3404,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     let listLocked = false;
     let lastListOpenAt = 0;
     function lockMap(lock){
+      // Track lock state without disabling map interactions
+      // so the map remains fluid and doesn't get stuck.
       listLocked = lock;
-      const fn = lock ? 'disable' : 'enable';
-      try{ map.dragPan[fn](); }catch{}
-      try{ map.scrollZoom[fn](); }catch{}
-      try{ map.boxZoom[fn](); }catch{}
-      try{ map.keyboard[fn](); }catch{}
-      try{ map.doubleClickZoom[fn](); }catch{}
-      try{ map.touchZoomRotate[fn](); }catch{}
     }
     function getClusterLeavesAll(sourceId, clusterId){
       return new Promise((resolve, reject)=>{
