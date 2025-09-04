@@ -1321,9 +1321,9 @@ button[aria-expanded="true"] .results-arrow{
 .list-panel{
   position: fixed;
   top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
-  bottom: var(--footer-h);
   left: var(--gap);
   width: var(--results-w);
+  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -2745,6 +2745,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius: inherit;
   padding:0;
   margin:0;
+  flex:1;
+  overflow-y:auto;
 }
 
 
