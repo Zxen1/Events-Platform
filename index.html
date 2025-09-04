@@ -3207,51 +3207,13 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
           </div>
         </div>
         <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="theme" aria-selected="true">Theme</button>
-          <button type="button" class="tab-btn" data-tab="map">Map</button>
+          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
           <button type="button" class="tab-btn" data-tab="forms">Forms</button>
         </div>
       </div>
       <form id="adminForm" class="panel-body">
-        <div id="tab-theme" class="tab-panel active">
-          <div id="themePresetsContainer" class="admin-section">
-            <h3 class="title">Theme Presets</h3>
-            <div class="panel-field">
-              <label for="themePreset">Themes</label>
-              <div class="preset-select">
-                <select id="themePreset" style="width:250px"></select>
-                <button type="button" id="refreshTheme">Refresh</button>
-              </div>
-            </div>
-            <div class="preset-actions">
-              <input id="newPresetName" type="text" placeholder="Name of your new theme" />
-              <button type="button" id="savePreset">Save Theme</button>
-              <button type="button" id="downloadCss">Download CSS</button>
-            </div>
-          </div>
-          <div id="themeBuilderContainer" class="admin-section">
-            <h3 class="title">Theme Builder</h3>
-            <div id="styleControls">
-              <div id="undo-row" class="history-group">
-                <button type="button" id="undoBtn">Undo</button>
-                <button type="button" id="redoBtn">Redo</button>
-              </div>
-              <div id="autoTheme-row">
-                <button type="button" id="autoThemeBtn">AutoTheme</button>
-                <input type="color" id="baseColor" value="#336699" />
-              </div>
-            </div>
-          </div>
-          <div id="backupRestoreContainer" class="admin-section">
-            <div class="panel-field">
-              <label for="themeRestore">Restore Backup</label>
-              <select id="themeRestore" style="width:250px"></select>
-              <button type="button" data-restore="theme">Restore</button>
-            </div>
-          </div>
-        </div>
-          <div id="tab-map" class="tab-panel">
+        <div id="tab-map" class="tab-panel active">
             <div class="panel-field">
               <label for="mapTheme">Theme</label>
               <select id="mapTheme">
@@ -7800,7 +7762,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     const saveBtn = document.getElementById('saveNow');
     const discardBtn = document.getElementById('discardChanges');
     const adminClose = document.querySelector('#adminPanel .close-panel');
-    const tabPanels = ['theme','map','settings'];
+    const tabPanels = ['map','settings'];
     const savedData = {};
 
     function toHex(val){
