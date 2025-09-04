@@ -602,7 +602,7 @@ button[aria-expanded="true"] .results-arrow{
 
 #filter-panel .panel-body > *,
 #filter-panel .field{
-  width:400px;
+  width:300px;
 }
 #admin-panel button{
   height:35px;
@@ -1034,6 +1034,10 @@ button[aria-expanded="true"] .results-arrow{
 
 .field > *:last-child{
   margin-left:auto;
+}
+
+#filter-panel .sort-field > *:last-child{
+  margin-left:0;
 }
 
 .field .input{
@@ -2883,28 +2887,22 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         </div>
       </div>
       <div class="panel-body">
-        <div id="geocoder" class="geocoder"></div>
-        <section class="filters-col" aria-label="Filters">
-          <div id="filterSummary" class="filter-summary"></div>
-          <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
-            </div>
-          </div>
-          <div class="field sort-field">
-            <label for="optionsBtn">Sort Results</label>
-            <div class="options-dropdown">
-              <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
-              <div id="optionsMenu" class="options-menu" hidden>
-                <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-                <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                  <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-                  <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-                  <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
-                </div>
+        <div class="field sort-field">
+          <div class="options-dropdown">
+            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
+            <div id="optionsMenu" class="options-menu" hidden>
+              <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+                <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
+                <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
+                <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
               </div>
             </div>
           </div>
+        </div>
+        <div id="geocoder" class="geocoder"></div>
+        <section class="filters-col" aria-label="Filters">
+          <div id="filterSummary" class="filter-summary"></div>
           <div class="field">
             <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
               <div class="x" role="button" aria-label="Clear keywords">X</div>
@@ -2926,6 +2924,11 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
             <div id="datePicker"></div>
           </div>
           <div class="cats" id="cats" aria-label="Categories"></div>
+          <div class="reset-box">
+            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+              Reset All Filters
+            </div>
+          </div>
         </section>
       </div>
     </div>
