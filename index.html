@@ -4621,8 +4621,8 @@ function makePosts(){
       if(fromCurrent){
         requestAnimationFrame(step);
       }else{
-        map.easeTo({center:[0,0], zoom:startZoom, pitch:0, essential:true});
-        map.once('moveend', () => requestAnimationFrame(step));
+        map.jumpTo({center:[0,0], zoom:startZoom, pitch:0});
+        requestAnimationFrame(step);
       }
     }
     function stopSpin(){
