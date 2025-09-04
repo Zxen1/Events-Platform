@@ -11,6 +11,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet" />
   <style>:root{
   --header-h: 75px;
   --panel-w: 420px;
@@ -76,7 +77,6 @@
         --session-available: #92D0F7;
         --session-selected: #009FFF;
         --today: #ff0000;
-        --ad-panel-bg: rgba(0,0,0,1);
         --image-panel-bg: rgba(0,0,0,0.7);
         --filter-active-color: #ff0000;
       --keyword-bg: #FFFFFF;
@@ -1657,7 +1657,6 @@ body.filters-active #filterBtn{
 .post-panel .open-posts{background:var(--closed-card-bg);}
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-panel .open-posts{margin-top:12px}
-.post-panel.ad-space{right:calc(400px + var(--gap) * 2);}
 
 body.hide-results .post-panel{
   left:0;
@@ -2733,78 +2732,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 
-.ad-panel{
-  position:fixed;
-  top: calc(var(--header-h) + var(--safe-top));
-  bottom: var(--footer-h);
-  width:420px;
-  right: var(--gap);
-  background: var(--ad-panel-bg);
-  z-index:5;
-  border-radius:8px;
-  overflow:hidden;
-  pointer-events:none;
-  padding:10px;
-  transform:translateX(calc(100% + var(--gap)));
-  transition:transform .3s ease;
-  cursor:pointer;
-}
-
-.ad-panel.show{
-  pointer-events:auto;
-  transform:translateX(0);
-}
-
-.ad-panel .ad-slide{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  transition:opacity 1.5s ease-in-out;
-  cursor:pointer;
-  border-radius:8px;
-  overflow:hidden;
-}
-
-.ad-panel .ad-slide.active{opacity:1;}
-
-.ad-panel .ad-slide img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  animation:pan 20s linear forwards;
-}
-
-.ad-panel .caption{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:12px;
-  background:linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
-  color:#fff;
-  text-shadow:0 1px 2px rgba(0,0,0,0.8);
-  font-size:13px;
-  display:flex;
-  flex-direction:column;
-  text-align:left;
-}
-
-.ad-panel .caption .title{
-  font-weight:900;
-  margin:0 0 4px;
-}
-
-.ad-panel .caption .info{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  align-items:flex-start;
-}
-
-@keyframes pan{
-  from{transform:scale(1) translateX(0);}
-  to{transform:scale(1.1) translateX(-5%);}
-}
 
 .mode-posts #postsWide{
   border: none;
@@ -2926,7 +2853,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     <div class="posts" id="postsWide"></div>
   </section>
 
-  <section id="ad-panel" class="ad-panel" aria-label="Advertisement"></section>
 
 
     <footer>
@@ -3386,7 +3312,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
-    let adPosts = [], adIndex = -1, adTimer;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -4320,13 +4245,11 @@ function makePosts(){
         listPanel.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
-        if(window.updateAdVisibility) updateAdVisibility();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
           }
-          if(window.updateAdVisibility) updateAdVisibility();
         }, 310);
       });
 
@@ -4343,7 +4266,6 @@ function makePosts(){
           resultsToggle.setAttribute('aria-pressed','false');
           listPanel.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
-          if(window.updateAdVisibility) updateAdVisibility();
           setMode('map');
         }
       });
@@ -4383,7 +4305,6 @@ function makePosts(){
         stopSpin();
       }
       applyFilters();
-      if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
     $('#mapPostsToggle').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
@@ -4980,7 +4901,6 @@ function makePosts(){
       }
       updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
-      updateAds(arr);
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
@@ -5024,64 +4944,6 @@ function makePosts(){
         }
       });
     }
-
-      function updateAds(list){
-        const panel = document.getElementById('ad-panel');
-        stopAdCycle();
-        panel.innerHTML = '';
-        if(window.innerWidth < 1200 || !list.length){
-          adPosts = [];
-          if(typeof updateAdVisibility === 'function') updateAdVisibility();
-          return;
-        }
-        adPosts = list.slice();
-        adIndex = -1;
-        startAdCycle();
-      }
-    function startAdCycle(){
-      const panel = document.getElementById('ad-panel');
-      if(!panel.classList.contains('show') || !adPosts.length || adTimer) return;
-      showNextAd();
-      adTimer = setInterval(showNextAd,20000);
-    }
-    function stopAdCycle(){ clearInterval(adTimer); adTimer = null; }
-    function showNextAd(){
-      const panel = document.getElementById('ad-panel');
-      if(!panel.classList.contains('show') || !adPosts.length) return;
-      adIndex = (adIndex + 1) % adPosts.length;
-      const p = adPosts[adIndex];
-      const slide = document.createElement('div');
-      slide.className = 'ad-slide';
-      const img = new Image();
-      img.src = imgHero(p);
-      img.alt = '';
-      img.loading = 'eager';
-      const cap = document.createElement('div');
-      cap.className = 'caption';
-      cap.innerHTML = `
-        <div class="title">${p.title}</div>
-        <div class="info">
-          <div>${p.category} &gt; ${p.subcategory}</div>
-          <div>📍 ${p.city}</div>
-          <div>📅 ${formatDates(p.dates)}</div>
-        </div>`;
-      slide.appendChild(img);
-      slide.appendChild(cap);
-      slide.addEventListener('click', e => { e.stopPropagation(); openPost(p.id); });
-      img.decode().catch(() => {}).then(() => {
-        panel.appendChild(slide);
-        requestAnimationFrame(()=> slide.classList.add('active'));
-        const slides = panel.querySelectorAll('.ad-slide');
-        if(slides.length > 1){
-          const old = slides[0];
-          old.classList.remove('active');
-          setTimeout(()=> old.remove(),1500);
-        }
-      });
-    }
-
-    window.startAdCycle = startAdCycle;
-    window.stopAdCycle = stopAdCycle;
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -6161,7 +6023,6 @@ document.addEventListener('pointerdown', handleDocInteract);
   {key:'admin-panel', label:'Admin Panel', selectors:{bg:['#admin-panel .panel-content'], text:['#admin-panel .panel-content'], title:['#admin-panel .panel-content .t','#admin-panel .panel-content .title'], btn:['#admin-panel button','#admin-panel #spinType span'], btnText:['#admin-panel button','#admin-panel #spinType span']}},
   {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
   {key:'member-panel', label:'Member Panel', selectors:{bg:['#member-panel .panel-content'], text:['#member-panel .panel-content'], title:['#member-panel .panel-content .t','#member-panel .panel-content .title'], btn:['#member-panel button'], btnText:['#member-panel button']}},
-  {key:'ad-panel', label:'Ad Panel', selectors:{bg:['#ad-panel']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
   let lastFieldsetKey = null;
@@ -6822,42 +6683,12 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const adPanel = document.getElementById('ad-panel');
   const postsPanel = document.querySelector('.post-panel');
-  if(adPanel){
-    adPanel.addEventListener('click', e => {
-      if(e.target === adPanel) setMode('map');
-    });
-  }
   if(postsPanel){
     postsPanel.addEventListener('click', e => {
       if(e.target === postsPanel) setMode('map');
     });
   }
-  window.updateAdVisibility = function(){
-    if(!adPanel || !postsPanel) return;
-    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const width = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
-    const hasPosts = !!postsPanel.querySelector('.card');
-    const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
-    const isShown = adPanel.classList.contains('show');
-    if(shouldShow === isShown) return;
-    if(shouldShow){
-      adPanel.classList.add('show');
-      postsPanel.classList.add('ad-space');
-      startAdCycle();
-    } else {
-      adPanel.classList.remove('show');
-      postsPanel.classList.remove('ad-space');
-      stopAdCycle();
-    }
-  };
-  window.addEventListener('resize', updateAdVisibility);
-  if(postsPanel && 'ResizeObserver' in window){
-    const ro = new ResizeObserver(() => updateAdVisibility());
-    ro.observe(postsPanel);
-  }
-  updateAdVisibility();
 });
 </script>
 </body>
