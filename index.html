@@ -3317,6 +3317,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
   <script>
   let startPitch, startBearing, logoEls = [];
 
@@ -4578,6 +4579,14 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
+      function updateSunLight(){
+        if(typeof SunCalc === 'undefined' || typeof map.setLight !== 'function') return;
+        const center = map.getCenter();
+        const pos = SunCalc.getPosition(new Date(), center.lat, center.lng);
+        const azimuth = 180 + pos.azimuth * 180 / Math.PI;
+        const altitude = 90 - pos.altitude * 180 / Math.PI;
+        map.setLight({anchor:'map', position:[azimuth, altitude]});
+      }
       addGeocoder();
       addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
@@ -4606,7 +4615,11 @@ function makePosts(){
       }catch{}
       map.on('style.load', () => {
         applySky(skyStyle);
+        updateSunLight();
       });
+      map.on('move', updateSunLight);
+      updateSunLight();
+      setInterval(updateSunLight, 60000);
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
         addPostSource();
