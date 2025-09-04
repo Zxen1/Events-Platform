@@ -4977,20 +4977,16 @@ function makePosts(){
       });
     }
 
-    function postPanelHasTwoColumns(){
-      const postsEl = document.querySelector('.post-panel .posts');
-      if(!postsEl) return false;
-      const first = postsEl.querySelector('.card');
-      if(!first) return false;
-      const cardWidth = first.getBoundingClientRect().width;
-      const containerWidth = postsEl.getBoundingClientRect().width;
-      return containerWidth >= cardWidth * 2;
+    function postPanelIsWide(){
+      const postPanel = document.querySelector('.post-panel');
+      if(!postPanel) return false;
+      return postPanel.getBoundingClientRect().width > 850;
     }
 
     function updateAdPanelVisibility(){
       const panel = $('#ad-panel');
       const postPanel = document.querySelector('.post-panel');
-      if(postPanelHasTwoColumns() && panel.children.length){
+      if(postPanelIsWide() && panel.children.length){
         panel.style.display = 'block';
         postPanel.style.right = '400px';
       } else {
