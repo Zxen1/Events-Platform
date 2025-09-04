@@ -1212,86 +1212,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 
-.cats{
-  margin:16px 0 0;
-}
-
-.cat{
-  display: grid;
-  grid-template-columns: 1fr 38px;
-  gap: 8px;
-  align-items: center;
-  margin: 8px 0;
-}
-
-.cat .bar{
-  height: 36px;
-  border-radius: 8px;
-  padding-left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  cursor: pointer;
-}
-
-.cat .bar .dot{
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-}
-
-.cat .bar .label{
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-
-.cat .cfg{
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  cursor: pointer;
-}
-
-.sub{
-  margin: 6px 0 0 6px;
-  display: none;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.sub .chip{
-  height: 28px;
-  display: inline-block;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  font-size: 12px;
-  color: var(--ink-d);
-  width: max-content;
-  cursor: pointer;
-  line-height: 28px;
-}
-.sub .chip .badge{
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
-}
-
-
-.cat[aria-expanded="true"] .sub{
-  display: grid;
-}
 
 .reset-box{
   display: grid;
@@ -2908,7 +2828,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
                 <span class="slider"></span>
               </label>
             </div>
-            <div class="cats" id="cats" aria-label="Categories"></div>
             <div class="reset-box">
               <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
                 Reset All Filters
@@ -3308,7 +3227,6 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     let postPanel = null;
     let posts = [], filtered = [];
     let favToTop = false, currentSort = 'az';
-    let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
@@ -3892,26 +3810,9 @@ function makePosts(){
       return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
-    // Categories UI
-    const catsEl = $('#cats');
-    categories.forEach(c=>{
-      const el = document.createElement('div'); el.className='cat'; el.setAttribute('role','group'); el.setAttribute('aria-expanded','false');
-      const bar = document.createElement('div'); bar.className='bar';
-      const dot = document.createElement('div'); dot.className='dot'; dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
-      const label = document.createElement('div'); label.className='label'; label.textContent=c.name;
-      const cfg = document.createElement('div'); cfg.className='cfg'; cfg.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>';
-      const sub = document.createElement('div'); sub.className='sub';
-      c.subs.forEach(s=>{ const chip=document.createElement('div'); chip.className='chip'; chip.innerHTML='<span class="badge"></span>'+s; chip.addEventListener('click',()=>{ chip.classList.toggle('on'); const key=c.name+'::'+s; if(selection.subs.has(key)) selection.subs.delete(key); else selection.subs.add(key); applyFilters(); }); sub.appendChild(chip); });
-      bar.appendChild(dot); bar.appendChild(label);
-      bar.addEventListener('click',()=>{ const ex = el.getAttribute('aria-expanded')==='true'; el.setAttribute('aria-expanded',ex?'false':'true'); if(ex){ selection.cats.delete(c.name); } else { selection.cats.add(c.name); } applyFilters(); });
-      el.appendChild(bar); el.appendChild(cfg); el.appendChild(sub); catsEl.appendChild(el);
-    });
 
     // Reset
     $('#resetBtn').addEventListener('click',()=>{
-      selection.cats.clear(); selection.subs.clear();
-      $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
-      $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
       $('#dateInput').value='';
       dateStart = null;
@@ -3941,9 +3842,8 @@ function makePosts(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
-      const cats = selection.cats.size > 0 || selection.subs.size > 0;
       const expired = $('#expiredToggle').checked;
-      return kw || hasDate || cats || expired;
+      return kw || hasDate || expired;
     }
 
     function updateFilterBtnColor(){
@@ -5120,8 +5020,6 @@ function makePosts(){
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
-        cats: [...selection.cats],
-        subs: [...selection.subs]
       };
     }
 
@@ -5157,18 +5055,6 @@ function makePosts(){
       expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
       updateInput();
-      selection.cats = new Set(st.cats || []);
-      selection.subs = new Set(st.subs || []);
-      $$('.cat').forEach(el=>{
-        const label = el.querySelector('.label').textContent;
-        const expanded = selection.cats.has(label);
-        el.setAttribute('aria-expanded', expanded?'true':'false');
-        el.querySelectorAll('.sub .chip').forEach(ch=>{
-          const subName = ch.textContent.trim();
-          const key = label+'::'+subName;
-          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
-        });
-      });
       if(map && st.bounds){
         stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
@@ -5706,10 +5592,9 @@ function makePosts(){
         return true;
       });
     }
-    function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
     function applyFilters(){
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
       const today = new Date(); today.setHours(0,0,0,0);
