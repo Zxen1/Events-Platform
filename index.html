@@ -502,9 +502,14 @@ button[aria-expanded="true"] .results-arrow{
   display:none;
   z-index:2000;
   pointer-events:none;
+  opacity:0;
+  transition:opacity 0.3s ease;
 }
 .panel.show{
   display:block;
+}
+.panel.visible{
+  opacity:1;
 }
 .panel-content{
   position:absolute;
@@ -516,6 +521,11 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+.panel.visible .panel-content{
+  opacity:1;
 }
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
@@ -708,6 +718,9 @@ button[aria-expanded="true"] .results-arrow{
   max-height:300px;
   height:auto;
   margin-bottom:10px;
+}
+#welcomePopup{
+  background:rgba(0,0,0,0.7);
 }
 #welcomePopup .panel-content{
   top:200px;
@@ -2197,12 +2210,24 @@ body.hide-results .post-panel{
   align-items:center;
   z-index:1000;
   pointer-events:auto;
+  opacity:0;
+  transition:opacity 0.3s ease;
+}
+.img-popup.visible{
+  opacity:1;
 }
 .img-popup img{
   max-width:90vw;
   max-height:90vh;
   cursor:pointer;
   pointer-events:auto;
+  transform:scale(0.9);
+  opacity:0;
+  transition:transform 0.3s ease, opacity 0.3s ease;
+}
+.img-popup.visible img{
+  transform:scale(1);
+  opacity:1;
 }
 
 .pill{
@@ -5443,7 +5468,10 @@ function makePosts(){
           imgEl.src = imgs[idx];
           imgEl.dataset.index = idx;
         }
-        const entry = {remove: ()=> panel.remove()};
+        const entry = {remove: ()=>{
+          panel.classList.remove('visible');
+          panel.addEventListener('transitionend', ()=> panel.remove(), {once:true});
+        }};
         panel._entry = entry;
         imgEl.addEventListener('click', e=>{ e.stopPropagation(); next(); });
         let startX = null;
@@ -5456,8 +5484,12 @@ function makePosts(){
           }
           startX = null;
         }, {passive:true});
-        panel.addEventListener('click', ()=>{ const i = panelStack.indexOf(entry); if(i!==-1) panelStack.splice(i,1); panel.remove(); });
+        panel.addEventListener('click', ()=>{
+          const i = panelStack.indexOf(entry); if(i!==-1) panelStack.splice(i,1);
+          entry.remove();
+        });
         document.body.appendChild(panel);
+        requestAnimationFrame(()=> panel.classList.add('visible'));
         panelStack.push(entry);
       }
       mainImg.addEventListener('click', e=>{ e.stopPropagation(); openImagePopup(parseInt(mainImg.dataset.index||'0',10)); });
@@ -5781,8 +5813,10 @@ function openPanel(m){
     content.style.width = '';
     content.style.height = '';
   }
+  m.classList.remove('visible');
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
+  requestAnimationFrame(()=> m.classList.add('visible'));
   localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
     const rootStyles = getComputedStyle(document.documentElement);
@@ -5848,31 +5882,22 @@ function openPanel(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function closePanel(m){
-  m.classList.remove('show');
+  m.classList.remove('show','visible');
   m.setAttribute('aria-hidden','true');
   localStorage.setItem(`panel-open-${m.id}`,'false');
   const idx = panelStack.indexOf(m);
   if(idx!==-1) panelStack.splice(idx,1);
-    if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+  if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
   function requestClosePanel(m){
-    const content = m && m.querySelector('.panel-content');
-    if(content){
-      const rect = content.getBoundingClientRect();
-      const distLeft = rect.left;
-      const distRight = window.innerWidth - rect.right;
-      const direction = distLeft < distRight ? -1 : 1;
-      const distance = direction === -1 ? rect.right : window.innerWidth - rect.left;
-      content.style.transition = 'transform 0.3s ease';
-      content.style.transform = `translateX(${direction * (distance + 20)}px)`;
-      content.addEventListener('transitionend', ()=>{
-        content.style.transition = '';
-        content.style.transform = '';
+    if(!m) return;
+    m.classList.remove('visible');
+    m.addEventListener('transitionend', function handler(e){
+      if(e.target === m){
+        m.removeEventListener('transitionend', handler);
         closePanel(m);
-      }, {once:true});
-    } else {
-      closePanel(m);
-    }
+      }
+    });
   }
 function togglePanel(m){
   if(m.classList.contains('show')){
@@ -5956,12 +5981,13 @@ function handleDocInteract(e){
   }
   document.querySelectorAll('.img-popup').forEach(p=>{
     if(!p.contains(e.target)){
-      p.remove();
       const entry = p._entry;
       if(entry){
         const i = panelStack.indexOf(entry);
         if(i!==-1) panelStack.splice(i,1);
       }
+      p.classList.remove('visible');
+      p.addEventListener('transitionend',()=> p.remove(), {once:true});
     }
   });
 }
@@ -6770,13 +6796,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openImagePopup(src){
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    overlay.className = 'img-popup';
     const big = document.createElement('img');
     big.src = src;
-    big.style.cssText = 'max-width:90%;max-height:90%;touch-action:pinch-zoom;';
+    big.style.cssText = 'touch-action:pinch-zoom;';
     overlay.appendChild(big);
-    overlay.addEventListener('click', () => overlay.remove());
+    const entry = {remove: ()=>{
+      overlay.classList.remove('visible');
+      overlay.addEventListener('transitionend', ()=> overlay.remove(), {once:true});
+    }};
+    overlay._entry = entry;
+    overlay.addEventListener('click', () => {
+      const i = panelStack.indexOf(entry); if(i!==-1) panelStack.splice(i,1);
+      entry.remove();
+    });
     document.body.appendChild(overlay);
+    requestAnimationFrame(()=> overlay.classList.add('visible'));
+    panelStack.push(entry);
   }
 
   posts.querySelectorAll('img').forEach(img => {
