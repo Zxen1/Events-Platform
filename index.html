@@ -1317,7 +1317,7 @@ button[aria-expanded="true"] .results-arrow{
   display: flex;
   flex-direction: column;
   padding: 0;
-  background: rgba(0,0,0,0);
+  background: rgba(0,0,0,0.5);
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
   pointer-events: auto;
@@ -1727,7 +1727,7 @@ body.filters-active #filterBtn{
 .post-panel .card .meta *{
   text-shadow:0 2px 4px rgba(0,0,0,0.8);
 }
-.post-panel.ad-space{right:calc(420px + var(--gap) * 2);}
+.post-panel.ad-space{right:420px;}
 
 body.hide-results .post-panel{
   left:0;
@@ -3602,7 +3602,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
-    let adPosts = [], adIndex = -1, adTimer, adPreloads = [];
+    let adPosts = [], adIndex = -1, adTimer, adPreloads = [], adNeedsReset = true;
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -3728,7 +3728,7 @@ function buildClusterListHTML(items){
     return `
       <div class="multi-item" data-id="${p.id}">
         <div class="hover-card">
-          <img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/>
+          <img class="thumb lqip" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" onload="if(this.dataset.src){const s=this.dataset.src;this.dataset.src='';this.src=s;}else{this.classList.remove('lqip');}"/>
           <div>
             <div class="t">${p.title}</div>
             <div class="s">${p.city}</div>
@@ -4119,7 +4119,7 @@ function makePosts(){
     }
 
     function hoverHTML(p){
-      return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
+      return `<div class="hover-card" data-id="${p.id}"><img class="thumb lqip" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" onload="if(this.dataset.src){const s=this.dataset.src;this.dataset.src='';this.src=s;}else{this.classList.remove('lqip');}"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
     // Categories UI
@@ -4597,6 +4597,8 @@ function makePosts(){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
         stopSpin();
+      } else if(m==='map'){
+        adNeedsReset = false;
       }
       applyFilters();
       if(window.updateAdVisibility) updateAdVisibility();
@@ -4817,6 +4819,7 @@ function makePosts(){
           if(bVal) bVal.textContent = map.getBearing().toFixed(0);
         });
         const refreshMapView = () => {
+          if(mode === 'map') adNeedsReset = true;
           applyFilters();
           updatePostPanel();
           const center = map.getCenter().toArray();
@@ -5265,6 +5268,8 @@ function makePosts(){
 
       function updateAds(list){
         const panel = document.getElementById('ad-panel');
+        if(!document.body.classList.contains('mode-posts')) return;
+        if(!adNeedsReset && adPosts.length && list.length) return;
         stopAdCycle();
         panel.innerHTML = '';
         if(window.innerWidth < 1200 || !list.length){
@@ -5277,6 +5282,7 @@ function makePosts(){
         adPreloads = [];
         preloadAds();
         startAdCycle();
+        adNeedsReset = false;
       }
       function preloadAds(){
         while(adPreloads.length < Math.min(3, adPosts.length)){
@@ -7124,8 +7130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   window.updateAdVisibility = function(){
     if(!adPanelContainer || !postsPanel) return;
-    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const width = postsPanel.getBoundingClientRect().width + (adPanelContainer.classList.contains('show') ? adPanelContainer.getBoundingClientRect().width + gap : 0);
+    const width = postsPanel.getBoundingClientRect().width + (adPanelContainer.classList.contains('show') ? adPanelContainer.getBoundingClientRect().width : 0);
     const hasPosts = !!postsPanel.querySelector('.card');
     const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
     const isShown = adPanelContainer.classList.contains('show');
