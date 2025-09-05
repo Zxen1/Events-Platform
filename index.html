@@ -1065,6 +1065,7 @@ button[aria-expanded="true"] .results-arrow{
   width:300px;
   flex:none;
   border-radius:4px;
+  padding-right:40px;
 }
 #filter-panel #dateInput{
   background: var(--date-range-bg);
@@ -1072,6 +1073,7 @@ button[aria-expanded="true"] .results-arrow{
   width:300px;
   flex:none;
   border-radius:4px;
+  padding-right:40px;
 }
 
 .input .down{
@@ -1089,14 +1091,16 @@ button[aria-expanded="true"] .results-arrow{
   vertical-align:middle;
 }
 #filter-panel .input .x{
-  position: static;
+  position: absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
   width: 35px;
   height: 35px;
   border-radius: 8px;
   background: var(--dropdown-bg);
   cursor: pointer;
   border: 0;
-  margin-left: 6px;
   line-height: 35px;
   text-align: center;
   color: var(--dropdown-text);
@@ -1189,125 +1193,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 
-.cats{
-  margin:8px 0;
-  width:300px;
-}
-
-.cat{
-  display: grid;
-  grid-template-columns: 1fr 38px;
-  gap: 8px;
-  align-items: center;
-  margin: 8px 0;
-  width:300px;
-}
-
-.cat .bar{
-  height: 36px;
-  border-radius: 4px;
-  padding-left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  cursor: pointer;
-}
-
-.cat .bar .dot{
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-}
-
-.cat .bar .label{
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-
-.cat .cfg{
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 36px;
-  border-radius: 4px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  cursor: pointer;
-}
-
-.sub{
-  margin: 6px 0 0 6px;
-  display: none;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.sub .chip{
-  height: 28px;
-  display: inline-block;
-  padding: 0 10px;
-  border-radius: 4px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  font-size: 12px;
-  color: var(--ink-d);
-  width: max-content;
-  cursor: pointer;
-  line-height: 28px;
-}
-.sub .chip .badge{
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
-}
-
-
-.cat[aria-expanded="true"] .sub{
-  display: grid;
-}
-
-.reset-box{
-  display: grid;
-  grid-template-columns: 1fr 38px;
-  gap: 8px;
-  align-items: center;
-  margin:8px 0;
-}
-
-.reset-box .reset-btn{
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-.reset-box .reset-btn.active{
-  background: var(--filter-active-color);
-  border-color: var(--filter-active-color);
-}
-
-.reset-box .reset-btn svg{
-  width: 16px;
-  height: 16px;
-}
-
-.reset-box .arr{
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-}
 
 .list-panel{
     position: fixed;
@@ -1331,6 +1216,24 @@ body.hide-results .list-panel{
   pointer-events: none;
 }
 
+
+.reset-box{
+  display:flex;
+  justify-content:center;
+  margin-top:auto;
+}
+
+.reset-box .reset-btn{
+  width:400px;
+  border-radius:4px;
+  font-weight:700;
+  letter-spacing:.2px;
+}
+
+.reset-box .reset-btn.active{
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
+}
 
 #filterBtn{
   border-radius:4px;
@@ -1592,73 +1495,6 @@ body.filters-active #filterBtn{
   justify-content:center;
   opacity:1;
 }
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg{opacity:1;fill:#000;}
-
-
-.geocoder .mapboxgl-ctrl-group button + button{border-left:1px solid #ccc;}
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg,
-.mapboxgl-ctrl button svg,
-.mapboxgl-ctrl button span{
-  display:block;
-  margin:0;
-}
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg,
-.mapboxgl-ctrl button svg{
-  width:20px;
-  height:20px;
-}
-.geocoder .mapboxgl-ctrl-group{border-radius:4px;overflow:hidden;}
-.mapboxgl-ctrl button{
-  line-height:var(--control-h);
-  text-align:center;
-  border-radius:4px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:none;
-  width:var(--control-h);
-  height:var(--control-h);
-  margin:0;
-  padding:0;
-}
-.mapboxgl-ctrl-group{overflow:hidden;}
-.mapboxgl-ctrl-geolocate,
-.mapboxgl-ctrl-compass{
-  width:var(--control-h);
-  height:var(--control-h);
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:4px;
-}
-#map .mapboxgl-ctrl-geolocate{background:var(--control-geolocate-bg);}
-#map .mapboxgl-ctrl-compass{background:var(--control-compass-bg);}
-#map .mapboxgl-ctrl-group button{
-  width:var(--control-h);
-  height:var(--control-h);
-  padding:0;
-}
-#map .mapboxgl-ctrl-group button:not(.mapboxgl-ctrl-geolocate):not(.mapboxgl-ctrl-compass){
-  background:var(--control-text-bg);
-}
-#map .mapboxgl-ctrl-group button svg{
-  width:20px;
-  height:20px;
-}
-#map .mapboxgl-ctrl-group button:hover{filter:brightness(1.1);}
-#map .mapboxgl-ctrl-group button:active{filter:brightness(0.9);}
-#map .mapboxgl-ctrl-group{
-  background:var(--control-text-bg);
-  border:1px solid #ccc;
-  border-radius:4px;
-  overflow:hidden;
-}
-.mapboxgl-ctrl-top-left,
-.mapboxgl-ctrl-top-right,
-.mapboxgl-ctrl-bottom-left{
-  margin:0;
-}
 
 
 
@@ -1732,10 +1568,10 @@ body.hide-results .post-panel{
 }
 .map-area{
   position: fixed;
-  top: 0;
+  top: calc(var(--header-h) + var(--safe-top));
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--footer-h);
   z-index: 0;
 }
 
@@ -1891,11 +1727,13 @@ body.hide-results .post-panel{
   .open-posts .detail-header{
     padding:6px 0;
   }
-  .open-posts .img-area,
+  .open-posts .img-area{
+    margin-bottom:6px;
+  }
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
   .open-posts .text{
-    margin-bottom:6px;
+    margin-bottom:10px;
   }
   .open-posts .text{
     padding:14px;
@@ -3163,9 +3001,6 @@ footer .chip-small img.mini{
         <div id="geocoder" class="geocoder"></div>
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
-          <div class="reset-box">
-            <button id="resetBtn" class="reset-btn" aria-label="Reset all filters">Reset All Filters</button>
-          </div>
           <div class="field sort-field">
             <div class="options-dropdown">
               <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
@@ -3199,7 +3034,9 @@ footer .chip-small img.mini{
           <div id="datePickerContainer" class="calendar-container">
             <div id="datePicker"></div>
           </div>
-          <div class="cats" id="cats" aria-label="Categories"></div>
+          <div class="reset-box">
+            <button id="resetBtn" class="reset-btn" aria-label="Reset all filters">Reset All Filters</button>
+          </div>
         </section>
       </div>
     </div>
@@ -3603,7 +3440,6 @@ footer .chip-small img.mini{
     let postPanel = null;
     let posts = [], filtered = [];
     let favToTop = false, currentSort = 'az';
-    let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
@@ -4151,26 +3987,8 @@ function makePosts(){
       return `<div class="hover-card" data-id="${p.id}">${thumbTag(p)}<div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
-    // Categories UI
-    const catsEl = $('#cats');
-    categories.forEach(c=>{
-      const el = document.createElement('div'); el.className='cat'; el.setAttribute('role','group'); el.setAttribute('aria-expanded','false');
-      const bar = document.createElement('div'); bar.className='bar';
-      const dot = document.createElement('div'); dot.className='dot'; dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
-      const label = document.createElement('div'); label.className='label'; label.textContent=c.name;
-      const cfg = document.createElement('div'); cfg.className='cfg'; cfg.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>';
-      const sub = document.createElement('div'); sub.className='sub';
-      c.subs.forEach(s=>{ const chip=document.createElement('div'); chip.className='chip'; chip.innerHTML='<span class="badge"></span>'+s; chip.addEventListener('click',()=>{ chip.classList.toggle('on'); const key=c.name+'::'+s; if(selection.subs.has(key)) selection.subs.delete(key); else selection.subs.add(key); applyFilters(); }); sub.appendChild(chip); });
-      bar.appendChild(dot); bar.appendChild(label);
-      bar.addEventListener('click',()=>{ const ex = el.getAttribute('aria-expanded')==='true'; el.setAttribute('aria-expanded',ex?'false':'true'); if(ex){ selection.cats.delete(c.name); } else { selection.cats.add(c.name); } applyFilters(); });
-      el.appendChild(bar); el.appendChild(cfg); el.appendChild(sub); catsEl.appendChild(el);
-    });
-
     // Reset
     $('#resetBtn').addEventListener('click',()=>{
-      selection.cats.clear(); selection.subs.clear();
-      $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
-      $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#kwInput').value='';
       $('#dateInput').value='';
       dateStart = null;
@@ -4200,9 +4018,8 @@ function makePosts(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
-      const cats = selection.cats.size > 0 || selection.subs.size > 0;
       const expired = $('#expiredToggle').checked;
-      return kw || hasDate || cats || expired;
+      return kw || hasDate || expired;
     }
 
     function updateFilterBtnColor(){
@@ -4228,6 +4045,7 @@ function makePosts(){
       e.preventDefault();
     });
     const today = new Date();
+    today.setHours(0,0,0,0);
     const minPickerDate = new Date(today);
     minPickerDate.setMonth(minPickerDate.getMonth() - 12);
     const maxPickerDate = new Date(today);
@@ -4753,14 +4571,7 @@ function makePosts(){
       }
     }
 
-    function ensureControlSizes(){
-      const style = document.createElement('style');
-      style.textContent = '.mapboxgl-ctrl button,.mapboxgl-ctrl-geolocate,.mapboxgl-ctrl-compass{width:var(--control-h)!important;height:var(--control-h)!important;}';
-      document.head.appendChild(style);
-    }
-
     function initMap(){
-      ensureControlSizes();
       if(typeof mapboxgl === 'undefined'){
         console.error('Mapbox GL failed to load');
         return;
@@ -5446,9 +5257,7 @@ function makePosts(){
         date: $('#dateInput').value,
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
-        expired: $('#expiredToggle').checked,
-        cats: [...selection.cats],
-        subs: [...selection.subs]
+        expired: $('#expiredToggle').checked
       };
     }
 
@@ -5484,18 +5293,6 @@ function makePosts(){
       expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
       updateInput();
-      selection.cats = new Set(st.cats || []);
-      selection.subs = new Set(st.subs || []);
-      $$('.cat').forEach(el=>{
-        const label = el.querySelector('.label').textContent;
-        const expanded = selection.cats.has(label);
-        el.setAttribute('aria-expanded', expanded?'true':'false');
-        el.querySelectorAll('.sub .chip').forEach(ch=>{
-          const subName = ch.textContent.trim();
-          const key = label+'::'+subName;
-          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
-        });
-      });
       if(map && st.bounds){
         stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
@@ -6118,10 +5915,8 @@ function makePosts(){
         return true;
       });
     }
-    function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
-
     function applyFilters(){
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p));
       renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
       const today = new Date(); today.setHours(0,0,0,0);
