@@ -1354,7 +1354,7 @@ body.filters-active #filterBtn{
 }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; }
+.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; overscroll-behavior:contain; }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
@@ -2571,6 +2571,7 @@ footer .foot-row .foot-item::before{
   background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
   pointer-events:none;
   z-index:0;
+  border-radius:inherit;
 }
 footer .foot-row .foot-item .t,
 footer .foot-row .foot-item .fav-star{
@@ -3390,7 +3391,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
                   #balloonTool .t{font-family:Verdana;font-size:20px;}
                   #balloonTool .shape-dropdown{position:relative;width:300px;height:35px;margin-bottom:8px;}
                   #balloonTool .shape-dropdown > button{width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
-                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:300px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;}
+                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:300px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;overscroll-behavior:contain;}
                   #balloonTool .shape-menu[hidden]{display:none;}
                   #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
                   #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
@@ -5241,6 +5242,8 @@ function makePosts(){
         const imgs = root.querySelectorAll('img.thumb');
         if(!imgs.length) return;
         if('IntersectionObserver' in window){
+          const opts = {};
+          if(root.scrollHeight > root.clientHeight) opts.root = root;
           const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if(entry.isIntersecting){
@@ -5254,8 +5257,8 @@ function makePosts(){
                 obs.unobserve(img);
               }
             });
-          }, {root});
-          imgs.forEach(img => obs.observe(img));
+          }, opts);
+          imgs.forEach(img => { img.loading = 'lazy'; obs.observe(img); });
         } else {
           imgs.forEach(img => {
             img.loading = 'lazy';
@@ -5464,13 +5467,23 @@ function makePosts(){
           el.className='foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
-          el.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0)), url(${imgThumb(v.id)})`;
+          el.style.backgroundImage = `url(${imgThumb(v.id)})`;
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
           const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
           el.innerHTML = `<img loading="lazy" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
+          el.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            stopSpin();
+            if(v.state) restoreState(v.state);
+            if(document.body.classList.contains('mode-map') && map && p){
+              map.flyTo({center:[p.lng,p.lat]});
+              map.once('moveend', ()=> openPost(v.id));
+            } else {
+              openPost(v.id);
+            }
+          });
           footRow.appendChild(el);
         }
       // scroll to the far right to reveal the newest
@@ -5978,6 +5991,13 @@ function makePosts(){
     }
 
     footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
+
+    document.addEventListener('wheel', e=>{
+      if(e.target.closest('.options-menu') || e.target.closest('.shape-menu')){ e.stopPropagation(); }
+    }, {passive:false});
+    document.addEventListener('touchmove', e=>{
+      if(e.target.closest('.options-menu') || e.target.closest('.shape-menu')){ e.stopPropagation(); }
+    }, {passive:false});
 
     function inBounds(p){
       if(!postPanel) return true;
