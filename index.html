@@ -166,8 +166,8 @@ textarea,
   user-select: text;
 }
 
-button:not([class^="mapboxgl-ctrl"]),
-[role="button"]:not([class^="mapboxgl-ctrl"]){
+button:not([class^="mapboxgl-ctrl"]):not(.fullscreen-btn),
+[role="button"]:not([class^="mapboxgl-ctrl"]):not(.fullscreen-btn){
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -498,11 +498,11 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .auth .auth-btn{
-  border: none;
+  border: 1px solid var(--btn);
   border-radius: 0;
   padding: 0;
-  background: rgba(255,255,255,0.2);
-  color: inherit;
+  background: var(--btn);
+  color: var(--button-text);
   font-weight: 600;
 }
 
@@ -2381,6 +2381,11 @@ footer{
     display:flex;
     align-items:center;
     justify-content:center;
+    background: var(--btn);
+    border: 1px solid var(--btn);
+    color: var(--button-text);
+    cursor: pointer;
+    transition: background .2s,border-color .2s,color .2s;
   }
 
 
