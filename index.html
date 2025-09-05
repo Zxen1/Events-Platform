@@ -4876,7 +4876,7 @@ function makePosts(){
         img.onload = ()=>{
           if(!map.hasImage(imgId)) map.addImage(imgId, img);
           map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'icon-image': imgId }, paint:{} });
-          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['coalesce',['get','point_count_abbreviated'],''], 'text-size':12 }, paint:{'text-color':'#fff'} });
           map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
             'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
             'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
@@ -4884,10 +4884,10 @@ function makePosts(){
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
         } else if(shouldCluster){
           map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
-            'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-            'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
+            'circle-color': ['step',['coalesce',['get','point_count'],0], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
+            'circle-radius': ['step',['coalesce',['get','point_count'],0], 16, 20, 22, 50, 28, 100, 34],
             'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['coalesce',['get','point_count_abbreviated'],''], 'text-size':12 }, paint:{'text-color':'#fff'} });
           map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
             'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
             'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
