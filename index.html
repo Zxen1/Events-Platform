@@ -4939,8 +4939,11 @@ function makePosts(){
         const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         const clusterId = features[0].properties.cluster_id;
         const leaves = await getClusterLeavesAll('posts', clusterId);
-        if(!leaves.length) return;
-        const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
+        const coords = leaves
+          .map(l => l && l.geometry && l.geometry.coordinates)
+          .filter(c => Array.isArray(c) && c.length >= 2 && Number.isFinite(c[0]) && Number.isFinite(c[1]));
+        if(!coords.length) return;
+        const bounds = coords.slice(1).reduce((b,c)=> b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
         map.fitBounds(bounds, { padding: 40, pitch: 45, maxZoom: 18, essential: true });
       });
       
