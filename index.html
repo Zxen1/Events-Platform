@@ -1539,12 +1539,12 @@ body.filters-active #filterBtn{
     display:none;
     position: fixed;
     top: calc(var(--header-h) + var(--safe-top));
-    bottom: calc(var(--footer-h) + var(--gap));
+    bottom: var(--footer-h);
     left: calc(var(--results-w) + var(--gap));
     right: 0;
   overflow-y:scroll;
   overflow-x:hidden;
-  padding:0 0 var(--gap);
+  padding:0;
   color:#000;
   background: rgba(0,0,0,0.5);
 }
@@ -1654,7 +1654,7 @@ body.hide-results .post-panel{
 }
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
-  top:0;
+  top:var(--gap);
   z-index:3;
   padding-bottom:var(--gap);
 }
@@ -1740,7 +1740,7 @@ body.hide-results .post-panel{
 }
 
 @media (max-width: 450px){
-  .post-panel .posts{padding:0 0 var(--gap);}
+  .post-panel .posts{padding:var(--gap) 0 var(--gap);}
   .post-panel .card{
     grid-template-columns:1fr;
     gap:0;
@@ -5564,15 +5564,17 @@ function makePosts(){
       await nextFrame();
       const header = detail.querySelector('.detail-header');
       const stickyHeaderActive = document.documentElement.classList.contains('open-posts-sticky-header');
+      const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
       if(stickyHeaderActive && header){
         const h = header.offsetHeight;
-        header.style.scrollMarginTop = h + 'px';
+        header.style.scrollMarginTop = (h + gap) + 'px';
       }
 
       if(container){
-        const headerHeight = (stickyHeaderActive && header) ? header.offsetHeight : 0;
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
-        container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
+        if(!fromPosts){
+          const top = detail.offsetTop - gap;
+          container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
+        }
         ensureGap(container, detail);
       } else if(window.innerWidth > 450) {
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
@@ -5607,8 +5609,8 @@ function makePosts(){
     });
 
     function ensureGap(container, el){
-      const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-      const desired = el.offsetTop - pad - 12;
+      const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
+      const desired = el.offsetTop - gap;
       if(container.scrollTop > desired){ container.scrollTop = Math.max(desired, 0); }
     }
 
