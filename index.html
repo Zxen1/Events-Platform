@@ -566,7 +566,6 @@ button[aria-expanded="true"] .results-arrow{
     max-height:90%;
     background:#222222;
     color:#fff;
-    transition:transform 0.3s ease;
     border-radius:0;
   }
 #filter-panel .panel-content{font-size:12px;}
@@ -6071,21 +6070,10 @@ function closePanel(m){
   function requestClosePanel(m){
     const content = m && m.querySelector('.panel-content');
     if(content){
-      const rect = content.getBoundingClientRect();
-      const distLeft = rect.left;
-      const distRight = window.innerWidth - rect.right;
-      const direction = distLeft < distRight ? -1 : 1;
-      const distance = direction === -1 ? rect.right : window.innerWidth - rect.left;
-      content.style.transition = 'transform 0.3s ease';
-      content.style.transform = `translateX(${direction * (distance + 20)}px)`;
-      content.addEventListener('transitionend', ()=>{
-        content.style.transition = '';
-        content.style.transform = '';
-        closePanel(m);
-      }, {once:true});
-    } else {
-      closePanel(m);
+      content.style.transition = '';
+      content.style.transform = '';
     }
+    closePanel(m);
   }
 function togglePanel(m){
   if(m.classList.contains('show')){
@@ -6100,23 +6088,16 @@ function movePanelToEdge(panel, side){
   if(!content) return;
   const header = document.querySelector('.header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
-  const rect = content.getBoundingClientRect();
-  const targetLeft = side === 'left' ? 0 : window.innerWidth - rect.width;
-  const delta = targetLeft - rect.left;
   content.style.top = `${topPos}px`;
-  content.style.transition = 'transform 0.3s ease';
-  content.style.transform = `translateX(${delta}px)`;
-  content.addEventListener('transitionend', ()=>{
-    content.style.transition = '';
-    content.style.transform = '';
-    if(side === 'left'){
-      content.style.left = '0';
-      content.style.right = '';
-    } else {
-      content.style.left = '';
-      content.style.right = '0';
-    }
-  }, {once:true});
+  content.style.transition = '';
+  content.style.transform = '';
+  if(side === 'left'){
+    content.style.left = '0';
+    content.style.right = '';
+  } else {
+    content.style.left = '';
+    content.style.right = '0';
+  }
 }
 function repositionPanels(){
   ['admin-panel','member-panel','filter-panel'].forEach(id=>{
