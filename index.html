@@ -330,7 +330,7 @@ input[type="checkbox"]{
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: var(--safe-top) 10px 0 10px;
+    padding: var(--safe-top) 0 0 0;
     position: fixed;
     top: 0;
     left: 0;
@@ -360,12 +360,12 @@ input[type="checkbox"]{
 
 .view-toggle{
   position: absolute;
-  left: 10px;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   height: 75px;
-  gap: 0;
+  gap: 1px;
 }
 
 .view-toggle button{
@@ -493,7 +493,7 @@ button[aria-expanded="true"] .results-arrow{
 .auth{
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 1px;
   margin-left: auto;
 }
 
@@ -504,6 +504,30 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--btn);
   color: var(--button-text);
   font-weight: 600;
+}
+
+@media (max-width:600px){
+  .header{
+    padding-left:10px;
+    justify-content:flex-start;
+  }
+  .logo{
+    position:static;
+    left:auto;
+    top:auto;
+    transform:none;
+    margin-right:auto;
+  }
+  .view-toggle{
+    position:static;
+    left:auto;
+    top:auto;
+    transform:none;
+    margin-right:1px;
+  }
+  .auth{
+    margin-left:0;
+  }
 }
 
 .gear{
