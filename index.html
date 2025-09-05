@@ -3591,12 +3591,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           }
         }
       }
-      const stickyInput = document.getElementById('open-posts-sticky-images');
-      if(!(stickyInput && stickyInput.checked) || !body || !imgArea || !text){
+      if(!body || !imgArea || !text){
         root.classList.remove('open-posts-sticky-images');
+        root.classList.remove('open-posts-sticky-header');
         return;
       }
-      root.classList.toggle('open-posts-sticky-images', !isBelow);
+      const shouldStick = !isBelow;
+      root.classList.toggle('open-posts-sticky-images', shouldStick);
+      root.classList.toggle('open-posts-sticky-header', shouldStick);
     }
 
     window.updateStickyImages = updateStickyImages;
