@@ -1314,7 +1314,7 @@ button[aria-expanded="true"] .results-arrow{
   border: 1px solid var(--btn);
 }
 
-  .list-panel{
+.list-panel{
     position: fixed;
       top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
     bottom: var(--footer-h);
@@ -1323,7 +1323,7 @@ button[aria-expanded="true"] .results-arrow{
   display: flex;
   flex-direction: column;
   padding: 0;
-  background: rgba(0,0,0,0.5);
+  background: none;
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
   pointer-events: auto;
@@ -1689,7 +1689,7 @@ body.filters-active #filterBtn{
   color:#000;
   background: rgba(0,0,0,0.5);
 }
-.post-panel .posts{overflow:visible;padding:10px;margin:0;}
+.post-panel .posts{overflow:visible;padding:var(--gap);padding-right:0;margin:0;}
 .post-panel .card,
 .post-panel .open-posts{background:rgba(0,0,0,0.7);}
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
@@ -2891,7 +2891,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   border-radius: inherit;
   padding: var(--gap);
   padding-right: 0;
-  margin: 0 calc(-1 * var(--gap));
+  margin: 0 calc(-1 * var(--gap)) 0 0;
+  background: rgba(0,0,0,0.5);
 }
 
 
