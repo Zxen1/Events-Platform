@@ -11,8 +11,6 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" />
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" />
   <style>:root{
   --header-h: 75px;
   --panel-w: 300px;
@@ -612,7 +610,7 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:content-box;
   width:calc(var(--calendar-width) * var(--calendar-scale));
   height:calc(var(--calendar-height) * var(--calendar-scale));
-  border:1px solid var(--border);
+  border:none;
   border-radius:8px;
 }
 #filter-panel .calendar-container .today-marker{
@@ -2369,8 +2367,16 @@ body.hide-results .post-panel{
 
 .desc{
   margin-top: 8px;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:4;
+  cursor:pointer;
 }
-.open-posts .desc-wrap .desc{overflow:visible;}
+.desc.expanded{
+  -webkit-line-clamp:unset;
+  display:block;
+}
 
 
 @media (max-width:1000px){
@@ -3514,6 +3520,8 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '',
           updateSunLight = () => {};
+        clusterRadius = Number.isFinite(clusterRadius) ? clusterRadius : 52;
+        clusterMaxZoom = Number.isFinite(clusterMaxZoom) ? clusterMaxZoom : 14;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
         logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
@@ -3686,12 +3694,12 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       try{ map.touchZoomRotate[fn](); }catch{}
     }
     function getClusterLeavesAll(sourceId, clusterId){
-      return new Promise((resolve, reject)=>{
+      return new Promise(resolve =>{
         const src = map.getSource(sourceId); if(!src) return resolve([]);
         const page = 50; const out = [];
         function step(offset){
           src.getClusterLeaves(clusterId, page, offset, (err, leaves)=>{
-            if(err){ reject(err); return; }
+            if(err){ resolve([]); return; }
             out.push(...leaves);
             if(leaves.length < page) resolve(out);
             else step(offset + page);
@@ -4599,6 +4607,24 @@ function makePosts(){
     // Mapbox
     function loadMapbox(cb){
       if(window.mapboxgl && window.MapboxGeocoder) return cb();
+
+      function injectCleanCSS(url, fallback){
+        fetch(url).then(r=>r.text()).then(css=>{
+          css = css.replace(/-ms-high-contrast/g,'forced-colors');
+          const style = document.createElement('style');
+          style.textContent = css;
+          document.head.appendChild(style);
+        }).catch(()=>{
+          const link = document.createElement('link');
+          link.rel='stylesheet';
+          link.href = fallback || url;
+          document.head.appendChild(link);
+        });
+      }
+
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css');
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
+        'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
 
       const s = document.createElement('script');
       s.src='https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
@@ -5584,11 +5610,6 @@ function makePosts(){
     }
 
     function hookDetailActions(el, p){
-      const descWrap = el.querySelector(".desc-wrap");
-      if(descWrap){
-        const desc = descWrap.querySelector(".desc");
-        if(desc) desc.style.overflow = 'visible';
-      }
       const favBtn = el.querySelector('.fav');
       if(favBtn){
         favBtn.addEventListener('click', (e)=>{
@@ -7075,6 +7096,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if(e.target === el) setMode('map');
       });
     }
+  });
+  document.addEventListener('click', e => {
+    const d = e.target.closest('.desc');
+    if(d) d.classList.toggle('expanded');
   });
   window.updateAdVisibility = function(){
     if(!adPanelContainer || !postsPanel) return;
