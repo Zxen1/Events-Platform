@@ -5018,7 +5018,7 @@ function makePosts(){
       });
 
       // Hover ring layer for individual points
-      map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
+      map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['all', ['!',['has','point_count']], ['==',['get','id'],'__none__']], paint:{
         'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
         'circle-stroke-width': 2, 'circle-radius': 12
       }});
@@ -5029,7 +5029,7 @@ function makePosts(){
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
         const id = f.properties.id; hoverId = id;
-        map.setFilter('hover-ring', ['==',['get','id'], id]);
+        map.setFilter('hover-ring', ['all', ['!',['has','point_count']], ['==',['get','id'], id]]);
         const coords = f.geometry && f.geometry.coordinates;
         const multi = (coords && coords.length>=2) ? postsAtVenue(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
@@ -5100,7 +5100,7 @@ function makePosts(){
         setTimeout(()=>{
           if(!window.__overCard && hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
         }, 180);
-        hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
+        hoverId = null; map.setFilter('hover-ring', ['all', ['!',['has','point_count']], ['==',['get','id'],'__none__']]);
       });
 
 
