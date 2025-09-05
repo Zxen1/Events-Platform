@@ -567,6 +567,7 @@ button[aria-expanded="true"] .results-arrow{
     background:#222222;
     color:#fff;
     transition:transform 0.3s ease;
+    border-radius:0;
   }
 #filter-panel .panel-content{font-size:12px;}
 
@@ -5475,6 +5476,7 @@ function makePosts(){
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
+      prioritizeVisibleImages();
       if (typeof updateStickyImages === 'function') {
         updateStickyImages();
       }
