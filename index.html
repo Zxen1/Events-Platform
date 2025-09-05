@@ -5410,11 +5410,13 @@ function makePosts(){
         const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
         if(v.id===activePostId) el.setAttribute('aria-selected','true');
-        el.addEventListener('click', e => {
+        el.addEventListener('click', async e => {
+          e.preventDefault();
           e.stopPropagation();
           stopSpin();
           if(v.state) restoreState(v.state);
-          openPost(v.id);
+          await nextFrame();
+          await openPost(v.id);
         });
         footRow.appendChild(el);
       }
