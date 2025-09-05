@@ -5426,8 +5426,9 @@ function makePosts(){
       const item = e.target.closest('.foot-item');
       if(!item) return;
       e.stopPropagation();
-      const id = item.dataset.id;
-      const record = viewHistory.find(v => v.id === id);
+      const idStr = item.dataset.id;
+      const record = viewHistory.find(v => String(v.id) === idStr);
+      const id = record ? record.id : idStr;
       stopSpin();
       if(record && record.state) restoreState(record.state);
       openPost(id);
