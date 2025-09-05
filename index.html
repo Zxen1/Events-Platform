@@ -1665,8 +1665,8 @@ body.filters-active #filterBtn{
     display:none;
     position: fixed;
     top: calc(var(--header-h) + var(--safe-top));
-    bottom: var(--footer-h);
-    left: var(--results-w);
+    bottom: calc(var(--footer-h) + var(--gap));
+    left: calc(var(--results-w) + var(--gap));
     right: 0;
   overflow-y:scroll;
   overflow-x:hidden;
@@ -1740,7 +1740,7 @@ body.hide-results .post-panel{
 
 .open-posts{
   border:none;
-  border-radius:8px;
+  border-radius:4pc 4pc 8px 8px;
   margin:0 0 12px 0;
   overflow:visible;
   color:#fff;
@@ -1755,8 +1755,8 @@ body.hide-results .post-panel{
   align-items:center;
   padding:6px 12px;
   opacity:1;
-  border-top-left-radius:inherit;
-  border-top-right-radius:inherit;
+  border-top-left-radius:4pc;
+  border-top-right-radius:4pc;
   background-size:cover;
   background-position:center;
   color:#fff;
@@ -1782,6 +1782,7 @@ body.hide-results .post-panel{
   position:sticky;
   top:0;
   z-index:3;
+  padding-bottom:var(--gap);
 }
 
 .open-posts .body{
