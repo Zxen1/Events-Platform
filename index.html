@@ -1311,7 +1311,7 @@ button[aria-expanded="true"] .results-arrow{
 
   .list-panel{
     position: fixed;
-    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
+      top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
     bottom: var(--footer-h);
     left: var(--gap);
     width: var(--results-w);
@@ -1679,18 +1679,17 @@ body.filters-active #filterBtn{
   .post-panel{
     display:none;
     position: fixed;
-    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
+    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 10px);
     bottom: var(--footer-h);
     left: calc(var(--results-w) + var(--gap) * 2);
     right: var(--gap);
   overflow-y:scroll;
   overflow-x:hidden;
-  scrollbar-gutter:stable;
   padding:0;
   color:#000;
   background: rgba(0,0,0,0.5);
 }
-.post-panel .posts{overflow:visible;padding:12px;margin:0;}
+.post-panel .posts{overflow:visible;padding:10px;margin:0;}
 .post-panel .card,
 .post-panel .open-posts{background:rgba(0,0,0,0.7);}
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
@@ -1729,7 +1728,7 @@ body.filters-active #filterBtn{
 .post-panel .card .meta *{
   text-shadow:0 2px 4px rgba(0,0,0,0.8);
 }
-.post-panel.ad-space{right:calc(420px + var(--gap));}
+.post-panel.ad-space{right:calc(420px + var(--gap) * 2);}
 
 body.hide-results .post-panel{
   left:0;
@@ -3009,10 +3008,10 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     left:0;
     right:0;
   }
-  .post-panel .posts{
-    padding:12px 12px var(--gap);
-    margin:0;
-  }
+    .post-panel .posts{
+      padding:10px 10px var(--gap);
+      margin:0;
+    }
   .post-panel .card{
     width:100%;
     margin:0;
