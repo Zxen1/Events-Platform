@@ -2542,23 +2542,31 @@ footer .foot-row .foot-item{
   border-radius:8px;
   color:#fff;
   height:100%;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
 }
 footer .foot-row .foot-item img{
-  width:40px;
-  height:40px;
+  width:30px;
+  height:30px;
   object-fit:cover;
   border-radius:8px;
   flex:0 0 auto;
   position:relative;
-  z-index:1;
+  z-index:2;
 }
 footer .foot-row .foot-item::before{
-  display:none;
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
+  pointer-events:none;
+  z-index:0;
 }
 footer .foot-row .foot-item .t,
 footer .foot-row .foot-item .fav-star{
   position:relative;
-  z-index:1;
+  z-index:2;
   padding:0;
   text-shadow:none;
 }
@@ -5406,6 +5414,9 @@ function makePosts(){
           el.className='foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
+          el.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0)), url(${imgThumb(v.id)})`;
+          el.style.backgroundSize = 'cover';
+          el.style.backgroundPosition = 'center';
           const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
           el.innerHTML = `<img loading="lazy" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
