@@ -4136,27 +4136,12 @@ function makePosts(){
           e.preventDefault();
         }
       });
-      let t;
       scroller.addEventListener('scroll', ()=>{
         const marker = scroller.querySelector('.today-marker');
         if(marker){
           const base = parseFloat(marker.dataset.pos || '0');
           marker.style.left = `${base + Math.round(scroller.scrollLeft)}px`;
         }
-        if(t) clearTimeout(t);
-        t = setTimeout(()=>{
-          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
-          const w = m ? m.offsetWidth : 0;
-          if(w){
-            const max = scroller.scrollWidth - scroller.clientWidth;
-            if(scroller.scrollLeft >= max - 1){
-              scroller.scrollLeft = max;
-            } else {
-              const i = Math.round(scroller.scrollLeft / w);
-              scroller.scrollLeft = w*i;
-            }
-          }
-        },100);
       });
     }
     setupCalendarScroll(calendarScroll);
@@ -5378,37 +5363,21 @@ function makePosts(){
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
       if(!viewHistory.length){ return; }
-      // render oldest -> newest so newest appears at the far right
-      const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
-        for(const v of items){
-          const p = posts.find(x=>x.id===v.id);
-          if(!p) continue;
-          const el = document.createElement('div');
-          el.className='foot-item';
-          el.dataset.id = v.id;
-          el.title=v.title+' — '+v.city;
-          el.dataset.bg = imgThumb(v.id);
-          el.style.backgroundSize = 'cover';
-          el.style.backgroundPosition = 'center';
-          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `${thumbTag(v.id)}<div class="t">${v.title}</div>${favIcon}`;
-          if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            stopSpin();
-            if(v.state) restoreState(v.state);
-            if(document.body.classList.contains('mode-map') && map && p){
-              map.flyTo({center:[p.lng,p.lat]});
-              map.once('moveend', ()=> openPost(v.id));
-            } else {
-              openPost(v.id);
-            }
-          });
-          footRow.appendChild(el);
-        }
-      // scroll to the far right to reveal the newest
+      const items = viewHistory.slice().reverse();
+      for(const v of items){
+        const p = posts.find(x=>x.id===v.id);
+        if(!p) continue;
+        const el = document.createElement('div');
+        el.className='chip-small foot-item';
+        el.dataset.id = v.id;
+        el.title=v.title+' — '+v.city;
+        const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+        el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+        if(v.id===activePostId) el.setAttribute('aria-selected','true');
+        el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
+        footRow.appendChild(el);
+      }
       footRow.scrollLeft = footRow.scrollWidth;
-      prioritizeVisibleImages();
     }
 
     renderFooter();
