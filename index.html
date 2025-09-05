@@ -11,6 +11,8 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.css" />
   <style>:root{
   --header-h: 75px;
   --panel-w: 300px;
@@ -3447,7 +3449,6 @@ footer .chip-small img.mini{
 
       function applySky(theme){
         if(!map || typeof map.setFog !== 'function'){
-          console.warn('map.setFog is not available in this Mapbox GL JS version.');
           return;
         }
         const skyThemes = {
@@ -4523,25 +4524,16 @@ function makePosts(){
         return cb();
       }
 
-      const glCss = document.createElement('link');
-      glCss.rel = 'stylesheet';
-      glCss.href = 'https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
-      document.head.appendChild(glCss);
-      const geocoderCss = document.createElement('link');
-      geocoderCss.rel = 'stylesheet';
-      geocoderCss.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css';
-      document.head.appendChild(geocoderCss);
-
       const s = document.createElement('script');
-      s.src = 'https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js';
+      s.src = 'https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js';
       s.onload = () => {
         mapboxgl.accessToken = MAPBOX_TOKEN;
         const g = document.createElement('script');
-        g.src = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+        g.src = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.min.js';
         g.onload = cb;
         g.onerror = () => {
           const gf = document.createElement('script');
-          gf.src = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
+          gf.src = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.1.0/dist/mapbox-gl-geocoder.min.js';
           gf.onload = cb;
           gf.onerror = cb;
           document.head.appendChild(gf);
@@ -4583,7 +4575,7 @@ function makePosts(){
         }
       } else {
         const script = document.createElement('script');
-        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.min.js';
         script.onload = addGeocoder;
         script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
         document.head.appendChild(script);
@@ -5765,10 +5757,18 @@ function makePosts(){
         if(calScroll){
           setupCalendarScroll(calScroll);
         }
-        let map, marker, sessionHasMultiple = false, lastClickedCell = null;
+        let sessionHasMultiple = false, lastClickedCell = null;
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+        if(!Number.isFinite(loc.lng) || !Number.isFinite(loc.lat)){
+          if(mapEl._map && typeof mapEl._map.remove === 'function'){
+            mapEl._map.remove();
+            mapEl._map = null;
+            mapEl._marker = null;
+          }
+          return;
+        }
         const currentYear = new Date().getFullYear();
         const parseDate = s => {
           const [yy, mm, dd] = s.split('-').map(Number);
@@ -5781,6 +5781,8 @@ function makePosts(){
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         sessionHasMultiple = loc.dates.length > 1;
+        let map = mapEl._map;
+        let marker = mapEl._marker;
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -5790,6 +5792,8 @@ function makePosts(){
             interactive: false
           });
           marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          mapEl._map = map;
+          mapEl._marker = marker;
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
@@ -6163,6 +6167,15 @@ function closePanel(m){
     if(content){
       content.style.transition = '';
       content.style.transform = '';
+    }
+    if(m){
+      m.querySelectorAll('.post-map').forEach(el=>{
+        if(el._map && typeof el._map.remove === 'function'){
+          el._map.remove();
+          el._map = null;
+          el._marker = null;
+        }
+      });
     }
     closePanel(m);
   }
