@@ -207,6 +207,36 @@ button.on:not([class^="mapboxgl-ctrl"]),
   border-color: var(--btn-active);
   color: var(--button-active-text);
 }
+
+button[aria-pressed="true"]:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-pressed="true"]:hover:not([class^="mapboxgl-ctrl"]),
+button[aria-current="page"]:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-current="page"]:hover:not([class^="mapboxgl-ctrl"]),
+button[aria-selected="true"]:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-selected="true"]:hover:not([class^="mapboxgl-ctrl"]),
+button.selected:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"].selected:hover:not([class^="mapboxgl-ctrl"]),
+button.on:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"].on:hover:not([class^="mapboxgl-ctrl"]){
+  filter: brightness(1.1);
+}
+
+button:disabled:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-disabled="true"]:not([class^="mapboxgl-ctrl"]){
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--button-text);
+  opacity:0.5;
+  filter:grayscale(1);
+  cursor:not-allowed;
+}
+
+button:disabled:hover:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-disabled="true"]:hover:not([class^="mapboxgl-ctrl"]){
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--button-text);
+}
 a{
   color: var(--primary);
 }
@@ -328,20 +358,19 @@ input[type="checkbox"]{
   display: block;
 }
 
-  .view-toggle{
+.view-toggle{
   position: absolute;
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  height: 35px;
-  gap: 8px;
-  }
+  height: 70px;
+  gap: 0;
+}
 
 .view-toggle button{
   border: 1px solid var(--btn);
-  border-radius: 4px;
-  padding: 0 14px;
+  padding: 0;
   background: var(--btn);
   color: var(--button-text);
   font-weight: 600;
@@ -351,7 +380,17 @@ input[type="checkbox"]{
 
 
 .header button,
-.view-toggle button,
+.view-toggle button{
+  width:70px;
+  height:70px;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  line-height:1;
+  overflow:hidden;
+}
 .options-menu button{
   height:35px;
   border-radius:4px;
@@ -363,7 +402,7 @@ input[type="checkbox"]{
 }
 .header .gear,
 .header a{
-  border-radius:4px;
+  border-radius:0;
 }
 
 
@@ -385,7 +424,6 @@ input[type="checkbox"]{
   transition:transform .3s;
   vertical-align:middle;
 }
-body.hide-results #resultsToggle .results-arrow{transform:rotate(-135deg);}
 
 .options-dropdown > button{
   position:relative;
@@ -455,14 +493,14 @@ button[aria-expanded="true"] .results-arrow{
 .auth{
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   margin-left: auto;
 }
 
 .auth .auth-btn{
   border: 1px solid rgba(255,255,255,.6);
-  border-radius: 4px;
-  padding: 0 14px;
+  border-radius: 0;
+  padding: 0;
   background: rgba(255,255,255,0.2);
   color: inherit;
   font-weight: 600;
@@ -1566,10 +1604,10 @@ body.hide-results .post-panel{
 }
 .map-area{
   position: fixed;
-  top: calc(var(--header-h) + var(--safe-top));
+  top: 0;
   left: 0;
   right: 0;
-  bottom: var(--footer-h);
+  bottom: 0;
   z-index: 0;
 }
 
@@ -2305,8 +2343,8 @@ footer{
   height: var(--footer-h);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 10px 0;
+  gap: 0;
+  padding: 0;
   background: rgba(0,0,0,0.7);
   position: fixed;
   bottom: 0;
@@ -2335,15 +2373,24 @@ footer{
   gap: 8px;
   width: 100%;
   flex:1;
-  height:50px;
+  height:100%;
+  align-items:center;
+  margin-right:70px;
+  padding:0 10px;
+  box-sizing:border-box;
 }
 
 .fullscreen-btn{
-    width:50px;
-    height:50px;
+    width:70px;
+    height:70px;
     padding:0;
-    margin-left:auto;
-    flex:0 0 auto;
+    border-radius:0;
+    position:absolute;
+    top:0;
+    right:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
 
 
@@ -2418,7 +2465,40 @@ footer .foot-row .foot-item .fav-star{
 .card,
 footer .foot-row .foot-item,
 .mapboxgl-popup.hover-pop .hover-card{
-  transition: box-shadow .2s;
+  transition: background .2s, filter .2s, box-shadow .2s;
+}
+
+.card:hover,
+footer .foot-row .foot-item:hover{
+  filter: brightness(1.1);
+}
+
+.card:active,
+footer .foot-row .foot-item:active{
+  filter: brightness(0.9);
+}
+
+.card[aria-selected="true"],
+footer .foot-row .foot-item[aria-selected="true"]{
+  border-color: var(--btn-active);
+}
+
+.card[aria-selected="true"]:hover,
+footer .foot-row .foot-item[aria-selected="true"]:hover{
+  filter: brightness(1.05);
+}
+
+.card:disabled,
+footer .foot-row .foot-item.disabled{
+  opacity:0.5;
+  filter:grayscale(1);
+  cursor:not-allowed;
+}
+
+.card:focus-visible,
+footer .foot-row .foot-item:focus-visible{
+  outline:2px solid var(--ink-d);
+  outline-offset:2px;
 }
 
 .card .thumb{
@@ -2923,7 +3003,7 @@ footer .chip-small img.mini{
 
 </style>
 </head>
-<body class="mode-map" style="padding-bottom:var(--footer-h);">
+<body class="mode-map">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap.com logo" />
@@ -2936,9 +3016,7 @@ footer .chip-small img.mini{
         </svg>
         <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
       </button>
-      <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
-        <span class="results-arrow" aria-hidden="true"></span> List
-      </button>
+      <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">List</button>
       <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
@@ -5087,8 +5165,16 @@ function makePosts(){
     function formatDates(d){
       if(!d || !d.length) return '';
       const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      if(d.length===1) return fmt(d[0]);
-      return `${fmt(d[0])} + ${d.length-1} more`;
+      const thisYear = new Date().getFullYear();
+      if(d.length===1){
+        const dt = parseISODate(d[0]);
+        const str = fmt(d[0]);
+        return dt.getFullYear() !== thisYear ? `${str}, ${dt.getFullYear()}` : str;
+      }
+      const start = fmt(d[0]);
+      const endDt = parseISODate(d[d.length-1]);
+      const end = endDt.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      return `${start} - ${end}${endDt.getFullYear() !== thisYear ? ', '+endDt.getFullYear() : ''}`;
     }
 
     function prioritizeVisibleImages(){
