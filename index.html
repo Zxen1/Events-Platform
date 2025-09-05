@@ -1309,13 +1309,13 @@ button[aria-expanded="true"] .results-arrow{
 
 .list-panel{
     position: fixed;
-    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 10px);
+    top: calc(var(--header-h) + var(--safe-top));
     bottom: var(--footer-h);
-    left: var(--gap);
+    left: 0;
     width: var(--results-w);
   display: flex;
   flex-direction: column;
-  padding: 0 0 var(--gap) 0;
+  padding: 0;
   background: none;
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
@@ -1632,13 +1632,6 @@ body.filters-active #filterBtn{
 }
 #map .mapboxgl-ctrl-geolocate{background:var(--control-geolocate-bg);}
 #map .mapboxgl-ctrl-compass{background:var(--control-compass-bg);}
-.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
-.mapboxgl-ctrl-compass .mapboxgl-ctrl-icon,
-.mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
-  margin:0;
-  width:20px;
-  height:20px;
-}
 #map .mapboxgl-ctrl-group button{
   width:var(--control-h);
   height:var(--control-h);
@@ -1671,10 +1664,10 @@ body.filters-active #filterBtn{
   .post-panel{
     display:none;
     position: fixed;
-    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 10px);
-    bottom: calc(var(--footer-h) + var(--gap));
-    left: calc(var(--results-w) + var(--gap) * 2);
-    right: var(--gap);
+    top: calc(var(--header-h) + var(--safe-top));
+    bottom: var(--footer-h);
+    left: var(--results-w);
+    right: 0;
   overflow-y:scroll;
   overflow-x:hidden;
   padding:0 0 var(--gap);
@@ -1872,7 +1865,7 @@ body.hide-results .post-panel{
 }
 
 @media (max-width: 450px){
-  .post-panel .posts{padding:0;}
+  .post-panel .posts{padding:0 0 var(--gap);}
   .post-panel .card{
     grid-template-columns:1fr;
     gap:0;
