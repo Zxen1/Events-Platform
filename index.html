@@ -5395,24 +5395,18 @@ function makePosts(){
         const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
         if(v.id===activePostId) el.setAttribute('aria-selected','true');
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          stopSpin();
+          if(v.state) restoreState(v.state);
+          openPost(v.id);
+        });
         footRow.appendChild(el);
       }
       footRow.scrollLeft = footRow.scrollWidth;
     }
 
     renderFooter();
-
-    footRow.addEventListener('click', e => {
-      const item = e.target.closest('.foot-item');
-      if(!item) return;
-      e.stopPropagation();
-      const idStr = item.dataset.id;
-      const record = viewHistory.find(v => String(v.id) === idStr);
-      const id = record ? record.id : idStr;
-      stopSpin();
-      if(record && record.state) restoreState(record.state);
-      openPost(id);
-    });
 
     const adPanelEl = document.getElementById('ad-panel');
     if(adPanelEl){
