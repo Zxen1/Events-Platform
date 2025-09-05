@@ -6347,7 +6347,11 @@ document.addEventListener('pointerdown', handleDocInteract);
   if(filterPanel) closePanel(filterPanel);
   [memberPanel, adminPanel, welcomePopup].forEach(m => {
     if (m && localStorage.getItem(`panel-open-${m.id}`) === 'true') {
-      openPanel(m);
+      if (m.id === 'welcomePopup') {
+        openWelcome();
+      } else {
+        openPanel(m);
+      }
     }
   });
   if (welcomePopup && !localStorage.getItem('welcome-seen')) {
