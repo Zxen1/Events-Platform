@@ -242,6 +242,13 @@ input[type="checkbox"]{
   border-radius: 8px;
 }
 
+button,
+[role="button"]{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
   .header{
     height: calc(var(--header-h) + var(--safe-top));
     min-height: calc(var(--header-h) + var(--safe-top));
@@ -311,13 +318,23 @@ input[type="checkbox"]{
   overflow:hidden;
 }
 .options-menu button{
-  height:35px;
-  border-radius:4px;
+  height:50px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+  color:var(--button-text);
   display:flex;
-  align-items:center;
+  flex-direction:column;
+  align-items:flex-start;
   justify-content:center;
   gap:6px;
   line-height:1;
+}
+.options-menu button.selected{
+  background:var(--dropdown-selected-bg);
+  color:var(--dropdown-selected-text);
 }
 .header .gear,
 .header a{
@@ -418,7 +435,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .auth .auth-btn{
   border: 1px solid var(--btn);
-  border-radius: 0;
+  border-radius: 8px;
   padding: 0;
   background: var(--btn);
   color: var(--button-text);
@@ -907,6 +924,16 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:100%;
 }
+
+.panel-field input[type="text"],
+.panel-field input[type="date"],
+.panel-field input[type="number"],
+.panel-field input[type="color"],
+.panel-field textarea{
+  background: var(--keyword-bg);
+  color: var(--panel-text);
+  border-radius:4px;
+}
 .panel-actions{
   margin-top:10px;
   display:flex;
@@ -1029,9 +1056,9 @@ button[aria-expanded="true"] .results-arrow{
   align-items: center;
 }
 .input input{
-  border-radius: 8px;
-  background: var(--btn);
-  color: var(--ink);
+  border-radius: 4px;
+  background: var(--keyword-bg);
+  color: var(--panel-text);
 }
 .input select{
   border-radius: var(--dropdown-radius);
@@ -1044,8 +1071,8 @@ button[aria-expanded="true"] .results-arrow{
   padding-right:40px;
 }
 #filter-panel #dateInput{
-  background: var(--date-range-bg);
-  color: var(--date-range-text);
+  background: var(--keyword-bg);
+  color: var(--panel-text);
   width:300px;
   flex:none;
   border-radius:4px;
@@ -1211,9 +1238,7 @@ body.hide-results .list-panel{
 }
 
 #filterBtn{
-  border-radius:0;
   flex-direction:column;
-  gap:10px;
 }
 #filterBtn.spinning{
   gap:0;
@@ -1245,7 +1270,7 @@ body.filters-active #filterBtn{
 }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; overscroll-behavior:contain; }
+.options-menu{ position:absolute; top:calc(100% + 4px); left:0; width:100%; box-sizing:border-box; max-height:250px; overflow-y:auto; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
@@ -1408,6 +1433,28 @@ body.filters-active #filterBtn{
 .fav[aria-pressed="true"] svg{
   fill: var(--gold);
   stroke: var(--gold);
+}
+
+#filterBtn,
+.auth .auth-btn{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+#filterBtn{
+  flex-direction:column;
+  gap:2px;
+}
+
+.view-toggle{
+  align-items:center;
 }
 
 #favToggle{
@@ -2396,6 +2443,7 @@ footer .foot-row .foot-item .t{
 }
 footer .foot-row .foot-item .fav-star{
   margin-left:auto;
+  color: var(--gold);
 }
 
 .card,
