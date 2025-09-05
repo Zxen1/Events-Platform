@@ -3745,7 +3745,7 @@ function buildClusterListHTML(items){
     return `
       <div class="multi-item" data-id="${p.id}">
         <div class="hover-card">
-          <img class="thumb lqip" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" onload="if(this.dataset.src){const s=this.dataset.src;this.dataset.src='';this.src=s;}else{this.classList.remove('lqip');}"/>
+          ${thumbTag(p)}
           <div>
             <div class="t">${p.title}</div>
             <div class="s">${p.city}</div>
@@ -4135,8 +4135,30 @@ function makePosts(){
       return 'assets/balloons/balloons-icon-16185.png';
     }
 
+    const loadedThumbs = new Set();
+    window.loadedThumbs = loadedThumbs;
+    function thumbLoad(img){
+      if(img.dataset.src){
+        const s = img.dataset.src;
+        img.removeAttribute('data-src');
+        img.src = s;
+      } else {
+        img.classList.remove('lqip');
+        loadedThumbs.add(img.src);
+      }
+    }
+    window.thumbLoad = thumbLoad;
+
+    function thumbTag(p){
+      const id = typeof p==='string' ? p : p.id;
+      const url = imgThumb(p);
+      const loaded = loadedThumbs.has(url);
+      return `<img class="thumb${loaded?'':' lqip'}" loading="lazy" src="${loaded?url:svgPlaceholder(id)}"${loaded?'':` data-src="${url}"`} alt="" referrerpolicy="no-referrer" onload="thumbLoad(this)"/>`;
+    }
+    window.thumbTag = thumbTag;
+
     function hoverHTML(p){
-      return `<div class="hover-card" data-id="${p.id}"><img class="thumb lqip" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" onload="if(this.dataset.src){const s=this.dataset.src;this.dataset.src='';this.src=s;}else{this.classList.remove('lqip');}"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
+      return `<div class="hover-card" data-id="${p.id}">${thumbTag(p)}<div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
 
     // Categories UI
@@ -5264,7 +5286,7 @@ function makePosts(){
               if(entry.isIntersecting){
                 const el = entry.target;
                 if(el.tagName === 'IMG' && el.dataset.src){
-                  el.addEventListener('load', ()=> el.classList.remove('lqip'), {once:true});
+                  el.addEventListener('load', ()=> thumbLoad(el), {once:true});
                   el.src = el.dataset.src;
                   el.removeAttribute('data-src');
                   el.fetchPriority = 'high';
@@ -5284,7 +5306,7 @@ function makePosts(){
           imgs.forEach(img => {
             img.loading = 'lazy';
             if(img.dataset.src){
-              img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
+              img.addEventListener('load', ()=> thumbLoad(img), {once:true});
               img.src = img.dataset.src;
               img.removeAttribute('data-src');
             }
@@ -5386,7 +5408,7 @@ function makePosts(){
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const thumb = thumbTag(p);
         el.innerHTML = `
           ${thumb}
         <div class="meta">
@@ -5501,7 +5523,7 @@ function makePosts(){
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
           const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(v.id)}" data-src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+          el.innerHTML = `${thumbTag(v.id)}<div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', (e)=>{
             e.stopPropagation();
@@ -5705,13 +5727,19 @@ function makePosts(){
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
-        t.className = 'thumb lqip';
+        t.className = 'thumb';
         t.loading = 'lazy';
-        t.src = svgPlaceholder(p.id + '-' + i);
-        t.dataset.src = url;
         t.dataset.full = url;
         t.dataset.index = i;
         t.tabIndex = 0;
+        if(loadedThumbs.has(url)){
+          t.src = url;
+        } else {
+          t.classList.add('lqip');
+          t.src = svgPlaceholder(p.id + '-' + i);
+          t.dataset.src = url;
+          t.addEventListener('load', ()=> thumbLoad(t));
+        }
         thumbCol.appendChild(t);
       });
       const preloads = imgs.map(url=>{ const im = new Image(); im.src = url; return im; });
@@ -5720,9 +5748,11 @@ function makePosts(){
         const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
         if(!t) return;
         if(t.dataset.src){
-          t.addEventListener('load', ()=> t.classList.remove('lqip'), {once:true});
+          t.addEventListener('load', ()=>{ t.classList.remove('lqip'); loadedThumbs.add(t.src); }, {once:true});
           t.src = t.dataset.src;
           t.removeAttribute('data-src');
+        } else {
+          loadedThumbs.add(t.src);
         }
         mainImg.src = t.src;
         mainImg.dataset.index = idx;
@@ -5748,7 +5778,15 @@ function makePosts(){
     setupHorizontalWheel(thumbCol);
     thumbCol.addEventListener('click', e=>{
       const t = e.target.closest('img');
-      if(t) show(parseInt(t.dataset.index,10));
+      if(t){
+        const idx = parseInt(t.dataset.index,10);
+        const cur = parseInt(mainImg.dataset.index||'0',10);
+        if(idx === cur){
+          openImagePopup(idx);
+        } else {
+          show(idx);
+        }
+      }
     });
       thumbCol.addEventListener('keydown', e=>{
         const cur = parseInt(mainImg.dataset.index||'0',10);
