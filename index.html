@@ -571,6 +571,12 @@ button[aria-expanded="true"] .results-arrow{
   }
 #filter-panel .panel-content{font-size:12px;}
 
+#admin-panel .panel-content,
+#member-panel .panel-content{
+  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:none;
+}
+
 #filter-panel button,
 #filter-panel .sq,
 #filter-panel .tiny,
