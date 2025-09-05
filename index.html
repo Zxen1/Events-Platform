@@ -165,78 +165,6 @@ textarea,
   caret-color: auto;
   user-select: text;
 }
-
-button:not([class^="mapboxgl-ctrl"]):not(.fullscreen-btn),
-[role="button"]:not([class^="mapboxgl-ctrl"]):not(.fullscreen-btn){
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  color: var(--button-text);
-  padding: 0 10px;
-  height: var(--control-h);
-  min-width: 35px;
-  border-radius: 4px;
-  opacity: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  transition: background .2s,border-color .2s,color .2s,transform .05s;
-}
-
-button:not([class^="mapboxgl-ctrl"]):hover,
-[role="button"]:not([class^="mapboxgl-ctrl"]):hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-
-button:not([class^="mapboxgl-ctrl"]):active,
-[role="button"]:not([class^="mapboxgl-ctrl"]):active,
-button[aria-pressed="true"]:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-pressed="true"]:not([class^="mapboxgl-ctrl"]),
-button[aria-current="page"]:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-current="page"]:not([class^="mapboxgl-ctrl"]),
-button[aria-selected="true"]:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-selected="true"]:not([class^="mapboxgl-ctrl"]),
-button.selected:not([class^="mapboxgl-ctrl"]),
-[role="button"].selected:not([class^="mapboxgl-ctrl"]),
-button.on:not([class^="mapboxgl-ctrl"]),
-[role="button"].on:not([class^="mapboxgl-ctrl"]){
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-  color: var(--button-active-text);
-}
-
-button[aria-pressed="true"]:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-pressed="true"]:hover:not([class^="mapboxgl-ctrl"]),
-button[aria-current="page"]:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-current="page"]:hover:not([class^="mapboxgl-ctrl"]),
-button[aria-selected="true"]:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-selected="true"]:hover:not([class^="mapboxgl-ctrl"]),
-button.selected:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"].selected:hover:not([class^="mapboxgl-ctrl"]),
-button.on:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"].on:hover:not([class^="mapboxgl-ctrl"]){
-  filter: brightness(1.1);
-}
-
-button:disabled:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-disabled="true"]:not([class^="mapboxgl-ctrl"]){
-  background: var(--btn);
-  border-color: var(--btn);
-  color: var(--button-text);
-  opacity:0.5;
-  filter:grayscale(1);
-  cursor:not-allowed;
-}
-
-button:disabled:hover:not([class^="mapboxgl-ctrl"]),
-[role="button"][aria-disabled="true"]:hover:not([class^="mapboxgl-ctrl"]){
-  background: var(--btn);
-  border-color: var(--btn);
-  color: var(--button-text);
-}
 a{
   color: var(--primary);
 }
@@ -247,15 +175,6 @@ a:hover{
 
 a:active{
   color: var(--active);
-}
-button:active,
-[role="button"]:active{
-  transform: scale(0.97);
-}
-button:focus-visible,
-[role="button"]:focus-visible{
-  outline:2px solid var(--ink-d);
-  outline-offset:2px;
 }
 
 input::placeholder,
@@ -629,7 +548,6 @@ button[aria-expanded="true"] .results-arrow{
   max-height:none;
 }
 
-#filter-panel button,
 #filter-panel .sq,
 #filter-panel .tiny,
 #filter-panel .btn,
@@ -1274,21 +1192,20 @@ body.hide-results .list-panel{
   pointer-events: none;
 }
 
-
-.reset-box{
+.reset-filters-container{
   display:flex;
   justify-content:center;
   margin-top:auto;
 }
 
-.reset-box .reset-btn{
+.reset-filters-btn{
   width:400px;
   border-radius:4px;
   font-weight:700;
   letter-spacing:.2px;
 }
 
-.reset-box .reset-btn.active{
+.reset-filters-btn.active{
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);
 }
@@ -3129,8 +3046,8 @@ footer .chip-small img.mini{
           <div id="datePickerContainer" class="calendar-container">
             <div id="datePicker"></div>
           </div>
-          <div class="reset-box">
-            <button id="resetBtn" class="reset-btn" aria-label="Reset all filters">Reset All Filters</button>
+          <div class="reset-filters-container">
+            <button id="resetFiltersBtn" class="reset-filters-btn" aria-label="Reset all filters">Reset All Filters</button>
           </div>
         </section>
       </div>
@@ -4087,7 +4004,7 @@ function makePosts(){
     }
 
     // Reset
-    $('#resetBtn').addEventListener('click',()=>{
+    $('#resetFiltersBtn').addEventListener('click',()=>{
       $('#kwInput').value='';
       $('#dateInput').value='';
       dateStart = null;
@@ -4110,10 +4027,10 @@ function makePosts(){
       const dateX = date.parentElement.querySelector('.x');
       const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
       dateX && dateX.classList.toggle('active', !!hasDate);
-      updateFilterBtnColor();
+      updateResetBtn();
     }
 
-    function filtersActive(){
+    function nonLocationFiltersActive(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
@@ -4121,10 +4038,10 @@ function makePosts(){
       return kw || hasDate || expired;
     }
 
-    function updateFilterBtnColor(){
-      const active = filtersActive();
+    function updateResetBtn(){
+      const active = nonLocationFiltersActive();
       document.body.classList.toggle('filters-active', active);
-      const reset = $('#resetBtn');
+      const reset = $('#resetFiltersBtn');
       reset && reset.classList.toggle('active', active);
     }
 
@@ -4391,7 +4308,7 @@ function makePosts(){
       }
     }
     updateClearButtons();
-    updateFilterBtnColor();
+    updateResetBtn();
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
     const favToggle = $('#favToggle');
@@ -6039,7 +5956,7 @@ function makePosts(){
       const total = posts.filter(p => inBounds(p) && p.dates.some(d => parseISODate(d) >= today)).length;
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
-      updateFilterBtnColor();
+      updateResetBtn();
     }
 
     if(!spinEnabled) applyFilters();
