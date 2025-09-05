@@ -5579,7 +5579,7 @@ function makePosts(){
         });
       }
 
-      const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
+      const imgs = p.images && p.images.length ? [heroUrl(p), ...p.images] : [heroUrl(p)];
       const thumbCol = el.querySelector('.thumb-column');
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
