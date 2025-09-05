@@ -25,7 +25,7 @@
       --primary: #3E5393;
       --secondary: #000000;
       --accent: #5C6FB1;
-      --active: #2E3A72;
+      --active: #0000ff;
       --background: rgba(41,41,41,1);
       --text: #ffffff;
       --button-text: #ffffff;
@@ -33,7 +33,7 @@
       --button-active-text: #ffffff;
       --btn: #333333;
       --btn-hover: #333333;
-      --btn-active: #333333;
+      --btn-active: #0000ff;
       --panel-bg: #444444;
       --panel-text: #000000;
       --footer-h: 60px;
@@ -45,7 +45,7 @@
       --scrollbar-h: 8px;
       --border: rgba(173,173,173,0.31);
       --border-hover: rgba(255,136,0,0.43);
-      --border-active: rgba(255,200,0,0.45);
+      --border-active: #0000ff;
       --placeholder-text: gray;
       --filter-placeholder-text: var(--placeholder-text);
       --control-text-bg: #ffffff;
@@ -78,7 +78,7 @@
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #ff0000;
+        --filter-active-color: #0000ff;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -362,7 +362,7 @@ input[type="checkbox"]{
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  height: 70px;
+  height: 75px;
   gap: 0;
 }
 
@@ -379,8 +379,8 @@ input[type="checkbox"]{
 
 .header button,
 .view-toggle button{
-  width:70px;
-  height:70px;
+  width:75px;
+  height:75px;
   border-radius:0;
   display:flex;
   align-items:center;
@@ -496,7 +496,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .auth .auth-btn{
-  border: 1px solid rgba(255,255,255,.6);
+  border: none;
   border-radius: 0;
   padding: 0;
   background: rgba(255,255,255,0.2);
@@ -749,7 +749,7 @@ button[aria-expanded="true"] .results-arrow{
       top:200px;
       left:50%;
       transform:translateX(-50%);
-      background:rgba(0,0,0,0.7);
+      background:rgba(0,0,0,1);
     }
 #member-panel .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
@@ -1269,17 +1269,34 @@ body.hide-results .list-panel{
 
 #filterBtn{
   border-radius:4px;
-  gap:4px;
+  flex-direction:column;
+  gap:10px;
+}
+#filterBtn.spinning{
+  gap:0;
 }
 .icon-search{
   display:inline-block;
   vertical-align:middle;
   color: currentColor;
   width:20px; height:20px;
+  transition:transform .3s;
+}
+#filterBtn.spinning .icon-search{
+  transform:scale(1.5);
+}
+#filterBtn:not(.spinning) .icon-search{
+  transform:scale(1);
+}
+#filterBtn.spinning #resultCount{
+  display:none;
+}
+#resultCount{
+  display:block;
 }
 body.filters-active #filterBtn{
-  background: red;
-  border-color: red;
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
   box-shadow: none;
 }
 
@@ -1624,7 +1641,7 @@ body.hide-results .post-panel{
 }
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
-  top:var(--gap);
+  top:0;
   z-index:3;
   padding-bottom:var(--gap);
 }
@@ -2345,14 +2362,14 @@ footer{
   flex:1;
   height:100%;
   align-items:center;
-  margin-right:70px;
+  margin-right:60px;
   padding:0 10px;
   box-sizing:border-box;
 }
 
 .fullscreen-btn{
-    width:70px;
-    height:70px;
+    width:60px;
+    height:60px;
     padding:0;
     border-radius:0;
     position:absolute;
@@ -2391,7 +2408,7 @@ footer .foot-row .foot-item{
   border:1px solid var(--border);
   border-radius:8px;
   color:#fff;
-  height:100%;
+  height:50px;
   overflow:hidden;
   background-size:cover;
   background-position:center;
@@ -2984,7 +3001,7 @@ footer .chip-small img.mini{
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
+        <span id="resultCount" aria-live="polite"><strong>0</strong></span>
       </button>
       <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">List</button>
       <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
@@ -4732,6 +4749,8 @@ function makePosts(){
       if(map.getZoom() >= 5) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) requestClosePanel(filterPanel);
       spinning = true;
+      const fb = document.getElementById('filterBtn');
+      if(fb) fb.classList.add('spinning');
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
         document.body.classList.add('hide-results');
@@ -4755,6 +4774,8 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
+      const fb = document.getElementById('filterBtn');
+      if(fb) fb.classList.remove('spinning');
       const wasHidden = resultsWasHidden;
       resultsWasHidden = null;
       if(wasHidden === false){
@@ -5116,7 +5137,7 @@ function makePosts(){
       updateAds(arr);
       restoreActivePost();
     }
-    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
+    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong>`; }
     function formatDates(d){
       if(!d || !d.length) return '';
       const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
