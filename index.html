@@ -4405,7 +4405,7 @@ function makePosts(){
         const cardEl = e.target.closest('.card');
         if(cardEl){
           const id = cardEl.getAttribute('data-id');
-          if(id) { stopSpin(); openPost(id); }
+          if(id) { openPost(id); }
           return;
         }
         if(e.target === resList){
@@ -4423,7 +4423,7 @@ function makePosts(){
         const cardEl = e.target.closest('.card');
         if(cardEl){
           const id = cardEl.getAttribute('data-id');
-          if(id){ stopSpin(); openPost(id, true); }
+          if(id){ openPost(id, true); }
           return;
         }
         if(e.target === postsWide && postsWide.querySelector('.open-posts')){
