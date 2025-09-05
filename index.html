@@ -1399,7 +1399,7 @@ body.filters-active #filterBtn{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.3));
+  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
   pointer-events:none;
   z-index:0;
 }
@@ -1709,7 +1709,7 @@ body.filters-active #filterBtn{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.3));
+  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
   pointer-events:none;
   z-index:0;
 }
@@ -1785,7 +1785,7 @@ body.hide-results .post-panel{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.3));
+  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
   z-index:0;
 }
 .open-posts .detail-header .title-block,
@@ -2515,23 +2515,40 @@ footer{
 }
 
 footer .foot-row .foot-item{
-  background:var(--list-background);
-  border:1px solid var(--border);
+  position:relative;
+  flex:0 0 auto;
+  width:120px;
+  height:100%;
+  border-radius:8px;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
+  display:flex;
+  align-items:flex-end;
+  color:#fff;
 }
-
-.chip-small img.mini{
-  width: 26px;
-  height: 20px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex: 0 0 auto;
-  display: block;
-  background: var(--btn);
+footer .foot-row .foot-item img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
 }
-
-.chip-small .t{
-  overflow: hidden;
-  text-overflow: ellipsis;
+footer .foot-row .foot-item::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.6));
+  z-index:1;
+  pointer-events:none;
+}
+footer .foot-row .foot-item .t,
+footer .foot-row .foot-item .fav-star{
+  position:relative;
+  z-index:2;
+  text-shadow:0 2px 4px rgba(0,0,0,0.8);
+  padding:6px;
 }
 
 .card,
@@ -2840,26 +2857,34 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 }
 
 
-.ad-panel{
+.ad-panel-container{
   position:fixed;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: var(--footer-h);
-  width:400px;
+  width:420px;
   right: var(--gap);
   background: rgba(0,0,0,0.5);
   z-index:5;
   border-radius:8px;
-  overflow:hidden;
+  padding:5px 10px;
   pointer-events:none;
-  padding:8px;
+  overflow:hidden;
   transform:translateX(calc(100% + var(--gap)));
   transition:transform .3s ease;
   cursor:pointer;
 }
 
-.ad-panel.show{
+.ad-panel-container.show{
   pointer-events:auto;
   transform:translateX(0);
+}
+
+.ad-panel{
+  width:100%;
+  height:100%;
+  border-radius:8px;
+  overflow:hidden;
+  position:relative;
 }
 
 .ad-panel .ad-slide{
@@ -3070,7 +3095,9 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     <div class="posts" id="postsWide"></div>
   </section>
 
-  <section id="ad-panel" class="ad-panel" aria-label="Advertisement"></section>
+  <div id="ad-panel-container" class="ad-panel-container">
+    <section id="ad-panel" class="ad-panel" aria-label="Advertisement"></section>
+  </div>
 
 
     <footer>
@@ -5195,15 +5222,16 @@ function makePosts(){
         startAdCycle();
       }
     function startAdCycle(){
-      const panel = document.getElementById('ad-panel');
-      if(!panel.classList.contains('show') || !adPosts.length || adTimer) return;
+      const container = document.getElementById('ad-panel-container');
+      if(!container.classList.contains('show') || !adPosts.length || adTimer) return;
       showNextAd();
       adTimer = setInterval(showNextAd,20000);
     }
     function stopAdCycle(){ clearInterval(adTimer); adTimer = null; }
     function showNextAd(){
+      const container = document.getElementById('ad-panel-container');
       const panel = document.getElementById('ad-panel');
-      if(!panel.classList.contains('show') || !adPosts.length) return;
+      if(!container.classList.contains('show') || !adPosts.length) return;
       adIndex = (adIndex + 1) % adPosts.length;
       const p = adPosts[adIndex];
       const slide = document.createElement('div');
@@ -5355,11 +5383,11 @@ function makePosts(){
           const p = posts.find(x=>x.id===v.id);
           if(!p) continue;
           const el = document.createElement('div');
-          el.className='chip-small foot-item';
+          el.className='foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
-            const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-            el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+          el.innerHTML = `<img loading="lazy" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
           footRow.appendChild(el);
@@ -5556,6 +5584,7 @@ function makePosts(){
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
+        t.loading = 'lazy';
         t.src = url;
         t.dataset.full = url;
         t.dataset.index = i;
@@ -6189,7 +6218,8 @@ document.addEventListener('pointerdown', handleDocInteract);
   });
 
   const welcomePopup = document.getElementById('welcomePopup');
-  [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m => {
+  if(filterPanel) closePanel(filterPanel);
+  [memberPanel, adminPanel, welcomePopup].forEach(m => {
     if (m && localStorage.getItem(`panel-open-${m.id}`) === 'true') {
       openPanel(m);
     }
@@ -6321,7 +6351,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   {key:'admin-panel', label:'Admin Panel', selectors:{bg:['#admin-panel .panel-content'], text:['#admin-panel .panel-content'], title:['#admin-panel .panel-content .t','#admin-panel .panel-content .title'], btn:['#admin-panel button','#admin-panel #spinType span'], btnText:['#admin-panel button','#admin-panel #spinType span']}},
   {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
   {key:'member-panel', label:'Member Panel', selectors:{bg:['#member-panel .panel-content'], text:['#member-panel .panel-content'], title:['#member-panel .panel-content .t','#member-panel .panel-content .title'], btn:['#member-panel button'], btnText:['#member-panel button']}},
-  {key:'ad-panel', label:'Ad Panel', selectors:{bg:['#ad-panel']}},
+    {key:'ad-panel', label:'Ad Panel', selectors:{bg:['#ad-panel-container']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
   let lastFieldsetKey = null;
@@ -7019,12 +7049,12 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const adPanel = document.getElementById('ad-panel');
+  const adPanelContainer = document.getElementById('ad-panel-container');
   const postsPanel = document.querySelector('.post-panel');
   const listPanel = document.querySelector('.list-panel');
   const header = document.querySelector('.header');
   const footer = document.querySelector('footer');
-  [adPanel, postsPanel, listPanel, header, footer].forEach(el => {
+  [adPanelContainer, postsPanel, listPanel, header, footer].forEach(el => {
     if(el){
       el.addEventListener('click', e => {
         if(e.target === el) setMode('map');
@@ -7032,19 +7062,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   window.updateAdVisibility = function(){
-    if(!adPanel || !postsPanel) return;
+    if(!adPanelContainer || !postsPanel) return;
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const width = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
+    const width = postsPanel.getBoundingClientRect().width + (adPanelContainer.classList.contains('show') ? adPanelContainer.getBoundingClientRect().width + gap : 0);
     const hasPosts = !!postsPanel.querySelector('.card');
     const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
-    const isShown = adPanel.classList.contains('show');
+    const isShown = adPanelContainer.classList.contains('show');
     if(shouldShow === isShown) return;
     if(shouldShow){
-      adPanel.classList.add('show');
+      adPanelContainer.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
     } else {
-      adPanel.classList.remove('show');
+      adPanelContainer.classList.remove('show');
       postsPanel.classList.remove('ad-space');
       stopAdCycle();
     }
