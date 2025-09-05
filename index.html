@@ -25,7 +25,7 @@
       --primary: #3E5393;
       --secondary: #000000;
       --accent: #5C6FB1;
-      --active: #0000ff;
+      --active: #2e3a72;
       --background: rgba(41,41,41,1);
       --text: #ffffff;
       --button-text: #ffffff;
@@ -33,7 +33,7 @@
       --button-active-text: #ffffff;
       --btn: #333333;
       --btn-hover: #333333;
-      --btn-active: #0000ff;
+      --btn-active: #2e3a72;
       --panel-bg: #444444;
       --panel-text: #000000;
       --footer-h: 60px;
@@ -45,7 +45,7 @@
       --scrollbar-h: 8px;
       --border: rgba(173,173,173,0.31);
       --border-hover: rgba(255,136,0,0.43);
-      --border-active: #0000ff;
+      --border-active: #2e3a72;
       --placeholder-text: gray;
       --filter-placeholder-text: var(--placeholder-text);
       --control-text-bg: #ffffff;
@@ -78,7 +78,7 @@
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #0000ff;
+        --filter-active-color: #ff0000;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -689,7 +689,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   justify-content:center;
   text-align:center;
-  background:#00008b;
+  background:var(--btn-active);
   color:#fff;
   font-family:Verdana, sans-serif;
   font-size:14px;
@@ -1298,6 +1298,7 @@ body.filters-active #filterBtn{
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);
   box-shadow: none;
+  color: var(--button-text);
 }
 
 .options-dropdown{ position:relative; }
@@ -3004,7 +3005,7 @@ footer .chip-small img.mini{
         <span id="resultCount" aria-live="polite"><strong>0</strong></span>
       </button>
       <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">List</button>
-      <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
+      <button id="mapPostsToggle" aria-pressed="false">Posts</button>
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
     <div class="auth">
@@ -3394,10 +3395,11 @@ footer .chip-small img.mini{
     localStorage.setItem('hasVisited','1');
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
-    const startCenter = savedView?.center || defaultCenter;
-    const startZoom = savedView?.zoom || 1.5;
-    startPitch = window.startPitch = savedView?.pitch || 0;
-    startBearing = window.startBearing = savedView?.bearing || 0;
+    const startCenter = (Array.isArray(savedView?.center) && savedView.center.length === 2 &&
+      savedView.center.every(n => typeof n === 'number')) ? savedView.center : defaultCenter;
+    const startZoom = typeof savedView?.zoom === 'number' ? savedView.zoom : 1.5;
+    startPitch = window.startPitch = typeof savedView?.pitch === 'number' ? savedView.pitch : 0;
+    startBearing = window.startBearing = typeof savedView?.bearing === 'number' ? savedView.bearing : 0;
 
     function normalizeMapStyle(style){
       switch(style){
@@ -4486,7 +4488,7 @@ function makePosts(){
       document.body.classList.add('mode-'+m);
       const toggle = $('#mapPostsToggle');
       if(toggle){
-        toggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
+        toggle.textContent = 'Posts';
         toggle.setAttribute('aria-pressed', m === 'posts');
       }
       if(map){
@@ -6055,6 +6057,10 @@ function openPanel(m){
     }
     m.classList.add('show');
     m.removeAttribute('aria-hidden');
+    const buttonMap = { 'member-panel':'memberBtn', 'admin-panel':'adminBtn', 'filter-panel':'filterBtn' };
+    const btnId = buttonMap[m.id];
+    const btn = btnId && document.getElementById(btnId);
+    if(btn) btn.setAttribute('aria-pressed','true');
     localStorage.setItem(`panel-open-${m.id}`,'true');
     if(content){
       const rootStyles = getComputedStyle(document.documentElement);
@@ -6121,6 +6127,10 @@ function openPanel(m){
 function closePanel(m){
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
+  const buttonMap = { 'member-panel':'memberBtn', 'admin-panel':'adminBtn', 'filter-panel':'filterBtn' };
+  const btnId = buttonMap[m.id];
+  const btn = btnId && document.getElementById(btnId);
+  if(btn) btn.setAttribute('aria-pressed','false');
   localStorage.setItem(`panel-open-${m.id}`,'false');
   const idx = panelStack.indexOf(m);
   if(idx!==-1) panelStack.splice(idx,1);
