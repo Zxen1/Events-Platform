@@ -96,7 +96,9 @@
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  border-color: var(--border) !important;
+}
+*:not(.mapboxgl-ctrl, .mapboxgl-ctrl *){
+  border-color: var(--border);
 }
 
 fieldset{
@@ -105,12 +107,12 @@ fieldset{
   border:0 !important;
 }
 
-*:hover{
-  border-color: var(--border-hover) !important;
+*:hover:not(.mapboxgl-ctrl, .mapboxgl-ctrl *){
+  border-color: var(--border-hover);
 }
 
-*:active{
-  border-color: var(--border-active) !important;
+*:active:not(.mapboxgl-ctrl, .mapboxgl-ctrl *){
+  border-color: var(--border-active);
 }
 
 *[aria-pressed="true"],
@@ -118,7 +120,7 @@ fieldset{
 *[aria-selected="true"],
 .selected,
 .on{
-  border-color: var(--border-active) !important;
+  border-color: var(--border-active);
   color: var(--active);
 }
 
@@ -165,7 +167,7 @@ textarea,
 }
 
 button:not([class^="mapboxgl-ctrl"]),
-[role="button"]{
+[role="button"]:not([class^="mapboxgl-ctrl"]){
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
@@ -182,25 +184,25 @@ button:not([class^="mapboxgl-ctrl"]),
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
-button:hover,
-[role="button"]:hover{
+button:not([class^="mapboxgl-ctrl"]):hover,
+[role="button"]:not([class^="mapboxgl-ctrl"]):hover{
   background: var(--btn-hover);
   border-color: var(--btn-hover);
   color: var(--button-hover-text);
 }
 
-button:active,
-[role="button"]:active,
-button[aria-pressed="true"],
-[role="button"][aria-pressed="true"],
-button[aria-current="page"],
-[role="button"][aria-current="page"],
-button[aria-selected="true"],
-[role="button"][aria-selected="true"],
-button.selected,
-[role="button"].selected,
-button.on,
-[role="button"].on{
+button:not([class^="mapboxgl-ctrl"]):active,
+[role="button"]:not([class^="mapboxgl-ctrl"]):active,
+button[aria-pressed="true"]:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-pressed="true"]:not([class^="mapboxgl-ctrl"]),
+button[aria-current="page"]:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-current="page"]:not([class^="mapboxgl-ctrl"]),
+button[aria-selected="true"]:not([class^="mapboxgl-ctrl"]),
+[role="button"][aria-selected="true"]:not([class^="mapboxgl-ctrl"]),
+button.selected:not([class^="mapboxgl-ctrl"]),
+[role="button"].selected:not([class^="mapboxgl-ctrl"]),
+button.on:not([class^="mapboxgl-ctrl"]),
+[role="button"].on:not([class^="mapboxgl-ctrl"]){
   background: var(--btn-active);
   border-color: var(--btn-active);
   color: var(--button-active-text);
@@ -1592,8 +1594,7 @@ body.filters-active #filterBtn{
   opacity:1;
 }
 .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg{opacity:1;fill:#000;}
-.geocoder .mapboxgl-ctrl-geocoder--icon,
-.geocoder .mapboxgl-ctrl-geocoder--icon-search{display:none !important;}
+
 
 .geocoder .mapboxgl-ctrl-group button + button{border-left:1px solid #ccc;}
 .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button svg,
@@ -1619,7 +1620,7 @@ body.filters-active #filterBtn{
   width:var(--control-h);
   height:var(--control-h);
   margin:0;
-  padding:0 !important;
+  padding:0;
 }
 .mapboxgl-ctrl-group{overflow:hidden;}
 .mapboxgl-ctrl-geolocate,
@@ -1630,11 +1631,10 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   justify-content:center;
-  border:none !important;
   border-radius:4px;
 }
-#map .mapboxgl-ctrl-geolocate{background:var(--control-geolocate-bg) !important;}
-#map .mapboxgl-ctrl-compass{background:var(--control-compass-bg) !important;}
+#map .mapboxgl-ctrl-geolocate{background:var(--control-geolocate-bg);}
+#map .mapboxgl-ctrl-compass{background:var(--control-compass-bg);}
 .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
 .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon,
 .mapboxgl-ctrl-compass .mapboxgl-ctrl-compass-arrow{
@@ -1645,13 +1645,10 @@ body.filters-active #filterBtn{
 #map .mapboxgl-ctrl button{
   width:var(--control-h);
   height:var(--control-h);
-  border:0 !important;
-  color:#000;
-  padding:0 !important;
-  box-shadow:none;
+  padding:0;
 }
 #map .mapboxgl-ctrl button:not(.mapboxgl-ctrl-geolocate):not(.mapboxgl-ctrl-compass){
-  background:var(--control-text-bg) !important;
+  background:var(--control-text-bg);
 }
 #map .mapboxgl-ctrl button svg{
   width:20px;
@@ -1660,8 +1657,8 @@ body.filters-active #filterBtn{
 #map .mapboxgl-ctrl button:hover{filter:brightness(1.1);}
 #map .mapboxgl-ctrl button:active{filter:brightness(0.9);}
 #map .mapboxgl-ctrl-group{
-  background:var(--control-text-bg) !important;
-  border:1px solid #ccc !important;
+  background:var(--control-text-bg);
+  border:1px solid #ccc;
   border-radius:4px;
   overflow:hidden;
 }
