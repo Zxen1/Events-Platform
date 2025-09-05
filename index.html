@@ -2673,6 +2673,19 @@ footer .foot-row .foot-item,
 .mapboxgl-popup.hover-pop .mapboxgl-popup-content{
   pointer-events: auto;
 }
+.mapboxgl-popup .mapboxgl-popup-content{background-color:var(--popup-bg);box-shadow:0 0 0px #000000;}
+.mapboxgl-popup .hover-card,
+.mapboxgl-popup .chip,
+.mapboxgl-popup .chip-small,
+.mapboxgl-popup .multi-item{background-color:var(--popup-bg);box-shadow:0 0 0px #000000;color:var(--popup-text);}
+.mapboxgl-popup .hover-card .t,
+.mapboxgl-popup .hover-card .title,
+.mapboxgl-popup .chip .t,
+.mapboxgl-popup .chip .title,
+.mapboxgl-popup .chip-small .t,
+.mapboxgl-popup .chip-small .title,
+.mapboxgl-popup .multi-item .t,
+.mapboxgl-popup .multi-item .title{color:var(--popup-text);}
 
 .multi-hover h4{
   margin: 0 0 8px 0;
@@ -3153,6 +3166,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
           <div class="panel-actions">
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="pin-panel" aria-label="Pin panel" aria-pressed="false">📌</button>
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
@@ -6251,6 +6265,13 @@ function handleDocInteract(e){
       requestClosePanel(welcome);
     }
   }
+  const filter = document.getElementById('filter-panel');
+  if(filter && filter.classList.contains('show') && !filter.classList.contains('pinned')){
+    const content = filter.querySelector('.panel-content');
+    if(content && !content.contains(e.target)){
+      requestClosePanel(filter);
+    }
+  }
   document.querySelectorAll('.img-popup').forEach(p=>{
     if(!p.contains(e.target)){
       p.remove();
@@ -6282,6 +6303,12 @@ document.addEventListener('pointerdown', handleDocInteract);
     togglePanel(adminPanel);
   });
   filterBtn && filterBtn.addEventListener('click', () => togglePanel(filterPanel));
+  const pinBtn = filterPanel && filterPanel.querySelector('.pin-panel');
+  pinBtn && pinBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const pinned = filterPanel.classList.toggle('pinned');
+    pinBtn.setAttribute('aria-pressed', pinned);
+  });
   document.querySelectorAll('.panel .close-panel').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.closest('.panel');
