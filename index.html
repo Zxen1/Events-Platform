@@ -3604,7 +3604,8 @@ footer .chip-small img.mini{
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
-    let activePostId = null;
+    let activePostId = localStorage.getItem('activePostId');
+    let restoringPost = false;
     let adPosts = [], adIndex = -1, adTimer, adPreloads = [], adNeedsReset = true;
 
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -5247,6 +5248,7 @@ function makePosts(){
       updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
       updateAds(arr);
+      restoreActivePost();
     }
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
     function formatDates(d){
@@ -5604,13 +5606,17 @@ function makePosts(){
     }
 
     async function openPost(id, fromPosts=false){
+      if(restoringPost) return;
+      const p = posts.find(x=>x.id===id); if(!p) return;
+      restoringPost = true;
+      try{
       touchMarker = null;
       if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
       localStorage.setItem('spinGlobe', 'false');
       stopSpin();
-      const p = posts.find(x=>x.id===id); if(!p) return;
       activePostId = id;
+      localStorage.setItem('activePostId', id);
       $$('.card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       $$('footer .foot-row .foot-item[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       $$('.mapboxgl-popup .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
@@ -5673,6 +5679,18 @@ function makePosts(){
       viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
+      } finally {
+        restoringPost = false;
+      }
+    }
+
+    function restoreActivePost(){
+      if(activePostId && !restoringPost && document.body.classList.contains('mode-posts')){
+        if(postsWideEl && !postsWideEl.querySelector('.open-posts')){
+          const card = postsWideEl.querySelector(`[data-id="${activePostId}"]`);
+          if(card) openPost(activePostId, true);
+        }
+      }
     }
 
     document.addEventListener('click', (ev)=>{
@@ -6098,7 +6116,11 @@ function makePosts(){
     }
 
     applyFilters();
-    setMode('map');
+    if(activePostId){
+      openPost(activePostId, true);
+    } else {
+      setMode('map');
+    }
   })();
   
 // 0577 helpers (safety)
