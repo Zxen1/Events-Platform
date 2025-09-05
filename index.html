@@ -214,6 +214,10 @@ button.on:not([class^="mapboxgl-ctrl"]),
   all: revert !important;
 }
 
+.mapboxgl-ctrl-attrib{
+  display:none !important;
+}
+
 a{
   color: var(--primary);
 }
@@ -1387,7 +1391,7 @@ body.filters-active #filterBtn{
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
-  transition: filter .22s ease;
+  transition: filter .22s ease, box-shadow .2s;
   position: relative;
   z-index: 1;
 }
@@ -1428,6 +1432,10 @@ body.filters-active #filterBtn{
 
 .thumb.lqip{
   filter: none;
+}
+
+.card[aria-selected="true"] .thumb{
+  box-shadow:0 0 0 2px var(--border-active);
 }
 
 .meta{
