@@ -25,7 +25,7 @@
       --primary: #3E5393;
       --secondary: #000000;
       --accent: #5C6FB1;
-      --active: #2E3A72;
+      --active: blue;
       --background: rgba(41,41,41,1);
       --text: #ffffff;
       --button-text: #ffffff;
@@ -33,7 +33,7 @@
       --button-active-text: #ffffff;
       --btn: #333333;
       --btn-hover: #333333;
-      --btn-active: #333333;
+      --btn-active: blue;
       --panel-bg: #444444;
       --panel-text: #000000;
       --footer-h: 60px;
@@ -362,12 +362,12 @@ input[type="checkbox"]{
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  height: 70px;
+  height: 75px;
   gap: 0;
 }
 
 .view-toggle button{
-  border: 1px solid var(--btn);
+  border: none;
   padding: 0;
   background: var(--btn);
   color: var(--button-text);
@@ -379,8 +379,8 @@ input[type="checkbox"]{
 
 .header button,
 .view-toggle button{
-  width:70px;
-  height:70px;
+  width:75px;
+  height:75px;
   border-radius:0;
   display:flex;
   align-items:center;
@@ -388,6 +388,7 @@ input[type="checkbox"]{
   gap:0;
   line-height:1;
   overflow:hidden;
+  border:none;
 }
 .options-menu button{
   height:35px;
@@ -1269,17 +1270,26 @@ body.hide-results .list-panel{
 
 #filterBtn{
   border-radius:4px;
-  gap:4px;
+  gap:0;
+  flex-direction:column;
+  align-items:center;
 }
 .icon-search{
   display:inline-block;
   vertical-align:middle;
   color: currentColor;
   width:20px; height:20px;
+  transition:transform .3s;
+}
+#filterBtn.spinning .icon-search{
+  transform:scale(1.5);
+}
+#filterBtn.spinning #resultCount{
+  display:none;
 }
 body.filters-active #filterBtn{
-  background: red;
-  border-color: red;
+  background: blue;
+  border-color: blue;
   box-shadow: none;
 }
 
@@ -1586,7 +1596,7 @@ body.hide-results .post-panel{
   border:none;
   border-radius:4pc 4pc 8px 8px;
   margin:0 0 12px 0;
-  overflow:visible;
+  overflow:hidden;
   color:#fff;
   font-family: Verdana;
   font-size:14px;
@@ -2345,14 +2355,14 @@ footer{
   flex:1;
   height:100%;
   align-items:center;
-  margin-right:70px;
+  margin-right:60px;
   padding:0 10px;
   box-sizing:border-box;
 }
 
 .fullscreen-btn{
-    width:70px;
-    height:70px;
+    width:60px;
+    height:60px;
     padding:0;
     border-radius:0;
     position:absolute;
@@ -2984,7 +2994,7 @@ footer .chip-small img.mini{
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
+        <span id="resultCount" aria-live="polite"><strong>0</strong></span>
       </button>
       <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">List</button>
       <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
@@ -3401,6 +3411,7 @@ footer .chip-small img.mini{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
+          lastResultCount = 0,
           mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
           dynamicSun = localStorage.getItem('dynamicSun') === 'true',
@@ -4748,6 +4759,7 @@ function makePosts(){
       if(typeof filterPanel !== 'undefined' && filterPanel) requestClosePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
+      updateResultCount(lastResultCount);
       if(!resultsWasHidden){
         document.body.classList.add('hide-results');
         const resultsToggle = document.getElementById('resultsToggle');
@@ -4770,6 +4782,7 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
+      updateResultCount(lastResultCount);
       const wasHidden = resultsWasHidden;
       resultsWasHidden = null;
       if(wasHidden === false){
@@ -5131,7 +5144,18 @@ function makePosts(){
       updateAds(arr);
       restoreActivePost();
     }
-    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
+    function updateResultCount(n){
+      lastResultCount = n;
+      const rc = $('#resultCount');
+      const btn = $('#filterBtn');
+      if(spinning){
+        rc.textContent = '';
+        btn.classList.add('spinning');
+      } else {
+        rc.innerHTML = `<strong>${n}</strong>`;
+        btn.classList.remove('spinning');
+      }
+    }
     function formatDates(d){
       if(!d || !d.length) return '';
       const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
