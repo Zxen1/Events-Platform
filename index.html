@@ -1316,13 +1316,13 @@ button[aria-expanded="true"] .results-arrow{
 
 .list-panel{
     position: fixed;
-      top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 12px);
+    top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 10px);
     bottom: var(--footer-h);
     left: var(--gap);
     width: var(--results-w);
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 0 var(--gap) 0;
   background: none;
   transition: width .3s ease, padding .3s ease;
   z-index: 2;
@@ -1685,7 +1685,7 @@ body.filters-active #filterBtn{
     right: var(--gap);
   overflow-y:scroll;
   overflow-x:hidden;
-  padding:0;
+  padding:0 0 var(--gap);
   color:#000;
   background: rgba(0,0,0,0.5);
 }
@@ -1862,7 +1862,7 @@ body.hide-results .post-panel{
   height:auto;
   overflow-x:auto;
   gap:4px;
-  padding:0 12px;
+  padding:0 12px 0 0;
   position:relative;
 }
 
@@ -2903,8 +2903,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
 
 .list-panel .res-list{
   border-radius: inherit;
-  padding: var(--gap);
-  padding-right: 0;
+  padding: var(--gap) 0 0 var(--gap);
   margin: 0 calc(-1 * var(--gap)) 0 0;
   background: rgba(0,0,0,0.5);
 }
@@ -5715,6 +5714,8 @@ function makePosts(){
         t.tabIndex = 0;
         thumbCol.appendChild(t);
       });
+      const preloads = imgs.map(url=>{ const im = new Image(); im.src = url; return im; });
+      el._preloadedImages = preloads;
       function show(idx){
         const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
         if(!t) return;
