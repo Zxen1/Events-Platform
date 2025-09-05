@@ -1268,7 +1268,7 @@ body.hide-results .list-panel{
 }
 
 #filterBtn{
-  border-radius:4px;
+  border-radius:0;
   flex-direction:column;
   gap:10px;
 }
@@ -1600,29 +1600,29 @@ body.hide-results .post-panel{
 }
 
 
-.open-posts{
+ .open-posts{
   border:none;
-  border-radius:4pc 4pc 8px 8px;
+  border-radius:4px;
   margin:0 0 12px 0;
   overflow:visible;
   color:#fff;
   font-family: Verdana;
   font-size:14px;
-}
+ }
 
-.open-posts .detail-header{
+ .open-posts .detail-header{
   position:relative;
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:6px 12px;
   opacity:1;
-  border-top-left-radius:4pc;
-  border-top-right-radius:4pc;
+  border-top-left-radius:4px;
+  border-top-right-radius:4px;
   background-size:cover;
   background-position:center;
   color:#fff;
-}
+ }
 .open-posts .detail-header::before{
   content:"";
   position:absolute;
@@ -1685,7 +1685,7 @@ body.hide-results .post-panel{
   aspect-ratio:1/1;
   overflow:hidden;
   border:none;
-  border-radius:8px;
+  border-radius:4px;
   flex-shrink:0;
   cursor:pointer;
   background:rgba(0,0,0,0);
@@ -1721,7 +1721,7 @@ body.hide-results .post-panel{
   object-position:center;
   aspect-ratio:1/1;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:4px;
   cursor:pointer;
   position:relative;
   z-index:1;
@@ -1771,7 +1771,7 @@ body.hide-results .post-panel{
     width:100%;
     aspect-ratio:1/1;
     margin:0;
-    border-radius:8px;
+    border-radius:4px;
     background:rgba(0,0,0,0);
   }
   .open-posts .img-box img{
@@ -1877,7 +1877,7 @@ body.hide-results .post-panel{
   flex:1 1 auto;
   height:100%;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:4px;
   min-width:300px;
   min-height:200px;
 }
@@ -2285,7 +2285,7 @@ body.hide-results .post-panel{
       width:100%;
       max-width:100%;
       border:none;
-      border-radius:8px;
+      border-radius:4px;
     }
   .post-panel{
     left:0;
@@ -2949,7 +2949,7 @@ footer .chip-small img.mini{
     width:100vw;
     aspect-ratio:1/1;
     flex:0 0 100vw;
-    border-radius:8px;
+    border-radius:4px;
     background:rgba(0,0,0,0);
   }
   .open-posts .img-box img{
@@ -3004,7 +3004,7 @@ footer .chip-small img.mini{
         </svg>
         <span id="resultCount" aria-live="polite"><strong>0</strong></span>
       </button>
-      <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">List</button>
+      <button id="resultsToggle" aria-pressed="false" aria-label="Toggle results list">List</button>
       <button id="mapPostsToggle" aria-pressed="false">Posts</button>
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
@@ -4417,8 +4417,8 @@ function makePosts(){
         resultsToggle.setAttribute('aria-pressed','false');
         listPanel.setAttribute('aria-hidden','true');
       } else {
-        resultsToggle.setAttribute('aria-pressed','true');
         listPanel.setAttribute('aria-hidden','false');
+        resultsToggle.setAttribute('aria-pressed','false');
       }
       window.addEventListener('resize', ()=>{
         if(window.innerWidth < 1000){
@@ -4797,7 +4797,7 @@ function makePosts(){
         const resultsToggle = document.getElementById('resultsToggle');
         const listPanel = document.querySelector('.list-panel');
         document.body.classList.remove('hide-results');
-      if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
+      if(resultsToggle) resultsToggle.setAttribute('aria-pressed','false');
       if(listPanel) listPanel.setAttribute('aria-hidden','false');
     }
     updatePostPanel();
@@ -5261,6 +5261,7 @@ function makePosts(){
       const p = adPosts[adIndex];
       const slide = document.createElement('div');
       slide.className = 'ad-slide';
+      slide.dataset.id = p.id;
       const img = new Image();
       img.loading = 'lazy';
       img.fetchPriority = 'low';
@@ -5278,7 +5279,6 @@ function makePosts(){
         </div>`;
       slide.appendChild(img);
       slide.appendChild(cap);
-      slide.addEventListener('click', e => { e.stopPropagation(); openPost(p.id); });
       img.decode().catch(() => {}).then(() => {
         panel.appendChild(slide);
         requestAnimationFrame(()=> slide.classList.add('active'));
@@ -5410,13 +5410,33 @@ function makePosts(){
         const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
         el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
         if(v.id===activePostId) el.setAttribute('aria-selected','true');
-        el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
         footRow.appendChild(el);
       }
       footRow.scrollLeft = footRow.scrollWidth;
     }
 
     renderFooter();
+
+    footRow.addEventListener('click', e => {
+      const item = e.target.closest('.foot-item');
+      if(!item) return;
+      e.stopPropagation();
+      const id = item.dataset.id;
+      const record = viewHistory.find(v => v.id === id);
+      stopSpin();
+      if(record && record.state) restoreState(record.state);
+      openPost(id);
+    });
+
+    const adPanelEl = document.getElementById('ad-panel');
+    if(adPanelEl){
+      adPanelEl.addEventListener('click', e => {
+        const slide = e.target.closest('.ad-slide');
+        if(!slide) return;
+        e.stopPropagation();
+        openPost(slide.dataset.id);
+      });
+    }
 
     function buildDetail(p){
       const wrap = document.createElement('div');
