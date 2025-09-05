@@ -38,7 +38,7 @@
       --btn-active: #333333;
       --panel-bg: #444444;
       --panel-text: #000000;
-      --footer-h: 70px;
+      --footer-h: 60px;
       --list-background: #555555;
       --closed-card-bg: #555555;
       --scrollbar-track: rgba(0,0,0,0);
@@ -1729,7 +1729,7 @@ body.filters-active #filterBtn{
 .post-panel .card .meta *{
   text-shadow:0 2px 4px rgba(0,0,0,0.8);
 }
-.post-panel.ad-space{right:calc(400px + var(--gap));}
+.post-panel.ad-space{right:calc(420px + var(--gap));}
 
 body.hide-results .post-panel{
   left:0;
@@ -2454,7 +2454,7 @@ footer{
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
+  padding: 10px 10px 0;
   background: rgba(0,0,0,0.7);
   position: fixed;
   bottom: 0;
@@ -2483,6 +2483,7 @@ footer{
   gap: 8px;
   width: 100%;
   flex:1;
+  height:50px;
 }
 
 .fullscreen-btn{
@@ -2516,11 +2517,12 @@ footer .foot-row .foot-item{
   display:flex;
   align-items:center;
   gap:8px;
-  padding:10px;
+  padding:5px;
   background:var(--list-background);
   border:1px solid var(--border);
   border-radius:8px;
   color:#fff;
+  height:100%;
 }
 footer .foot-row .foot-item img{
   width:40px;
@@ -5171,7 +5173,7 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
+      const roots = [resultsEl, postsModeEl];
       roots.forEach(root => {
         if(!root) return;
         const imgs = root.querySelectorAll('img.thumb');
