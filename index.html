@@ -359,7 +359,6 @@ input[type="checkbox"]{
 
 .header button,
 .view-toggle button,
-.auth button,
 .options-menu button{
   height:35px;
   border-radius:4px;
@@ -466,15 +465,13 @@ button[aria-expanded="true"] .results-arrow{
   gap: 10px;
 }
 
-.auth button{
+.auth .auth-btn{
   border: 1px solid rgba(255,255,255,.6);
   border-radius: 999px;
   padding: 0 14px;
   background: rgba(255,255,255,0.2);
   color: inherit;
   font-weight: 600;
-  cursor: pointer;
-  transition: background .2s;
 }
 
 .gear{
@@ -1282,26 +1279,21 @@ button[aria-expanded="true"] .results-arrow{
   margin:8px 0;
 }
 
-.reset-box .btn{
-  height: 36px;
+.reset-box .reset-btn{
   border-radius: 999px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 0 14px;
   font-weight: 700;
   letter-spacing: .2px;
-  color: var(--ink);
-  cursor: pointer;
 }
-.reset-box .btn.active{
+.reset-box .reset-btn.active{
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);
 }
 
-.reset-box .btn svg{
+.reset-box .reset-btn svg{
   width: 16px;
   height: 16px;
 }
@@ -3071,14 +3063,14 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
     <div class="auth">
-      <button id="memberBtn" aria-label="Open members area">
+      <button id="memberBtn" class="auth-btn" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="adminBtn" aria-label="Open admin area">
+      <button id="adminBtn" class="auth-btn" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
@@ -3127,9 +3119,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
           <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
-            </div>
+            <button id="resetBtn" class="reset-btn" aria-label="Reset all filters">Reset All Filters</button>
           </div>
           <div class="field sort-field">
             <div class="options-dropdown">
