@@ -7162,8 +7162,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const postsPanel = document.querySelector('.post-panel');
   const listPanel = document.querySelector('.list-panel');
   const header = document.querySelector('.header');
-  const footer = document.querySelector('footer');
-  [adPanelContainer, postsPanel, listPanel, header, footer].forEach(el => {
+  [adPanelContainer, postsPanel, listPanel, header].forEach(el => {
     if(el){
       el.addEventListener('click', e => {
         if(e.target === el) setMode('map');
