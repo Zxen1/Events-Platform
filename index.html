@@ -709,18 +709,19 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   text-align:center;
 }
-#welcomeBody img{
-  max-width:400px;
-  width:100%;
-  max-height:300px;
-  height:auto;
-  margin-bottom:10px;
-}
-#welcomePopup .panel-content{
-  top:200px;
-  left:50%;
-  transform:translateX(-50%);
-}
+  #welcomeBody img{
+    max-width:400px;
+    width:100%;
+    max-height:300px;
+    height:auto;
+    margin-bottom:10px;
+  }
+    #welcomePopup .panel-content{
+      top:200px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,0.7);
+    }
 #member-panel .location-info{margin-top:4px;font-size:13px;}
   @media (max-width:600px){
   #admin-panel .panel-content,
@@ -1989,11 +1990,12 @@ body.hide-results .post-panel{
   margin:8px 0;
 }
 
-.open-posts .author img{
-  width:100px;
-  height:100px;
-  object-fit:cover;
-}
+  .open-posts .author img{
+    width:50px;
+    height:50px;
+    border-radius:4px;
+    object-fit:cover;
+  }
 
 .open-posts .meta{
   font-size:13px;
@@ -5462,7 +5464,7 @@ function makePosts(){
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
-            <div class="author"><img src="${p.member.avatar}" alt="${p.member.username} avatar" width="100" height="100"/><span>Posted by ${p.member.username}</span></div>
+              <div class="author"><img src="${p.member.avatar}" alt="${p.member.username} avatar" width="50" height="50"/><span>Posted by ${p.member.username}</span></div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div id="venue-info-${p.id}" class="venue-info"></div>
             <div id="session-info-${p.id}" class="session-info">
