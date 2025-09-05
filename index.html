@@ -3395,8 +3395,12 @@ footer .chip-small img.mini{
     localStorage.setItem('hasVisited','1');
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
-    const startCenter = (Array.isArray(savedView?.center) && savedView.center.length === 2 &&
-      savedView.center.every(n => typeof n === 'number')) ? savedView.center : defaultCenter;
+    const startCenter =
+      Array.isArray(savedView?.center) &&
+      savedView.center.length === 2 &&
+      savedView.center.every(Number.isFinite)
+        ? savedView.center
+        : defaultCenter;
     const startZoom = typeof savedView?.zoom === 'number' ? savedView.zoom : 1.5;
     startPitch = window.startPitch = typeof savedView?.pitch === 'number' ? savedView.pitch : 0;
     startBearing = window.startBearing = typeof savedView?.bearing === 'number' ? savedView.bearing : 0;
@@ -4736,7 +4740,16 @@ function makePosts(){
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
-          localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
+          if (
+            Array.isArray(center) &&
+            center.length === 2 &&
+            center.every(Number.isFinite)
+          ) {
+            localStorage.setItem(
+              'mapView',
+              JSON.stringify({ center, zoom, pitch, bearing })
+            );
+          }
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
         map.on('dragend', () => { if(geocoder) geocoder.clear(); });
