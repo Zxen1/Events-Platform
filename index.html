@@ -3602,7 +3602,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
-    let adPosts = [], adIndex = -1, adTimer;
+    let adPosts = [], adIndex = -1, adTimer, adPreloads = [];
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -5229,7 +5229,7 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsModeEl];
+      const roots = [resultsEl, postsWideEl];
       roots.forEach(root => {
         if(!root) return;
         const imgs = root.querySelectorAll('img.thumb');
@@ -5274,15 +5274,26 @@ function makePosts(){
         }
         adPosts = list.slice();
         adIndex = -1;
+        adPreloads = [];
+        preloadAds();
         startAdCycle();
+      }
+      function preloadAds(){
+        while(adPreloads.length < Math.min(3, adPosts.length)){
+          const idx = (adIndex + 1 + adPreloads.length) % adPosts.length;
+          const img = new Image();
+          img.src = imgHero(adPosts[idx]);
+          adPreloads.push(img);
+        }
       }
     function startAdCycle(){
       const container = document.getElementById('ad-panel-container');
       if(!container.classList.contains('show') || !adPosts.length || adTimer) return;
+      preloadAds();
       showNextAd();
       adTimer = setInterval(showNextAd,20000);
     }
-    function stopAdCycle(){ clearInterval(adTimer); adTimer = null; }
+    function stopAdCycle(){ clearInterval(adTimer); adTimer = null; adPreloads = []; }
     function showNextAd(){
       const container = document.getElementById('ad-panel-container');
       const panel = document.getElementById('ad-panel');
@@ -5292,9 +5303,11 @@ function makePosts(){
       const slide = document.createElement('div');
       slide.className = 'ad-slide';
       const img = new Image();
-      img.src = imgHero(p);
+      img.loading = 'lazy';
+      img.fetchPriority = 'low';
+      const pre = adPreloads.shift();
+      img.src = pre ? pre.src : imgHero(p);
       img.alt = '';
-      img.loading = 'eager';
       const cap = document.createElement('div');
       cap.className = 'caption';
       cap.innerHTML = `
@@ -5317,6 +5330,7 @@ function makePosts(){
           setTimeout(()=> old.remove(),1500);
         }
       });
+      preloadAds();
     }
 
     window.startAdCycle = startAdCycle;
@@ -5638,8 +5652,10 @@ function makePosts(){
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
+        t.className = 'thumb lqip';
         t.loading = 'lazy';
-        t.src = url;
+        t.src = svgPlaceholder(p.id + '-' + i);
+        t.dataset.src = url;
         t.dataset.full = url;
         t.dataset.index = i;
         t.tabIndex = 0;
@@ -5648,6 +5664,11 @@ function makePosts(){
       function show(idx){
         const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
         if(!t) return;
+        if(t.dataset.src){
+          t.addEventListener('load', ()=> t.classList.remove('lqip'), {once:true});
+          t.src = t.dataset.src;
+          t.removeAttribute('data-src');
+        }
         mainImg.src = t.src;
         mainImg.dataset.index = idx;
         mainImg.classList.remove('ready');
