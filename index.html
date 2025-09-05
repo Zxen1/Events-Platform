@@ -3914,26 +3914,109 @@ function uniqueTitle(seed, cityName, idx){
 
 function makePosts(){
   const out = [];
-  // ---- 100 posts at Federation Square (as before) ----
-  const fsLng = 144.9695, fsLat = -37.8178;
-  const fsCity = "Federation Square, Melbourne";
-  for(let i=0;i<100;i++){
+  // ---- 100 posts scattered across Tasmania ----
+  const tasHubs = [
+    {c:"Hobart, Tasmania",      lng:147.3272, lat:-42.8821},
+    {c:"Launceston, Tasmania",  lng:147.1394, lat:-41.4545},
+    {c:"Devonport, Tasmania",   lng:146.3630, lat:-41.1750},
+    {c:"Burnie, Tasmania",      lng:145.9160, lat:-41.0550},
+    {c:"Bicheno, Tasmania",     lng:148.2940, lat:-41.8750},
+    {c:"Strahan, Tasmania",     lng:145.3290, lat:-42.1530},
+    {c:"St Helens, Tasmania",   lng:148.2420, lat:-41.3200},
+    {c:"Queenstown, Tasmania",  lng:145.5550, lat:-42.0800},
+    {c:"George Town, Tasmania", lng:147.1340, lat:-41.1070},
+    {c:"Ulverstone, Tasmania",  lng:146.1730, lat:-41.1600},
+    {c:"Oatlands, Tasmania",    lng:147.3800, lat:-42.2920},
+  ];
+  const tasJitter = ()=> (rnd()-0.5) * 0.2;
+  const pastDate = ()=>{
+    const d = new Date();
+    d.setDate(d.getDate() - (Math.floor(rnd()*365) + 1));
+    return [toISODate(d)];
+  };
+  const ongoingDates = ()=>{
+    const start = new Date();
+    start.setMonth(start.getMonth() - 6);
+    const arr = [];
+    for(let m=0;m<=18;m+=3){
+      const d = new Date(start);
+      d.setMonth(start.getMonth() + m);
+      arr.push(toISODate(d));
+    }
+    return arr;
+  };
+  const futureDates = ()=>{
+    const start = new Date(2025,11,1);
+    const sessions = 3 + Math.floor(rnd()*5);
+    const arr = [];
+    for(let i=0;i<sessions;i++){
+      const d = new Date(start);
+      d.setMonth(start.getMonth() + i*2);
+      arr.push(toISODate(d));
+    }
+    return arr;
+  };
+  for(let i=0;i<90;i++){
+    const hub = tasHubs[i % tasHubs.length];
     const cat = pick(categories);
     const sub = pick(cat.subs);
-    const id = 'FS'+i;
+    const id = `TASPAST${i}`;
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`,
-      city: fsCity,
-      lng: fsLng, lat: fsLat,
+      title: `${id} ${uniqueTitle(i*5511+23, hub.c, i)}`,
+      city: hub.c,
+      lng: hub.lng + tasJitter(),
+      lat: hub.lat + tasJitter(),
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: pastDate(),
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(fsCity, fsLng, fsLat),
+      locations: randomLocations(hub.c, hub.lng, hub.lat),
       member:{ username:`user${i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
+    });
+  }
+  for(let i=0;i<5;i++){
+    const hub = tasHubs[(i+90) % tasHubs.length];
+    const cat = pick(categories);
+    const sub = pick(cat.subs);
+    const id = `TASON${i}`;
+    out.push({
+      id,
+      title: `${id} ${uniqueTitle(i*7751+29, hub.c, i)}`,
+      city: hub.c,
+      lng: hub.lng + tasJitter(),
+      lat: hub.lat + tasJitter(),
+      category: cat.name,
+      subcategory: sub,
+      dates: ongoingDates(),
+      fav:false,
+      desc: randomText(),
+      images: randomImages(id),
+      locations: randomLocations(hub.c, hub.lng, hub.lat),
+      member:{ username:`user${90+i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
+    });
+  }
+  for(let i=0;i<5;i++){
+    const hub = tasHubs[(i+95) % tasHubs.length];
+    const cat = pick(categories);
+    const sub = pick(cat.subs);
+    const id = `TASFUT${i}`;
+    out.push({
+      id,
+      title: `${id} ${uniqueTitle(i*8123+31, hub.c, i)}`,
+      city: hub.c,
+      lng: hub.lng + tasJitter(),
+      lat: hub.lat + tasJitter(),
+      category: cat.name,
+      subcategory: sub,
+      dates: futureDates(),
+      fav:false,
+      desc: randomText(),
+      images: randomImages(id),
+      locations: randomLocations(hub.c, hub.lng, hub.lat),
+      member:{ username:`user${95+i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
     });
   }
 
