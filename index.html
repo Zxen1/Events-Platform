@@ -1761,7 +1761,7 @@ body.hide-results .post-panel{
   overflow:visible;
   color:#fff;
   font-family: Verdana;
-  font-size:16px;
+  font-size:14px;
 }
 
 .open-posts .detail-header{
@@ -1955,12 +1955,13 @@ body.hide-results .post-panel{
   }
 }
 
-.open-posts .detail-header .title{
+.open-posts .detail-header .t{
   margin:0;
   font-size:20px;
   line-height:1.2;
   color:#fff;
   font-family: Verdana;
+  font-weight:bold;
 }
 
 .open-posts .detail-header .title-block{
@@ -1974,6 +1975,24 @@ body.hide-results .post-panel{
   display:flex;
   align-items:center;
   gap:4px;
+}
+
+.open-posts .text .title{
+  font-size:16px;
+  font-weight:bold;
+}
+
+.open-posts .author{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:8px 0;
+}
+
+.open-posts .author img{
+  width:100px;
+  height:100px;
+  object-fit:cover;
 }
 
 .open-posts .meta{
@@ -3990,6 +4009,7 @@ function makePosts(){
       desc: randomText(),
       images: randomImages(id),
       locations: randomLocations(fsCity, fsLng, fsLat),
+      member:{ username:`user${i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
     });
   }
 
@@ -4059,6 +4079,7 @@ function makePosts(){
       desc: randomText(),
       images: randomImages(id),
       locations: randomLocations(hub.c, hub.lng, hub.lat),
+      member:{ username:`user${i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
     });
   }
   return out;
@@ -5430,6 +5451,7 @@ function makePosts(){
               </div>
             </div>
             <h2 class="title">${p.title}</h2>
+            <div class="author"><img src="${p.member.avatar}" alt="${p.member.username} avatar" width="100" height="100"/><span>Posted by ${p.member.username}</span></div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div id="venue-info-${p.id}" class="venue-info"></div>
             <div id="session-info-${p.id}" class="session-info">
