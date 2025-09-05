@@ -1680,7 +1680,7 @@ body.filters-active #filterBtn{
     display:none;
     position: fixed;
     top: calc(var(--header-h) + var(--safe-top) + var(--gap) - 10px);
-    bottom: var(--footer-h);
+    bottom: calc(var(--footer-h) + var(--gap));
     left: calc(var(--results-w) + var(--gap) * 2);
     right: var(--gap);
   overflow-y:scroll;
@@ -1693,7 +1693,7 @@ body.filters-active #filterBtn{
 .post-panel .card,
 .post-panel .open-posts{background:rgba(0,0,0,0.7);}
 .post-panel button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.post-panel .open-posts{margin-top:12px}
+.post-panel .open-posts{margin-top:0}
 .post-panel .card{
   position:relative;
   overflow:hidden;
@@ -2498,7 +2498,7 @@ footer{
   }
   body.mode-posts.hide-posts-ui .post-panel{
     top: calc(var(--header-h) + var(--safe-top));
-    bottom: 0;
+    bottom: var(--gap);
   }
 }
 
@@ -3636,7 +3636,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
         const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
         const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
         const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-        const availableHeight = window.innerHeight - headerH - footerH - safeTop;
+        const availableHeight = Math.max(0, window.innerHeight - headerH - footerH - safeTop);
         document.querySelectorAll('.res-list, .posts').forEach(list=>{
           list.style.maxHeight = `${availableHeight}px`;
         });
