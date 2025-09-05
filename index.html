@@ -5977,7 +5977,7 @@ function makePosts(){
             if(cell) cell.classList.add('selected');
           }
         }
-        function selectSession(i){
+        function selectSession(i, scrollMonth=false){
           if(!sessMenu) return;
           selectedIndex = i;
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
@@ -5988,6 +5988,15 @@ function makePosts(){
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
+            if(scrollMonth && calScroll){
+              const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
+              if(cell){
+                const monthEl = cell.closest('.month');
+                if(monthEl){
+                  calScroll.scrollTo({left: monthEl.offsetLeft, behavior:'smooth'});
+                }
+              }
+            }
           } else {
             sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
             if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
@@ -6031,7 +6040,7 @@ function makePosts(){
               }
             }
             sessMenu.querySelectorAll('button').forEach(btn=>{
-              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
+              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10), true));
             });
           }
       }
