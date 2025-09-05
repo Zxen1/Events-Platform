@@ -71,8 +71,8 @@
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
         --calendar-header-h: var(--calendar-cell-h);
-        --calendar-past-bg: #222222;
-        --calendar-future-bg: #222222;
+        --calendar-past-bg: #111111;
+        --calendar-future-bg: #111111;
         --session-available: #92D0F7;
         --session-selected: #009FFF;
         --today: #ff0000;
@@ -604,7 +604,7 @@ button[aria-expanded="true"] .results-arrow{
   color: var(--panel-text);
 }
 #filter-panel .calendar-container{
-  background: #222222;
+  background: #111111;
   position:relative;
   overflow-x:auto;
   overflow-y:hidden;
@@ -613,7 +613,7 @@ button[aria-expanded="true"] .results-arrow{
   width:calc(var(--calendar-width) * var(--calendar-scale));
   height:calc(var(--calendar-height) * var(--calendar-scale));
   border:none;
-  border-radius:8px;
+  border-radius:4px;
 }
 #filter-panel .calendar-container .today-marker{
   position:absolute;
@@ -633,7 +633,7 @@ button[aria-expanded="true"] .results-arrow{
   width:max-content;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:#222222;
+  background:#111111;
   color:var(--dropdown-text);
 }
 .calendar .month{
@@ -685,6 +685,8 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
   font-family:Verdana, sans-serif;
   font-size:12px;
+  border-radius:4px;
+  background:#111111;
 }
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
 .calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
@@ -693,9 +695,9 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.in-range{background:var(--session-available);border-radius:0;}
 .calendar .day.selected{background:var(--session-selected);color:#fff;}
 .calendar .day.selected.today{color:var(--today) !important;}
-.calendar .day.range-start{border-radius:8px 0 0 8px;}
-.calendar .day.range-end{border-radius:0 8px 8px 0;}
-.calendar .day.range-start.range-end{border-radius:8px;}
+.calendar .day.range-start{border-radius:4px 0 0 4px;}
+.calendar .day.range-end{border-radius:0 4px 4px 0;}
+.calendar .day.range-start.range-end{border-radius:4px;}
 #member-panel #mLocation .mapboxgl-ctrl-geocoder{width:100%;}
 #member-panel input[type=color]{
   border-radius:8px;
@@ -1067,12 +1069,14 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--keyword-bg);
   width:300px;
   flex:none;
+  border-radius:4px;
 }
 #filter-panel #dateInput{
   background: var(--date-range-bg);
   color: var(--date-range-text);
   width:300px;
   flex:none;
+  border-radius:4px;
 }
 
 .input .down{
@@ -2199,9 +2203,9 @@ body.hide-results .post-panel{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  background:#222222;
+  background:#111111;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:4px;
   flex:1 1 auto;
 }
 .open-posts .post-calendar .calendar{
@@ -2212,7 +2216,7 @@ body.hide-results .post-panel{
   height:100%;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
-  background:#222222;
+  background:#111111;
   color:var(--dropdown-text);
 }
 .open-posts .post-calendar .month{
@@ -2253,7 +2257,8 @@ body.hide-results .post-panel{
 .open-posts .post-calendar .day{
   cursor:pointer;
   font-size:12px;
-  border-radius:8px;
+  border-radius:4px;
+  background:#111111;
 }
 .open-posts .post-calendar .day.available-day{
   background:var(--session-available);
@@ -6816,6 +6821,11 @@ document.addEventListener('pointerdown', handleDocInteract);
     const sizeValue = document.getElementById('balloonSizeValue');
     const svgCode = document.getElementById('balloonSvgCode');
     const copyBtn = document.getElementById('copySvgCode');
+
+    grid.addEventListener('wheel', e => {
+      e.preventDefault();
+      grid.scrollLeft += e.deltaY;
+    }, { passive: false });
 
     sizeValue.textContent = sizeSlider.value;
     copyBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(svgCode.value); });
