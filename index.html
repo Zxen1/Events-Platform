@@ -5250,29 +5250,37 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
+      const foot = typeof footRow !== 'undefined' ? footRow : document.getElementById('footRow');
+      const roots = [resultsEl, postsWideEl, foot, document.body];
       roots.forEach(root => {
         if(!root) return;
-        const imgs = root.querySelectorAll('img.thumb');
-        if(!imgs.length) return;
+        const imgs = root.querySelectorAll('img[data-src]');
+        const bgs = root.querySelectorAll('[data-bg]');
+        if(!imgs.length && !bgs.length) return;
         if('IntersectionObserver' in window){
           const opts = {};
-          if(root.scrollHeight > root.clientHeight) opts.root = root;
+          if(root !== document.body && root.scrollHeight > root.clientHeight) opts.root = root;
           const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if(entry.isIntersecting){
-                const img = entry.target;
-                if(img.dataset.src){
-                  img.addEventListener('load', ()=> img.classList.remove('lqip'), {once:true});
-                  img.src = img.dataset.src;
-                  img.removeAttribute('data-src');
+                const el = entry.target;
+                if(el.tagName === 'IMG' && el.dataset.src){
+                  el.addEventListener('load', ()=> el.classList.remove('lqip'), {once:true});
+                  el.src = el.dataset.src;
+                  el.removeAttribute('data-src');
+                  el.fetchPriority = 'high';
+                } else if(el.dataset.bg){
+                  const grad = el.dataset.gradient ? el.dataset.gradient + ', ' : '';
+                  el.style.backgroundImage = grad + `url(${el.dataset.bg})`;
+                  el.removeAttribute('data-bg');
+                  if(el.dataset.gradient) el.removeAttribute('data-gradient');
                 }
-                img.fetchPriority = 'high';
-                obs.unobserve(img);
+                obs.unobserve(el);
               }
             });
           }, opts);
           imgs.forEach(img => { img.loading = 'lazy'; obs.observe(img); });
+          bgs.forEach(bg => obs.observe(bg));
         } else {
           imgs.forEach(img => {
             img.loading = 'lazy';
@@ -5281,6 +5289,12 @@ function makePosts(){
               img.src = img.dataset.src;
               img.removeAttribute('data-src');
             }
+          });
+          bgs.forEach(bg => {
+            const grad = bg.dataset.gradient ? bg.dataset.gradient + ', ' : '';
+            bg.style.backgroundImage = grad + `url(${bg.dataset.bg})`;
+            bg.removeAttribute('data-bg');
+            if(bg.dataset.gradient) bg.removeAttribute('data-gradient');
           });
         }
       });
@@ -5366,7 +5380,10 @@ function makePosts(){
       const el = document.createElement('article');
       el.className = 'card';
       el.dataset.id = p.id;
-      el.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0)), url(${imgThumb(p)})`;
+      const gradient = 'linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0))';
+      el.dataset.bg = imgThumb(p);
+      el.dataset.gradient = gradient;
+      el.style.backgroundImage = gradient;
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
@@ -5481,11 +5498,11 @@ function makePosts(){
           el.className='foot-item';
           el.dataset.id = v.id;
           el.title=v.title+' — '+v.city;
-          el.style.backgroundImage = `url(${imgThumb(v.id)})`;
+          el.dataset.bg = imgThumb(v.id);
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
           const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img loading="lazy" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+          el.innerHTML = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(v.id)}" data-src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', (e)=>{
             e.stopPropagation();
@@ -5502,6 +5519,7 @@ function makePosts(){
         }
       // scroll to the far right to reveal the newest
       footRow.scrollLeft = footRow.scrollWidth;
+      prioritizeVisibleImages();
     }
 
     renderFooter();
