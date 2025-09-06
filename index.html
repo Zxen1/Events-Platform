@@ -73,7 +73,7 @@
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
         --calendar-header-h: var(--calendar-cell-h);
-        --calendar-past-bg: #111111;
+        --calendar-past-bg: #5c1a1a;
         --calendar-future-bg: #111111;
         --session-available: #4e5572;
         --session-selected: #2e3a72;
@@ -678,7 +678,7 @@ button[aria-expanded="true"] .results-arrow{
   background:#111111;
 }
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
-.calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
+.calendar .day.past{background:var(--calendar-past-bg);color:#fff;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
 .calendar .day.in-range{background:var(--session-available);border-radius:0;}
@@ -1914,6 +1914,14 @@ body.hide-results .post-panel{
   justify-content:flex-start;
   width:100%;
 }
+.open-posts .session-dropdown > button.past{
+  background:#800000;
+  border-color:#800000;
+}
+.open-posts .session-dropdown > button.past:hover{
+  background:#a00000;
+  border-color:#a00000;
+}
 
 
 .open-posts .venue-dropdown > button .venue-name{
@@ -1989,6 +1997,18 @@ body.hide-results .post-panel{
   display:flex;
   align-items:center;
   justify-content:flex-start;
+}
+.open-posts .session-menu button.past{
+  background:#800000;
+  border-color:#800000;
+}
+.open-posts .session-menu button.past:hover{
+  background:#a00000;
+  border-color:#a00000;
+}
+.open-posts .session-menu button.past.selected{
+  background:#a00000;
+  color:#fff;
 }
 
 
@@ -2105,8 +2125,16 @@ body.hide-results .post-panel{
   color:var(--button-text);
   font-weight:bold;
 }
+.open-posts .post-calendar .day.available-day.past{
+  background:#800000;
+  color:#fff;
+}
 .open-posts .post-calendar .day.available-day.selected{
   background:var(--session-selected);
+  color:#fff;
+}
+.open-posts .post-calendar .day.available-day.past.selected{
+  background:#a00000;
   color:#fff;
 }
 .open-posts .post-calendar .day.today{color:var(--today) !important;}
@@ -2152,6 +2180,9 @@ body.hide-results .post-panel{
   color: inherit;
   font-size: inherit;
   font-family: inherit;
+}
+.open-posts .session-info.past{
+  color:#ff0000;
 }
 .open-posts .venue-info{margin-top:4px;}
 .open-posts .session-info{margin-top:8px;}
@@ -3853,7 +3884,8 @@ function uniqueTitle(seed, cityName, idx){
     const count = 1 + Math.floor(rnd()*30);
     const now = new Date();
     return Array.from({length:count}, ()=>{
-      const d = new Date(+now + Math.floor(rnd()*365)*86400000);
+      const offset = Math.floor(rnd()*730) - 365; // past and future
+      const d = new Date(+now + offset*86400000);
       return toISODate(d);
     }).sort();
   }
@@ -3871,7 +3903,8 @@ function uniqueTitle(seed, cityName, idx){
     const count = 1 + Math.floor(rnd()*20);
     const now = new Date();
     return Array.from({length:count}, ()=>{
-      const d = new Date(+now + Math.floor(rnd()*365)*86400000);
+      const offset = Math.floor(rnd()*730) - 365; // past and future
+      const d = new Date(+now + offset*86400000);
       const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
       const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
       const full = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -3914,109 +3947,25 @@ function uniqueTitle(seed, cityName, idx){
 
 function makePosts(){
   const out = [];
-  // ---- 100 posts scattered across Tasmania ----
-  const tasHubs = [
-    {c:"Hobart, Tasmania",      lng:147.3272, lat:-42.8821},
-    {c:"Launceston, Tasmania",  lng:147.1394, lat:-41.4545},
-    {c:"Devonport, Tasmania",   lng:146.3630, lat:-41.1750},
-    {c:"Burnie, Tasmania",      lng:145.9160, lat:-41.0550},
-    {c:"Bicheno, Tasmania",     lng:148.2940, lat:-41.8750},
-    {c:"Strahan, Tasmania",     lng:145.3290, lat:-42.1530},
-    {c:"St Helens, Tasmania",   lng:148.2420, lat:-41.3200},
-    {c:"Queenstown, Tasmania",  lng:145.5550, lat:-42.0800},
-    {c:"George Town, Tasmania", lng:147.1340, lat:-41.1070},
-    {c:"Ulverstone, Tasmania",  lng:146.1730, lat:-41.1600},
-    {c:"Oatlands, Tasmania",    lng:147.3800, lat:-42.2920},
-  ];
-  const tasJitter = ()=> (rnd()-0.5) * 0.2;
-  const pastDate = ()=>{
-    const d = new Date();
-    d.setDate(d.getDate() - (Math.floor(rnd()*365) + 1));
-    return [toISODate(d)];
-  };
-  const ongoingDates = ()=>{
-    const start = new Date();
-    start.setMonth(start.getMonth() - 6);
-    const arr = [];
-    for(let m=0;m<=18;m+=3){
-      const d = new Date(start);
-      d.setMonth(start.getMonth() + m);
-      arr.push(toISODate(d));
-    }
-    return arr;
-  };
-  const futureDates = ()=>{
-    const start = new Date(2025,11,1);
-    const sessions = 3 + Math.floor(rnd()*5);
-    const arr = [];
-    for(let i=0;i<sessions;i++){
-      const d = new Date(start);
-      d.setMonth(start.getMonth() + i*2);
-      arr.push(toISODate(d));
-    }
-    return arr;
-  };
-  for(let i=0;i<90;i++){
-    const hub = tasHubs[i % tasHubs.length];
+  // ---- 100 posts at Federation Square (as before) ----
+  const fsLng = 144.9695, fsLat = -37.8178;
+  const fsCity = "Federation Square, Melbourne";
+  for(let i=0;i<100;i++){
     const cat = pick(categories);
     const sub = pick(cat.subs);
-    const id = `TASPAST${i}`;
+    const id = 'FS'+i;
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*5511+23, hub.c, i)}`,
-      city: hub.c,
-      lng: hub.lng + tasJitter(),
-      lat: hub.lat + tasJitter(),
+      title: `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`,
+      city: fsCity,
+      lng: fsLng, lat: fsLat,
       category: cat.name,
       subcategory: sub,
-      dates: pastDate(),
+      dates: randomDates(),
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(hub.c, hub.lng, hub.lat),
-      member:{ username:`user${i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
-    });
-  }
-  for(let i=0;i<5;i++){
-    const hub = tasHubs[(i+90) % tasHubs.length];
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
-    const id = `TASON${i}`;
-    out.push({
-      id,
-      title: `${id} ${uniqueTitle(i*7751+29, hub.c, i)}`,
-      city: hub.c,
-      lng: hub.lng + tasJitter(),
-      lat: hub.lat + tasJitter(),
-      category: cat.name,
-      subcategory: sub,
-      dates: ongoingDates(),
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations: randomLocations(hub.c, hub.lng, hub.lat),
-      member:{ username:`user${90+i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
-    });
-  }
-  for(let i=0;i<5;i++){
-    const hub = tasHubs[(i+95) % tasHubs.length];
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
-    const id = `TASFUT${i}`;
-    out.push({
-      id,
-      title: `${id} ${uniqueTitle(i*8123+31, hub.c, i)}`,
-      city: hub.c,
-      lng: hub.lng + tasJitter(),
-      lat: hub.lat + tasJitter(),
-      category: cat.name,
-      subcategory: sub,
-      dates: futureDates(),
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations: randomLocations(hub.c, hub.lng, hub.lat),
-      member:{ username:`user${95+i}`, avatar:`https://i.pravatar.cc/100?u=${id}` },
+      locations: randomLocations(fsCity, fsLng, fsLat),
     });
   }
 
@@ -5831,10 +5780,12 @@ function makePosts(){
           setupCalendarScroll(calScroll);
         }
         let sessionHasMultiple = false, lastClickedCell = null;
-      function updateVenue(idx){
-        const loc = p.locations[idx];
-        loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
-        if(!Number.isFinite(loc.lng) || !Number.isFinite(loc.lat)){
+function updateVenue(idx){
+  const loc = p.locations[idx];
+  loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(!Number.isFinite(loc.lng) || !Number.isFinite(loc.lat)){
           if(mapEl._map && typeof mapEl._map.remove === 'function'){
             mapEl._map.remove();
             mapEl._map = null;
@@ -5915,6 +5866,7 @@ function makePosts(){
               cell.dataset.iso = iso;
               if(allowedSet.has(iso)){
                 cell.classList.add('available-day');
+                if(dateObj < today) cell.classList.add('past');
                 cell.addEventListener('mousedown',()=>{ lastClickedCell = cell; });
                 cell.addEventListener('click',()=>{
                   const matches = loc.dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
@@ -5933,7 +5885,22 @@ function makePosts(){
           current.setMonth(current.getMonth()+1);
         }
         calendarEl.appendChild(cal);
-        if(calScroll) calScroll.scrollLeft = 0;
+        if(calScroll){
+          const todayIso = toISODate(today);
+          const future = loc.dates.find(d => d.full >= todayIso);
+          const target = future || loc.dates[loc.dates.length-1];
+          if(target){
+            const cell = calendarEl.querySelector(`.day[data-iso="${target.full}"]`);
+            if(cell){
+              const monthEl = cell.closest('.month');
+              if(monthEl) calScroll.scrollLeft = monthEl.offsetLeft; else calScroll.scrollLeft = 0;
+            } else {
+              calScroll.scrollLeft = 0;
+            }
+          } else {
+            calScroll.scrollLeft = 0;
+          }
+        }
         let selectedIndex = null;
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         function markSelected(){
@@ -5952,8 +5919,13 @@ function makePosts(){
           if(btn) btn.classList.add('selected');
           const dt = loc.dates[i];
           if(dt){
+            const isPast = parseDate(dt.full) < today;
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            sessionInfo.classList.toggle('past', isPast);
+            if(sessBtn){
+              sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+              sessBtn.classList.toggle('past', isPast);
+            }
             markSelected();
             if(scrollMonth && calScroll){
               const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
@@ -5966,12 +5938,16 @@ function makePosts(){
             }
           } else {
             sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-            if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
+            sessionInfo.classList.remove('past');
+            if(sessBtn){
+              sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
+              sessBtn.classList.remove('past');
+            }
             selectedIndex = null;
             markSelected();
           }
           sessMenu.hidden = true;
-          sessBtn && sessBtn.setAttribute('aria-expanded','false');
+          if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
         }
         function showTimePopup(matches){
           const existing = calContainer.querySelector('.time-popup');
@@ -5993,23 +5969,34 @@ function makePosts(){
           if(map && typeof map.resize === 'function') map.resize();
         },0);
         if(sessMenu){
-          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button class="${parseDate(d.full)<today?'past':''}" data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
           sessMenu.scrollTop = 0;
           if(sessionHasMultiple){
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            const rangeText = formatDates(loc.dates.map(d=>d.full));
+            sessionInfo.innerHTML = `<div>💲 Price range</div><div>📅 ${rangeText}</div>`;
+            sessionInfo.classList.remove('past');
+            if(sessBtn){
+              sessBtn.innerHTML = `<span class="session-date">${rangeText}</span><span class="results-arrow" aria-hidden="true"></span>`;
+              sessBtn.classList.remove('past');
+              sessBtn.setAttribute('aria-expanded','false');
+            }
+          } else {
+            if(loc.dates.length){
+              selectSession(0);
             } else {
-              if(loc.dates.length){
-                selectSession(0);
-              } else {
-                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-                if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+              sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+              sessionInfo.classList.remove('past');
+              if(sessBtn){
+                sessBtn.textContent = 'Select Session';
+                sessBtn.classList.remove('past');
+                sessBtn.setAttribute('aria-expanded','false');
               }
             }
-            sessMenu.querySelectorAll('button').forEach(btn=>{
-              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10), true));
-            });
           }
+          sessMenu.querySelectorAll('button').forEach(btn=>{
+            btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10), true));
+          });
+        }
       }
         if(mapEl){
           setTimeout(()=>{
