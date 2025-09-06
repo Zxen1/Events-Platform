@@ -3016,6 +3016,90 @@ footer .chip-small img.mini{
   }
 }
 
+#filterBtn,
+.auth .auth-btn{
+  width:75px;
+  height:75px;
+  border-radius:0;
+  background:var(--btn);
+  border:1px solid var(--btn);
+}
+
+.panel-header .panel-actions button{
+  height:36px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:8px;
+  color:var(--button-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 10px;
+}
+
+.options-dropdown > button{
+  height:50px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:2px 8px;
+  color:var(--button-text);
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+}
+
+.options-dropdown .options-menu button{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
+  text-align:left;
+  padding:4px 8px;
+  color:var(--button-text);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:6px;
+}
+
+.filter-panel .panel-body,
+.member-panel .panel-body,
+.admin-panel .panel-body{
+  width:400px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.filter-panel .field,
+.member-panel .panel-field,
+.admin-panel .panel-field{
+  margin:0;
+  width:100%;
+}
+
+.filter-panel .panel-body input,
+.filter-panel .panel-body textarea,
+.filter-panel .panel-body select,
+.member-panel .panel-body input,
+.member-panel .panel-body textarea,
+.member-panel .panel-body select,
+.admin-panel .panel-body input,
+.admin-panel .panel-body textarea,
+.admin-panel .panel-body select{
+  text-align:left;
+  align-self:flex-start;
+  width:100%;
+}
+
+.filter-panel .panel-body button,
+.member-panel .panel-body button,
+.admin-panel .panel-body button{
+  align-self:flex-end;
+}
+
 </style>
 </head>
 <body class="mode-map">
