@@ -36,16 +36,19 @@
     .footer-card .title{flex:1;}
     .footer-card .star{color:yellow;font-size:20px;}
     #fullscreenBtn{position:absolute;right:0;top:0;width:80px;height:80px;}
-    #quickBoard{position:absolute;top:80px;bottom:80px;left:0;width:520px;z-index:5;transform:translateX(-100%);transition:transform .3s;}
-    #quickBoard.open{transform:translateX(0);}
+    #quickBoardContainer{position:absolute;top:80px;bottom:80px;left:0;width:520px;padding:10px;background:rgba(0,0,0,0.5);z-index:5;transform:translateX(-100%);transition:transform .3s;}
+    #quickBoardContainer.open{transform:translateX(0);}
+    #quickBoard{width:500px;height:100%;overflow:auto;}
     #quickBoard .quick-card{width:500px;border-radius:4px;overflow:hidden;position:relative;margin-bottom:10px;color:white;}
     .quick-card .content{position:relative;display:flex;gap:10px;}
     .quick-card .thumb{width:80px;height:80px;border-radius:4px;flex-shrink:0;}
     .quick-card .info{display:flex;flex-direction:column;gap:2px;font-size:12px;}
     .quick-card>*{position:relative;}
-    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:420px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:left .3s,transform .3s;}
-    #quickBoard.open~#postBoard{left:520px;}
-    #postBoard.closed{transform:translateX(-520px);}
+    #postBoardContainer{position:absolute;top:80px;bottom:80px;left:0;right:420px;padding:10px;background:rgba(0,0,0,0.5);z-index:4;transition:left .3s,transform .3s;}
+    #quickBoardContainer.open~#postBoardContainer{left:520px;}
+    #postBoardContainer.closed{transform:translateX(-520px);}
+    #postBoard{height:100%;overflow:auto;}
+    #postBoard .post-card + .post-card{margin-top:10px;}
     .post-card{width:auto;border-radius:4px;overflow:hidden;position:relative;}
     .post-card .post-header{height:50px;font-weight:bold;position:sticky;top:80px;z-index:1;line-height:50px;padding-left:10px;background:#222;}
     .post-card .post-body{display:grid;grid-template-columns:400px 400px 400px;column-gap:10px;row-gap:10px;}
@@ -63,12 +66,14 @@
       .post-card .col3{grid-column:1;}
       .post-card .post-text{grid-column:1;}
     }
-    #adBoard{position:absolute;top:80px;bottom:80px;right:0;width:420px;z-index:5;transform:translateX(100%);transition:transform .3s;}
-    #adBoard.open{transform:translateX(0);}
+    #adBoardContainer{position:absolute;top:80px;bottom:80px;right:0;width:420px;padding:10px;background:rgba(0,0,0,0.5);z-index:5;transform:translateX(100%);transition:transform .3s;}
+    #adBoardContainer.open{transform:translateX(0);}
+    #adBoard{width:400px;height:100%;overflow:auto;}
     #adBoard .ad-card{width:400px;border-radius:4px;overflow:hidden;position:relative;}
+    #adBoard .ad-card + .ad-card{margin-top:10px;}
     #adBoard .ad-card img{width:100%;display:block;}
     #adBoard .ad-card .info{position:absolute;bottom:0;left:0;width:100%;}
-    .panel{position:absolute;top:80px;bottom:80px;width:420px;z-index:6;transition:transform .3s;}
+    .panel{position:absolute;top:80px;bottom:80px;width:420px;padding:10px;z-index:6;transition:transform .3s;}
     #filterPanel{left:0;transform:translateX(-100%);}
     #filterPanel.open{transform:translateX(0);}
     #memberPanel{right:0;transform:translateX(100%);}
@@ -78,6 +83,10 @@
     .panel .panel-header{height:50px;display:flex;align-items:center;gap:10px;font-weight:bold;font-size:16px;}
     .panel .panel-header .title{flex:1;text-align:center;}
     .panel .panel-body{overflow:auto;height:calc(100% - 50px);}
+    .panel .panel-body>*+*{margin-top:10px;}
+    .panel .panel-body .row{width:400px;height:40px;}
+    .panel .panel-body [class$='-container']{width:400px;}
+    .panel .panel-body button{height:40px;}
     #adminPanel .panel-body{height:calc(100% - 110px);}
     #adminPanel .admin-subheader{height:60px;display:flex;gap:10px;position:sticky;top:50px;}
     #adminPanel .admin-subheader .tab-btn{width:100px;height:40px;}
@@ -170,7 +179,8 @@
       <button class="btn" id="fullscreenBtn">⛶</button>
     </div>
   </footer>
-  <div id="quickBoard" class="scrollable">
+  <div id="quickBoardContainer">
+    <div id="quickBoard" class="scrollable">
     <div class="quick-card">
       <div class="content">
         <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
@@ -432,7 +442,8 @@
       </div>
     </div>
   </div>
-  <div id="postBoard" class="scrollable">
+  <div id="postBoardContainer">
+    <div id="postBoard" class="scrollable">
     <div class="post-card quick-card">
       <div class="content">
         <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
@@ -573,11 +584,14 @@
       </div>
     </div>
   </div>
-  <div id="adBoard" class="scrollable open">
-    <div class="ad-card">
-      <img src="assets/welcome 001.jpg" alt="ad">
-      <div class="info">
-        Sponsored Post<br>Location
+  </div>
+  <div id="adBoardContainer" class="open">
+    <div id="adBoard" class="scrollable">
+      <div class="ad-card">
+        <img src="assets/welcome 001.jpg" alt="ad">
+        <div class="info">
+          Sponsored Post<br>Location
+        </div>
       </div>
     </div>
   </div>
@@ -711,10 +725,10 @@
     mapboxgl.accessToken='pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
     const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/standard',projection:'globe',zoom:1});
     map.on('style.load',()=>{try{map.setConfig({sky:{style:'night'}});}catch(e){};map.setFog({color:'#0b0b19','high-color':'#1a4a8a','space-color':'#000','horizon-blend':0.2});});
-    const quickBoard=document.getElementById('quickBoard');
-    const postBoard=document.getElementById('postBoard');
-    document.getElementById('quickToggle').addEventListener('click',e=>{quickBoard.classList.toggle('open');e.target.classList.toggle('selected');});
-    document.getElementById('postToggle').addEventListener('click',e=>{postBoard.classList.toggle('closed');e.target.classList.toggle('selected');});
+    const quickBoardContainer=document.getElementById('quickBoardContainer');
+    const postBoardContainer=document.getElementById('postBoardContainer');
+    document.getElementById('quickToggle').addEventListener('click',e=>{quickBoardContainer.classList.toggle('open');e.target.classList.toggle('selected');});
+    document.getElementById('postToggle').addEventListener('click',e=>{postBoardContainer.classList.toggle('closed');e.target.classList.toggle('selected');});
     document.querySelectorAll('#postBoard .post-card.quick-card').forEach(card=>{
       card.addEventListener('click',()=>{document.querySelector('#postBoard .post-card.open').scrollIntoView({behavior:'smooth'});});
     });
