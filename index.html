@@ -24,48 +24,56 @@
     .scrollable::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.3);border-radius:3px;}
     .scrollable{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.3) transparent;}
     #map{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
-    header{position:fixed;top:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;display:flex;align-items:center;justify-content:space-between;}
-    .header-left,.header-right{display:flex;}
-    .logo{height:60px;margin:auto;}
+    header{position:fixed;top:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;}
+    .header-left{position:absolute;top:0;left:0;width:240px;height:80px;}
+    .header-right{position:absolute;top:0;right:0;width:160px;height:80px;}
+    .header-left .btn,.header-right .btn{float:left;}
+    .logo{height:60px;margin:10px auto;display:block;}
     footer{position:fixed;bottom:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;}
-    .footer-content{position:relative;height:100%;padding:10px 90px 10px 10px;display:flex;align-items:center;}
-    .footer-slider{display:flex;gap:10px;height:60px;overflow-x:auto;white-space:nowrap;}
-    .footer-card{flex:0 0 auto;width:150px;height:60px;background:#333;border-radius:4px;display:flex;align-items:center;padding:10px;gap:10px;}
-    .footer-card img{width:40px;height:40px;border-radius:4px;}
-    .footer-card .title{flex:1;}
-    .footer-card .star{color:yellow;font-size:20px;}
+    .footer-content{position:relative;height:100%;padding:10px 90px 10px 10px;}
+    .footer-slider{height:60px;overflow-x:auto;white-space:nowrap;}
+    .footer-card{display:inline-block;width:150px;height:60px;background:#333;border-radius:4px;margin-right:10px;padding:10px;vertical-align:top;}
+    .footer-card img{width:40px;height:40px;border-radius:4px;float:left;margin-right:10px;}
+    .footer-card .title{line-height:40px;}
+    .footer-card .star{float:right;color:yellow;font-size:20px;line-height:40px;}
     #fullscreenBtn{position:absolute;right:0;top:0;width:80px;height:80px;}
-    #quickBoard{position:absolute;top:80px;bottom:80px;left:0;width:520px;padding:10px;z-index:5;transform:translateX(-100%);transition:transform .3s;}
-    #quickBoard.open{transform:translateX(0);}
+    #quickBoardContainer{position:absolute;top:80px;bottom:80px;left:0;width:520px;padding:10px;background:rgba(0,0,0,0.5);z-index:5;transform:translateX(-100%);transition:transform .3s;}
+    #quickBoardContainer.open{transform:translateX(0);}
+    #quickBoard{width:500px;}
     #quickBoard .quick-card{width:500px;border-radius:4px;overflow:hidden;position:relative;margin-bottom:10px;color:white;}
-    .quick-card .content{position:relative;padding:10px;display:flex;gap:10px;}
-    .quick-card .thumb{width:80px;height:80px;border-radius:4px;flex-shrink:0;}
-    .quick-card .info{display:flex;flex-direction:column;gap:2px;font-size:12px;}
+    .quick-card .content{position:relative;padding:10px;}
+    .quick-card .thumb{width:80px;height:80px;border-radius:4px;float:left;margin-right:10px;}
+    .quick-card .info{font-size:12px;}
+    .quick-card::after{content:"";display:block;clear:both;}
     .quick-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(0,0,0,0.8),rgba(0,0,0,0.6));z-index:1;}
     .quick-card>*{position:relative;z-index:2;}
-    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:0;padding:10px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:transform .3s;}
-    #postBoard.closed{transform:translateX(-520px);}
-    .post-card{width:500px;border-radius:4px;overflow:hidden;position:relative;}
-    .post-card .post-header{height:50px;background:#222;display:flex;align-items:center;padding:10px;font-weight:bold;}
-    .post-card .post-body{display:grid;gap:10px;background:#111;padding:10px;}
-    @media(min-width:1000px){.post-card .post-body{grid-template-columns:repeat(3,1fr);}}
-    @media(max-width:999px) and (min-width:700px){.post-card .post-body{grid-template-columns:repeat(2,1fr);}}
-    @media(max-width:699px){.post-card .post-body{grid-template-columns:1fr;}}
-    #adBoard{position:absolute;top:80px;bottom:80px;right:0;width:420px;padding:10px;z-index:5;transform:translateX(100%);transition:transform .3s;}
-    #adBoard.open{transform:translateX(0);}
+    #postBoardContainer{position:absolute;top:80px;bottom:80px;left:0;right:0;padding:10px;background:rgba(0,0,0,0.5);z-index:4;overflow:auto;transition:transform .3s;}
+    #postBoardContainer.closed{transform:translateX(-520px);}
+    #postBoard{width:100%;}
+    .post-card{width:500px;border-radius:4px;overflow:hidden;position:relative;margin-bottom:10px;}
+    .post-card .post-header{height:50px;background:#222;padding:10px;font-weight:bold;line-height:30px;}
+    .post-card .post-body{background:#111;padding:10px;}
+    .post-card .post-body div{margin-bottom:10px;}
+    #adBoardContainer{position:absolute;top:80px;bottom:80px;right:0;width:420px;padding:10px;background:rgba(0,0,0,0.5);z-index:5;transform:translateX(100%);transition:transform .3s;}
+    #adBoardContainer.open{transform:translateX(0);}
+    #adBoard{width:400px;}
     #adBoard .ad-card{width:400px;border-radius:4px;overflow:hidden;position:relative;}
     #adBoard .ad-card img{width:100%;display:block;}
     #adBoard .ad-card .info{position:absolute;bottom:0;left:0;width:100%;padding:10px;background:linear-gradient(0deg,rgba(0,0,0,0.8),rgba(0,0,0,0));}
-    .panel{position:absolute;top:80px;bottom:80px;width:420px;background:#222;z-index:6;transition:transform .3s;}
+    .panel{position:absolute;top:80px;bottom:80px;width:420px;background:#222;z-index:6;transition:transform .3s;padding:10px;}
     #filterPanel{left:0;transform:translateX(-100%);}
     #filterPanel.open{transform:translateX(0);}
     #memberPanel{right:0;transform:translateX(100%);}
     #memberPanel.open{transform:translateX(0);}
     #adminPanel{right:0;transform:translateX(100%);}
     #adminPanel.open{transform:translateX(0);}
-    .panel .panel-header{height:50px;background:#333;display:flex;align-items:center;padding:5px;gap:10px;font-weight:bold;font-size:16px;}
-    .panel .panel-header .title{flex:1;text-align:center;}
-    .panel .panel-body{padding:10px;overflow:auto;height:calc(100% - 50px);}
+    .panel .panel-header{height:50px;background:#333;padding:5px;position:relative;font-weight:bold;font-size:16px;}
+    .panel .panel-header .btn.small{width:40px;height:40px;float:left;margin-right:10px;}
+    .panel .panel-header .btn.small:last-child{float:right;margin-right:0;}
+    .panel .panel-header .title{position:absolute;left:0;right:0;top:5px;height:40px;line-height:40px;text-align:center;}
+    .panel .panel-body{padding-top:10px;height:calc(100% - 60px);overflow:auto;}
+    .panel .panel-body>*{width:400px;height:40px;margin-bottom:10px;}
+    .panel .panel-body .btn{height:40px;}
   </style>
 </head>
 <body>
@@ -99,36 +107,42 @@
       <button class="btn" id="fullscreenBtn">⛶</button>
     </div>
   </footer>
-  <div id="quickBoard" class="scrollable">
-    <div class="quick-card" style="background-image:url('assets/welcome 001.jpg')">
-      <div class="content">
-        <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
-        <div>
-          <div style="font-weight:bold;">Sample Post</div>
-          <div class="info">
-            <div class="subcat-row">Cat &gt; Subcat</div>
-            <div class="venue-row">Venue Location</div>
-            <div class="daterange-row">Mon 31 Jan, 2024 - Thu 25 Jul, 2026</div>
+  <div id="quickBoardContainer">
+    <div id="quickBoard" class="scrollable">
+      <div class="quick-card" style="background-image:url('assets/welcome 001.jpg')">
+        <div class="content">
+          <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
+          <div>
+            <div style="font-weight:bold;">Sample Post</div>
+            <div class="info">
+              <div class="subcat-row">Cat &gt; Subcat</div>
+              <div class="venue-row">Venue Location</div>
+              <div class="daterange-row">Mon 31 Jan, 2024 - Thu 25 Jul, 2026</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div id="postBoard" class="scrollable">
-    <div class="post-card">
-      <div class="post-header">Post Title</div>
-      <div class="post-body">
-        <div>Column 1</div>
-        <div>Column 2</div>
-        <div>Column 3</div>
+  <div id="postBoardContainer" class="scrollable">
+    <div id="postBoard">
+      <div class="post-card">
+        <div class="post-header">Post Title</div>
+        <div class="post-body">
+          <div>Column 1</div>
+          <div>Column 2</div>
+          <div>Column 3</div>
+        </div>
       </div>
     </div>
   </div>
-  <div id="adBoard" class="scrollable open">
-    <div class="ad-card">
-      <img src="assets/welcome 001.jpg" alt="ad">
-      <div class="info">
-        Sponsored Post<br>Location
+  <div id="adBoardContainer" class="scrollable open">
+    <div id="adBoard">
+      <div class="ad-card">
+        <img src="assets/welcome 001.jpg" alt="ad">
+        <div class="info">
+          Sponsored Post<br>Location
+        </div>
       </div>
     </div>
   </div>
@@ -164,10 +178,10 @@
     mapboxgl.accessToken='pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
     const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/standard',projection:'globe',zoom:1});
     map.on('style.load',()=>{try{map.setConfig({sky:{style:'night'}});}catch(e){};map.setFog({color:'#0b0b19','high-color':'#1a4a8a','space-color':'#000','horizon-blend':0.2});});
-    const quickBoard=document.getElementById('quickBoard');
-    const postBoard=document.getElementById('postBoard');
-    document.getElementById('quickToggle').addEventListener('click',e=>{quickBoard.classList.toggle('open');e.target.classList.toggle('selected');});
-    document.getElementById('postToggle').addEventListener('click',e=>{postBoard.classList.toggle('closed');e.target.classList.toggle('selected');});
+    const quickBoardContainer=document.getElementById('quickBoardContainer');
+    const postBoardContainer=document.getElementById('postBoardContainer');
+    document.getElementById('quickToggle').addEventListener('click',e=>{quickBoardContainer.classList.toggle('open');e.target.classList.toggle('selected');});
+    document.getElementById('postToggle').addEventListener('click',e=>{postBoardContainer.classList.toggle('closed');e.target.classList.toggle('selected');});
     document.getElementById('filterToggle').addEventListener('click',()=>{document.getElementById('filterPanel').classList.toggle('open');});
     document.getElementById('memberToggle').addEventListener('click',()=>{document.getElementById('memberPanel').classList.toggle('open');});
     document.getElementById('adminToggle').addEventListener('click',()=>{document.getElementById('adminPanel').classList.toggle('open');});
