@@ -3774,7 +3774,7 @@ footer{color:#ffffff;font-family:Verdana;font-size:12px;font-weight:normal;text-
         const page = 50; const out = [];
         function step(offset){
           src.getClusterLeaves(clusterId, page, offset, (err, leaves)=>{
-            if(err){ reject(err); return; }
+            if(err){ resolve([]); return; }
             out.push(...leaves);
             if(leaves.length < page) resolve(out);
             else step(offset + page);
