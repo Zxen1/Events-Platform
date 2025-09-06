@@ -9,6 +9,7 @@
     html,body{margin:0;padding:0;height:100%;overflow:hidden;}
     body{font:14px Verdana,sans-serif;color:white;}
     *,*::before,*::after{box-sizing:border-box;}
+    div{padding:0;background:#222;}
     .btn{border:none;background:#333;color:white;cursor:pointer;padding:0;margin:0;border-radius:4px;}
     .btn{width:80px;height:80px;}
     .btn.small{width:40px;height:40px;}
@@ -28,47 +29,46 @@
     .header-left,.header-right{display:flex;}
     .logo{height:60px;margin:auto;}
     footer{position:fixed;bottom:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;}
-    .footer-content{position:relative;height:100%;padding:10px 90px 10px 10px;display:flex;align-items:center;}
+    .footer-content{position:relative;height:100%;display:flex;align-items:center;}
     .footer-slider{display:flex;gap:10px;height:60px;overflow-x:auto;white-space:nowrap;}
-    .footer-card{flex:0 0 auto;width:150px;height:60px;background:#333;border-radius:4px;display:flex;align-items:center;padding:10px;gap:10px;}
+    .footer-card{flex:0 0 auto;width:150px;height:60px;border-radius:4px;display:flex;align-items:center;gap:10px;}
     .footer-card img{width:40px;height:40px;border-radius:4px;}
     .footer-card .title{flex:1;}
     .footer-card .star{color:yellow;font-size:20px;}
     #fullscreenBtn{position:absolute;right:0;top:0;width:80px;height:80px;}
-    #quickBoard{position:absolute;top:80px;bottom:80px;left:0;width:520px;padding:10px;z-index:5;transform:translateX(-100%);transition:transform .3s;}
+    #quickBoard{position:absolute;top:80px;bottom:80px;left:0;width:520px;z-index:5;transform:translateX(-100%);transition:transform .3s;}
     #quickBoard.open{transform:translateX(0);}
     #quickBoard .quick-card{width:500px;border-radius:4px;overflow:hidden;position:relative;margin-bottom:10px;color:white;}
-    .quick-card .content{position:relative;padding:10px;display:flex;gap:10px;}
+    .quick-card .content{position:relative;display:flex;gap:10px;}
     .quick-card .thumb{width:80px;height:80px;border-radius:4px;flex-shrink:0;}
     .quick-card .info{display:flex;flex-direction:column;gap:2px;font-size:12px;}
-    .quick-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(0,0,0,0.8),rgba(0,0,0,0.6));z-index:1;}
-    .quick-card>*{position:relative;z-index:2;}
-    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:420px;padding:10px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:left .3s,transform .3s;}
+    .quick-card>*{position:relative;}
+    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:420px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:left .3s,transform .3s;}
     #quickBoard.open~#postBoard{left:520px;}
     #postBoard.closed{transform:translateX(-520px);}
     .post-card{width:500px;border-radius:4px;overflow:hidden;position:relative;}
-    .post-card .post-header{height:50px;background:#222;display:flex;align-items:center;padding:10px;font-weight:bold;}
-    .post-card .post-body{display:grid;gap:10px;background:#111;padding:10px;}
+    .post-card .post-header{height:50px;display:flex;align-items:center;font-weight:bold;}
+    .post-card .post-body{display:grid;gap:10px;}
     @media(min-width:1000px){.post-card .post-body{grid-template-columns:repeat(3,1fr);}}
     @media(max-width:999px) and (min-width:700px){.post-card .post-body{grid-template-columns:repeat(2,1fr);}}
     @media(max-width:699px){.post-card .post-body{grid-template-columns:1fr;}}
-    #adBoard{position:absolute;top:80px;bottom:80px;right:0;width:420px;padding:10px;z-index:5;transform:translateX(100%);transition:transform .3s;}
+    #adBoard{position:absolute;top:80px;bottom:80px;right:0;width:420px;z-index:5;transform:translateX(100%);transition:transform .3s;}
     #adBoard.open{transform:translateX(0);}
     #adBoard .ad-card{width:400px;border-radius:4px;overflow:hidden;position:relative;}
     #adBoard .ad-card img{width:100%;display:block;}
-    #adBoard .ad-card .info{position:absolute;bottom:0;left:0;width:100%;padding:10px;background:linear-gradient(0deg,rgba(0,0,0,0.8),rgba(0,0,0,0));}
-    .panel{position:absolute;top:80px;bottom:80px;width:420px;background:#222;z-index:6;transition:transform .3s;}
+    #adBoard .ad-card .info{position:absolute;bottom:0;left:0;width:100%;}
+    .panel{position:absolute;top:80px;bottom:80px;width:420px;z-index:6;transition:transform .3s;}
     #filterPanel{left:0;transform:translateX(-100%);}
     #filterPanel.open{transform:translateX(0);}
     #memberPanel{right:0;transform:translateX(100%);}
     #memberPanel.open{transform:translateX(0);}
     #adminPanel{right:0;transform:translateX(100%);}
     #adminPanel.open{transform:translateX(0);}
-    .panel .panel-header{height:50px;background:#333;display:flex;align-items:center;padding:5px;gap:10px;font-weight:bold;font-size:16px;}
+    .panel .panel-header{height:50px;display:flex;align-items:center;gap:10px;font-weight:bold;font-size:16px;}
     .panel .panel-header .title{flex:1;text-align:center;}
-    .panel .panel-body{padding:10px;overflow:auto;height:calc(100% - 50px);}
+    .panel .panel-body{overflow:auto;height:calc(100% - 50px);}
     #adminPanel .panel-body{height:calc(100% - 110px);}
-    #adminPanel .admin-subheader{height:60px;display:flex;gap:10px;padding:10px;}
+    #adminPanel .admin-subheader{height:60px;display:flex;gap:10px;position:sticky;top:50px;}
     #adminPanel .admin-subheader .tab-btn{width:100px;height:40px;}
     #adminPanel .tab-content{display:none;flex-direction:column;gap:10px;}
     #adminPanel .tab-content.active{display:flex;}
@@ -82,7 +82,7 @@
     #adminPanel .row input[type=range]{width:350px;}
     #adminPanel .row input[type=number]{width:40px;height:40px;border:none;border-radius:4px;margin-left:10px;padding:0 5px;background:#333;color:white;}
     #adminPanel .row input[type=checkbox]{width:40px;height:40px;}
-    #adminPanel [class$='-container']{width:400px;height:300px;border-radius:4px;background:#333;}
+    #adminPanel [class$='-container']{width:400px;height:300px;border-radius:4px;}
     #adminPanel [class$='-container']+ [class$='-container'],
     #adminPanel [class$='-container']+ .row,
     #adminPanel .row+ [class$='-container']{margin-top:10px;}
@@ -92,26 +92,26 @@
     #adminPanel .small-logo-container,
     #adminPanel .favicon-container{display:flex;align-items:center;justify-content:center;}
     #adminPanel .welcome-message-container{height:300px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-    #adminPanel .welcome-message-container .wysiwyg-row{width:400px;height:100px;background:#444;border-radius:4px;}
+    #adminPanel .welcome-message-container .wysiwyg-row{width:400px;height:100px;border-radius:4px;}
     #adminPanel .welcome-message-container textarea{width:400px;height:190px;border:none;border-radius:4px;background:#222;color:white;padding:10px;}
     #adminPanel .map-settings-container,
     #adminPanel .map-spin-container,
-    #adminPanel .markercluster-container{display:flex;flex-direction:column;gap:10px;padding:10px;box-sizing:border-box;}
+    #adminPanel .markercluster-container{display:flex;flex-direction:column;gap:10px;box-sizing:border-box;}
     #adminPanel .dropdown{position:relative;}
-    #adminPanel .menu-button{width:300px;height:40px;border-radius:4px;background:#333;color:white;padding:0 30px 0 10px;display:flex;align-items:center;cursor:pointer;}
+    #adminPanel .menu-button{width:300px;height:40px;border-radius:4px;color:white;display:flex;align-items:center;cursor:pointer;}
     #adminPanel .menu-arrow{position:absolute;right:10px;transition:transform .3s;}
     #adminPanel .dropdown.open .menu-arrow{transform:rotate(180deg);}
-    #adminPanel .menu-options{display:none;position:absolute;top:40px;left:0;width:100%;max-height:250px;overflow:auto;background:#333;padding:10px 0;z-index:20;}
+    #adminPanel .menu-options{display:none;position:absolute;top:40px;left:0;width:100%;max-height:250px;overflow:auto;z-index:20;}
     #adminPanel .dropdown.open .menu-options{display:block;}
-    #adminPanel .menu-option-button{width:100%;height:40px;padding:0 10px;border:none;background:#444;color:white;text-align:left;}
+    #adminPanel .menu-option-button{width:100%;height:40px;border:none;color:white;text-align:left;}
     #adminPanel .menu-option-button:hover{background:#555;}
     #adminPanel .markercluster-container input[type=color]{width:40px;height:40px;border:none;border-radius:4px;padding:0;}
     #adminPanel .row label{display:flex;align-items:center;gap:5px;margin-right:20px;}
     #adminForms .formbuilder-container{display:flex;flex-direction:column;gap:10px;}
-    #adminForms .category-form-menu,#adminForms .subcategory-form-menu{border:1px solid #444;border-radius:4px;padding:10px;}
+    #adminForms .category-form-menu,#adminForms .subcategory-form-menu{border:1px solid #444;border-radius:4px;}
     #adminForms .category-form-menu+.category-form-menu{margin-top:10px;}
     #adminForms .subcategory-form-menu{margin-top:10px;}
-    #adminForms .field-menu-button{display:flex;align-items:center;justify-content:space-between;background:#444;border-radius:4px;height:40px;padding:0 10px;margin-bottom:5px;}
+    #adminForms .field-menu-button{display:flex;align-items:center;justify-content:space-between;border-radius:4px;height:40px;margin-bottom:5px;}
     #adminForms .formbuilder{display:flex;flex-direction:column;}
   </style>
 </head>
@@ -147,7 +147,7 @@
     </div>
   </footer>
   <div id="quickBoard" class="scrollable">
-    <div class="quick-card" style="background-image:url('assets/welcome 001.jpg')">
+    <div class="quick-card">
       <div class="content">
         <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
         <div>
