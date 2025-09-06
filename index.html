@@ -7386,5 +7386,42 @@ document.addEventListener('DOMContentLoaded', () => {
   updateAdVisibility();
 });
 </script>
+<script>
+(function(){
+  const selectors = ['.res-list', '.post-panel'];
+
+  function savePositions(){
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if(!el.id) return;
+        const key = `scroll-pos-${el.id}`;
+        const pos = {top: el.scrollTop, left: el.scrollLeft};
+        sessionStorage.setItem(key, JSON.stringify(pos));
+      });
+    });
+  }
+
+  function restorePositions(){
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if(!el.id) return;
+        const key = `scroll-pos-${el.id}`;
+        const data = sessionStorage.getItem(key);
+        if(data){
+          try {
+            const {top, left} = JSON.parse(data);
+            if(typeof top === 'number') el.scrollTop = top;
+            if(typeof left === 'number') el.scrollLeft = left;
+          } catch {}
+          sessionStorage.removeItem(key);
+        }
+      });
+    });
+  }
+
+  window.addEventListener('beforeunload', savePositions);
+  document.addEventListener('DOMContentLoaded', restorePositions);
+})();
+</script>
 </body>
 </html>
