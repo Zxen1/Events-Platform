@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" media="(max-width: 649px)" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" media="(min-width: 650px)" />
   <title>Events Platform</title>
   <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
@@ -7210,53 +7211,21 @@ document.addEventListener('pointerdown', handleDocInteract);
 
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
   const editor = document.getElementById('welcomeMessageEditor');
   const hidden = document.getElementById('welcomeMessage');
-  if(editor && hidden){
+  if (editor && hidden) {
     const placeholder = editor.getAttribute('data-placeholder') || '';
     hidden.value = hidden.value || placeholder;
     editor.innerHTML = hidden.value;
-    editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
+    editor.addEventListener('input', () => (hidden.value = editor.innerHTML));
+    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.execCommand(btn.dataset.command, false, null);
         editor.focus();
       });
     });
   }
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('#admin-panel input[type="checkbox"]').forEach(cb => {
-    if (cb.closest('.switch')) return;
-    const wrapper = document.createElement('label');
-    wrapper.className = 'switch';
-    cb.parentNode.insertBefore(wrapper, cb);
-    wrapper.appendChild(cb);
-    const slider = document.createElement('span');
-    slider.className = 'slider';
-    cb.after(slider);
-  });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const vp = document.getElementById('viewport');
-  const updateViewport = () => {
-    if (!vp) return;
-    if (window.innerWidth < 650) {
-      vp.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
-    } else {
-      vp.setAttribute('content','width=device-width, initial-scale=1');
-    }
-  };
-  updateViewport();
-  window.addEventListener('resize', updateViewport);
-  window.addEventListener('orientationchange', updateViewport);
 
   const fsBtn = document.getElementById('fullscreenBtn');
   if (fsBtn) {
@@ -7279,93 +7248,93 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (window.innerWidth >= 650) return;
+  if (window.innerWidth < 650) {
+    const posts = document.querySelector('.post-panel');
+    if (posts) {
+      let defaultSize = parseFloat(getComputedStyle(posts).fontSize);
+      let startDist = null;
+      let enlarged = false;
 
-  const posts = document.querySelector('.post-panel');
-  if (!posts) return;
+      function distance(t1, t2) {
+        return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      }
 
-  let defaultSize = parseFloat(getComputedStyle(posts).fontSize);
-  let startDist = null;
-  let enlarged = false;
+      posts.addEventListener('touchstart', e => {
+        if (e.target.tagName === 'IMG') return;
+        if (e.touches.length === 2) {
+          startDist = distance(e.touches[0], e.touches[1]);
+        }
+      }, { passive: true });
 
-  function distance(t1, t2){
-    return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      posts.addEventListener('touchmove', e => {
+        if (e.target.tagName === 'IMG') return;
+        if (e.touches.length === 2 && startDist) {
+          const scale = distance(e.touches[0], e.touches[1]) / startDist;
+          if (!enlarged && scale > 1.2) {
+            posts.style.fontSize = defaultSize * 1.2 + 'px';
+            enlarged = true;
+          } else if (enlarged && scale < 0.8) {
+            posts.style.fontSize = defaultSize + 'px';
+            enlarged = false;
+          }
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      posts.addEventListener('touchend', e => {
+        if (e.touches.length < 2) startDist = null;
+      });
+
+      function openImagePopup(src) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        const big = document.createElement('img');
+        big.src = src;
+        big.style.cssText = 'max-width:90%;max-height:90%;touch-action:pinch-zoom;';
+        overlay.appendChild(big);
+        overlay.addEventListener('click', () => overlay.remove());
+        document.body.appendChild(overlay);
+      }
+
+      posts.querySelectorAll('img').forEach(img => {
+        img.addEventListener('click', e => {
+          e.stopPropagation();
+          openImagePopup(img.src);
+        });
+        img.addEventListener('touchstart', e => {
+          if (e.touches.length === 2) {
+            e.preventDefault();
+            e.stopPropagation();
+            openImagePopup(img.src);
+          }
+        }, { passive: false });
+      });
+    }
   }
 
-  posts.addEventListener('touchstart', e => {
-    if (e.target.tagName === 'IMG') return;
-    if (e.touches.length === 2) {
-      startDist = distance(e.touches[0], e.touches[1]);
-    }
-  }, { passive: true });
-
-  posts.addEventListener('touchmove', e => {
-    if (e.target.tagName === 'IMG') return;
-    if (e.touches.length === 2 && startDist) {
-      const scale = distance(e.touches[0], e.touches[1]) / startDist;
-      if (!enlarged && scale > 1.2) {
-        posts.style.fontSize = (defaultSize * 1.2) + 'px';
-        enlarged = true;
-      } else if (enlarged && scale < 0.8) {
-        posts.style.fontSize = defaultSize + 'px';
-        enlarged = false;
-      }
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  posts.addEventListener('touchend', e => {
-    if (e.touches.length < 2) startDist = null;
-  });
-
-  function openImagePopup(src){
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
-    const big = document.createElement('img');
-    big.src = src;
-    big.style.cssText = 'max-width:90%;max-height:90%;touch-action:pinch-zoom;';
-    overlay.appendChild(big);
-    overlay.addEventListener('click', () => overlay.remove());
-    document.body.appendChild(overlay);
-  }
-
-  posts.querySelectorAll('img').forEach(img => {
-    img.addEventListener('click', e => { e.stopPropagation(); openImagePopup(img.src); });
-    img.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        e.stopPropagation();
-        openImagePopup(img.src);
-      }
-    }, { passive: false });
-  });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
   const adPanelContainer = document.getElementById('ad-panel-container');
   const postsPanel = document.querySelector('.post-panel');
   const listPanel = document.querySelector('.list-panel');
   const header = document.querySelector('.header');
   [adPanelContainer, postsPanel, listPanel, header].forEach(el => {
-    if(el){
+    if (el) {
       el.addEventListener('click', e => {
-        if(e.target === el) setMode('map');
+        if (e.target === el) setMode('map');
       });
     }
   });
   document.addEventListener('click', e => {
     const d = e.target.closest('.desc');
-    if(d) d.classList.toggle('expanded');
+    if (d) d.classList.toggle('expanded');
   });
-  window.updateAdVisibility = function(){
-    if(!adPanelContainer || !postsPanel) return;
+  window.updateAdVisibility = function () {
+    if (!adPanelContainer || !postsPanel) return;
     const width = postsPanel.getBoundingClientRect().width + (adPanelContainer.classList.contains('show') ? adPanelContainer.getBoundingClientRect().width : 0);
     const hasPosts = !!postsPanel.querySelector('.card');
     const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
     const isShown = adPanelContainer.classList.contains('show');
-    if(shouldShow === isShown) return;
-    if(shouldShow){
+    if (shouldShow === isShown) return;
+    if (shouldShow) {
       adPanelContainer.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
@@ -7376,49 +7345,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   window.addEventListener('resize', updateAdVisibility);
-  if(postsPanel && 'ResizeObserver' in window){
+  if (postsPanel && 'ResizeObserver' in window) {
     const ro = new ResizeObserver(() => updateAdVisibility());
     ro.observe(postsPanel);
   }
-  updateAdVisibility();
-});
-</script>
-<script>
-(function(){
-  const selectors = ['.res-list', '.post-panel'];
-
-  function savePositions(){
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        if(!el.id) return;
-        const key = `scroll-pos-${el.id}`;
-        const pos = {top: el.scrollTop, left: el.scrollLeft};
-        sessionStorage.setItem(key, JSON.stringify(pos));
-      });
-    });
+  if (adPanelContainer && adPanelContainer.classList.contains('show')) {
+    startAdCycle();
   }
-
-  function restorePositions(){
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        if(!el.id) return;
-        const key = `scroll-pos-${el.id}`;
-        const data = sessionStorage.getItem(key);
-        if(data){
-          try {
-            const {top, left} = JSON.parse(data);
-            if(typeof top === 'number') el.scrollTop = top;
-            if(typeof left === 'number') el.scrollLeft = left;
-          } catch {}
-          sessionStorage.removeItem(key);
-        }
-      });
-    });
-  }
-
-  window.addEventListener('beforeunload', savePositions);
-  document.addEventListener('DOMContentLoaded', restorePositions);
-})();
+}
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
