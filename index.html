@@ -43,7 +43,8 @@
     .quick-card .info{display:flex;flex-direction:column;gap:2px;font-size:12px;}
     .quick-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(0,0,0,0.8),rgba(0,0,0,0.6));z-index:1;}
     .quick-card>*{position:relative;z-index:2;}
-    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:0;padding:10px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:transform .3s;}
+    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:420px;padding:10px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:left .3s,transform .3s;}
+    #quickBoard.open~#postBoard{left:520px;}
     #postBoard.closed{transform:translateX(-520px);}
     .post-card{width:500px;border-radius:4px;overflow:hidden;position:relative;}
     .post-card .post-header{height:50px;background:#222;display:flex;align-items:center;padding:10px;font-weight:bold;}
