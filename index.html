@@ -11,6 +11,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css" />
   <style>:root{
   --header-h: 75px;
   --subheader-h: 0;
@@ -4697,7 +4698,6 @@ function makePosts(){
         });
       }
 
-      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css');
       injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
         'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
 
@@ -4842,9 +4842,10 @@ function makePosts(){
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
       }catch{}
-      map.on('style.load', () => {
-        applySky(skyStyle);
-      });
+        map.on('style.load', () => {
+          map.setTerrain(null);
+          applySky(skyStyle);
+        });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
         addPostSource();
@@ -8569,7 +8570,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(overlay);
   }
 
-  posts.querySelectorAll('img').forEach(img => {
+posts.querySelectorAll('img').forEach(img => {
     img.addEventListener('click', e => { e.stopPropagation(); openImagePopup(img.src); });
     img.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
@@ -8578,6 +8579,13 @@ document.addEventListener('DOMContentLoaded', () => {
         openImagePopup(img.src);
       }
     }, { passive: false });
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type="color"]').forEach(el => {
+    if(!el.value) el.value = '#000000';
   });
 });
 </script>
