@@ -4695,19 +4695,19 @@ function makePosts(){
         });
       }
 
-      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css');
-      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
-        'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css');
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.css',
+        'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.1.0/dist/mapbox-gl-geocoder.css');
 
       const s = document.createElement('script');
-      s.src='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js';
+      s.src='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
       s.onload = ()=>{
         const g = document.createElement('script');
-        g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+        g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.min.js';
         g.onload = cb;
         g.onerror = ()=>{
           const gf = document.createElement('script');
-          gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
+          gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.1.0/dist/mapbox-gl-geocoder.min.js';
           gf.onload = cb;
           gf.onerror = cb;
           document.head.appendChild(gf);
@@ -4749,7 +4749,7 @@ function makePosts(){
         }
       } else {
         const script = document.createElement('script');
-        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+        script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.min.js';
         script.onload = addGeocoder;
         script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
         document.head.appendChild(script);
