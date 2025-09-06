@@ -124,6 +124,19 @@
     #adminForms .subcategory-form-menu{margin-top:10px;}
     #adminForms .field-menu-button{display:flex;align-items:center;justify-content:space-between;border-radius:4px;height:40px;margin-bottom:5px;}
     #adminForms .formbuilder{display:flex;flex-direction:column;}
+    #adminForms .category-edit-menu,
+    #adminForms .subcategory-edit-menu,
+    #adminForms .form-pricing-menu{width:400px;border:1px solid #444;border-radius:4px;display:flex;flex-direction:column;gap:10px;padding:10px;}
+    #adminForms .iconpicker-container{display:flex;}
+    #adminForms .iconpicker-container .icon-left{width:300px;display:flex;flex-direction:column;gap:10px;}
+    #adminForms .iconpicker-container .icon-left textarea{width:300px;height:300px;}
+    #adminForms .iconpicker-container .icon-right{width:90px;padding-left:10px;display:flex;flex-direction:column;align-items:center;}
+    #adminForms .iconpicker-container .icon-right .icon-preview{width:90px;height:90px;background:#fff;border-radius:4px;}
+    #adminForms .iconpicker-container .icon-right button{width:90px;height:40px;margin-top:10px;}
+    #adminForms .iconpicker-container .icon-right input[type=color]{width:90px;height:40px;border:none;border-radius:4px;margin-top:10px;padding:0;}
+    #adminForms .icon-generator{display:flex;gap:10px;}
+    #adminForms .icon-generator input{width:300px;height:40px;border:none;border-radius:4px;padding:0 10px;background:#333;color:white;}
+    #adminForms .icon-generator button{width:90px;height:40px;}
   </style>
 </head>
 <body>
@@ -753,10 +766,38 @@
       catMenu.appendChild(catHeader);
       const catBody=document.createElement('div');
       catBody.style.display='none';
-      const catEdit=document.createElement('button');
-      catEdit.className='btn small';
-      catEdit.textContent='Edit Menu';
-      catBody.appendChild(catEdit);
+      const catEditBtn=document.createElement('button');
+      catEditBtn.className='btn small';
+      catEditBtn.textContent='Edit Menu';
+      catBody.appendChild(catEditBtn);
+      const catEditMenu=document.createElement('div');
+      catEditMenu.className='category-edit-menu';
+      catEditMenu.style.display='none';
+      catEditMenu.innerHTML=`
+        <div class="row"><input type="text" class="short" placeholder="Category Name"></div>
+        <div class="iconpicker-container">
+          <div class="icon-left">
+            <input type="file">
+            <textarea placeholder="SVG Code"></textarea>
+          </div>
+          <div class="icon-right">
+            <div class="icon-preview"></div>
+            <button class="btn small copy-svg">Copy SVG</button>
+          </div>
+        </div>
+        <div class="icon-generator">
+          <input type="text" placeholder="Describe your icon">
+          <button class="btn small">Create</button>
+        </div>
+        <button class="btn small delete-category" style="background:red;">Delete Category</button>
+      `;
+      catBody.appendChild(catEditMenu);
+      catEditBtn.addEventListener('click',e=>{e.stopPropagation();catEditMenu.style.display=catEditMenu.style.display==='none'?'flex':'none';});
+      document.addEventListener('click',e=>{if(!catEditMenu.contains(e.target)&&e.target!==catEditBtn){catEditMenu.style.display='none';}});
+      const catNameInput=catEditMenu.querySelector('input[placeholder="Category Name"]');
+      catNameInput.addEventListener('input',()=>{catToggle.textContent=catNameInput.value||'Category';});
+      catEditMenu.querySelector('.copy-svg').addEventListener('click',()=>{navigator.clipboard.writeText(catEditMenu.querySelector('textarea').value);});
+      catEditMenu.querySelector('.delete-category').addEventListener('click',()=>{if(confirm('Are you sure?'))catMenu.remove();});
       cat.subcategories.forEach(sub=>{
         const subMenu=document.createElement('div');
         subMenu.className='subcategory-form-menu';
@@ -773,10 +814,33 @@
         subMenu.appendChild(subHeader);
         const subBody=document.createElement('div');
         subBody.style.display='none';
-        const subEdit=document.createElement('button');
-        subEdit.className='btn small';
-        subEdit.textContent='Edit Menu';
-        subBody.appendChild(subEdit);
+        const subEditBtn=document.createElement('button');
+        subEditBtn.className='btn small';
+        subEditBtn.textContent='Edit Menu';
+        subBody.appendChild(subEditBtn);
+        const subEditMenu=document.createElement('div');
+        subEditMenu.className='subcategory-edit-menu';
+        subEditMenu.style.display='none';
+        subEditMenu.innerHTML=`
+          <div class="row"><input type="text" class="short" placeholder="Subcategory Name"></div>
+          <div class="iconpicker-container">
+            <div class="icon-left">
+              <textarea readonly placeholder="SVG Code"></textarea>
+            </div>
+            <div class="icon-right">
+              <div class="icon-preview"></div>
+              <input type="color" value="#000000">
+            </div>
+          </div>
+        `;
+        subBody.appendChild(subEditMenu);
+        subEditBtn.addEventListener('click',e=>{e.stopPropagation();subEditMenu.style.display=subEditMenu.style.display==='none'?'flex':'none';});
+        document.addEventListener('click',e=>{if(!subEditMenu.contains(e.target)&&e.target!==subEditBtn){subEditMenu.style.display='none';}});
+        const subNameInput=subEditMenu.querySelector('input[placeholder="Subcategory Name"]');
+        subNameInput.addEventListener('input',()=>{subToggle.textContent=subNameInput.value||'Subcategory';});
+        const colorPicker=subEditMenu.querySelector('input[type=color]');
+        const subPreview=subEditMenu.querySelector('.icon-preview');
+        colorPicker.addEventListener('input',()=>{subPreview.style.background=colorPicker.value;});
         const pricing=document.createElement('div');
         pricing.className='form-pricing-menu';
         pricing.textContent='Pricing Settings';
@@ -802,6 +866,7 @@
         delSub.className='btn small';
         delSub.style.background='red';
         delSub.textContent='Delete Subcategory';
+        delSub.addEventListener('click',()=>{if(confirm('Are you sure?'))subMenu.remove();});
         subBody.appendChild(delSub);
         subMenu.appendChild(subBody);
         catBody.appendChild(subMenu);
