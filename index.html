@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" />
   <style>:root{
   --header-h: 75px;
-  --panel-w: 300px;
+  --panel-w: 400px;
   --results-w: 520px;
   --gap: 10px;
     --media-h: 200px;
@@ -326,11 +326,11 @@ button,
   padding:4px 8px;
   color:var(--button-text);
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:center;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
   gap:6px;
-  line-height:1;
+  line-height:normal;
 }
 .options-menu button.selected{
   background:var(--dropdown-selected-bg);
@@ -531,18 +531,21 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #admin-panel #styleControls > *{
-  width:300px;
+  width:100%;
+  max-width:400px;
 }
 .admin-fieldset{
   margin:0;
   border:0;
   border-radius:8px;
   padding:0;
-  width:300px;
+  width:100%;
+  max-width:400px;
   box-sizing:border-box;
 }
 #admin-panel .admin-fieldset{
-  width:300px;
+  width:100%;
+  max-width:400px;
 }
 #admin-panel .admin-fieldset.collapsed{
   padding:0;
@@ -722,13 +725,13 @@ button[aria-expanded="true"] .results-arrow{
     max-height:95%;
   }
 }
-#admin-panel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#admin-panel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
 #admin-panel legend::after{content:'\25BC';margin-left:auto;font-size:12px;}
 #admin-panel fieldset.collapsed legend::after{content:'\25B6';}
 #admin-panel fieldset.collapsed > :not(legend){display:none;}
 #admin-panel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #admin-panel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#admin-panel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
+#admin-panel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:400px;width:100%;}
 #admin-panel .control-row label:first-child{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #admin-panel .color-group{
@@ -875,7 +878,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
-  max-width:300px;
+  max-width:400px;
   width:100%;
 }
 #admin-panel .panel-field{margin:0;}
@@ -1065,18 +1068,20 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filter-panel #kwInput{
   background:#fff;
-  width:300px;
+  width:100%;
   flex:none;
   border-radius:4px;
-  padding-right:40px;
+  padding-right:24px;
+  box-sizing:border-box;
 }
 #filter-panel #dateInput{
   background:#fff;
   color: var(--panel-text);
-  width:300px;
+  width:100%;
   flex:none;
   border-radius:4px;
-  padding-right:40px;
+  padding-right:24px;
+  box-sizing:border-box;
 }
 
 .input .down{
@@ -1923,7 +1928,7 @@ body.hide-results .post-panel{
 }
 .filter-panel .options-dropdown{width:400px;}
 .filter-panel .options-dropdown > button{width:400px;}
-.options-dropdown .options-menu{width:400px;}
+.options-dropdown .options-menu{min-width:380px;width:auto;}
 .open-posts .session-dropdown > button.past{
   background:#800000;
   border-color:#800000;
@@ -3069,10 +3074,11 @@ footer .chip-small img.mini{
   padding:4px 8px;
   color:var(--button-text);
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:flex-start;
   gap:6px;
-  width:380px;
+  width:auto;
+  min-width:380px;
 }
 
 .filter-panel .panel-body,
@@ -3104,7 +3110,8 @@ footer .chip-small img.mini{
 .admin-panel .panel-body select{
   text-align:left;
   align-self:flex-start;
-  width:300px;
+  width:100%;
+  max-width:400px;
   background:#fff;
 }
 
