@@ -104,6 +104,13 @@
     #adminPanel .menu-option-button{width:100%;height:40px;padding:0 10px;border:none;background:#444;color:white;text-align:left;}
     #adminPanel .menu-option-button:hover{background:#555;}
     #adminPanel .markercluster-container input[type=color]{width:40px;height:40px;border:none;border-radius:4px;padding:0;}
+    #adminPanel .row label{display:flex;align-items:center;gap:5px;margin-right:20px;}
+    #adminForms .formbuilder-container{display:flex;flex-direction:column;gap:10px;}
+    #adminForms .category-form-menu,#adminForms .subcategory-form-menu{border:1px solid #444;border-radius:4px;padding:10px;}
+    #adminForms .category-form-menu+.category-form-menu{margin-top:10px;}
+    #adminForms .subcategory-form-menu{margin-top:10px;}
+    #adminForms .field-menu-button{display:flex;align-items:center;justify-content:space-between;background:#444;border-radius:4px;height:40px;padding:0 10px;margin-bottom:5px;}
+    #adminForms .formbuilder{display:flex;flex-direction:column;}
   </style>
 </head>
 <body>
@@ -267,10 +274,11 @@
         <div class="map-spin-container">
           <div class="row">
             <div>Spin on Load</div>
-            <div class="right-group">
-              <select class="short"><option>Everyone</option><option>New Users</option></select>
-              <input type="checkbox">
-            </div>
+            <div class="right-group"><input type="checkbox"></div>
+          </div>
+          <div class="row">
+            <label><input type="radio" name="spinAudience" checked> Everyone</label>
+            <label><input type="radio" name="spinAudience"> New Users</label>
           </div>
           <div class="row">
             <div>Spin on Logo</div>
@@ -330,6 +338,90 @@
     document.querySelectorAll('#adminPanel .map-spin-container input[type=number]').forEach(n=>{
       n.addEventListener('input',e=>{e.target.previousElementSibling.value=e.target.value;});
     });
+
+    const categories=Array.from({length:5},(_,i)=>({name:`Category ${i+1}`,subcategories:Array.from({length:5},(_,j)=>({name:`Subcategory ${j+1}`,fields:['Title','Description','Images']}))}));
+    const formsTab=document.getElementById('adminForms');
+    const fbContainer=document.createElement('div');
+    fbContainer.className='formbuilder-container';
+    categories.forEach(cat=>{
+      const catMenu=document.createElement('div');
+      catMenu.className='category-form-menu';
+      const catHeader=document.createElement('div');
+      catHeader.className='row';
+      const catToggle=document.createElement('button');
+      catToggle.className='btn small category-toggle';
+      catToggle.textContent=cat.name;
+      catHeader.appendChild(catToggle);
+      const catRight=document.createElement('div');
+      catRight.className='right-group';
+      catRight.innerHTML='<input type="checkbox">';
+      catHeader.appendChild(catRight);
+      catMenu.appendChild(catHeader);
+      const catBody=document.createElement('div');
+      catBody.style.display='none';
+      const catEdit=document.createElement('button');
+      catEdit.className='btn small';
+      catEdit.textContent='Edit Menu';
+      catBody.appendChild(catEdit);
+      cat.subcategories.forEach(sub=>{
+        const subMenu=document.createElement('div');
+        subMenu.className='subcategory-form-menu';
+        const subHeader=document.createElement('div');
+        subHeader.className='row';
+        const subToggle=document.createElement('button');
+        subToggle.className='btn small subcategory-toggle';
+        subToggle.textContent=sub.name;
+        subHeader.appendChild(subToggle);
+        const subRight=document.createElement('div');
+        subRight.className='right-group';
+        subRight.innerHTML='<input type="checkbox">';
+        subHeader.appendChild(subRight);
+        subMenu.appendChild(subHeader);
+        const subBody=document.createElement('div');
+        subBody.style.display='none';
+        const subEdit=document.createElement('button');
+        subEdit.className='btn small';
+        subEdit.textContent='Edit Menu';
+        subBody.appendChild(subEdit);
+        const pricing=document.createElement('div');
+        pricing.className='form-pricing-menu';
+        pricing.textContent='Pricing Settings';
+        subBody.appendChild(pricing);
+        const formbuilder=document.createElement('div');
+        formbuilder.className='formbuilder';
+        sub.fields.forEach(f=>{
+          const field=document.createElement('div');
+          field.className='field-menu-button';
+          field.textContent=f;
+          const clear=document.createElement('button');
+          clear.className='btn small';
+          clear.textContent='x';
+          field.appendChild(clear);
+          formbuilder.appendChild(field);
+        });
+        const addField=document.createElement('button');
+        addField.className='btn small add-field-menu';
+        addField.textContent='Add Field';
+        formbuilder.appendChild(addField);
+        subBody.appendChild(formbuilder);
+        const delSub=document.createElement('button');
+        delSub.className='btn small';
+        delSub.style.background='red';
+        delSub.textContent='Delete Subcategory';
+        subBody.appendChild(delSub);
+        subMenu.appendChild(subBody);
+        catBody.appendChild(subMenu);
+        subToggle.addEventListener('click',()=>{subBody.style.display=subBody.style.display==='none'?'block':'none';});
+      });
+      const addSub=document.createElement('button');
+      addSub.className='btn small add-subcategory';
+      addSub.textContent='Add Subcategory';
+      catBody.appendChild(addSub);
+      catMenu.appendChild(catBody);
+      fbContainer.appendChild(catMenu);
+      catToggle.addEventListener('click',()=>{catBody.style.display=catBody.style.display==='none'?'block':'none';});
+    });
+    formsTab.appendChild(fbContainer);
   </script>
 </body>
 </html>
