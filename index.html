@@ -236,6 +236,12 @@ select{
   height: var(--control-h);
   border-radius: 8px;
 }
+input[type="text"],
+textarea{
+  background: #ffffff;
+  color: #000000;
+  width: 300px;
+}
 input[type="checkbox"]{
   width: var(--control-h);
   height: var(--control-h);
@@ -594,8 +600,9 @@ button[aria-expanded="true"] .results-arrow{
   --panel-label-size:12px;
 }
 #filter-panel input[type="text"]{
-  background: var(--panel-bg);
+  background: #ffffff;
   color: var(--panel-text);
+  width:300px;
 }
 #filter-panel .calendar-container{
   background: #111111;
@@ -1070,7 +1077,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filter-panel #kwInput{
   background:#fff;
-  width:100%;
+  width:300px;
   flex:none;
   border-radius:4px;
   padding-right:24px;
@@ -1079,7 +1086,7 @@ button[aria-expanded="true"] .results-arrow{
 #filter-panel #dateInput{
   background:#fff;
   color: var(--panel-text);
-  width:100%;
+  width:300px;
   flex:none;
   border-radius:4px;
   padding-right:24px;
@@ -1261,7 +1268,7 @@ body.hide-results .list-panel{
   display:inline-block;
   vertical-align:middle;
   color: currentColor;
-  width:20px; height:20px;
+  width:30px; height:30px;
   transition:transform .3s;
 }
 #filterBtn.spinning .icon-search{
@@ -3143,7 +3150,7 @@ footer .chip-small img.mini{
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <button id="filterBtn" aria-label="Open filters panel">
-        <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
