@@ -33,8 +33,8 @@
       --button-text: #ffffff;
       --button-hover-text: #000000;
       --button-active-text: #ffffff;
-      --btn: #333333;
-      --btn-hover: #333333;
+      --btn: #3E5393;
+      --btn-hover: #5C6FB1;
       --btn-active: #2e3a72;
       --panel-bg: #444444;
       --panel-text: #000000;
@@ -75,7 +75,7 @@
         --calendar-header-h: var(--calendar-cell-h);
         --calendar-past-bg: #5c1a1a;
         --calendar-future-bg: #111111;
-        --session-available: #4e5572;
+        --session-available: #333333;
         --session-selected: #2e3a72;
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
@@ -250,9 +250,62 @@ input[type="checkbox"]{
 
 button,
 [role="button"]{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+button:hover:not(:disabled),
+[role="button"]:hover:not([aria-disabled="true"]){
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+button:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]){
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+}
+button.selected,
+button[aria-pressed="true"],
+button[aria-current="page"],
+button[aria-selected="true"],
+[role="button"].selected,
+[role="button"][aria-pressed="true"],
+[role="button"][aria-current="page"],
+[role="button"][aria-selected="true"]{
+  background:var(--active);
+  border-color:var(--active);
+  color:var(--button-text);
+}
+button.selected:hover,
+button[aria-pressed="true"]:hover,
+button[aria-current="page"]:hover,
+button[aria-selected="true"]:hover,
+[role="button"].selected:hover,
+[role="button"][aria-pressed="true"]:hover,
+[role="button"][aria-current="page"]:hover,
+[role="button"][aria-selected="true"]:hover{
+  background:#39448f;
+  border-color:#39448f;
+}
+button:disabled,
+[role="button"][aria-disabled="true"]{
+  background:#777;
+  border-color:#777;
+  color:#ccc;
+  cursor:not-allowed;
+  opacity:0.5;
+}
+button:focus-visible,
+[role="button"]:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
 }
 
   .header{
@@ -328,19 +381,19 @@ button,
   background:var(--btn);
   border:1px solid var(--btn);
   border-radius:var(--dropdown-radius);
-  text-align:left;
+  text-align:center;
   padding:4px 8px;
   color:var(--button-text);
   display:flex;
   flex-direction:row;
   align-items:center;
-  justify-content:flex-start;
+  justify-content:center;
   gap:6px;
   line-height:normal;
 }
 .options-menu button.selected{
-  background:var(--dropdown-selected-bg);
-  color:var(--dropdown-selected-text);
+  background:var(--active);
+  color:var(--button-text);
 }
 .header .gear,
 .header a{
@@ -369,7 +422,6 @@ button,
 
 .options-dropdown > button{
   position:relative;
-  padding-right:30px;
 }
 
 .options-dropdown .dropdown-arrow,
@@ -514,7 +566,7 @@ button[aria-expanded="true"] .results-arrow{
   overflow:hidden;
   pointer-events:auto;
 }
-.panel-content .resizer{position:absolute;z-index:10;background:transparent;}
+.panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
 .panel-content .resizer.s{bottom:0;left:0;right:0;height:6px;cursor:s-resize;}
 .panel-content .resizer.e{top:0;right:0;bottom:0;width:6px;cursor:e-resize;}
@@ -615,6 +667,7 @@ button[aria-expanded="true"] .results-arrow{
   height:calc(var(--calendar-height) * var(--calendar-scale));
   border:none;
   border-radius:4px;
+  margin-bottom:10px;
 }
 #filter-panel .calendar-container .today-marker{
   position:absolute;
@@ -645,7 +698,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
 }
 .calendar .month:not(:first-child){
-  border-left:1px solid var(--calendar-past-bg);
+  border-left:1px solid var(--muted);
 }
 .calendar .grid{
   flex:1 1 auto;
@@ -1532,7 +1585,15 @@ body.filters-active #filterBtn{
   margin-bottom:var(--gap);
 }
 .geocoder > .mapboxgl-ctrl-geocoder{
-  flex:1;
+  flex:0 0 300px;
+  width:300px;
+  max-width:300px;
+  min-width:300px;
+}
+.mapboxgl-ctrl-geocoder.mapboxgl-ctrl{
+  width:300px !important;
+  max-width:300px !important;
+  min-width:300px !important;
 }
 .geocoder > .mapboxgl-ctrl-group:first-of-type{
   margin-left:auto;
@@ -2014,7 +2075,7 @@ body.hide-results .post-panel{
   display:flex;
   flex-direction:column;
   align-items:flex-start;
-  justify-content:center;
+  justify-content:flex-start;
 }
 
 .open-posts .session-menu button{
@@ -3070,38 +3131,10 @@ footer .chip-small img.mini{
 
 .options-dropdown > button{
   height:50px;
-  background:var(--btn);
-  border:1px solid var(--btn);
-  border-radius:var(--dropdown-radius);
-  text-align:left;
-  padding:2px 8px;
-  color:var(--button-text);
+  width:100%;
+  padding:2px 30px 2px 8px;
   display:inline-flex;
   align-items:center;
-  justify-content:flex-start;
-  width:100%;
-}
-
-.options-dropdown .options-menu button{
-  background:var(--btn);
-  border:1px solid var(--btn);
-  border-radius:var(--dropdown-radius);
-  text-align:left;
-  padding:4px 8px;
-  color:var(--button-text);
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:6px;
-  width:100%;
-}
-
-.sort-field .options-dropdown > button{
-  text-align:center;
-  justify-content:center;
-}
-
-.sort-field .options-menu button{
   text-align:center;
   justify-content:center;
 }
@@ -3222,22 +3255,22 @@ footer .chip-small img.mini{
       </div>
       <div class="panel-body">
         <div id="geocoder" class="geocoder"></div>
-        <section class="filters-col" aria-label="Filters">
-          <div id="filterSummary" class="filter-summary"></div>
-          <div class="field sort-field">
-            <div class="options-dropdown">
-              <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
-              <div id="optionsMenu" class="options-menu" hidden>
-                <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-                <div class="sort-options" role="group" aria-label="Sort options" style="display:flex; flex-direction:column; gap:6px;">
-                  <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-                  <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-                  <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+          <section class="filters-col" aria-label="Filters">
+            <div class="field sort-field">
+              <div class="options-dropdown">
+                <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
+                <div id="optionsMenu" class="options-menu" hidden>
+                  <button id="favToggle" aria-pressed="false">Favourites on Top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+                  <div class="sort-options" role="group" aria-label="Sort options" style="display:flex; flex-direction:column; gap:6px;">
+                    <button class="sort-option" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                    <button class="sort-option" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                    <button class="sort-option" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="field">
+            <div id="filterSummary" class="filter-summary"></div>
+            <div class="field">
             <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
               <div class="x" role="button" aria-label="Clear keywords">X</div>
             </div>
@@ -3395,30 +3428,6 @@ footer .chip-small img.mini{
                   <span id="bearingVal"></span>
                 </div>
               </div>
-              <div class="panel-field">
-                <label>Markercluster</label>
-                <div class="marker-grid">
-                  <div class="marker-options">
-                    <label for="clusterRadius">Radius</label>
-                    <input type="number" id="clusterRadius" min="10" max="100" step="1" />
-                  </div>
-                  <div class="marker-options">
-                    <label for="clusterMaxZoom">Max Zoom</label>
-                    <input type="number" id="clusterMaxZoom" min="0" max="18" step="1" />
-                  </div>
-                  <div class="marker-options">
-                    <label for="clusterIconType">Icon Type</label>
-                    <select id="clusterIconType">
-                      <option value="circle">Circle</option>
-                      <option value="svg">SVG</option>
-                    </select>
-                  </div>
-                  <div class="marker-options" id="clusterSvgRow">
-                    <label for="clusterSvg">SVG Icon</label>
-                    <textarea id="clusterSvg" rows="3" placeholder="<svg>...</svg>"></textarea>
-                  </div>
-                </div>
-              </div>
             <div class="panel-field">
               <div class="option-label">
                 <span>Spin on Load</span>
@@ -3450,13 +3459,13 @@ footer .chip-small img.mini{
               <div id="balloonTool">
                 <style>
                   #balloonTool .t{font-family:Verdana;font-size:20px;}
-                  #balloonTool .shape-dropdown{position:relative;height:35px;margin-bottom:8px;}
-                  #balloonTool .shape-dropdown > button{height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
-                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;overscroll-behavior:contain;}
-                  #balloonTool .shape-menu[hidden]{display:none;}
-                  #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
-                  #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
-                  #balloonTool .shape-button.active{outline:2px solid var(--border);}
+                    #balloonTool .shape-dropdown{position:relative;height:50px;margin-bottom:8px;}
+                    #balloonTool .shape-dropdown > button{height:50px;width:100%;}
+                    #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;max-height:400px;overflow-y:auto;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;overscroll-behavior:contain;}
+                    #balloonTool .shape-menu[hidden]{display:none;}
+                    #balloonTool .shape-button{width:100%;}
+                    #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
+                    #balloonTool .shape-button.active{outline:2px solid var(--border);}
                   #balloonTool .size-control{margin-bottom:8px;}
                   #balloonTool .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
                   #balloonTool .svg-output textarea{height:200px;}
@@ -3465,10 +3474,10 @@ footer .chip-small img.mini{
                   #balloonTool #balloonGrid svg{cursor:pointer;}
                 </style>
                 <div class="t">Balloon Icon Generator</div>
-                <div class="shape-dropdown">
-                  <button type="button" id="shapeMenuBtn" aria-expanded="false">Select Shape</button>
-                  <div class="shape-menu" id="balloonShapeButtons" hidden></div>
-                </div>
+                  <div class="shape-dropdown options-dropdown">
+                    <button type="button" id="shapeMenuBtn" aria-expanded="false">Select Shape</button>
+                    <div class="shape-menu options-menu" id="balloonShapeButtons" hidden></div>
+                  </div>
                 <div class="size-control">
                   <label>Balloon size: <input type="range" id="balloonSize" min="40" max="120" value="40" /> <span id="balloonSizeValue">40</span>px</label>
                 </div>
@@ -4547,6 +4556,8 @@ function makePosts(){
         sortButtons.forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true' : 'false'));
         updateSortBtnLabel(btn.textContent);
         renderLists(filtered);
+        optionsMenu.setAttribute('hidden','');
+        optionsBtn.setAttribute('aria-expanded','false');
       });
     });
 
@@ -6588,7 +6599,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       savePanelState(panel);
     }
 
-    const handles = ['n','e','s','w','ne','nw','se','sw'];
+    const handles = [];
     handles.forEach(dir=>{
       const h = document.createElement('div');
       h.className = 'resizer ' + dir;
@@ -6686,11 +6697,6 @@ document.addEventListener('pointerdown', handleDocInteract);
           const pitchVal = document.getElementById("pitchVal");
           const bearingInput = document.getElementById("mapBearing");
           const bearingVal = document.getElementById("bearingVal");
-          const radiusInput = document.getElementById("clusterRadius");
-          const maxZoomInput = document.getElementById("clusterMaxZoom");
-          const iconSelect = document.getElementById("clusterIconType");
-          const svgInput = document.getElementById("clusterSvg");
-          const svgRow = document.getElementById("clusterSvgRow");
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
@@ -6747,42 +6753,7 @@ document.addEventListener('pointerdown', handleDocInteract);
           bearingVal.textContent = val.toFixed(0);
         });
       }
-      if(radiusInput){
-        radiusInput.value = clusterRadius;
-        radiusInput.addEventListener("change", ()=>{
-          clusterRadius = parseInt(radiusInput.value,10) || 52;
-          localStorage.setItem("clusterRadius", String(clusterRadius));
-          addPostSource();
-        });
-      }
-      if(maxZoomInput){
-        maxZoomInput.value = clusterMaxZoom;
-        maxZoomInput.addEventListener("change", ()=>{
-          let val = parseInt(maxZoomInput.value,10);
-          if(isNaN(val)) val = 14;
-          clusterMaxZoom = Math.max(0, Math.min(18, val));
-          localStorage.setItem("clusterMaxZoom", String(clusterMaxZoom));
-          addPostSource();
-        });
-      }
-      if(iconSelect){
-        iconSelect.value = clusterIconType;
-        iconSelect.addEventListener("change", ()=>{
-          clusterIconType = iconSelect.value;
-          localStorage.setItem("clusterIconType", clusterIconType);
-          if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
-          addPostSource();
-        });
-      }
-      if(svgInput){
-        svgInput.value = clusterSvg;
-        svgInput.addEventListener("change", ()=>{
-          clusterSvg = svgInput.value;
-          localStorage.setItem("clusterSvg", clusterSvg);
-          if(clusterIconType === "svg") addPostSource();
-        });
-        if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
-      }
+      /* marker cluster options removed */
       if(loadStartChk){
         loadStartChk.checked = sg.spinLoadStart;
         loadStartChk.addEventListener("change", ()=>{
