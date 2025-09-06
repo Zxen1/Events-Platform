@@ -116,14 +116,17 @@ fieldset{
   border-color: var(--border-active);
 }
 
-*[aria-pressed="true"],
-*[aria-current="page"],
-*[aria-selected="true"],
-.selected,
-.on{
-  border-color: var(--border-active);
-  color: var(--active);
-}
+  *[aria-pressed="true"],
+  *[aria-current="page"],
+  *[aria-selected="true"]{
+    border-color: var(--border-active);
+    color: var(--active);
+  }
+
+  .selected,
+  .on{
+    border-color: var(--border-active);
+  }
 
 html,body{
   height: 100%;
