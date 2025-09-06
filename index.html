@@ -2448,8 +2448,7 @@ footer{
   height: var(--footer-h);
   display: flex;
   align-items: center;
-  gap: 0;
-  padding: 0;
+  padding: 10px 0;
   background: rgba(0,0,0,0.7);
   position: fixed;
   bottom: 0;
@@ -2471,13 +2470,11 @@ footer{
 
 
 .fullscreen-btn{
-    width:60px;
-    height:60px;
+    width:40px;
+    height:40px;
     padding:0;
     border-radius:0;
-    position:absolute;
-    top:0;
-    right:0;
+    flex:0 0 auto;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -2487,6 +2484,16 @@ footer{
     cursor: pointer;
     transition: background .2s,border-color .2s,color .2s;
   }
+
+.footer-container{
+  flex:1;
+  display:flex;
+  gap:4px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  margin-left:10px;
+  margin-right:10px;
+}
 
 
 .chip-small{
@@ -3088,27 +3095,18 @@ footer{
   align-self:flex-end;
 }
 
-.history-bar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  height:50px;
-  display:flex;
-  gap:4px;
-  overflow-x:auto;
-  z-index:1000;
-}
 .history-card{
   position:relative;
   flex:0 0 auto;
-  height:50px;
-  padding:10px 25px 10px 40px;
+  height:40px;
+  padding:0 25px 0 40px;
   background-size:cover;
   background-position:center;
   cursor:pointer;
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,0.8);
+  display:flex;
+  align-items:center;
 }
 .history-card::before{
   content:"";
@@ -3147,7 +3145,6 @@ footer{
 </style>
 </head>
 <body class="mode-map">
-  <div id="historyBar" class="history-bar"></div>
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap.com logo" />
@@ -3200,6 +3197,7 @@ footer{
 
 
     <footer>
+      <div id="footer-container" class="footer-container" aria-label="Recently viewed posts"></div>
       <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
     </footer>
 
@@ -4209,12 +4207,35 @@ function makePosts(){
     return `<div class="hover-card" data-id="${p.id}">${thumbTag(p)}<div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
   }
 
-  const historyBar = document.getElementById('historyBar');
+  const footerContainer = document.getElementById('footer-container');
   let visitHistory = JSON.parse(localStorage.getItem('visitHistory')||'[]');
 
+  function captureState(){
+    const {start,end} = orderedRange();
+    return {
+      kw: $('#kwInput').value,
+      date: $('#dateInput').value,
+      start: start ? toISODate(start) : null,
+      end: end ? toISODate(end) : null,
+      expired: $('#expiredToggle').checked
+    };
+  }
+
+  function restoreState(st){
+    if(!st) return;
+    $('#kwInput').value = st.kw || '';
+    dateStart = st.start ? parseISODate(st.start) : null;
+    dateEnd = st.end ? parseISODate(st.end) : null;
+    $('#dateInput').value = st.date || '';
+    const expiredToggle = $('#expiredToggle');
+    if(expiredToggle) expiredToggle.checked = st.expired || false;
+    applyFilters();
+    updateClearButtons();
+  }
+
   function renderHistory(){
-    if(!historyBar) return;
-    historyBar.innerHTML='';
+    if(!footerContainer) return;
+    footerContainer.innerHTML='';
     visitHistory.forEach(h=>{
       const card=document.createElement('div');
       card.className='history-card' + (h.fav ? ' favourited':'');
@@ -4230,20 +4251,23 @@ function makePosts(){
       fav.textContent='★';
       card.append(thumb,title,fav);
       card.addEventListener('click',()=>{
+        if(h.state) restoreState(h.state);
         if(map && h.center){
           map.jumpTo({center:[h.center.lng,h.center.lat], zoom: h.zoom || map.getZoom()});
         }
         openPost(h.id);
       });
-      historyBar.appendChild(card);
+      footerContainer.appendChild(card);
     });
+    footerContainer.scrollLeft = footerContainer.scrollWidth;
   }
 
   function addHistory(p){
     const center = map ? map.getCenter() : {lng:p.lng, lat:p.lat};
     const zoom = map ? map.getZoom() : null;
+    const state = captureState();
     visitHistory = visitHistory.filter(h=>h.id!==p.id);
-    visitHistory.push({id:p.id, title:p.title, fav:!!p.fav, center, zoom});
+    visitHistory.push({id:p.id, title:p.title, fav:!!p.fav, center, zoom, state});
     if(visitHistory.length>100) visitHistory.splice(0, visitHistory.length-100);
     localStorage.setItem('visitHistory', JSON.stringify(visitHistory));
     renderHistory();
