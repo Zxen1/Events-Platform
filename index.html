@@ -678,7 +678,7 @@ button[aria-expanded="true"] .results-arrow{
   background:#111111;
 }
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
-.calendar .day.past{background:var(--calendar-past-bg);color:#fff;}
+.calendar .day.past{background:#111111;color:grey;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
 .calendar .day.in-range{background:var(--session-available);border-radius:0;}
@@ -1064,14 +1064,14 @@ button[aria-expanded="true"] .results-arrow{
   border-radius: var(--dropdown-radius);
 }
 #filter-panel #kwInput{
-  background: var(--keyword-bg);
+  background:#fff;
   width:300px;
   flex:none;
   border-radius:4px;
   padding-right:40px;
 }
 #filter-panel #dateInput{
-  background: var(--keyword-bg);
+  background:#fff;
   color: var(--panel-text);
   width:300px;
   flex:none;
@@ -1227,14 +1227,21 @@ body.hide-results .list-panel{
 
 .reset-filters-btn{
   width:400px;
-  border-radius:4px;
+  height:50px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  border-radius:var(--dropdown-radius);
   font-weight:700;
   letter-spacing:.2px;
+  color:var(--button-text);
+  text-align:left;
+  padding:2px 8px;
 }
 
 .reset-filters-btn.active{
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);
+  color:var(--button-text);
 }
 
 #filterBtn{
@@ -1914,6 +1921,9 @@ body.hide-results .post-panel{
   justify-content:flex-start;
   width:100%;
 }
+.filter-panel .options-dropdown{width:400px;}
+.filter-panel .options-dropdown > button{width:400px;}
+.options-dropdown .options-menu{width:400px;}
 .open-posts .session-dropdown > button.past{
   background:#800000;
   border-color:#800000;
@@ -3060,8 +3070,9 @@ footer .chip-small img.mini{
   color:var(--button-text);
   display:flex;
   align-items:flex-start;
-  justify-content:center;
+  justify-content:flex-start;
   gap:6px;
+  width:380px;
 }
 
 .filter-panel .panel-body,
@@ -3077,21 +3088,24 @@ footer .chip-small img.mini{
 .member-panel .panel-field,
 .admin-panel .panel-field{
   margin:0;
-  width:100%;
+  width:400px;
+  display:flex;
+  justify-content:space-between;
 }
 
-.filter-panel .panel-body input,
+.filter-panel .panel-body input:not([type=color]),
 .filter-panel .panel-body textarea,
 .filter-panel .panel-body select,
-.member-panel .panel-body input,
+.member-panel .panel-body input:not([type=color]),
 .member-panel .panel-body textarea,
 .member-panel .panel-body select,
-.admin-panel .panel-body input,
+.admin-panel .panel-body input:not([type=color]),
 .admin-panel .panel-body textarea,
 .admin-panel .panel-body select{
   text-align:left;
   align-self:flex-start;
-  width:100%;
+  width:300px;
+  background:#fff;
 }
 
 .filter-panel .panel-body button,
@@ -5243,17 +5257,21 @@ function makePosts(){
     function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong>`; }
     function formatDates(d){
       if(!d || !d.length) return '';
-      const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      const thisYear = new Date().getFullYear();
-      if(d.length===1){
-        const dt = parseISODate(d[0]);
-        const str = fmt(d[0]);
-        return dt.getFullYear() !== thisYear ? `${str}, ${dt.getFullYear()}` : str;
-      }
-      const start = fmt(d[0]);
+      const fmt = (iso, withYear) => parseISODate(iso).toLocaleDateString('en-GB',{
+        weekday:'short', day:'numeric', month:'short', ...(withYear?{year:'numeric'}:{})
+      }).replace(/,/g,'');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const thisYear = today.getFullYear();
+      const startDt = parseISODate(d[0]);
       const endDt = parseISODate(d[d.length-1]);
-      const end = endDt.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      return `${start} - ${end}${endDt.getFullYear() !== thisYear ? ', '+endDt.getFullYear() : ''}`;
+      const isPast = endDt < today;
+      if(d.length===1){
+        return fmt(d[0], startDt.getFullYear() !== thisYear || isPast);
+      }
+      const startStr = fmt(d[0], startDt.getFullYear() !== thisYear && startDt.getFullYear() !== endDt.getFullYear());
+      const showEndYear = endDt.getFullYear() !== thisYear || (startDt.getFullYear() === endDt.getFullYear() && isPast);
+      const endStr = fmt(d[d.length-1], showEndYear);
+      return `${startStr} - ${endStr}`;
     }
 
     function prioritizeVisibleImages(){
@@ -5882,13 +5900,16 @@ function updateVenue(idx){
           const [yy, mm, dd] = s.split('-').map(Number);
           return new Date(yy, mm - 1, dd);
         };
+        const showExpired = document.getElementById('expiredToggle')?.checked;
+        const dates = showExpired ? loc.dates.slice() : loc.dates.filter(d => parseDate(d.full) >= today);
         const formatDate = d => {
-          const y = parseDate(d.full).getFullYear();
-          return y !== currentYear ? `${d.date}, ${y}` : d.date;
+          const dateObj = parseDate(d.full);
+          const y = dateObj.getFullYear();
+          return (y !== currentYear || dateObj < today) ? `${d.date}, ${y}` : d.date;
         };
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
-        sessionHasMultiple = loc.dates.length > 1;
+        sessionHasMultiple = dates.length > 1;
         let map = mapEl._map;
         let marker = mapEl._marker;
         if(!map){
@@ -5906,7 +5927,20 @@ function updateVenue(idx){
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
         }
-        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
+        const dateStrings = Array.from(new Set(dates.map(d=>d.full)));
+        if(!dateStrings.length){
+          calendarEl.innerHTML='';
+          if(sessMenu) sessMenu.innerHTML='';
+          sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+          sessionInfo.classList.remove('past');
+          if(sessBtn){
+            sessBtn.textContent = 'Select Session';
+            sessBtn.classList.remove('past');
+            sessBtn.setAttribute('aria-expanded','false');
+          }
+          sessionHasMultiple = false;
+          return;
+        }
         const allowedSet = new Set(dateStrings);
         const minDate = parseDate(dateStrings[0]);
         const maxDate = parseDate(dateStrings[dateStrings.length-1]);
@@ -5953,7 +5987,7 @@ function updateVenue(idx){
                 if(dateObj < today) cell.classList.add('past');
                 cell.addEventListener('mousedown',()=>{ lastClickedCell = cell; });
                 cell.addEventListener('click',()=>{
-                  const matches = loc.dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
+                  const matches = dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
                   if(matches.length===1){ selectSession(matches[0].i); }
                   else if(matches.length>1){ showTimePopup(matches); }
                 });
@@ -5971,8 +6005,8 @@ function updateVenue(idx){
         calendarEl.appendChild(cal);
         if(calScroll){
           const todayIso = toISODate(today);
-          const future = loc.dates.find(d => d.full >= todayIso);
-          const target = future || loc.dates[loc.dates.length-1];
+          const future = dates.find(d => d.full >= todayIso);
+          const target = future || dates[dates.length-1];
           if(target){
             const cell = calendarEl.querySelector(`.day[data-iso="${target.full}"]`);
             if(cell){
@@ -5990,7 +6024,7 @@ function updateVenue(idx){
         function markSelected(){
           calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
           if(selectedIndex!==null){
-            const dt = loc.dates[selectedIndex];
+            const dt = dates[selectedIndex];
             const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
             if(cell) cell.classList.add('selected');
           }
@@ -6001,7 +6035,7 @@ function updateVenue(idx){
           sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
           const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
           if(btn) btn.classList.add('selected');
-          const dt = loc.dates[i];
+          const dt = dates[i];
           if(dt){
             const isPast = parseDate(dt.full) < today;
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
@@ -6053,19 +6087,19 @@ function updateVenue(idx){
           if(map && typeof map.resize === 'function') map.resize();
         },0);
         if(sessMenu){
-          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button class="${parseDate(d.full)<today?'past':''}" data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+          sessMenu.innerHTML = dates.map((d,i)=> `<button class="${parseDate(d.full)<today?'past':''}" data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
           sessMenu.scrollTop = 0;
           if(sessionHasMultiple){
-            const rangeText = formatDates(loc.dates.map(d=>d.full));
+            const rangeText = formatDates(dates.map(d=>d.full));
             sessionInfo.innerHTML = `<div>💲 Price range</div><div>📅 ${rangeText}</div>`;
             sessionInfo.classList.remove('past');
             if(sessBtn){
-              sessBtn.innerHTML = `<span class="session-date">${rangeText}</span><span class="results-arrow" aria-hidden="true"></span>`;
+              sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
               sessBtn.classList.remove('past');
               sessBtn.setAttribute('aria-expanded','false');
             }
           } else {
-            if(loc.dates.length){
+            if(dates.length){
               selectSession(0);
             } else {
               sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
