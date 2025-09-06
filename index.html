@@ -1109,7 +1109,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filter-panel .input .x{
   position: absolute;
-  right:5px;
+  right:0;
   top:50%;
   transform:translateY(-50%);
   width: 35px;
@@ -1260,6 +1260,7 @@ body.hide-results .list-panel{
 
 #filterBtn{
   flex-direction:column;
+  gap:10px;
 }
 #filterBtn.spinning{
   gap:0;
@@ -1529,6 +1530,12 @@ body.filters-active #filterBtn{
   align-items:center;
   gap:10px;
   margin-bottom:var(--gap);
+}
+.geocoder > .mapboxgl-ctrl-geocoder{
+  flex:1;
+}
+.geocoder > .mapboxgl-ctrl-group:first-of-type{
+  margin-left:auto;
 }
 
 
@@ -4820,8 +4827,8 @@ function makePosts(){
         gc.appendChild(geolocate.onAdd(map));
         gc.appendChild(nav.onAdd(map));
       }else{
-        map.addControl(nav, 'top-left');
-        map.addControl(geolocate, 'top-left');
+        map.addControl(nav, 'top-right');
+        map.addControl(geolocate, 'top-right');
       }
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
