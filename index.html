@@ -311,6 +311,7 @@ input[type="checkbox"]{
     left: 0;
     right: 0;
     z-index: 20;
+    background: rgba(0,0,0,0.7);
   }
 
   .logo{
@@ -1375,6 +1376,7 @@ body.filters-active #filterBtn{
   min-height: 0;
   scrollbar-gutter: stable;
   height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
+  background: rgba(0,0,0,0.5);
 }
 
 .card{
@@ -1664,7 +1666,7 @@ body.filters-active #filterBtn{
   scrollbar-gutter:stable;
   padding:0;
   color:#000;
-  background:var(--panel-bg);
+  background: rgba(0,0,0,0.5);
 }
 .closed-posts .posts{overflow:visible;padding:12px;margin:0;}
 .closed-posts{color:#000;padding:0;}
@@ -1689,7 +1691,7 @@ body.hide-results .closed-posts{
 }
 .map-area{
   position: fixed;
-  top: calc(var(--header-h) + var(--safe-top));
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -1765,7 +1767,7 @@ body.hide-results .closed-posts{
   border-radius:8px;
   flex-shrink:0;
   cursor:pointer;
-  background:var(--list-background);
+  background: rgba(0,0,0,0);
 }
 
 .open-posts .img-box img{
@@ -5392,6 +5394,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
+      el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
       el.querySelector('.fav').addEventListener('click', (e)=>{
         p.fav = !p.fav;
         document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
@@ -5541,6 +5544,10 @@ function makePosts(){
             <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
           </div>
         </div>`;
+      const header = wrap.querySelector('.detail-header');
+      if(header){
+        header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
+      }
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
