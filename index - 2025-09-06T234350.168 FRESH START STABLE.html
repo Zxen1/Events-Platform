@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Events Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css" rel="stylesheet">
+  <style>
+    html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+    body{font:14px Verdana,sans-serif;color:white;}
+    *,*::before,*::after{box-sizing:border-box;}
+    .btn{border:none;background:#333;color:white;cursor:pointer;padding:0;margin:0;border-radius:4px;}
+    .btn{width:80px;height:80px;}
+    .btn.small{width:40px;height:40px;}
+    .btn:hover:not(.selected):not(:disabled){background:#4d4d4d;}
+    .btn:active:not(:disabled){background:#1a1a1a;}
+    .btn.selected{background:#2e3a72;}
+    .btn.selected:hover{background:#3e4a82;}
+    .btn:disabled{background:#555;color:#777;cursor:not-allowed;}
+    .btn:focus{outline:2px solid #fff;outline-offset:2px;}
+    .scrollable{overflow:auto;}
+    .scrollable::-webkit-scrollbar{width:6px;height:6px;}
+    .scrollable::-webkit-scrollbar-track{background:transparent;}
+    .scrollable::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.3);border-radius:3px;}
+    .scrollable{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.3) transparent;}
+    #map{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
+    header{position:fixed;top:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;display:flex;align-items:center;justify-content:space-between;}
+    .header-left,.header-right{display:flex;}
+    .logo{height:60px;margin:auto;}
+    footer{position:fixed;bottom:0;left:0;width:100%;height:80px;background:rgba(0,0,0,0.7);z-index:10;}
+    .footer-content{position:relative;height:100%;padding:10px 90px 10px 10px;display:flex;align-items:center;}
+    .footer-slider{display:flex;gap:10px;height:60px;overflow-x:auto;white-space:nowrap;}
+    .footer-card{flex:0 0 auto;width:150px;height:60px;background:#333;border-radius:4px;display:flex;align-items:center;padding:10px;gap:10px;}
+    .footer-card img{width:40px;height:40px;border-radius:4px;}
+    .footer-card .title{flex:1;}
+    .footer-card .star{color:yellow;font-size:20px;}
+    #fullscreenBtn{position:absolute;right:0;top:0;width:80px;height:80px;}
+    #quickBoard{position:absolute;top:80px;bottom:80px;left:0;width:520px;padding:10px;z-index:5;transform:translateX(-100%);transition:transform .3s;}
+    #quickBoard.open{transform:translateX(0);}
+    #quickBoard .quick-card{width:500px;border-radius:4px;overflow:hidden;position:relative;margin-bottom:10px;color:white;}
+    .quick-card .content{position:relative;padding:10px;display:flex;gap:10px;}
+    .quick-card .thumb{width:80px;height:80px;border-radius:4px;flex-shrink:0;}
+    .quick-card .info{display:flex;flex-direction:column;gap:2px;font-size:12px;}
+    .quick-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(0,0,0,0.8),rgba(0,0,0,0.6));z-index:1;}
+    .quick-card>*{position:relative;z-index:2;}
+    #postBoard{position:absolute;top:80px;bottom:80px;left:0;right:0;padding:10px;z-index:4;display:flex;flex-direction:column;gap:10px;overflow:auto;transition:transform .3s;}
+    #postBoard.closed{transform:translateX(-520px);}
+    .post-card{width:500px;border-radius:4px;overflow:hidden;position:relative;}
+    .post-card .post-header{height:50px;background:#222;display:flex;align-items:center;padding:10px;font-weight:bold;}
+    .post-card .post-body{display:grid;gap:10px;background:#111;padding:10px;}
+    @media(min-width:1000px){.post-card .post-body{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:999px) and (min-width:700px){.post-card .post-body{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:699px){.post-card .post-body{grid-template-columns:1fr;}}
+    #adBoard{position:absolute;top:80px;bottom:80px;right:0;width:420px;padding:10px;z-index:5;transform:translateX(100%);transition:transform .3s;}
+    #adBoard.open{transform:translateX(0);}
+    #adBoard .ad-card{width:400px;border-radius:4px;overflow:hidden;position:relative;}
+    #adBoard .ad-card img{width:100%;display:block;}
+    #adBoard .ad-card .info{position:absolute;bottom:0;left:0;width:100%;padding:10px;background:linear-gradient(0deg,rgba(0,0,0,0.8),rgba(0,0,0,0));}
+    .panel{position:absolute;top:80px;bottom:80px;width:420px;background:#222;z-index:6;transition:transform .3s;}
+    #filterPanel{left:0;transform:translateX(-100%);}
+    #filterPanel.open{transform:translateX(0);}
+    #memberPanel{right:0;transform:translateX(100%);}
+    #memberPanel.open{transform:translateX(0);}
+    #adminPanel{right:0;transform:translateX(100%);}
+    #adminPanel.open{transform:translateX(0);}
+    .panel .panel-header{height:50px;background:#333;display:flex;align-items:center;padding:5px;gap:10px;font-weight:bold;font-size:16px;}
+    .panel .panel-header .title{flex:1;text-align:center;}
+    .panel .panel-body{padding:10px;overflow:auto;height:calc(100% - 50px);}
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <header>
+    <div class="header-left">
+      <button class="btn" id="filterToggle">F</button>
+      <button class="btn" id="quickToggle">Q</button>
+      <button class="btn selected" id="postToggle">P</button>
+    </div>
+    <img src="assets/funmap-logo-big.png" class="logo" alt="Logo">
+    <div class="header-right">
+      <button class="btn" id="memberToggle">M</button>
+      <button class="btn" id="adminToggle">A</button>
+    </div>
+  </header>
+  <footer>
+    <div class="footer-content">
+      <div class="footer-slider scrollable" id="footerSlider">
+        <div class="footer-card">
+          <img src="assets/funmap-logo-small.png" alt="thumb">
+          <div class="title">Post 1</div>
+          <div class="star">★</div>
+        </div>
+        <div class="footer-card">
+          <img src="assets/funmap-logo-small.png" alt="thumb">
+          <div class="title">Post 2</div>
+          <div class="star">★</div>
+        </div>
+      </div>
+      <button class="btn" id="fullscreenBtn">⛶</button>
+    </div>
+  </footer>
+  <div id="quickBoard" class="scrollable">
+    <div class="quick-card" style="background-image:url('assets/welcome 001.jpg')">
+      <div class="content">
+        <img class="thumb" src="assets/welcome 001.jpg" alt="thumb">
+        <div>
+          <div style="font-weight:bold;">Sample Post</div>
+          <div class="info">
+            <div class="subcat-row">Cat &gt; Subcat</div>
+            <div class="venue-row">Venue Location</div>
+            <div class="daterange-row">Mon 31 Jan, 2024 - Thu 25 Jul, 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="postBoard" class="scrollable">
+    <div class="post-card">
+      <div class="post-header">Post Title</div>
+      <div class="post-body">
+        <div>Column 1</div>
+        <div>Column 2</div>
+        <div>Column 3</div>
+      </div>
+    </div>
+  </div>
+  <div id="adBoard" class="scrollable open">
+    <div class="ad-card">
+      <img src="assets/welcome 001.jpg" alt="ad">
+      <div class="info">
+        Sponsored Post<br>Location
+      </div>
+    </div>
+  </div>
+  <div id="filterPanel" class="panel">
+    <div class="panel-header">
+      <button class="btn small">←</button>
+      <button class="btn small">→</button>
+      <div class="title">Filterbar</div>
+      <button class="btn small" id="filterClose">✖</button>
+    </div>
+    <div class="panel-body scrollable"></div>
+  </div>
+  <div id="memberPanel" class="panel">
+    <div class="panel-header">
+      <button class="btn small" id="memberSnapLeft">←</button>
+      <button class="btn small" id="memberSnapRight">→</button>
+      <div class="title">Member</div>
+      <button class="btn small" id="memberClose">✖</button>
+    </div>
+    <div class="panel-body scrollable"></div>
+  </div>
+  <div id="adminPanel" class="panel">
+    <div class="panel-header">
+      <button class="btn small" id="adminSnapLeft">←</button>
+      <button class="btn small" id="adminSnapRight">→</button>
+      <div class="title">Admin</div>
+      <button class="btn small" id="adminClose">✖</button>
+    </div>
+    <div class="panel-body scrollable"></div>
+  </div>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js"></script>
+  <script>
+    mapboxgl.accessToken='pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
+    const map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/standard',projection:'globe',zoom:1});
+    map.on('style.load',()=>{try{map.setConfig({sky:{style:'night'}});}catch(e){};map.setFog({color:'#0b0b19','high-color':'#1a4a8a','space-color':'#000','horizon-blend':0.2});});
+    const quickBoard=document.getElementById('quickBoard');
+    const postBoard=document.getElementById('postBoard');
+    document.getElementById('quickToggle').addEventListener('click',e=>{quickBoard.classList.toggle('open');e.target.classList.toggle('selected');});
+    document.getElementById('postToggle').addEventListener('click',e=>{postBoard.classList.toggle('closed');e.target.classList.toggle('selected');});
+    document.getElementById('filterToggle').addEventListener('click',()=>{document.getElementById('filterPanel').classList.toggle('open');});
+    document.getElementById('memberToggle').addEventListener('click',()=>{document.getElementById('memberPanel').classList.toggle('open');});
+    document.getElementById('adminToggle').addEventListener('click',()=>{document.getElementById('adminPanel').classList.toggle('open');});
+    document.getElementById('filterClose').addEventListener('click',()=>{document.getElementById('filterPanel').classList.remove('open');});
+    document.getElementById('memberClose').addEventListener('click',()=>{document.getElementById('memberPanel').classList.remove('open');});
+    document.getElementById('adminClose').addEventListener('click',()=>{document.getElementById('adminPanel').classList.remove('open');});
+    document.getElementById('footerSlider').addEventListener('wheel',e=>{e.preventDefault();e.currentTarget.scrollLeft+=e.deltaY;},{passive:false});
+  </script>
+</body>
+</html>
