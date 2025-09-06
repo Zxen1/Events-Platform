@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" />
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" />
   <style>:root{
-  --header-h: 75px;
+  --header-h: 70px;
   --panel-w: 400px;
   --results-w: 520px;
   --gap: 10px;
@@ -38,7 +38,7 @@
       --btn-active: #2e3a72;
       --panel-bg: #444444;
       --panel-text: #000000;
-      --footer-h: 60px;
+      --footer-h: 70px;
       --list-background: #555555;
       --closed-card-bg: #555555;
       --scrollbar-track: rgba(0,0,0,0);
@@ -520,7 +520,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body{
   flex:1 1 auto;
   overflow-y:auto;
-  overflow-x:hidden;
+  overflow-x:visible;
   padding:0 10px 10px;
   overscroll-behavior:contain;
 }
@@ -559,6 +559,8 @@ button[aria-expanded="true"] .results-arrow{
     background:#222222;
     color:#fff;
     border-radius:0;
+    padding:10px;
+    overflow:visible;
   }
 #filter-panel .panel-content{font-size:12px;}
 
@@ -991,6 +993,7 @@ button[aria-expanded="true"] .results-arrow{
   display: flex;
   flex-direction: column;
   min-height: 0;
+  gap: 10px;
 }
 
 .left-tools{
@@ -1251,6 +1254,7 @@ body.hide-results .list-panel{
 
 #filterBtn{
   flex-direction:column;
+  gap:10px;
 }
 #filterBtn.spinning{
   gap:0;
@@ -1462,7 +1466,7 @@ body.filters-active #filterBtn{
 
 #filterBtn{
   flex-direction:column;
-  gap:2px;
+  gap:10px;
 }
 
 .view-toggle{
@@ -1520,6 +1524,20 @@ body.filters-active #filterBtn{
   align-items:center;
   gap:10px;
   margin-bottom:var(--gap);
+}
+
+.filter-panel .panel-body .mapboxgl-ctrl-geocoder--input,
+.member-panel .panel-body .mapboxgl-ctrl-geocoder--input,
+.admin-panel .panel-body .mapboxgl-ctrl-geocoder--input{
+  background:#fff !important;
+  width:300px !important;
+}
+
+.filter-panel .panel-body .mapboxgl-ctrl-geocoder,
+.member-panel .panel-body .mapboxgl-ctrl-geocoder,
+.admin-panel .panel-body .mapboxgl-ctrl-geocoder{
+  width:300px;
+  background:#fff;
 }
 
 
@@ -3110,8 +3128,7 @@ footer .chip-small img.mini{
 .admin-panel .panel-body select{
   text-align:left;
   align-self:flex-start;
-  width:100%;
-  max-width:400px;
+  width:300px;
   background:#fff;
 }
 
