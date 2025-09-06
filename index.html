@@ -66,11 +66,12 @@
     .panel .panel-header{height:50px;background:#333;display:flex;align-items:center;padding:5px;gap:10px;font-weight:bold;font-size:16px;}
     .panel .panel-header .title{flex:1;text-align:center;}
     .panel .panel-body{padding:10px;overflow:auto;height:calc(100% - 50px);}
-    #adminPanel .admin-subheader{height:60px;display:flex;gap:10px;margin-bottom:10px;}
+    #adminPanel .panel-body{height:calc(100% - 110px);}
+    #adminPanel .admin-subheader{height:60px;display:flex;gap:10px;padding:10px;}
     #adminPanel .admin-subheader .tab-btn{width:100px;height:40px;}
     #adminPanel .tab-content{display:none;flex-direction:column;gap:10px;}
     #adminPanel .tab-content.active{display:flex;}
-    #adminPanel .row{width:400px;display:flex;align-items:center;}
+    .panel .row{width:400px;display:flex;align-items:center;}
     #adminPanel .row+ .row{margin-top:10px;}
     #adminPanel .row input[type=text],
     #adminPanel .row select{width:400px;height:40px;border:none;border-radius:4px;padding:0 10px;background:#333;color:white;}
@@ -89,9 +90,9 @@
     #adminPanel .medium-logo-container,
     #adminPanel .small-logo-container,
     #adminPanel .favicon-container{display:flex;align-items:center;justify-content:center;}
-    #adminPanel .welcome-message-container{height:400px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+    #adminPanel .welcome-message-container{height:300px;display:flex;flex-direction:column;align-items:center;gap:10px;}
     #adminPanel .welcome-message-container .wysiwyg-row{width:400px;height:100px;background:#444;border-radius:4px;}
-    #adminPanel .welcome-message-container textarea{width:400px;height:300px;border:none;border-radius:4px;background:#222;color:white;padding:10px;}
+    #adminPanel .welcome-message-container textarea{width:400px;height:190px;border:none;border-radius:4px;background:#222;color:white;padding:10px;}
     #adminPanel .map-settings-container,
     #adminPanel .map-spin-container,
     #adminPanel .markercluster-container{display:flex;flex-direction:column;gap:10px;padding:10px;box-sizing:border-box;}
@@ -202,13 +203,13 @@
       <div class="title">Admin</div>
       <button class="btn small" id="adminClose">✖</button>
     </div>
+    <div class="admin-subheader">
+      <button class="btn tab-btn selected" data-target="adminSettings">Settings</button>
+      <button class="btn tab-btn" data-target="adminTheme">Theme</button>
+      <button class="btn tab-btn" data-target="adminMap">Map</button>
+      <button class="btn tab-btn" data-target="adminForms">Forms</button>
+    </div>
     <div class="panel-body scrollable">
-      <div class="admin-subheader">
-        <button class="btn tab-btn selected" data-target="adminSettings">Settings</button>
-        <button class="btn tab-btn" data-target="adminTheme">Theme</button>
-        <button class="btn tab-btn" data-target="adminMap">Map</button>
-        <button class="btn tab-btn" data-target="adminForms">Forms</button>
-      </div>
       <div id="adminSettings" class="tab-content active">
         <div class="row username-row"><input type="text" placeholder="Username"></div>
         <div class="avatar-container">Avatar Picker</div>
