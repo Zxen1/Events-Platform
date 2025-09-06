@@ -1,0 +1,404 @@
+<!--
+PANELS:
+All panels (filter-panel, member-panel and admin-panel) have a fixed width of 440px and have a constant height of the header to the footer with 10px padding and a 50px panel-header. There is a 10px gap between each row or container in the panel-body. All rows and containers inside the panel-body have a fixed width of 400px. all panel-body rows are 40px high. all panel-body buttons are 40px high.
+
+BOARDS: 
+The quick-board-container has a fixed width of 520px with 10px padding and a constant height of the header to the footer and contains the quick-board with a fixed width of 500px and slides into the left edge of the screen. it never goes anywhere else. Its background color is black opacity 0.5.  
+
+The post-board-container has an auto width with 10px padding and a constant height of the header to the footer and contains the post-board. its width is only limited by the ad-board-container or edge of the screen on its right and the quick-board-container or edge of the screen on its left. It contains post-cards and post-content, all with a 10px gap. Its background color is black opacity 0.5.  
+
+The ad-board-container has a fixed width of 420px with 10px padding and a constant height of the header to the footer and contains the ad-board with a fixed width of 400px and slides into the right edge of the screen. it never goes anywhere else. Its background color is black opacity 0.5. It only appears in Post-Mode, not Map-Mode. It only appears when the width of the post-board-container is 850px or higher.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Events Platform</title>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css' rel='stylesheet'/>
+<style>
+html, body {
+  height:100%;
+  width:100%;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  font-family: Verdana, sans-serif;
+  font-size:14px;
+  color:#ffffff;
+}
+
+/* Scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #555555 transparent;
+}
+*::-webkit-scrollbar {
+  width:6px;
+  height:6px;
+}
+*::-webkit-scrollbar-track {
+  background:transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background:#555555;
+  border-radius:3px;
+}
+
+/* Button states */
+button {
+  background:#333333;
+  color:#ffffff;
+  border:none;
+  cursor:pointer;
+}
+button:hover:not(.disabled):not(.selected) {
+  background:#4d4d4d;
+}
+button:active:not(.disabled) {
+  background:#1a1a1a;
+}
+button.selected {
+  background:#2e3a72;
+}
+button.selected:hover {
+  background:#39488f;
+}
+button.disabled {
+  background:#555555;
+  color:#999999;
+  cursor:not-allowed;
+}
+button:focus {
+  outline:2px solid #ffffff;
+}
+
+/* Map */
+#map {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:0;
+}
+
+/* Header */
+#header {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:80px;
+  background:rgba(0,0,0,0.7);
+  z-index:10;
+}
+#header button {
+  width:80px;
+  height:80px;
+}
+#filter-btn { position:absolute; left:0; top:0; }
+#quick-btn { position:absolute; left:80px; top:0; }
+#post-btn { position:absolute; left:160px; top:0; }
+#member-btn { position:absolute; right:80px; top:0; }
+#admin-btn { position:absolute; right:0; top:0; }
+#logo {
+  position:absolute;
+  left:50%;
+  top:0;
+  width:80px;
+  height:80px;
+  margin-left:-40px;
+  background:url('assets/funmap-logo-big.png') center/contain no-repeat;
+}
+
+/* Footer */
+#footer {
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:80px;
+  background:rgba(0,0,0,0.7);
+  z-index:10;
+  padding:10px;
+  box-sizing:border-box;
+}
+#footer-row {
+  position:absolute;
+  left:10px;
+  right:100px;
+  top:10px;
+  bottom:10px;
+  overflow:hidden;
+}
+#fullscreen-btn {
+  position:absolute;
+  right:10px;
+  bottom:10px;
+  width:80px;
+  height:80px;
+}
+.footer-card {
+  float:left;
+  width:240px;
+  height:60px;
+  margin-right:10px;
+  background:rgba(51,51,51,0.8);
+  position:relative;
+}
+.footer-card img {
+  width:40px;
+  height:40px;
+  position:absolute;
+  left:10px;
+  top:10px;
+}
+.footer-card .title {
+  position:absolute;
+  left:60px;
+  top:10px;
+  right:30px;
+  height:40px;
+  line-height:40px;
+}
+.footer-card .star {
+  position:absolute;
+  right:10px;
+  top:20px;
+  width:20px;
+  height:20px;
+  background:yellow;
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+}
+
+/* Boards */
+#quick-board-container {
+  position:absolute;
+  top:80px;
+  bottom:80px;
+  left:0;
+  width:520px;
+  padding:10px;
+  background:rgba(0,0,0,0.5);
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index:5;
+}
+#quick-board {
+  width:500px;
+}
+.quick-card {
+  width:500px;
+  height:100px;
+  margin-bottom:10px;
+  background:#333333;
+  position:relative;
+  overflow:hidden;
+  border-radius:4px;
+}
+.quick-card img {
+  width:80px;
+  height:80px;
+  position:absolute;
+  left:10px;
+  top:10px;
+  border-radius:4px;
+}
+.quick-card .post-title {
+  position:absolute;
+  left:100px;
+  top:10px;
+  right:10px;
+  font-weight:bold;
+}
+.quick-card .info {
+  position:absolute;
+  left:100px;
+  top:40px;
+  right:10px;
+  bottom:10px;
+}
+
+#post-board-container {
+  position:absolute;
+  top:80px;
+  bottom:80px;
+  left:520px;
+  right:420px;
+  padding:10px;
+  background:rgba(0,0,0,0.5);
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index:5;
+}
+#post-board {
+  width:100%;
+}
+.post-card {
+  width:500px;
+  height:100px;
+  margin-bottom:10px;
+  background:#333333;
+}
+
+#ad-board-container {
+  position:absolute;
+  top:80px;
+  bottom:80px;
+  right:0;
+  width:420px;
+  padding:10px;
+  background:rgba(0,0,0,0.5);
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index:5;
+}
+#ad-board {
+  width:400px;
+}
+.ad-hero {
+  width:400px;
+  height:200px;
+  background:#555555;
+  margin-bottom:10px;
+  position:relative;
+}
+.ad-hero img {
+  width:400px;
+  height:200px;
+  object-fit:cover;
+}
+.ad-hero .info {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:10px;
+  background:rgba(0,0,0,0.6);
+}
+
+/* Panels */
+.panel {
+  width:440px;
+  background:#222222;
+  padding:10px;
+  position:absolute;
+  top:80px;
+  bottom:80px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  z-index:15;
+}
+.panel-header {
+  height:50px;
+  line-height:50px;
+  font-weight:bold;
+  position:relative;
+}
+.panel-header .close {
+  position:absolute;
+  right:0;
+  top:0;
+  width:40px;
+  height:50px;
+}
+.panel-body .row {
+  width:400px;
+  height:40px;
+  margin-bottom:10px;
+  background:#333333;
+}
+.panel-body button {
+  width:400px;
+  height:40px;
+}
+#filter-panel { left:0; }
+#member-panel { right:0; }
+#admin-panel { right:0; display:none; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="header">
+  <button id="filter-btn" aria-label="Filterbar-Panel"></button>
+  <button id="quick-btn" aria-label="Quick-Board"></button>
+  <button id="post-btn" aria-label="Post-Board"></button>
+  <div id="logo"></div>
+  <button id="member-btn" aria-label="Member-Panel"></button>
+  <button id="admin-btn" aria-label="Admin-Panel"></button>
+</div>
+
+<div id="quick-board-container">
+  <div id="quick-board">
+    <div class="quick-card">
+      <img src="assets/funmap-logo-small.png" alt="thumb">
+      <div class="post-title">Sample Post</div>
+      <div class="info">
+        <div>Category &gt; Subcategory</div>
+        <div>Location</div>
+        <div>Mon 31 Jan, 2024 - Thu 25 Jul, 2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="post-board-container">
+  <div id="post-board">
+    <div class="post-card"></div>
+  </div>
+</div>
+
+<div id="ad-board-container">
+  <div id="ad-board">
+    <div class="ad-hero">
+      <img src="assets/funmap-logo-medium.png" alt="ad">
+      <div class="info">Sponsored Post</div>
+    </div>
+  </div>
+</div>
+
+<div id="filter-panel" class="panel">
+  <div class="panel-header">Filter Panel<button class="close" aria-label="close"></button></div>
+  <div class="panel-body">
+    <div class="row"></div>
+    <button class="row">Apply</button>
+  </div>
+</div>
+
+<div id="member-panel" class="panel">
+  <div class="panel-header">Member Panel<button class="close" aria-label="close"></button></div>
+  <div class="panel-body">
+    <div class="row"></div>
+    <button class="row">Login</button>
+  </div>
+</div>
+
+<div id="footer">
+  <div id="footer-row">
+    <div class="footer-card">
+      <img src="assets/funmap-logo-small.png" alt="thumb">
+      <div class="title">Recent Post</div>
+      <div class="star"></div>
+    </div>
+  </div>
+  <button id="fullscreen-btn" aria-label="fullscreen"></button>
+</div>
+
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js'></script>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/standard',
+    center: [0,0],
+    zoom: 1,
+    projection: 'globe'
+  });
+  map.setConfig({ theme: 'standard', sky: 'night' });
+  map.on('style.load', () => {
+    map.setFog({ 'range': [0.5, 10], 'color': 'rgb(0, 0, 0)', 'horizon-blend': 0.1 });
+  });
+</script>
+</body>
+</html>
