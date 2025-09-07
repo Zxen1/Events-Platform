@@ -16,7 +16,7 @@
   --subheader-h: 0;
   --panel-w: 440px;
   --results-w: 520px;
-  --gap: 12px;
+  --gap: 10px;
     --media-h: 200px;
     --calendar-scale: 1;
     --ink: #ffffff;
@@ -141,7 +141,7 @@ html,body{
 }
 *::-webkit-scrollbar-thumb{
   background:var(--scrollbar-thumb);
-  border-radius:8px;
+  border-radius:0;
 }
 *::-webkit-scrollbar-thumb:hover{
   background:var(--scrollbar-thumb-hover);
@@ -429,7 +429,7 @@ input[type="checkbox"]{
 .auth button,
 .options-menu button{
   height:35px;
-  border-radius:8px;
+  border-radius:0;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -438,7 +438,7 @@ input[type="checkbox"]{
 }
 .header .gear,
 .header a{
-  border-radius:8px;
+  border-radius:0;
 }
 
 
@@ -584,7 +584,7 @@ button[aria-expanded="true"] .results-arrow{
   width:440px;
   max-width:440px;
   height:calc(100vh - var(--header-h) - var(--footer-h));
-  border-radius:8px;
+  border-radius:0;
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -788,6 +788,7 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin-bottom:10px;
 }
+#welcome-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap);margin-top:var(--gap);}
 #welcomePopup{background:rgba(0,0,0,0.7);}
 #memberPanel .location-info{margin-top:4px;font-size:14px;font-family: Verdana;}
   @media (max-width:600px){
@@ -1043,8 +1044,8 @@ button[aria-expanded="true"] .results-arrow{
   position:sticky;
   top:0;
   padding:10px 20px;
-  border-top-left-radius:8px;
-  border-top-right-radius:8px;
+  border-top-left-radius:0;
+  border-top-right-radius:0;
   z-index:1;
   cursor:move;
   display:flex;
@@ -1469,7 +1470,7 @@ body.filters-active #filterBtn{
   grid-template-columns:90px 1fr 36px;
   gap:12px;
   align-items: flex-start;
-  background: var(--list-background);
+  background: rgba(0,0,0,0.7);
   border: none;
   border-radius:8px;
   padding:12px;
@@ -1827,6 +1828,7 @@ body.hide-results .post-board{
   border-top-right-radius:inherit;
   background:#3E5393;
 }
+.open-posts .detail-header .share{margin-left:auto;margin-right:var(--gap);}
 .open-posts-sticky-header .open-posts .detail-header{
   position:sticky;
   top:0;
@@ -1838,8 +1840,9 @@ body.hide-results .post-board{
   padding:14px;
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
+  gap:var(--gap);
   align-items:flex-start;
+  align-content:flex-start;
 }
 
 .open-posts .text{
@@ -1857,13 +1860,13 @@ body.hide-results .post-board{
 .open-posts .img-area{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:var(--gap);
   flex:0 0 400px;
 }
 
 .open-posts-sticky-images .open-posts .img-area{
   position:sticky;
-  top:calc(var(--header-h) + var(--safe-top) + 8px);
+  top:calc(var(--header-h) + var(--safe-top) + var(--gap));
   align-self:start;
 }
 
@@ -1976,7 +1979,7 @@ body.hide-results .post-board{
   .open-posts .post-calendar,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
-    min-width:0;
+    min-width:200px;
     width:100%;
   }
   body.mode-posts footer{
@@ -2013,11 +2016,24 @@ body.hide-results .post-board{
   flex-wrap:wrap;
 }
 
+.open-posts .member-avatar-row{
+  display:flex;
+  align-items:center;
+  height:50px;
+  gap:var(--gap);
+  margin:var(--gap) 0;
+}
+.open-posts .member-avatar-row img{
+  width:50px;
+  height:50px;
+  object-fit:cover;
+}
+
 
 .open-posts .location-section{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
+  gap:var(--gap);
   margin-top:0;
   margin-bottom:6px;
 }
@@ -2026,8 +2042,8 @@ body.hide-results .post-board{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:1 1 400px;
-  min-width:400px;
+  flex:1 1 200px;
+  min-width:200px;
   width:auto;
 }
 .open-posts .map-container .venue-dropdown{
@@ -2039,7 +2055,7 @@ body.hide-results .post-board{
   height:100%;
   border:1px solid var(--border);
   border-radius:8px;
-  min-width:400px;
+  min-width:200px;
   min-height:200px;
 }
 
@@ -2047,7 +2063,7 @@ body.hide-results .post-board{
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  min-width:400px;
+  min-width:200px;
 }
 
 .open-posts .calendar-container .session-dropdown{
@@ -2118,6 +2134,7 @@ body.hide-results .post-board{
   top:calc(100% + 4px);
   left:0;
   width:100%;
+  min-width:200px;
   box-sizing:border-box;
   max-height:250px;
   overflow-y:auto;
@@ -2185,8 +2202,8 @@ body.hide-results .post-board{
   gap:var(--gap);
   position:relative;
   align-items:flex-start;
-  flex:1 1 400px;
-  min-width:400px;
+  flex:1 1 200px;
+  min-width:200px;
   width:calc(var(--calendar-width) * var(--calendar-scale));
   min-height:calc(var(--calendar-height) * var(--calendar-scale));
 }
@@ -2205,6 +2222,7 @@ body.hide-results .post-board{
   position:relative;
   font-size:14px;
   font-family: Verdana;
+  min-width:200px;
 }
 
 
@@ -2488,7 +2506,7 @@ footer{
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: var(--list-background);
+  background: rgba(0,0,0,0.7);
   position: fixed;
   bottom: 0;
   left: 0;
@@ -2551,7 +2569,7 @@ footer{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:1000;
+    z-index:3000;
   }
   #post-modal-container.hidden{display:none;}
   #post-modal-container .post-modal{
@@ -2930,11 +2948,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
 
 .ad-board{
-  position:fixed;
-  top: calc(var(--header-h) + var(--safe-top));
-  bottom: var(--footer-h);
-  width:400px;
-  right: var(--gap);
   background:var(--ad-panel-bg);
   z-index:5;
   border-radius:8px;
@@ -2944,6 +2957,23 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   transform:translateX(calc(100% + var(--gap)));
   transition:transform .3s ease;
   cursor:pointer;
+}
+
+#ad-opacity-container{
+  position:fixed;
+  top:calc(var(--header-h) + var(--safe-top));
+  bottom:var(--footer-h);
+  right:0;
+  width:420px;
+  pointer-events:none;
+}
+
+#ad-opacity-container .ad-board{
+  position:absolute;
+  top:10px;
+  bottom:10px;
+  left:10px;
+  right:10px;
 }
 
 .ad-board.show{
@@ -3160,7 +3190,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <div class="posts" id="postsWide"></div>
   </section>
 
-  <section id="adPanel" class="ad-board" aria-label="Advertisement"></section>
+  <div id="ad-opacity-container">
+    <section id="adPanel" class="ad-board" aria-label="Advertisement"></section>
+  </div>
 
 
     <footer>
@@ -3496,7 +3528,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   </div>
 
   <script>
-  let startPitch, startBearing, logoEls = [];
+  let startPitch, startBearing, logoEls = [], movedControls = [];
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -3580,6 +3612,15 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         if(!/\<img/i.test(msg)){
           body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />');
         }
+        const ctrlWrap = document.createElement('div');
+        ctrlWrap.id = 'welcome-controls';
+        ['.mapboxgl-ctrl-top-left','.mapboxgl-ctrl-top-right','.mapboxgl-ctrl-bottom-left','.mapboxgl-ctrl-bottom-right'].forEach(sel=>{
+          document.querySelectorAll(`#map ${sel} > *`).forEach(el=>{
+            movedControls.push({el,parent:el.parentElement});
+            ctrlWrap.appendChild(el);
+          });
+        });
+        body.appendChild(ctrlWrap);
         openPanel(popup);
         body.style.padding = '20px';
       }
@@ -5511,6 +5552,7 @@ function makePosts(){
             </div>
             <h2 class="title">${p.title}</h2>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="member-avatar-row">${p.member && p.member.avatar ? `<img src="${p.member.avatar}" alt="${p.member.username} avatar" width="50" height="50"/>` : ''}<span>${p.member ? `Posted by ${p.member.username}` : ''}</span></div>
             <div id="venue-info-${p.id}" class="venue-info"></div>
             <div id="session-info-${p.id}" class="session-info">
               <div class="placeholder">💲 Price range | 📅 Date range</div>
@@ -5522,6 +5564,7 @@ function makePosts(){
       if(header){
         header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
       }
+      wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), url('${imgThumb(p)}') center/cover no-repeat`;
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
@@ -5624,6 +5667,7 @@ function makePosts(){
       modal.appendChild(detail);
       hookDetailActions(detail, p);
       container.classList.remove('hidden');
+      bringToTop(container);
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
@@ -5635,6 +5679,8 @@ function makePosts(){
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       container.classList.add('hidden');
+      const idx = panelStack.indexOf(container);
+      if(idx!==-1) panelStack.splice(idx,1);
       const modal = container.querySelector('.post-modal');
       if(modal) modal.innerHTML='';
       location.hash = '';
@@ -6141,22 +6187,13 @@ function openPanel(m){
     const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
-      if(window.innerWidth < 450){
-        const topPos = headerH + safeTop;
-        content.style.left='0';
-        content.style.right='0';
-        content.style.top=`${topPos}px`;
-        content.style.bottom=`${footerH}px`;
-        content.style.maxHeight='';
-        content.dataset.side='right';
-      } else {
-        content.style.left='';
-        content.style.right='0';
-        content.style.top=`${headerH + safeTop}px`;
-        content.style.bottom='';
-        content.style.maxHeight='';
-        content.dataset.side='right';
-      }
+      const topPos = headerH + safeTop;
+      content.style.left='';
+      content.style.right='0';
+      content.style.top=`${topPos}px`;
+      content.style.bottom='';
+      content.style.maxHeight='';
+      content.dataset.side='right';
       content.classList.remove('panel-visible');
       content.style.transform='translateX(100%)';
       requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
@@ -6215,6 +6252,10 @@ function closePanel(m){
       localStorage.setItem(`panel-open-${m.id}`,'false');
       const idx = panelStack.indexOf(m);
       if(idx!==-1) panelStack.splice(idx,1);
+      if(m.id==='welcomePopup' && movedControls.length){
+        movedControls.forEach(({el,parent})=> parent.appendChild(el));
+        movedControls = [];
+      }
       if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
     }, {once:true});
   } else {
@@ -6223,6 +6264,10 @@ function closePanel(m){
     localStorage.setItem(`panel-open-${m.id}`,'false');
     const idx = panelStack.indexOf(m);
     if(idx!==-1) panelStack.splice(idx,1);
+    if(m.id==='welcomePopup' && movedControls.length){
+      movedControls.forEach(({el,parent})=> parent.appendChild(el));
+      movedControls = [];
+    }
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
   }
 }
@@ -6278,7 +6323,11 @@ function handleEsc(){
     if(top.id === 'adminPanel' && typeof window.saveAdminChanges === 'function'){
       window.saveAdminChanges();
     }
-    requestClosePanel(top);
+    if(top.id === 'post-modal-container'){
+      closePostModal();
+    } else {
+      requestClosePanel(top);
+    }
   } else if(typeof top.remove==='function'){
     panelStack.pop();
     top.remove();
@@ -6355,6 +6404,36 @@ document.addEventListener('pointerdown', handleDocInteract);
       e.stopPropagation();
       const panel = btn.closest('.panel');
       movePanelToEdge(panel, 'right');
+    });
+  });
+
+  document.querySelectorAll('.panel .panel-header').forEach(header=>{
+    header.addEventListener('mousedown', e=>{
+      const panel = header.closest('.panel');
+      const content = panel ? panel.querySelector('.panel-content') : null;
+      if(!content) return;
+      bringToTop(panel);
+      const rect = content.getBoundingClientRect();
+      const startX = e.clientX;
+      const startLeft = rect.left;
+      function onMove(ev){
+        const dx = ev.clientX - startX;
+        let newLeft = startLeft + dx;
+        const maxLeft = window.innerWidth - rect.width;
+        if(newLeft < 0) newLeft = 0;
+        if(newLeft > maxLeft) newLeft = maxLeft;
+        content.style.left = `${newLeft}px`;
+        content.style.right = '';
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        const c = content.getBoundingClientRect();
+        const side = c.left + c.width/2 < window.innerWidth/2 ? 'left' : 'right';
+        movePanelToEdge(panel, side);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     });
   });
 
