@@ -589,6 +589,10 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
+  transition:transform 0.3s;
+}
+.panel-content.panel-visible{
+  transform:translateX(0);
 }
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
@@ -6143,16 +6147,19 @@ function openPanel(m){
         content.style.right='0';
         content.style.top=`${topPos}px`;
         content.style.bottom=`${footerH}px`;
-        content.style.transform='none';
         content.style.maxHeight='';
+        content.dataset.side='right';
       } else {
         content.style.left='';
         content.style.right='0';
         content.style.top=`${headerH + safeTop}px`;
         content.style.bottom='';
-        content.style.transform='none';
         content.style.maxHeight='';
+        content.dataset.side='right';
       }
+      content.classList.remove('panel-visible');
+      content.style.transform='translateX(100%)';
+      requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
     } else if(m.id==='filterPanel'){
       const topPos = headerH + subH + safeTop;
       if(window.innerWidth < 450){
@@ -6160,17 +6167,20 @@ function openPanel(m){
         content.style.right='0';
         content.style.top=`${topPos}px`;
         content.style.bottom=`${footerH}px`;
-        content.style.transform='none';
         content.style.maxHeight='';
+        content.dataset.side='left';
       } else {
         const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left='0';
         content.style.right='';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
-        content.style.transform='none';
         content.style.maxHeight=`${availableHeight}px`;
+        content.dataset.side='left';
       }
+      content.classList.remove('panel-visible');
+      content.style.transform='translateX(-100%)';
+      requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
         scrollCalendarToToday();
@@ -6194,12 +6204,27 @@ function openPanel(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function closePanel(m){
-  m.classList.remove('show');
-  m.setAttribute('aria-hidden','true');
-  localStorage.setItem(`panel-open-${m.id}`,'false');
-  const idx = panelStack.indexOf(m);
-  if(idx!==-1) panelStack.splice(idx,1);
+  const content = m.querySelector('.panel-content');
+  if(content && content.dataset.side){
+    content.classList.remove('panel-visible');
+    content.style.transform = content.dataset.side === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
+    content.addEventListener('transitionend', function handler(){
+      content.removeEventListener('transitionend', handler);
+      m.classList.remove('show');
+      m.setAttribute('aria-hidden','true');
+      localStorage.setItem(`panel-open-${m.id}`,'false');
+      const idx = panelStack.indexOf(m);
+      if(idx!==-1) panelStack.splice(idx,1);
+      if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+    }, {once:true});
+  } else {
+    m.classList.remove('show');
+    m.setAttribute('aria-hidden','true');
+    localStorage.setItem(`panel-open-${m.id}`,'false');
+    const idx = panelStack.indexOf(m);
+    if(idx!==-1) panelStack.splice(idx,1);
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
+  }
 }
 function requestClosePanel(m){
   closePanel(m);
@@ -6218,14 +6243,19 @@ function movePanelToEdge(panel, side){
   const header = document.querySelector('.header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
   content.style.top = `${topPos}px`;
-  content.style.transform = 'none';
+  content.classList.remove('panel-visible');
   if(side === 'left'){
+    content.dataset.side='left';
     content.style.left = '0';
     content.style.right = '';
+    content.style.transform='translateX(-100%)';
   } else {
+    content.dataset.side='right';
     content.style.left = '';
     content.style.right = '0';
+    content.style.transform='translateX(100%)';
   }
+  requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
 }
 function repositionPanels(){
   ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
