@@ -14,7 +14,7 @@
   <style>:root{
   --header-h: 75px;
   --subheader-h: 0;
-  --panel-w: 300px;
+  --panel-w: 440px;
   --results-w: 520px;
   --gap: 12px;
     --media-h: 200px;
@@ -577,16 +577,20 @@ button[aria-expanded="true"] .results-arrow{
 }
 .panel-content{
   position:absolute;
+  left:50%;
+  top:var(--header-h);
+  bottom:var(--footer-h);
+  transform:translateX(-50%);
+  width:440px;
+  max-width:440px;
+  height:calc(100vh - var(--header-h) - var(--footer-h));
   border-radius:8px;
-  width:90%;
-  max-width:600px;
-  max-height:90%;
   display:flex;
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
 }
-.panel-content .resizer{position:absolute;z-index:10;background:transparent;}
+.panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
 .panel-content .resizer.s{bottom:0;left:0;right:0;height:6px;cursor:s-resize;}
 .panel-content .resizer.e{top:0;right:0;bottom:0;width:6px;cursor:e-resize;}
@@ -602,6 +606,10 @@ button[aria-expanded="true"] .results-arrow{
   padding:0 20px 20px;
   overscroll-behavior:contain;
 }
+.panel-body > *{
+  width:400px;
+  max-width:400px;
+}
 #adminPanel #styleControls{
   display:flex;
   flex-direction:column;
@@ -609,26 +617,26 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #adminPanel #styleControls > *{
-  width:300px;
+  width:400px;
 }
 .admin-fieldset{
   margin:0;
   border:0;
   border-radius:8px;
   padding:0;
-  width:300px;
+  width:400px;
   box-sizing:border-box;
 }
 #adminPanel .admin-fieldset{
-  width:300px;
+  width:400px;
 }
 #adminPanel .admin-fieldset.collapsed{
   padding:0;
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    width:600px;
-    max-width:90%;
+    width:440px;
+    max-width:440px;
     max-height:90%;
   }
 
@@ -642,8 +650,8 @@ button[aria-expanded="true"] .results-arrow{
     color:#fff;
   }
 #filterPanel .panel-content{
-  width:350px;
-  max-width:600px;
+  width:440px;
+  max-width:440px;
   max-height:90%;
   background:#222222;
   color:#fff;
@@ -776,28 +784,24 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin-bottom:10px;
 }
-#welcomePopup .panel-content{
-  top:200px;
-  left:50%;
-  transform:translateX(-50%);
-}
+#welcomePopup{background:rgba(0,0,0,0.7);}
 #memberPanel .location-info{margin-top:4px;font-size:14px;font-family: Verdana;}
   @media (max-width:600px){
   #adminPanel .panel-content,
   #memberPanel .panel-content,
   #filterPanel .panel-content{
-    width:95%;
-    max-width:95%;
+    width:440px;
+    max-width:440px;
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;font-family: Verdana;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:400px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;font-family: Verdana;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
@@ -814,8 +818,8 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:8px;
   margin-left:0;
-  width:300px;
-  max-width:300px;
+  width:400px;
+  max-width:400px;
 }
 #autoTheme-row button{
   flex:0 0 auto;
@@ -898,7 +902,7 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:border-box;
 }
 .autotheme-row{
-  width:300px;
+  width:400px;
   height:35px;
   display:flex;
   align-items:center;
@@ -978,8 +982,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
-  max-width:300px;
-  width:100%;
+  width:400px;
 }
 #adminPanel .panel-field{margin:0;}
 #adminPanel h3{margin:0;}
@@ -1837,8 +1840,8 @@ body.hide-results .post-board{
 
 .open-posts .text{
   margin-top:0;
-  flex:1 1 300px;
-  min-width:300px;
+  flex:1 1 400px;
+  min-width:400px;
 }
 
 .open-posts .text .info{
@@ -2019,8 +2022,8 @@ body.hide-results .post-board{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:1 1 300px;
-  min-width:300px;
+  flex:1 1 400px;
+  min-width:400px;
   width:auto;
 }
 .open-posts .map-container .venue-dropdown{
@@ -2032,7 +2035,7 @@ body.hide-results .post-board{
   height:100%;
   border:1px solid var(--border);
   border-radius:8px;
-  min-width:300px;
+  min-width:400px;
   min-height:200px;
 }
 
@@ -2040,7 +2043,7 @@ body.hide-results .post-board{
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  min-width:300px;
+  min-width:400px;
 }
 
 .open-posts .calendar-container .session-dropdown{
@@ -2178,8 +2181,8 @@ body.hide-results .post-board{
   gap:var(--gap);
   position:relative;
   align-items:flex-start;
-  flex:1 1 300px;
-  min-width:300px;
+  flex:1 1 400px;
+  min-width:400px;
   width:calc(var(--calendar-width) * var(--calendar-scale));
   min-height:calc(var(--calendar-height) * var(--calendar-scale));
 }
@@ -2370,9 +2373,18 @@ body.hide-results .post-board{
 }
 
 .desc{
-  margin-top: 8px;
+  margin-top:8px;
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  cursor:pointer;
 }
-.open-posts .desc-wrap .desc{overflow:visible;}
+.desc.expanded{
+  display:block;
+  -webkit-line-clamp:unset;
+  overflow:visible;
+}
 
 
 @media (max-width:1000px){
@@ -2567,6 +2579,18 @@ footer{
 footer .foot-row .footer-card{
   background:var(--list-background);
   border:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  max-width:240px;
+}
+
+footer .foot-row .footer-card .t{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  flex:1 1 auto;
+  min-width:0;
 }
 
 .chip-small img.mini{
@@ -2630,7 +2654,7 @@ footer .foot-row .footer-card,
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  max-width: 300px;
+  max-width: 400px;
 }
 
 .hover-card img{
@@ -3202,7 +3226,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   </div>
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
+    <div class="panel-content" style="right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
@@ -3246,8 +3270,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="header-top">
           <h2 class="title">Admin</h2>
           <div class="panel-actions">
-            <button type="button" id="discardChanges">Discard Changes</button>
-            <button type="button" id="saveNow">Save Now</button>
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
             <button type="button" class="close-panel">Close</button>
@@ -3380,17 +3402,17 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
                 <style>
                   #balloonTool { padding: 10px; }
                   #balloonTool .t{font-family: Verdana;font-size:16px;font-weight:bold;}
-                  #balloonTool .shape-dropdown{position:relative;width:300px;height:35px;margin-bottom:8px;}
-                  #balloonTool .shape-dropdown > button{width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
-                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:300px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;}
+                  #balloonTool .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
+                  #balloonTool .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
+                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;}
                   #balloonTool .shape-menu[hidden]{display:none;}
                   #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
                   #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
                   #balloonTool .shape-button.active{outline:2px solid var(--border);}
                   #balloonTool .size-control{margin-bottom:8px;}
                   #balloonTool .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
-                  #balloonTool .svg-output textarea{width:300px;height:200px;}
-                  #balloonTool #copySvgCode{width:300px;height:35px;}
+                    #balloonTool .svg-output textarea{width:400px;height:200px;}
+                    #balloonTool #copySvgCode{width:400px;height:35px;}
                   #balloonTool #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;}
                   #balloonTool #balloonGrid svg{cursor:pointer;}
                 </style>
@@ -3985,7 +4007,7 @@ function uniqueTitle(seed, cityName, idx){
     return [hero, ...others];
   }
 
-  function randomText(min=200,max=2000){
+  function randomText(min=100,max=500){
     const lorem = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua".split(' ');
     const count = min + Math.floor(rnd()*(max-min+1));
     const words = [];
@@ -5228,6 +5250,7 @@ function makePosts(){
         const imgs = root.querySelectorAll('img.thumb');
         if(!imgs.length) return;
         if('IntersectionObserver' in window){
+          const observerRoot = root === postsWideEl ? root.closest('.post-board') : root;
           const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if(entry.isIntersecting){
@@ -5241,7 +5264,7 @@ function makePosts(){
                 obs.unobserve(img);
               }
             });
-          }, {root});
+          }, {root: observerRoot});
           imgs.forEach(img => obs.observe(img));
         } else {
           imgs.forEach(img => {
@@ -5636,17 +5659,23 @@ function makePosts(){
     });
 
     function ensureGap(container, el){
-      const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-      const desired = el.offsetTop - pad - 12;
-      if(container.scrollTop > desired){ container.scrollTop = Math.max(desired, 0); }
-    }
+  const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
+  const desired = el.offsetTop - pad - 12;
+  if(container.scrollTop > desired){
+    container.scrollTo({top: Math.max(desired, 0), behavior:'smooth'});
+  }
+}
 
     function hookDetailActions(el, p){
-      const descWrap = el.querySelector(".desc-wrap");
-      if(descWrap){
-        const desc = descWrap.querySelector(".desc");
-        if(desc) desc.style.overflow = 'visible';
-      }
+  const descWrap = el.querySelector(".desc-wrap");
+  if(descWrap){
+    const desc = descWrap.querySelector(".desc");
+    if(desc){
+      desc.addEventListener('click', ()=>{
+        desc.classList.toggle('expanded');
+      });
+    }
+  }
       const favBtn = el.querySelector('.fav');
       if(favBtn){
         favBtn.addEventListener('click', (e)=>{
@@ -6305,95 +6334,12 @@ document.addEventListener('pointerdown', handleDocInteract);
     }
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
-    const header = panel.querySelector('.panel-header');
-    if(!content || !header) return;
-    let dragging = false;
-    let offsetX = 0, offsetY = 0;
-      header.addEventListener('mousedown', e=>{
-        if(window.innerWidth < 450) return;
-        dragging = true;
-        const rect = content.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        content.style.left = `${rect.left}px`;
-        content.style.top = `${rect.top}px`;
-        content.style.transform = 'none';
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        e.preventDefault();
-      });
-      function onMouseMove(e){
-        if(!dragging) return;
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-        const rect = content.getBoundingClientRect();
-        const maxLeft = window.innerWidth - rect.width;
-        const maxTop = window.innerHeight - header.offsetHeight;
-        newLeft = Math.min(Math.max(newLeft, 0), Math.max(maxLeft, 0));
-        newTop = Math.min(Math.max(newTop, 0), Math.max(maxTop, 0));
-        content.style.left = `${newLeft}px`;
-        content.style.top = `${newTop}px`;
-      }
-      function onMouseUp(){
-        dragging = false;
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        savePanelState(panel);
-      }
-
-    const handles = ['n','e','s','w','ne','nw','se','sw'];
-    handles.forEach(dir=>{
-      const h = document.createElement('div');
-      h.className = 'resizer ' + dir;
-      content.appendChild(h);
-      h.addEventListener('mousedown', e=>{
-        if(window.innerWidth < 450) return;
-        initResize(e, dir);
-      });
-    });
-    let startX, startY, startW, startH, startL, startT, resizeDir;
-    function initResize(e, dir){
-      e.preventDefault();
-      e.stopPropagation();
-      resizeDir = dir;
-      const rect = content.getBoundingClientRect();
-      startX = e.clientX;
-      startY = e.clientY;
-      startW = rect.width;
-      startH = rect.height;
-      startL = rect.left;
-      startT = rect.top;
-      content.style.left = `${startL}px`;
-      content.style.top = `${startT}px`;
-      content.style.transform = 'none';
-      document.addEventListener('mousemove', onResize);
-      document.addEventListener('mouseup', stopResize);
-    }
-    const minW = 200, minH = 150;
-    function onResize(e){
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      if(resizeDir.includes('e')){
-        content.style.width = `${Math.max(minW, startW + dx)}px`;
-      }
-      if(resizeDir.includes('s')){
-        content.style.height = `${Math.max(minH, startH + dy)}px`;
-      }
-      if(resizeDir.includes('w')){
-        const newW = Math.max(minW, startW - dx);
-        content.style.width = `${newW}px`;
-        content.style.left = `${startL + dx}px`;
-      }
-      if(resizeDir.includes('n')){
-        const newH = Math.max(minH, startH - dy);
-        content.style.height = `${newH}px`;
-        content.style.top = `${startT + dy}px`;
-      }
-    }
-    function stopResize(){
-      document.removeEventListener('mousemove', onResize);
-      document.removeEventListener('mouseup', stopResize);
-      savePanelState(panel);
+    if(content){
+      content.style.width = '440px';
+      content.style.maxWidth = '440px';
+      content.style.top = 'var(--header-h)';
+      content.style.bottom = 'var(--footer-h)';
+      content.style.height = 'calc(100vh - var(--header-h) - var(--footer-h))';
     }
   });
 
@@ -7885,8 +7831,6 @@ document.addEventListener('pointerdown', handleDocInteract);
     }
 
     // Save/Discard/Restore logic
-    const saveBtn = document.getElementById('saveNow');
-    const discardBtn = document.getElementById('discardChanges');
     const adminClose = document.querySelector('#adminPanel .close-panel');
     const tabPanels = ['map','settings'];
     const savedData = {};
@@ -8013,12 +7957,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     }
     window.saveAdminChanges = saveAllTabs;
 
-    saveBtn && saveBtn.addEventListener('click', saveAllTabs);
-
-    discardBtn && discardBtn.addEventListener('click', ()=>{
-      if(!confirm('Are you sure you want to Discard Your Changes? Y/N')) return;
-      tabPanels.forEach(tab=> applyData(tab, savedData[tab]));
-    });
+    // save/discard buttons removed
 
     adminClose && adminClose.addEventListener('click', ()=>{
       saveAllTabs();
