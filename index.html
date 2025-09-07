@@ -4021,7 +4021,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function postUrl(p){
-    return `${BASE_URL}post/${p.slug}-${p.created}`;
+    return `${BASE_URL}#/post/${p.slug}-${p.created}`;
   }
 
   function showCopyMsg(){
@@ -5624,7 +5624,7 @@ function makePosts(){
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
-      history.replaceState(null,'',`${BASE_URL}post/${p.slug}-${p.created}`);
+      location.hash = `/post/${p.slug}-${p.created}`;
     }
 
     function closePostModal(){
@@ -5633,7 +5633,7 @@ function makePosts(){
       container.classList.add('hidden');
       const modal = container.querySelector('.post-modal');
       if(modal) modal.innerHTML='';
-      history.replaceState(null,'',BASE_URL);
+      location.hash = '';
     }
 
     document.addEventListener('DOMContentLoaded', ()=>{
@@ -5641,7 +5641,7 @@ function makePosts(){
       if(container){
         container.addEventListener('click', e=>{ if(e.target===container) closePostModal(); });
       }
-      const m = location.pathname.match(/\/post\/([^\/]+)-([^\/]+)$/);
+      const m = location.hash.match(/\/post\/([^\/]+)-([^\/]+)$/);
       if(m){
         const slug = decodeURIComponent(m[1]);
         const created = m[2];
