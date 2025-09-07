@@ -52,8 +52,8 @@
       --filter-placeholder-text: var(--placeholder-text);
       --control-text-bg: #ffffff;
       --control-placeholder-text: var(--placeholder-text);
-      --control-placeholder-font: Verdana, sans-serif;
-      --control-placeholder-size: 16px;
+      --control-placeholder-font: Verdana;
+      --control-placeholder-size: 14px;
       --control-geolocate-bg: #ffffff;
       --control-compass-bg: #ffffff;
       --control-clear-bg: rgba(0,0,0,0);
@@ -86,10 +86,10 @@
       --date-range-text: rgba(255,255,255,1);
       --control-h: 35px;
       --panel-label-font: Verdana;
-      --panel-label-size: 16px;
+      --panel-label-size: 14px;
       --panel-label-color: #ffffff;
       --panel-title-font: Verdana;
-      --panel-title-size: 20px;
+      --panel-title-size: 16px;
       --panel-title-color: #ffffff;
       --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -146,7 +146,8 @@ html,body{
   body{
     margin: 0 auto;
     max-width: 1920px;
-    font-family: Verdana,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans","Liberation Sans",sans-serif;
+    font-family: Verdana;
+    font-size: 14px;
     background: var(--background);
     color: var(--text);
     overflow: hidden;
@@ -157,6 +158,12 @@ html,body{
     min-height: 100vh;
     user-select: none;
     touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4, h5, h6{
+    font-family: Verdana;
+    font-size: 16px;
+    font-weight: bold;
   }
 
 input,
@@ -171,6 +178,8 @@ button:not([class^="mapboxgl-ctrl"]),
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
+  font-family: Verdana;
+  font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
   min-width: 35px;
@@ -713,7 +722,7 @@ button[aria-expanded="true"] .results-arrow{
   left:50%;
   transform:translateX(-50%);
 }
-#memberPanel .location-info{margin-top:4px;font-size:13px;}
+#memberPanel .location-info{margin-top:4px;font-size:14px;font-family: Verdana;}
   @media (max-width:600px){
   #adminPanel .panel-content,
   #memberPanel .panel-content,
@@ -724,13 +733,13 @@ button[aria-expanded="true"] .results-arrow{
   }
 }
 #adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
-#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:12px;}
+#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;font-family: Verdana;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;max-width:300px;width:100%;}
-#adminPanel .control-row label:first-child{min-width:80px;font-size:12px;cursor:pointer;user-select:none;}
+#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;font-family: Verdana;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -880,7 +889,8 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .range-group span{
   min-width:32px;
   text-align:right;
-  font-size:12px;
+  font-size:14px;
+  font-family: Verdana;
 }
 #adminPanel .tab-bar{display:flex;gap:6px;}
 #adminPanel .tab-bar button{
@@ -1144,7 +1154,7 @@ button[aria-expanded="true"] .results-arrow{
 .expired-text{
   font-family: Verdana;
   color:#fff;
-  font-size:16px;
+  font-size:14px;
 }
 .filter-summary{
   margin-bottom:8px;
@@ -1274,7 +1284,8 @@ button[aria-expanded="true"] .results-arrow{
   border-radius: 999px;
   background: var(--btn);
   border: 1px solid var(--btn);
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
   color: var(--ink-d);
   width: max-content;
   cursor: pointer;
@@ -1421,7 +1432,9 @@ body.filters-active #filterBtn{
 
 .title{
   margin: 0;
-  font-weight: 900;
+  font-family: Verdana;
+  font-weight: bold;
+  font-size: 16px;
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1434,7 +1447,6 @@ body.filters-active #filterBtn{
   display: flex;
   gap: 16px;
   align-items: center;
-  font-size: 13px;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -1445,12 +1457,16 @@ body.filters-active #filterBtn{
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+  font-size: 13px;
+  font-family: Verdana;
 }
 
 .closed-posts .info{
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+  font-size: 13px;
+  font-family: Verdana;
 }
 
 .res-list .info > div{
@@ -1473,7 +1489,8 @@ body.filters-active #filterBtn{
   place-items: center;
   background: #0e2540;
   border: 1px solid rgba(255,255,255,.1);
-  font-size: 11px;
+  font-size: 14px;
+  font-family: Verdana;
 }
 
 .fav{
@@ -1550,10 +1567,10 @@ body.filters-active #filterBtn{
   width:100%;
   margin-bottom:var(--gap);
 }
-.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:var(--control-text-bg) !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:8px;overflow:visible;font-size:16px;}
+.geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:var(--control-text-bg) !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:8px;overflow:visible;font-family: Verdana;font-size:14px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
-.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 10px;background:var(--control-text-bg) !important;color:#000;font-family:inherit;font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+.geocoder .mapboxgl-ctrl-geocoder input{height:100%;line-height:var(--control-h);padding:0 var(--control-h) 0 10px;background:var(--control-text-bg) !important;color:#000;font-family:Verdana;font-size:14px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 .geocoder .mapboxgl-ctrl-geocoder input::placeholder{font-family:var(--control-placeholder-font) !important;font-size:var(--control-placeholder-size) !important;color:var(--control-placeholder-text);}
 .geocoder .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
   position:absolute;
@@ -1712,7 +1729,7 @@ body.hide-results .closed-posts{
   overflow:visible;
   color:#fff;
   font-family: Verdana;
-  font-size:16px;
+  font-size:14px;
 }
 
 .open-posts .detail-header{
@@ -1884,10 +1901,11 @@ body.hide-results .closed-posts{
 
 .open-posts .detail-header .title{
   margin:0;
-  font-size:20px;
+  font-family: Verdana;
+  font-size:16px;
+  font-weight:bold;
   line-height:1.2;
   color:#fff;
-  font-family: Verdana;
 }
 
 .open-posts .detail-header .title-block{
@@ -1904,7 +1922,7 @@ body.hide-results .closed-posts{
 }
 
 .open-posts .meta{
-  font-size:13px;
+  font-size:14px;
   display:flex;
   gap:12px;
   flex-wrap:wrap;
@@ -2100,7 +2118,8 @@ body.hide-results .closed-posts{
   width:var(--calendar-width);
   height:var(--calendar-height);
   position:relative;
-  font-size:16px;
+  font-size:14px;
+  font-family: Verdana;
 }
 
 
@@ -2160,7 +2179,8 @@ body.hide-results .closed-posts{
 }
 .open-posts .post-calendar .day{
   cursor:pointer;
-  font-size:12px;
+  font-size:14px;
+  font-family: Verdana;
   border-radius:8px;
 }
 .open-posts .post-calendar .day.available-day{
@@ -2267,7 +2287,8 @@ body.hide-results .closed-posts{
   border: 1px solid var(--btn);
   border-radius: 999px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
 }
 
 .desc{
@@ -2421,7 +2442,8 @@ footer{
   background: var(--btn);
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2500,8 +2522,9 @@ footer .foot-row .foot-item,
 }
 
 .hover-card .t{
-  font-weight: 800;
-  font-size: 13px;
+  font-family: Verdana;
+  font-weight: bold;
+  font-size: 16px;
   line-height: 1.25;
   white-space: normal;
   word-break: break-word;
@@ -2513,7 +2536,8 @@ footer .foot-row .foot-item,
 }
 
 .hover-card .s{
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
   opacity: .8;
   margin-top: 2px;
   white-space: normal;
@@ -2534,9 +2558,10 @@ footer .foot-row .foot-item,
 
 .multi-hover h4{
   margin: 0 0 8px 0;
-  font-size: 13px;
+  font-family: Verdana;
+  font-size: 16px;
   color: var(--ink-d);
-  font-weight: 700;
+  font-weight: bold;
   letter-spacing: .3px;
 }
 
@@ -2579,7 +2604,8 @@ footer .foot-row .foot-item,
 }
 
 .multi-item .s{
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
   opacity: .8;
   margin-top: 2px;
   white-space: nowrap;
@@ -2596,7 +2622,8 @@ footer .foot-row .foot-item,
 }
 
 .multi-ctrls .hint{
-  font-size: 12px;
+  font-size: 14px;
+  font-family: Verdana;
   color: var(--ink-d);
 }
 
@@ -2802,14 +2829,17 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
   background:linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
   color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,0.8);
-  font-size:13px;
+  font-size:14px;
+  font-family: Verdana;
   display:flex;
   flex-direction:column;
   text-align:left;
 }
 
 .ad-panel .caption .title{
-  font-weight:900;
+  font-family: Verdana;
+  font-weight:bold;
+  font-size:16px;
   margin:0 0 4px;
 }
 
@@ -3227,7 +3257,7 @@ footer .chip-small img.mini, footer .foot-row .foot-item img{
               <div id="balloonTool">
                 <style>
                   #balloonTool { padding: 10px; }
-                  #balloonTool .t{font-family:Verdana;font-size:20px;}
+                  #balloonTool .t{font-family: Verdana;font-size:16px;font-weight:bold;}
                   #balloonTool .shape-dropdown{position:relative;width:300px;height:35px;margin-bottom:8px;}
                   #balloonTool .shape-dropdown > button{width:300px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
                   #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:300px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;}
