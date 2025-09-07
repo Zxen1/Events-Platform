@@ -3854,10 +3854,12 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function randomImages(id){
-    return Array.from({length:10},(_,i)=>{
+    const hero = imgHero(id);
+    const others = Array.from({length:9},(_,i)=>{
       const port = i % 2 === 0;
       return `https://picsum.photos/seed/${encodeURIComponent(id)}-${i}/${port?'800/1200':'1200/800'}`;
     });
+    return [hero, ...others];
   }
 
   function randomText(min=200,max=2000){
