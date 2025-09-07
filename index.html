@@ -460,7 +460,7 @@ input[type="checkbox"]{
   transition:transform .3s;
   vertical-align:middle;
 }
-body.hide-results #resultsToggle .results-arrow{transform:rotate(-135deg);}
+body.hide-results #quickBtn .results-arrow{transform:rotate(-135deg);}
 
 .options-dropdown > button{
   position:relative;
@@ -1433,7 +1433,11 @@ body.hide-results .results-col{
 }
 
 
-#filterBtn{
+#filterBtn,
+#quickBtn,
+#postBtn,
+#memberBtn,
+#adminBtn{
   border-radius:8px;
   gap:4px;
 }
@@ -1653,6 +1657,20 @@ body.filters-active #filterBtn{
   width:100%;
   margin-bottom:var(--gap);
 }
+
+.mapbox-control-row{
+  display:flex;
+  align-items:center;
+  width:400px;
+}
+.mapbox-control-row #geocoder{flex:0 0 300px;}
+.mapbox-control-row #geocoder .mapboxgl-ctrl-geocoder{width:300px !important;}
+.mapbox-control-row #geolocateBtn{flex:0 0 35px;margin-left:20px;}
+.mapbox-control-row #compassBtn{flex:0 0 35px;margin-left:10px;}
+
+#filterPanel .panel-body > *,
+#memberPanel .panel-body > *,
+#adminPanel .panel-body > *{width:400px;}
 .geocoder .mapboxgl-ctrl-geocoder{position:relative;height:var(--control-h);min-width:240px !important;background:var(--control-text-bg) !important;border:1px solid #ccc !important;width:100%;flex:1;border-radius:8px;overflow:visible;font-family: Verdana;font-size:14px;}
 .geocoder .mapboxgl-ctrl-geocoder--suggestions,
 .geocoder .mapboxgl-ctrl-geocoder .suggestions{top:var(--control-h);}
@@ -1816,6 +1834,9 @@ body.hide-results .post-board{
   color:#fff;
   font-family: Verdana;
   font-size:14px;
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
 }
 
 .open-posts .detail-header{
@@ -1849,6 +1870,9 @@ body.hide-results .post-board{
   margin-top:0;
   flex:1 1 400px;
   min-width:400px;
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
 }
 
 .open-posts .text .info{
@@ -2066,6 +2090,8 @@ body.hide-results .post-board{
   min-width:200px;
 }
 
+.open-posts .venue-dropdown{width:400px;}
+
 .open-posts .calendar-container .session-dropdown{
   margin-top:0;
   width:100%;
@@ -2164,6 +2190,7 @@ body.hide-results .post-board{
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
+  width:100%;
 }
 
 .open-posts .session-menu button{
@@ -2351,7 +2378,7 @@ body.hide-results .post-board{
   display:flex;
   justify-content:center;
   align-items:center;
-  z-index:1000;
+  z-index:4000;
   pointer-events:auto;
 }
 .img-popup img{
@@ -2412,7 +2439,7 @@ body.hide-results .post-board{
 @media (max-width:1000px){
   .results-col{display:none;}
   .post-board{left:0;}
-  #resultsToggle{display:none;}
+  #quickBtn{display:none;}
   .results-arrow{display:none;}
 }
 
@@ -2959,16 +2986,17 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   cursor:pointer;
 }
 
-#ad-opacity-container{
+#ad-panel-container{
   position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   right:0;
   width:420px;
   pointer-events:none;
+  background:rgba(0,0,0,0.5);
+  border-radius:0;
 }
-
-#ad-opacity-container .ad-board{
+#ad-panel-container .ad-board{
   position:absolute;
   top:10px;
   bottom:10px;
@@ -3154,10 +3182,10 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         </svg>
         <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
       </button>
-      <button id="resultsToggle" aria-pressed="true" aria-label="Toggle results list">
+      <button id="quickBtn" aria-pressed="true" aria-label="Toggle results list">
         <span class="results-arrow" aria-hidden="true"></span> List
       </button>
-      <button id="mapPostsToggle" aria-pressed="false">Show Posts</button>
+      <button id="postBtn" aria-pressed="false">Show Posts</button>
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
     <div class="auth">
@@ -3190,7 +3218,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <div class="posts" id="postsWide"></div>
   </section>
 
-  <div id="ad-opacity-container">
+  <div id="ad-panel-container">
     <section id="adPanel" class="ad-board" aria-label="Advertisement"></section>
   </div>
 
@@ -3213,7 +3241,11 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         </div>
       </div>
       <div class="panel-body">
-        <div id="geocoder" class="geocoder"></div>
+        <div class="mapbox-control-row">
+          <div id="geocoder" class="geocoder"></div>
+          <div id="geolocateBtn"></div>
+          <div id="compassBtn"></div>
+        </div>
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
           <div class="reset-box">
@@ -4199,6 +4231,13 @@ function makePosts(){
       return 'assets/balloons/balloons-icon-16185.png';
     }
 
+    function memberAvatarUrl(p){
+      if(p.member && p.member.avatar){
+        return p.member.avatar;
+      }
+      return svgPlaceholder(p.id);
+    }
+
     function hoverHTML(p){
       return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
     }
@@ -4581,23 +4620,23 @@ function makePosts(){
         optionsBtn.setAttribute('aria-expanded','false');
       });
 
-      const resultsToggle = $('#resultsToggle');
+      const quickBtn = $('#quickBtn');
       const resultsCol = $('.results-col');
       const isSmall = window.innerWidth < 1000;
       const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
       if(storedHidden || isSmall){
         document.body.classList.add('hide-results');
-        resultsToggle.setAttribute('aria-pressed','false');
+        quickBtn.setAttribute('aria-pressed','false');
         resultsCol.setAttribute('aria-hidden','true');
       } else {
-        resultsToggle.setAttribute('aria-pressed','true');
+        quickBtn.setAttribute('aria-pressed','true');
         resultsCol.setAttribute('aria-hidden','false');
       }
       window.addEventListener('resize', ()=>{
         if(window.innerWidth < 1000){
           if(!document.body.classList.contains('hide-results')){
             document.body.classList.add('hide-results');
-            resultsToggle.setAttribute('aria-pressed','false');
+            quickBtn.setAttribute('aria-pressed','false');
             resultsCol.setAttribute('aria-hidden','true');
             localStorage.setItem('resultsHidden','true');
           }
@@ -4611,9 +4650,9 @@ function makePosts(){
             applyFilters();
           }
         }, 0);
-      resultsToggle.addEventListener('click', ()=>{
+      quickBtn.addEventListener('click', ()=>{
         const hidden = document.body.classList.toggle('hide-results');
-        resultsToggle.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+        quickBtn.setAttribute('aria-pressed', hidden ? 'false' : 'true');
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
@@ -4637,7 +4676,7 @@ function makePosts(){
         }
         if(e.target === resList){
           document.body.classList.add('hide-results');
-          resultsToggle.setAttribute('aria-pressed','false');
+          quickBtn.setAttribute('aria-pressed','false');
           resultsCol.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
           if(window.updateAdVisibility) updateAdVisibility();
@@ -4663,7 +4702,7 @@ function makePosts(){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
       document.body.classList.add('mode-'+m);
-      const toggle = $('#mapPostsToggle');
+      const toggle = $('#postBtn');
       if(toggle){
         toggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
         toggle.setAttribute('aria-pressed', m === 'posts');
@@ -4683,7 +4722,7 @@ function makePosts(){
       if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
-    $('#mapPostsToggle').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
+    $('#postBtn').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
 
     // Mapbox
     function loadMapbox(cb){
@@ -4748,13 +4787,6 @@ function makePosts(){
             geocoder.clear();
           });
         });
-        const gc = document.getElementById('geocoder');
-        if(gc){
-          const control = geocoder.onAdd(map);
-          gc.appendChild(control);
-          const input = control.querySelector('input[type="text"]');
-          if(input) input.setAttribute('autocomplete','street-address');
-        }
       } else {
         const script = document.createElement('script');
         script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
@@ -4837,12 +4869,18 @@ function makePosts(){
       });
       const nav = new mapboxgl.NavigationControl({showZoom: false});
       const gc = document.getElementById('geocoder');
-      if(gc){
-        gc.appendChild(geolocate.onAdd(map));
-        gc.appendChild(nav.onAdd(map));
+      const geoHolder = document.getElementById('geolocateBtn');
+      const compassHolder = document.getElementById('compassBtn');
+      if(gc && geoHolder && compassHolder){
+        gc.appendChild(geocoder.onAdd(map));
+        const input = gc.querySelector('input[type="text"]');
+        if(input) input.setAttribute('autocomplete','street-address');
+        geoHolder.appendChild(geolocate.onAdd(map));
+        compassHolder.appendChild(nav.onAdd(map));
       }else{
         map.addControl(nav, 'top-left');
         map.addControl(geolocate, 'top-left');
+        if(gc) gc.appendChild(geocoder.onAdd(map));
       }
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
@@ -4901,9 +4939,9 @@ function makePosts(){
       resultsWasHidden = document.body.classList.contains('hide-results');
       if(!resultsWasHidden){
         document.body.classList.add('hide-results');
-        const resultsToggle = document.getElementById('resultsToggle');
+        const quickBtnEl = document.getElementById('quickBtn');
         const resultsCol = document.querySelector('.results-col');
-        if(resultsToggle) resultsToggle.setAttribute('aria-pressed','false');
+        if(quickBtnEl) quickBtnEl.setAttribute('aria-pressed','false');
         if(resultsCol) resultsCol.setAttribute('aria-hidden','true');
       }
       function step(){
@@ -4924,10 +4962,10 @@ function makePosts(){
       const wasHidden = resultsWasHidden;
       resultsWasHidden = null;
       if(wasHidden === false){
-        const resultsToggle = document.getElementById('resultsToggle');
+        const quickBtnEl2 = document.getElementById('quickBtn');
         const resultsCol = document.querySelector('.results-col');
         document.body.classList.remove('hide-results');
-      if(resultsToggle) resultsToggle.setAttribute('aria-pressed','true');
+      if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','true');
       if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
     }
     applyFilters();
@@ -5552,7 +5590,7 @@ function makePosts(){
             </div>
             <h2 class="title">${p.title}</h2>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="member-avatar-row">${p.member && p.member.avatar ? `<img src="${p.member.avatar}" alt="${p.member.username} avatar" width="50" height="50"/>` : ''}<span>${p.member ? `Posted by ${p.member.username}` : ''}</span></div>
+            <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Unknown'} avatar" width="50" height="50"/><span>${p.member ? `Posted by ${p.member.username}` : ''}</span></div>
             <div id="venue-info-${p.id}" class="venue-info"></div>
             <div id="session-info-${p.id}" class="session-info">
               <div class="placeholder">💲 Price range | 📅 Date range</div>
@@ -5667,7 +5705,22 @@ function makePosts(){
       modal.appendChild(detail);
       hookDetailActions(detail, p);
       container.classList.remove('hidden');
+      if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
+      requestAnimationFrame(()=>{
+        const header = detail.querySelector('.detail-header');
+        const imgArea = detail.querySelector('.img-area');
+        const text = detail.querySelector('.text');
+        if(header){
+          header.style.position='sticky';
+          header.style.top='0';
+          header.style.zIndex='2';
+        }
+        if(imgArea && text && text.offsetTop === imgArea.offsetTop){
+          imgArea.style.position='sticky';
+          imgArea.style.top = header ? header.offsetHeight + 'px' : '0';
+        }
+      });
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
@@ -5700,6 +5753,15 @@ function makePosts(){
     }
 
     window.addEventListener('hashchange', handleHash);
+
+    window.addEventListener('resize', ()=>{
+      if(activePostId){
+        const c = document.getElementById('post-modal-container');
+        if(c && !c.classList.contains('hidden')){
+          openPostModal(activePostId);
+        }
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', ()=>{
       const container = document.getElementById('post-modal-container');
@@ -6188,7 +6250,7 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
       const topPos = headerH + safeTop;
-      content.style.left='';
+      content.style.left='auto';
       content.style.right='0';
       content.style.top=`${topPos}px`;
       content.style.bottom='';
@@ -6209,7 +6271,7 @@ function openPanel(m){
       } else {
         const availableHeight = window.innerHeight - footerH - topPos;
         content.style.left='0';
-        content.style.right='';
+        content.style.right='auto';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
         content.style.maxHeight=`${availableHeight}px`;
@@ -6292,11 +6354,11 @@ function movePanelToEdge(panel, side){
   if(side === 'left'){
     content.dataset.side='left';
     content.style.left = '0';
-    content.style.right = '';
+    content.style.right = 'auto';
     content.style.transform='translateX(-100%)';
   } else {
     content.dataset.side='right';
-    content.style.left = '';
+    content.style.left = 'auto';
     content.style.right = '0';
     content.style.transform='translateX(100%)';
   }
@@ -6423,14 +6485,11 @@ document.addEventListener('pointerdown', handleDocInteract);
         if(newLeft < 0) newLeft = 0;
         if(newLeft > maxLeft) newLeft = maxLeft;
         content.style.left = `${newLeft}px`;
-        content.style.right = '';
+        content.style.right = 'auto';
       }
       function onUp(){
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        const c = content.getBoundingClientRect();
-        const side = c.left + c.width/2 < window.innerWidth/2 ? 'left' : 'right';
-        movePanelToEdge(panel, side);
       }
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
