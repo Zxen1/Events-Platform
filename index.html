@@ -1577,6 +1577,21 @@ body.filters-active #filterBtn{
   stroke: var(--gold);
 }
 
+.share{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:var(--btn);
+  border:1px solid var(--btn);
+}
+.share svg{
+  width:18px;
+  height:18px;
+  fill:var(--button-text);
+}
+
 #favToggle{
   white-space:nowrap;
 }
@@ -1781,6 +1796,31 @@ body.hide-results .post-board{
   bottom: 0;
   z-index: 0;
 }
+
+.post-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.copy-msg{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--btn);
+  color:var(--button-text);
+  padding:8px 16px;
+  border-radius:8px;
+  opacity:0;
+  transition:opacity .5s;
+  z-index:1100;
+}
+.copy-msg.show{opacity:1;}
 
 
 .open-posts{
@@ -5272,106 +5312,43 @@ function makePosts(){
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
 
-    function captureState(){
-      const {start,end} = orderedRange();
-      return {
-        bounds: map ? map.getBounds().toArray() : null,
-        kw: $('#kwInput').value,
-        date: $('#dateInput').value,
-        start: start ? toISODate(start) : null,
-        end: end ? toISODate(end) : null,
-        expired: $('#expiredToggle').checked,
-        cats: [...selection.cats],
-        subs: [...selection.subs]
-      };
-    }
-
-    function restoreState(st){
-      if(!st) return;
-      $('#kwInput').value = st.kw || '';
-      dateStart = st.start ? parseISODate(st.start) : null;
-      dateEnd = st.end ? parseISODate(st.end) : null;
-      if(!st.start && st.range){
-        const parts = st.range.split(' to ').map(s=>s.trim());
-        if(parts[0]) dateStart = parseISODate(parts[0]);
-        if(parts[1]) dateEnd = parseISODate(parts[1]);
-      }
-      $('#expiredToggle').checked = st.expired || false;
-      if($('#expiredToggle').checked){
-        buildFilterCalendar(minPickerDate, maxPickerDate);
-      } else {
-        buildFilterCalendar(today, maxPickerDate);
-      }
-      if(dateStart){
-        const sIso = toISODate(dateStart);
-        const sDisp = fmtShort(sIso);
-        if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
-          const eIso = toISODate(dateEnd);
-          const eDisp = fmtShort(eIso);
-          $('#dateInput').value = `${sDisp} - ${eDisp}`;
-        } else {
-          $('#dateInput').value = sDisp;
-        }
-      } else {
-        $('#dateInput').value = '';
-      }
-      expiredWasOn = $('#expiredToggle').checked;
-      updateRangeClasses();
-      updateInput();
-      selection.cats = new Set(st.cats || []);
-      selection.subs = new Set(st.subs || []);
-      $$('.cat').forEach(el=>{
-        const label = el.querySelector('.label').textContent;
-        const expanded = selection.cats.has(label);
-        el.setAttribute('aria-expanded', expanded?'true':'false');
-        el.querySelectorAll('.sub .chip').forEach(ch=>{
-          const subName = ch.textContent.trim();
-          const key = label+'::'+subName;
-          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
-        });
-      });
-      if(map && st.bounds){
-        stopSpin();
-        const bounds = new mapboxgl.LngLatBounds(st.bounds);
-        map.fitBounds(bounds, {duration:0});
-        postPanel = bounds;
-      }
-      applyFilters();
-      updateClearButtons();
-    }
+    function captureState(){ return {}; }
+    function restoreState(){ }
     function renderFooter(){
       footRow.innerHTML='';
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
       if(!viewHistory.length){ return; }
-      // render oldest -> newest so newest appears at the far right
-      const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
-        for(const v of items){
-          const p = posts.find(x=>x.id===v.id);
-          if(!p) continue;
-          const el = document.createElement('div');
-          el.className='footer-card';
-          el.dataset.id = v.id;
-          el.title=v.title+' — '+v.city;
-            const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-            el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
-          if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            stopSpin();
-            const needsRestore = v.state && JSON.stringify(captureState()) !== JSON.stringify(v.state);
-            openPost(v.id);
-            if(needsRestore){
-              setTimeout(()=>restoreState(v.state),0);
-            }
-          });
-          footRow.appendChild(el);
-        }
-      // scroll to the far right to reveal the newest
+      const items = viewHistory.slice().reverse();
+      for(const v of items){
+        const p = posts.find(x=>x.id===v.id);
+        if(!p) continue;
+        const el = document.createElement('div');
+        el.className='footer-card';
+        el.dataset.id = v.id;
+        el.title = p.title+' — '+p.city;
+        const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+        el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${p.title}</div>${favIcon}`;
+        if(v.id===activePostId) el.setAttribute('aria-selected','true');
+        el.addEventListener('click', e=>{
+          e.stopPropagation();
+          openPost(v.id);
+        });
+        footRow.appendChild(el);
+      }
       footRow.scrollLeft = footRow.scrollWidth;
     }
 
     renderFooter();
+
+    function showCopyMsg(){
+      const msg=document.createElement('div');
+      msg.className='copy-msg';
+      msg.textContent='Link Copied';
+      document.body.appendChild(msg);
+      requestAnimationFrame(()=>msg.classList.add('show'));
+      setTimeout(()=>{msg.classList.remove('show'); setTimeout(()=>msg.remove(),500);},1500);
+    }
 
     function buildDetail(p){
       const wrap = document.createElement('div');
@@ -5383,6 +5360,9 @@ function makePosts(){
             <div class="t">${p.title}</div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
+          <button class="share" aria-label="Copy link">
+            <svg viewBox="0 0 24 24"><path d="M4 17v2h16v-2H4zm8-14-6 6h4v6h4V9h4l-6-6z"/></svg>
+          </button>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
@@ -5437,75 +5417,37 @@ function makePosts(){
         return wrap;
     }
 
-    async function openPost(id, fromPosts=false){
+    async function openPost(id){
       touchMarker = null;
       if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
       localStorage.setItem('spinGlobe', 'false');
       stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
+      closePost();
       activePostId = id;
-      $$('.quick-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('footer .foot-row .footer-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      if(mode !== 'posts'){
-        setMode('posts');
-        await nextFrame();
-      }
-
-      if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
-
-      (function(){
-        const ex = postsWideEl.querySelector('.open-posts');
-        if(ex){
-          const exId = ex.dataset && ex.dataset.id;
-          const prev = posts.find(x=> x.id===exId);
-          if(prev){ ex.replaceWith(card(prev, true)); } else { ex.remove(); }
-        }
-      })();
-
-      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
-      if(!target){ return; }
-      const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
-      if(resCard){
-        resCard.setAttribute('aria-selected','true');
-        resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
-      }
-      const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
-      if(mapCard) mapCard.setAttribute('aria-selected','true');
-
-      const container = postsWideEl.closest('.post-board');
       const detail = buildDetail(p);
-      target.replaceWith(detail);
       hookDetailActions(detail, p);
-      if (typeof updateStickyImages === 'function') {
-        updateStickyImages();
-      }
-
-      await nextFrame();
-      const header = detail.querySelector('.detail-header');
-      const stickyHeaderActive = document.documentElement.classList.contains('open-posts-sticky-header');
-      if(stickyHeaderActive && header){
-        const h = header.offsetHeight;
-        header.style.scrollMarginTop = h + 'px';
-      }
-
-      if(container){
-        const headerHeight = (stickyHeaderActive && header) ? header.offsetHeight : 0;
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
-        container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
-        ensureGap(container, detail);
-      } else if(window.innerWidth > 450) {
-        (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      }
-
-
-      // Update history on open (keep newest-first)
+      const overlay = document.createElement('div');
+      overlay.className = 'post-modal-overlay';
+      overlay.appendChild(detail);
+      overlay.addEventListener('click', e=>{ if(e.target===overlay) closePost(); });
+      document.body.appendChild(overlay);
+      const shareURL = `${location.origin}${location.pathname}?post=${p.id}`;
+      history.replaceState(null,'',shareURL);
       viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
+      viewHistory.unshift({id:p.id, url:shareURL});
       if(viewHistory.length>100) viewHistory.length=100;
-      saveHistory(); renderFooter();
+      saveHistory();
+      renderFooter();
+    }
+
+    function closePost(){
+      const overlay = document.querySelector('.post-modal-overlay');
+      if(overlay) overlay.remove();
+      activePostId = null;
+      history.replaceState(null,'',`${location.origin}${location.pathname}`);
+      renderFooter();
     }
 
     document.addEventListener('click', (ev)=>{
@@ -5515,12 +5457,6 @@ function makePosts(){
         if(pid){ touchMarker = null; stopSpin(); openPost(pid); }
       }
     });
-
-    function ensureGap(container, el){
-      const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-      const desired = el.offsetTop - pad - 12;
-      if(container.scrollTop > desired){ container.scrollTop = Math.max(desired, 0); }
-    }
 
     function hookDetailActions(el, p){
       const descWrap = el.querySelector(".desc-wrap");
@@ -5536,18 +5472,16 @@ function makePosts(){
           document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
             btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
           });
-          const detailEl = el;
-          const container = detailEl.closest('.post-board');
           renderFooter();
-          const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
-          if(replacement){
-            replacement.replaceWith(detailEl);
-            if(container){
-              ensureGap(container, detailEl);
-            } else {
-              detailEl.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-            }
-          }
+        });
+      }
+
+      const shareBtn = el.querySelector('.share');
+      if(shareBtn){
+        shareBtn.addEventListener('click', e=>{
+          e.stopPropagation();
+          const url = `${location.origin}${location.pathname}?post=${p.id}`;
+          navigator.clipboard.writeText(url).then(()=> showCopyMsg());
         });
       }
 
@@ -5904,6 +5838,8 @@ function makePosts(){
 
     applyFilters();
     setMode('map');
+    const initialPost = new URLSearchParams(window.location.search).get('post');
+    if(initialPost) openPost(initialPost);
   })();
   
 // 0577 helpers (safety)
