@@ -64,8 +64,8 @@
       --popup-bg: rgba(0,0,0,1);
       --popup-text: #ffffff;
       --dropdown-title: #000000;
-      --dropdown-selected-bg: rgba(224,224,224,1);
-      --dropdown-selected-text: #000000;
+      --dropdown-selected-bg: #2e3a72;
+      --dropdown-selected-text: #ffffff;
       --dropdown-text: #000000;
       --dropdown-bg: rgba(255,255,255,1);
       --dropdown-hover-bg: rgba(224,224,224,1);
@@ -79,8 +79,8 @@
         --calendar-header-h: var(--calendar-cell-h);
         --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
-        --session-available: #92D0F7;
-        --session-selected: #009FFF;
+        --session-available: #333333;
+        --session-selected: #2e3a72;
         --today: #ff0000;
         --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
@@ -745,7 +745,8 @@ button[aria-expanded="true"] .results-arrow{
   text-align:center;
   font-family:inherit;
   font-size:inherit;
-  color:inherit;
+  color:#fff;
+  background:#2e3a72;
 }
 .calendar .weekday,
 .calendar .day{
@@ -1803,7 +1804,7 @@ body.filters-active #filterBtn{
 .post-board .open-posts{background:var(--closed-card-bg);}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-board .open-posts{margin-top:12px}
-.post-board.ad-space{right:calc(400px + var(--gap) * 2);}
+.post-board.ad-space{right:calc(420px + var(--gap));}
 
 body.hide-results .post-board{
   left:0;
@@ -1850,6 +1851,7 @@ body.hide-results .post-board{
   border-top-left-radius:inherit;
   border-top-right-radius:inherit;
   background:#3E5393;
+  position:relative;
 }
 .open-posts .detail-header .share{margin-left:auto;margin-right:var(--gap);}
 .open-posts-sticky-header .open-posts .detail-header{
@@ -1892,7 +1894,7 @@ body.hide-results .post-board{
 
 .open-posts-sticky-images .open-posts .img-area{
   position:sticky;
-  top:calc(var(--header-h) + var(--safe-top) + var(--gap));
+  top:var(--open-post-header-h,0px);
   align-self:start;
 }
 
@@ -2232,7 +2234,8 @@ body.hide-results .post-board{
   align-items:flex-start;
   flex:1 1 200px;
   min-width:200px;
-  width:calc(var(--calendar-width) * var(--calendar-scale));
+  width:100%;
+  max-width:calc(var(--calendar-width) * var(--calendar-scale));
   min-height:calc(var(--calendar-height) * var(--calendar-scale));
 }
 .open-posts .location-section .options-menu{
@@ -2299,6 +2302,8 @@ body.hide-results .post-board{
   justify-content:center;
   text-align:center;
   font-weight:bold;
+  background:#2e3a72;
+  color:#fff;
 }
 .open-posts .post-calendar .weekday,
 .open-posts .post-calendar .day{
@@ -2316,7 +2321,7 @@ body.hide-results .post-board{
 }
 .open-posts .post-calendar .day.available-day{
   background:var(--session-available);
-  color:var(--button-text);
+  color:#fff;
   font-weight:bold;
 }
 .open-posts .post-calendar .day.available-day.selected{
@@ -2441,7 +2446,6 @@ body.hide-results .post-board{
   .results-col{display:none;}
   .post-board{left:0;}
   #quickBtn{display:none;}
-  .results-arrow{display:none;}
 }
 
 @media (max-width:650px){
@@ -2985,19 +2989,22 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 }
 
 #ad-panel-container{
-  position:relative;
+  position:fixed;
+  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
+  bottom:var(--footer-h);
+  right:0;
   width:420px;
+  display:none;
   pointer-events:none;
+  justify-content:center;
+  align-items:center;
   background:rgba(0,0,0,0.5);
   border-radius:0;
 }
+#ad-panel-container.show{display:flex;}
 #ad-panel-container .ad-board{
   position:relative;
-  top:0;
-  bottom:auto;
-  left:0;
-  right:0;
-  margin:10px;
+  margin:0;
 }
 
 .ad-board.show{
@@ -3718,6 +3725,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       const body = document.querySelector('.open-posts .body');
       const imgArea = body ? body.querySelector('.img-area') : null;
       const text = body ? body.querySelector('.text') : null;
+      const header = body ? body.querySelector('.detail-header') : null;
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
       root.classList.toggle('hide-map-calendar', isBelow);
       if(body && text){
@@ -3742,12 +3750,17 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           }
         }
       }
-      const stickyInput = document.getElementById('open-posts-sticky-images');
-      if(!(stickyInput && stickyInput.checked) || !body || !imgArea || !text){
-        root.classList.remove('open-posts-sticky-images');
+      if(!body || !imgArea || !text || !header){
+        root.classList.remove('open-posts-sticky-images','open-posts-sticky-header');
         return;
       }
-      root.classList.toggle('open-posts-sticky-images', !isBelow);
+      root.classList.toggle('open-posts-sticky-images', isBelow);
+      root.classList.toggle('open-posts-sticky-header', isBelow);
+      if(isBelow){
+        document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
+      } else {
+        document.documentElement.style.removeProperty('--open-post-header-h');
+      }
     }
 
     window.updateStickyImages = updateStickyImages;
@@ -4351,6 +4364,19 @@ function makePosts(){
       if(!scroller) return;
       scroller.setAttribute('tabindex','0');
       setupHorizontalWheel(scroller);
+      const container = scroller.closest('.calendar-container');
+      const adjustScale = () => {
+        if(!container) return;
+        const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--calendar-width')) || 0;
+        const available = container.parentElement ? container.parentElement.clientWidth : container.clientWidth;
+        const scale = base ? Math.min(1, available / base) : 1;
+        container.style.setProperty('--calendar-scale', scale);
+      };
+      if('ResizeObserver' in window && container){
+        const ro = new ResizeObserver(adjustScale);
+        ro.observe(container);
+      }
+      adjustScale();
       scroller.addEventListener('keydown', e=>{
         if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
           const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
@@ -4898,7 +4924,7 @@ function makePosts(){
         addPostSource();
         if(spinEnabled){
           document.body.classList.remove('hide-results');
-          startSpin();
+          startSpin(true);
         }
         updatePostPanel();
         applyFilters();
@@ -8723,6 +8749,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('wheel', e => {
+    if(e.target.closest('.post-board, .panel-content, .options-menu, .calendar-scroll')){
+      e.stopPropagation();
+    }
+  }, {passive:false});
   const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.post-board');
   if(adPanel){
@@ -8738,17 +8769,19 @@ document.addEventListener('DOMContentLoaded', () => {
   window.updateAdVisibility = function(){
     if(!adPanel || !postsPanel) return;
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const width = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
+    const totalWidth = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
     const hasPosts = !!postsPanel.querySelector('.post-card');
-    const shouldShow = document.body.classList.contains('mode-posts') && width >= 1200 && hasPosts;
+    const shouldShow = document.body.classList.contains('mode-posts') && totalWidth > 850 && hasPosts;
     const isShown = adPanel.classList.contains('show');
     if(shouldShow === isShown) return;
     if(shouldShow){
       adPanel.classList.add('show');
+      adPanel.parentElement.classList.add('show');
       postsPanel.classList.add('ad-space');
       startAdCycle();
     } else {
       adPanel.classList.remove('show');
+      adPanel.parentElement.classList.remove('show');
       postsPanel.classList.remove('ad-space');
       stopAdCycle();
     }
