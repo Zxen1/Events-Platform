@@ -5289,7 +5289,15 @@ function makePosts(){
             const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
             el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e)=>{ e.stopPropagation(); stopSpin(); if(v.state) restoreState(v.state); openPost(v.id); });
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            stopSpin();
+            const needsRestore = v.state && JSON.stringify(captureState()) !== JSON.stringify(v.state);
+            openPost(v.id);
+            if(needsRestore){
+              setTimeout(()=>restoreState(v.state),0);
+            }
+          });
           footRow.appendChild(el);
         }
       // scroll to the far right to reveal the newest
