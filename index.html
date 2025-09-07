@@ -1805,6 +1805,16 @@ body.hide-results .post-board{
   align-items:center;
   justify-content:center;
   z-index:1000;
+  padding:20px;
+}
+
+.post-modal{
+  max-width:800px;
+  max-height:90vh;
+  overflow:auto;
+  background:var(--panel-bg);
+  border-radius:8px;
+  padding:20px;
 }
 
 .copy-msg{
@@ -5428,7 +5438,10 @@ function makePosts(){
       hookDetailActions(detail, p);
       const overlay = document.createElement('div');
       overlay.className = 'post-modal-overlay';
-      overlay.appendChild(detail);
+      const modal = document.createElement('div');
+      modal.className = 'post-modal';
+      modal.appendChild(detail);
+      overlay.appendChild(modal);
       overlay.addEventListener('click', e=>{ if(e.target===overlay) closePost(); });
       document.body.appendChild(overlay);
       const shareURL = `${location.origin}${location.pathname}?post=${p.id}`;
