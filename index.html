@@ -4960,7 +4960,7 @@ function makePosts(){
         const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
         root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
         root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', ()=>{
-        const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, true);
+        const id = n.getAttribute('data-id'); close(); stopSpin();
         }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
@@ -4989,7 +4989,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, true); }));
+            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -5000,7 +5000,7 @@ function makePosts(){
                   var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
                   if(row){
                     var pid = row.getAttribute('data-id');
-                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, true); return; }
+                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); return; }
                   }
                 }, {capture:true});
               }
@@ -5015,7 +5015,6 @@ function makePosts(){
           if(touchMarker === id){
             touchMarker = null;
             if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-            openPost(id, true);
             return;
           } else {
             touchMarker = id;
@@ -5027,12 +5026,10 @@ function makePosts(){
               registerPopup(hoverPopup);
               const cardEl = hoverPopup.getElement().querySelector('.hover-card');
               if(cardEl){
-                cardEl.addEventListener('click', (e)=>{ e.stopPropagation(); touchMarker=null; openPost(id, true); });
+                cardEl.addEventListener('click', (e)=>{ e.stopPropagation(); touchMarker=null; });
               }
             }
           }
-        } else {
-          openPost(id, true);
         }
       });
 
@@ -5112,7 +5109,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
-              try{ stopSpin(); openPost(id, true); }catch(e){ console.warn('id missing', e); }
+              try{ stopSpin(); }catch(e){ console.warn('id missing', e); }
             }, {capture:true});
           }
         })();
@@ -5466,7 +5463,7 @@ function makePosts(){
       const card = ev.target.closest('.mapboxgl-popup.map-card .hover-card');
       if(card){
         const pid = card.getAttribute('data-id') || (card.closest('.multi-item.map-card') && card.closest('.multi-item.map-card').getAttribute('data-id'));
-        if(pid){ touchMarker = null; stopSpin(); openPost(pid, true); }
+        if(pid){ touchMarker = null; stopSpin(); }
       }
     });
 
