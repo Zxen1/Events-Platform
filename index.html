@@ -5270,7 +5270,7 @@ function makePosts(){
         </div>`;
       slide.appendChild(img);
       slide.appendChild(cap);
-      slide.addEventListener('click', e => { e.stopPropagation(); openPost(p.id, true); });
+      slide.addEventListener('click', e => { e.stopPropagation(); });
       img.decode().catch(() => {}).then(() => {
         panel.appendChild(slide);
         requestAnimationFrame(()=> slide.classList.add('active'));
