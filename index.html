@@ -1577,6 +1577,23 @@ body.filters-active #filterBtn{
   stroke: var(--gold);
 }
 
+.share{
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  margin-left: auto;
+}
+
+.share svg{
+  width: 18px;
+  height: 18px;
+  fill: var(--button-text);
+}
+
 #favToggle{
   white-space:nowrap;
 }
@@ -2485,7 +2502,7 @@ footer{
   flex:1;
 }
 
-.fullscreen-btn{
+  .fullscreen-btn{
     width:50px;
     height:50px;
     padding:0;
@@ -2493,8 +2510,44 @@ footer{
     flex:0 0 auto;
   }
 
+  .copy-msg{
+    position:fixed;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.8);
+    color:#fff;
+    padding:8px 12px;
+    border-radius:8px;
+    opacity:0;
+    transition:opacity .3s;
+    z-index:1001;
+  }
+  .copy-msg.show{opacity:1;}
 
-.chip-small{
+  #post-modal-container{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  }
+  #post-modal-container.hidden{display:none;}
+  #post-modal-container .post-modal{
+    width:90%;
+    height:90%;
+    overflow:auto;
+    background:var(--list-background);
+    border-radius:8px;
+  }
+
+
+  .chip-small{
   flex: 0 0 auto;
   max-width: 240px;
   display: flex;
@@ -3540,6 +3593,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     let touchMarker = null;
     let activePostId = null;
     let adPosts = [], adIndex = -1, adTimer;
+    const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -3940,8 +3994,24 @@ function uniqueTitle(seed, cityName, idx){
     return words.join(' ') + '.';
   }
 
+  function slugify(str){
+    return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  }
 
-    
+  function postUrl(p){
+    return `${BASE_URL}post/${p.slug}-${p.created}`;
+  }
+
+  function showCopyMsg(){
+    const msg = document.createElement('div');
+    msg.className='copy-msg';
+    msg.textContent='Link Copied';
+    document.body.appendChild(msg);
+    requestAnimationFrame(()=>msg.classList.add('show'));
+    setTimeout(()=>msg.classList.remove('show'),1500);
+    setTimeout(()=>msg.remove(),1800);
+  }
+
 
 function makePosts(){
   const out = [];
@@ -3952,9 +4022,13 @@ function makePosts(){
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'FS'+i;
+    const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
+    const created = new Date().toISOString().replace(/[:.]/g,'-');
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`,
+      title,
+      slug: slugify(title),
+      created,
       city: fsCity,
       lng: fsLng, lat: fsLat,
       category: cat.name,
@@ -4020,9 +4094,13 @@ function makePosts(){
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'WW'+i;
+    const title = `${id} ${uniqueTitle(i*9343+19, hub.c, i)}`;
+    const created = new Date().toISOString().replace(/[:.]/g,'-');
     out.push({
       id,
-      title: `${id} ${uniqueTitle(i*9343+19, hub.c, i)}`,
+      title,
+      slug: slugify(title),
+      created,
       city: hub.c,
       lng: hub.lng + jitter(),
       lat: hub.lat + jitter(),
@@ -5352,18 +5430,14 @@ function makePosts(){
           const el = document.createElement('div');
           el.className='footer-card';
           el.dataset.id = v.id;
-          el.title=v.title+' — '+v.city;
-            const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-            el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
+          el.title=v.title+' — '+p.city;
+          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
+          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
           if(v.id===activePostId) el.setAttribute('aria-selected','true');
           el.addEventListener('click', (e) => {
             e.stopPropagation();
             stopSpin();
-            const needsRestore = v.state && JSON.stringify(captureState()) !== JSON.stringify(v.state);
-            openPost(v.id);
-            if(needsRestore){
-              setTimeout(()=>restoreState(v.state),0);
-            }
+            openPostModal(v.id);
           });
           footRow.appendChild(el);
         }
@@ -5383,6 +5457,9 @@ function makePosts(){
             <div class="t">${p.title}</div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
+          <button class="share" aria-label="Share post">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+          </button>
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
@@ -5503,10 +5580,52 @@ function makePosts(){
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, city:p.city, state:captureState()});
+      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
       saveHistory(); renderFooter();
     }
+
+    function openPostModal(id){
+      const p = posts.find(x=>x.id===id);
+      if(!p) return;
+      activePostId = id;
+      const container = document.getElementById('post-modal-container');
+      if(!container) return;
+      const modal = container.querySelector('.post-modal');
+      modal.innerHTML='';
+      const detail = buildDetail(p);
+      modal.appendChild(detail);
+      hookDetailActions(detail, p);
+      container.classList.remove('hidden');
+      viewHistory = viewHistory.filter(x=>x.id!==id);
+      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
+      if(viewHistory.length>100) viewHistory.length=100;
+      saveHistory(); renderFooter();
+      history.replaceState(null,'',`${BASE_URL}post/${p.slug}-${p.created}`);
+    }
+
+    function closePostModal(){
+      const container = document.getElementById('post-modal-container');
+      if(!container) return;
+      container.classList.add('hidden');
+      const modal = container.querySelector('.post-modal');
+      if(modal) modal.innerHTML='';
+      history.replaceState(null,'',BASE_URL);
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const container = document.getElementById('post-modal-container');
+      if(container){
+        container.addEventListener('click', e=>{ if(e.target===container) closePostModal(); });
+      }
+      const m = location.pathname.match(/\/post\/([^\/]+)-([^\/]+)$/);
+      if(m){
+        const slug = decodeURIComponent(m[1]);
+        const created = m[2];
+        const post = posts.find(x=>x.slug===slug && x.created===created);
+        if(post){ openPostModal(post.id); }
+      }
+    });
 
     document.addEventListener('click', (ev)=>{
       const card = ev.target.closest('.mapboxgl-popup.map-card .hover-card');
@@ -5548,6 +5667,15 @@ function makePosts(){
               detailEl.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
             }
           }
+        });
+      }
+
+      const shareBtn = el.querySelector('.share');
+      if(shareBtn){
+        shareBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const url = postUrl(p);
+          navigator.clipboard.writeText(url).then(()=>{ showCopyMsg(); });
         });
       }
 
@@ -8085,6 +8213,10 @@ document.addEventListener('pointerdown', handleDocInteract);
   }
 })();
 </script>
+
+<div id="post-modal-container" class="hidden">
+  <div class="post-modal"></div>
+</div>
 
 <script>
   (function(){
