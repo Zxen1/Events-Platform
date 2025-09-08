@@ -4776,7 +4776,7 @@ function makePosts(){
       });
 
 
-      function setMode(m){
+      function setMode(m, skipFilters = false){
         mode = m;
       document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
       document.body.classList.add('mode-'+m);
@@ -4796,7 +4796,7 @@ function makePosts(){
         localStorage.setItem('spinGlobe','false');
         stopSpin();
       }
-      applyFilters();
+      if(!skipFilters) applyFilters();
       if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
@@ -5716,7 +5716,7 @@ function makePosts(){
       $$('footer .foot-row .footer-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       if(mode !== 'posts'){
-        setMode('posts');
+        setMode('posts', true);
         await nextFrame();
       }
 
