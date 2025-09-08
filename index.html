@@ -3207,7 +3207,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-      <button id="filterBtn" aria-label="Open filters panel">
+      <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -3221,14 +3221,14 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
     <div class="auth">
-      <button id="memberBtn" aria-label="Open members area">
+      <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="adminBtn" aria-label="Open admin area">
+      <button id="adminBtn" aria-pressed="false" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
@@ -6327,6 +6327,11 @@ function loadPanelState(m){
   }
   return false;
 }
+const panelButtons = {
+  filterPanel: 'filterBtn',
+  memberPanel: 'memberBtn',
+  adminPanel: 'adminBtn'
+};
 function openPanel(m){
   const content = m.querySelector('.panel-content');
   if(content){
@@ -6335,6 +6340,11 @@ function openPanel(m){
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
+  const btnId = panelButtons[m && m.id];
+  if(btnId){
+    const btn = document.getElementById(btnId);
+    btn && btn.setAttribute('aria-pressed','true');
+  }
   localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
     const rootStyles = getComputedStyle(document.documentElement);
@@ -6397,6 +6407,11 @@ function openPanel(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
 }
 function closePanel(m){
+  const btnId = panelButtons[m && m.id];
+  if(btnId){
+    const btn = document.getElementById(btnId);
+    btn && btn.setAttribute('aria-pressed','false');
+  }
   const content = m.querySelector('.panel-content');
   if(content && content.dataset.side){
     content.classList.remove('panel-visible');
@@ -6645,7 +6660,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   });
 
   const colorAreas = [
-    {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header'], btn:['.header button','.header .gear','.header a'], btnText:['.header button','.header .gear','.header a']}},
+    {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.quick-board'], text:['.quick-board'], title:['.quick-board .quick-card .t','.quick-board .quick-card .title'], btn:['.quick-board button','.quick-board .sq','.quick-board .tiny','.quick-board .btn'], btnText:['.quick-board button','.quick-board .sq','.quick-board .tiny','.quick-board .btn'], card:['.quick-board .quick-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-posts .t','.post-board .open-posts .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-posts']}},
