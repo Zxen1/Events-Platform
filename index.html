@@ -15,7 +15,7 @@
   --header-h: 75px;
   --subheader-h: 0;
   --panel-w: 440px;
-  --results-w: 520px;
+  --results-w: 440px;
   --gap: 10px;
     --media-h: 200px;
     --calendar-scale: 1;
@@ -1370,25 +1370,106 @@ button[aria-expanded="true"] .results-arrow{
   border: 1px solid var(--btn);
 }
 
-.results-col{
-  position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
-  bottom: var(--footer-h);
-  left: var(--gap);
-  width: var(--results-w);
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  transition: width .3s ease, padding .3s ease;
-  z-index: 2;
-  pointer-events: auto;
+.post-mode-background{
+  position:fixed;
+  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  bottom:var(--footer-h);
+  left:0;
+  right:0;
+  background:rgba(0,0,0,0.5);
+  z-index:1;
+  pointer-events:none;
 }
 
-body.hide-results .results-col{
-  width: 0;
-  padding: 0;
-  overflow: hidden;
-  pointer-events: none;
+.post-mode-boards{
+  position:fixed;
+  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  bottom:var(--footer-h);
+  left:0;
+  right:0;
+  display:flex;
+  justify-content:space-between;
+  z-index:2;
+  pointer-events:none;
+}
+
+.quick-list-board{
+  width:440px;
+  padding:10px;
+  overflow:auto;
+  background:rgba(0,0,0,0.5);
+  pointer-events:auto;
+}
+
+body.hide-results .quick-list-board{
+  display:none;
+}
+
+.post-board{
+  max-width:970px;
+  min-width:360px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  background:rgba(0,0,0,0.5);
+  pointer-events:auto;
+}
+
+.post-board .post-body{
+  display:flex;
+}
+
+.main-post-column{
+  flex:0 0 440px;
+  min-width:360px;
+}
+
+.tall-image-container{
+  margin-top:10px;
+  width:440px;
+}
+
+.image-thumbnail-row{
+  display:flex;
+  gap:5px;
+  padding:5px;
+}
+
+.image-thumbnail-row img{
+  width:40px;
+  height:40px;
+  object-fit:cover;
+}
+
+.selected-image img{
+  width:440px;
+  height:auto;
+  display:block;
+}
+
+.second-post-column{
+  flex:1;
+  max-width:530px;
+  min-width:270px;
+  padding:10px;
+}
+
+.ad-board{
+  width:440px;
+  padding:10px;
+  background:rgba(0,0,0,0.5);
+  pointer-events:auto;
+}
+
+.ad-board-container{
+  width:100%;
+  height:100%;
+}
+
+.ad-panel{
+  width:420px;
+  height:100%;
+  margin:0 auto;
 }
 
 
@@ -1417,14 +1498,6 @@ body.filters-active #filterBtn{
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
-.quick-board{
-  overflow: auto;
-  flex: 1;
-  min-height: 0;
-  scrollbar-gutter: stable;
-  height: calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--safe-top));
-  background: rgba(0,0,0,0.5);
-}
 
 .card,
 .quick-card,
@@ -1485,7 +1558,7 @@ body.filters-active #filterBtn{
   text-overflow: ellipsis;
 }
 
-.quick-board .info{
+.quick-list-board .info{
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
@@ -1501,7 +1574,7 @@ body.filters-active #filterBtn{
   font-family: Verdana;
 }
 
-.quick-board .info > div{
+.quick-list-board .info > div{
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1638,30 +1711,13 @@ body.mode-map .map-control-row{
 
 
 
-.post-board{
-  display:none;
-  position: fixed;
-  top: calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
-  bottom: var(--footer-h);
-  left: calc(var(--results-w) + var(--gap) * 2);
-  right: var(--gap);
-  overflow-y:scroll;
-  overflow-x:hidden;
-  scrollbar-gutter:stable;
-  padding:0;
-  color:#fff;
-  background: rgba(0,0,0,0.5);
-}
 .post-board .posts{overflow:visible;padding:12px;margin:0;}
-.post-board{color:#fff;padding:0;}
+.post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-posts{background:var(--closed-card-bg);}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-board .open-posts{margin-top:0}
 
-body.hide-results .post-board{
-  left:0;
-}
 
 .mode-posts .post-board{
   display: block;
@@ -2302,10 +2358,8 @@ body.hide-results .post-board{
 
 
 @media (max-width:650px){
-  .results-col{display:none;}
-  .post-board{left:0;}
+  .quick-list-board{display:none;}
   #quickBtn{display:none;}
-  .quick-board{display:none;}
 }
 
 @media (max-width:650px){
@@ -2355,11 +2409,6 @@ body.hide-results .post-board{
       border:none;
       border-radius:8px;
     }
-  .post-board{
-    left:0;
-    right:0;
-    top:calc(var(--header-h) + var(--safe-top));
-  }
   .open-posts .img-box{
     height:auto;
     max-height:100vw;
@@ -2784,12 +2833,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 }
 
 
-.results-col .quick-board{
-  border-radius: inherit;
-  padding: var(--gap);
-  padding-right: 0;
-  margin: 0 calc(-1 * var(--gap));
-}
 
 
 
@@ -2831,10 +2874,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 }
 
 @media (max-width:449px){
-  .post-board{
-    left:0;
-    right:0;
-  }
   .post-board .posts{
     padding:12px 12px var(--gap);
     margin:0;
@@ -2938,13 +2977,38 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <div id="map"></div>
   </section>
 
-  <section class="results-col" aria-label="Results">
-    <div class="quick-board" id="results"></div>
-  </section>
-
-  <section class="post-board" aria-label="Closed Posts">
-    <div class="posts" id="postsWide"></div>
-  </section>
+  <div class="post-mode-background"></div>
+  <div class="post-mode-boards">
+    <section class="quick-list-board" id="results" aria-label="Quick List Board"></section>
+    <section class="post-board" aria-label="Post Board">
+      <div class="post-content" id="postsWide">
+        <div class="post-header"></div>
+        <div class="post-body">
+          <div class="main-post-column">
+            <div class="tall-image-container">
+              <div class="image-thumbnail-row"></div>
+              <div class="selected-image"></div>
+            </div>
+          </div>
+          <div class="second-post-column">
+            <div class="post-details">
+              <div class="post-venue-selection-container"></div>
+              <div class="post-session-selection-container"></div>
+              <div class="post-details-title-container"></div>
+              <div class="post-details-member-container"></div>
+              <div class="post-details-info-container"></div>
+              <div class="post-details-description-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="ad-board" aria-label="Ad Board">
+      <div class="ad-board-container">
+        <div class="ad-panel"></div>
+      </div>
+    </section>
+  </div>
 
 
 
@@ -3411,7 +3475,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.quick-board, .posts').forEach(list=>{
+      document.querySelectorAll('.quick-list-board, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
@@ -4393,16 +4457,16 @@ function makePosts(){
       });
 
       const quickBtn = $('#quickBtn');
-      const resultsCol = $('.results-col');
+      const quickListBoard = $('.quick-list-board');
       document.body.classList.add('hide-results');
       quickBtn.setAttribute('aria-pressed','false');
-      resultsCol.setAttribute('aria-hidden','true');
+      quickListBoard.setAttribute('aria-hidden','true');
       window.addEventListener('resize', ()=>{
         if(window.innerWidth < 650){
           if(!document.body.classList.contains('hide-results')){
             document.body.classList.add('hide-results');
             quickBtn.setAttribute('aria-pressed','false');
-            resultsCol.setAttribute('aria-hidden','true');
+            quickListBoard.setAttribute('aria-hidden','true');
             localStorage.setItem('resultsHidden','true');
           }
         }
@@ -4418,7 +4482,7 @@ function makePosts(){
       quickBtn.addEventListener('click', ()=>{
         const hidden = document.body.classList.toggle('hide-results');
         quickBtn.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-        resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+        quickListBoard.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
         setTimeout(()=>{
@@ -4429,7 +4493,7 @@ function makePosts(){
         }, 310);
       });
 
-      const resList = $('.quick-board');
+      const resList = $('.quick-list-board');
       resList && resList.addEventListener('click', e=>{
         const cardEl = e.target.closest('.quick-card');
         if(cardEl){
@@ -4440,7 +4504,7 @@ function makePosts(){
         if(e.target === resList){
           document.body.classList.add('hide-results');
           quickBtn.setAttribute('aria-pressed','false');
-          resultsCol.setAttribute('aria-hidden','true');
+          quickListBoard.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
           setMode('map');
         }
@@ -4691,9 +4755,9 @@ function makePosts(){
       if(!resultsWasHidden){
         document.body.classList.add('hide-results');
         const quickBtnEl = document.getElementById('quickBtn');
-        const resultsCol = document.querySelector('.results-col');
+        const quickListBoard = document.querySelector('.quick-list-board');
         if(quickBtnEl) quickBtnEl.setAttribute('aria-pressed','false');
-        if(resultsCol) resultsCol.setAttribute('aria-hidden','true');
+        if(quickListBoard) quickListBoard.setAttribute('aria-hidden','true');
       }
       function step(){
         if(!spinning || !map) return;
@@ -4714,10 +4778,10 @@ function makePosts(){
       resultsWasHidden = null;
       if(wasHidden === false){
         const quickBtnEl2 = document.getElementById('quickBtn');
-        const resultsCol = document.querySelector('.results-col');
+        const quickListBoard = document.querySelector('.quick-list-board');
         document.body.classList.remove('hide-results');
       if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','true');
-      if(resultsCol) resultsCol.setAttribute('aria-hidden','false');
+      if(quickListBoard) quickListBoard.setAttribute('aria-hidden','false');
     }
     applyFilters();
   }
@@ -5356,7 +5420,7 @@ function makePosts(){
       if(resCard){
         resCard.setAttribute('aria-selected','true');
         if(fromMap){
-          const qb = resCard.closest('.quick-board');
+          const qb = resCard.closest('.quick-list-board');
           if(qb){
             const hh = document.querySelector('.header').offsetHeight;
             const desired = hh + 10;
@@ -6279,7 +6343,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
-    {key:'list', label:'List', selectors:{bg:['.quick-board'], text:['.quick-board'], title:['.quick-board .quick-card .t','.quick-board .quick-card .title'], btn:['.quick-board button','.quick-board .sq','.quick-board .tiny','.quick-board .btn'], btnText:['.quick-board button','.quick-board .sq','.quick-board .tiny','.quick-board .btn'], card:['.quick-board .quick-card']}},
+    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .quick-card .t','.quick-list-board .quick-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .quick-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-posts .t','.post-board .open-posts .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .footer-card']}},
