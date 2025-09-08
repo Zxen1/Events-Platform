@@ -422,7 +422,6 @@ input[type="checkbox"]{
 
 .header button,
 .view-toggle button,
-.auth button,
 .options-menu button{
   height:35px;
   border-radius:0;
@@ -523,18 +522,6 @@ button[aria-expanded="true"] .results-arrow{
     border-radius:8px;
   }
 
-.auth{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.auth button{
-  padding: 0 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .2s,border-color .2s,color .2s;
-}
 
 .gear{
   width: 36px;
@@ -2949,9 +2936,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <span class="results-arrow" aria-hidden="true"></span> List
       </button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
-      <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
-    </nav>
-    <div class="auth">
       <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
@@ -2965,7 +2949,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
-    </div>
+      <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
+    </nav>
   </header>
   
 
