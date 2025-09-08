@@ -6826,5 +6826,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const board = document.querySelector('.post-board');
+  const mainCol = document.querySelector('.main-post-column');
+  const secondCol = document.querySelector('.second-post-column');
+  const details = document.querySelector('.post-details');
+  const tallImg = document.querySelector('.tall-image-container');
+  if(!board || !mainCol || !secondCol || !details || !tallImg) return;
+
+  function adjust(){
+    const width = board.offsetWidth;
+    if(width < 440){
+      if(secondCol.style.display !== 'none'){
+        secondCol.style.display = 'none';
+        tallImg.insertAdjacentElement('afterend', details);
+        details.style.padding = '0';
+      }
+    } else if(width < 710){
+      if(secondCol.style.display !== 'none'){
+        secondCol.style.display = 'none';
+        tallImg.insertAdjacentElement('afterend', details);
+        details.style.padding = '0';
+      }
+    } else {
+      if(secondCol.style.display === 'none'){
+        secondCol.style.display = '';
+        secondCol.appendChild(details);
+        details.style.padding = '';
+      }
+    }
+  }
+
+  adjust();
+  window.addEventListener('resize', adjust);
+});
+</script>
 </body>
 </html>
