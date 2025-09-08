@@ -3347,30 +3347,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
                   <span id="bearingVal"></span>
                 </div>
               </div>
-              <div class="panel-field">
-                <label>Markercluster</label>
-                <div class="marker-grid">
-                  <div class="marker-options">
-                    <label for="clusterRadius">Radius</label>
-                    <input type="number" id="clusterRadius" min="10" max="100" step="1" />
-                  </div>
-                  <div class="marker-options">
-                    <label for="clusterMaxZoom">Max Zoom</label>
-                    <input type="number" id="clusterMaxZoom" min="0" max="18" step="1" />
-                  </div>
-                  <div class="marker-options">
-                    <label for="clusterIconType">Icon Type</label>
-                    <select id="clusterIconType">
-                      <option value="circle">Circle</option>
-                      <option value="svg">SVG</option>
-                    </select>
-                  </div>
-                  <div class="marker-options" id="clusterSvgRow">
-                    <label for="clusterSvg">SVG Icon</label>
-                    <textarea id="clusterSvg" rows="3" placeholder="<svg>...</svg>"></textarea>
-                  </div>
-                </div>
-              </div>
             <div class="panel-field">
               <div class="option-label">
                 <span>Spin on Load</span>
@@ -6755,16 +6731,6 @@ document.addEventListener('pointerdown', handleDocInteract);
         bearingInput.value = b;
         if(bearingVal) bearingVal.textContent = b.toFixed(0);
       }
-      const radiusInput = document.getElementById('clusterRadius');
-      if(radiusInput) radiusInput.value = clusterRadius;
-      const maxZoomInput = document.getElementById('clusterMaxZoom');
-      if(maxZoomInput) maxZoomInput.value = clusterMaxZoom;
-      const iconSelect = document.getElementById('clusterIconType');
-      if(iconSelect) iconSelect.value = clusterIconType;
-      const svgInput = document.getElementById('clusterSvg');
-      const svgRow = document.getElementById('clusterSvgRow');
-      if(svgInput) svgInput.value = clusterSvg;
-      if(svgRow) svgRow.style.display = clusterIconType === 'svg' ? 'flex' : 'none';
       const calWidthInput = document.getElementById('calendar-width');
       if(calWidthInput){
         const w = getComputedStyle(document.documentElement).getPropertyValue('--calendar-width').trim();
@@ -7852,11 +7818,6 @@ document.addEventListener('pointerdown', handleDocInteract);
           const pitchVal = document.getElementById("pitchVal");
           const bearingInput = document.getElementById("mapBearing");
           const bearingVal = document.getElementById("bearingVal");
-          const radiusInput = document.getElementById("clusterRadius");
-          const maxZoomInput = document.getElementById("clusterMaxZoom");
-          const iconSelect = document.getElementById("clusterIconType");
-          const svgInput = document.getElementById("clusterSvg");
-          const svgRow = document.getElementById("clusterSvgRow");
         if(themeSelect){
           themeSelect.value = mapStyle;
           themeSelect.addEventListener("change", ()=>{
@@ -7905,42 +7866,6 @@ document.addEventListener('pointerdown', handleDocInteract);
           bearingVal.textContent = val.toFixed(0);
         });
       }
-      if(radiusInput){
-        radiusInput.value = clusterRadius;
-        radiusInput.addEventListener("change", ()=>{
-          clusterRadius = parseInt(radiusInput.value,10) || 52;
-          localStorage.setItem("clusterRadius", String(clusterRadius));
-          addPostSource();
-        });
-      }
-      if(maxZoomInput){
-        maxZoomInput.value = clusterMaxZoom;
-        maxZoomInput.addEventListener("change", ()=>{
-          let val = parseInt(maxZoomInput.value,10);
-          if(isNaN(val)) val = 14;
-          clusterMaxZoom = Math.max(0, Math.min(18, val));
-          localStorage.setItem("clusterMaxZoom", String(clusterMaxZoom));
-          addPostSource();
-        });
-      }
-      if(iconSelect){
-        iconSelect.value = clusterIconType;
-        iconSelect.addEventListener("change", ()=>{
-          clusterIconType = iconSelect.value;
-          localStorage.setItem("clusterIconType", clusterIconType);
-          if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
-          addPostSource();
-        });
-      }
-      if(svgInput){
-        svgInput.value = clusterSvg;
-        svgInput.addEventListener("change", ()=>{
-          clusterSvg = svgInput.value;
-          localStorage.setItem("clusterSvg", clusterSvg);
-          if(clusterIconType === "svg") addPostSource();
-        });
-        if(svgRow) svgRow.style.display = clusterIconType === "svg" ? "flex" : "none";
-      }
       if(loadStartChk){
         loadStartChk.checked = sg.spinLoadStart;
         loadStartChk.addEventListener("change", ()=>{
@@ -7969,12 +7894,12 @@ document.addEventListener('pointerdown', handleDocInteract);
         });
       }
         adminForm.addEventListener("input", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterMaxZoom","clusterIconType","clusterSvg"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
         adminForm.addEventListener("change", e=>{
-          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing","clusterRadius","clusterMaxZoom","clusterIconType","clusterSvg"].includes(e.target.id)) return;
+          if(["spinSpeed","mapTheme","skyTheme","mapPitch","mapBearing"].includes(e.target.id)) return;
           if(e.target.matches('input[type="range"]') && e.target.id.endsWith('-o')) updateOpacityDisplay(e.target);
           applyAdmin(e.target);
         });
