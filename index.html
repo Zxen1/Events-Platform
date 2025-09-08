@@ -5692,7 +5692,10 @@ function makePosts(){
     function ensureGap(container, el){
   const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
   const desired = el.offsetTop - pad - 12;
-  if(container.scrollTop > desired){
+  const viewTop = container.scrollTop;
+  const viewBottom = viewTop + container.clientHeight;
+  const elBottom = el.offsetTop + el.offsetHeight + 12;
+  if(viewTop > desired || viewBottom < elBottom){
     container.scrollTo({top: Math.max(desired, 0), behavior:'smooth'});
   }
 }
