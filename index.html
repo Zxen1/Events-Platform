@@ -5520,9 +5520,7 @@ function makePosts(){
   const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
   const desired = el.offsetTop - pad - 12;
   const viewTop = container.scrollTop;
-  const viewBottom = viewTop + container.clientHeight;
-  const elBottom = el.offsetTop + el.offsetHeight + 12;
-  if(viewTop > desired || viewBottom < elBottom){
+  if(viewTop > desired){
     container.scrollTo({top: Math.max(desired, 0), behavior:'smooth'});
   }
 }
