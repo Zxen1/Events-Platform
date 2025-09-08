@@ -419,6 +419,12 @@ input[type="checkbox"]{
   transition: background .2s,border-color .2s,color .2s;
 }
 
+.view-toggle button[aria-pressed="true"]{
+  background: var(--btn-selected);
+  border-color: var(--btn-selected) !important;
+  color: var(--button-active-text) !important;
+}
+
 
 .header button,
 .view-toggle button,
