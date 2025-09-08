@@ -1427,6 +1427,8 @@ body.hide-results .quick-list-board{
 .short-image-container{
   margin-top:10px;
   width:440px;
+  display:flex;
+  flex-direction:column;
 }
 
 .post-board.two-columns .post-header{
@@ -1460,6 +1462,7 @@ body.hide-results .quick-list-board{
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
 }
 
 .short-image-container .selected-image img{
@@ -7037,31 +7040,41 @@ document.addEventListener('DOMContentLoaded', () => {
   if(!board || !mainCol || !secondCol || !details || !postImages || !postHeader || !imageModalContainer || !imageModal) return;
 
   function adjust(){
-    const boardStyles = getComputedStyle(board);
-    const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
-    const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-    if(secondWidth < 270){
-      if(secondCol.style.display !== 'none'){
-        secondCol.style.display = 'none';
-        postImages.insertAdjacentElement('afterend', details);
-        details.style.padding = '0';
+      const boardStyles = getComputedStyle(board);
+      const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+      const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
+      if(secondWidth < 270){
+        if(secondCol.style.display !== 'none'){
+          secondCol.style.display = 'none';
+          postImages.insertAdjacentElement('afterend', details);
+          details.style.padding = '0';
+        }
+        postImages.classList.add('short-image-container');
+        postImages.classList.remove('tall-image-container');
+        if(thumbRow && selectedImageBox){
+          selectedImageBox.insertAdjacentElement('afterend', thumbRow);
+        }
+      } else {
+        if(secondCol.style.display === 'none'){
+          secondCol.style.display = '';
+          secondCol.appendChild(details);
+          details.style.padding = '';
+        }
+        postImages.classList.add('tall-image-container');
+        postImages.classList.remove('short-image-container');
+        if(thumbRow && selectedImageBox){
+          postImages.appendChild(thumbRow);
+        }
       }
-    } else {
-      if(secondCol.style.display === 'none'){
-        secondCol.style.display = '';
-        secondCol.appendChild(details);
-        details.style.padding = '';
-      }
-    }
 
-    const twoCols = secondCol.style.display !== 'none';
-    board.classList.toggle('two-columns', twoCols);
-    if(twoCols){
-      document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
-    } else {
-      document.documentElement.style.removeProperty('--post-header-h');
+      const twoCols = secondCol.style.display !== 'none';
+      board.classList.toggle('two-columns', twoCols);
+      if(twoCols){
+        document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
+      } else {
+        document.documentElement.style.removeProperty('--post-header-h');
+      }
     }
-  }
 
   adjust();
   window.addEventListener('resize', adjust);
