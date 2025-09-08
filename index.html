@@ -2707,21 +2707,6 @@ footer .foot-row .footer-card,
   flex: 0 0 auto;
 }
 
-.post-card .member,
-.quick-card .member{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:12px;
-}
-.post-card .member img,
-.quick-card .member img{
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  object-fit:cover;
-}
-
 .hover-card{
   display: flex;
   gap: 10px;
@@ -4022,7 +4007,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function randomAvatar(seed){
-    return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
+    return `https://api.dicebear.com/7.x/identicon/png?seed=${encodeURIComponent(seed)}`;
   }
 
   function slugify(str){
@@ -5325,12 +5310,10 @@ function makePosts(){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
-      const member = p.member ? `<div class=\"member\"><img src=\"${memberAvatarUrl(p)}\" alt=\"${p.member.username} avatar\" width=\"24\" height=\"24\"/><span>${p.member.username}</span></div>` : '';
         el.innerHTML = `
           ${thumb}
         <div class="meta">
           <div class="title">${p.title}</div>
-          ${member}
           <div class="info">
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
@@ -5558,7 +5541,7 @@ function makePosts(){
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
         resCard.setAttribute('aria-selected','true');
-        resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+        if(fromQuick) resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
       }
       const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
