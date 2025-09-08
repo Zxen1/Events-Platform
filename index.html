@@ -4852,18 +4852,18 @@ function makePosts(){
           marker: false,
           placeholder: 'Location',
           reverseGeocode: true,
-          collapsed: false
+          collapsed: false,
+          flyTo: false
         });
-        geocoder.on('result', ()=>{
+        geocoder.on('result', (e)=>{
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
           if(mode!=='map') setMode('map');
-          if(map) map.once('moveend', () => {
-            applyFilters();
-            updatePostPanel();
-            geocoder.clear();
-          });
+          if(map){
+            map.jumpTo({ center: e.result.center, zoom: Math.max(map.getZoom(), 12) });
+          }
+          geocoder.clear();
         });
       } else {
         const script = document.createElement('script');
@@ -4938,11 +4938,10 @@ function makePosts(){
       geolocate.on('geolocate', (e)=>{
         spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
         if(mode!=='map') setMode('map');
-        map.flyTo({
+        map.jumpTo({
           center: [e.coords.longitude, e.coords.latitude],
           zoom: Math.max(map.getZoom(), 12),
-          pitch: 45,
-          essential: true
+          pitch: 45
         });
       });
       const nav = new mapboxgl.NavigationControl({showZoom: false});
@@ -5721,7 +5720,7 @@ function makePosts(){
         await nextFrame();
       }
 
-      if(!postsWideEl.children.length){ renderLists(filtered); await nextFrame(); }
+      if(!postsWideEl.children.length){ postsWideEl.appendChild(card(p, true)); }
 
       (function(){
         const ex = postsWideEl.querySelector('.open-posts');
@@ -5733,8 +5732,7 @@ function makePosts(){
       })();
 
       let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      if(!target){ renderLists(filtered); await nextFrame(); target = postsWideEl.querySelector(`[data-id="${id}"]`); }
-      if(!target){ return; }
+      if(!target){ target = card(p, true); postsWideEl.appendChild(target); }
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
         resCard.setAttribute('aria-selected','true');
