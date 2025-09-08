@@ -1496,6 +1496,8 @@ body.hide-results .quick-list-board{
   pointer-events:auto;
 }
 
+body.hide-ads .ad-board{display:none;}
+
 .ad-board-container{
   width:100%;
   height:100%;
@@ -1533,6 +1535,7 @@ body.hide-results .quick-list-board{
 
 #filterBtn,
 #quickBtn,
+#adBtn,
 #postBtn,
 #memberBtn,
 #adminBtn{
@@ -3031,6 +3034,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">
         <span class="results-arrow" aria-hidden="true"></span> List
       </button>
+      <button id="adBtn" aria-pressed="true" aria-label="Toggle ad board">Ads</button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
       <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -3345,6 +3349,15 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         </div>
         <div id="tab-settings" class="tab-panel">
           <div class="panel-field">
+            <div class="option-label">
+              <span>Board Priority</span>
+            </div>
+            <div class="option-group">
+              <label class="option-label"><span>Prioritize Quick-List Board</span><input type="radio" name="boardPriority" value="quick"></label>
+              <label class="option-label"><span>Prioritize Ad Board</span><input type="radio" name="boardPriority" value="ad"></label>
+            </div>
+          </div>
+          <div class="panel-field">
             <label for="catList">Categories</label>
             <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
           </div>
@@ -3444,7 +3457,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '';
+          clusterSvg = localStorage.getItem('clusterSvg') || '',
+          boardPriority = localStorage.getItem('boardPriority') || 'quick';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
         logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
@@ -4537,9 +4551,15 @@ function makePosts(){
 
       const quickBtn = $('#quickBtn');
       const quickListBoard = $('.quick-list-board');
+      const adBtn = $('#adBtn');
+      const adBoard = $('.ad-board');
+      const boardsContainer = $('.post-mode-boards');
+      const postBoard = $('.post-board');
+
       document.body.classList.add('hide-results');
       quickBtn.setAttribute('aria-pressed','false');
       quickListBoard.setAttribute('aria-hidden','true');
+      adBtn.setAttribute('aria-pressed','true');
       window.addEventListener('resize', ()=>{
         if(window.innerWidth < 650){
           if(!document.body.classList.contains('hide-results')){
@@ -4550,6 +4570,42 @@ function makePosts(){
           }
         }
       });
+      function adjustBoards(){
+        const small = window.innerWidth < 1200;
+        const quickHidden = document.body.classList.contains('hide-results');
+        const adsHidden = document.body.classList.contains('hide-ads');
+        if(small){
+          if(boardPriority === 'quick'){
+            adBoard.style.display = 'none';
+            quickListBoard.style.display = quickHidden ? 'none' : '';
+            boardsContainer.style.justifyContent = 'flex-start';
+            postBoard.style.marginLeft = quickHidden ? '' : '10px';
+            postBoard.style.marginRight = '';
+            quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
+            adBtn.setAttribute('aria-pressed','false');
+          } else {
+            quickListBoard.style.display = 'none';
+            adBoard.style.display = adsHidden ? 'none' : '';
+            boardsContainer.style.justifyContent = 'flex-end';
+            postBoard.style.marginLeft = '';
+            postBoard.style.marginRight = adsHidden ? '' : '10px';
+            quickBtn.setAttribute('aria-pressed','false');
+            adBtn.setAttribute('aria-pressed', adsHidden ? 'false' : 'true');
+          }
+        } else {
+          quickListBoard.style.display = quickHidden ? 'none' : '';
+          adBoard.style.display = adsHidden ? 'none' : '';
+          boardsContainer.style.justifyContent = 'space-between';
+          postBoard.style.marginLeft = '';
+          postBoard.style.marginRight = '';
+          quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
+          adBtn.setAttribute('aria-pressed', adsHidden ? 'false' : 'true');
+        }
+        quickListBoard.setAttribute('aria-hidden', quickListBoard.style.display==='none' ? 'true' : 'false');
+        adBoard.setAttribute('aria-hidden', adBoard.style.display==='none' ? 'true' : 'false');
+      }
+      adjustBoards();
+      window.addEventListener('resize', adjustBoards);
       window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
@@ -4560,9 +4616,8 @@ function makePosts(){
         }, 0);
       quickBtn.addEventListener('click', ()=>{
         const hidden = document.body.classList.toggle('hide-results');
-        quickBtn.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-        quickListBoard.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
+        adjustBoards();
         window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
@@ -4571,6 +4626,20 @@ function makePosts(){
           }
         }, 310);
       });
+      adBtn && adBtn.addEventListener('click', ()=>{
+        document.body.classList.toggle('hide-ads');
+        adjustBoards();
+      });
+
+      document.querySelectorAll('input[name="boardPriority"]').forEach(rb=>{
+        rb.addEventListener('change', ()=>{
+          boardPriority = rb.value;
+          localStorage.setItem('boardPriority', boardPriority);
+          adjustBoards();
+        });
+      });
+      const savedRb = document.querySelector(`input[name="boardPriority"][value="${boardPriority}"]`);
+      if(savedRb) savedRb.checked = true;
 
       const resList = $('.quick-list-board');
       resList && resList.addEventListener('click', e=>{
@@ -4585,6 +4654,7 @@ function makePosts(){
           quickBtn.setAttribute('aria-pressed','false');
           quickListBoard.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
+          adjustBoards();
           setMode('map');
         }
       });
