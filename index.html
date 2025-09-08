@@ -5526,7 +5526,7 @@ function makePosts(){
         return wrap;
     }
 
-    async function openPost(id, fromPosts=false){
+    async function openPost(id, fromQuick=false){
       touchMarker = null;
       if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
@@ -5580,7 +5580,12 @@ function makePosts(){
       }
 
       if(container){
-        ensureGap(container, detail);
+        if(fromQuick){
+          const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
+          container.scrollTo({top: detail.offsetTop - pad - 12, behavior:'smooth'});
+        } else {
+          ensureGap(container, detail);
+        }
       } else if(window.innerWidth > 450) {
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
