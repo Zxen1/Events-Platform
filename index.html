@@ -3066,7 +3066,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="post-header"></div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="short-image-container">
+            <div class="post-images short-image-container">
               <div class="selected-image"></div>
               <div class="image-thumbnail-row"></div>
             </div>
@@ -7027,26 +7027,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainCol = document.querySelector('.main-post-column');
   const secondCol = document.querySelector('.second-post-column');
   const details = document.querySelector('.post-details');
-  const shortImg = document.querySelector('.short-image-container');
+  const postImages = document.querySelector('.post-images');
   const postHeader = document.querySelector('.post-header');
   const thumbRow = document.querySelector('.image-thumbnail-row');
-  const selectedImageBox = shortImg ? shortImg.querySelector('.selected-image') : null;
+  const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
-  if(!board || !mainCol || !secondCol || !details || !shortImg || !postHeader || !imageModalContainer || !imageModal) return;
+  if(!board || !mainCol || !secondCol || !details || !postImages || !postHeader || !imageModalContainer || !imageModal) return;
 
   function adjust(){
-    const width = board.offsetWidth;
-    if(width < 440){
+    const boardStyles = getComputedStyle(board);
+    const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+    const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
+    if(secondWidth < 270){
       if(secondCol.style.display !== 'none'){
         secondCol.style.display = 'none';
-        shortImg.insertAdjacentElement('afterend', details);
-        details.style.padding = '0';
-      }
-    } else if(width < 710){
-      if(secondCol.style.display !== 'none'){
-        secondCol.style.display = 'none';
-        shortImg.insertAdjacentElement('afterend', details);
+        postImages.insertAdjacentElement('afterend', details);
         details.style.padding = '0';
       }
     } else {
