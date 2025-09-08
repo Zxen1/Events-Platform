@@ -6263,9 +6263,9 @@ function makePosts(){
     }
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
-    function applyFilters(){
+    function applyFilters(render = true){
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
-      renderLists(filtered);
+      if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
       const today = new Date(); today.setHours(0,0,0,0);
       const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
@@ -6274,7 +6274,7 @@ function makePosts(){
       updateFilterBtnColor();
     }
 
-    applyFilters();
+    // applyFilters();
     setMode('map');
   })();
   
