@@ -5406,14 +5406,7 @@ function makePosts(){
         header.style.scrollMarginTop = h + 'px';
       }
 
-      if(container){
-        if(fromQuick){
-          const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-          container.scrollTo({top: detail.offsetTop - pad - 12, behavior:'smooth'});
-        } else {
-          ensureGap(container, detail);
-        }
-      } else if(window.innerWidth > 450) {
+      if(!container && window.innerWidth > 450){
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
 
