@@ -82,7 +82,6 @@
         --session-available: #333333;
         --session-selected: #2e3a72;
         --today: #ff0000;
-        --ad-panel-bg: rgba(0,0,0,0.5);
         --image-panel-bg: rgba(0,0,0,0.7);
         --filter-active-color: #ff0000;
       --keyword-bg: #FFFFFF;
@@ -1800,7 +1799,6 @@ body.filters-active #filterBtn{
 .post-board .open-posts{background:var(--closed-card-bg);}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 .post-board .open-posts{margin-top:12px}
-.post-board.ad-space{right:calc(420px + var(--gap));}
 
 body.hide-results .post-board{
   left:0;
@@ -2999,97 +2997,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 }
 
 
-.ad-board{
-  background:var(--ad-panel-bg);
-  z-index:5;
-  border-radius:8px;
-  overflow:hidden;
-  pointer-events:none;
-  padding:8px;
-  height:100%;
-  transform:translateX(calc(100% + var(--gap)));
-  transition:transform .3s ease;
-  cursor:pointer;
-}
-
-#ad-panel-container{
-  position:fixed;
-  top:calc(var(--header-h) + var(--subheader-h));
-  bottom:var(--footer-h);
-  right:0;
-  width:420px;
-  display:none;
-  pointer-events:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.5);
-  border-radius:0;
-}
-#ad-panel-container.show{display:flex;}
-#ad-panel-container .ad-board{
-  position:relative;
-  margin:0;
-  height:100%;
-}
-
-.ad-board.show{
-  pointer-events:auto;
-  transform:translateX(0);
-}
-
-.ad-board .ad-slide{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  transition:opacity 1.5s ease-in-out;
-  cursor:pointer;
-  border-radius:8px;
-  overflow:hidden;
-}
-
-.ad-board .ad-slide.active{opacity:1;}
-
-.ad-board .ad-slide img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  animation:pan 20s linear forwards;
-}
-
-.ad-board .caption{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:12px;
-  background:linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
-  color:#fff;
-  text-shadow:0 1px 2px rgba(0,0,0,0.8);
-  font-size:14px;
-  font-family: Verdana;
-  display:flex;
-  flex-direction:column;
-  text-align:left;
-}
-
-.ad-board .caption .title{
-  font-family: Verdana;
-  font-weight:bold;
-  font-size:16px;
-  margin:0 0 4px;
-}
-
-.ad-board .caption .info{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  align-items:flex-start;
-}
-
-@keyframes pan{
-  from{transform:scale(1) translateX(0);}
-  to{transform:scale(1.1) translateX(-5%);}
-}
 
 .mode-posts #postsWide{
   border: none;
@@ -3208,9 +3115,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <span id="resultCount" aria-live="polite"><strong>0</strong> Results</span>
+        <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
-      <button id="quickBtn" aria-pressed="true" aria-label="Toggle results list">
+      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">
         <span class="results-arrow" aria-hidden="true"></span> List
       </button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
@@ -3246,9 +3153,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <div class="posts" id="postsWide"></div>
   </section>
 
-  <div id="ad-panel-container">
-    <section id="adPanel" class="ad-board" aria-label="Advertisement"></section>
-  </div>
 
 
     <footer>
@@ -3720,7 +3624,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
-    let adPosts = [], adIndex = -1, adTimer;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -4277,7 +4180,18 @@ function makePosts(){
 }
 
 
-    posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+    let postsLoaded = false;
+    function loadPosts(){
+      if(postsLoaded) return;
+      posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      postsLoaded = true;
+      addPostSource();
+      applyFilters();
+    }
+
+    function checkLoadPosts(){
+      if(map && map.getZoom() >= 5) loadPosts();
+    }
 
     const resultsEl = $('#results');
     const postsWideEl = $('#postsWide');
@@ -4696,16 +4610,9 @@ function makePosts(){
 
       const quickBtn = $('#quickBtn');
       const resultsCol = $('.results-col');
-      const isSmall = window.innerWidth < 650;
-      const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') ?? 'true');
-      if(storedHidden || isSmall){
-        document.body.classList.add('hide-results');
-        quickBtn.setAttribute('aria-pressed','false');
-        resultsCol.setAttribute('aria-hidden','true');
-      } else {
-        quickBtn.setAttribute('aria-pressed','true');
-        resultsCol.setAttribute('aria-hidden','false');
-      }
+      document.body.classList.add('hide-results');
+      quickBtn.setAttribute('aria-pressed','false');
+      resultsCol.setAttribute('aria-hidden','true');
       window.addEventListener('resize', ()=>{
         if(window.innerWidth < 650){
           if(!document.body.classList.contains('hide-results')){
@@ -4730,13 +4637,11 @@ function makePosts(){
         resultsCol.setAttribute('aria-hidden', hidden ? 'true' : 'false');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
         window.adjustListHeight();
-        if(window.updateAdVisibility) updateAdVisibility();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
           }
-          if(window.updateAdVisibility) updateAdVisibility();
         }, 310);
       });
 
@@ -4753,7 +4658,6 @@ function makePosts(){
           quickBtn.setAttribute('aria-pressed','false');
           resultsCol.setAttribute('aria-hidden','true');
           localStorage.setItem('resultsHidden','true');
-          if(window.updateAdVisibility) updateAdVisibility();
           setMode('map');
         }
       });
@@ -4793,7 +4697,6 @@ function makePosts(){
         stopSpin();
       }
       if(!skipFilters) applyFilters();
-      if(window.updateAdVisibility) updateAdVisibility();
     }
     window.setMode = setMode;
     $('#postBtn').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
@@ -4928,6 +4831,7 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
+      map.on('zoomend', checkLoadPosts);
       addGeocoder();
       addMemberGeocoder();
       const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
@@ -4965,13 +4869,12 @@ function makePosts(){
         });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
-        addPostSource();
         if(spinEnabled){
-          document.body.classList.remove('hide-results');
           startSpin(true);
         }
         updatePostPanel();
         applyFilters();
+        checkLoadPosts();
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -5356,7 +5259,7 @@ function makePosts(){
 
     }
     function renderLists(list){
-      if(spinning) return;
+      if(spinning || !postsLoaded) return;
       const sort = currentSort;
       const arr = list.slice();
       if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -5389,9 +5292,14 @@ function makePosts(){
       }
       updateResultCount(spinning ? arr.length : toRender.length);
       prioritizeVisibleImages();
-      updateAds(arr);
     }
-    function updateResultCount(n){ $('#resultCount').innerHTML = `<strong>${n}</strong> Results`; }
+    function updateResultCount(n){
+      const el = $('#resultCount');
+      if(el){
+        el.innerHTML = `<strong>${n}</strong> Results`;
+        el.style.display = '';
+      }
+    }
     function formatDates(d){
       if(!d || !d.length) return '';
       const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
@@ -5434,64 +5342,6 @@ function makePosts(){
         }
       });
     }
-
-      function updateAds(list){
-        const panel = document.getElementById('adPanel');
-        stopAdCycle();
-        panel.innerHTML = '';
-        if(window.innerWidth < 1200 || !list.length){
-          adPosts = [];
-          if(typeof updateAdVisibility === 'function') updateAdVisibility();
-          return;
-        }
-        adPosts = list.slice();
-        adIndex = -1;
-        startAdCycle();
-      }
-    function startAdCycle(){
-      const panel = document.getElementById('adPanel');
-      if(!panel.classList.contains('show') || !adPosts.length || adTimer) return;
-      showNextAd();
-      adTimer = setInterval(showNextAd,20000);
-    }
-    function stopAdCycle(){ clearInterval(adTimer); adTimer = null; }
-    function showNextAd(){
-      const panel = document.getElementById('adPanel');
-      if(!panel.classList.contains('show') || !adPosts.length) return;
-      adIndex = (adIndex + 1) % adPosts.length;
-      const p = adPosts[adIndex];
-      const slide = document.createElement('div');
-      slide.className = 'ad-slide';
-      const img = new Image();
-      img.src = imgHero(p);
-      img.alt = '';
-      img.loading = 'eager';
-      const cap = document.createElement('div');
-      cap.className = 'caption';
-      cap.innerHTML = `
-        <div class="title">${p.title}</div>
-        <div class="info">
-          <div>${p.category} &gt; ${p.subcategory}</div>
-          <div>📍 ${p.city}</div>
-          <div>📅 ${formatDates(p.dates)}</div>
-        </div>`;
-      slide.appendChild(img);
-      slide.appendChild(cap);
-      slide.addEventListener('click', e => { e.stopPropagation(); openPost(p.id); });
-      img.decode().catch(() => {}).then(() => {
-        panel.appendChild(slide);
-        requestAnimationFrame(()=> slide.classList.add('active'));
-        const slides = panel.querySelectorAll('.ad-slide');
-        if(slides.length > 1){
-          const old = slides[0];
-          old.classList.remove('active');
-          setTimeout(()=> old.remove(),1500);
-        }
-      });
-    }
-
-    window.startAdCycle = startAdCycle;
-    window.stopAdCycle = stopAdCycle;
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -6260,6 +6110,7 @@ function makePosts(){
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
     function applyFilters(render = true){
+      if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
@@ -6668,7 +6519,6 @@ document.addEventListener('pointerdown', handleDocInteract);
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
   {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
-  {key:'adPanel', label:'Ad Panel', selectors:{bg:['#adPanel']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
 
@@ -8826,44 +8676,12 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
     }
   }, {passive:false});
-  const adPanel = document.getElementById('adPanel');
   const postsPanel = document.querySelector('.post-board');
-  if(adPanel){
-    adPanel.addEventListener('click', e => {
-      if(e.target === adPanel) setMode('map');
-    });
-  }
   if(postsPanel){
     postsPanel.addEventListener('click', e => {
       if(e.target === postsPanel) setMode('map');
     });
   }
-  window.updateAdVisibility = function(){
-    if(!adPanel || !postsPanel) return;
-    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 0;
-    const totalWidth = postsPanel.getBoundingClientRect().width + (adPanel.classList.contains('show') ? adPanel.getBoundingClientRect().width + gap : 0);
-    const hasPosts = !!postsPanel.querySelector('.post-card');
-    const shouldShow = document.body.classList.contains('mode-posts') && totalWidth > 850 && hasPosts;
-    const isShown = adPanel.classList.contains('show');
-    if(shouldShow === isShown) return;
-    if(shouldShow){
-      adPanel.classList.add('show');
-      adPanel.parentElement.classList.add('show');
-      postsPanel.classList.add('ad-space');
-      startAdCycle();
-    } else {
-      adPanel.classList.remove('show');
-      adPanel.parentElement.classList.remove('show');
-      postsPanel.classList.remove('ad-space');
-      stopAdCycle();
-    }
-  };
-  window.addEventListener('resize', updateAdVisibility);
-  if(postsPanel && 'ResizeObserver' in window){
-    const ro = new ResizeObserver(() => updateAdVisibility());
-    ro.observe(postsPanel);
-  }
-  updateAdVisibility();
 });
 </script>
 </body>
