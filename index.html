@@ -1429,6 +1429,17 @@ body.hide-results .quick-list-board{
   width:440px;
 }
 
+.post-board.two-columns .post-header{
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+
+.post-board.two-columns .tall-image-container{
+  position:sticky;
+  top:calc(var(--post-header-h,0px) + var(--gap));
+}
+
 .image-thumbnail-row{
   display:flex;
   gap:5px;
@@ -6833,7 +6844,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const secondCol = document.querySelector('.second-post-column');
   const details = document.querySelector('.post-details');
   const tallImg = document.querySelector('.tall-image-container');
-  if(!board || !mainCol || !secondCol || !details || !tallImg) return;
+  const postHeader = document.querySelector('.post-header');
+  if(!board || !mainCol || !secondCol || !details || !tallImg || !postHeader) return;
 
   function adjust(){
     const width = board.offsetWidth;
@@ -6855,6 +6867,14 @@ document.addEventListener('DOMContentLoaded', () => {
         secondCol.appendChild(details);
         details.style.padding = '';
       }
+    }
+
+    const twoCols = secondCol.style.display !== 'none';
+    board.classList.toggle('two-columns', twoCols);
+    if(twoCols){
+      document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
+    } else {
+      document.documentElement.style.removeProperty('--post-header-h');
     }
   }
 
