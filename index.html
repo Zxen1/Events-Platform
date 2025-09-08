@@ -3849,7 +3849,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function randomAvatar(seed){
-    return `https://api.dicebear.com/7.x/identicon/png?seed=${encodeURIComponent(seed)}`;
+    return `https://picsum.photos/seed/${encodeURIComponent(seed)}-a/100/100`;
   }
 
   function slugify(str){
