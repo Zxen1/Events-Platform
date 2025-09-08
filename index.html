@@ -1690,7 +1690,7 @@ body.mode-map .map-control-row{
 .post-board .post-card,
 .post-board .open-posts{background:var(--closed-card-bg);}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.post-board .open-posts{margin-top:12px}
+.post-board .open-posts{margin-top:0}
 
 body.hide-results .post-board{
   left:0;
@@ -2596,6 +2596,10 @@ footer .foot-row .footer-card{
 .quick-card .fav,
 .post-card .fav{
   flex: 0 0 auto;
+}
+
+.quick-card[aria-selected="true"]{
+  background:#2e3a72;
 }
 
 .hover-card{
@@ -4876,7 +4880,7 @@ function makePosts(){
         const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
         root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
         root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', ()=>{
-          const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id);
+          const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true);
         }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
@@ -4905,7 +4909,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id); }));
+            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -4916,7 +4920,7 @@ function makePosts(){
                   var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
                   if(row){
                     var pid = row.getAttribute('data-id');
-                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid); return; }
+                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
                   }
                 }, {capture:true});
               }
@@ -4931,7 +4935,7 @@ function makePosts(){
           if(touchMarker === id){
             touchMarker = null;
             if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-            openPost(id);
+            openPost(id, false, true);
             return;
           } else {
             touchMarker = id;
@@ -4943,12 +4947,12 @@ function makePosts(){
               registerPopup(hoverPopup);
               const cardEl = hoverPopup.getElement().querySelector('.hover-card');
               if(cardEl){
-                cardEl.addEventListener('click', (e)=>{ e.stopPropagation(); touchMarker=null; openPost(id); });
+                cardEl.addEventListener('click', (e)=>{ e.stopPropagation(); touchMarker=null; openPost(id, false, true); });
               }
             }
           }
         } else {
-          openPost(id);
+          openPost(id, false, true);
         }
       });
 
@@ -4995,7 +4999,7 @@ function makePosts(){
               var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
               if(row){
                 var pid = row.getAttribute('data-id');
-                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid); return; }
+                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
               }
             }, {capture:true});
           }
@@ -5028,7 +5032,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
-              try{ stopSpin(); openPost(id); }catch(e){ console.warn('openPost id missing', e); }
+              try{ stopSpin(); openPost(id, false, true); }catch(e){ console.warn('openPost id missing', e); }
             }, {capture:true});
           }
         })();
@@ -5353,7 +5357,7 @@ function makePosts(){
         return wrap;
     }
 
-    async function openPost(id, fromQuick=false){
+    async function openPost(id, fromQuick=false, fromMap=false){
       touchMarker = null;
       if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
       spinEnabled = false;
@@ -5385,7 +5389,17 @@ function makePosts(){
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
         resCard.setAttribute('aria-selected','true');
-        if(fromQuick) resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+        if(fromMap){
+          const qb = resCard.closest('.quick-board');
+          if(qb){
+            const hh = document.querySelector('.header').offsetHeight;
+            const desired = hh + 10;
+            const r = resCard.getBoundingClientRect();
+            qb.scrollBy({top: r.top - desired, behavior:'smooth'});
+          }
+        } else if(fromQuick){
+          resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
+        }
       }
       const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
@@ -5408,6 +5422,12 @@ function makePosts(){
 
       if(!container && window.innerWidth > 450){
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
+      }
+      if(fromQuick && container && header){
+        const hh = document.querySelector('.header').offsetHeight;
+        const desired = hh + 10;
+        const r = header.getBoundingClientRect();
+        container.scrollBy({top: r.top - desired, behavior:'smooth'});
       }
 
 
@@ -5505,7 +5525,7 @@ function makePosts(){
       const card = ev.target.closest('.mapboxgl-popup.map-card .hover-card');
       if(card){
         const pid = card.getAttribute('data-id') || (card.closest('.multi-item.map-card') && card.closest('.multi-item.map-card').getAttribute('data-id'));
-        if(pid){ touchMarker = null; stopSpin(); openPost(pid); }
+        if(pid){ touchMarker = null; stopSpin(); openPost(pid, false, true); }
       }
     });
 
