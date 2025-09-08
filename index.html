@@ -160,7 +160,7 @@ html,body{
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    user-select: none;
+    user-select: text;
     touch-action: manipulation;
   }
 
@@ -1865,7 +1865,7 @@ body.hide-results .post-board{
   padding:14px;
   display:flex;
   flex-wrap:wrap;
-  gap:var(--gap);
+  gap:10px;
   align-items:flex-start;
   align-content:flex-start;
 }
@@ -2073,6 +2073,7 @@ body.hide-results .post-board{
   flex:1 1 200px;
   min-width:200px;
   width:auto;
+  height:200px;
 }
 .open-posts .map-container .venue-dropdown{
   width:100%;
@@ -2080,6 +2081,7 @@ body.hide-results .post-board{
 
 .open-posts .post-map{
   flex:1 1 auto;
+  width:100%;
   height:100%;
   border:1px solid var(--border);
   border-radius:8px;
@@ -2236,7 +2238,7 @@ body.hide-results .post-board{
   min-width:200px;
   width:100%;
   max-width:calc(var(--calendar-width) * var(--calendar-scale));
-  min-height:calc(var(--calendar-height) * var(--calendar-scale));
+  height:200px;
 }
 .open-posts .location-section .options-menu{
   width:100%;
@@ -2313,19 +2315,23 @@ body.hide-results .post-board{
   align-items:center;
   justify-content:center;
 }
+.open-posts .post-calendar .weekday{
+  font-size:10px;
+  color:#555555;
+}
 .open-posts .post-calendar .day{
   cursor:pointer;
-  font-size:14px;
+  font-size:12px;
   font-family: Verdana;
   border-radius:8px;
 }
 .open-posts .post-calendar .day.available-day{
-  background:var(--session-available);
+  background:#555555;
   color:#fff;
   font-weight:bold;
 }
 .open-posts .post-calendar .day.available-day.selected{
-  background:var(--session-selected);
+  background:#555555;
   color:#fff;
 }
 .open-posts .post-calendar .day.today{color:var(--today) !important;}
@@ -2433,7 +2439,7 @@ body.hide-results .post-board{
   -webkit-line-clamp:4;
   -webkit-box-orient:vertical;
   overflow:hidden;
-  cursor:pointer;
+  cursor:default;
 }
 .desc.expanded{
   display:block;
@@ -2442,10 +2448,11 @@ body.hide-results .post-board{
 }
 
 
-@media (max-width:1000px){
+@media (max-width:650px){
   .results-col{display:none;}
   .post-board{left:0;}
   #quickBtn{display:none;}
+  .quick-board{display:none;}
 }
 
 @media (max-width:650px){
@@ -2695,10 +2702,30 @@ footer .foot-row .footer-card,
   gap: 6px;
 }
 
+.post-card .meta, .post-card .meta *,
+.quick-card .meta, .quick-card .meta *{
+  cursor: default;
+}
+
 .card .fav,
 .quick-card .fav,
 .post-card .fav{
   flex: 0 0 auto;
+}
+
+.post-card .member,
+.quick-card .member{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+}
+.post-card .member img,
+.quick-card .member img{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  object-fit:cover;
 }
 
 .hover-card{
@@ -2983,6 +3010,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   overflow:hidden;
   pointer-events:none;
   padding:8px;
+  height:100%;
   transform:translateX(calc(100% + var(--gap)));
   transition:transform .3s ease;
   cursor:pointer;
@@ -2990,7 +3018,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
 #ad-panel-container{
   position:fixed;
-  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top) + var(--gap) - 12px);
+  top:calc(var(--header-h) + var(--subheader-h));
   bottom:var(--footer-h);
   right:0;
   width:420px;
@@ -3005,6 +3033,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 #ad-panel-container .ad-board{
   position:relative;
   margin:0;
+  height:100%;
 }
 
 .ad-board.show{
@@ -4077,7 +4106,7 @@ function uniqueTitle(seed, cityName, idx){
     const jitter = ()=> (rnd()-0.5) * 0.02;
     const lng = baseLng + jitter();
     const lat = baseLat + jitter();
-    return { venue, address, lng, lat, dates: randomSchedule() };
+    return { venue, address, lng, lat, dates: randomSchedule(), price: randomPriceRange() };
   }
 
   function randomLocations(city, baseLng=0, baseLat=0){
@@ -4101,6 +4130,24 @@ function uniqueTitle(seed, cityName, idx){
     for(let i=0;i<count;i++){ words.push(lorem[i%lorem.length]); }
     words[0] = words[0][0].toUpperCase() + words[0].slice(1);
     return words.join(' ') + '.';
+  }
+
+  function randomPriceRange(){
+    const low = 10 + Math.floor(rnd()*90);
+    const high = low + 10 + Math.floor(rnd()*90);
+    return `$${low} - $${high}`;
+  }
+
+  function randomUsername(seed){
+    const names = ['Aria','Blake','Casey','Drew','Evan','Finn','Gray','Harper','Indie','Jules'];
+    let h = 0; for(let i=0;i<seed.length;i++){ h = (h<<5)-h+seed.charCodeAt(i); }
+    const name = names[Math.abs(h)%names.length];
+    const num = Math.abs(Math.floor(h/7))%1000;
+    return name + num;
+  }
+
+  function randomAvatar(seed){
+    return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}`;
   }
 
   function slugify(str){
@@ -4153,6 +4200,7 @@ function makePosts(){
       desc: randomText(),
       images: randomImages(id),
       locations: randomLocations(fsCity, fsLng, fsLat),
+      member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
 
@@ -4226,6 +4274,7 @@ function makePosts(){
       desc: randomText(),
       images: randomImages(id),
       locations: randomLocations(hub.c, hub.lng, hub.lat),
+      member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
   return out;
@@ -4651,8 +4700,8 @@ function makePosts(){
 
       const quickBtn = $('#quickBtn');
       const resultsCol = $('.results-col');
-      const isSmall = window.innerWidth < 1000;
-      const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') || 'false');
+      const isSmall = window.innerWidth < 650;
+      const storedHidden = JSON.parse(localStorage.getItem('resultsHidden') ?? 'true');
       if(storedHidden || isSmall){
         document.body.classList.add('hide-results');
         quickBtn.setAttribute('aria-pressed','false');
@@ -4662,7 +4711,7 @@ function makePosts(){
         resultsCol.setAttribute('aria-hidden','false');
       }
       window.addEventListener('resize', ()=>{
-        if(window.innerWidth < 1000){
+        if(window.innerWidth < 650){
           if(!document.body.classList.contains('hide-results')){
             document.body.classList.add('hide-results');
             quickBtn.setAttribute('aria-pressed','false');
@@ -5455,10 +5504,12 @@ function makePosts(){
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const member = p.member ? `<div class=\"member\"><img src=\"${memberAvatarUrl(p)}\" alt=\"${p.member.username} avatar\" width=\"24\" height=\"24\"/><span>${p.member.username}</span></div>` : '';
         el.innerHTML = `
           ${thumb}
         <div class="meta">
           <div class="title">${p.title}</div>
+          ${member}
           <div class="info">
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
@@ -5586,6 +5637,9 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'open-posts';
       wrap.dataset.id = p.id;
+      const loc0 = p.locations[0];
+      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
+      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       wrap.innerHTML = `
         <div class="detail-header">
           <div class="title-block">
@@ -5622,7 +5676,7 @@ function makePosts(){
             <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
             <div id="venue-info-${p.id}" class="venue-info"></div>
             <div id="session-info-${p.id}" class="session-info">
-              <div class="placeholder">💲 Price range | 📅 Date range</div>
+              <div>${defaultInfo}</div>
             </div>
             <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
           </div>
@@ -5706,9 +5760,6 @@ function makePosts(){
       }
 
       if(container){
-        const headerHeight = (stickyHeaderActive && header) ? header.offsetHeight : 0;
-        const top = detail.offsetTop - parseInt(getComputedStyle(container).paddingTop,10) - 12 - headerHeight;
-        container.scrollTo({top: Math.max(top, 0), behavior:'smooth'});
         ensureGap(container, detail);
       } else if(window.innerWidth > 450) {
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
@@ -5993,9 +6044,17 @@ function makePosts(){
           const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
         };
+        let defaultInfoHTML = '';
         if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         sessionHasMultiple = loc.dates.length > 1;
+        if(sessionInfo){
+          const firstDate = loc.dates[0];
+          const lastDate = loc.dates[loc.dates.length-1];
+          const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+          defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}<span style="display:inline-block;margin-left:10px;">(Select Session)</span></div>`;
+          sessionInfo.innerHTML = defaultInfoHTML;
+        }
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -6005,9 +6064,12 @@ function makePosts(){
             interactive: false
           });
           marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          setTimeout(()=> map && map.resize(),0);
+          window.addEventListener('resize', ()=>{ if(map) map.resize(); });
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
+          setTimeout(()=> map && map.resize(),0);
         }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
@@ -6094,7 +6156,7 @@ function makePosts(){
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
           } else {
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
+            sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
             selectedIndex = null;
             markSelected();
@@ -6125,20 +6187,20 @@ function makePosts(){
           sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
           sessMenu.scrollTop = 0;
           if(sessionHasMultiple){
-            sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            sessionInfo.innerHTML = defaultInfoHTML;
+            if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+          } else {
+            if(loc.dates.length){
+              selectSession(0);
             } else {
-              if(loc.dates.length){
-                selectSession(0);
-              } else {
-                sessionInfo.innerHTML = '<div class="placeholder">💲 Price range | 📅 Date range</div>';
-                if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
-              }
+              sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
             }
-            sessMenu.querySelectorAll('button').forEach(btn=>{
-              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
-            });
           }
+          sessMenu.querySelectorAll('button').forEach(btn=>{
+            btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
+          });
+        }
       }
         if(mapEl){
           setTimeout(()=>{
@@ -6522,6 +6584,7 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   document.querySelectorAll('.panel .panel-header').forEach(header=>{
     header.addEventListener('mousedown', e=>{
+      if(e.target.closest('button')) return;
       const panel = header.closest('.panel');
       const content = panel ? panel.querySelector('.panel-content') : null;
       if(!content) return;
@@ -6557,7 +6620,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
-    if(filterPanel && window.innerWidth >= 450 && !filterPanel.classList.contains('show') && localStorage.getItem('panel-open-filterPanel') !== 'false'){
+    if(filterPanel && localStorage.getItem('panel-open-filterPanel') === 'true'){
       openPanel(filterPanel);
     }
   document.querySelectorAll('.panel').forEach(panel=>{
