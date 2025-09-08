@@ -2599,7 +2599,8 @@ footer .foot-row .footer-card{
 }
 
 .quick-card[aria-selected="true"]{
-  background:#2e3a72;
+  background-color:#2e3a72 !important;
+  background-image:none !important;
 }
 
 .hover-card{
@@ -5397,8 +5398,6 @@ function makePosts(){
             const r = resCard.getBoundingClientRect();
             qb.scrollBy({top: r.top - desired, behavior:'smooth'});
           }
-        } else if(fromQuick){
-          resCard.scrollIntoView({block:'nearest', behavior:'smooth'});
         }
       }
       const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
@@ -5423,7 +5422,7 @@ function makePosts(){
       if(!container && window.innerWidth > 450){
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
-      if(fromQuick && container && header){
+      if((fromQuick || fromMap) && container && header){
         const hh = document.querySelector('.header').offsetHeight;
         const desired = hh + 10;
         const r = header.getBoundingClientRect();
@@ -5529,15 +5528,6 @@ function makePosts(){
       }
     });
 
-    function ensureGap(container, el){
-  const pad = parseInt(getComputedStyle(container).paddingTop, 10) || 0;
-  const desired = el.offsetTop - pad - 12;
-  const viewTop = container.scrollTop;
-  if(viewTop > desired){
-    container.scrollTo({top: Math.max(desired, 0), behavior:'smooth'});
-  }
-}
-
     function hookDetailActions(el, p){
   const descWrap = el.querySelector(".desc-wrap");
   if(descWrap){
@@ -5557,16 +5547,10 @@ function makePosts(){
             btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
           });
           const detailEl = el;
-          const container = detailEl.closest('.post-board');
           renderFooter();
           const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
           if(replacement){
             replacement.replaceWith(detailEl);
-            if(container){
-              ensureGap(container, detailEl);
-            } else {
-              detailEl.scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-            }
           }
         });
       }
