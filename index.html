@@ -1424,7 +1424,7 @@ body.hide-results .quick-list-board{
   min-width:360px;
 }
 
-.tall-image-container{
+.short-image-container{
   margin-top:10px;
   width:440px;
 }
@@ -1435,7 +1435,7 @@ body.hide-results .quick-list-board{
   z-index:1;
 }
 
-.post-board.two-columns .tall-image-container{
+.post-board.two-columns .short-image-container{
   position:sticky;
   top:calc(var(--post-header-h,0px) + var(--gap));
 }
@@ -1452,8 +1452,19 @@ body.hide-results .quick-list-board{
   object-fit:cover;
 }
 
-.selected-image img{
+.short-image-container .selected-image{
   width:440px;
+  height:440px;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.short-image-container .selected-image img{
+  max-width:100%;
+  max-height:100%;
+  width:auto;
   height:auto;
   display:block;
 }
@@ -2496,7 +2507,7 @@ footer{
     flex:0 0 auto;
   }
 
-.copy-msg{
+  .copy-msg{ 
     position:absolute;
     background:rgba(0,0,0,0.8);
     color:#fff;
@@ -2507,6 +2518,25 @@ footer{
     pointer-events:none;
   }
   .copy-msg.show{opacity:1;}
+
+  .image-modal-container{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:3000;
+  }
+  .image-modal-container.hidden{display:none;}
+  .image-modal-container .image-modal img{
+    max-width:90vw;
+    max-height:90vh;
+    display:block;
+  }
 
   #post-modal-container{
     position:fixed;
@@ -2996,9 +3026,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="post-header"></div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="tall-image-container">
-              <div class="image-thumbnail-row"></div>
+            <div class="short-image-container">
               <div class="selected-image"></div>
+              <div class="image-thumbnail-row"></div>
             </div>
           </div>
           <div class="second-post-column">
@@ -6456,6 +6486,10 @@ document.addEventListener('pointerdown', handleDocInteract);
 })();
 </script>
 
+<div class="image-modal-container hidden">
+  <div class="image-modal"></div>
+</div>
+
 <div id="post-modal-container" class="hidden">
   <div class="post-modal"></div>
 </div>
@@ -6843,22 +6877,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainCol = document.querySelector('.main-post-column');
   const secondCol = document.querySelector('.second-post-column');
   const details = document.querySelector('.post-details');
-  const tallImg = document.querySelector('.tall-image-container');
+  const shortImg = document.querySelector('.short-image-container');
   const postHeader = document.querySelector('.post-header');
-  if(!board || !mainCol || !secondCol || !details || !tallImg || !postHeader) return;
+  const thumbRow = document.querySelector('.image-thumbnail-row');
+  const selectedImageBox = shortImg ? shortImg.querySelector('.selected-image') : null;
+  const imageModalContainer = document.querySelector('.image-modal-container');
+  const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
+  if(!board || !mainCol || !secondCol || !details || !shortImg || !postHeader || !imageModalContainer || !imageModal) return;
 
   function adjust(){
     const width = board.offsetWidth;
     if(width < 440){
       if(secondCol.style.display !== 'none'){
         secondCol.style.display = 'none';
-        tallImg.insertAdjacentElement('afterend', details);
+        shortImg.insertAdjacentElement('afterend', details);
         details.style.padding = '0';
       }
     } else if(width < 710){
       if(secondCol.style.display !== 'none'){
         secondCol.style.display = 'none';
-        tallImg.insertAdjacentElement('afterend', details);
+        shortImg.insertAdjacentElement('afterend', details);
         details.style.padding = '0';
       }
     } else {
@@ -6880,6 +6918,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   adjust();
   window.addEventListener('resize', adjust);
+
+  function openImageModal(src){
+    imageModal.innerHTML='';
+    const img = document.createElement('img');
+    img.src = src;
+    imageModal.appendChild(img);
+    imageModalContainer.classList.remove('hidden');
+  }
+
+  imageModalContainer.addEventListener('click', e => {
+    if(e.target === imageModalContainer){
+      imageModalContainer.classList.add('hidden');
+      imageModal.innerHTML='';
+    }
+  });
+
+  if(thumbRow){
+    thumbRow.addEventListener('dblclick', e => {
+      const img = e.target.closest('img');
+      if(img) openImageModal(img.src);
+    });
+  }
+
+  if(selectedImageBox){
+    selectedImageBox.addEventListener('click', () => {
+      const img = selectedImageBox.querySelector('img');
+      if(img) openImageModal(img.src);
+    });
+  }
 });
 </script>
 </body>
