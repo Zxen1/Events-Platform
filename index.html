@@ -72,14 +72,14 @@
       --dropdown-hover-text: #000000;
         --dropdown-venue-text: #000000;
         --dropdown-radius: 8px;
-        --calendar-width: 300px;
-        --calendar-height: 250px;
+        --calendar-width: 250px;
+        --calendar-height: 200px;
         --calendar-cell-w: calc(var(--calendar-width) / 7);
-        --calendar-cell-h: calc((var(--calendar-height) - var(--scrollbar-h)) / 8);
-        --calendar-header-h: var(--calendar-cell-h);
+        --calendar-header-h: 20px;
+        --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h)) / 7);
         --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
-        --session-available: #333333;
+        --session-available: #555555;
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
@@ -386,9 +386,9 @@ input[type="checkbox"]{
 
   .logo{
     position: absolute;
-    left: 50%;
+    left: 20px;
     top: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -405,7 +405,7 @@ input[type="checkbox"]{
 
   .view-toggle{
   position: absolute;
-  left: 20px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -488,10 +488,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 
-#smallLogo{
-  display:none;
-  height:48px;
-}
 
 
 
@@ -601,8 +597,8 @@ button[aria-expanded="true"] .results-arrow{
   overscroll-behavior:contain;
 }
 .panel-body > *{
-  width:400px;
-  max-width:400px;
+  width:440px;
+  max-width:440px;
 }
 #adminPanel #styleControls{
   display:flex;
@@ -611,18 +607,16 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #adminPanel #styleControls > *{
-  width:400px;
+  width:440px;
 }
+#adminPanel .admin-fieldset,
 .admin-fieldset{
   margin:0;
   border:0;
   border-radius:8px;
   padding:0;
-  width:400px;
+  width:440px;
   box-sizing:border-box;
-}
-#adminPanel .admin-fieldset{
-  width:400px;
 }
 #adminPanel .admin-fieldset.collapsed{
   padding:0;
@@ -783,13 +777,13 @@ button[aria-expanded="true"] .results-arrow{
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:440px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;font-family: Verdana;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:400px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:440px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;font-family: Verdana;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
@@ -806,8 +800,8 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:8px;
   margin-left:0;
-  width:400px;
-  max-width:400px;
+  width:440px;
+  max-width:440px;
 }
 #autoTheme-row button{
   flex:0 0 auto;
@@ -958,7 +952,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
-  width:400px;
+  width:440px;
 }
 #adminPanel .panel-field{margin:0;}
 #adminPanel h3{margin:0;}
@@ -1817,9 +1811,7 @@ body.mode-map .map-control-row{
 .map-control-row #geolocateBtn{flex:0 0 35px;margin-left:20px;}
 .map-control-row #compassBtn{flex:0 0 35px;margin-left:10px;}
 
-#filterPanel .panel-body > *,
-#memberPanel .panel-body > *,
-#adminPanel .panel-body > *{width:400px;}
+#filterPanel .panel-body > *{width:400px;max-width:400px;}
 
 
 
@@ -2024,9 +2016,7 @@ body.mode-map .map-control-row{
     padding:0;
   }
   .open-posts .location-section .map-container,
-  .open-posts .location-section .calendar-container,
   .open-posts .post-map,
-  .open-posts .post-calendar,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
     min-width:250px;
@@ -2256,10 +2246,8 @@ body.mode-map .map-control-row{
   gap:var(--gap);
   position:relative;
   align-items:flex-start;
-  flex:1 1 250px;
-  min-width:250px;
+  flex:1 1 auto;
   width:100%;
-  max-width:calc(var(--calendar-width) * var(--calendar-scale));
   height:200px;
 }
 .open-posts .location-section .options-menu{
@@ -2278,7 +2266,6 @@ body.mode-map .map-control-row{
   position:relative;
   font-size:14px;
   font-family: Verdana;
-  min-width:250px;
 }
 
 
@@ -2354,7 +2341,7 @@ body.mode-map .map-control-row{
   font-weight:bold;
 }
 .open-posts .post-calendar .day.available-day.selected{
-  background:#555555;
+  background:#2e3a72;
   color:#fff;
 }
 .open-posts .post-calendar .day.today{color:var(--today) !important;}
@@ -2476,10 +2463,6 @@ body.mode-map .map-control-row{
   #quickBtn{display:none;}
 }
 
-@media (max-width:650px){
-  .logo{display:none;}
-  #smallLogo{display:block;height:35px;}
-}
 
 @media (max-width:650px){
   html{
@@ -3084,7 +3067,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
     <div class="logo" aria-label="Site logo">
-      <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap.com logo" />
+      <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
@@ -3111,7 +3094,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
-      <img id="smallLogo" src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </nav>
   </header>
   
@@ -3531,7 +3513,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           boardPriority = localStorage.getItem('boardPriority') || 'quick';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         if(spinEnabled) document.body.classList.add('hide-results');
-        logoEls = [document.querySelector('.logo'), document.getElementById('smallLogo')].filter(Boolean);
+        logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
         logoEls.forEach(el=>{
           el.style.cursor = 'pointer';
