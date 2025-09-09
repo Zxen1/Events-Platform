@@ -122,11 +122,14 @@ fieldset{
 
 *[aria-pressed="true"],
 *[aria-current="page"],
-*[aria-selected="true"],
 .selected,
 .on{
   border-color: var(--border-active) !important;
   color: var(--active);
+}
+
+*[aria-selected="true"]{
+  border-color: var(--border-active) !important;
 }
 
 html,body{
