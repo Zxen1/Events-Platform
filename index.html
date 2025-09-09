@@ -154,6 +154,7 @@ html,body{
 
   body{
     margin: 0 auto;
+    max-width:1920px;
     font: 13px system-ui, sans-serif;
     background: var(--background);
     color: var(--text);
@@ -551,6 +552,7 @@ button[aria-expanded="true"] .results-arrow{
   right:0;
   width:100%;
   margin:0 auto;
+  max-width:1920px;
   height:100vh;
   background:transparent;
   display:none;
@@ -558,6 +560,23 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:none;
 }
 .panel.show{
+  display:block;
+}
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  margin:0 auto;
+  max-width:1920px;
+  height:100vh;
+  background:transparent;
+  display:none;
+  z-index:2000;
+  pointer-events:none;
+}
+.modal.show{
   display:block;
 }
 .panel-content{
@@ -762,7 +781,7 @@ button[aria-expanded="true"] .results-arrow{
   margin-bottom:10px;
 }
 #welcome-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap);margin-top:var(--gap);}
-#welcomePopup{background:rgba(0,0,0,0.7);}
+#welcome-modal{background:rgba(0,0,0,0.7);}
 #memberPanel .location-info{margin-top:4px;font-size:14px;}
   @media (max-width:600px){
   #adminPanel .panel-content,
@@ -1536,45 +1555,6 @@ body.hide-ads .ad-board{
   height:100%;
 }
 
-.ad-panel{
-  width:420px;
-  height:100%;
-  margin:0 auto;
-  position:relative;
-  overflow:hidden;
-}
-
-.ad-panel .ad-slide{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  transition:opacity 1.5s ease-in-out;
-  cursor:pointer;
-}
-
-.ad-panel .ad-slide.active{opacity:1;}
-
-.ad-panel .ad-slide img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  animation:adZoom 20s linear forwards;
-}
-.ad-panel .ad-slide .info{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  background:rgba(0,0,0,0.5);
-  color:#fff;
-  padding:10px;
-  text-shadow:0 0 4px #000;
-}
-
-@keyframes adZoom{
-  from{transform:scale(1);}
-  to{transform:scale(1.1);}
-}
 
 
 #filterBtn,
@@ -3091,7 +3071,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     </section>
     <section class="ad-board" aria-label="Ad Board">
       <div class="ad-board-container">
-        <div class="ad-panel"></div>
       </div>
     </section>
   </div>
@@ -3422,7 +3401,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   </div>
   </div>
 
-  <div id="welcomePopup" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+  <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="panel-content">
       <div class="panel-body" id="welcomeBody"></div>
     </div>
@@ -3506,7 +3485,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       }
 
       function openWelcome(){
-        const popup = document.getElementById('welcomePopup');
+        const popup = document.getElementById('welcome-modal');
         const body = document.getElementById('welcomeBody');
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
         const msg = saved.welcomeMessage || DEFAULT_WELCOME;
@@ -3529,7 +3508,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       window.openWelcome = openWelcome;
 
       function toggleWelcome(){
-        const popup = document.getElementById('welcomePopup');
+        const popup = document.getElementById('welcome-modal');
         if(popup.classList.contains('show')){
           closePanel(popup);
         } else {
@@ -3555,7 +3534,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [];
-    let adPosts = [], adIndex = -1, adTimer = null;
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -4127,7 +4105,6 @@ function makePosts(){
       postsLoaded = true;
       addPostSource();
       applyFilters();
-      initAdPanel();
     }
 
     function checkLoadPosts(){
@@ -6155,55 +6132,6 @@ function makePosts(){
       updateFilterBtnColor();
     }
 
-    function initAdPanel(){
-      const panel = document.querySelector('.ad-panel');
-      adPosts = posts.filter(p => p.sponsored);
-      if(!panel || !adPosts.length) return;
-      function showNextAd(){
-        adIndex = (adIndex + 1) % adPosts.length;
-        const p = adPosts[adIndex];
-        const slide = document.createElement('a');
-        slide.className = 'ad-slide';
-        slide.dataset.id = p.id;
-        slide.href = postUrl(p);
-        const img = new Image();
-        img.src = heroUrl(p);
-        img.alt = '';
-        img.decode().catch(()=>{}).then(()=>{
-          slide.appendChild(img);
-          const info = document.createElement('div');
-          info.className = 'info';
-          info.textContent = p.title;
-          slide.appendChild(info);
-          panel.appendChild(slide);
-          requestAnimationFrame(()=> slide.classList.add('active'));
-          const slides = panel.querySelectorAll('.ad-slide');
-          if(slides.length > 1){
-            const old = slides[0];
-            old.classList.remove('active');
-            setTimeout(()=> old.remove(),1500);
-          }
-        });
-      }
-      showNextAd();
-      adTimer = setInterval(showNextAd,20000);
-      panel.addEventListener('click', async e => {
-        const slide = e.target.closest('.ad-slide');
-        if(!slide) return;
-        e.preventDefault();
-        const id = slide.dataset.id;
-        await openPost(id);
-        const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
-        if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
-        document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
-        if(quickCard){
-          quickCard.setAttribute('aria-selected','true');
-          quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-        }
-      });
-    }
-
     // applyFilters();
     setMode('map');
   })();
@@ -6235,7 +6163,7 @@ function registerPopup(p){
   }
 }
 function savePanelState(m){
-  if(!m || !m.id || m.id === 'welcomePopup') return;
+  if(!m || !m.id || m.id === 'welcome-modal') return;
   const content = m.querySelector('.panel-content');
   if(!content) return;
   const state = {
@@ -6321,7 +6249,7 @@ function openPanel(m){
       if(calScroll){
         scrollCalendarToToday();
       }
-    } else if(m.id==='welcomePopup'){
+    } else if(m.id==='welcome-modal'){
       content.style.left='50%';
       content.style.top='200px';
       content.style.transform='translateX(-50%)';
@@ -6330,7 +6258,7 @@ function openPanel(m){
       content.style.top='50%';
       content.style.transform='translate(-50%, -50%)';
     }
-    if(m.id !== 'welcomePopup' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
+    if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
@@ -6356,7 +6284,7 @@ function closePanel(m){
       localStorage.setItem(`panel-open-${m.id}`,'false');
       const idx = panelStack.indexOf(m);
       if(idx!==-1) panelStack.splice(idx,1);
-      if(m.id==='welcomePopup' && movedControls.length){
+      if(m.id==='welcome-modal' && movedControls.length){
         movedControls.forEach(({el,parent})=> parent.appendChild(el));
         movedControls = [];
       }
@@ -6368,16 +6296,16 @@ function closePanel(m){
     localStorage.setItem(`panel-open-${m.id}`,'false');
     const idx = panelStack.indexOf(m);
     if(idx!==-1) panelStack.splice(idx,1);
-    if(m.id==='welcomePopup' && movedControls.length){
+    if(m.id==='welcome-modal' && movedControls.length){
       movedControls.forEach(({el,parent})=> parent.appendChild(el));
       movedControls = [];
     }
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
   }
 }
-const welcomePopupEl = document.getElementById('welcomePopup');
-if(welcomePopupEl){
-  welcomePopupEl.addEventListener('click', () => closePanel(welcomePopupEl));
+const welcomeModalEl = document.getElementById('welcome-modal');
+if(welcomeModalEl){
+  welcomeModalEl.addEventListener('click', () => closePanel(welcomeModalEl));
 }
 function requestClosePanel(m){
   closePanel(m);
@@ -6455,7 +6383,7 @@ function handleDocInteract(e){
   if(e.target.closest('.img-popup')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
   if(e.target.closest('#filterBtn')) return;
-  const welcome = document.getElementById('welcomePopup');
+  const welcome = document.getElementById('welcome-modal');
   if(welcome && welcome.classList.contains('show')){
     const content = welcome.querySelector('.panel-content');
     if(content && !content.contains(e.target)){
@@ -6558,13 +6486,13 @@ document.addEventListener('pointerdown', handleDocInteract);
     });
   });
 
-    const welcomePopup = document.getElementById('welcomePopup');
-    [filterPanel, memberPanel, adminPanel, welcomePopup].forEach(m=>{
+    const welcomeModal = document.getElementById('welcome-modal');
+    [filterPanel, memberPanel, adminPanel, welcomeModal].forEach(m=>{
       if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
         openPanel(m);
       }
     });
-    if(welcomePopup && !localStorage.getItem('welcome-seen')){
+    if(welcomeModal && !localStorage.getItem('welcome-seen')){
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
@@ -6605,7 +6533,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
-  {key:'welcomePopup', label:'Welcome Popup', selectors:{bg:['#welcomePopup .panel-content'], text:['#welcomePopup .panel-content'], title:['#welcomePopup .panel-content .t','#welcomePopup .panel-content .title'], btn:['#welcomePopup button'], btnText:['#welcomePopup button']}},
+  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .panel-content'], text:['#welcome-modal .panel-content'], title:['#welcome-modal .panel-content .t','#welcome-modal .panel-content .title'], btn:['#welcome-modal button'], btnText:['#welcome-modal button']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
