@@ -104,7 +104,6 @@
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   border-color: var(--border) !important;
-  box-shadow: rgba(0,0,0,0.1) 0px 2px 12px;
 }
 
 fieldset{
@@ -165,7 +164,6 @@ html,body{
     min-height: 100vh;
     user-select: text;
     touch-action: manipulation;
-    box-shadow: rgba(0,0,0,0.1) 0px 2px 12px;
   }
 
   body, .post-board, .panel-content, .options-menu, .calendar-scroll{overscroll-behavior: contain;}
@@ -939,7 +937,6 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .marker-grid select{min-width:120px;}
 #adminPanel .marker-options{display:flex;gap:8px;align-items:center;}
 #adminPanel .marker-set{display:grid;grid-template-columns:repeat(10,max-content);gap:4px;}
-#adminPanel .marker-set svg.shadow{filter:drop-shadow(2px 2px 2px rgba(0,0,0,0.5));}
 #adminPanel .marker-set svg.outline *{stroke:#000;stroke-width:1;}
 #adminPanel input[type=range]{width:100%;}
 .panel-field{
@@ -2662,12 +2659,6 @@ footer .foot-row .footer-card .t{
   text-overflow: ellipsis;
 }
 
-.card,
-.quick-card,
-.post-card,
-footer .foot-row .footer-card{
-  transition: box-shadow .2s;
-}
 
 .card .thumb,
 .quick-card .thumb,
