@@ -4630,15 +4630,27 @@ function makePosts(){
             quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
           } else {
             document.body.classList.add('hide-results');
-            document.body.classList.remove('hide-ads');
+            if(document.body.classList.contains('mode-map')){
+              document.body.classList.add('hide-ads');
+            } else {
+              document.body.classList.remove('hide-ads');
+            }
             boardsContainer.style.justifyContent = 'flex-start';
             postBoard.style.marginLeft = '10px';
             postBoard.style.marginRight = '';
             quickBtn.setAttribute('aria-pressed','false');
           }
         } else {
-          document.body.classList.remove('hide-results');
-          document.body.classList.remove('hide-ads');
+          if(quickHidden){
+            document.body.classList.add('hide-results');
+          } else {
+            document.body.classList.remove('hide-results');
+          }
+          if(document.body.classList.contains('mode-map')){
+            document.body.classList.add('hide-ads');
+          } else {
+            document.body.classList.remove('hide-ads');
+          }
           boardsContainer.style.justifyContent = 'space-between';
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
