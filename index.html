@@ -4561,21 +4561,6 @@ function makePosts(){
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
-
-      document.body.classList.add('hide-results');
-      quickBtn.setAttribute('aria-pressed','false');
-      quickListBoard.setAttribute('aria-hidden','true');
-      adBtn.setAttribute('aria-pressed','true');
-      window.addEventListener('resize', ()=>{
-        if(window.innerWidth < 650){
-          if(!document.body.classList.contains('hide-results')){
-            document.body.classList.add('hide-results');
-            quickBtn.setAttribute('aria-pressed','false');
-            quickListBoard.setAttribute('aria-hidden','true');
-            localStorage.setItem('resultsHidden','true');
-          }
-        }
-      });
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const quickHidden = document.body.classList.contains('hide-results');
