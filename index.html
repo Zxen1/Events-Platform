@@ -1425,6 +1425,7 @@ body.hide-results .quick-list-board{
   max-width:970px;
   min-width:360px;
   padding:0;
+  margin:0 auto;
   overflow:auto;
   display:flex;
   flex-direction:column;
@@ -2023,7 +2024,7 @@ body.mode-map .map-control-row{
   .open-posts .post-calendar,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
-    min-width:200px;
+    min-width:250px;
     width:400px;
   }
   body.mode-posts footer{
@@ -2086,8 +2087,8 @@ body.mode-map .map-control-row{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:1 1 200px;
-  min-width:200px;
+  flex:1 1 250px;
+  min-width:250px;
   width:auto;
   height:200px;
 }
@@ -2101,7 +2102,7 @@ body.mode-map .map-control-row{
   height:100%;
   border:1px solid var(--border);
   border-radius:8px;
-  min-width:200px;
+  min-width:250px;
   min-height:200px;
 }
 
@@ -2109,7 +2110,7 @@ body.mode-map .map-control-row{
 .open-posts .venue-dropdown,
 .open-posts .session-dropdown{
   position:relative;
-  min-width:200px;
+  min-width:250px;
   width:400px;
 }
 
@@ -2181,7 +2182,7 @@ body.mode-map .map-control-row{
   top:calc(100% + 4px);
   left:0;
   width:100%;
-  min-width:200px;
+  min-width:250px;
   box-sizing:border-box;
   max-height:250px;
   overflow-y:auto;
@@ -2250,8 +2251,8 @@ body.mode-map .map-control-row{
   gap:var(--gap);
   position:relative;
   align-items:flex-start;
-  flex:1 1 200px;
-  min-width:200px;
+  flex:1 1 250px;
+  min-width:250px;
   width:100%;
   max-width:calc(var(--calendar-width) * var(--calendar-scale));
   height:200px;
@@ -2266,12 +2267,13 @@ body.mode-map .map-control-row{
   display:none;
 }
 .open-posts .post-calendar{
+  --calendar-height:200px;
   width:var(--calendar-width);
   height:var(--calendar-height);
   position:relative;
   font-size:14px;
   font-family: Verdana;
-  min-width:200px;
+  min-width:250px;
 }
 
 
