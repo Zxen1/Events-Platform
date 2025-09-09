@@ -549,7 +549,10 @@ button[aria-expanded="true"] .results-arrow{
   position:fixed;
   top:0;
   left:0;
-  width:100vw;
+  right:0;
+  width:100%;
+  max-width:1920px;
+  margin:0 auto;
   height:100vh;
   background:transparent;
   display:none;
@@ -1009,11 +1012,11 @@ button[aria-expanded="true"] .results-arrow{
 }
 .panel-header .header-top{
   display:flex;
-  justify-content:space-between;
   align-items:center;
 }
 .panel-header .panel-actions{
   margin-top:0;
+  margin-left:auto;
 }
 .panel-header h2{
   margin:0;
@@ -1439,6 +1442,7 @@ body.hide-results .quick-list-board{
 .main-post-column{
   flex:0 0 440px;
   width:440px;
+  max-width:440px;
   padding:0;
 }
 
@@ -1863,7 +1867,7 @@ body.mode-map .map-control-row{
 }
 
 .open-posts .post-body{
-  padding:14px;
+  padding:0;
   display:flex;
   flex-wrap:wrap;
   gap:10px;
@@ -2495,7 +2499,7 @@ body.mode-map .map-control-row{
     margin-right:0;
   }
   .open-posts .post-body{
-    padding:14px 0;
+    padding:0;
     gap:8px;
   }
   .open-posts .post-details{
@@ -6373,6 +6377,10 @@ function closePanel(m){
     if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
   }
 }
+const welcomePopupEl = document.getElementById('welcomePopup');
+if(welcomePopupEl){
+  welcomePopupEl.addEventListener('click', () => closePanel(welcomePopupEl));
+}
 function requestClosePanel(m){
   closePanel(m);
 }
@@ -7136,7 +7144,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-      if(secondWidth < 270){
+      if(secondWidth < 440){
         if(secondCol.style.display !== 'none'){
           secondCol.style.display = 'none';
           postImages.insertAdjacentElement('afterend', details);
