@@ -79,7 +79,7 @@
         --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h)) / 7);
         --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
-        --session-available: #555555;
+        --session-available: #888888;
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
@@ -95,7 +95,7 @@
       --panel-title-size: 16px;
       --panel-title-color: #ffffff;
       --post-mode-bg-color: 0,0,0;
-      --post-mode-bg-opacity: 0.5;
+      --post-mode-bg-opacity: 0;
       --safe-top: env(safe-area-inset-top, 0px);
 }
 
@@ -405,12 +405,13 @@ input[type="checkbox"]{
 
   .view-toggle{
   position: absolute;
-  right: 20px;
+  left: 80px;
+  right: auto;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   height: 35px;
-  gap: 8px;
+  gap: 10px;
   }
 
 .view-toggle button{
@@ -460,17 +461,14 @@ input[type="checkbox"]{
   transition:transform .3s;
 }
 
-.results-arrow{
-  margin-right:8px;
-  transform:rotate(45deg);
-  transition:transform .3s;
-  vertical-align:middle;
-}
-body.hide-results #quickBtn .results-arrow{transform:rotate(-135deg);}
-
 .options-dropdown > button{
   position:relative;
   padding-right:30px;
+}
+.results-arrow{
+  transform:rotate(45deg);
+  transition:transform .3s;
+  vertical-align:middle;
 }
 
 .options-dropdown .dropdown-arrow,
@@ -640,7 +638,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:440px;
   max-width:440px;
-  max-height:90%;
   background:#222222;
   color:#fff;
   display:block;
@@ -1842,6 +1839,17 @@ body.mode-map .map-control-row{
   z-index: 0;
 }
 
+.mapboxgl-ctrl-top-left,
+.mapboxgl-ctrl-top-right,
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right{
+  top:calc(var(--header-h) + 10px) !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translateX(-50%);
+}
+
 
 .open-posts{
   border:none;
@@ -1899,14 +1907,14 @@ body.mode-map .map-control-row{
   font-family: inherit;
 }
 
-.open-posts .img-area{
+.open-posts .short-image-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:0 0 400px;
+  flex:0 0 440px;
 }
 
-.open-posts-sticky-images .open-posts .img-area{
+.open-posts-sticky-images .open-posts .short-image-container{
   position:sticky;
   top:var(--open-post-header-h,0px);
   align-self:start;
@@ -1934,7 +1942,7 @@ body.mode-map .map-control-row{
   object-fit:cover;
 }
 
-.open-posts .thumb-column{
+.open-posts .thumbnail-row{
   display:flex;
   flex-direction:row;
   width:400px;
@@ -1945,7 +1953,7 @@ body.mode-map .map-control-row{
   position:relative;
 }
 
-.open-posts .thumb-column img{
+.open-posts .thumbnail-row img{
   width:50px;
   height:50px;
   object-fit:cover;
@@ -1982,7 +1990,7 @@ body.mode-map .map-control-row{
   .open-posts .detail-header{
     padding:6px 0;
   }
-  .open-posts .img-area,
+  .open-posts .short-image-container,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
   .open-posts .text{
@@ -1992,7 +2000,7 @@ body.mode-map .map-control-row{
     padding:14px;
     margin-bottom:0;
   }
-  .open-posts .img-area{
+  .open-posts .short-image-container{
     flex:1 1 100%;
     width:100%;
   }
@@ -2006,7 +2014,7 @@ body.mode-map .map-control-row{
     object-fit:cover;
     object-position:center;
   }
-  .open-posts .thumb-column{
+  .open-posts .thumbnail-row{
     width:auto;
     padding:0;
   }
@@ -2085,7 +2093,7 @@ body.mode-map .map-control-row{
   flex:1 1 250px;
   min-width:250px;
   width:auto;
-  height:200px;
+  height:auto;
 }
 .open-posts .map-container .venue-dropdown{
   width:100%;
@@ -2098,7 +2106,6 @@ body.mode-map .map-control-row{
   border:1px solid var(--border);
   border-radius:8px;
   min-width:250px;
-  min-height:200px;
 }
 
 
@@ -2241,15 +2248,15 @@ body.mode-map .map-control-row{
 
 
 .open-posts .location-section .calendar-container{
-  display:flex;
-  flex-direction:column;
-  gap:var(--gap);
-  position:relative;
-  align-items:flex-start;
-  flex:1 1 auto;
-  width:100%;
-  height:200px;
-}
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
+    position:relative;
+    align-items:flex-start;
+    flex:1 1 auto;
+    width:100%;
+    height:auto;
+  }
 .open-posts .location-section .options-menu{
   width:100%;
   box-sizing:border-box;
@@ -2259,10 +2266,9 @@ body.mode-map .map-control-row{
 .hide-map-calendar .open-posts .calendar-container{
   display:none;
 }
+
 .open-posts .post-calendar{
-  --calendar-height:200px;
   width:var(--calendar-width);
-  height:var(--calendar-height);
   position:relative;
   font-size:14px;
   font-family: Verdana;
@@ -2271,7 +2277,6 @@ body.mode-map .map-control-row{
 
 .open-posts .calendar-container .calendar-scroll{
   width:100%;
-  height:100%;
   overflow-x:auto;
   overflow-y:hidden;
   padding-bottom:0;
@@ -2286,7 +2291,6 @@ body.mode-map .map-control-row{
   box-sizing:border-box;
   display:flex;
   width:max-content;
-  height:100%;
   transform:scale(var(--calendar-scale));
   transform-origin:top left;
   background:var(--dropdown-bg);
@@ -2295,7 +2299,6 @@ body.mode-map .map-control-row{
 .open-posts .post-calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
-  height:var(--calendar-height);
   display:flex;
   flex-direction:column;
 }
@@ -2627,7 +2630,8 @@ footer{
   }
   #post-modal-container.hidden{display:none;}
   #post-modal-container .post-modal{
-    width:90%;
+    width:440px;
+    max-width:100%;
     height:90%;
     overflow:auto;
     background:var(--list-background);
@@ -2974,9 +2978,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
 
 @media (max-width:649px){
-  #filterPanel .panel-content,
-  #adminPanel .panel-content,
-  #memberPanel .panel-content{
+  #filterPanel .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
     left:0;
     right:0;
@@ -2987,14 +2989,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     border-radius:0;
   }
   #filterPanel .panel-content .resizer,
-  #adminPanel .panel-content .resizer,
-  #memberPanel .panel-content .resizer,
   #filterPanel .panel-actions .move-left,
-  #filterPanel .panel-actions .move-right,
-  #adminPanel .panel-actions .move-left,
-  #adminPanel .panel-actions .move-right,
-  #memberPanel .panel-actions .move-left,
-  #memberPanel .panel-actions .move-right{
+  #filterPanel .panel-actions .move-right{
     display:none;
   }
 }
@@ -3017,7 +3013,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     border-radius:0;
     margin:0;
   }
-  .open-posts .img-area{
+  .open-posts .short-image-container{
     flex:0 0 100%;
   }
   .open-posts .img-box{
@@ -3046,9 +3042,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   body.mode-map footer{
     display:none;
   }
-  #filterPanel .panel-content,
-  #memberPanel .panel-content,
-  #adminPanel .panel-content{
+  #filterPanel .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
     left:0;
     right:0;
@@ -3070,6 +3064,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
+      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">List</button>
+      <button id="postBtn" aria-pressed="false">Show Posts</button>
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
@@ -3077,10 +3073,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         </svg>
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
-      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">
-        <span class="results-arrow" aria-hidden="true"></span> List
-      </button>
-      <button id="postBtn" aria-pressed="false">Show Posts</button>
       <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
@@ -3143,7 +3135,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
@@ -3628,7 +3620,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     function updateStickyImages(){
       const root = document.documentElement;
       const body = document.querySelector('.open-posts .body');
-      const imgArea = body ? body.querySelector('.img-area') : null;
+      const imgArea = body ? body.querySelector('.short-image-container') : null;
       const text = body ? body.querySelector('.text') : null;
       const header = body ? body.querySelector('.detail-header') : null;
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
@@ -5540,9 +5532,9 @@ function makePosts(){
           </button>
         </div>
         <div class="body">
-          <div class="img-area">
+          <div class="short-image-container">
             <div class="img-box"><img id="hero-img" class="lqip" src="${svgPlaceholder(p.id)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
-            <div class="thumb-column"></div>
+            <div class="thumbnail-row"></div>
           </div>
           <div class="text">
             <div class="location-section">
@@ -5609,6 +5601,23 @@ function makePosts(){
 
       if(!postsWideEl.children.length){ postsWideEl.appendChild(card(p, true)); }
 
+      const alreadyOpen = postsWideEl.querySelector(`.open-posts[data-id="${id}"]`);
+      if(alreadyOpen){
+        const header = alreadyOpen.querySelector('.detail-header');
+        if(header){
+          const hh = document.querySelector('.header').offsetHeight;
+          const desired = hh + 10;
+          const r = header.getBoundingClientRect();
+          const container = postsWideEl.closest('.post-board');
+          if(container) container.scrollBy({top: r.top - desired, behavior:'smooth'});
+        }
+        return;
+      }
+
+      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
+      const container = postsWideEl.closest('.post-board');
+      const initialTop = target && container ? target.getBoundingClientRect().top : null;
+
       (function(){
         const ex = postsWideEl.querySelector('.open-posts');
         if(ex){
@@ -5618,7 +5627,15 @@ function makePosts(){
         }
       })();
 
-      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
+      if(target && container && initialTop!==null){
+        const newTarget = postsWideEl.querySelector(`[data-id="${id}"]`) || target;
+        const newTop = newTarget.getBoundingClientRect().top;
+        container.scrollTop += newTop - initialTop;
+        target = newTarget;
+      } else {
+        target = postsWideEl.querySelector(`[data-id="${id}"]`);
+      }
+
       if(!target){ target = card(p, true); postsWideEl.appendChild(target); }
       const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
       if(resCard){
@@ -5636,7 +5653,6 @@ function makePosts(){
       const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
       if(mapCard) mapCard.setAttribute('aria-selected','true');
 
-      const container = postsWideEl.closest('.post-board');
       const detail = buildDetail(p);
       target.replaceWith(detail);
       hookDetailActions(detail, p);
@@ -5700,7 +5716,7 @@ function makePosts(){
       if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
       requestAnimationFrame(()=>{
-        const imgArea = detail.querySelector('.img-area');
+        const imgArea = detail.querySelector('.short-image-container');
         const text = detail.querySelector('.text');
         if(headerEl){
           headerEl.style.position='sticky';
@@ -5801,7 +5817,7 @@ function makePosts(){
       }
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
-      const thumbCol = el.querySelector('.thumb-column');
+      const thumbCol = el.querySelector('.thumbnail-row');
       const mainImg = el.querySelector('.img-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
@@ -5814,6 +5830,7 @@ function makePosts(){
       function show(idx){
         const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
         if(!t) return;
+        if(mainImg.dataset.index == idx && mainImg.classList.contains('ready')) return;
         mainImg.src = t.src;
         mainImg.dataset.index = idx;
         mainImg.classList.remove('ready');
@@ -5838,7 +5855,13 @@ function makePosts(){
     setupHorizontalWheel(thumbCol);
     thumbCol.addEventListener('click', e=>{
       const t = e.target.closest('img');
-      if(t) show(parseInt(t.dataset.index,10));
+      if(!t) return;
+      const idx = parseInt(t.dataset.index,10);
+      if(t.classList.contains('selected')){
+        openImagePopup(idx);
+      } else {
+        show(idx);
+      }
     });
       thumbCol.addEventListener('keydown', e=>{
         const cur = parseInt(mainImg.dataset.index||'0',10);
@@ -6225,6 +6248,9 @@ function bringToTop(item){
   const idx = panelStack.indexOf(item);
   if(idx!==-1) panelStack.splice(idx,1);
   panelStack.push(item);
+  panelStack.forEach((p,i)=>{
+    if(p instanceof Element){ p.style.zIndex = 2000 + i; }
+  });
 }
 function registerPopup(p){
   bringToTop(p);
@@ -7149,6 +7175,7 @@ document.addEventListener('DOMContentLoaded', () => {
           postImages.insertAdjacentElement('afterend', details);
           details.style.padding = '0';
         }
+        board.style.width = '440px';
         postImages.classList.add('short-image-container');
         postImages.classList.remove('tall-image-container');
         if(thumbRow && selectedImageBox){
@@ -7160,6 +7187,7 @@ document.addEventListener('DOMContentLoaded', () => {
           secondCol.appendChild(details);
           details.style.padding = '';
         }
+        board.style.width = '';
         postImages.classList.add('tall-image-container');
         postImages.classList.remove('short-image-container');
         if(thumbRow && selectedImageBox){
