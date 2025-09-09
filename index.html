@@ -1371,8 +1371,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .post-mode-background{
-  position:fixed;
-  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  position:absolute;
+  top:var(--header-h);
   bottom:var(--footer-h);
   left:0;
   right:0;
@@ -1382,18 +1382,20 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .post-mode-boards{
-  position:fixed;
-  top:calc(var(--header-h) + var(--subheader-h) + var(--safe-top));
+  position:absolute;
+  top:var(--header-h);
   bottom:var(--footer-h);
   left:0;
   right:0;
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
+  gap:var(--gap);
   z-index:2;
   pointer-events:none;
 }
 
 .quick-list-board{
+  flex:0 0 440px;
   width:440px;
   padding:10px;
   overflow:auto;
@@ -1406,13 +1408,18 @@ body.hide-results .quick-list-board{
 }
 
 .post-board{
+  flex:0 0 440px;
   max-width:970px;
   min-width:360px;
-  padding:10px;
+  padding:0;
+  overflow:auto;
   display:flex;
   flex-direction:column;
   background:rgba(0,0,0,0.5);
   pointer-events:auto;
+}
+.post-board .post-card{
+  width:100%;
 }
 
 .post-board .post-body{
@@ -1422,6 +1429,7 @@ body.hide-results .quick-list-board{
 .main-post-column{
   flex:0 0 440px;
   min-width:360px;
+  padding:0;
 }
 
 .short-image-container{
@@ -1494,6 +1502,7 @@ body.hide-results .quick-list-board{
 }
 
 .ad-board{
+  flex:0 0 440px;
   width:440px;
   padding:10px;
   background:rgba(0,0,0,0.5);
@@ -1520,6 +1529,7 @@ body.hide-ads .ad-board{display:none;}
   inset:0;
   opacity:0;
   transition:opacity 1.5s ease-in-out;
+  cursor:pointer;
 }
 
 .ad-panel .ad-slide.active{opacity:1;}
@@ -1529,6 +1539,16 @@ body.hide-ads .ad-board{display:none;}
   height:100%;
   object-fit:cover;
   animation:adZoom 20s linear forwards;
+}
+.ad-panel .ad-slide .info{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.5);
+  color:#fff;
+  padding:10px;
+  text-shadow:0 0 4px #000;
 }
 
 @keyframes adZoom{
@@ -1776,7 +1796,7 @@ body.mode-map .map-control-row{
 
 
 
-.post-board .posts{overflow:visible;padding:12px;margin:0;}
+.post-board .posts{overflow:visible;padding:0;margin:0;}
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-posts{background:var(--closed-card-bg);}
@@ -2959,7 +2979,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
 @media (max-width:449px){
   .post-board .posts{
-    padding:12px 12px var(--gap);
+    padding:0;
     margin:0;
   }
   .post-board .post-card{
@@ -4123,7 +4143,7 @@ function makePosts(){
 
     function checkLoadPosts(){
       if(!map) return;
-      const show = map.getZoom() >= 5;
+      const show = map.getZoom() >= 3;
       if(show){
         loadPosts();
         applyFilters();
@@ -4888,7 +4908,7 @@ function makePosts(){
     function startSpin(fromCurrent=false){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
-      if(map.getZoom() >= 5) return;
+      if(map.getZoom() >= 3) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
@@ -4995,19 +5015,19 @@ function makePosts(){
         const img = new Image();
         img.onload = ()=>{
           if(!map.hasImage(imgId)) map.addImage(imgId, img);
-          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'icon-image': imgId }, paint:{} });
-          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'icon-image': imgId }, paint:{} });
+          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
           map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
             'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
             'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
         } else if(shouldCluster){
-          map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3.5, paint:{
+          map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3, paint:{
             'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
             'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
             'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3.5, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
           map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
             'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
             'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
@@ -5344,6 +5364,7 @@ function makePosts(){
       `;
       el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
       el.querySelector('.fav').addEventListener('click', (e)=>{
+        e.stopPropagation();
         p.fav = !p.fav;
         document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
           btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
@@ -5614,6 +5635,8 @@ function makePosts(){
       if(!container) return;
       const modal = container.querySelector('.post-modal');
       modal.innerHTML='';
+      const wrap = document.createElement('div');
+      wrap.className = 'post-content';
       const detail = buildDetail(p);
       const headerEl = detail.querySelector('.detail-header');
       const favBtn = headerEl && headerEl.querySelector('.fav');
@@ -5627,7 +5650,8 @@ function makePosts(){
         favBtn.after(closeBtn);
         closeBtn.addEventListener('click', e=>{ e.stopPropagation(); closePostModal(); });
       }
-      modal.appendChild(detail);
+      wrap.appendChild(detail);
+      modal.appendChild(wrap);
       hookDetailActions(detail, p);
       container.classList.remove('hidden');
       if(!panelStack.includes(container)) panelStack.push(container);
@@ -6103,14 +6127,19 @@ function makePosts(){
       function showNextAd(){
         adIndex = (adIndex + 1) % adPosts.length;
         const p = adPosts[adIndex];
-        const slide = document.createElement('div');
+        const slide = document.createElement('a');
         slide.className = 'ad-slide';
         slide.dataset.id = p.id;
+        slide.href = postUrl(p);
         const img = new Image();
         img.src = heroUrl(p);
         img.alt = '';
         img.decode().catch(()=>{}).then(()=>{
           slide.appendChild(img);
+          const info = document.createElement('div');
+          info.className = 'info';
+          info.textContent = p.title;
+          slide.appendChild(info);
           panel.appendChild(slide);
           requestAnimationFrame(()=> slide.classList.add('active'));
           const slides = panel.querySelectorAll('.ad-slide');
@@ -6123,12 +6152,14 @@ function makePosts(){
       }
       showNextAd();
       adTimer = setInterval(showNextAd,20000);
-      panel.addEventListener('click', e => {
+      panel.addEventListener('click', async e => {
         const slide = e.target.closest('.ad-slide');
         if(!slide) return;
+        e.preventDefault();
         const id = slide.dataset.id;
-        const postCard = document.querySelector(`.post-board .post-card[data-id="${id}"]`);
-        if(postCard){ postCard.scrollIntoView({behavior:'smooth', block:'center'}); }
+        await openPost(id);
+        const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
+        if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
         document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
         const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
         if(quickCard){
@@ -6431,7 +6462,6 @@ document.addEventListener('pointerdown', handleDocInteract);
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const panel = btn.closest('.panel');
-      if(panel && panel.id === 'adminPanel') return;
       requestClosePanel(panel);
     });
   });
