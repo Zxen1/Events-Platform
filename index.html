@@ -56,7 +56,7 @@
       --filter-placeholder-text: var(--placeholder-text);
       --control-text-bg: #ffffff;
       --control-placeholder-text: var(--placeholder-text);
-      --control-placeholder-font: Verdana;
+      --control-placeholder-font: system-ui, sans-serif;
       --control-placeholder-size: 14px;
       --control-geolocate-bg: #ffffff;
       --control-compass-bg: #ffffff;
@@ -88,10 +88,10 @@
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
       --control-h: 35px;
-      --panel-label-font: Verdana;
+      --panel-label-font: system-ui, sans-serif;
       --panel-label-size: 14px;
       --panel-label-color: #ffffff;
-      --panel-title-font: Verdana;
+      --panel-title-font: system-ui, sans-serif;
       --panel-title-size: 16px;
       --panel-title-color: #ffffff;
       --post-mode-bg-color: 0,0,0;
@@ -104,6 +104,7 @@
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   border-color: var(--border) !important;
+  box-shadow: rgba(0,0,0,0.1) 0px 2px 12px;
 }
 
 fieldset{
@@ -154,8 +155,7 @@ html,body{
   body{
     margin: 0 auto;
     max-width: 1920px;
-    font-family: Verdana;
-    font-size: 14px;
+    font: 13px system-ui, sans-serif;
     background: var(--background);
     color: var(--text);
     overflow: hidden;
@@ -166,12 +166,12 @@ html,body{
     min-height: 100vh;
     user-select: text;
     touch-action: manipulation;
+    box-shadow: rgba(0,0,0,0.1) 0px 2px 12px;
   }
 
   body, .post-board, .panel-content, .options-menu, .calendar-scroll{overscroll-behavior: contain;}
 
   h1, h2, h3, h4, h5, h6{
-    font-family: Verdana;
     font-size: 16px;
     font-weight: bold;
   }
@@ -188,7 +188,6 @@ button:not([class^="mapboxgl-ctrl"]),
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
-  font-family: Verdana;
   font-size: 13px;
   padding: 0 10px;
   height: var(--control-h);
@@ -319,14 +318,12 @@ textarea::placeholder{
 
 .field label{
   color: var(--panel-label-color);
-  font-family: var(--panel-label-font);
   font-size: var(--panel-label-size);
 }
 
 .panel-content .title,
 .panel-content .t{
   color: var(--panel-title-color);
-  font-family: var(--panel-title-font);
   font-size: var(--panel-title-size);
 }
 
@@ -396,6 +393,7 @@ input[type="checkbox"]{
     letter-spacing: .4px;
     user-select: none;
     cursor: pointer;
+    padding-right:10px;
   }
 
 .logo img{
@@ -430,6 +428,8 @@ input[type="checkbox"]{
   border-color: var(--btn-selected) !important;
   color: var(--button-active-text) !important;
 }
+
+#filterBtn{margin-left:auto;}
 
 
 .header button,
@@ -576,7 +576,7 @@ button[aria-expanded="true"] .results-arrow{
   transition:transform 0.3s;
 }
 .panel-content.panel-visible{
-  transform:translateX(0);
+  transform:translateX(-50%);
 }
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
@@ -672,8 +672,8 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  width:calc(var(--calendar-width) * var(--calendar-scale));
-  height:calc(var(--calendar-height) * var(--calendar-scale));
+  width:var(--calendar-width);
+  height:var(--calendar-height);
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -688,7 +688,7 @@ button[aria-expanded="true"] .results-arrow{
   transform:translateX(-50%);
 }
 #filterPanel #datePicker{
-  width:max-content;
+  width:var(--calendar-width);
 }
 #filterPanel .calendar{
   display:flex;
@@ -717,7 +717,6 @@ button[aria-expanded="true"] .results-arrow{
   height:var(--calendar-header-h);
   line-height:var(--calendar-header-h);
   text-align:center;
-  font-family:inherit;
   font-size:inherit;
   color:#fff;
   background:#2e3a72;
@@ -728,7 +727,6 @@ button[aria-expanded="true"] .results-arrow{
   height:var(--calendar-cell-h);
   line-height:var(--calendar-cell-h);
   text-align:center;
-  font-family:inherit;
   font-size:inherit;
 }
 .calendar .weekday{font-weight:bold;}
@@ -764,7 +762,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #welcome-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap);margin-top:var(--gap);}
 #welcomePopup{background:rgba(0,0,0,0.7);}
-#memberPanel .location-info{margin-top:4px;font-size:14px;font-family: Verdana;}
+#memberPanel .location-info{margin-top:4px;font-size:14px;}
   @media (max-width:600px){
   #adminPanel .panel-content,
   #memberPanel .panel-content,
@@ -775,13 +773,13 @@ button[aria-expanded="true"] .results-arrow{
   }
 }
 #adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:440px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
-#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;font-family: Verdana;}
+#adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:440px;}
-#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;font-family: Verdana;cursor:pointer;user-select:none;}
+#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -923,7 +921,6 @@ button[aria-expanded="true"] .results-arrow{
   min-width:32px;
   text-align:right;
   font-size:14px;
-  font-family: Verdana;
 }
 #adminPanel .tab-bar{display:flex;gap:6px;}
 #adminPanel .tab-bar button{
@@ -1174,7 +1171,6 @@ button[aria-expanded="true"] .results-arrow{
   gap:8px;
 }
 .expired-text{
-  font-family: Verdana;
   color:#fff;
   font-size:14px;
 }
@@ -1307,7 +1303,6 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--btn);
   border: 1px solid var(--btn);
   font-size: 14px;
-  font-family: Verdana;
   color: var(--ink-d);
   width: max-content;
   cursor: pointer;
@@ -1417,9 +1412,7 @@ body.hide-results .quick-list-board{
 }
 
 .post-board{
-  flex:1;
-  max-width:970px;
-  min-width:360px;
+  width:880px;
   padding:0;
   margin:0 auto;
   overflow:auto;
@@ -1429,6 +1422,9 @@ body.hide-results .quick-list-board{
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
+@media (max-width:879px){
+  .post-board{width:440px;}
+}
 .post-board .post-card{
   width:100%;
 }
@@ -1436,14 +1432,17 @@ body.hide-results .quick-list-board{
 .post-board .post-body{
   display:flex;
 }
+@media (max-width:879px){
+  .post-board .post-body{flex-direction:column;}
+}
 
 .main-post-column{
   flex:0 0 440px;
-  min-width:360px;
+  width:440px;
   padding:0;
 }
 
-.short-image-container{
+.post-images{
   margin-top:10px;
   width:440px;
   display:flex;
@@ -1456,7 +1455,7 @@ body.hide-results .quick-list-board{
   z-index:1;
 }
 
-.post-board.two-columns .short-image-container,
+.post-board.two-columns .post-images,
 .post-board.two-columns .tall-image-container{
   position:sticky;
   top:calc(var(--post-header-h,0px) + var(--gap));
@@ -1474,7 +1473,7 @@ body.hide-results .quick-list-board{
   object-fit:cover;
 }
 
-.short-image-container .selected-image{
+.post-images .selected-image{
   width:440px;
   height:440px;
   background:#000;
@@ -1484,7 +1483,7 @@ body.hide-results .quick-list-board{
   overflow:hidden;
 }
 
-.short-image-container .selected-image img{
+.post-images .selected-image img{
   max-width:100%;
   max-height:100%;
   width:auto;
@@ -1493,10 +1492,9 @@ body.hide-results .quick-list-board{
 }
 
 .second-post-column{
-  flex:1;
-  max-width:530px;
-  min-width:270px;
-  padding:10px;
+  flex:1 1 440px;
+  min-width:440px;
+  padding:0;
 }
 
 .post-venue-selection-container,
@@ -1594,11 +1592,10 @@ body.hide-ads .ad-board{
 body.filters-active #filterBtn{
   background: red;
   border-color: red;
-  box-shadow: none;
-}
+  }
 
 .options-dropdown{ position:relative; }
-.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); z-index:30; }
+.options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index:30; }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
@@ -1641,7 +1638,6 @@ body.filters-active #filterBtn{
 
 .title{
   margin: 0;
-  font-family: Verdana;
   font-weight: bold;
   font-size: 16px;
   line-height: 1.2;
@@ -1667,7 +1663,6 @@ body.filters-active #filterBtn{
   align-items: flex-start;
   gap: 4px;
   font-size: 13px;
-  font-family: Verdana;
 }
 
 .post-board .info{
@@ -1675,7 +1670,6 @@ body.filters-active #filterBtn{
   align-items: flex-start;
   gap: 4px;
   font-size: 13px;
-  font-family: Verdana;
 }
 
 .quick-list-board .info > div{
@@ -1696,10 +1690,8 @@ body.filters-active #filterBtn{
   border-radius: 50%;
   display: inline-grid;
   place-items: center;
-  background: #0e2540;
   border: 1px solid rgba(255,255,255,.1);
   font-size: 14px;
-  font-family: Verdana;
 }
 
 .fav{
@@ -1839,25 +1831,12 @@ body.mode-map .map-control-row{
   z-index: 0;
 }
 
-.mapboxgl-ctrl-top-left,
-.mapboxgl-ctrl-top-right,
-.mapboxgl-ctrl-bottom-left,
-.mapboxgl-ctrl-bottom-right{
-  top:calc(var(--header-h) + 10px) !important;
-  left:50% !important;
-  right:auto !important;
-  bottom:auto !important;
-  transform:translateX(-50%);
-}
-
-
 .open-posts{
   border:none;
   border-radius:8px;
   margin:0 0 12px 0;
   overflow:visible;
   color:#fff;
-  font-family: Verdana;
   font-size:14px;
   display:flex;
   flex-direction:column;
@@ -1883,7 +1862,7 @@ body.mode-map .map-control-row{
   background:var(--list-background);
 }
 
-.open-posts .body{
+.open-posts .post-body{
   padding:14px;
   display:flex;
   flex-wrap:wrap;
@@ -1892,29 +1871,29 @@ body.mode-map .map-control-row{
   align-content:flex-start;
 }
 
-.open-posts .text{
+.open-posts .post-details{
   margin-top:0;
   flex:1 1 400px;
   min-width:400px;
   display:flex;
   flex-direction:column;
   gap:var(--gap);
+  padding:10px;
 }
 
-.open-posts .text .info{
+.open-posts .post-details .info{
   color: inherit;
   font-size: inherit;
-  font-family: inherit;
 }
 
-.open-posts .short-image-container{
+.open-posts .post-images{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
   flex:0 0 440px;
 }
 
-.open-posts-sticky-images .open-posts .short-image-container{
+.open-posts-sticky-images .open-posts .post-images{
   position:sticky;
   top:var(--open-post-header-h,0px);
   align-self:start;
@@ -1984,23 +1963,23 @@ body.mode-map .map-control-row{
   .open-posts{
     margin:0;
   }
-  .open-posts .body{
+  .open-posts .post-body{
     padding:0;
   }
   .open-posts .detail-header{
     padding:6px 0;
   }
-  .open-posts .short-image-container,
+  .open-posts .post-images,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
-  .open-posts .text{
+  .open-posts .post-details{
     margin-bottom:6px;
   }
-  .open-posts .text{
+  .open-posts .post-details{
     padding:14px;
     margin-bottom:0;
   }
-  .open-posts .short-image-container{
+  .open-posts .post-images{
     flex:1 1 100%;
     width:100%;
   }
@@ -2024,7 +2003,6 @@ body.mode-map .map-control-row{
     padding:0;
   }
   .open-posts .location-section .map-container,
-  .open-posts .post-map,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown{
     min-width:250px;
@@ -2037,7 +2015,6 @@ body.mode-map .map-control-row{
 
 .open-posts .detail-header .title{
   margin:0;
-  font-family: Verdana;
   font-size:16px;
   font-weight:bold;
   line-height:1.2;
@@ -2100,9 +2077,9 @@ body.mode-map .map-control-row{
 }
 
 .open-posts .post-map{
-  flex:1 1 auto;
+  flex:0 0 200px;
   width:100%;
-  height:100%;
+  height:200px;
   border:1px solid var(--border);
   border-radius:8px;
   min-width:250px;
@@ -2195,8 +2172,7 @@ body.mode-map .map-control-row{
   display:flex;
   flex-direction:column;
   gap:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.2);
-  z-index:30;
+   z-index:30;
 }
 
 .open-posts .venue-menu[hidden],
@@ -2271,7 +2247,6 @@ body.mode-map .map-control-row{
   width:var(--calendar-width);
   position:relative;
   font-size:14px;
-  font-family: Verdana;
 }
 
 
@@ -2335,13 +2310,11 @@ body.mode-map .map-control-row{
 .open-posts .post-calendar .day{
   cursor:pointer;
   font-size:12px;
-  font-family: Verdana;
   border-radius:8px;
 }
 .open-posts .post-calendar .day.available-day{
-  background:#555555;
+  background:var(--session-available);
   color:#fff;
-  font-weight:bold;
 }
 .open-posts .post-calendar .day.available-day.selected{
   background:#2e3a72;
@@ -2373,8 +2346,7 @@ body.mode-map .map-control-row{
   display:flex;
   flex-direction:column;
   gap:4px;
-  box-shadow:0 2px 6px var(--border);
-}
+   }
 
 .open-posts .calendar-container .time-popup .time-list button{
   background:var(--btn);
@@ -2389,7 +2361,6 @@ body.mode-map .map-control-row{
 .open-posts .session-info{
   color: inherit;
   font-size: inherit;
-  font-family: inherit;
 }
 .open-posts .venue-info{margin-top:4px;}
 .open-posts .session-info{margin-top:8px;}
@@ -2443,7 +2414,6 @@ body.mode-map .map-control-row{
   border-radius: 999px;
   padding: 6px 10px;
   font-size: 14px;
-  font-family: Verdana;
 }
 
 .desc{
@@ -2480,10 +2450,10 @@ body.mode-map .map-control-row{
 }
 
 @media (max-width:840px){
-  .open-posts .body{
+  .open-posts .post-body{
     flex-direction:column;
   }
-  .open-posts .text .location-section{
+  .open-posts .post-details .location-section{
     order:-1;
   }
   .open-posts .img-box{
@@ -2524,11 +2494,11 @@ body.mode-map .map-control-row{
     margin-left:0;
     margin-right:0;
   }
-  .open-posts .body{
+  .open-posts .post-body{
     padding:14px 0;
     gap:8px;
   }
-  .open-posts .text{
+  .open-posts .post-details{
     padding-left:12px;
     padding-right:12px;
   }
@@ -2630,12 +2600,15 @@ footer{
   }
   #post-modal-container.hidden{display:none;}
   #post-modal-container .post-modal{
-    width:440px;
+    width:880px;
     max-width:100%;
     height:90%;
     overflow:auto;
     background:var(--list-background);
     border-radius:8px;
+  }
+  @media (max-width:879px){
+    #post-modal-container .post-modal{width:440px;}
   }
 
 
@@ -2649,7 +2622,6 @@ footer{
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 14px;
-  font-family: Verdana;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2767,7 +2739,6 @@ footer .foot-row .footer-card{
 }
 
 .hover-card .t{
-  font-family: Verdana;
   font-weight: bold;
   font-size: 16px;
   line-height: 1.25;
@@ -2782,7 +2753,6 @@ footer .foot-row .footer-card{
 
 .hover-card .s{
   font-size: 14px;
-  font-family: Verdana;
   opacity: .8;
   margin-top: 2px;
   white-space: normal;
@@ -2797,7 +2767,6 @@ footer .foot-row .footer-card{
 
 .multi-hover h4{
   margin: 0 0 8px 0;
-  font-family: Verdana;
   font-size: 16px;
   color: var(--ink-d);
   font-weight: bold;
@@ -2844,7 +2813,6 @@ footer .foot-row .footer-card{
 
 .multi-item.map-card .s{
   font-size: 14px;
-  font-family: Verdana;
   opacity: .8;
   margin-top: 2px;
   white-space: nowrap;
@@ -2862,7 +2830,6 @@ footer .foot-row .footer-card{
 
 .multi-ctrls .hint{
   font-size: 14px;
-  font-family: Verdana;
   color: var(--ink-d);
 }
 
@@ -3013,7 +2980,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     border-radius:0;
     margin:0;
   }
-  .open-posts .short-image-container{
+  .open-posts .post-images{
     flex:0 0 100%;
   }
   .open-posts .img-box{
@@ -3051,7 +3018,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   .open-posts .detail-header{
     padding-bottom:0;
   }
-  .open-posts .body{
+  .open-posts .post-body{
     padding:0;
   }
 }
@@ -3064,7 +3031,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">List</button>
+      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -3102,7 +3069,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="post-header"></div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="post-images short-image-container">
+            <div class="post-images">
               <div class="selected-image"></div>
               <div class="image-thumbnail-row"></div>
             </div>
@@ -3352,10 +3319,10 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
               <div id="balloonTool">
                 <style>
                   #balloonTool { padding: 10px; }
-                  #balloonTool .t{font-family: Verdana;font-size:16px;font-weight:bold;}
+                  #balloonTool .t{font-size:16px;font-weight:bold;}
                   #balloonTool .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
                   #balloonTool .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
-                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:30;}
+                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px; z-index:30;}
                   #balloonTool .shape-menu[hidden]{display:none;}
                   #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
                   #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
@@ -3619,9 +3586,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
     function updateStickyImages(){
       const root = document.documentElement;
-      const body = document.querySelector('.open-posts .body');
-      const imgArea = body ? body.querySelector('.short-image-container') : null;
-      const text = body ? body.querySelector('.text') : null;
+      const body = document.querySelector('.open-posts .post-body');
+      const imgArea = body ? body.querySelector('.post-images') : null;
+      const text = body ? body.querySelector('.post-details') : null;
       const header = body ? body.querySelector('.detail-header') : null;
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
       root.classList.toggle('hide-map-calendar', isBelow);
@@ -4189,15 +4156,11 @@ function makePosts(){
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
     function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 
-    function svgPlaceholder(id){
-      return 'assets/balloons/balloons-icon-16185.png';
-    }
-
     function memberAvatarUrl(p){
       if(p.member && p.member.avatar){
         return p.member.avatar;
       }
-      return svgPlaceholder(p.id);
+      return 'assets/balloons/balloons-icon-16185.png';
     }
 
     function hoverHTML(p){
@@ -5382,7 +5345,7 @@ function makePosts(){
       el.className = wide ? 'post-card' : 'quick-card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = `<img class="thumb lqip" loading="lazy" src="${svgPlaceholder(p.id)}" data-src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const thumb = `<img class="thumb lqip" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
           ${thumb}
         <div class="meta">
@@ -5531,32 +5494,36 @@ function makePosts(){
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
         </div>
-        <div class="body">
-          <div class="short-image-container">
-            <div class="img-box"><img id="hero-img" class="lqip" src="${svgPlaceholder(p.id)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
-            <div class="thumbnail-row"></div>
+        <div class="post-body">
+          <div class="main-post-column">
+            <div class="post-images">
+              <div class="img-box"><img id="hero-img" class="lqip" src="${imgThumb(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
+              <div class="thumbnail-row"></div>
+            </div>
           </div>
-          <div class="text">
-            <div class="location-section">
-              <div class="map-container">
-                <div id="map-${p.id}" class="post-map"></div>
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
-              </div>
-              <div class="calendar-container">
-                <div class="calendar-scroll">
-                  <div id="cal-${p.id}" class="post-calendar"></div>
+          <div class="second-post-column">
+            <div class="post-details">
+              <div class="location-section">
+                <div class="map-container">
+                  <div id="map-${p.id}" class="post-map"></div>
+                  <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
                 </div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
+                <div class="calendar-container">
+                  <div class="calendar-scroll">
+                    <div id="cal-${p.id}" class="post-calendar"></div>
+                  </div>
+                  <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
+                </div>
               </div>
+              <h2 class="title">${p.title}</h2>
+              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
+              <div id="venue-info-${p.id}" class="venue-info"></div>
+              <div id="session-info-${p.id}" class="session-info">
+                <div>${defaultInfo}</div>
+              </div>
+              <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
             </div>
-            <h2 class="title">${p.title}</h2>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
-            <div id="venue-info-${p.id}" class="venue-info"></div>
-            <div id="session-info-${p.id}" class="session-info">
-              <div>${defaultInfo}</div>
-            </div>
-            <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
           </div>
         </div>`;
       const header = wrap.querySelector('.detail-header');
@@ -5671,7 +5638,7 @@ function makePosts(){
       if(!container && window.innerWidth > 450){
         (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
       }
-      if((fromQuick || fromMap) && container && header){
+      if(container && header){
         const hh = document.querySelector('.header').offsetHeight;
         const desired = hh + 10;
         const r = header.getBoundingClientRect();
@@ -5716,8 +5683,8 @@ function makePosts(){
       if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
       requestAnimationFrame(()=>{
-        const imgArea = detail.querySelector('.short-image-container');
-        const text = detail.querySelector('.text');
+        const imgArea = detail.querySelector('.post-images');
+      const text = detail.querySelector('.post-details');
         if(headerEl){
           headerEl.style.position='sticky';
           headerEl.style.top='0';
@@ -7176,7 +7143,7 @@ document.addEventListener('DOMContentLoaded', () => {
           details.style.padding = '0';
         }
         board.style.width = '440px';
-        postImages.classList.add('short-image-container');
+        postImages.classList.add('post-images');
         postImages.classList.remove('tall-image-container');
         if(thumbRow && selectedImageBox){
           selectedImageBox.insertAdjacentElement('afterend', thumbRow);
@@ -7189,7 +7156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         board.style.width = '';
         postImages.classList.add('tall-image-container');
-        postImages.classList.remove('short-image-container');
+        postImages.classList.remove('post-images');
         if(thumbRow && selectedImageBox){
           postImages.appendChild(thumbRow);
         }
