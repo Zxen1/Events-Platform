@@ -14,7 +14,7 @@
   <style>:root{
   --header-h: 75px;
   --subheader-h: 0;
-  --panel-w: 440px;
+  --panel-w: 420px;
   --results-w: 440px;
   --gap: 10px;
     --media-h: 200px;
@@ -105,6 +105,10 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   border-color: var(--border) !important;
   box-shadow: rgba(0,0,0,0.1) 0px 2px 12px;
+}
+
+*:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(p):not(span):not(a):not(label):not(strong):not(em):not(small){
+  box-shadow:none;
 }
 
 fieldset{
@@ -568,8 +572,8 @@ button[aria-expanded="true"] .results-arrow{
   top:var(--header-h);
   bottom:var(--footer-h);
   transform:translateX(-50%);
-  width:440px;
-  max-width:440px;
+  width:420px;
+  max-width:420px;
   height:calc(100vh - var(--header-h) - var(--footer-h));
   border-radius:0;
   display:flex;
@@ -594,12 +598,19 @@ button[aria-expanded="true"] .results-arrow{
   flex:1 1 auto;
   overflow-y:auto;
   overflow-x:hidden;
-  padding:0 20px 20px;
+  padding:0 0 20px;
   overscroll-behavior:contain;
 }
 .panel-body > *{
-  width:440px;
-  max-width:440px;
+  width:400px;
+  max-width:400px;
+}
+
+.panel-header,
+.panel-body{
+  width:400px;
+  max-width:400px;
+  margin:0 auto;
 }
 #adminPanel #styleControls{
   display:flex;
@@ -608,7 +619,7 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #adminPanel #styleControls > *{
-  width:440px;
+  width:400px;
 }
 #adminPanel .admin-fieldset,
 .admin-fieldset{
@@ -616,7 +627,7 @@ button[aria-expanded="true"] .results-arrow{
   border:0;
   border-radius:8px;
   padding:0;
-  width:440px;
+  width:400px;
   box-sizing:border-box;
 }
 #adminPanel .admin-fieldset.collapsed{
@@ -624,8 +635,8 @@ button[aria-expanded="true"] .results-arrow{
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    width:440px;
-    max-width:440px;
+    width:420px;
+    max-width:420px;
     max-height:90%;
   }
 
@@ -639,11 +650,22 @@ button[aria-expanded="true"] .results-arrow{
     color:#fff;
   }
 #filterPanel .panel-content{
-  width:440px;
-  max-width:440px;
+  width:420px;
+  max-width:420px;
   background:#222222;
   color:#fff;
   display:block;
+}
+
+.admin-container,
+.member-container,
+.filter-container{
+  width:420px;
+  max-width:420px;
+  background:#333333;
+  display:flex;
+  flex-direction:column;
+  height:100%;
 }
 
 #filterPanel button,
@@ -770,18 +792,18 @@ button[aria-expanded="true"] .results-arrow{
   #adminPanel .panel-content,
   #memberPanel .panel-content,
   #filterPanel .panel-content{
-    width:440px;
-    max-width:440px;
+    width:420px;
+    max-width:420px;
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:440px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:440px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:400px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #adminPanel .color-group{
@@ -798,8 +820,8 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:8px;
   margin-left:0;
-  width:440px;
-  max-width:440px;
+  width:400px;
+  max-width:400px;
 }
 #autoTheme-row button{
   flex:0 0 auto;
@@ -949,7 +971,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:8px;
-  width:440px;
+  width:400px;
 }
 #adminPanel .panel-field{margin:0;}
 #adminPanel h3{margin:0;}
@@ -3107,6 +3129,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
+      <div class="filter-container">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
@@ -3173,6 +3196,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="right:0;transform:none;">
+      <div class="member-container">
       <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
@@ -3207,12 +3231,14 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <input type="color" id="mColor" data-mode="hex" value="#000000" />
         </div>
       </form>
+      </div>
     </div>
   </div>
 
   <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
-      <div class="panel-header">
+      <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
+        <div class="admin-container">
+        <div class="panel-header">
         <div class="header-top">
           <h2 class="title">Admin</h2>
           <div class="panel-actions">
@@ -3226,8 +3252,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <button type="button" class="tab-btn" data-tab="settings">Settings</button>
           <button type="button" class="tab-btn" data-tab="forms">Forms</button>
         </div>
-      </div>
-      <form id="adminForm" class="panel-body">
+        </div>
+        <form id="adminForm" class="panel-body">
         <div id="tab-map" class="tab-panel active">
             <div class="panel-field">
               <label for="mapTheme">Theme</label>
@@ -3420,9 +3446,10 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
             <div id="formsCategories"></div>
           </div>
         </div>
-      </form>
-  </div>
-  </div>
+        </form>
+        </div>
+      </div>
+    </div>
 
   <div id="welcomePopup" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content">
@@ -6576,8 +6603,8 @@ document.addEventListener('pointerdown', handleDocInteract);
   document.querySelectorAll('.panel').forEach(panel=>{
     const content = panel.querySelector('.panel-content');
     if(content){
-      content.style.width = '440px';
-      content.style.maxWidth = '440px';
+      content.style.width = '420px';
+      content.style.maxWidth = '420px';
       content.style.top = 'var(--header-h)';
       content.style.bottom = 'var(--footer-h)';
       content.style.height = 'calc(100vh - var(--header-h) - var(--footer-h))';
