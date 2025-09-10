@@ -1429,7 +1429,7 @@ body.hide-results .quick-list-board{
 }
 
 .post-board{
-  width:880px;
+  width:970px;
   padding:0;
   margin:0 auto;
   overflow:auto;
@@ -1439,7 +1439,7 @@ body.hide-results .quick-list-board{
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-@media (max-width:879px){
+@media (max-width:969px){
   .post-board{width:440px;}
 }
 .post-board .post-card{
@@ -1449,7 +1449,7 @@ body.hide-results .quick-list-board{
 .post-board .post-body{
   display:flex;
 }
-@media (max-width:879px){
+@media (max-width:969px){
   .post-board .post-body{flex-direction:column;}
 }
 
@@ -1510,8 +1510,9 @@ body.hide-results .quick-list-board{
 }
 
 .second-post-column{
-  flex:1 1 440px;
-  min-width:440px;
+  flex:0 0 530px;
+  width:530px;
+  max-width:530px;
   padding:0;
 }
 
@@ -2614,14 +2615,14 @@ footer{
   }
   #post-modal-container.hidden{display:none;}
   #post-modal-container .post-modal{
-    width:880px;
+    width:970px;
     max-width:100%;
     height:90%;
     overflow:auto;
     background:var(--list-background);
     border-radius:8px;
   }
-  @media (max-width:879px){
+  @media (max-width:969px){
     #post-modal-container .post-modal{width:440px;}
   }
 
@@ -7155,7 +7156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-      if(secondWidth < 440){
+      if(secondWidth < 530){
         if(secondCol.style.display !== 'none'){
           secondCol.style.display = 'none';
           postImages.insertAdjacentElement('afterend', details);
