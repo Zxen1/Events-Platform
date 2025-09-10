@@ -4692,6 +4692,15 @@ function makePosts(){
           document.body.classList.remove('hide-ads');
         }
         adjustBoards();
+        if(m === 'posts'){
+          const boardEl = document.querySelector('.post-board');
+          if(boardEl){
+            boardEl.style.width = '';
+          }
+          if(window.adjust){
+            window.adjust();
+          }
+        }
         const toggle = $('#postBtn');
         if(toggle){
           toggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
@@ -7177,10 +7186,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if(twoCols){
         document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
       } else {
-        document.documentElement.style.removeProperty('--post-header-h');
+      document.documentElement.style.removeProperty('--post-header-h');
       }
     }
 
+  window.adjust = adjust;
   adjust();
   window.addEventListener('resize', adjust);
 
