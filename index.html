@@ -1550,6 +1550,41 @@ body.hide-ads .ad-board{
 .ad-board-container{
   width:100%;
   height:100%;
+  position:relative;
+  overflow:hidden;
+}
+
+.ad-board-container .ad-slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 1.5s ease-in-out;
+  cursor:pointer;
+}
+
+.ad-board-container .ad-slide.active{opacity:1;}
+
+.ad-board-container .ad-slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:adZoom 20s linear forwards;
+}
+
+.ad-board-container .ad-slide .info{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  background:rgba(0,0,0,0.5);
+  color:#fff;
+  padding:10px;
+  text-shadow:0 0 4px #000;
+}
+
+@keyframes adZoom{
+  from{transform:scale(1);}
+  to{transform:scale(1.1);}
 }
 
 
@@ -3524,7 +3559,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let posts = [], filtered = [];
+    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null;
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -4096,6 +4131,7 @@ function makePosts(){
       postsLoaded = true;
       addPostSource();
       applyFilters();
+      initAdBoard();
     }
 
     function checkLoadPosts(){
@@ -6121,6 +6157,55 @@ function makePosts(){
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
       updateFilterBtnColor();
+    }
+
+    function initAdBoard(){
+      const panel = document.querySelector('.ad-board-container');
+      adPosts = posts.filter(p => p.sponsored);
+      if(!panel || !adPosts.length) return;
+      function showNextAd(){
+        adIndex = (adIndex + 1) % adPosts.length;
+        const p = adPosts[adIndex];
+        const slide = document.createElement('a');
+        slide.className = 'ad-slide';
+        slide.dataset.id = p.id;
+        slide.href = postUrl(p);
+        const img = new Image();
+        img.src = heroUrl(p);
+        img.alt = '';
+        img.decode().catch(()=>{}).then(()=>{
+          slide.appendChild(img);
+          const info = document.createElement('div');
+          info.className = 'info';
+          info.textContent = p.title;
+          slide.appendChild(info);
+          panel.appendChild(slide);
+          requestAnimationFrame(()=> slide.classList.add('active'));
+          const slides = panel.querySelectorAll('.ad-slide');
+          if(slides.length > 1){
+            const old = slides[0];
+            old.classList.remove('active');
+            setTimeout(()=> old.remove(),1500);
+          }
+        });
+      }
+      showNextAd();
+      adTimer = setInterval(showNextAd,20000);
+      panel.addEventListener('click', async e => {
+        const slide = e.target.closest('.ad-slide');
+        if(!slide) return;
+        e.preventDefault();
+        const id = slide.dataset.id;
+        await openPost(id);
+        const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
+        if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
+        document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
+        if(quickCard){
+          quickCard.setAttribute('aria-selected','true');
+          quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+        }
+      });
     }
 
     // applyFilters();
