@@ -7156,7 +7156,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
 
   function adjust(){
-      if(!board || !mainCol || !secondCol || !details || !postImages || !postHeader) return;
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
