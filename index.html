@@ -1883,7 +1883,7 @@ body.mode-map .map-control-row{
   display:flex;
   flex-wrap:wrap;
   gap:10px;
-  align-items:flex-start;
+  align-items:stretch;
   align-content:flex-start;
 }
 
@@ -7157,7 +7157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-      if(secondWidth < 530){
+      if(secondWidth < 440){
         if(secondCol.style.display !== 'none'){
           secondCol.style.display = 'none';
           postImages.insertAdjacentElement('afterend', details);
