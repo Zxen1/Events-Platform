@@ -54,13 +54,6 @@
       --border-active: rgba(255,200,0,0.45);
       --placeholder-text: gray;
       --filter-placeholder-text: var(--placeholder-text);
-      --control-text-bg: #ffffff;
-      --control-placeholder-text: var(--placeholder-text);
-      --control-placeholder-font: system-ui, sans-serif;
-      --control-placeholder-size: 14px;
-      --control-geolocate-bg: #ffffff;
-      --control-compass-bg: #ffffff;
-      --control-clear-bg: rgba(0,0,0,0);
       --popup-bg: rgba(0,0,0,1);
       --popup-text: #ffffff;
       --dropdown-title: #000000;
@@ -370,7 +363,7 @@ input[type="checkbox"]{
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: var(--safe-top) 20px 0 20px;
+    padding: var(--safe-top) 10px 0 10px;
     position: fixed;
     top: 0;
     left: 0;
@@ -427,7 +420,8 @@ input[type="checkbox"]{
   color: var(--button-active-text) !important;
 }
 
-#filterBtn{margin-left:auto;}
+
+.header-buttons{display:flex;gap:10px;}
 
 
 .header button,
@@ -665,7 +659,9 @@ button[aria-expanded="true"] .results-arrow{
   max-width:440px;
   background:#222222;
   color:#fff;
-  display:block;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
 }
 
 #filterPanel button,
@@ -1447,7 +1443,7 @@ body.hide-results .quick-list-board{
 .post-board{
   width:970px;
   padding:0;
-  margin:0 auto;
+  margin:0;
   overflow:auto;
   display:flex;
   flex-direction:column;
@@ -1484,7 +1480,7 @@ body.hide-results .quick-list-board{
 }
 
 .post-images-container{
-  margin-top:10px;
+  margin-top:0;
   width:100%;
   display:flex;
   flex-direction:column;
@@ -3067,6 +3063,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
+    </nav>
+    <div class="header-buttons">
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
@@ -3087,7 +3085,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
-    </nav>
+    </div>
   </header>
   
 
