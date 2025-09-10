@@ -1461,9 +1461,9 @@ body.hide-results .quick-list-board{
   border-right:1px solid #ffffff;
 }
 
-.post-images{
+.post-images-container{
   margin-top:10px;
-  width:440px;
+  width:100%;
   display:flex;
   flex-direction:column;
 }
@@ -1474,7 +1474,7 @@ body.hide-results .quick-list-board{
   z-index:1;
 }
 
-.post-board.two-columns .post-images,
+.post-board.two-columns .post-images-container,
 .post-board.two-columns .tall-image-container{
   position:sticky;
   top:calc(var(--post-header-h,0px) + var(--gap));
@@ -1492,9 +1492,9 @@ body.hide-results .quick-list-board{
   object-fit:cover;
 }
 
-.post-images .selected-image{
-  width:440px;
-  height:440px;
+.post-images-container .selected-image{
+  width:100%;
+  height:auto;
   background:#000;
   display:flex;
   align-items:center;
@@ -1502,7 +1502,7 @@ body.hide-results .quick-list-board{
   overflow:hidden;
 }
 
-.post-images .selected-image img{
+.post-images-container .selected-image img{
   max-width:100%;
   max-height:100%;
   width:auto;
@@ -1903,22 +1903,23 @@ body.mode-map .map-control-row{
   font-size: inherit;
 }
 
-.open-posts .post-images{
+.open-posts .post-images-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:0 0 440px;
+  width:100%;
+  flex:0 0 100%;
 }
 
-.open-posts-sticky-images .open-posts .post-images{
+.open-posts-sticky-images .open-posts .post-images-container{
   position:sticky;
   top:var(--open-post-header-h,0px);
   align-self:start;
 }
 
 .open-posts .img-box{
-  width:400px;
-  height:400px;
+  width:100%;
+  height:auto;
   overflow:hidden;
   border:none;
   border-radius:8px;
@@ -1986,7 +1987,7 @@ body.mode-map .map-control-row{
   .open-posts .detail-header{
     padding:6px 0;
   }
-  .open-posts .post-images,
+  .open-posts .post-images-container,
   .open-posts .venue-dropdown,
   .open-posts .session-dropdown,
   .open-posts .post-details{
@@ -1996,7 +1997,7 @@ body.mode-map .map-control-row{
     padding:14px;
     margin-bottom:0;
   }
-  .open-posts .post-images{
+  .open-posts .post-images-container{
     flex:1 1 100%;
     width:100%;
   }
@@ -2991,13 +2992,14 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     border-radius:0;
     margin:0;
   }
-  .open-posts .post-images{
+  .open-posts .post-images-container{
     flex:0 0 100%;
+    width:100%;
   }
   .open-posts .img-box{
-    width:100vw;
-    height:100vw;
-    flex:0 0 100vw;
+    width:100%;
+    height:auto;
+    flex:0 0 100%;
     border-radius:8px;
   }
   .open-posts .img-box img{
@@ -3080,7 +3082,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="post-header"></div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="post-images">
+            <div class="post-images-container">
               <div class="selected-image"></div>
               <div class="image-thumbnail-row"></div>
             </div>
@@ -3596,7 +3598,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     function updateStickyImages(){
       const root = document.documentElement;
       const body = document.querySelector('.open-posts .post-body');
-      const imgArea = body ? body.querySelector('.post-images') : null;
+      const imgArea = body ? body.querySelector('.post-images-container') : null;
       const text = body ? body.querySelector('.post-details') : null;
       const header = body ? body.querySelector('.detail-header') : null;
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
@@ -5514,7 +5516,7 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="post-images">
+            <div class="post-images-container">
               <div class="img-box"><img id="hero-img" class="lqip" src="${imgThumb(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
               <div class="thumbnail-row"></div>
             </div>
@@ -5701,7 +5703,7 @@ function makePosts(){
       if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
       requestAnimationFrame(()=>{
-        const imgArea = detail.querySelector('.post-images');
+        const imgArea = detail.querySelector('.post-images-container');
       const text = detail.querySelector('.post-details');
         if(headerEl){
           headerEl.style.position='sticky';
@@ -7146,7 +7148,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainCol = document.querySelector('.main-post-column');
   const secondCol = document.querySelector('.second-post-column');
   const details = document.querySelector('.post-details');
-  const postImages = document.querySelector('.post-images');
+  const postImages = document.querySelector('.post-images-container');
   const postHeader = document.querySelector('.post-header');
   const thumbRow = document.querySelector('.image-thumbnail-row');
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
@@ -7165,7 +7167,6 @@ document.addEventListener('DOMContentLoaded', () => {
           details.style.padding = '0';
         }
         board.style.width = '440px';
-        postImages.classList.add('post-images');
         postImages.classList.remove('tall-image-container');
         if(thumbRow && selectedImageBox){
           selectedImageBox.insertAdjacentElement('afterend', thumbRow);
@@ -7178,7 +7179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         board.style.width = '';
         postImages.classList.add('tall-image-container');
-        postImages.classList.remove('post-images');
         if(thumbRow && selectedImageBox){
           postImages.appendChild(thumbRow);
         }
