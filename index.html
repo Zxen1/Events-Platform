@@ -7152,9 +7152,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
-  if(!board || !mainCol || !secondCol || !details || !postImages || !postHeader || !imageModalContainer || !imageModal) return;
 
   function adjust(){
+      if(!board || !mainCol || !secondCol || !details || !postImages || !postHeader) return;
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
@@ -7195,9 +7195,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.adjust = adjust;
   adjust();
+  window.addEventListener('load', adjust);
+  const boardObserver = new ResizeObserver(() => adjust());
+  if(board) boardObserver.observe(board);
   window.addEventListener('resize', adjust);
 
   function openImageModal(src){
+    if(!imageModalContainer || !imageModal) return;
     imageModal.innerHTML='';
     const img = document.createElement('img');
     img.src = src;
