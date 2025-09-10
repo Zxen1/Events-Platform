@@ -7195,8 +7195,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.adjust = adjust;
   adjust();
   window.addEventListener('load', adjust);
-  const boardObserver = new ResizeObserver(() => adjust());
-  if(board) boardObserver.observe(board);
+  new ResizeObserver(() => adjust()).observe(board);
   window.addEventListener('resize', adjust);
 
   function openImageModal(src){
