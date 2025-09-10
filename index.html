@@ -582,7 +582,6 @@ button[aria-expanded="true"] .results-arrow{
   left:50%;
   top:var(--header-h);
   bottom:var(--footer-h);
-  transform:translateX(-50%);
   width:440px;
   max-width:440px;
   height:calc(100vh - var(--header-h) - var(--footer-h));
@@ -594,7 +593,6 @@ button[aria-expanded="true"] .results-arrow{
   transition:transform 0.3s;
 }
 .panel-content.panel-visible{
-  transform:translateX(-50%);
 }
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
 .panel-content .resizer.n{top:0;left:0;right:0;height:6px;cursor:n-resize;}
@@ -690,7 +688,7 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
-  width:var(--calendar-width);
+  width:auto;
   height:var(--calendar-height);
   border:1px solid var(--border);
   border-radius:8px;
@@ -703,7 +701,6 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:50%;
   background:var(--today);
   cursor:pointer;
-  transform:translateX(-50%);
 }
 #filterPanel #datePicker{
   width:var(--calendar-width);
@@ -780,6 +777,16 @@ button[aria-expanded="true"] .results-arrow{
 }
 #welcome-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap);margin-top:var(--gap);}
 #welcome-modal{background:rgba(0,0,0,0.7);}
+#welcome-modal .modal-content{
+  position:absolute;
+  width:440px;
+  max-width:440px;
+  border-radius:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  pointer-events:auto;
+}
 #memberPanel .location-info{margin-top:4px;font-size:14px;}
   @media (max-width:600px){
   #adminPanel .panel-content,
@@ -1439,6 +1446,10 @@ body.hide-results .quick-list-board{
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
+.post-content{
+  max-width:900px;
+  margin:0 auto;
+}
 @media (max-width:969px){
   .post-board{width:440px;}
 }
@@ -1485,7 +1496,6 @@ body.hide-results .quick-list-board{
 .image-thumbnail-row{
   display:flex;
   gap:5px;
-  padding:5px;
 }
 
 .image-thumbnail-row img{
@@ -1812,7 +1822,6 @@ body.mode-map .map-control-row{
   position:fixed;
   top:calc(var(--header-h) + 10px);
   left:50%;
-  transform:translateX(-50%);
   display:flex;
   align-items:center;
   width:400px;
@@ -1899,7 +1908,7 @@ body.mode-map .map-control-row{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  padding:10px;
+  padding:0;
 }
 
 .open-posts .post-details .info{
@@ -1924,9 +1933,10 @@ body.mode-map .map-control-row{
 .open-posts .img-box{
   width:100%;
   height:auto;
+  aspect-ratio:1/1;
   overflow:hidden;
   border:none;
-  border-radius:8px;
+  border-radius:0;
   flex-shrink:0;
   cursor:pointer;
   background: rgba(0,0,0,0);
@@ -1950,7 +1960,6 @@ body.mode-map .map-control-row{
   height:auto;
   overflow-x:auto;
   gap:4px;
-  padding:0 12px;
   position:relative;
 }
 
@@ -1998,7 +2007,6 @@ body.mode-map .map-control-row{
     margin-bottom:6px;
   }
   .open-posts .post-details{
-    padding:14px;
     margin-bottom:0;
   }
   .open-posts .post-images-container{
@@ -3437,7 +3445,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   </div>
 
   <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="panel-content">
+    <!-- Welcome modal content (not a panel) -->
+    <div class="modal-content">
       <div class="panel-body" id="welcomeBody"></div>
     </div>
   </div>
@@ -3568,7 +3577,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null;
+    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null;
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -6168,6 +6177,16 @@ function makePosts(){
     function applyFilters(render = true){
       if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      adPosts = filtered.filter(p => p.sponsored);
+      if(adPanel){
+        adPanel.innerHTML = '';
+        adIndex = -1;
+        if(adTimer){ clearInterval(adTimer); }
+        if(adPosts.length){
+          showNextAd();
+          adTimer = setInterval(showNextAd,20000);
+        }
+      }
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
       const today = new Date(); today.setHours(0,0,0,0);
@@ -6177,39 +6196,41 @@ function makePosts(){
       updateFilterBtnColor();
     }
 
+    function showNextAd(){
+      if(!adPanel || !adPosts.length) return;
+      adIndex = (adIndex + 1) % adPosts.length;
+      const p = adPosts[adIndex];
+      const slide = document.createElement('a');
+      slide.className = 'ad-slide';
+      slide.dataset.id = p.id;
+      slide.href = postUrl(p);
+      const img = new Image();
+      img.src = heroUrl(p);
+      img.alt = '';
+      img.decode().catch(()=>{}).then(()=>{
+        slide.appendChild(img);
+        const info = document.createElement('div');
+        info.className = 'info';
+        info.textContent = p.title;
+        slide.appendChild(info);
+        adPanel.appendChild(slide);
+        requestAnimationFrame(()=> slide.classList.add('active'));
+        const slides = adPanel.querySelectorAll('.ad-slide');
+        if(slides.length > 1){
+          const old = slides[0];
+          old.classList.remove('active');
+          setTimeout(()=> old.remove(),1500);
+        }
+      });
+    }
+
     function initAdBoard(){
-      const panel = document.querySelector('.ad-board-container');
-      adPosts = posts.filter(p => p.sponsored);
-      if(!panel || !adPosts.length) return;
-      function showNextAd(){
-        adIndex = (adIndex + 1) % adPosts.length;
-        const p = adPosts[adIndex];
-        const slide = document.createElement('a');
-        slide.className = 'ad-slide';
-        slide.dataset.id = p.id;
-        slide.href = postUrl(p);
-        const img = new Image();
-        img.src = heroUrl(p);
-        img.alt = '';
-        img.decode().catch(()=>{}).then(()=>{
-          slide.appendChild(img);
-          const info = document.createElement('div');
-          info.className = 'info';
-          info.textContent = p.title;
-          slide.appendChild(info);
-          panel.appendChild(slide);
-          requestAnimationFrame(()=> slide.classList.add('active'));
-          const slides = panel.querySelectorAll('.ad-slide');
-          if(slides.length > 1){
-            const old = slides[0];
-            old.classList.remove('active');
-            setTimeout(()=> old.remove(),1500);
-          }
-        });
-      }
+      adPanel = document.querySelector('.ad-board-container');
+      adPosts = filtered.filter(p => p.sponsored);
+      if(!adPanel || !adPosts.length) return;
       showNextAd();
       adTimer = setInterval(showNextAd,20000);
-      panel.addEventListener('click', async e => {
+      adPanel.addEventListener('click', async e => {
         const slide = e.target.closest('.ad-slide');
         if(!slide) return;
         e.preventDefault();
@@ -6288,7 +6309,7 @@ const panelButtons = {
   adminPanel: 'adminBtn'
 };
 function openPanel(m){
-  const content = m.querySelector('.panel-content');
+  const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   if(content){
     content.style.width = '';
     content.style.height = '';
@@ -6346,7 +6367,6 @@ function openPanel(m){
     } else if(m.id==='welcome-modal'){
       content.style.left='50%';
       content.style.top='200px';
-      content.style.transform='translateX(-50%)';
     } else {
       content.style.left='50%';
       content.style.top='50%';
@@ -6367,7 +6387,7 @@ function closePanel(m){
     const btn = document.getElementById(btnId);
     btn && btn.setAttribute('aria-pressed','false');
   }
-  const content = m.querySelector('.panel-content');
+  const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   if(content && content.dataset.side){
     content.classList.remove('panel-visible');
     content.style.transform = content.dataset.side === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
@@ -6413,7 +6433,7 @@ function togglePanel(m){
 }
 function movePanelToEdge(panel, side){
   if(!panel) return;
-  const content = panel.querySelector('.panel-content');
+  const content = panel.querySelector('.panel-content') || panel.querySelector('.modal-content');
   if(!content) return;
   const header = document.querySelector('.header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
@@ -6479,7 +6499,7 @@ function handleDocInteract(e){
   if(e.target.closest('#filterBtn')) return;
   const welcome = document.getElementById('welcome-modal');
   if(welcome && welcome.classList.contains('show')){
-    const content = welcome.querySelector('.panel-content');
+    const content = welcome.querySelector('.modal-content');
     if(content && !content.contains(e.target)){
       closePanel(welcome);
     }
@@ -6627,7 +6647,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
-  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .panel-content'], text:['#welcome-modal .panel-content'], title:['#welcome-modal .panel-content .t','#welcome-modal .panel-content .title'], btn:['#welcome-modal button'], btnText:['#welcome-modal button']}},
+  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .modal-content'], text:['#welcome-modal .modal-content'], title:['#welcome-modal .modal-content .t','#welcome-modal .modal-content .title'], btn:['#welcome-modal button'], btnText:['#welcome-modal button']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
