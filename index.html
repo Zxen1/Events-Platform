@@ -145,8 +145,7 @@ html,body{
 }
 
   body{
-    margin: 0 auto;
-    max-width:1920px;
+    margin: 0;
     font: 13px system-ui, sans-serif;
     background: var(--background);
     color: var(--text);
@@ -192,25 +191,6 @@ button:not([class^="mapboxgl-ctrl"]),
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
-.map-control-row .mapboxgl-ctrl button{
-  background: var(--btn);
-  border:1px solid var(--btn);
-  color: var(--button-text);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.map-control-row .mapboxgl-ctrl button:hover{
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
-  color: var(--button-hover-text);
-}
-.map-control-row .mapboxgl-ctrl button:active{
-  background: var(--btn-active);
-  border-color: var(--btn-active);
-  color: var(--button-active-text);
-}
-.map-control-row .mapboxgl-ctrl{box-shadow:none;}
 
 button:hover,
 [role="button"]:hover{
@@ -562,8 +542,6 @@ button[aria-expanded="true"] .results-arrow{
   left:0;
   right:0;
   width:100%;
-  margin:0 auto;
-  max-width:1920px;
   height:100vh;
   background:transparent;
   display:none;
@@ -579,8 +557,6 @@ button[aria-expanded="true"] .results-arrow{
   left:0;
   right:0;
   width:100%;
-  margin:0 auto;
-  max-width:1920px;
   height:100vh;
   background:transparent;
   display:none;
@@ -1515,7 +1491,8 @@ body.hide-results .quick-list-board{
 .image-thumbnail-row{
   display:flex;
   width:440px;
-  padding:0 10px;
+  padding-left:0;
+  padding-right:10px;
   box-sizing:border-box;
   gap:5px;
 }
@@ -1914,7 +1891,7 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  padding:0;
+  padding:10px;
 }
 
 .open-posts .post-details .info{
@@ -2537,8 +2514,7 @@ body.filters-active #filterBtn{
     gap:8px;
   }
   .open-posts .post-details{
-    padding-left:12px;
-    padding-right:12px;
+    padding:10px;
   }
 }
 
@@ -3224,13 +3200,10 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <label for="mDate">Date</label>
           <input type="date" id="mDate" />
         </div>
-        <div class="panel-field" id="mLocationField">
-          <label for="geocoder">Location</label>
-          <div class="map-control-row">
-            <div id="geocoder" class="geocoder"></div>
-            <div id="geolocateBtn"></div>
-            <div id="compassBtn"></div>
-          </div>
+        <div class="map-control-row">
+          <div id="geocoder" class="geocoder"></div>
+          <div id="geolocateBtn"></div>
+          <div id="compassBtn"></div>
         </div>
         <div class="panel-field">
           <label for="mColor">Color</label>
@@ -3482,12 +3455,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     if(geo) geo.style.flex='1 1 auto';
     if(geoBtn){ geoBtn.style.flex='0 0 35px'; geoBtn.style.marginLeft='20px'; }
     if(compassBtn){ compassBtn.style.flex='0 0 35px'; compassBtn.style.marginLeft='10px'; }
-    if(panel.id === 'memberPanel'){
-      const locField = panel.querySelector('#mLocationField');
-      if(locField) locField.appendChild(mapControlRow);
-    } else {
-      body.insertBefore(mapControlRow, body.firstChild);
-    }
+    body.insertBefore(mapControlRow, body.firstChild);
   }
 
   function placeMapControlsAtTop(){
@@ -3515,15 +3483,18 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   function updateMapControlsLocation(){
     if(!mapControlRow) return;
     const memberPanel = document.getElementById('memberPanel');
+    const filterPanel = document.getElementById('filterPanel');
     const welcomeModal = document.getElementById('welcome-modal');
     if(memberPanel && memberPanel.classList.contains('show')){
       placeMapControlsInPanel(memberPanel);
+    } else if(filterPanel && filterPanel.classList.contains('show')){
+      placeMapControlsInPanel(filterPanel);
+    } else if(document.body.classList.contains('mode-posts')){
+      mapControlRow.style.display='none';
+    } else if(welcomeModal && welcomeModal.classList.contains('show')){
+      placeMapControlsInPanel(welcomeModal);
     } else {
-      if(welcomeModal && welcomeModal.classList.contains('show')){
-        placeMapControlsInPanel(welcomeModal);
-      } else {
-        placeMapControlsAtTop();
-      }
+      placeMapControlsAtTop();
     }
   }
 
@@ -4314,8 +4285,6 @@ function makePosts(){
       $('#dateInput').value='';
       dateStart = null;
       dateEnd = null;
-      $('#expiredToggle').checked = false;
-      expiredWasOn = false;
       buildFilterCalendar(today, maxPickerDate);
       updateRangeClasses();
       updateInput();
@@ -4513,7 +4482,6 @@ function makePosts(){
       else { dateEnd = date; }
       updateRangeClasses();
       updateInput();
-      if(expiredToggle && expiredToggle.checked){ expiredToggle.checked = false; expiredWasOn = false; }
     }
 
     function buildFilterCalendar(minDate, maxDate){
@@ -4602,7 +4570,6 @@ function makePosts(){
           dateEnd = null;
           updateRangeClasses();
           updateInput();
-          if(expiredToggle && expiredToggle.checked){ expiredToggle.checked = false; expiredWasOn = false; }
         } else {
           input.value='';
         }
@@ -4726,7 +4693,12 @@ function makePosts(){
           } else {
             document.body.classList.remove('hide-ads');
           }
-          boardsContainer.style.justifyContent = 'space-between';
+          const adsHidden = document.body.classList.contains('hide-ads');
+          if(!quickHidden && !adsHidden){
+            boardsContainer.style.justifyContent = 'center';
+          } else {
+            boardsContainer.style.justifyContent = 'flex-start';
+          }
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
           quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
