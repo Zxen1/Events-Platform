@@ -1823,6 +1823,14 @@ body.filters-active #filterBtn{
 
 .mode-posts .map-controls-map{display:none;}
 
+.map-controls-map{
+  position:absolute;
+  left:50%;
+  top:calc(var(--header-h) + 10px);
+  transform:translateX(-50%);
+  width:auto;
+}
+
 .map-control-row .geocoder{flex:1 1 auto;margin:0;}
 
 .map-control-row .geolocate-btn,
@@ -1855,6 +1863,12 @@ body.filters-active #filterBtn{
 
 #filterPanel .map-control-row input{
   color:#000;
+}
+
+#filterPanel .map-control-row button:not([class*="mapboxgl-"]){
+  background:#fff;
+  color:#000;
+  border:0;
 }
 
 #filterPanel .panel-body > *{width:420px !important;max-width:420px !important;}
@@ -3148,6 +3162,11 @@ img.thumb{
         </div>
       </div>
       <form id="memberForm" class="panel-body">
+        <div class="map-control-row map-controls-member">
+          <div id="geocoder-member" class="geocoder"></div>
+          <div id="geolocate-member" class="geolocate-btn"></div>
+          <div id="compass-member" class="compass-btn"></div>
+        </div>
         <div class="panel-field">
           <label for="mTitle">Title</label>
           <input type="text" id="mTitle" required />
@@ -4765,7 +4784,8 @@ function makePosts(){
         });
       }
 
-      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css');
+      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
+        'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css');
       injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
         'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
 
@@ -4801,7 +4821,8 @@ function makePosts(){
       const sets = [
         {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
         {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'}
+        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
+        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
