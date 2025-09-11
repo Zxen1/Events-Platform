@@ -610,7 +610,10 @@ button[aria-expanded="true"] .results-arrow{
   width:420px !important;
   max-width:420px !important;
   box-sizing:border-box;
-  padding:0 10px;
+  padding:0 10px 10px;
+}
+.panel-body > *:last-child{
+  padding-bottom:0;
 }
 .panel-body > * > *{
   width:400px !important;
@@ -809,15 +812,15 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:440px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:0;padding:10px 0;width:440px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #post-mode-background-row{
   display:flex;
   align-items:center;
   width:400px;
-  height:40px;
   gap:8px;
+  flex-wrap:wrap;
 }
 #post-mode-background-row label{
   min-width:140px;
@@ -831,7 +834,8 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 #post-mode-background-row input[type="range"]{
-  flex:1 1 auto;
+  flex:0 0 300px;
+  width:300px;
 }
 #post-mode-background-row span{
   width:40px;
@@ -1664,7 +1668,7 @@ body.filters-active #filterBtn{
   grid-template-columns:90px 1fr 36px;
   gap:12px;
   align-items: flex-start;
-  background: rgba(0,0,0,0.7);
+  background-color: transparent;
   border: none;
   border-radius:8px;
   padding:12px;
@@ -1905,7 +1909,7 @@ body.filters-active #filterBtn{
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
-  background:var(--closed-card-bg);
+  background-color:transparent;
   margin:0;
   border-radius:0;
   border-bottom:1px solid var(--border);
@@ -1957,7 +1961,7 @@ body.filters-active #filterBtn{
   position:sticky;
   top:0;
   z-index:3;
-  background:var(--list-background);
+  background-color:transparent;
 }
 .open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
