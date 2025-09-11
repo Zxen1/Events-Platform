@@ -1467,7 +1467,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-direction:column;
 }
 
-.post-images-container{
+.post-images{
   margin-top:0;
   width:100%;
   display:flex;
@@ -1480,14 +1480,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   z-index:1;
 }
 
-.post-board.two-columns .post-images-container,
+.post-board.two-columns .post-images,
 .post-board.two-columns .tall-image-container{
   position:sticky;
   top:calc(var(--post-header-h,0px) + var(--gap));
   align-self:flex-start;
 }
 
-.image-thumbnail-row{
+.thumbnail-row{
   display:flex;
   width:440px;
   padding-left:0;
@@ -1496,13 +1496,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:5px;
 }
 
-.image-thumbnail-row img{
+.thumbnail-row img{
   width:40px;
   height:40px;
   object-fit:cover;
 }
 
-.post-images-container .selected-image{
+.post-images .selected-image{
   width:100%;
   height:auto;
   background:#000;
@@ -1512,7 +1512,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:hidden;
 }
 
-.post-images-container .selected-image img{
+.post-images .selected-image img{
   max-width:100%;
   max-height:100%;
   width:auto;
@@ -1880,14 +1880,14 @@ body.filters-active #filterBtn{
 .post-board .posts{overflow:visible;padding:0;margin:0;}
 .post-board{color:#fff;}
 .post-board .post-card,
-.post-board .open-posts{
+.post-board .open-post{
   background:var(--closed-card-bg);
   margin:0;
   border-radius:0;
   border-bottom:1px solid var(--border);
 }
 .post-board .post-card:last-child,
-.post-board .open-posts:last-child{border-bottom:none;}
+.post-board .open-post:last-child{border-bottom:none;}
 .post-board .post-card .thumb{border-radius:0;}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 
@@ -1910,7 +1910,7 @@ body.filters-active #filterBtn{
   z-index: 0;
 }
 
-.open-posts{
+.open-post{
   border:none;
   border-radius:8px;
   margin:0 0 12px 0;
@@ -1922,7 +1922,7 @@ body.filters-active #filterBtn{
   gap:var(--gap);
 }
 
-.open-posts .detail-header{
+.open-post .post-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -1935,9 +1935,9 @@ body.filters-active #filterBtn{
   z-index:3;
   background:var(--list-background);
 }
-.open-posts .detail-header .share{margin-left:auto;margin-right:var(--gap);}
+.open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
-.open-posts .post-body{
+.open-post .post-body{
   padding:0 0 10px;
   display:flex;
   flex-wrap:wrap;
@@ -1946,7 +1946,7 @@ body.filters-active #filterBtn{
   align-content:flex-start;
 }
 
-.open-posts .post-details{
+.open-post .post-details{
   margin-top:0;
   flex:1 1 400px;
   min-width:400px;
@@ -1956,12 +1956,12 @@ body.filters-active #filterBtn{
   padding:10px;
 }
 
-.open-posts .post-details .info{
+.open-post .post-details .info{
   color: inherit;
   font-size: inherit;
 }
 
-.open-posts .post-images-container{
+.open-post .post-images{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -1969,13 +1969,13 @@ body.filters-active #filterBtn{
   flex:0 0 100%;
 }
 
-.open-posts-sticky-images .open-posts .post-images-container{
+.open-post-sticky-images .open-post .post-images{
   position:sticky;
   top:var(--open-post-header-h,0px);
   align-self:start;
 }
 
-.open-posts .img-box{
+.open-post .image-box{
   width:100%;
   height:auto;
   aspect-ratio:1/1;
@@ -1987,18 +1987,18 @@ body.filters-active #filterBtn{
   background: rgba(0,0,0,0);
 }
 
-.open-posts .img-box img{
+.open-post .image-box img{
   width:100%;
   height:100%;
   object-fit:cover;
   object-position:center;
   display:block;
 }
-.open-posts .img-box img.ready{
+.open-post .image-box img.ready{
   object-fit:cover;
 }
 
-.open-posts .thumbnail-row{
+.open-post .thumbnail-row{
   display:flex;
   flex-direction:row;
   width:440px;
@@ -2010,7 +2010,7 @@ body.filters-active #filterBtn{
   position:relative;
 }
 
-.open-posts .thumbnail-row img{
+.open-post .thumbnail-row img{
   width:50px;
   height:50px;
   object-fit:cover;
@@ -2038,56 +2038,56 @@ body.filters-active #filterBtn{
     border-radius:0;
   }
   .post-board .post-card .meta{padding:12px;}
-  .open-posts{
+  .open-post{
     margin:0;
   }
-  .open-posts .post-body{
+  .open-post .post-body{
     padding:0;
   }
-  .open-posts .detail-header{
+  .open-post .post-header{
     padding:6px 0;
   }
-  .open-posts .post-images-container,
-  .open-posts .venue-dropdown,
-  .open-posts .session-dropdown,
-  .open-posts .post-details{
+  .open-post .post-images,
+  .open-post .venue-dropdown,
+  .open-post .session-dropdown,
+  .open-post .post-details{
     margin-bottom:6px;
   }
-  .open-posts .post-details{
+  .open-post .post-details{
     margin-bottom:0;
   }
-  .open-posts .post-images-container{
+  .open-post .post-images{
     flex:1 1 100%;
     width:100%;
   }
-  .open-posts .img-box{
+  .open-post .image-box{
     width:100%;
     height:100vw;
     margin:0;
     border-radius:0;
   }
-  .open-posts .img-box img{
+  .open-post .image-box img{
     object-fit:cover;
     object-position:center;
   }
-  .open-posts .thumbnail-row{
+  .open-post .thumbnail-row{
     width:auto;
     padding:0;
   }
-  .open-posts .venue-dropdown,
-  .open-posts .session-dropdown{
+  .open-post .venue-dropdown,
+  .open-post .session-dropdown{
     width:400px;
     padding:0;
   }
-  .open-posts .location-section .map-container,
-  .open-posts .venue-dropdown,
-  .open-posts .session-dropdown{
+  .open-post .location-section .map-container,
+  .open-post .venue-dropdown,
+  .open-post .session-dropdown{
     min-width:250px;
     width:400px;
   }
 }
 
-.open-posts .detail-header .title{
+.open-post .post-header .title{
   margin:0;
   font-size:16px;
   font-weight:bold;
@@ -2095,12 +2095,12 @@ body.filters-active #filterBtn{
   color:#fff;
 }
 
-.open-posts .detail-header .title-block{
+.open-post .post-header .title-block{
   display:flex;
   flex-direction:column;
 }
 
-.open-posts .detail-header .cat-line{
+.open-post .post-header .cat-line{
   font-size:14px;
   margin-top:4px;
   display:flex;
@@ -2108,28 +2108,28 @@ body.filters-active #filterBtn{
   gap:4px;
 }
 
-.open-posts .meta{
+.open-post .meta{
   font-size:14px;
   display:flex;
   gap:12px;
   flex-wrap:wrap;
 }
 
-.open-posts .member-avatar-row{
+.open-post .member-avatar-row{
   display:flex;
   align-items:center;
   height:50px;
   gap:10px;
   margin:var(--gap) 0;
 }
-.open-posts .member-avatar-row img{
+.open-post .member-avatar-row img{
   width:50px;
   height:50px;
   object-fit:cover;
 }
 
 
-.open-posts .location-section{
+.open-post .location-section{
   display:flex;
   flex-wrap:wrap;
   gap:var(--gap);
@@ -2137,7 +2137,7 @@ body.filters-active #filterBtn{
   margin-bottom:6px;
 }
 
-.open-posts .location-section .map-container{
+.open-post .location-section .map-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2146,11 +2146,11 @@ body.filters-active #filterBtn{
   width:auto;
   height:auto;
 }
-.open-posts .map-container .venue-dropdown{
+.open-post .map-container .venue-dropdown{
   width:100%;
 }
 
-.open-posts .post-map{
+.open-post .post-map{
   flex:0 0 200px;
   width:100%;
   height:200px;
@@ -2160,21 +2160,21 @@ body.filters-active #filterBtn{
 }
 
 
-.open-posts .venue-dropdown,
-.open-posts .session-dropdown{
+.open-post .venue-dropdown,
+.open-post .session-dropdown{
   position:relative;
   min-width:250px;
   width:400px;
 }
 
-.open-posts .calendar-container .session-dropdown{
+.open-post .calendar-container .session-dropdown{
   margin-top:0;
   width:100%;
 }
 
 
 
-.open-posts .venue-dropdown > button{
+.open-post .venue-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2189,7 +2189,7 @@ body.filters-active #filterBtn{
   width:100%;
 }
 
-.open-posts .session-dropdown > button{
+.open-post .session-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2204,33 +2204,33 @@ body.filters-active #filterBtn{
 }
 
 
-.open-posts .venue-dropdown > button .venue-name{
+.open-post .venue-dropdown > button .venue-name{
   font-weight:bold;
   display:block;
 }
 
-.open-posts .venue-dropdown > button .venue-address{
+.open-post .venue-dropdown > button .venue-address{
   display:block;
 }
 
-.open-posts .venue-menu button .venue-name{
+.open-post .venue-menu button .venue-name{
   font-weight:bold;
   display:block;
 }
 
-.open-posts .venue-menu button .venue-address{
+.open-post .venue-menu button .venue-address{
   display:block;
 }
 
-.open-posts .venue-dropdown > button .venue-name,
-.open-posts .venue-dropdown > button .venue-address,
-.open-posts .venue-menu button .venue-name,
-.open-posts .venue-menu button .venue-address{
+.open-post .venue-dropdown > button .venue-name,
+.open-post .venue-dropdown > button .venue-address,
+.open-post .venue-menu button .venue-name,
+.open-post .venue-menu button .venue-address{
   line-height:1.2;
 }
 
-.open-posts .venue-menu,
-.open-posts .session-menu{
+.open-post .venue-menu,
+.open-post .session-menu{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2249,10 +2249,10 @@ body.filters-active #filterBtn{
    z-index:30;
 }
 
-.open-posts .venue-menu[hidden],
-.open-posts .session-menu[hidden]{display:none;}
+.open-post .venue-menu[hidden],
+.open-post .session-menu[hidden]{display:none;}
 
-.open-posts .venue-menu button{
+.open-post .venue-menu button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2267,7 +2267,7 @@ body.filters-active #filterBtn{
   width:100%;
 }
 
-.open-posts .session-menu button{
+.open-post .session-menu button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2281,23 +2281,23 @@ body.filters-active #filterBtn{
 }
 
 
-.open-posts .venue-menu button.selected,
-.open-posts .session-menu button.selected{
+.open-post .venue-menu button.selected,
+.open-post .session-menu button.selected{
   background:var(--dropdown-selected-bg);
   color:var(--dropdown-selected-text);
 }
 
-.open-posts .session-menu button .session-time{
+.open-post .session-menu button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
-.open-posts .session-dropdown > button .session-time{
+.open-post .session-dropdown > button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
 
 
-.open-posts .location-section .calendar-container{
+.open-post .location-section .calendar-container{
     display:flex;
     flex-direction:column;
     gap:var(--gap);
@@ -2307,24 +2307,24 @@ body.filters-active #filterBtn{
     width:100%;
     height:auto;
   }
-.open-posts .location-section .options-menu{
+.open-post .location-section .options-menu{
   width:100%;
   box-sizing:border-box;
 }
 
-.hide-map-calendar .open-posts .map-container,
-.hide-map-calendar .open-posts .calendar-container{
+.hide-map-calendar .open-post .map-container,
+.hide-map-calendar .open-post .calendar-container{
   display:none;
 }
 
-.open-posts .post-calendar{
+.open-post .post-calendar{
   width:var(--calendar-width);
   position:relative;
   font-size:14px;
 }
 
 
-.open-posts .calendar-container .calendar-scroll{
+.open-post .calendar-container .calendar-scroll{
   width:100%;
   overflow-x:auto;
   overflow-y:hidden;
@@ -2335,7 +2335,7 @@ body.filters-active #filterBtn{
   border-radius:8px;
   flex:1 1 auto;
 }
-.open-posts .post-calendar .calendar{
+.open-post .post-calendar .calendar{
   margin:0;
   box-sizing:border-box;
   display:flex;
@@ -2345,13 +2345,13 @@ body.filters-active #filterBtn{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
 }
-.open-posts .post-calendar .month{
+.open-post .post-calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
   display:flex;
   flex-direction:column;
 }
-.open-posts .post-calendar .grid{
+.open-post .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
   height:calc(var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h));
@@ -2359,7 +2359,7 @@ body.filters-active #filterBtn{
   grid-template-columns:repeat(7,var(--calendar-cell-w));
   grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
-.open-posts .post-calendar .calendar-header{
+.open-post .post-calendar .calendar-header{
   height:var(--calendar-header-h);
   display:flex;
   align-items:center;
@@ -2369,50 +2369,50 @@ body.filters-active #filterBtn{
   background:#2e3a72;
   color:#fff;
 }
-.open-posts .post-calendar .weekday,
-.open-posts .post-calendar .day{
+.open-post .post-calendar .weekday,
+.open-post .post-calendar .day{
   width:var(--calendar-cell-w);
   height:var(--calendar-cell-h);
   display:flex;
   align-items:center;
   justify-content:center;
 }
-.open-posts .post-calendar .weekday{
+.open-post .post-calendar .weekday{
   font-size:10px;
   color:#555555;
 }
-.open-posts .post-calendar .day{
+.open-post .post-calendar .day{
   cursor:pointer;
   font-size:12px;
   border-radius:8px;
 }
-.open-posts .post-calendar .day.available-day{
+.open-post .post-calendar .day.available-day{
   background:var(--session-available);
   color:#fff;
 }
-.open-posts .post-calendar .day.available-day.selected{
+.open-post .post-calendar .day.available-day.selected{
   background:#2e3a72;
   color:#fff;
 }
-.open-posts .post-calendar .day.today{color:var(--today) !important;}
-.open-posts .post-calendar .day.available-day.today,
-.open-posts .post-calendar .day.available-day.selected.today,
-.open-posts .post-calendar .day.selected.today{color:var(--today) !important;}
+.open-post .post-calendar .day.today{color:var(--today) !important;}
+.open-post .post-calendar .day.available-day.today,
+.open-post .post-calendar .day.available-day.selected.today,
+.open-post .post-calendar .day.selected.today{color:var(--today) !important;}
 
 
-.open-posts .post-calendar .selected-month-name{
+.open-post .post-calendar .selected-month-name{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:8px;
   padding:0 4px;
 }
 
-.open-posts .calendar-container .time-popup{
+.open-post .calendar-container .time-popup{
   position:absolute;
   z-index:10;
 }
 
-.open-posts .calendar-container .time-popup .time-list{
+.open-post .calendar-container .time-popup .time-list{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
   padding:8px;
@@ -2422,7 +2422,7 @@ body.filters-active #filterBtn{
   gap:4px;
    }
 
-.open-posts .calendar-container .time-popup .time-list button{
+.open-post .calendar-container .time-popup .time-list button{
   background:var(--btn);
   border:1px solid var(--btn);
   color:var(--button-text);
@@ -2431,13 +2431,13 @@ body.filters-active #filterBtn{
   cursor:pointer;
 }
 
-.open-posts .venue-info,
-.open-posts .session-info{
+.open-post .venue-info,
+.open-post .session-info{
   color: inherit;
   font-size: inherit;
 }
-.open-posts .venue-info{margin-top:4px;}
-.open-posts .session-info{margin-top:8px;}
+.open-post .venue-info{margin-top:4px;}
+.open-post .session-info{margin-top:8px;}
 
 
 
@@ -2522,21 +2522,21 @@ body.filters-active #filterBtn{
 }
 
 @media (max-width:840px){
-  .open-posts .post-body{
+  .open-post .post-body{
     flex-direction:column;
   }
-  .open-posts .post-details .location-section{
+  .open-post .post-details .location-section{
     order:-1;
   }
-  .open-posts .img-box{
+  .open-post .image-box{
     max-width:100%;
     width:100%;
   }
-  .open-posts .post-calendar{
+  .open-post .post-calendar{
     display:none;
   }
-  .open-posts .venue-dropdown,
-  .open-posts .session-dropdown{
+  .open-post .venue-dropdown,
+  .open-post .session-dropdown{
     display:block;
   }
 }
@@ -2544,14 +2544,14 @@ body.filters-active #filterBtn{
   @media (max-width:450px){
     .post-board,
     .post-board .post-card,
-    .open-posts,
-    .open-posts .img-box{
+    .open-post,
+    .open-post .image-box{
       width:100%;
       max-width:100%;
       border:none;
       border-radius:8px;
     }
-  .open-posts .img-box{
+  .open-post .image-box{
     height:auto;
     max-height:100vw;
     margin-left:0;
@@ -2559,25 +2559,25 @@ body.filters-active #filterBtn{
     padding-left:0;
     padding-right:0;
   }
-  .open-posts .img-box img{
+  .open-post .image-box img{
     width:100%;
     height:100%;
     object-fit:cover;
     margin-left:0;
     margin-right:0;
   }
-  .open-posts .post-body{
+  .open-post .post-body{
     padding:0;
     gap:8px;
   }
-  .open-posts .post-details{
+  .open-post .post-details{
     padding:10px;
   }
 }
 
 @media (max-width:450px){
-  .open-posts .venue-dropdown > button,
-  .open-posts .session-dropdown > button{
+  .open-post .venue-dropdown > button,
+  .open-post .session-dropdown > button{
     height:50px;
   }
 }
@@ -2964,25 +2964,25 @@ img.thumb{
     margin:0;
     border-radius:0;
   }
-  .post-board .open-posts{
+  .post-board .open-post{
     margin:0;
   }
-  .open-posts{
+  .open-post{
     width:100%;
     border-radius:0;
     margin:0;
   }
-  .open-posts .post-images-container{
+  .open-post .post-images{
     flex:0 0 100%;
     width:100%;
   }
-  .open-posts .img-box{
+  .open-post .image-box{
     width:100%;
     height:auto;
     flex:0 0 100%;
     border-radius:8px;
   }
-  .open-posts .img-box img{
+  .open-post .image-box img{
     width:100%;
     height:100%;
     object-fit:cover;
@@ -3002,10 +3002,10 @@ img.thumb{
     right:0;
     transform:none;
   }
-  .open-posts .detail-header{
+  .open-post .post-header{
     padding-bottom:0;
   }
-  .open-posts .post-body{
+  .open-post .post-body{
     padding:0;
   }
 }
@@ -3065,9 +3065,9 @@ img.thumb{
       <div class="post-header"></div>
       <div class="post-body">
         <div class="main-post-column">
-          <div class="post-images-container">
+          <div class="post-images">
             <div class="selected-image"></div>
-            <div class="image-thumbnail-row"></div>
+            <div class="thumbnail-row"></div>
           </div>
         </div>
         <div class="second-post-column">
@@ -3530,10 +3530,10 @@ img.thumb{
     let stickyScrollHandler = null;
     function updateStickyImages(){
       const root = document.documentElement;
-      const body = document.querySelector('.open-posts .post-body');
-      const imgArea = body ? body.querySelector('.post-images-container') : null;
+      const body = document.querySelector('.open-post .post-body');
+      const imgArea = body ? body.querySelector('.post-images') : null;
       const secondColumn = body ? body.querySelector('.second-post-column') : null;
-      const header = body ? body.querySelector('.detail-header') : null;
+      const header = body ? body.querySelector('.post-header') : null;
       const board = document.querySelector('.post-board');
       if(stickyScrollHandler && board){
         board.removeEventListener('scroll', stickyScrollHandler);
@@ -3564,7 +3564,7 @@ img.thumb{
         }
       }
       if(!body || !imgArea || !secondColumn || !header || !board){
-        root.classList.remove('open-posts-sticky-images');
+        root.classList.remove('open-post-sticky-images');
         document.documentElement.style.removeProperty('--open-post-header-h');
         return;
       }
@@ -3572,9 +3572,8 @@ img.thumb{
       document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
       stickyScrollHandler = () => {
         const imgHeight = imgArea.getBoundingClientRect().height;
-        const columnBottom = secondColumn.getBoundingClientRect().bottom;
-        const columnHeight = columnBottom - secondColumn.offsetTop;
-        root.classList.toggle('open-posts-sticky-images', twoCols && columnHeight > imgHeight);
+        const columnHeight = secondColumn.offsetHeight;
+        root.classList.toggle('open-post-sticky-images', twoCols && columnHeight > imgHeight);
       };
       board.addEventListener('scroll', stickyScrollHandler);
       stickyScrollHandler();
@@ -3947,7 +3946,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function showCopyMsg(btn){
-    const header = btn && btn.closest('.detail-header');
+    const header = btn && btn.closest('.post-header');
     if(!header) return;
     const msg = document.createElement('div');
     msg.className='copy-msg';
@@ -4655,7 +4654,7 @@ function makePosts(){
           if(id){ stopSpin(); openPost(id); }
           return;
         }
-        if(e.target === postsWide && postsWide.querySelector('.open-posts')){
+        if(e.target === postsWide && postsWide.querySelector('.open-post')){
           setMode('map');
         }
       });
@@ -5430,14 +5429,14 @@ function makePosts(){
 
     function buildDetail(p){
       const wrap = document.createElement('div');
-      wrap.className = 'open-posts';
+      wrap.className = 'open-post';
       wrap.dataset.id = p.id;
       const loc0 = p.locations[0];
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
       const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const thumbSrc = imgThumb(p);
       wrap.innerHTML = `
-        <div class="detail-header">
+        <div class="post-header">
           <div class="title-block">
             <div class="title">${p.title}</div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
@@ -5451,8 +5450,8 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="main-post-column">
-            <div class="post-images-container">
-              <div class="img-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+            <div class="post-images">
+              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
               <div class="thumbnail-row"></div>
             </div>
           </div>
@@ -5481,7 +5480,7 @@ function makePosts(){
             </div>
           </div>
         </div>`;
-      const header = wrap.querySelector('.detail-header');
+      const header = wrap.querySelector('.post-header');
       dominantColor(thumbSrc, color => {
         if(header) header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
         wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), ${color}`;
@@ -5522,9 +5521,9 @@ function makePosts(){
 
       if(!postsWideEl.children.length){ postsWideEl.appendChild(card(p, true)); }
 
-      const alreadyOpen = postsWideEl.querySelector(`.open-posts[data-id="${id}"]`);
+      const alreadyOpen = postsWideEl.querySelector(`.open-post[data-id="${id}"]`);
       if(alreadyOpen){
-        const header = alreadyOpen.querySelector('.detail-header');
+        const header = alreadyOpen.querySelector('.post-header');
         if(header){
           const hh = document.querySelector('.header').offsetHeight;
           const desired = hh + 10;
@@ -5540,7 +5539,7 @@ function makePosts(){
       const initialTop = target && container ? target.getBoundingClientRect().top : null;
 
       (function(){
-        const ex = postsWideEl.querySelector('.open-posts');
+        const ex = postsWideEl.querySelector('.open-post');
         if(ex){
           const exId = ex.dataset && ex.dataset.id;
           const prev = posts.find(x=> x.id===exId);
@@ -5582,7 +5581,7 @@ function makePosts(){
       }
 
       await nextFrame();
-      const header = detail.querySelector('.detail-header');
+      const header = detail.querySelector('.post-header');
       if(header){
         const h = header.offsetHeight;
         header.style.scrollMarginTop = h + 'px';
@@ -5617,7 +5616,7 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'post-board';
       const detail = buildDetail(p);
-      const headerEl = detail.querySelector('.detail-header');
+      const headerEl = detail.querySelector('.post-header');
       const favBtn = headerEl && headerEl.querySelector('.fav');
       if(headerEl && favBtn){
         const closeBtn = document.createElement('button');
@@ -5636,7 +5635,7 @@ function makePosts(){
       if(!panelStack.includes(container)) panelStack.push(container);
       bringToTop(container);
       requestAnimationFrame(()=>{
-        const imgArea = detail.querySelector('.post-images-container');
+        const imgArea = detail.querySelector('.post-images');
       const text = detail.querySelector('.post-details');
         if(headerEl){
           headerEl.style.position='sticky';
@@ -5738,7 +5737,7 @@ function makePosts(){
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       const thumbCol = el.querySelector('.thumbnail-row');
-      const mainImg = el.querySelector('.img-box img');
+      const mainImg = el.querySelector('.image-box img');
       imgs.forEach((url,i)=>{
         const t = document.createElement('img');
         t.src = url;
@@ -6164,7 +6163,7 @@ function makePosts(){
         e.preventDefault();
         const id = slide.dataset.id;
         await openPost(id);
-        const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
+        const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
         if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
         document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
         const quickCard = document.querySelector(`.history-board .quick-card[data-id="${id}"]`);
@@ -6563,8 +6562,8 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .quick-card .t','.quick-list-board .quick-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .quick-card']}},
-    {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-posts .t','.post-board .open-posts .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-posts']}},
-    {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
+    {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
+    {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], popupText:['.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], title:['.mapboxgl-popup.map-card .hover-card .t','.mapboxgl-popup.map-card .hover-card .title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title','.mapboxgl-popup.map-card .multi-item.map-card .t','.mapboxgl-popup.map-card .multi-item.map-card .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
@@ -7053,9 +7052,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainCol = document.querySelector('.main-post-column');
   const secondCol = document.querySelector('.second-post-column');
   const details = document.querySelector('.post-details');
-  const postImages = document.querySelector('.post-images-container');
+  const postImages = document.querySelector('.post-images');
   const postHeader = document.querySelector('.post-header');
-  const thumbRow = document.querySelector('.image-thumbnail-row');
+  const thumbRow = document.querySelector('.thumbnail-row');
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
