@@ -192,6 +192,26 @@ button:not([class^="mapboxgl-ctrl"]),
   transition: background .2s,border-color .2s,color .2s,transform .05s;
 }
 
+.map-control-row .mapboxgl-ctrl button{
+  background: var(--btn);
+  border:1px solid var(--btn);
+  color: var(--button-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.map-control-row .mapboxgl-ctrl button:hover{
+  background: var(--btn-hover);
+  border-color: var(--btn-hover);
+  color: var(--button-hover-text);
+}
+.map-control-row .mapboxgl-ctrl button:active{
+  background: var(--btn-active);
+  border-color: var(--btn-active);
+  color: var(--button-active-text);
+}
+.map-control-row .mapboxgl-ctrl{box-shadow:none;}
+
 button:hover,
 [role="button"]:hover{
   background: var(--btn-hover);
@@ -780,12 +800,12 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin-bottom:10px;
 }
-#welcome-modal{background:rgba(0,0,0,0.7);}
+#welcome-modal{background:transparent;}
 #welcome-modal .modal-content{
   position:absolute;
   width:600px;
   max-width:600px;
-  background:#222222;
+  background:rgba(0,0,0,0.7);
   border-radius:0;
   display:flex;
   flex-direction:column;
@@ -3498,12 +3518,12 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     const welcomeModal = document.getElementById('welcome-modal');
     if(memberPanel && memberPanel.classList.contains('show')){
       placeMapControlsInPanel(memberPanel);
-    } else if(welcomeModal && welcomeModal.classList.contains('show')){
-      placeMapControlsInPanel(welcomeModal);
-    } else if(document.body.classList.contains('mode-map')){
-      placeMapControlsAtTop();
     } else {
-      mapControlRow.style.display='none';
+      if(welcomeModal && welcomeModal.classList.contains('show')){
+        placeMapControlsInPanel(welcomeModal);
+      } else {
+        placeMapControlsAtTop();
+      }
     }
   }
 
@@ -4110,6 +4130,39 @@ function makePosts(){
     });
   }
 
+  // ---- 100 posts in Tasmania ----
+  const tasLng = 147.3272, tasLat = -42.8821;
+  const tasCity = "Hobart, Tasmania";
+  const todayTas = new Date(); todayTas.setHours(0,0,0,0);
+  for(let i=0;i<100;i++){
+    const cat = pick(categories);
+    const sub = pick(cat.subs);
+    const id = 'TAS'+i;
+    const title = `${id} ${uniqueTitle(i*5311+23, tasCity, i)}`;
+    const created = new Date().toISOString().replace(/[:.]/g,'-');
+    const offset = 1 + i%30;
+    const date = new Date(todayTas);
+    date.setDate(date.getDate() + (i<50 ? -offset : offset));
+    out.push({
+      id,
+      title,
+      slug: slugify(title),
+      created,
+      city: tasCity,
+      lng: tasLng + (rnd()-0.5)*0.2,
+      lat: tasLat + (rnd()-0.5)*0.2,
+      category: cat.name,
+      subcategory: sub,
+      dates: [toISODate(date)],
+      sponsored: true, // All posts are sponsored for development
+      fav:false,
+      desc: randomText(),
+      images: randomImages(id),
+      locations: randomLocations(tasCity, tasLng, tasLat),
+      member: { username: randomUsername(id), avatar: randomAvatar(id) },
+    });
+  }
+
   // ---- Restore world-wide posts ----
   // A light list of hub cities for better realism
   const hubs = [
@@ -4279,20 +4332,19 @@ function makePosts(){
       const dateX = date.parentElement.querySelector('.x');
       const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
       dateX && dateX.classList.toggle('active', !!hasDate);
-      updateFilterBtnColor();
+      updateResetBtn();
     }
 
-    function filtersActive(){
+    function nonLocationFiltersActive(){
       const kw = $('#kwInput').value.trim() !== '';
       const raw = $('#dateInput').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
-      const cats = selection.cats.size > 0 || selection.subs.size > 0;
       const expired = $('#expiredToggle').checked;
-      return kw || hasDate || cats || expired;
+      return kw || hasDate || expired;
     }
 
-    function updateFilterBtnColor(){
-      const active = filtersActive();
+    function updateResetBtn(){
+      const active = nonLocationFiltersActive() || selection.cats.size > 0 || selection.subs.size > 0;
       document.body.classList.toggle('filters-active', active);
       const reset = $('#resetBtn');
       reset && reset.classList.toggle('active', active);
@@ -4314,6 +4366,7 @@ function makePosts(){
       e.preventDefault();
     });
     const today = new Date();
+    today.setHours(0,0,0,0);
     const minPickerDate = new Date(today);
     minPickerDate.setMonth(minPickerDate.getMonth() - 12);
     const maxPickerDate = new Date(today);
@@ -4579,7 +4632,7 @@ function makePosts(){
       }
     }
     updateClearButtons();
-    updateFilterBtnColor();
+    updateResetBtn();
     const optionsBtn = $('#optionsBtn');
     const optionsMenu = $('#optionsMenu');
     const favToggle = $('#favToggle');
@@ -6218,7 +6271,7 @@ function makePosts(){
       const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
-      updateFilterBtnColor();
+      updateResetBtn();
     }
 
     function showNextAd(){
