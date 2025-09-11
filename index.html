@@ -92,7 +92,7 @@
       --safe-top: env(safe-area-inset-top, 0px);
 }
 
-*{
+*:not([class^="mapboxgl-"]){
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
@@ -105,23 +105,23 @@ fieldset{
   border:0 !important;
 }
 
-*:hover{
+*:not([class^="mapboxgl-"]):hover{
   border-color: var(--border-hover) !important;
 }
 
-*:active{
+*:not([class^="mapboxgl-"]):active{
   border-color: var(--border-active) !important;
 }
 
-*[aria-pressed="true"],
-*[aria-current="page"],
-.selected,
-.on{
+*[aria-pressed="true"]:not([class^="mapboxgl-"]),
+*[aria-current="page"]:not([class^="mapboxgl-"]),
+.selected:not([class^="mapboxgl-"]),
+.on:not([class^="mapboxgl-"]){
   border-color: var(--border-active) !important;
   color: var(--active);
 }
 
-*[aria-selected="true"]{
+*[aria-selected="true"]:not([class^="mapboxgl-"]){
   border-color: var(--border-active) !important;
 }
 
@@ -129,18 +129,18 @@ html,body{
   height: 100%;
 }
 
-*::-webkit-scrollbar{
+*:not([class^="mapboxgl-"])::-webkit-scrollbar{
   width:var(--scrollbar-h);
   height:var(--scrollbar-h);
 }
-*::-webkit-scrollbar-track{
+*:not([class^="mapboxgl-"])::-webkit-scrollbar-track{
   background:var(--scrollbar-track);
 }
-*::-webkit-scrollbar-thumb{
+*:not([class^="mapboxgl-"])::-webkit-scrollbar-thumb{
   background:var(--scrollbar-thumb);
   border-radius:0;
 }
-*::-webkit-scrollbar-thumb:hover{
+*:not([class^="mapboxgl-"])::-webkit-scrollbar-thumb:hover{
   background:var(--scrollbar-thumb-hover);
 }
 
@@ -1847,11 +1847,10 @@ body.filters-active #filterBtn{
   justify-content:center;
 }
 
-#filterPanel .map-control-row,
 #filterPanel .map-control-row input{
   color:#000;
 }
-#filterPanel .map-control-row button{
+#filterPanel .map-control-row button:not([class^="mapboxgl-"]){
   background:#fff;
   color:#000;
   border:0;
