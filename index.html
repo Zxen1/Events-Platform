@@ -490,9 +490,12 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:8px;
 }
-#spinSpeedVal{
-  min-width:40px;
-  text-align:right;
+.range-wrap input[type="range"]{
+  width:300px;
+}
+.range-wrap span{
+  width:40px;
+  text-align:center;
 }
   #spinType{
     display:flex;
@@ -610,7 +613,10 @@ button[aria-expanded="true"] .results-arrow{
   width:420px !important;
   max-width:420px !important;
   box-sizing:border-box;
-  padding:0 10px;
+  padding:0 10px 10px;
+}
+.panel-body > *:last-child{
+  padding-bottom:0;
 }
 .panel-body > * > *{
   width:400px !important;
@@ -809,7 +815,7 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;padding:8px 0;width:440px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:0;padding:10px 0;width:440px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #post-mode-background-row{
@@ -819,11 +825,6 @@ button[aria-expanded="true"] .results-arrow{
   height:40px;
   gap:8px;
 }
-#post-mode-background-row label{
-  min-width:140px;
-  cursor:pointer;
-  user-select:none;
-}
 #post-mode-background-row input[type="color"]{
   width:40px;
   height:40px;
@@ -831,7 +832,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 #post-mode-background-row input[type="range"]{
-  flex:1 1 auto;
+  width:300px;
 }
 #post-mode-background-row span{
   width:40px;
@@ -1664,7 +1665,7 @@ body.filters-active #filterBtn{
   grid-template-columns:90px 1fr 36px;
   gap:12px;
   align-items: flex-start;
-  background: rgba(0,0,0,0.7);
+  background-color: transparent;
   border: none;
   border-radius:8px;
   padding:12px;
@@ -1905,7 +1906,7 @@ body.filters-active #filterBtn{
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
-  background:var(--closed-card-bg);
+  background-color:transparent;
   margin:0;
   border-radius:0;
   border-bottom:1px solid var(--border);
@@ -1943,7 +1944,7 @@ body.filters-active #filterBtn{
   font-size:14px;
   display:flex;
   flex-direction:column;
-  gap:var(--gap);
+  gap:0;
 }
 
 .open-post .post-header{
@@ -1957,7 +1958,7 @@ body.filters-active #filterBtn{
   position:sticky;
   top:0;
   z-index:3;
-  background:var(--list-background);
+  background-color:transparent;
 }
 .open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
@@ -3333,7 +3334,7 @@ img.thumb{
                   #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
                   #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
                   #balloonTool .shape-button.active{outline:2px solid var(--border);}
-                  #balloonTool .size-control{margin-bottom:8px;}
+                  #balloonTool .size-control{margin-bottom:8px;display:flex;align-items:center;gap:8px;}
                   #balloonTool .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
                     #balloonTool .svg-output textarea{width:400px;height:200px;}
                     #balloonTool #copySvgCode{width:400px;height:35px;}
@@ -3346,7 +3347,11 @@ img.thumb{
                   <div class="shape-menu" id="balloonShapeButtons" hidden></div>
                 </div>
                 <div class="size-control">
-                  <label>Balloon size: <input type="range" id="balloonSize" min="40" max="120" value="40" /> <span id="balloonSizeValue">40</span>px</label>
+                  <label for="balloonSize">Balloon size</label>
+                  <div class="range-wrap">
+                    <input type="range" id="balloonSize" min="40" max="120" value="40" />
+                    <span id="balloonSizeValue">40</span>
+                  </div>
                 </div>
                 <div class="svg-output">
                   <textarea id="balloonSvgCode" readonly></textarea>
@@ -3357,11 +3362,13 @@ img.thumb{
             </div>
         </div>
         <div id="tab-settings" class="tab-panel">
-          <div id="post-mode-background-row" class="panel-field">
+          <div class="panel-field">
             <label for="postModeBgColor">Post Mode Background</label>
-            <input type="color" id="postModeBgColor">
-            <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
-            <span id="postModeBgOpacityVal">0.00</span>
+            <div id="post-mode-background-row">
+              <input type="color" id="postModeBgColor">
+              <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
+              <span id="postModeBgOpacityVal">0.00</span>
+            </div>
           </div>
           <div class="panel-field">
             <label for="welcomeMessageEditor">Welcome Message</label>
@@ -5378,9 +5385,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      dominantColor(thumbSrc, color => {
-        if(color) el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
-      });
+      el.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
         p.fav = !p.fav;
@@ -5533,10 +5538,8 @@ function makePosts(){
           </div>
         </div>`;
       const header = wrap.querySelector('.post-header');
-      dominantColor(thumbSrc, color => {
-        if(header) header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
-        wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), ${color}`;
-      });
+      if(header) header.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+      wrap.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8))';
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
