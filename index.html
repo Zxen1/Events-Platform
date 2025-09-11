@@ -1830,6 +1830,7 @@ body.filters-active #filterBtn{
   top:calc(var(--header-h) + 10px);
   transform:translateX(-50%);
   width:auto;
+  z-index:1;
 }
 
 .map-control-row .geocoder{flex:1 1 auto;margin:0;}
@@ -1862,11 +1863,8 @@ body.filters-active #filterBtn{
   justify-content:center;
 }
 
-#filterPanel .map-control-row input{
-  color:#000;
-}
-
-#filterPanel .map-control-row button:not([class*="mapboxgl-"]){
+#filterPanel .map-control-row input,
+#filterPanel .map-control-row button{
   background:#fff;
   color:#000;
   border:0;
@@ -4705,16 +4703,34 @@ function makePosts(){
     function loadMapbox(cb){
       if(window.mapboxgl && window.MapboxGeocoder) return cb();
 
+      let cssLoaded = 0;
+      const onCss = () => { if(++cssLoaded === 2) loadScripts(); };
+
       function injectCleanCSS(url, fallback){
         fetch(url).then(r=>r.text()).then(css=>{
           css = css.replace(/-ms-high-contrast/g,'forced-colors');
           const style = document.createElement('style');
           style.textContent = css;
           document.head.appendChild(style);
+          const link = document.createElement('link');
+          link.rel='stylesheet';
+          link.href = url;
+          link.onload = onCss;
+          link.onerror = ()=>{
+            const lf = document.createElement('link');
+            lf.rel='stylesheet';
+            lf.href = fallback || url;
+            lf.onload = onCss;
+            lf.onerror = onCss;
+            document.head.appendChild(lf);
+          };
+          document.head.appendChild(link);
         }).catch(()=>{
           const link = document.createElement('link');
           link.rel='stylesheet';
           link.href = fallback || url;
+          link.onload = onCss;
+          link.onerror = onCss;
           document.head.appendChild(link);
         });
       }
@@ -4724,23 +4740,25 @@ function makePosts(){
       injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
         'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
 
-      const s = document.createElement('script');
-      s.src='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js';
-      s.onload = ()=>{
-        const g = document.createElement('script');
-        g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
-        g.onload = cb;
-        g.onerror = ()=>{
-          const gf = document.createElement('script');
-          gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
-          gf.onload = cb;
-          gf.onerror = cb;
-          document.head.appendChild(gf);
+      function loadScripts(){
+        const s = document.createElement('script');
+        s.src='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js';
+        s.onload = ()=>{
+          const g = document.createElement('script');
+          g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+          g.onload = cb;
+          g.onerror = ()=>{
+            const gf = document.createElement('script');
+            gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
+            gf.onload = cb;
+            gf.onerror = cb;
+            document.head.appendChild(gf);
+          };
+          document.head.appendChild(g);
         };
-        document.head.appendChild(g);
-      };
-      s.onerror = cb;
-      document.head.appendChild(s);
+        s.onerror = cb;
+        document.head.appendChild(s);
+      }
     }
     loadMapbox(initMap);
 
