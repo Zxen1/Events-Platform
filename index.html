@@ -1545,8 +1545,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   z-index:1;
 }
 
-.post-board.two-columns .post-images,
-.post-board.two-columns .tall-image-container{
+.post-board.two-columns .main-post-column{
   position:sticky;
   top:var(--post-header-h,0px);
   align-self:flex-start;
@@ -1593,7 +1592,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   flex-direction:column;
   overflow-y:auto;
-  max-height:calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h));
+  height:calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--post-header-h,0px));
 }
 
 .post-venue-selection-container,
@@ -7164,7 +7163,6 @@ document.addEventListener('DOMContentLoaded', () => {
           details.style.padding = '0';
         }
         board.style.width = '440px';
-        postImages.classList.remove('tall-image-container');
         if(thumbRow && selectedImageBox){
           selectedImageBox.insertAdjacentElement('afterend', thumbRow);
         }
@@ -7175,7 +7173,6 @@ document.addEventListener('DOMContentLoaded', () => {
           details.style.padding = '';
         }
         board.style.width = '';
-        postImages.classList.add('tall-image-container');
         if(thumbRow && selectedImageBox){
           postImages.appendChild(thumbRow);
         }
