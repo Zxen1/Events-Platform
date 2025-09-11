@@ -431,16 +431,22 @@ input[type="checkbox"]{
 .view-toggle button,
 .options-menu button{
   height:40px;
-  border-radius:0;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:6px;
   line-height:1;
 }
+.header button,
+.view-toggle button{
+  border-radius:4px;
+}
+.options-menu button{
+  border-radius:0;
+}
 .header .gear,
 .header a{
-  border-radius:0;
+  border-radius:4px;
 }
 
 
@@ -485,14 +491,26 @@ button[aria-expanded="true"] .results-arrow{
 
 
 /* Spin controls */
-.range-wrap{
+#adminPanel .range-wrap{
   display:flex;
   align-items:center;
   gap:8px;
 }
-#spinSpeedVal{
-  min-width:40px;
+#adminPanel .range-wrap input[type="range"]{
+  width:300px;
+}
+#adminPanel .range-wrap span{
+  width:40px;
   text-align:right;
+}
+#adminPanel #balloonSize{
+  width:300px;
+}
+#adminPanel #balloonSizeValue{
+  display:inline-block;
+  width:40px;
+  text-align:right;
+  margin-left:8px;
 }
   #spinType{
     display:flex;
@@ -815,17 +833,14 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:0;padding:10px 0;width:440px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
+#post-mode-background-field{
+  width:400px;
+}
 #post-mode-background-row{
   display:flex;
   align-items:center;
-  width:400px;
+  width:380px;
   gap:8px;
-  flex-wrap:wrap;
-}
-#post-mode-background-row label{
-  min-width:140px;
-  cursor:pointer;
-  user-select:none;
 }
 #post-mode-background-row input[type="color"]{
   width:40px;
@@ -839,7 +854,21 @@ button[aria-expanded="true"] .results-arrow{
 }
 #post-mode-background-row span{
   width:40px;
-  text-align:center;
+  text-align:right;
+}
+
+.map-theme-container,
+.map-spin-container{
+  background:#444444;
+  width:420px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.map-theme-container .panel-field,
+.map-spin-container .panel-field{
+  width:100%;
 }
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -1676,6 +1705,11 @@ body.filters-active #filterBtn{
   cursor:pointer;
 }
 
+.post-card{
+  border-radius:4px;
+  padding-top:10px;
+}
+
 .thumb{
   width: 90px;
   height: 70px;
@@ -1940,14 +1974,14 @@ body.filters-active #filterBtn{
 
 .open-post{
   border:none;
-  border-radius:8px;
+  border-radius:4px;
   margin:0 0 12px 0;
+  padding-top:10px;
   overflow:visible;
   color:#fff;
   font-size:14px;
   display:flex;
   flex-direction:column;
-  gap:var(--gap);
 }
 
 .open-post .post-header{
@@ -3240,6 +3274,7 @@ img.thumb{
       </div>
       <form id="adminForm" class="panel-body">
         <div id="tab-map" class="tab-panel active">
+          <div class="map-theme-container">
             <div class="panel-field">
               <label for="mapTheme">Theme</label>
               <select id="mapTheme">
@@ -3282,27 +3317,29 @@ img.thumb{
                 <option value="rainbow">Rainbow</option>
               </select>
             </div>
+          </div>
+          <div class="map-spin-container">
             <div class="panel-field">
               <label for="spinSpeed">Spin speed</label>
               <div class="range-wrap">
                 <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
                 <span id="spinSpeedVal"></span>
-                </div>
               </div>
-              <div class="panel-field">
-                <label for="mapPitch">Pitch</label>
-                <div class="range-wrap">
-                  <input type="range" id="mapPitch" min="0" max="85" step="1" />
-                  <span id="pitchVal"></span>
-                </div>
-              </div>
-              <div class="panel-field">
-                <label for="mapBearing">Bearing</label>
+            </div>
+            <div class="panel-field">
+              <label for="mapPitch">Pitch</label>
               <div class="range-wrap">
-                  <input type="range" id="mapBearing" min="-180" max="180" step="1" />
-                  <span id="bearingVal"></span>
-                </div>
+                <input type="range" id="mapPitch" min="0" max="85" step="1" />
+                <span id="pitchVal"></span>
               </div>
+            </div>
+            <div class="panel-field">
+              <label for="mapBearing">Bearing</label>
+              <div class="range-wrap">
+                <input type="range" id="mapBearing" min="-180" max="180" step="1" />
+                <span id="bearingVal"></span>
+              </div>
+            </div>
             <div class="panel-field">
               <div class="option-label">
                 <span>Spin on Load</span>
@@ -3325,6 +3362,8 @@ img.thumb{
                 </label>
               </div>
             </div>
+          </div>
+          <div class="map-theme-container">
             <div class="panel-field">
               <div id="balloonTool">
                 <style>
@@ -3361,12 +3400,14 @@ img.thumb{
             </div>
         </div>
         <div id="tab-settings" class="tab-panel">
-          <div id="post-mode-background-row" class="panel-field">
-            <label for="postModeBgColor">Post Mode Background</label>
+        <div id="post-mode-background-field" class="panel-field">
+          <label for="postModeBgColor">Post Mode Background</label>
+          <div id="post-mode-background-row">
             <input type="color" id="postModeBgColor">
             <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
             <span id="postModeBgOpacityVal">0.00</span>
           </div>
+        </div>
           <div class="panel-field">
             <label for="welcomeMessageEditor">Welcome Message</label>
             <div class="wysiwyg-toolbar">
@@ -4166,26 +4207,6 @@ function makePosts(){
     function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
     function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
-
-    function dominantColor(src, cb){
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.referrerPolicy = 'no-referrer';
-      img.onload = () => {
-        try{
-          const canvas = document.createElement('canvas');
-          canvas.width = canvas.height = 1;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, 1, 1);
-          const [r,g,b] = ctx.getImageData(0,0,1,1).data;
-          cb(`rgb(${r},${g},${b})`);
-        } catch(e){
-          cb('');
-        }
-      };
-      img.onerror = () => cb('');
-      img.src = src;
-    }
 
     function memberAvatarUrl(p){
       if(p.member && p.member.avatar){
@@ -5382,9 +5403,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      dominantColor(thumbSrc, color => {
-        if(color) el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
-      });
+      el.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
         p.fav = !p.fav;
@@ -5537,10 +5556,8 @@ function makePosts(){
           </div>
         </div>`;
       const header = wrap.querySelector('.post-header');
-      dominantColor(thumbSrc, color => {
-        if(header) header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
-        wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), ${color}`;
-      });
+      if(header) header.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+      wrap.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8))';
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
