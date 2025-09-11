@@ -857,6 +857,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .map-theme-container,
+.map-balloon-container,
 .map-spin-container{
   background:#444444;
   width:420px;
@@ -866,8 +867,22 @@ button[aria-expanded="true"] .results-arrow{
   gap:8px;
 }
 .map-theme-container .panel-field,
+.map-balloon-container .panel-field,
 .map-spin-container .panel-field{
   width:100%;
+}
+
+.settings-style-container,
+.settings-welcome-container{
+  background:#444444;
+  width:420px;
+  padding:10px;
+}
+
+.sub-icon svg{
+  width:20px;
+  height:20px;
+  vertical-align:middle;
 }
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -3380,23 +3395,22 @@ img.thumb{
               </div>
             </div>
           </div>
-          <div id="Map-Balloon-Container" class="map-theme-container">
+          <div id="map-balloon-container" class="map-balloon-container">
             <style>
-              #Map-Balloon-Container .t{font-size:16px;font-weight:bold;}
-              #Map-Balloon-Container .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
-              #Map-Balloon-Container .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
-              #Map-Balloon-Container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
-              #Map-Balloon-Container .shape-menu[hidden]{display:none;}
-              #Map-Balloon-Container .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
-              #Map-Balloon-Container .shape-button svg{width:24px;height:24px;vertical-align:middle;}
-              #Map-Balloon-Container .shape-button.active{outline:2px solid var(--border);}
-              #Map-Balloon-Container .panel-field{width:400px;}
-              #Map-Balloon-Container .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
-              #Map-Balloon-Container .svg-output textarea{width:400px;height:200px;}
-              #Map-Balloon-Container #copySvgCode{width:400px;height:35px;padding:0;}
-              #Map-Balloon-Container #shapeMenuBtn{padding:0;}
-              #Map-Balloon-Container #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;}
-              #Map-Balloon-Container #balloonGrid svg{cursor:pointer;}
+              #map-balloon-container .t{font-size:16px;font-weight:bold;}
+              #map-balloon-container .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
+              #map-balloon-container .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
+              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
+              #map-balloon-container .shape-menu[hidden]{display:none;}
+              #map-balloon-container .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
+              #map-balloon-container .shape-button svg{width:24px;height:24px;vertical-align:middle;}
+              #map-balloon-container .shape-button.active{outline:2px solid var(--border);}
+              #map-balloon-container .panel-field{width:400px;}
+              #map-balloon-container #copySvgCode{width:400px;height:35px;padding:0;margin-bottom:8px;}
+              #map-balloon-container #shapeMenuBtn{padding:0;}
+              #map-balloon-container #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;margin-bottom:8px;}
+              #map-balloon-container #balloonGrid svg{cursor:pointer;}
+              #map-balloon-container #balloonSvgCode{width:400px;height:200px;}
             </style>
             <div class="t">Balloon Icon Generator</div>
             <div class="shape-dropdown">
@@ -3410,23 +3424,24 @@ img.thumb{
                 <span id="balloonSizeValue">40</span>px
               </div>
             </div>
-            <div class="svg-output">
-              <textarea id="balloonSvgCode" readonly></textarea>
-              <button type="button" id="copySvgCode">Copy SVG</button>
-            </div>
+            <button type="button" id="copySvgCode">Copy SVG</button>
             <div id="balloonGrid"></div>
+            <textarea id="balloonSvgCode"></textarea>
           </div>
         </div>
         <div id="tab-settings" class="tab-panel">
         <div id="post-mode-background-field" class="panel-field">
           <label for="postModeBgColor">Post Mode Background</label>
-          <div id="post-mode-background-row">
-            <input type="color" id="postModeBgColor">
-            <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
-            <span id="postModeBgOpacityVal">0.00</span>
+          <div class="settings-style-container">
+            <div id="post-mode-background-row">
+              <input type="color" id="postModeBgColor">
+              <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
+              <span id="postModeBgOpacityVal">0.00</span>
+            </div>
           </div>
         </div>
-          <div class="panel-field">
+        <div class="settings-welcome-container">
+          <div id="welcome-message-panel" class="panel-field">
             <label for="welcomeMessageEditor">Welcome Message</label>
             <div class="wysiwyg-toolbar">
               <button type="button" data-command="bold"><b>B</b></button>
@@ -3437,6 +3452,7 @@ img.thumb{
             <textarea id="welcomeMessage" hidden></textarea>
           </div>
         </div>
+        </div>
         <div id="tab-forms" class="tab-panel">
           <style>
             #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
@@ -3445,7 +3461,9 @@ img.thumb{
             #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
           </style>
           <div id="formsControls">
-            <button type="button" id="addCategory">Add Category</button>
+            <div class="settings-style-container">
+              <button type="button" id="addCategory">Add Category</button>
+            </div>
             <div id="formsCategories"></div>
           </div>
         </div>
@@ -3799,34 +3817,9 @@ function buildClusterListHTML(items){
       { name:"Auditions", subs:["Film","Theatre","Music"] },
       { name:"Talent",    subs:["Models","Actors","Crew"] }
     ];
-    const subcategoryIcons = {
-      "Screenings":"🎬",
-      "Festivals":"🎉",
-      "Shorts":"📽️",
-      "Indie":"🎞️",
-      "Plays":"🎭",
-      "Musicals":"🎶",
-      "Improv":"🤹",
-      "Gigs":"🎤",
-      "Open Mic":"🎙️",
-      "Classical":"🎼",
-      "Jazz":"🎷",
-      "Ballet":"🩰",
-      "Contemporary":"💃",
-      "Hip Hop":"🕺",
-      "Exhibitions":"🖼️",
-      "Workshops":"🛠️",
-      "Openings":"🚪",
-      "Talks":"🗣️",
-      "Film":"🎥",
-      "Theatre":"🎭",
-      "Music":"🎵",
-      "Dance":"💃",
-      "Photography":"📸",
-      "Gallery":"🏛️",
-      "Auditions":"🎬",
-      "Talent":"⭐"
-    };
+    const subcategoryIcons = {};
+    const subcategoryMarkers = {};
+    const categoryShapes = {};
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
@@ -5410,7 +5403,7 @@ function makePosts(){
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
             <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
             <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
@@ -5530,7 +5523,7 @@ function makePosts(){
         <div class="post-header">
           <div class="title-block">
             <div class="title">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
           <button class="share" aria-label="Share post">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
@@ -5561,7 +5554,7 @@ function makePosts(){
                 </div>
               </div>
               <h2 class="title">${p.title}</h2>
-              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+              <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
               <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
               <div id="venue-info-${p.id}" class="venue-info"></div>
               <div id="session-info-${p.id}" class="session-info">
@@ -5980,7 +5973,13 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          if(subcategoryMarkers[p.subcategory]){
+            const mEl = document.createElement('div');
+            mEl.innerHTML = subcategoryMarkers[p.subcategory];
+            marker = new mapboxgl.Marker({element:mEl.firstChild}).setLngLat([loc.lng, loc.lat]).addTo(map);
+          } else {
+            marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+          }
           setTimeout(()=> map && map.resize(),0);
           window.addEventListener('resize', ()=>{ if(map) map.resize(); });
         } else {
@@ -6775,6 +6774,10 @@ document.addEventListener('pointerdown', handleDocInteract);
       return svg;
     }
 
+    window.SHAPES = SHAPES;
+    window.COLORS = COLORS;
+    window.createBalloon = createBalloon;
+
     const buttons = document.getElementById('balloonShapeButtons');
     const shapeMenuBtn = document.getElementById('shapeMenuBtn');
     const grid = document.getElementById('balloonGrid');
@@ -6782,6 +6785,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     const sizeValue = document.getElementById('balloonSizeValue');
     const svgCode = document.getElementById('balloonSvgCode');
     const copyBtn = document.getElementById('copySvgCode');
+    let currentTemplate = '';
 
     sizeValue.textContent = sizeSlider.value;
     copyBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(svgCode.value); });
@@ -6802,25 +6806,50 @@ document.addEventListener('pointerdown', handleDocInteract);
 
     sizeSlider.addEventListener('input', ()=>{
       sizeValue.textContent = sizeSlider.value;
-      grid.querySelectorAll('svg').forEach(svg=>{
+      renderFromSvg(currentTemplate);
+    });
+
+    function selectSvg(svg){
+      grid.querySelectorAll('svg').forEach(s=>s.classList.remove('selected'));
+      svg.classList.add('selected');
+      svgCode.value = svg.outerHTML;
+      currentTemplate = svg.outerHTML;
+      navigator.clipboard.writeText(svg.outerHTML);
+    }
+
+    function renderFromSvg(template){
+      if(!template){ return; }
+      grid.innerHTML='';
+      COLORS.forEach(color=>{
+        const colored = template.replace(/fill="(?!#fff)[^"]*"/g, `fill="${color}"`);
+        const doc = new DOMParser().parseFromString(colored,'image/svg+xml');
+        const svg = doc.documentElement;
         svg.setAttribute('width', sizeSlider.value);
         svg.setAttribute('height', sizeSlider.value);
-        svg.setAttribute('title', sizeSlider.value + 'px ' + svg.dataset.color);
+        svg.dataset.color = color;
+        svg.setAttribute('title', sizeSlider.value + 'px ' + color);
+        svg.addEventListener('click', ()=> selectSvg(svg));
+        grid.appendChild(svg);
       });
       const first = grid.querySelector('svg');
-      if(first) svgCode.value = first.outerHTML;
-    });
+      if(first) selectSvg(first);
+    }
 
     function render(name){
       grid.innerHTML='';
       COLORS.forEach(color=>{
         const svg = createBalloon(name, color, sizeSlider.value);
-        svg.addEventListener('click', ()=>{ svgCode.value = svg.outerHTML; });
+        svg.addEventListener('click', ()=> selectSvg(svg));
         grid.appendChild(svg);
       });
       const first = grid.querySelector('svg');
-      if(first) svgCode.value = first.outerHTML;
+      if(first) selectSvg(first);
     }
+
+    svgCode.addEventListener('input', ()=>{
+      currentTemplate = svgCode.value;
+      renderFromSvg(currentTemplate);
+    });
 
     const LABELS = {
       circle:'circle',
@@ -6842,7 +6871,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       btn.appendChild(createBalloon(name, '#000', 24));
       btn.appendChild(document.createTextNode(LABELS[name] || name));
       btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#Map-Balloon-Container .shape-button').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('#map-balloon-container .shape-button').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         render(name);
         if(shapeMenuBtn){
@@ -6859,6 +6888,26 @@ document.addEventListener('pointerdown', handleDocInteract);
     render(firstShape);
     if(shapeMenuBtn){ shapeMenuBtn.textContent = LABELS[firstShape] || firstShape; }
   })();
+</script>
+<script>
+(function(){
+  const shapeList = Object.keys(SHAPES);
+  let colorIdx = 0;
+  categories.forEach((cat, idx) => {
+    const shape = shapeList[idx % shapeList.length];
+    categoryShapes[cat.name] = shape;
+    cat.subs.forEach(sub => {
+      const color = COLORS[colorIdx % COLORS.length];
+      colorIdx++;
+      subcategoryIcons[sub] = createBalloon(shape, color, 20).outerHTML;
+      subcategoryMarkers[sub] = createBalloon(shape, color, 40).outerHTML;
+    });
+  });
+  document.querySelectorAll('.sub-icon').forEach(el=>{
+    const sub = el.dataset.sub;
+    if(subcategoryIcons[sub]) el.innerHTML = subcategoryIcons[sub];
+  });
+})();
 </script>
 <script>
 (function(){
