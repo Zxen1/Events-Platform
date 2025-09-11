@@ -4790,15 +4790,20 @@ function makePosts(){
         const script = document.createElement('script');
         script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
         script.onload = addControls;
-        script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
-        document.head.appendChild(script);
-        return;
-      }
-      const sets = [
-        {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
-        {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
-        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
+    script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
+    document.head.appendChild(script);
+    return;
+  }
+  const cssLink = document.querySelector('link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"]');
+  if(!cssLink || !cssLink.sheet){
+    setTimeout(addControls, 50);
+    return;
+  }
+  const sets = [
+    {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
+    {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
+    {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
+    {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
@@ -4832,7 +4837,12 @@ function makePosts(){
         geolocate.on('geolocate', (e)=>{
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
-          map.jumpTo({ center:[e.coords.longitude,e.coords.latitude], zoom: Math.max(map.getZoom(), 12), pitch:45 });
+          map.flyTo({
+            center:[e.coords.longitude, e.coords.latitude],
+            zoom: Math.max(map.getZoom(), 12),
+            pitch:45,
+            essential:true
+          });
         });
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder) geoHolder.appendChild(geolocate.onAdd(map));
