@@ -388,7 +388,8 @@ input[type="checkbox"]{
   }
 
 .logo img{
-  height: 48px;
+  width: 40px;
+  height: 40px;
   display: block;
 }
 
@@ -1433,7 +1434,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 
 .post-board{
-  width:970px;
+  width:900px;
   padding:0;
   margin:0;
   overflow:auto;
@@ -1451,7 +1452,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   padding-bottom:10px;
 }
-@media (max-width:969px){
+@media (max-width:899px){
   .post-board{width:440px;}
   .post-board .post-body{flex-direction:column;}
 }
@@ -1879,9 +1880,16 @@ body.filters-active #filterBtn{
 .post-board .posts{overflow:visible;padding:0;margin:0;}
 .post-board{color:#fff;}
 .post-board .post-card,
-.post-board .open-posts{background:var(--closed-card-bg);}
+.post-board .open-posts{
+  background:var(--closed-card-bg);
+  margin:0;
+  border-radius:0;
+  border-bottom:1px solid var(--border);
+}
+.post-board .post-card:last-child,
+.post-board .open-posts:last-child{border-bottom:none;}
+.post-board .post-card .thumb{border-radius:0;}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
-.post-board .open-posts{margin-top:0}
 
 
 .mode-posts .post-board{
@@ -2021,7 +2029,7 @@ body.filters-active #filterBtn{
     grid-template-columns:1fr;
     gap:0;
     padding:0;
-    margin:0 0 var(--gap) 0;
+    margin:0;
     border-radius:0;
   }
   .post-board .post-card .thumb{
@@ -2056,7 +2064,7 @@ body.filters-active #filterBtn{
     width:100%;
     height:100vw;
     margin:0;
-    border-radius:8px;
+    border-radius:0;
   }
   .open-posts .img-box img{
     object-fit:cover;
@@ -2626,14 +2634,14 @@ body.filters-active #filterBtn{
   }
   #post-modal-container.hidden{display:none;}
   #post-modal-container .post-modal{
-    width:970px;
+    width:900px;
     max-width:100%;
     height:90%;
     overflow:auto;
     background:var(--list-background);
     border-radius:8px;
   }
-  @media (max-width:969px){
+  @media (max-width:899px){
     #post-modal-container .post-modal{width:440px;}
   }
 
@@ -3290,11 +3298,6 @@ img.thumb{
               </div>
             </div>
             <div class="panel-field">
-              <label for="mapRestore">Restore Backup</label>
-              <select id="mapRestore"></select>
-              <button type="button" data-restore="map">Restore</button>
-            </div>
-            <div class="panel-field">
               <div id="balloonTool">
                 <style>
                   #balloonTool { padding: 10px; }
@@ -3330,19 +3333,6 @@ img.thumb{
             </div>
         </div>
         <div id="tab-settings" class="tab-panel">
-          <!-- Board Priority settings removed -->
-          <div class="panel-field">
-            <label for="catList">Categories</label>
-            <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
-          </div>
-          <div class="panel-field">
-            <label for="subList">Subcategories</label>
-            <textarea id="subList" rows="3" placeholder="One subcategory per line"></textarea>
-          </div>
-          <div class="panel-field">
-            <label for="aColor">Color</label>
-            <input type="color" id="aColor" data-mode="hex" value="#000000" />
-          </div>
           <div class="panel-field">
             <label for="postModeBgColor">Post Mode Background</label>
             <div class="color-group">
@@ -3360,19 +3350,6 @@ img.thumb{
             </div>
             <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome to Funmap!</p><p>Choose an area on the map to search for events and listings.</p><p>Click the Filters button to refine your search.</p>"></div>
             <textarea id="welcomeMessage" hidden></textarea>
-          </div>
-          <h3>Subcategory Form Builder</h3>
-          <div class="palette" id="fieldPalette">
-            <div class="field-item" draggable="true" data-type="text">Text</div>
-            <div class="field-item" draggable="true" data-type="date">Date</div>
-            <div class="field-item" draggable="true" data-type="image">Image</div>
-            <div class="field-item" draggable="true" data-type="location">Location</div>
-          </div>
-          <div id="formBuilder" class="builder-zone" aria-label="Form fields drop zone"></div>
-          <div class="panel-field">
-            <label for="settingsRestore">Restore Backup</label>
-            <select id="settingsRestore" style="width:250px"></select>
-            <button type="button" data-restore="settings">Restore</button>
           </div>
         </div>
         <div id="tab-forms" class="tab-panel">
@@ -3550,12 +3527,18 @@ img.thumb{
     }
     window.adjustListHeight = adjustListHeight;
 
+    let stickyScrollHandler = null;
     function updateStickyImages(){
       const root = document.documentElement;
       const body = document.querySelector('.open-posts .post-body');
       const imgArea = body ? body.querySelector('.post-images-container') : null;
       const text = body ? body.querySelector('.post-details') : null;
       const header = body ? body.querySelector('.detail-header') : null;
+      const board = document.querySelector('.post-board');
+      if(stickyScrollHandler && board){
+        board.removeEventListener('scroll', stickyScrollHandler);
+        stickyScrollHandler = null;
+      }
       const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
       root.classList.toggle('hide-map-calendar', isBelow);
       if(body && text){
@@ -3580,14 +3563,20 @@ img.thumb{
           }
         }
       }
-      if(!body || !imgArea || !text || !header){
+      if(!body || !imgArea || !text || !header || !board){
         root.classList.remove('open-posts-sticky-images');
         document.documentElement.style.removeProperty('--open-post-header-h');
         return;
       }
       const twoCols = !isBelow;
-      root.classList.toggle('open-posts-sticky-images', twoCols);
       document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
+      stickyScrollHandler = () => {
+        const imgBottom = imgArea.getBoundingClientRect().bottom;
+        const textBottom = text.getBoundingClientRect().bottom;
+        root.classList.toggle('open-posts-sticky-images', twoCols && textBottom > imgBottom);
+      };
+      board.addEventListener('scroll', stickyScrollHandler);
+      stickyScrollHandler();
     }
 
     window.updateStickyImages = updateStickyImages;
@@ -4288,6 +4277,19 @@ function makePosts(){
       }, {passive:false});
     }
 
+    function smoothScroll(el, to, duration=600){
+      const start = el.scrollLeft;
+      const change = to - start;
+      const startTime = performance.now();
+      function animate(time){
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        el.scrollLeft = start + change * progress;
+        if(progress < 1) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+
     function setupCalendarScroll(scroller){
       if(!scroller) return;
       scroller.setAttribute('tabindex','0');
@@ -4326,12 +4328,14 @@ function makePosts(){
           const w = m ? m.offsetWidth : 0;
           if(w){
             const max = scroller.scrollWidth - scroller.clientWidth;
+            let target;
             if(scroller.scrollLeft >= max - 1){
-              scroller.scrollLeft = max;
+              target = max;
             } else {
               const i = Math.round(scroller.scrollLeft / w);
-              scroller.scrollLeft = w*i;
+              target = w*i;
             }
+            smoothScroll(scroller, target, 600);
           }
         },100);
       });
@@ -6606,47 +6610,6 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   storeTitleDefaults();
 
-
-  const palette = document.getElementById('fieldPalette');
-  const builder = document.getElementById('formBuilder');
-  let dragType = null;
-
-  palette && palette.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-item')){
-      dragType = e.target.dataset.type;
-    }
-  });
-
-  builder && builder.addEventListener('dragover', e=> e.preventDefault());
-
-  builder && builder.addEventListener('drop', e=>{
-    e.preventDefault();
-    if(dragType){
-      const item = document.createElement('div');
-      item.className = 'field-instance';
-      item.textContent = dragType.charAt(0).toUpperCase()+dragType.slice(1);
-      item.setAttribute('draggable','true');
-      builder.appendChild(item);
-      dragType = null;
-    }
-  });
-
-  let dragEl = null;
-  builder && builder.addEventListener('dragstart', e=>{
-    if(e.target.classList.contains('field-instance')){
-      dragEl = e.target;
-    }
-  });
-
-  builder && builder.addEventListener('drop', e=>{
-    if(dragEl && e.target.classList.contains('field-instance')){
-      e.preventDefault();
-      const rect = e.target.getBoundingClientRect();
-      const after = (e.clientY - rect.top) > rect.height/2;
-      builder.insertBefore(dragEl, after ? e.target.nextSibling : e.target);
-    }
-    dragEl = null;
-  });
 
   window.addEventListener('resize', updateLayoutVars);
   window.addEventListener('resize', updateStickyImages);
