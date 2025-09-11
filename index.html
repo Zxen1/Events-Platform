@@ -4609,7 +4609,7 @@ function makePosts(){
               document.body.classList.remove('hide-results');
               boardsContainer.style.justifyContent = 'flex-end';
               postBoard.style.marginLeft = '';
-              postBoard.style.marginRight = '10px';
+              postBoard.style.marginRight = '';
             }
             quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
           } else {
@@ -4620,7 +4620,7 @@ function makePosts(){
               document.body.classList.remove('hide-ads');
             }
             boardsContainer.style.justifyContent = 'flex-start';
-            postBoard.style.marginLeft = '10px';
+            postBoard.style.marginLeft = '';
             postBoard.style.marginRight = '';
             quickBtn.setAttribute('aria-pressed','false');
           }
@@ -6371,6 +6371,7 @@ function openPanel(m){
       requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
     } else if(m.id==='filterPanel'){
       const topPos = headerH + subH + safeTop;
+      let translate;
       if(window.innerWidth < 450){
         content.style.left='0';
         content.style.right='0';
@@ -6378,17 +6379,19 @@ function openPanel(m){
         content.style.bottom=`${footerH}px`;
         content.style.maxHeight='';
         content.dataset.side='left';
+        translate = '-100%';
       } else {
         const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left='0';
-        content.style.right='auto';
+        content.style.left='auto';
+        content.style.right='0';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
         content.style.maxHeight=`${availableHeight}px`;
-        content.dataset.side='left';
+        content.dataset.side='right';
+        translate = '100%';
       }
       content.classList.remove('panel-visible');
-      content.style.transform='translateX(-100%)';
+      content.style.transform=`translateX(${translate})`;
       requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
       const calScroll = document.getElementById('datePickerContainer');
       if(calScroll){
@@ -6631,7 +6634,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   });
 
     const welcomeModal = document.getElementById('welcome-modal');
-    [filterPanel, memberPanel, adminPanel, welcomeModal].forEach(m=>{
+    [memberPanel, adminPanel, welcomeModal].forEach(m=>{
       if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
         openPanel(m);
       }
@@ -6640,7 +6643,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
-    if(filterPanel && localStorage.getItem('panel-open-filterPanel') === 'true'){
+    if(filterPanel && localStorage.getItem('panel-open-filterPanel') !== 'false'){
       openPanel(filterPanel);
     }
   document.querySelectorAll('.panel').forEach(panel=>{
