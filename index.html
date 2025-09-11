@@ -3532,27 +3532,27 @@ img.thumb{
       const root = document.documentElement;
       const body = document.querySelector('.open-posts .post-body');
       const imgArea = body ? body.querySelector('.post-images-container') : null;
-      const text = body ? body.querySelector('.post-details') : null;
+      const secondColumn = body ? body.querySelector('.second-post-column') : null;
       const header = body ? body.querySelector('.detail-header') : null;
       const board = document.querySelector('.post-board');
       if(stickyScrollHandler && board){
         board.removeEventListener('scroll', stickyScrollHandler);
         stickyScrollHandler = null;
       }
-      const isBelow = imgArea && text ? text.offsetTop > imgArea.offsetTop : false;
-      root.classList.toggle('hide-map-calendar', isBelow);
-      if(body && text){
+      const isColumnBelow = imgArea && secondColumn ? secondColumn.offsetTop > imgArea.offsetTop : false;
+      root.classList.toggle('hide-map-calendar', isColumnBelow);
+      if(body && secondColumn){
         const venueDropdown = body.querySelector('.venue-dropdown');
         const sessionDropdown = body.querySelector('.session-dropdown');
         const mapContainer = body.querySelector('.map-container');
         const calContainer = body.querySelector('.calendar-container');
-        const titleEl = text.querySelector('.title');
-        if(isBelow){
-          if(venueDropdown && venueDropdown.parentElement !== text && titleEl){
-            text.insertBefore(venueDropdown, titleEl);
+        const titleEl = secondColumn.querySelector('.title');
+        if(isColumnBelow){
+          if(venueDropdown && venueDropdown.parentElement !== secondColumn && titleEl){
+            secondColumn.insertBefore(venueDropdown, titleEl);
           }
-          if(sessionDropdown && sessionDropdown.parentElement !== text && titleEl){
-            text.insertBefore(sessionDropdown, titleEl);
+          if(sessionDropdown && sessionDropdown.parentElement !== secondColumn && titleEl){
+            secondColumn.insertBefore(sessionDropdown, titleEl);
           }
         } else {
           if(venueDropdown && mapContainer && venueDropdown.parentElement !== mapContainer){
@@ -3563,17 +3563,18 @@ img.thumb{
           }
         }
       }
-      if(!body || !imgArea || !text || !header || !board){
+      if(!body || !imgArea || !secondColumn || !header || !board){
         root.classList.remove('open-posts-sticky-images');
         document.documentElement.style.removeProperty('--open-post-header-h');
         return;
       }
-      const twoCols = !isBelow;
+      const twoCols = !isColumnBelow;
       document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
       stickyScrollHandler = () => {
-        const imgBottom = imgArea.getBoundingClientRect().bottom;
-        const textBottom = text.getBoundingClientRect().bottom;
-        root.classList.toggle('open-posts-sticky-images', twoCols && textBottom > imgBottom);
+        const imgHeight = imgArea.getBoundingClientRect().height;
+        const columnBottom = secondColumn.getBoundingClientRect().bottom;
+        const columnHeight = columnBottom - secondColumn.offsetTop;
+        root.classList.toggle('open-posts-sticky-images', twoCols && columnHeight > imgHeight);
       };
       board.addEventListener('scroll', stickyScrollHandler);
       stickyScrollHandler();
