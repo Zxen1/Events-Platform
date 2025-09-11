@@ -1414,7 +1414,6 @@ button[aria-expanded="true"] .results-arrow{
   transition:padding 0.3s ease;
 }
 
-body.hide-results .post-mode-boards{padding-left:0;}
 body.hide-ads .post-mode-boards{padding-right:0;}
 
 .quick-list-board{
@@ -1432,10 +1431,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transition:transform 0.3s ease;
 }
 
-body.hide-results .quick-list-board{
-  transform:translateX(-100%);
-  pointer-events:none;
-}
 
 .post-board{
   width:970px;
@@ -1488,6 +1483,7 @@ body.hide-results .quick-list-board{
 .post-board.two-columns .tall-image-container{
   position:sticky;
   top:calc(var(--post-header-h,0px) + var(--gap));
+  align-self:flex-start;
 }
 
 .image-thumbnail-row{
@@ -1608,12 +1604,14 @@ body.hide-ads .ad-board{
 
 
 #filterBtn,
-#quickBtn,
 #postBtn,
 #memberBtn,
 #adminBtn{
   border-radius:8px;
   gap:4px;
+}
+.header .view-toggle #filterBtn{
+  height:40px;
 }
 .icon-search{
   display:inline-block;
@@ -2500,8 +2498,6 @@ body.filters-active #filterBtn{
 
 
 @media (max-width:650px){
-  .quick-list-board{display:none;}
-  #quickBtn{display:none;}
 }
 
 
@@ -3014,11 +3010,8 @@ img.thumb{
       <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
-      <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button>
+      <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
       <button id="historyBtn" aria-pressed="false">History</button>
-      <button id="postBtn" aria-pressed="false">Show Posts</button>
-    </nav>
-    <div class="header-buttons">
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
@@ -3026,6 +3019,9 @@ img.thumb{
         </svg>
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
+      <button id="postBtn" aria-pressed="false">Show Posts</button>
+    </nav>
+    <div class="header-buttons">
       <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
@@ -3055,7 +3051,7 @@ img.thumb{
 
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
-    <section class="quick-list-board" id="results" aria-label="Quick List Board"></section>
+    <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
     <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board"></section>
     <section class="post-board" aria-label="Post Board">
       <div class="post-header"></div>
@@ -3086,14 +3082,14 @@ img.thumb{
 
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Filters</h2>
           <div class="panel-actions">
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-            <button type="button" class="pin-panel" aria-pressed="false" aria-label="Pin filter panel">📌</button>
+            <button type="button" class="pin-panel" aria-pressed="true" aria-label="Pin filter panel">📌</button>
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
@@ -3334,15 +3330,7 @@ img.thumb{
             </div>
         </div>
         <div id="tab-settings" class="tab-panel">
-          <div class="panel-field">
-            <div class="option-label">
-              <span>Board Priority</span>
-            </div>
-            <div class="option-group">
-              <label class="option-label"><span>Prioritize Quick-List Board</span><input type="radio" name="boardPriority" value="quick"></label>
-              <label class="option-label"><span>Prioritize Ad Board</span><input type="radio" name="boardPriority" value="ad"></label>
-            </div>
-          </div>
+          <!-- Board Priority settings removed -->
           <div class="panel-field">
             <label for="catList">Categories</label>
             <textarea id="catList" rows="3" placeholder="One category per line"></textarea>
@@ -3450,7 +3438,7 @@ img.thumb{
       }
     }
 
-      let map, spinning = false, resultsWasHidden = null, historyWasActive = false, expiredWasOn = false, dateStart = null, dateEnd = null,
+      let map, spinning = false, historyWasActive = false, expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -3461,10 +3449,8 @@ img.thumb{
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '',
-          boardPriority = localStorage.getItem('boardPriority') || 'quick';
+          clusterSvg = localStorage.getItem('clusterSvg') || '';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
-        if(spinEnabled) document.body.classList.add('hide-results');
         logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
         logoEls.forEach(el=>{
@@ -3558,7 +3544,7 @@ img.thumb{
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.quick-list-board, .posts').forEach(list=>{
+      document.querySelectorAll('.history-board, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
@@ -4151,7 +4137,7 @@ function makePosts(){
         ['posts-heat','clusters','cluster-count','unclustered'].forEach(id=>{
           if(map.getLayer(id)) map.setLayoutProperty(id,'visibility','none');
         });
-        resultsEl.innerHTML = '';
+        if(resultsEl) resultsEl.innerHTML = '';
         postsWideEl.innerHTML = '';
         updateResultCount(0);
       }
@@ -4496,7 +4482,6 @@ function makePosts(){
         marker.className = 'today-marker';
         marker.dataset.pos = pos;
         calendarScroll.appendChild(marker);
-        scrollCalendarToToday();
         marker.addEventListener('click', ()=> scrollCalendarToToday('smooth'));
       }
     }
@@ -4589,9 +4574,7 @@ function makePosts(){
         optionsBtn.setAttribute('aria-expanded','false');
       });
 
-      const quickBtn = $('#quickBtn');
       const historyBtn = $('#historyBtn');
-      const quickListBoard = $('.quick-list-board');
       const historyBoard = $('#historyBoard');
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
@@ -4599,66 +4582,28 @@ function makePosts(){
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
-        const quickHidden = historyActive ? false : document.body.classList.contains('hide-results');
         if(small){
-          if(boardPriority === 'quick'){
-            document.body.classList.add('hide-ads');
-            if(quickHidden){
-              boardsContainer.style.justifyContent = 'center';
-              postBoard.style.marginLeft = '';
-              postBoard.style.marginRight = '';
-            } else {
-              document.body.classList.remove('hide-results');
-              boardsContainer.style.justifyContent = 'flex-end';
-              postBoard.style.marginLeft = '';
-              postBoard.style.marginRight = '';
-            }
-            quickBtn.setAttribute('aria-pressed', (!historyActive && !quickHidden) ? 'true' : 'false');
-            historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
-          } else {
-            document.body.classList.add('hide-results');
-            if(document.body.classList.contains('mode-map')){
-              document.body.classList.add('hide-ads');
-            } else {
-              document.body.classList.remove('hide-ads');
-            }
-            boardsContainer.style.justifyContent = 'flex-start';
-            postBoard.style.marginLeft = '';
-            postBoard.style.marginRight = '';
-            quickBtn.setAttribute('aria-pressed','false');
-            historyBtn && historyBtn.setAttribute('aria-pressed','false');
-          }
+          document.body.classList.add('hide-ads');
+          boardsContainer.style.justifyContent = 'center';
+          postBoard.style.marginLeft = '';
+          postBoard.style.marginRight = '';
         } else {
-          if(quickHidden){
-            document.body.classList.add('hide-results');
-          } else {
-            document.body.classList.remove('hide-results');
-          }
           if(document.body.classList.contains('mode-map')){
             document.body.classList.add('hide-ads');
           } else {
             document.body.classList.remove('hide-ads');
           }
           const adsHidden = document.body.classList.contains('hide-ads');
-          if(!quickHidden && !adsHidden){
-            boardsContainer.style.justifyContent = 'center';
-          } else {
-            boardsContainer.style.justifyContent = 'flex-start';
-          }
+          boardsContainer.style.justifyContent = adsHidden ? 'flex-start' : 'center';
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
-          quickBtn.setAttribute('aria-pressed', (!historyActive && !quickHidden) ? 'true' : 'false');
-          historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
-        }
-        if(quickListBoard){
-          quickListBoard.style.display = historyActive ? 'none' : '';
-          quickListBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-results') || historyActive ? 'true' : 'false');
         }
         if(historyBoard){
           historyBoard.style.display = historyActive ? '' : 'none';
           historyBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
         }
         adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
+        historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
       }
       adjustBoards();
       window.addEventListener('resize', adjustBoards);
@@ -4670,25 +4615,10 @@ function makePosts(){
             applyFilters();
           }
         }, 0);
-      quickBtn.addEventListener('click', ()=>{
-        document.body.classList.remove('show-history');
-        historyBtn && historyBtn.setAttribute('aria-pressed','false');
-        const hidden = document.body.classList.toggle('hide-results');
-        localStorage.setItem('resultsHidden', JSON.stringify(hidden));
-        adjustBoards();
-        window.adjustListHeight();
-        setTimeout(()=>{
-          if(map && typeof map.resize === 'function'){
-            map.resize();
-            updatePostPanel();
-          }
-        }, 310);
-      });
 
       historyBtn && historyBtn.addEventListener('click', ()=>{
         const active = document.body.classList.toggle('show-history');
         if(active){
-          document.body.classList.remove('hide-results');
           renderHistoryBoard();
         }
         adjustBoards();
@@ -4701,35 +4631,13 @@ function makePosts(){
         }, 310);
       });
 
-      document.querySelectorAll('input[name="boardPriority"]').forEach(rb=>{
-        rb.addEventListener('change', ()=>{
-          boardPriority = rb.value;
-          localStorage.setItem('boardPriority', boardPriority);
-          adjustBoards();
-        });
-      });
-      const savedRb = document.querySelector(`input[name="boardPriority"][value="${boardPriority}"]`);
-      if(savedRb) savedRb.checked = true;
-
-      const resLists = $$('.quick-list-board, .history-board');
+      const resLists = $$('.history-board');
       resLists.forEach(list=>{
         list.addEventListener('click', e=>{
           const cardEl = e.target.closest('.quick-card');
           if(cardEl){
             const id = cardEl.getAttribute('data-id');
             if(id) { stopSpin(); openPost(id, true); }
-            return;
-          }
-          if(e.target === list){
-            document.body.classList.add('hide-results');
-            document.body.classList.remove('show-history');
-            quickBtn.setAttribute('aria-pressed','false');
-            historyBtn && historyBtn.setAttribute('aria-pressed','false');
-            quickListBoard.setAttribute('aria-hidden','true');
-            historyBoard && historyBoard.setAttribute('aria-hidden','true');
-            localStorage.setItem('resultsHidden','true');
-            adjustBoards();
-            setMode('map');
           }
         });
       });
@@ -4959,18 +4867,12 @@ function makePosts(){
       if(map.getZoom() >= 3) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
-      resultsWasHidden = document.body.classList.contains('hide-results');
       historyWasActive = document.body.classList.contains('show-history');
-      if(!resultsWasHidden || historyWasActive){
-        document.body.classList.add('hide-results');
+      if(historyWasActive){
         document.body.classList.remove('show-history');
-        const quickBtnEl = document.getElementById('quickBtn');
         const historyBtnEl = document.getElementById('historyBtn');
-        const quickListBoard = document.querySelector('.quick-list-board');
         const historyBoardEl = document.getElementById('historyBoard');
-        if(quickBtnEl) quickBtnEl.setAttribute('aria-pressed','false');
         if(historyBtnEl) historyBtnEl.setAttribute('aria-pressed','false');
-        if(quickListBoard) quickListBoard.setAttribute('aria-hidden','true');
         if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
       }
       function step(){
@@ -4988,28 +4890,14 @@ function makePosts(){
     }
     function stopSpin(){
       spinning = false;
-      const wasHidden = resultsWasHidden;
       const wasHistory = historyWasActive;
-      resultsWasHidden = null;
       historyWasActive = false;
-      if(wasHidden === false || wasHistory){
-        const quickBtnEl2 = document.getElementById('quickBtn');
-        const historyBtnEl2 = document.getElementById('historyBtn');
-        const quickListBoard = document.querySelector('.quick-list-board');
+      if(wasHistory){
+        document.body.classList.add('show-history');
+        const historyBtnEl = document.getElementById('historyBtn');
         const historyBoardEl = document.getElementById('historyBoard');
-        document.body.classList.remove('hide-results');
-        if(wasHistory){
-          document.body.classList.add('show-history');
-          if(historyBtnEl2) historyBtnEl2.setAttribute('aria-pressed','true');
-          if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','false');
-          if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','false');
-          if(quickListBoard) quickListBoard.setAttribute('aria-hidden','true');
-        } else {
-          if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','true');
-          if(quickListBoard) quickListBoard.setAttribute('aria-hidden','false');
-          if(historyBtnEl2) historyBtnEl2.setAttribute('aria-pressed','false');
-          if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
-        }
+        if(historyBtnEl) historyBtnEl.setAttribute('aria-pressed','true');
+        if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','false');
       }
       applyFilters();
     }
@@ -5350,10 +5238,13 @@ function makePosts(){
         toRender = arr.slice(0, max);
       }
 
-      resultsEl.innerHTML = '';
+      if(resultsEl) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
-      toRender.forEach(p => { resultsEl.appendChild(card(p)); postsWideEl.appendChild(card(p, true)); });
-      if(activePostId){
+      toRender.forEach(p => {
+        if(resultsEl) resultsEl.appendChild(card(p));
+        postsWideEl.appendChild(card(p, true));
+      });
+      if(activePostId && resultsEl){
         const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
         if(sel) sel.setAttribute('aria-selected','true');
       }
@@ -5375,9 +5266,9 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [resultsEl, postsWideEl];
+      const roots = [postsWideEl];
+      if(resultsEl) roots.push(resultsEl);
       roots.forEach(root => {
-        if(!root) return;
         const imgs = root.querySelectorAll('img.thumb');
         if(!imgs.length) return;
         if('IntersectionObserver' in window){
@@ -5662,7 +5553,7 @@ function makePosts(){
       }
 
       if(!target){ target = card(p, true); postsWideEl.appendChild(target); }
-      const resCard = resultsEl.querySelector(`[data-id="${id}"]`);
+      const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
       if(resCard){
         resCard.setAttribute('aria-selected','true');
         if(fromMap){
@@ -6066,7 +5957,6 @@ function makePosts(){
           current.setMonth(current.getMonth()+1);
         }
         calendarEl.appendChild(cal);
-        if(calScroll) calScroll.scrollLeft = 0;
         let selectedIndex = null;
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         function markSelected(){
@@ -6272,7 +6162,7 @@ function makePosts(){
         const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
         if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
         document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
+        const quickCard = document.querySelector(`.history-board .quick-card[data-id="${id}"]`);
         if(quickCard){
           quickCard.setAttribute('aria-selected','true');
           quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -6363,11 +6253,12 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
       const topPos = headerH + safeTop;
+      const availableHeight = window.innerHeight - footerH - topPos;
       content.style.left='auto';
       content.style.right='0';
       content.style.top=`${topPos}px`;
-      content.style.bottom='';
-      content.style.maxHeight='';
+      content.style.bottom=`${footerH}px`;
+      content.style.maxHeight=`${availableHeight}px`;
       content.dataset.side='right';
       content.classList.remove('panel-visible');
       content.style.transform='translateX(100%)';
@@ -6385,21 +6276,17 @@ function openPanel(m){
         translate = '-100%';
       } else {
         const availableHeight = window.innerHeight - footerH - topPos;
-        content.style.left='auto';
-        content.style.right='0';
+        content.style.left='0';
+        content.style.right='';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
         content.style.maxHeight=`${availableHeight}px`;
-        content.dataset.side='right';
-        translate = '100%';
+        content.dataset.side='left';
+        translate = '-100%';
       }
       content.classList.remove('panel-visible');
       content.style.transform=`translateX(${translate})`;
       requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
-      const calScroll = document.getElementById('datePickerContainer');
-      if(calScroll){
-        scrollCalendarToToday();
-      }
     } else if(m.id==='welcome-modal'){
       const topPos = headerH + safeTop + 10;
       content.style.left='50%';
@@ -6640,7 +6527,8 @@ document.addEventListener('pointerdown', handleDocInteract);
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
-    if(filterPanel && localStorage.getItem('panel-open-filterPanel') !== 'false'){
+    const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') !== 'false';
+    if(filterPanel && shouldOpenFilter){
       openPanel(filterPanel);
     }
   document.querySelectorAll('.panel').forEach(panel=>{
