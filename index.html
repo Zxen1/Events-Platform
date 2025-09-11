@@ -4112,7 +4112,7 @@ function makePosts(){
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
-      sponsored: rnd() < 0.05,
+      sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
@@ -4187,7 +4187,7 @@ function makePosts(){
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
-      sponsored: rnd() < 0.05,
+      sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
@@ -4205,8 +4205,8 @@ function makePosts(){
       posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
       postsLoaded = true;
       addPostSource();
-      applyFilters();
       initAdBoard();
+      applyFilters();
     }
 
     function checkLoadPosts(){
@@ -6296,35 +6296,22 @@ function makePosts(){
 
     function initAdBoard(){
       adPanel = document.querySelector('.ad-panel');
-      adPosts = filtered.filter(p => p.sponsored);
       if(!adPanel) return;
-      if(adPosts.length){
-        showNextAd();
-        adTimer = setInterval(showNextAd,20000);
-        adPanel.addEventListener('click', async e => {
-          const slide = e.target.closest('.ad-slide');
-          if(!slide) return;
-          e.preventDefault();
-          const id = slide.dataset.id;
-          await openPost(id);
-          const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
-          if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
-          document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-          const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
-          if(quickCard){
-            quickCard.setAttribute('aria-selected','true');
-            quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-          }
-        });
-      } else {
-        const img = document.createElement('img');
-        img.src = 'assets/welcome%20001.jpg';
-        img.alt = 'Welcome';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        adPanel.appendChild(img);
-      }
+      adPanel.addEventListener('click', async e => {
+        const slide = e.target.closest('.ad-slide');
+        if(!slide) return;
+        e.preventDefault();
+        const id = slide.dataset.id;
+        await openPost(id);
+        const openEl = document.querySelector(`.post-board .open-posts[data-id="${id}"]`);
+        if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
+        document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        const quickCard = document.querySelector(`.quick-list-board .quick-card[data-id="${id}"]`);
+        if(quickCard){
+          quickCard.setAttribute('aria-selected','true');
+          quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+        }
+      });
     }
 
     // applyFilters();
