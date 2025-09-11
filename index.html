@@ -1443,10 +1443,6 @@ body.hide-results .quick-list-board{
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-.post-content{
-  max-width:900px;
-  margin:0;
-}
 .post-board .post-card{
   width:100%;
 }
@@ -3124,24 +3120,22 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   <div class="post-mode-boards">
     <section class="quick-list-board" id="results" aria-label="Quick List Board"></section>
     <section class="post-board" aria-label="Post Board">
-      <div class="post-content" id="postsWide">
-        <div class="post-header"></div>
-        <div class="post-body">
-          <div class="main-post-column">
-            <div class="post-images-container">
-              <div class="selected-image"></div>
-              <div class="image-thumbnail-row"></div>
-            </div>
+      <div class="post-header"></div>
+      <div class="post-body">
+        <div class="main-post-column">
+          <div class="post-images-container">
+            <div class="selected-image"></div>
+            <div class="image-thumbnail-row"></div>
           </div>
-          <div class="second-post-column">
-            <div class="post-details">
-              <div class="post-venue-selection-container"></div>
-              <div class="post-session-selection-container"></div>
-              <div class="post-details-title-container"></div>
-              <div class="post-details-member-container"></div>
-              <div class="post-details-info-container"></div>
-              <div class="post-details-description-container"></div>
-            </div>
+        </div>
+        <div class="second-post-column">
+          <div class="post-details">
+            <div class="post-venue-selection-container"></div>
+            <div class="post-session-selection-container"></div>
+            <div class="post-details-title-container"></div>
+            <div class="post-details-member-container"></div>
+            <div class="post-details-info-container"></div>
+            <div class="post-details-description-container"></div>
           </div>
         </div>
       </div>
@@ -4296,7 +4290,7 @@ function makePosts(){
     }
 
     const resultsEl = $('#results');
-    const postsWideEl = $('#postsWide');
+    const postsWideEl = $('.post-board');
     const postsModeEl = $('.post-board');
 
     // Image helpers (unique per post)
@@ -4811,7 +4805,7 @@ function makePosts(){
         }
       });
 
-      const postsWide = $('#postsWide');
+      const postsWide = $('.post-board');
       postsWide && postsWide.addEventListener('click', e=>{
         const cardEl = e.target.closest('.post-card');
         if(cardEl){
@@ -5786,7 +5780,7 @@ function makePosts(){
       const modal = container.querySelector('.post-modal');
       modal.innerHTML='';
       const wrap = document.createElement('div');
-      wrap.className = 'post-content';
+      wrap.className = 'post-board';
       const detail = buildDetail(p);
       const headerEl = detail.querySelector('.detail-header');
       const favBtn = headerEl && headerEl.querySelector('.fav');
