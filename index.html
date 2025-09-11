@@ -81,6 +81,7 @@
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
       --control-h: 35px;
+      --geocoder-h: var(--control-h);
       --panel-label-font: system-ui, sans-serif;
       --panel-label-size: 14px;
       --panel-label-color: #ffffff;
@@ -92,7 +93,7 @@
       --safe-top: env(safe-area-inset-top, 0px);
 }
 
-*:not([class^="mapboxgl-"]){
+*:not([class*="mapboxgl-"]){
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
@@ -105,23 +106,23 @@ fieldset{
   border:0 !important;
 }
 
-*:not([class^="mapboxgl-"]):hover{
+*:not([class*="mapboxgl-"]):hover{
   border-color: var(--border-hover) !important;
 }
 
-*:not([class^="mapboxgl-"]):active{
+*:not([class*="mapboxgl-"]):active{
   border-color: var(--border-active) !important;
 }
 
-*[aria-pressed="true"]:not([class^="mapboxgl-"]),
-*[aria-current="page"]:not([class^="mapboxgl-"]),
-.selected:not([class^="mapboxgl-"]),
-.on:not([class^="mapboxgl-"]){
+*[aria-pressed="true"]:not([class*="mapboxgl-"]),
+*[aria-current="page"]:not([class*="mapboxgl-"]),
+.selected:not([class*="mapboxgl-"]),
+.on:not([class*="mapboxgl-"]){
   border-color: var(--border-active) !important;
   color: var(--active);
 }
 
-*[aria-selected="true"]:not([class^="mapboxgl-"]){
+*[aria-selected="true"]:not([class*="mapboxgl-"]){
   border-color: var(--border-active) !important;
 }
 
@@ -129,18 +130,18 @@ html,body{
   height: 100%;
 }
 
-*:not([class^="mapboxgl-"])::-webkit-scrollbar{
+*:not([class*="mapboxgl-"])::-webkit-scrollbar{
   width:var(--scrollbar-h);
   height:var(--scrollbar-h);
 }
-*:not([class^="mapboxgl-"])::-webkit-scrollbar-track{
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-track{
   background:var(--scrollbar-track);
 }
-*:not([class^="mapboxgl-"])::-webkit-scrollbar-thumb{
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb{
   background:var(--scrollbar-thumb);
   border-radius:0;
 }
-*:not([class^="mapboxgl-"])::-webkit-scrollbar-thumb:hover{
+*:not([class*="mapboxgl-"])::-webkit-scrollbar-thumb:hover{
   background:var(--scrollbar-thumb-hover);
 }
 
@@ -173,7 +174,7 @@ textarea,
   user-select: text;
 }
 
-button:not([class^="mapboxgl-ctrl"]),
+button:not([class*="mapboxgl-ctrl"]),
 [role="button"]{
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -660,7 +661,7 @@ button[aria-expanded="true"] .results-arrow{
   padding-bottom:10px;
 }
 
-#filterPanel button,
+#filterPanel button:not([class*="mapboxgl-"]),
 #filterPanel .sq,
 #filterPanel .tiny,
 #filterPanel .btn,
@@ -1810,7 +1811,6 @@ body.filters-active #filterBtn{
   align-items:center;
   gap:6px;
   width:100%;
-  margin-bottom:var(--gap);
 }
 
 .map-control-row{
@@ -1819,13 +1819,15 @@ body.filters-active #filterBtn{
   gap:var(--gap);
 }
 
-.map-control-row .geocoder{flex:1 1 auto;}
+.mode-posts .map-controls-map{display:none;}
+
+.map-control-row .geocoder{flex:1 1 auto;margin:0;}
 
 .map-control-row .geolocate-btn,
 .map-control-row .compass-btn{
-  flex:0 0 var(--control-h);
-  width:var(--control-h);
-  height:var(--control-h);
+  flex:0 0 var(--geocoder-h);
+  width:var(--geocoder-h);
+  height:var(--geocoder-h);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1835,6 +1837,8 @@ body.filters-active #filterBtn{
 .map-control-row .compass-btn .mapboxgl-ctrl-compass{
   width:100%;
   height:100%;
+  margin:0;
+  padding:0;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
@@ -1850,12 +1854,6 @@ body.filters-active #filterBtn{
 #filterPanel .map-control-row input{
   color:#000;
 }
-#filterPanel .map-control-row button:not([class^="mapboxgl-"]){
-  background:#fff;
-  color:#000;
-  border:0;
-}
-
 
 #filterPanel .panel-body > *{width:420px !important;max-width:420px !important;}
 
@@ -3113,9 +3111,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
   <section class="map-area" aria-label="Map">
     <div class="map-control-row map-controls-map">
-      <div class="geocoder geocoder-map"></div>
-      <div class="geolocate-btn geolocate-btn-map"></div>
-      <div class="compass-btn compass-btn-map"></div>
+      <div id="geocoder-map" class="geocoder"></div>
+      <div id="geolocate-map" class="geolocate-btn"></div>
+      <div id="compass-map" class="compass-btn"></div>
     </div>
     <div id="map"></div>
   </section>
@@ -3172,9 +3170,9 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       </div>
       <div class="panel-body">
         <div class="map-control-row map-controls-filter">
-          <div class="geocoder geocoder-filter"></div>
-          <div class="geolocate-btn geolocate-btn-filter"></div>
-          <div class="compass-btn compass-btn-filter"></div>
+          <div id="geocoder-filter" class="geocoder"></div>
+          <div id="geolocate-filter" class="geolocate-btn"></div>
+          <div id="compass-filter" class="compass-btn"></div>
         </div>
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
@@ -3247,11 +3245,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
         <div class="panel-field">
           <label for="mDate">Date</label>
           <input type="date" id="mDate" />
-        </div>
-        <div class="map-control-row map-controls-member">
-          <div class="geocoder geocoder-member"></div>
-          <div class="geolocate-btn geolocate-btn-member"></div>
-          <div class="compass-btn compass-btn-member"></div>
         </div>
         <div class="panel-field">
           <label for="mColor">Color</label>
@@ -3479,11 +3472,13 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     <!-- Welcome modal content (not a panel) -->
     <div class="modal-content">
       <div class="panel-body" id="welcomeBody">
+        <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />
         <div class="map-control-row map-controls-welcome">
-          <div class="geocoder geocoder-welcome"></div>
-          <div class="geolocate-btn geolocate-btn-welcome"></div>
-          <div class="compass-btn compass-btn-welcome"></div>
+          <div id="geocoder-welcome" class="geocoder"></div>
+          <div id="geolocate-welcome" class="geolocate-btn"></div>
+          <div id="compass-welcome" class="compass-btn"></div>
         </div>
+        <div id="welcomeMessageBox"></div>
       </div>
     </div>
   </div>
@@ -3568,20 +3563,11 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
 
       function openWelcome(){
         const popup = document.getElementById('welcome-modal');
-        const body = document.getElementById('welcomeBody');
-        const controls = body.querySelector('.map-controls-welcome');
+        const msgEl = document.getElementById('welcomeMessageBox');
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
-        const msg = saved.welcomeMessage || DEFAULT_WELCOME;
-        body.innerHTML = msg;
-        let logo = body.querySelector('img');
-        if(!logo){
-          body.insertAdjacentHTML('afterbegin', '<img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />');
-          logo = body.querySelector('img');
-        }
-        if(controls && logo){
-          logo.insertAdjacentElement('afterend', controls);
-        }
+        msgEl.innerHTML = saved.welcomeMessage || DEFAULT_WELCOME;
         openPanel(popup);
+        const body = document.getElementById('welcomeBody');
         body.style.padding = '20px';
       }
       window.openWelcome = openWelcome;
@@ -4858,10 +4844,9 @@ function makePosts(){
         return;
       }
       const sets = [
-        {geo:'.geocoder-welcome', locate:'.geolocate-btn-welcome', compass:'.compass-btn-welcome'},
-        {geo:'.geocoder-map', locate:'.geolocate-btn-map', compass:'.compass-btn-map'},
-        {geo:'.geocoder-filter', locate:'.geolocate-btn-filter', compass:'.compass-btn-filter'},
-        {geo:'.geocoder-member', locate:'.geolocate-btn-member', compass:'.compass-btn-member'}
+        {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
+        {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
+        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'}
       ];
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
@@ -6684,10 +6669,10 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
     {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .footer-card']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], popupText:['.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], title:['.mapboxgl-popup.map-card .hover-card .t','.mapboxgl-popup.map-card .hover-card .title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title','.mapboxgl-popup.map-card .multi-item.map-card .t','.mapboxgl-popup.map-card .multi-item.map-card .title']}},
-    {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
+    {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny','#filterPanel .btn']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
-  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .modal-content'], text:['#welcome-modal .modal-content'], title:['#welcome-modal .modal-content .t','#welcome-modal .modal-content .title'], btn:['#welcome-modal button'], btnText:['#welcome-modal button']}},
+  {key:'welcome-modal', label:'Welcome Modal', selectors:{bg:['#welcome-modal .modal-content'], text:['#welcome-modal .modal-content'], title:['#welcome-modal .modal-content .t','#welcome-modal .modal-content .title'], btn:['#welcome-modal button:not([class*"mapboxgl-"])'], btnText:['#welcome-modal button:not([class*"mapboxgl-"])']}},
   {key:'memberPanel', label:'Member Panel', selectors:{bg:['#memberPanel .panel-content'], text:['#memberPanel .panel-content'], title:['#memberPanel .panel-content .t','#memberPanel .panel-content .title'], btn:['#memberPanel button'], btnText:['#memberPanel button']}},
   {key:'imagePanel', label:'Image Popup', selectors:{bg:['.img-popup']}}
 ];
