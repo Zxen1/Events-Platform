@@ -4166,6 +4166,26 @@ function makePosts(){
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
     function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 
+    function dominantColor(src, cb){
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => {
+        try{
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 1, 1);
+          const [r,g,b] = ctx.getImageData(0,0,1,1).data;
+          cb(`rgb(${r},${g},${b})`);
+        } catch(e){
+          cb('');
+        }
+      };
+      img.onerror = () => cb('');
+      img.src = src;
+    }
+
     function memberAvatarUrl(p){
       if(p.member && p.member.avatar){
         return p.member.avatar;
@@ -5395,7 +5415,8 @@ function makePosts(){
       el.className = wide ? 'post-card' : 'quick-card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumb = `<img class="thumb lqip" loading="lazy" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+      const thumbSrc = imgThumb(p);
+      const thumb = `<img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
           ${thumb}
         <div class="meta">
@@ -5410,7 +5431,9 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
+      dominantColor(thumbSrc, color => {
+        if(color) el.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
+      });
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
         p.fav = !p.fav;
@@ -5516,6 +5539,7 @@ function makePosts(){
       const loc0 = p.locations[0];
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
       const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
+      const thumbSrc = imgThumb(p);
       wrap.innerHTML = `
         <div class="detail-header">
           <div class="title-block">
@@ -5532,7 +5556,7 @@ function makePosts(){
         <div class="post-body">
           <div class="main-post-column">
             <div class="post-images-container">
-              <div class="img-box"><img id="hero-img" class="lqip" src="${imgThumb(p)}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${imgThumb(p)}';"/></div>
+              <div class="img-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
               <div class="thumbnail-row"></div>
             </div>
           </div>
@@ -5562,10 +5586,10 @@ function makePosts(){
           </div>
         </div>`;
       const header = wrap.querySelector('.detail-header');
-      if(header){
-        header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), url('${imgThumb(p)}') center/cover no-repeat`;
-      }
-      wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), url('${imgThumb(p)}') center/cover no-repeat`;
+      dominantColor(thumbSrc, color => {
+        if(header) header.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6)), ${color}`;
+        wrap.style.background = `linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)), ${color}`;
+      });
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
