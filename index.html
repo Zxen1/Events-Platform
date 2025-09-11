@@ -3555,7 +3555,7 @@ img.thumb{
       const body = document.querySelector('.open-post .post-body');
       const imgArea = body ? body.querySelector('.post-images') : null;
       const secondColumn = body ? body.querySelector('.second-post-column') : null;
-      const header = body ? body.querySelector('.post-header') : null;
+      const header = document.querySelector('.open-post .post-header');
       const board = document.querySelector('.post-board');
       if(stickyScrollHandler && board){
         board.removeEventListener('scroll', stickyScrollHandler);
