@@ -42,7 +42,7 @@
       --btn-disabled: #bbbbbb;
       --panel-bg: rgba(0,0,0,1);
       --panel-text: #000000;
-      --footer-h: 70px;
+      --footer-h: 0px;
       --list-background: rgba(0,0,0,0.37);
       --closed-card-bg: rgba(0,0,0,0.37);
       --scrollbar-track: rgba(0,0,0,0);
@@ -375,7 +375,7 @@ input[type="checkbox"]{
 
   .logo{
     position: absolute;
-    left: 20px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -394,7 +394,7 @@ input[type="checkbox"]{
 
   .view-toggle{
   position: absolute;
-  left: 78px;
+  left: 68px;
   right: auto;
   top: 50%;
   transform: translateY(-50%);
@@ -2063,9 +2063,6 @@ body.filters-active #filterBtn{
     min-width:250px;
     width:400px;
   }
-  body.mode-posts footer{
-    display:none;
-  }
 }
 
 .open-posts .detail-header .title{
@@ -2565,47 +2562,10 @@ body.filters-active #filterBtn{
   }
 }
 
-footer{
-  height: var(--footer-h);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: rgba(0,0,0,0.7);
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  transition: transform .1s linear;
-}
-
-@media (max-width: 649px){
-  body.mode-posts.hide-posts-ui footer{
-    transform: translateY(100%);
-  }
-  body.mode-posts.hide-posts-ui .post-board{
-    top: calc(var(--header-h) + var(--safe-top));
-    bottom: 0;
-  }
-}
-
-
-.foot-row{
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  flex:1;
-}
-
   .fullscreen-btn{
-    width:50px;
-    height:50px;
+    width:35px;
+    height:35px;
     padding:0;
-    margin-left:auto;
     flex:0 0 auto;
   }
 
@@ -2682,24 +2642,6 @@ footer{
   cursor: pointer;
 }
 
-footer .foot-row .footer-card{
-  background:var(--list-background);
-  border:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  gap:8px;
-  max-width:240px;
-  padding:10px;
-  border-radius:4px;
-}
-
-footer .foot-row .footer-card .t{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  flex:1 1 auto;
-  min-width:0;
-}
 
 .chip-small img.mini{
   width: 26px;
@@ -2942,13 +2884,6 @@ footer .foot-row .footer-card .t{
   background: var(--panel-bg);
 }
 
-.footer-card img{
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
 img.thumb{
   width: 80px;
   height: 80px;
@@ -2963,21 +2898,7 @@ img.thumb{
   display: block;
 }
 
-footer .foot-row .footer-card > img, footer .foot-row .footer-card img{
-  width: 40px;
-  height: 40px;
-  aspect-ratio: 1/1;
-  object-fit: cover;
-  display: block;
-  border-radius: 8px;
-}
 
-footer .footer-card img.mini, footer .foot-row .footer-card img{
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 8px;
-}
 
 
 
@@ -3052,14 +2973,8 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   :root{
     --footer-h:0;
   }
-  footer{
-    display:none;
-  }
   body.mode-map{
     --footer-h:0;
-  }
-  body.mode-map footer{
-    display:none;
   }
   #filterPanel .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
@@ -3084,6 +2999,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button>
+      <button id="historyBtn" aria-pressed="false">History</button>
       <button id="postBtn" aria-pressed="false">Show Posts</button>
     </nav>
     <div class="header-buttons">
@@ -3107,6 +3023,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
+      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
     </div>
   </header>
   
@@ -3123,6 +3040,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <section class="quick-list-board" id="results" aria-label="Quick List Board"></section>
+    <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board"></section>
     <section class="post-board" aria-label="Post Board">
       <div class="post-header"></div>
       <div class="post-body">
@@ -3150,12 +3068,6 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
     </section>
   </div>
 
-
-
-    <footer>
-      <div id="footRow" class="foot-row" aria-label="Recently viewed posts"></div>
-      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
-    </footer>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
@@ -3517,7 +3429,7 @@ footer .footer-card img.mini, footer .foot-row .footer-card img{
       }
     }
 
-      let map, spinning = false, resultsWasHidden = null, expiredWasOn = false, dateStart = null, dateEnd = null,
+      let map, spinning = false, resultsWasHidden = null, historyWasActive = false, expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -4637,13 +4549,16 @@ function makePosts(){
       });
 
       const quickBtn = $('#quickBtn');
+      const historyBtn = $('#historyBtn');
       const quickListBoard = $('.quick-list-board');
+      const historyBoard = $('#historyBoard');
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
       function adjustBoards(){
         const small = window.innerWidth < 1200;
-        const quickHidden = document.body.classList.contains('hide-results');
+        const historyActive = document.body.classList.contains('show-history');
+        const quickHidden = historyActive ? false : document.body.classList.contains('hide-results');
         if(small){
           if(boardPriority === 'quick'){
             document.body.classList.add('hide-ads');
@@ -4657,7 +4572,8 @@ function makePosts(){
               postBoard.style.marginLeft = '';
               postBoard.style.marginRight = '';
             }
-            quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
+            quickBtn.setAttribute('aria-pressed', (!historyActive && !quickHidden) ? 'true' : 'false');
+            historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
           } else {
             document.body.classList.add('hide-results');
             if(document.body.classList.contains('mode-map')){
@@ -4669,6 +4585,7 @@ function makePosts(){
             postBoard.style.marginLeft = '';
             postBoard.style.marginRight = '';
             quickBtn.setAttribute('aria-pressed','false');
+            historyBtn && historyBtn.setAttribute('aria-pressed','false');
           }
         } else {
           if(quickHidden){
@@ -4689,9 +4606,17 @@ function makePosts(){
           }
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
-          quickBtn.setAttribute('aria-pressed', quickHidden ? 'false' : 'true');
+          quickBtn.setAttribute('aria-pressed', (!historyActive && !quickHidden) ? 'true' : 'false');
+          historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
         }
-        quickListBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-results') ? 'true' : 'false');
+        if(quickListBoard){
+          quickListBoard.style.display = historyActive ? 'none' : '';
+          quickListBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-results') || historyActive ? 'true' : 'false');
+        }
+        if(historyBoard){
+          historyBoard.style.display = historyActive ? '' : 'none';
+          historyBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
+        }
         adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
       }
       adjustBoards();
@@ -4705,8 +4630,26 @@ function makePosts(){
           }
         }, 0);
       quickBtn.addEventListener('click', ()=>{
+        document.body.classList.remove('show-history');
+        historyBtn && historyBtn.setAttribute('aria-pressed','false');
         const hidden = document.body.classList.toggle('hide-results');
         localStorage.setItem('resultsHidden', JSON.stringify(hidden));
+        adjustBoards();
+        window.adjustListHeight();
+        setTimeout(()=>{
+          if(map && typeof map.resize === 'function'){
+            map.resize();
+            updatePostPanel();
+          }
+        }, 310);
+      });
+
+      historyBtn && historyBtn.addEventListener('click', ()=>{
+        const active = document.body.classList.toggle('show-history');
+        if(active){
+          document.body.classList.remove('hide-results');
+          renderHistoryBoard();
+        }
         adjustBoards();
         window.adjustListHeight();
         setTimeout(()=>{
@@ -4727,22 +4670,27 @@ function makePosts(){
       const savedRb = document.querySelector(`input[name="boardPriority"][value="${boardPriority}"]`);
       if(savedRb) savedRb.checked = true;
 
-      const resList = $('.quick-list-board');
-      resList && resList.addEventListener('click', e=>{
-        const cardEl = e.target.closest('.quick-card');
-        if(cardEl){
-          const id = cardEl.getAttribute('data-id');
-          if(id) { stopSpin(); openPost(id, true); }
-          return;
-        }
-        if(e.target === resList){
-          document.body.classList.add('hide-results');
-          quickBtn.setAttribute('aria-pressed','false');
-          quickListBoard.setAttribute('aria-hidden','true');
-          localStorage.setItem('resultsHidden','true');
-          adjustBoards();
-          setMode('map');
-        }
+      const resLists = $$('.quick-list-board, .history-board');
+      resLists.forEach(list=>{
+        list.addEventListener('click', e=>{
+          const cardEl = e.target.closest('.quick-card');
+          if(cardEl){
+            const id = cardEl.getAttribute('data-id');
+            if(id) { stopSpin(); openPost(id, true); }
+            return;
+          }
+          if(e.target === list){
+            document.body.classList.add('hide-results');
+            document.body.classList.remove('show-history');
+            quickBtn.setAttribute('aria-pressed','false');
+            historyBtn && historyBtn.setAttribute('aria-pressed','false');
+            quickListBoard.setAttribute('aria-hidden','true');
+            historyBoard && historyBoard.setAttribute('aria-hidden','true');
+            localStorage.setItem('resultsHidden','true');
+            adjustBoards();
+            setMode('map');
+          }
+        });
       });
 
       const postsWide = $('.post-board');
@@ -4969,12 +4917,18 @@ function makePosts(){
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       resultsWasHidden = document.body.classList.contains('hide-results');
-      if(!resultsWasHidden){
+      historyWasActive = document.body.classList.contains('show-history');
+      if(!resultsWasHidden || historyWasActive){
         document.body.classList.add('hide-results');
+        document.body.classList.remove('show-history');
         const quickBtnEl = document.getElementById('quickBtn');
+        const historyBtnEl = document.getElementById('historyBtn');
         const quickListBoard = document.querySelector('.quick-list-board');
+        const historyBoardEl = document.getElementById('historyBoard');
         if(quickBtnEl) quickBtnEl.setAttribute('aria-pressed','false');
+        if(historyBtnEl) historyBtnEl.setAttribute('aria-pressed','false');
         if(quickListBoard) quickListBoard.setAttribute('aria-hidden','true');
+        if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
       }
       function step(){
         if(!spinning || !map) return;
@@ -4992,16 +4946,30 @@ function makePosts(){
     function stopSpin(){
       spinning = false;
       const wasHidden = resultsWasHidden;
+      const wasHistory = historyWasActive;
       resultsWasHidden = null;
-      if(wasHidden === false){
+      historyWasActive = false;
+      if(wasHidden === false || wasHistory){
         const quickBtnEl2 = document.getElementById('quickBtn');
+        const historyBtnEl2 = document.getElementById('historyBtn');
         const quickListBoard = document.querySelector('.quick-list-board');
+        const historyBoardEl = document.getElementById('historyBoard');
         document.body.classList.remove('hide-results');
-      if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','true');
-      if(quickListBoard) quickListBoard.setAttribute('aria-hidden','false');
+        if(wasHistory){
+          document.body.classList.add('show-history');
+          if(historyBtnEl2) historyBtnEl2.setAttribute('aria-pressed','true');
+          if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','false');
+          if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','false');
+          if(quickListBoard) quickListBoard.setAttribute('aria-hidden','true');
+        } else {
+          if(quickBtnEl2) quickBtnEl2.setAttribute('aria-pressed','true');
+          if(quickListBoard) quickListBoard.setAttribute('aria-hidden','false');
+          if(historyBtnEl2) historyBtnEl2.setAttribute('aria-pressed','false');
+          if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
+        }
+      }
+      applyFilters();
     }
-    applyFilters();
-  }
 
     function haltSpin(e){
       const target = (e && e.originalEvent && e.originalEvent.target) || (e && e.target);
@@ -5426,13 +5394,12 @@ function makePosts(){
         document.querySelectorAll(`[data-id="${p.id}"] .fav`).forEach(btn=>{
           btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
         });
-        renderFooter();
+        renderHistoryBoard();
       });
       return el;
     }
 
-    // Footer history
-    const footRow = $('#footRow');
+    // History board
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
 
@@ -5503,35 +5470,21 @@ function makePosts(){
       applyFilters();
       updateClearButtons();
     }
-    function renderFooter(){
-      footRow.innerHTML='';
+    function renderHistoryBoard(){
+      if(!historyBoard) return;
+      historyBoard.innerHTML='';
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
-      if(!viewHistory.length){ return; }
-      // render oldest -> newest so newest appears at the far right
-      const items = viewHistory.slice().reverse(); // reverse because viewHistory is newest-first
-        for(const v of items){
-          const p = posts.find(x=>x.id===v.id);
-          if(!p) continue;
-          const el = document.createElement('div');
-          el.className='footer-card';
-          el.dataset.id = v.id;
-          el.title=v.title+' — '+p.city;
-          const favIcon = p && p.fav ? '<span class="fav-star" aria-hidden="true">★</span>' : '';
-          el.innerHTML = `<img class="mini" src="${imgThumb(v.id)}" alt="" referrerpolicy="no-referrer"/><div class="t">${v.title}</div>${favIcon}`;
-          if(v.id===activePostId) el.setAttribute('aria-selected','true');
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            stopSpin();
-            openPostModal(v.id);
-          });
-          footRow.appendChild(el);
-        }
-      // scroll to the far right to reveal the newest
-      footRow.scrollLeft = footRow.scrollWidth;
+      const items = viewHistory.slice(0,100);
+      for(const v of items){
+        const p = posts.find(x=>x.id===v.id);
+        if(!p) continue;
+        const el = card(p);
+        historyBoard.appendChild(el);
+      }
     }
 
-    renderFooter();
+    renderHistoryBoard();
 
     function buildDetail(p){
       const wrap = document.createElement('div');
@@ -5618,7 +5571,6 @@ function makePosts(){
       const p = posts.find(x=>x.id===id); if(!p) return;
       activePostId = id;
       $$('.quick-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('footer .foot-row .footer-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       if(mode !== 'posts'){
         setMode('posts', true);
@@ -5708,7 +5660,7 @@ function makePosts(){
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
-      saveHistory(); renderFooter();
+      saveHistory(); renderHistoryBoard();
     }
 
     function openPostModal(id){
@@ -5756,7 +5708,7 @@ function makePosts(){
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
-      saveHistory(); renderFooter();
+      saveHistory(); renderHistoryBoard();
       location.hash = `/post/${p.slug}-${p.created}`;
     }
 
@@ -5824,7 +5776,7 @@ function makePosts(){
             btn.setAttribute('aria-pressed', p.fav ? 'true' : 'false');
           });
           const detailEl = el;
-          renderFooter();
+          renderHistoryBoard();
           const replacement = postsWideEl.querySelector(`[data-id="${p.id}"]`);
           if(replacement){
             replacement.replaceWith(detailEl);
@@ -6177,7 +6129,6 @@ function makePosts(){
         }
     }
 
-    footRow.addEventListener('wheel', (e)=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ footRow.scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
 
     function inBounds(p){
       if(!postPanel) return true;
@@ -6674,7 +6625,6 @@ document.addEventListener('pointerdown', handleDocInteract);
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .quick-card .t','.quick-list-board .quick-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .quick-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-posts .t','.post-board .open-posts .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-posts']}},
     {key:'open-posts', label:'Open Posts', selectors:{text:['.open-posts','.open-posts .venue-info','.open-posts .session-info'], title:['.open-posts .t','.open-posts .title'], btn:['.open-posts button'], btnText:['.open-posts button'], card:['.open-posts'], header:['.open-posts .detail-header'], image:['.open-posts .img-box'], menu:['.open-posts .venue-menu button','.open-posts .session-menu button']}},
-    {key:'footer', label:'Footer', selectors:{bg:['footer'], text:['footer'], card:['footer .foot-row .footer-card']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], popupText:['.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], title:['.mapboxgl-popup.map-card .hover-card .t','.mapboxgl-popup.map-card .hover-card .title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title','.mapboxgl-popup.map-card .multi-item.map-card .t','.mapboxgl-popup.map-card .multi-item.map-card .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
