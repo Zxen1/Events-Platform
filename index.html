@@ -1039,7 +1039,7 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .panel-field{margin:0;}
 #adminPanel h3{margin:0;}
 .admin-section{display:flex;flex-direction:column;gap:var(--gap);}
-#balloonTool .panel-field,
+#mapBalloonContainer .panel-field,
 #tab-forms .panel-field{max-width:none;}
 .history-group,
 .color-group{display:flex;align-items:center;gap:8px;}
@@ -1532,7 +1532,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .post-images{
   margin-top:0;
-  padding-top:0;
+  padding-top:10px;
   width:100%;
   display:flex;
   flex-direction:column;
@@ -1672,7 +1672,7 @@ body.hide-ads .ad-board{
 #postBtn,
 #memberBtn,
 #adminBtn{
-  border-radius:8px;
+  border-radius:4px;
   gap:4px;
 }
 .header .view-toggle #filterBtn{
@@ -1713,6 +1713,7 @@ body.filters-active #filterBtn{
 .post-card{
   border-radius:4px;
   padding-top:10px;
+  margin-top:10px;
 }
 
 .thumb{
@@ -1949,9 +1950,9 @@ body.filters-active #filterBtn{
 .post-board .post-card,
 .post-board .open-post{
   background-color:transparent;
-  margin:0;
-  border-radius:0;
-  border-bottom:1px solid var(--border);
+  margin:10px 0 12px;
+  border:none;
+  border-radius:4px;
 }
 .post-board .post-card:last-child,
 .post-board .open-post:last-child{border-bottom:none;}
@@ -1980,7 +1981,7 @@ body.filters-active #filterBtn{
 .open-post{
   border:none;
   border-radius:4px;
-  margin:0 0 12px 0;
+  margin:10px 0 12px;
   padding-top:10px;
   overflow:visible;
   color:#fff;
@@ -2096,8 +2097,8 @@ body.filters-active #filterBtn{
     grid-template-columns:1fr;
     gap:0;
     padding:0;
-    margin:0;
-    border-radius:0;
+    margin:10px 0 12px;
+    border-radius:4px;
   }
   .post-board .post-card .thumb{
     width:100%;
@@ -2106,7 +2107,7 @@ body.filters-active #filterBtn{
   }
   .post-board .post-card .meta{padding:12px;}
   .open-post{
-    margin:0;
+    margin:10px 0 12px;
   }
   .open-post .post-body{
     padding:0;
@@ -2611,36 +2612,41 @@ body.filters-active #filterBtn{
   @media (max-width:450px){
     .post-board,
     .post-board .post-card,
-    .open-post,
+    .open-post{
+      width:100%;
+      max-width:100%;
+      border:none;
+      border-radius:4px;
+    }
     .open-post .image-box{
       width:100%;
       max-width:100%;
       border:none;
       border-radius:8px;
     }
-  .open-post .image-box{
-    height:auto;
-    max-height:100vw;
-    margin-left:0;
-    margin-right:0;
-    padding-left:0;
-    padding-right:0;
+    .open-post .image-box{
+      height:auto;
+      max-height:100vw;
+      margin-left:0;
+      margin-right:0;
+      padding-left:0;
+      padding-right:0;
+    }
+    .open-post .image-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      margin-left:0;
+      margin-right:0;
+    }
+    .open-post .post-body{
+      padding:0;
+      gap:0;
+    }
+    .open-post .post-details{
+      padding:10px;
+    }
   }
-  .open-post .image-box img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    margin-left:0;
-    margin-right:0;
-  }
-  .open-post .post-body{
-    padding:0;
-    gap:8px;
-  }
-  .open-post .post-details{
-    padding:10px;
-  }
-}
 
 @media (max-width:450px){
   .open-post .venue-dropdown > button,
@@ -3028,16 +3034,16 @@ img.thumb{
   }
   .post-board .post-card{
     width:100%;
-    margin:0;
-    border-radius:0;
+    margin:10px 0 12px;
+    border-radius:4px;
   }
   .post-board .open-post{
-    margin:0;
+    margin:10px 0 12px;
   }
   .open-post{
     width:100%;
-    border-radius:0;
-    margin:0;
+    border-radius:4px;
+    margin:10px 0 12px;
   }
   .open-post .post-images{
     flex:0 0 100%;
@@ -3368,25 +3374,24 @@ img.thumb{
               </div>
             </div>
           </div>
-          <div class="map-theme-container">
+          <div id="mapBalloonContainer" class="map-theme-container">
             <div class="panel-field">
-              <div id="balloonTool">
                 <style>
-                  #balloonTool { padding: 10px; }
-                  #balloonTool .t{font-size:16px;font-weight:bold;}
-                  #balloonTool .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
-                  #balloonTool .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;}
-                  #balloonTool .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px; z-index:30;}
-                  #balloonTool .shape-menu[hidden]{display:none;}
-                  #balloonTool .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
-                  #balloonTool .shape-button svg{width:24px;height:24px;vertical-align:middle;}
-                  #balloonTool .shape-button.active{outline:2px solid var(--border);}
-                  #balloonTool .size-control{margin-bottom:8px;}
-                  #balloonTool .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
-                    #balloonTool .svg-output textarea{width:400px;height:200px;}
-                    #balloonTool #copySvgCode{width:400px;height:35px;}
-                  #balloonTool #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;}
-                  #balloonTool #balloonGrid svg{cursor:pointer;}
+                  #mapBalloonContainer .t{font-size:16px;font-weight:bold;}
+                  #mapBalloonContainer .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
+                  #mapBalloonContainer .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
+                  #mapBalloonContainer .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px; z-index:30;}
+                  #mapBalloonContainer .shape-menu[hidden]{display:none;}
+                  #mapBalloonContainer .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
+                  #mapBalloonContainer .shape-button svg{width:24px;height:24px;vertical-align:middle;}
+                  #mapBalloonContainer .shape-button.active{outline:2px solid var(--border);}
+                  #mapBalloonContainer .size-control{margin-bottom:8px;}
+                  #mapBalloonContainer .svg-output{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+                    #mapBalloonContainer .svg-output textarea{width:400px;height:200px;}
+                    #mapBalloonContainer #copySvgCode{width:400px;height:35px;padding:0;}
+                  #mapBalloonContainer #shapeMenuBtn{padding:0;}
+                  #mapBalloonContainer #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;}
+                  #mapBalloonContainer #balloonGrid svg{cursor:pointer;}
                 </style>
                 <div class="t">Balloon Icon Generator</div>
                 <div class="shape-dropdown">
@@ -3401,9 +3406,8 @@ img.thumb{
                   <button type="button" id="copySvgCode">Copy SVG</button>
                 </div>
                 <div id="balloonGrid"></div>
-              </div>
             </div>
-        </div>
+          </div>
         <div id="tab-settings" class="tab-panel">
         <div id="post-mode-background-field" class="panel-field">
           <label for="postModeBgColor">Post Mode Background</label>
@@ -3643,9 +3647,7 @@ img.thumb{
       const twoCols = !isColumnBelow;
       document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
       stickyScrollHandler = () => {
-        const imgHeight = imgArea.getBoundingClientRect().height;
-        const columnHeight = secondColumn.offsetHeight;
-        root.classList.toggle('open-post-sticky-images', twoCols && columnHeight > imgHeight);
+        root.classList.toggle('open-post-sticky-images', twoCols);
       };
       board.addEventListener('scroll', stickyScrollHandler);
       stickyScrollHandler();
@@ -6831,7 +6833,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       btn.appendChild(createBalloon(name, '#000', 24));
       btn.appendChild(document.createTextNode(LABELS[name] || name));
       btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#balloonTool .shape-button').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('#mapBalloonContainer .shape-button').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         render(name);
         if(shapeMenuBtn){
