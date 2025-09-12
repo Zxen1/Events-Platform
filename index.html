@@ -3805,7 +3805,7 @@ function buildClusterListHTML(items){
       {n:"Reykjavík, Iceland", c:[-21.8174,64.1265]},
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
-    const categories = [
+    const categories = window.categories = [
       { name:"Film",      subs:["Screenings","Festivals","Shorts","Indie"] },
       { name:"Theatre",   subs:["Plays","Musicals","Improv"] },
       { name:"Music",     subs:["Gigs","Open Mic","Classical","Jazz"] },
@@ -3815,9 +3815,9 @@ function buildClusterListHTML(items){
       { name:"Auditions", subs:["Film","Theatre","Music"] },
       { name:"Talent",    subs:["Models","Actors","Crew"] }
     ];
-    const subcategoryIcons = {};
-    const subcategoryMarkers = {};
-    const categoryShapes = {};
+    const subcategoryIcons = window.subcategoryIcons = {};
+    const subcategoryMarkers = window.subcategoryMarkers = {};
+    const categoryShapes = window.categoryShapes = {};
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
@@ -4177,11 +4177,13 @@ function makePosts(){
 }
 
 
-    let postsLoaded = false;
+    let postsLoaded = window.postsLoaded || false;
+    window.postsLoaded = postsLoaded;
     function loadPosts(){
       if(postsLoaded) return;
       posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
       postsLoaded = true;
+      window.postsLoaded = postsLoaded;
       if(Object.keys(subcategoryMarkers).length) addPostSource();
       initAdBoard();
       applyFilters();
@@ -5350,6 +5352,7 @@ function makePosts(){
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
 
     }
+    window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       const sort = currentSort;
