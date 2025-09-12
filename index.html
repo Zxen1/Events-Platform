@@ -3603,9 +3603,31 @@ img.thumb{
     window.adjustListHeight = adjustListHeight;
 
     let stickyScrollHandler = null;
+    let venueDropdownEl = null;
+    let sessionDropdownEl = null;
+    let venueDropdownParent = null;
+    let sessionDropdownParent = null;
       function updateStickyImages(){
         const root = document.documentElement;
         const body = document.querySelector('.open-post .post-body');
+        if(!venueDropdownEl || !document.contains(venueDropdownEl)){
+          const vd = document.querySelector('.venue-dropdown');
+          if(vd){
+            venueDropdownEl = vd;
+            if(!venueDropdownParent && vd.parentElement){
+              venueDropdownParent = vd.parentElement;
+            }
+          }
+        }
+        if(!sessionDropdownEl || !document.contains(sessionDropdownEl)){
+          const sd = document.querySelector('.session-dropdown');
+          if(sd){
+            sessionDropdownEl = sd;
+            if(!sessionDropdownParent && sd.parentElement){
+              sessionDropdownParent = sd.parentElement;
+            }
+          }
+        }
         const imgArea = body ? body.querySelector('.post-images') : null;
         const secondColumn = body ? body.querySelector('.second-post-column') : null;
         const header = document.querySelector('.open-post .post-header');
@@ -3617,15 +3639,20 @@ img.thumb{
         const isColumnBelow = imgArea && secondColumn ? secondColumn.offsetTop > imgArea.offsetTop : false;
         root.classList.toggle('hide-map-calendar', isColumnBelow);
         if(body){
-          const venueDropdown = body.querySelector('.venue-dropdown');
-          const sessionDropdown = body.querySelector('.session-dropdown');
           const venueContainer = body.querySelector('.post-venue-selection-container');
           const sessionContainer = body.querySelector('.post-session-selection-container');
-          if(venueDropdown && venueContainer && venueDropdown.parentElement !== venueContainer){
-            venueContainer.appendChild(venueDropdown);
+          if(venueDropdownEl && venueContainer && venueDropdownEl.parentElement !== venueContainer){
+            venueContainer.appendChild(venueDropdownEl);
           }
-          if(sessionDropdown && sessionContainer && sessionDropdown.parentElement !== sessionContainer){
-            sessionContainer.appendChild(sessionDropdown);
+          if(sessionDropdownEl && sessionContainer && sessionDropdownEl.parentElement !== sessionContainer){
+            sessionContainer.appendChild(sessionDropdownEl);
+          }
+        }else{
+          if(venueDropdownEl && venueDropdownParent && venueDropdownEl.parentElement !== venueDropdownParent){
+            venueDropdownParent.appendChild(venueDropdownEl);
+          }
+          if(sessionDropdownEl && sessionDropdownParent && sessionDropdownEl.parentElement !== sessionDropdownParent){
+            sessionDropdownParent.appendChild(sessionDropdownEl);
           }
         }
         if(!body || !imgArea || !secondColumn || !header || !board){
