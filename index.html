@@ -4233,7 +4233,7 @@ function makePosts(){
     function checkLoadPosts(){
       if(!map) return;
       if(!postsLoaded) loadPosts();
-      if(postsLoaded) addPostSource();
+      if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
       applyFilters();
     }
 
@@ -5137,8 +5137,11 @@ function makePosts(){
         };
       }
 
+    let addingPostSource = false;
     async function addPostSource(){
-      if(!map) return;
+      if(!map || addingPostSource) return;
+      addingPostSource = true;
+      try{
       const layerIds = ['cluster-count','clusters','unclustered','posts-heat','hover-ring','hover-fill'];
       layerIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
       const geojson = postsToGeoJSON(posts);
@@ -5154,7 +5157,7 @@ function makePosts(){
       await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
         if(map.hasImage(sub)) map.removeImage(sub);
         map.loadImage(url, (err, img)=>{ if(!err && img && !map.hasImage(sub)) map.addImage(sub, img); res(); });
-      })));
+      }))); 
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
@@ -5503,6 +5506,9 @@ function makePosts(){
           });
         }
       });
+      } finally {
+        addingPostSource = false;
+      }
     }
 
     function card(p, wide=false){
