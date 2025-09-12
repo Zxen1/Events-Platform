@@ -5501,13 +5501,8 @@ function makePosts(){
             }
           });
         }
-        });
-        } catch (err) {
-          console.error('addPostSource failed', err);
-        } finally {
-          addingPostSource = false;
-        }
-      }
+      });
+    }
 
     function card(p, wide=false){
       const el = document.createElement('article');
