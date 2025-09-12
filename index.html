@@ -299,11 +299,11 @@ textarea::placeholder{
   color: var(--placeholder-text);
   font-size: inherit;
 }
-#filterPanel #kwInput::placeholder{
+#filterPanel #keyword-textbox::placeholder{
   color: var(--filter-placeholder-text);
   font-size: inherit;
 }
-#filterPanel #dateInput::placeholder{
+#filterPanel #daterange-textbox::placeholder{
   color: var(--filter-placeholder-text);
   font-size: inherit;
 }
@@ -862,6 +862,7 @@ button[aria-expanded="true"] .results-arrow{
   background:#444444;
   width:420px;
   padding:10px;
+  border-radius:4px;
   display:flex;
   flex-direction:column;
   gap:8px;
@@ -876,7 +877,8 @@ button[aria-expanded="true"] .results-arrow{
 .settings-welcome-container{
   background:#444444;
   width:420px;
-  padding:0;
+  padding:10px;
+  border-radius:4px;
 }
 
 .sub-icon svg{
@@ -1217,10 +1219,10 @@ button[aria-expanded="true"] .results-arrow{
 .input select{
   border-radius: var(--dropdown-radius);
 }
-#filterPanel #kwInput{
+#filterPanel #keyword-textbox{
   background: var(--keyword-bg);
 }
-#filterPanel #dateInput{
+#filterPanel #daterange-textbox{
   background: var(--date-range-bg);
   color: var(--date-range-text);
 }
@@ -1239,7 +1241,8 @@ button[aria-expanded="true"] .results-arrow{
 .input .down svg{
   vertical-align:middle;
 }
-#filterPanel .input .x{
+#filterPanel .keyword-clear-button,
+#filterPanel .daterange-clear-button{
   position: static;
   width: 35px;
   height: 35px;
@@ -1253,7 +1256,8 @@ button[aria-expanded="true"] .results-arrow{
   color: var(--dropdown-text);
   opacity:1;
 }
-#filterPanel .input .x.active{
+#filterPanel .keyword-clear-button.active,
+#filterPanel .daterange-clear-button.active{
   background: var(--filter-active-color);
   color: var(--button-text);
   opacity:1;
@@ -1266,7 +1270,7 @@ button[aria-expanded="true"] .results-arrow{
   gap: 6px;
 }
 
-.expired-field{
+.expired-row{
   grid-template-columns:1fr auto;
   align-items:center;
   gap:8px;
@@ -1277,6 +1281,37 @@ button[aria-expanded="true"] .results-arrow{
 }
 .filter-summary{
   margin-bottom:8px;
+}
+
+#filterPanel .reset-box,
+#filterPanel .sort-field,
+#filterPanel .map-control-row,
+#filterPanel #filterSummary{
+  width:400px;
+  max-width:400px;
+}
+#filterPanel .reset-box #resetBtn{
+  width:100%;
+}
+#filterPanel .sort-field .options-menu{
+  width:400px;
+}
+#filterPanel .filter-basics-container,
+#filterPanel .filter-category-container{
+  width:420px;
+  background:#444444;
+  border-radius:4px;
+  padding:10px;
+}
+#filterPanel .keyword-row,
+#filterPanel .daterange-row,
+#filterPanel .expired-row,
+#filterPanel #datePickerContainer{
+  width:400px;
+}
+#filterPanel .filter-category-container .cats,
+#filterPanel .filter-category-container .cat{
+  width:400px;
 }
 .switch{
   position:relative;
@@ -1907,18 +1942,6 @@ body.filters-active #filterBtn{
   pointer-events: none;
 }
 
-.geocoder{
-  position:static;
-  transform:none;
-  z-index:10;
-  min-width:240px;
-  pointer-events:auto;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  width:100%;
-}
-
 .map-control-row{
   display:flex;
   align-items:center;
@@ -1937,7 +1960,17 @@ body.filters-active #filterBtn{
 }
 
 .map-control-row .geocoder{flex:1 1 auto;margin:0;}
-#filterPanel .panel-body > *{width:420px !important;max-width:420px !important;}
+
+.mapboxgl-ctrl-geolocate,
+.mapboxgl-ctrl-compass{
+  width:var(--control-h);
+  height:var(--control-h);
+}
+.geolocate-btn .mapboxgl-ctrl-group,
+.compass-btn .mapboxgl-ctrl-group{
+  width:var(--control-h);
+  height:var(--control-h);
+}
 
 
 
@@ -3180,6 +3213,24 @@ img.thumb{
         </div>
       </div>
       <div class="panel-body">
+        <div class="reset-box">
+          <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+            Reset All Filters
+          </div>
+        </div>
+        <div class="field sort-field">
+          <div class="options-dropdown">
+            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
+            <div id="optionsMenu" class="options-menu" hidden>
+              <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+                <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
+                <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
+                <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="map-control-row map-controls-filter">
           <div id="geocoder-filter" class="geocoder"></div>
           <div id="geolocate-filter" class="geolocate-btn"></div>
@@ -3187,45 +3238,31 @@ img.thumb{
         </div>
         <section class="filters-col" aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
-          <div class="reset-box">
-            <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
-              Reset All Filters
-            </div>
-          </div>
-          <div class="field sort-field">
-            <div class="options-dropdown">
-              <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
-              <div id="optionsMenu" class="options-menu" hidden>
-                <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
-                <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                  <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-                  <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-                  <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
-                </div>
+          <div class="filter-basics-container">
+            <div class="field keyword-row">
+              <div class="input"><input id="keyword-textbox" type="text" placeholder="Keywords" aria-label="Keywords" />
+                <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
-          </div>
-          <div class="field">
-            <div class="input"><input id="kwInput" type="text" placeholder="Keywords" aria-label="Keywords" />
-              <div class="x" role="button" aria-label="Clear keywords">X</div>
+            <div class="field daterange-row">
+              <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly />
+                <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
+              </div>
+            </div>
+            <div class="field expired-row">
+              <span class="expired-text">Show Expired Events</span>
+              <label class="switch">
+                <input id="expiredToggle" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="datePickerContainer" class="calendar-container">
+              <div id="datePicker"></div>
             </div>
           </div>
-          <div class="field">
-            <div class="input"><input id="dateInput" type="text" aria-label="Date range" placeholder="Date Range" readonly />
-              <div class="x" role="button" aria-label="Clear date">X</div>
-            </div>
+          <div class="filter-category-container">
+            <div class="cats" id="cats" aria-label="Categories"></div>
           </div>
-          <div class="field expired-field">
-            <span class="expired-text">Show Expired Events</span>
-            <label class="switch">
-              <input id="expiredToggle" type="checkbox" />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div id="datePickerContainer" class="calendar-container">
-            <div id="datePicker"></div>
-          </div>
-          <div class="cats" id="cats" aria-label="Categories"></div>
         </section>
       </div>
     </div>
@@ -4271,8 +4308,8 @@ function makePosts(){
       selection.cats.clear(); selection.subs.clear();
       $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
-      $('#kwInput').value='';
-      $('#dateInput').value='';
+      $('#keyword-textbox').value='';
+      $('#daterange-textbox').value='';
       const expired = $('#expiredToggle');
       if(expired){
         expired.checked = false;
@@ -4289,19 +4326,19 @@ function makePosts(){
     });
 
     function updateClearButtons(){
-      const kw = $('#kwInput');
-      const kwX = kw.parentElement.querySelector('.x');
+      const kw = $('#keyword-textbox');
+      const kwX = kw.parentElement.querySelector('.keyword-clear-button');
       kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
-      const date = $('#dateInput');
-      const dateX = date.parentElement.querySelector('.x');
+      const date = $('#daterange-textbox');
+      const dateX = date.parentElement.querySelector('.daterange-clear-button');
       const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
       dateX && dateX.classList.toggle('active', !!hasDate);
       updateResetBtn();
     }
 
     function nonLocationFiltersActive(){
-      const kw = $('#kwInput').value.trim() !== '';
-      const raw = $('#dateInput').value.trim();
+      const kw = $('#keyword-textbox').value.trim() !== '';
+      const raw = $('#daterange-textbox').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
       const expired = $('#expiredToggle').checked;
       return kw || hasDate || expired;
@@ -4318,9 +4355,9 @@ function makePosts(){
       return parseISODate(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
     }
 
-    $('#kwInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
-    $('#dateInput').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
-    $('#dateInput').addEventListener('keydown', e=>{
+    $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    $('#daterange-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    $('#daterange-textbox').addEventListener('keydown', e=>{
       const scroll = $('#datePickerContainer');
       if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
         const month = scroll.querySelector('.month');
@@ -4474,7 +4511,7 @@ function makePosts(){
     }
 
     function updateInput(){
-      const input = $('#dateInput');
+      const input = $('#daterange-textbox');
       const {start,end} = orderedRange();
       if(start && end){
         input.value = `${formatDisplay(start)} - ${formatDisplay(end)}`;
@@ -4571,10 +4608,10 @@ function makePosts(){
 
     buildFilterCalendar(today, maxPickerDate);
 
-    $$('.field .x').forEach(x=> x.addEventListener('click',()=>{
-      const input = x.parentElement.querySelector('input');
+    $$('#filterPanel .keyword-clear-button, #filterPanel .daterange-clear-button').forEach(btn=> btn.addEventListener('click',()=>{
+      const input = btn.parentElement.querySelector('input');
       if(input){
-        if(input.id==='dateInput'){
+        if(input.id==='daterange-textbox'){
           dateStart = null;
           dateEnd = null;
           updateRangeClasses();
@@ -4589,7 +4626,7 @@ function makePosts(){
     }));
     if(expiredToggle){
       expiredToggle.addEventListener('change', ()=>{
-        const input = $('#dateInput');
+        const input = $('#daterange-textbox');
         const todayDate = new Date();
         todayDate.setHours(0,0,0,0);
         dateStart = null;
@@ -5502,8 +5539,8 @@ function makePosts(){
       const {start,end} = orderedRange();
       return {
         bounds: map ? map.getBounds().toArray() : null,
-        kw: $('#kwInput').value,
-        date: $('#dateInput').value,
+        kw: $('#keyword-textbox').value,
+        date: $('#daterange-textbox').value,
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
@@ -5514,7 +5551,7 @@ function makePosts(){
 
     function restoreState(st){
       if(!st) return;
-      $('#kwInput').value = st.kw || '';
+      $('#keyword-textbox').value = st.kw || '';
       dateStart = st.start ? parseISODate(st.start) : null;
       dateEnd = st.end ? parseISODate(st.end) : null;
       if(!st.start && st.range){
@@ -5534,12 +5571,12 @@ function makePosts(){
         if(dateEnd && dateEnd.getTime() !== dateStart.getTime()){
           const eIso = toISODate(dateEnd);
           const eDisp = fmtShort(eIso);
-          $('#dateInput').value = `${sDisp} - ${eDisp}`;
+          $('#daterange-textbox').value = `${sDisp} - ${eDisp}`;
         } else {
-          $('#dateInput').value = sDisp;
+          $('#daterange-textbox').value = sDisp;
         }
       } else {
-        $('#dateInput').value = '';
+        $('#daterange-textbox').value = '';
       }
       expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
@@ -6237,7 +6274,7 @@ function makePosts(){
       return p.lng >= postPanel.getWest() && p.lng <= postPanel.getEast() &&
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
-    function kwMatch(p){ const kw = $('#kwInput').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
+    function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
     function dateMatch(p){
       const {start,end} = orderedRange();
       const expiredChk = $('#expiredToggle');
