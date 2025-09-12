@@ -1511,6 +1511,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
   .post-board{
     width:880px;
+  flex-shrink:0;
   padding:0;
   margin:0;
   overflow:auto;
@@ -1617,6 +1618,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex:0 0 440px;
   width:440px;
   max-width:440px;
+  min-width:440px;
   padding:0;
   display:flex;
   flex-direction:column;
@@ -3817,6 +3819,7 @@ function buildClusterListHTML(items){
     ];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
+    const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
@@ -5090,7 +5093,7 @@ function makePosts(){
             .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
             .map(p => ({
               type:'Feature',
-              properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:p.subcategory, layer:'poi', sizerank:1},
+              properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:(subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory)), layer:'poi', sizerank:1},
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             }))
         };
@@ -6042,9 +6045,10 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          if(subcategoryMarkers[p.subcategory]){
+          const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
+          if(subcategoryMarkers[subId]){
             const mEl = document.createElement('div');
-            mEl.innerHTML = subcategoryMarkers[p.subcategory];
+            mEl.innerHTML = subcategoryMarkers[subId];
             marker = new mapboxgl.Marker({element:mEl.firstChild}).setLngLat([loc.lng, loc.lat]).addTo(map);
           } else {
             marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
@@ -6981,8 +6985,10 @@ document.addEventListener('pointerdown', handleDocInteract);
     cat.subs.forEach(sub => {
       const color = COLORS[colorIdx % COLORS.length];
       colorIdx++;
+      const slug = slugify(sub);
       subcategoryIcons[sub] = createBalloon(shape, color, 20).outerHTML;
-      subcategoryMarkers[sub] = createBalloon(shape, color, 40).outerHTML;
+      subcategoryMarkerIds[sub] = slug;
+      subcategoryMarkers[slug] = createBalloon(shape, color, 40).outerHTML;
     });
   });
   if(postsLoaded) addPostSource();
