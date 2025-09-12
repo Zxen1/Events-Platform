@@ -5497,11 +5497,13 @@ function makePosts(){
             }
           });
         }
-      });
-      } finally {
-        addingPostSource = false;
+        });
+        } catch (e) {
+          console.error('addPostSource failed', e);
+        } finally {
+          addingPostSource = false;
+        }
       }
-    }
 
     function card(p, wide=false){
       const el = document.createElement('article');
@@ -6942,7 +6944,13 @@ document.addEventListener('pointerdown', handleDocInteract);
       svg.classList.add('selected');
       svgCode.value = svg.outerHTML;
       currentTemplate = svg.outerHTML;
-      navigator.clipboard.writeText(svg.outerHTML);
+      if(document.hasFocus()){
+        try{
+          navigator.clipboard.writeText(svg.outerHTML);
+        }catch(e){
+          console.error('clipboard write failed', e);
+        }
+      }
     }
 
     function renderFromSvg(template){
@@ -6960,7 +6968,11 @@ document.addEventListener('pointerdown', handleDocInteract);
         grid.appendChild(svg);
       });
       const first = grid.querySelector('svg');
-      if(first) selectSvg(first);
+      if(first){
+        first.classList.add('selected');
+        svgCode.value = first.outerHTML;
+        currentTemplate = first.outerHTML;
+      }
     }
 
     function render(name){
@@ -6971,7 +6983,11 @@ document.addEventListener('pointerdown', handleDocInteract);
         grid.appendChild(svg);
       });
       const first = grid.querySelector('svg');
-      if(first) selectSvg(first);
+      if(first){
+        first.classList.add('selected');
+        svgCode.value = first.outerHTML;
+        currentTemplate = first.outerHTML;
+      }
     }
 
     svgCode.addEventListener('input', ()=>{
@@ -7034,7 +7050,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryMarkers[slug] = `assets/subcategoryMarkers/${slug}.svg`;
     });
   });
-  if(postsLoaded) addPostSource();
+  if(window.postsLoaded) addPostSource();
 })();
 </script>
 <script>
