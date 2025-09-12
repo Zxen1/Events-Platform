@@ -4172,21 +4172,8 @@ function makePosts(){
 
     function checkLoadPosts(){
       if(!map) return;
-      const show = map.getZoom() >= 3;
-      if(show){
-        loadPosts();
-        applyFilters();
-        ['posts-heat','clusters','cluster-count','unclustered'].forEach(id=>{
-          if(map.getLayer(id)) map.setLayoutProperty(id,'visibility','visible');
-        });
-      } else {
-        ['posts-heat','clusters','cluster-count','unclustered'].forEach(id=>{
-          if(map.getLayer(id)) map.setLayoutProperty(id,'visibility','none');
-        });
-        if(resultsEl) resultsEl.innerHTML = '';
-        postsWideEl.innerHTML = '';
-        updateResultCount(0);
-      }
+      loadPosts();
+      applyFilters();
     }
 
     const resultsEl = $('#results');
@@ -5060,17 +5047,17 @@ function makePosts(){
         const img = new Image();
         img.onload = ()=>{
           if(!map.hasImage(imgId)) map.addImage(imgId, img);
-          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'icon-image': imgId }, paint:{} });
-          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
+          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
             map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
         } else if(shouldCluster){
-          map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom:3, paint:{
+          map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
             'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
             'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
             'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
             map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
         } else {
             map.addLayer({ id:'unclustered', type:'symbol', source:'posts', layout:{ 'icon-image':['get','sub'] }, paint:{} });
