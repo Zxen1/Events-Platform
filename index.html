@@ -1521,7 +1521,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-.post-board.two-columns{overflow:hidden;}
+.post-board.two-columns{overflow:auto;}
 .post-board .post-card{
   width:100%;
 }
@@ -4191,7 +4191,8 @@ function makePosts(){
 
     function checkLoadPosts(){
       if(!map) return;
-      loadPosts();
+      if(!postsLoaded) loadPosts();
+      if(postsLoaded) addPostSource();
       applyFilters();
     }
 
