@@ -5502,8 +5502,8 @@ function makePosts(){
           });
         }
         });
-        } catch (e) {
-          console.error('addPostSource failed', e);
+        } catch (err) {
+          console.error('addPostSource failed', err);
         } finally {
           addingPostSource = false;
         }
