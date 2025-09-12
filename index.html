@@ -4193,6 +4193,38 @@ function makePosts(){
     const postsWideEl = $('.post-board');
     const postsModeEl = $('.post-board');
 
+    let sortedPostList = [];
+    let renderedPostCount = 0;
+    let postBatchObserver = null;
+    let postSentinel = null;
+    const INITIAL_RENDER_COUNT = 50;
+    const POST_BATCH_SIZE = 25;
+
+    function appendPostBatch(count = POST_BATCH_SIZE){
+      const slice = sortedPostList.slice(renderedPostCount, renderedPostCount + count);
+      slice.forEach(p => {
+        if(resultsEl){
+          const rCard = card(p);
+          if(activePostId && p.id === activePostId) rCard.setAttribute('aria-selected','true');
+          resultsEl.appendChild(rCard);
+        }
+        const wCard = card(p, true);
+        postsWideEl.insertBefore(wCard, postSentinel);
+      });
+      renderedPostCount += slice.length;
+      if(renderedPostCount >= sortedPostList.length){
+        if(postBatchObserver) postBatchObserver.disconnect();
+        postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+      }
+      prioritizeVisibleImages();
+    }
+
+    function onPostBoardScroll(){
+      if(postsWideEl.scrollTop + postsWideEl.clientHeight >= postsWideEl.scrollHeight - 200){
+        appendPostBatch();
+      }
+    }
+
     // Image helpers (unique per post)
     function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
     function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
@@ -5308,31 +5340,47 @@ function makePosts(){
       }
       if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
 
-      let toRender = arr;
+      sortedPostList = arr;
+      renderedPostCount = 0;
+
+      if(postBatchObserver) postBatchObserver.disconnect();
+      postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+      if(postSentinel) postSentinel.remove();
+
+      if(resultsEl) resultsEl.innerHTML = '';
+      postsWideEl.innerHTML = '';
+      postSentinel = document.createElement('div');
+      postSentinel.style.height = '1px';
+      postsWideEl.appendChild(postSentinel);
+
       if(spinning && arr.length){
         const sample = card(arr[0], true);
         sample.style.visibility = 'hidden';
-        postsWideEl.appendChild(sample);
+        postsWideEl.insertBefore(sample, postSentinel);
         const rect = sample.getBoundingClientRect();
         const style = getComputedStyle(sample);
         const cardHeight = rect.height + parseFloat(style.marginBottom || 0);
         postsWideEl.removeChild(sample);
         const max = Math.max(1, Math.floor(postsModeEl.clientHeight / cardHeight));
-        toRender = arr.slice(0, max);
+        appendPostBatch(max);
+      } else {
+        appendPostBatch(INITIAL_RENDER_COUNT);
       }
 
-      if(resultsEl) resultsEl.innerHTML = '';
-      postsWideEl.innerHTML = '';
-      toRender.forEach(p => {
-        if(resultsEl) resultsEl.appendChild(card(p));
-        postsWideEl.appendChild(card(p, true));
-      });
-      if(activePostId && resultsEl){
-        const sel = resultsEl.querySelector(`[data-id="${activePostId}"]`);
-        if(sel) sel.setAttribute('aria-selected','true');
+      updateResultCount(arr.length);
+
+      if('IntersectionObserver' in window){
+        postBatchObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if(entry.isIntersecting){
+              appendPostBatch();
+            }
+          });
+        }, {root: postsWideEl, rootMargin:'0px 0px 200px 0px'});
+        postBatchObserver.observe(postSentinel);
+      } else {
+        postsWideEl.addEventListener('scroll', onPostBoardScroll);
       }
-      updateResultCount(spinning ? arr.length : toRender.length);
-      prioritizeVisibleImages();
     }
     function updateResultCount(n){
       const el = $('#resultCount');
