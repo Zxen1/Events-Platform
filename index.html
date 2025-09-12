@@ -876,7 +876,7 @@ button[aria-expanded="true"] .results-arrow{
 .settings-welcome-container{
   background:#444444;
   width:420px;
-  padding:10px;
+  padding:0;
 }
 
 .sub-icon svg{
@@ -1922,34 +1922,6 @@ body.filters-active #filterBtn{
 
 .map-control-row .geocoder{flex:1 1 auto;margin:0;}
 
-.map-control-row .geolocate-btn,
-.map-control-row .compass-btn{
-  flex:0 0 var(--geocoder-h);
-  width:var(--geocoder-h);
-  height:var(--geocoder-h);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.map-control-row .geolocate-btn .mapboxgl-ctrl-geolocate,
-.map-control-row .compass-btn .mapboxgl-ctrl-compass{
-  width:100%;
-  height:100%;
-  margin:0;
-  padding:0;
-}
-
-.map-control-row .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon,
-.map-control-row .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon{
-  width:100%;
-  height:100%;
-  margin:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
 #filterPanel .map-control-row input,
 #filterPanel .map-control-row button{
   background:#fff;
@@ -1962,7 +1934,7 @@ body.filters-active #filterBtn{
 
 
 
-.post-board .posts{overflow:visible;padding:0;margin:0;}
+.post-board .posts{overflow-y:auto;padding:0;margin:0;}
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
@@ -3455,7 +3427,7 @@ img.thumb{
         </div>
         <div id="tab-forms" class="tab-panel">
           <style>
-            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:10px;}
+            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:0;}
             #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
             #tab-forms .subcategory-table{border-collapse:collapse;}
             #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
@@ -3631,54 +3603,44 @@ img.thumb{
     window.adjustListHeight = adjustListHeight;
 
     let stickyScrollHandler = null;
-    function updateStickyImages(){
-      const root = document.documentElement;
-      const body = document.querySelector('.open-post .post-body');
-      const imgArea = body ? body.querySelector('.post-images') : null;
-      const secondColumn = body ? body.querySelector('.second-post-column') : null;
-      const header = document.querySelector('.open-post .post-header');
-      const board = document.querySelector('.post-board');
-      if(stickyScrollHandler && board){
-        board.removeEventListener('scroll', stickyScrollHandler);
-        stickyScrollHandler = null;
-      }
-      const isColumnBelow = imgArea && secondColumn ? secondColumn.offsetTop > imgArea.offsetTop : false;
-      root.classList.toggle('hide-map-calendar', isColumnBelow);
-      if(body && secondColumn){
-        const venueDropdown = body.querySelector('.venue-dropdown');
-        const sessionDropdown = body.querySelector('.session-dropdown');
-        const mapContainer = body.querySelector('.map-container');
-        const calContainer = body.querySelector('.calendar-container');
-        const titleEl = secondColumn.querySelector('.title');
-        if(isColumnBelow){
-          if(venueDropdown && venueDropdown.parentElement !== secondColumn && titleEl){
-            secondColumn.insertBefore(venueDropdown, titleEl);
+      function updateStickyImages(){
+        const root = document.documentElement;
+        const body = document.querySelector('.open-post .post-body');
+        const imgArea = body ? body.querySelector('.post-images') : null;
+        const secondColumn = body ? body.querySelector('.second-post-column') : null;
+        const header = document.querySelector('.open-post .post-header');
+        const board = document.querySelector('.post-board');
+        if(stickyScrollHandler && board){
+          board.removeEventListener('scroll', stickyScrollHandler);
+          stickyScrollHandler = null;
+        }
+        const isColumnBelow = imgArea && secondColumn ? secondColumn.offsetTop > imgArea.offsetTop : false;
+        root.classList.toggle('hide-map-calendar', isColumnBelow);
+        if(body){
+          const venueDropdown = body.querySelector('.venue-dropdown');
+          const sessionDropdown = body.querySelector('.session-dropdown');
+          const venueContainer = body.querySelector('.post-venue-selection-container');
+          const sessionContainer = body.querySelector('.post-session-selection-container');
+          if(venueDropdown && venueContainer && venueDropdown.parentElement !== venueContainer){
+            venueContainer.appendChild(venueDropdown);
           }
-          if(sessionDropdown && sessionDropdown.parentElement !== secondColumn && titleEl){
-            secondColumn.insertBefore(sessionDropdown, titleEl);
-          }
-        } else {
-          if(venueDropdown && mapContainer && venueDropdown.parentElement !== mapContainer){
-            mapContainer.appendChild(venueDropdown);
-          }
-          if(sessionDropdown && calContainer && sessionDropdown.parentElement !== calContainer){
-            calContainer.appendChild(sessionDropdown);
+          if(sessionDropdown && sessionContainer && sessionDropdown.parentElement !== sessionContainer){
+            sessionContainer.appendChild(sessionDropdown);
           }
         }
+        if(!body || !imgArea || !secondColumn || !header || !board){
+          root.classList.remove('open-post-sticky-images');
+          document.documentElement.style.removeProperty('--open-post-header-h');
+          return;
+        }
+        const twoCols = !isColumnBelow;
+        document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
+        stickyScrollHandler = () => {
+          root.classList.toggle('open-post-sticky-images', twoCols);
+        };
+        board.addEventListener('scroll', stickyScrollHandler);
+        stickyScrollHandler();
       }
-      if(!body || !imgArea || !secondColumn || !header || !board){
-        root.classList.remove('open-post-sticky-images');
-        document.documentElement.style.removeProperty('--open-post-header-h');
-        return;
-      }
-      const twoCols = !isColumnBelow;
-      document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
-      stickyScrollHandler = () => {
-        root.classList.toggle('open-post-sticky-images', twoCols);
-      };
-      board.addEventListener('scroll', stickyScrollHandler);
-      stickyScrollHandler();
-    }
 
     window.updateStickyImages = updateStickyImages;
 
@@ -4720,11 +4682,21 @@ function makePosts(){
         mode = m;
         document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
         document.body.classList.add('mode-'+m);
-        if(m==='map'){
-          document.body.classList.add('hide-ads');
-        } else {
-          document.body.classList.remove('hide-ads');
-        }
+          if(m==='map'){
+            document.body.classList.add('hide-ads');
+            document.body.classList.remove('show-history');
+            const historyBoardEl = document.getElementById('historyBoard');
+            if(historyBoardEl){
+              historyBoardEl.style.display = 'none';
+              historyBoardEl.setAttribute('aria-hidden','true');
+            }
+            const historyBtnEl = document.getElementById('historyBtn');
+            if(historyBtnEl){
+              historyBtnEl.setAttribute('aria-pressed','false');
+            }
+          } else {
+            document.body.classList.remove('hide-ads');
+          }
         adjustBoards();
         if(m === 'posts'){
           const boardEl = document.querySelector('.post-board');
@@ -5036,23 +5008,29 @@ function makePosts(){
     function postsToGeoJSON(list){
       return {
         type:'FeatureCollection',
-        features: list
-          .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
-          .map(p => ({
-            type:'Feature',
-            properties:{id:p.id, title:p.title, city:p.city, cat:p.category},
-            geometry:{type:'Point', coordinates:[p.lng, p.lat]}
-          }))
-      };
-    }
+          features: list
+            .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
+            .map(p => ({
+              type:'Feature',
+              properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:p.subcategory},
+              geometry:{type:'Point', coordinates:[p.lng, p.lat]}
+            }))
+        };
+      }
 
     function addPostSource(){
       if(!map) return;
       ['cluster-count','clusters','unclustered','posts-heat'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
       if(map.getSource('posts')) map.removeSource('posts');
-      const shouldCluster = posts.length > 1 && clusterRadius > 0;
-      map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
-      map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
+        const shouldCluster = posts.length > 1 && clusterRadius > 0;
+        map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
+        Object.entries(subcategoryMarkers).forEach(([sub, svg])=>{
+          if(map.hasImage(sub)) map.removeImage(sub);
+          const img = new Image();
+          img.onload = ()=>{ if(!map.hasImage(sub)) map.addImage(sub, img); };
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
+        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
       if(shouldCluster && clusterIconType === 'svg' && clusterSvg){
@@ -5063,9 +5041,7 @@ function makePosts(){
           if(!map.hasImage(imgId)) map.addImage(imgId, img);
           map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'icon-image': imgId }, paint:{} });
           map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-          map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
-            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
         } else if(shouldCluster){
@@ -5074,13 +5050,9 @@ function makePosts(){
             'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
             'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
         map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], minzoom:3, layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-          map.addLayer({ id:'unclustered', type:'circle', source:'posts', filter:['!', ['has','point_count']], paint:{
-            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
         } else {
-          map.addLayer({ id:'unclustered', type:'circle', source:'posts', paint:{
-            'circle-color':[ 'match',['get','cat'], 'Film','#ff6b6b','Theatre','#ffd93d','Music','#38bdf8','Dance','#a78bfa','Photography','#34d399','Gallery','#f472b6','Auditions','#f59e0b','Talent','#22c55e','#ffce3a'],
-            'circle-radius': 5, 'circle-stroke-width': 1, 'circle-stroke-color': '#0b1623', 'circle-blur': 0.2 } });
+            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', layout:{ 'icon-image':['get','sub'] }, paint:{} });
         }
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
@@ -5403,7 +5375,7 @@ function makePosts(){
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
             <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
@@ -5523,7 +5495,7 @@ function makePosts(){
         <div class="post-header">
           <div class="title-block">
             <div class="title">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
           <button class="share" aria-label="Share post">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
@@ -5541,6 +5513,8 @@ function makePosts(){
           </div>
           <div class="second-post-column">
             <div class="post-details">
+              <div class="post-venue-selection-container"></div>
+              <div class="post-session-selection-container"></div>
               <div class="location-section">
                 <div class="map-container">
                   <div id="map-${p.id}" class="post-map"></div>
@@ -5554,7 +5528,7 @@ function makePosts(){
                 </div>
               </div>
               <h2 class="title">${p.title}</h2>
-              <div class="cat-line"><span class="sub-icon" data-sub="${p.subcategory}"></span> ${p.category} &gt; ${p.subcategory}</div>
+              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
               <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
               <div id="venue-info-${p.id}" class="venue-info"></div>
               <div id="session-info-${p.id}" class="session-info">
@@ -6902,10 +6876,6 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryIcons[sub] = createBalloon(shape, color, 20).outerHTML;
       subcategoryMarkers[sub] = createBalloon(shape, color, 40).outerHTML;
     });
-  });
-  document.querySelectorAll('.sub-icon').forEach(el=>{
-    const sub = el.dataset.sub;
-    if(subcategoryIcons[sub]) el.innerHTML = subcategoryIcons[sub];
   });
 })();
 </script>
