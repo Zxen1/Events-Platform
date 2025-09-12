@@ -5095,32 +5095,32 @@ function makePosts(){
         };
       }
 
-    function addPostSource(){
+    async function addPostSource(){
       if(!map) return;
       ['cluster-count','clusters','unclustered','posts-heat'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
       if(map.getSource('posts')) map.removeSource('posts');
         const shouldCluster = posts.length > 1 && clusterRadius > 0;
         map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
-        Object.entries(subcategoryMarkers).forEach(([sub, svg])=>{
+        await Promise.all(Object.entries(subcategoryMarkers).map(([sub, svg])=> new Promise(res=>{
           if(map.hasImage(sub)) map.removeImage(sub);
           const img = new Image();
-          img.onload = ()=>{ if(!map.hasImage(sub)) map.addImage(sub, img); };
+          img.onload = ()=>{ if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
           img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        });
+        })));
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
       if(shouldCluster && clusterIconType === 'svg' && clusterSvg){
         const imgId = 'cluster-svg';
         if(map.hasImage(imgId)) map.removeImage(imgId);
-        const img = new Image();
-        img.onload = ()=>{
-          if(!map.hasImage(imgId)) map.addImage(imgId, img);
+        await new Promise(res=>{
+          const img = new Image();
+          img.onload = ()=>{ if(!map.hasImage(imgId)) map.addImage(imgId, img); res(); };
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
+        });
           map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
           map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
             map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
-        };
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
         } else if(shouldCluster){
           map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
             'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
@@ -6408,6 +6408,7 @@ function openPanel(m){
   }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
+  m.removeAttribute('inert');
   const btnId = panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
@@ -6482,6 +6483,9 @@ function closePanel(m){
     btn && btn.setAttribute('aria-pressed','false');
   }
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
+  const active = document.activeElement;
+  if(active && m.contains(active)) active.blur();
+  m.setAttribute('inert','');
   if(content && content.dataset.side){
     content.classList.remove('panel-visible');
     content.style.transform = content.dataset.side === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
