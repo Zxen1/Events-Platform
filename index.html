@@ -4926,8 +4926,10 @@ function makePosts(){
           if(bIn) bIn.value = map.getBearing();
           if(bVal) bVal.textContent = map.getBearing().toFixed(0);
         });
+        map.on('move', updateFilterCounts);
         const refreshMapView = () => {
-          applyFilters();
+          updateFilterCounts();
+          refreshMarkers();
           updatePostPanel();
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
@@ -6177,9 +6179,18 @@ function makePosts(){
     }
     function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
 
-    function applyFilters(render = true){
+    function updateFilterCounts(){
       if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      const today = new Date(); today.setHours(0,0,0,0);
+      const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
+      const summary = $('#filterSummary');
+      if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
+      updateResetBtn();
+    }
+
+    function refreshMarkers(render = true){
+      if(!postsLoaded) return;
       adPosts = filtered.filter(p => p.sponsored);
       if(adPanel){
         adPanel.innerHTML = '';
@@ -6200,11 +6211,11 @@ function makePosts(){
       }
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
-      const today = new Date(); today.setHours(0,0,0,0);
-      const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
-      const summary = $('#filterSummary');
-      if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
-      updateResetBtn();
+    }
+
+    function applyFilters(render = true){
+      updateFilterCounts();
+      refreshMarkers(render);
     }
 
     function showNextAd(){
