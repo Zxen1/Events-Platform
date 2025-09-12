@@ -97,6 +97,7 @@
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-gutter: stable;
   border-color: var(--border) !important;
 }
 
@@ -160,7 +161,10 @@ html,body{
     touch-action: manipulation;
   }
 
-  body, .post-board, .second-post-column, .panel-content, .options-menu, .calendar-scroll{overscroll-behavior: contain;}
+  body, .post-board, .second-post-column, .panel-content, .options-menu, .calendar-scroll{
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
 
   h1, h2, h3, h4, h5, h6{
     font-size: 16px;
