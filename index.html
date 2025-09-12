@@ -4968,9 +4968,11 @@ function makePosts(){
       map.on('styleimagemissing', (e)=>{
         const url = subcategoryMarkers[e.id];
         if(url){
-          map.loadImage(url, (err, img)=>{
-            if(!err && img && !map.hasImage(e.id)) map.addImage(e.id, img);
-          });
+          fetch(url)
+            .then(r=>r.blob())
+            .then(b=>createImageBitmap(b))
+            .then(img=>{ if(!map.hasImage(e.id)) map.addImage(e.id, img); })
+            .catch(err=>console.warn('load image failed', e.id, err));
         }else{
           console.warn('Unknown image ID:', e.id);
         }
@@ -5148,8 +5150,13 @@ function makePosts(){
       }
       await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
         if(map.hasImage(sub)) map.removeImage(sub);
-        map.loadImage(url, (err, img)=>{ if(!err && img && !map.hasImage(sub)) map.addImage(sub, img); res(); });
-      }))); 
+        fetch(url)
+          .then(r=>r.blob())
+          .then(b=>createImageBitmap(b))
+          .then(img=>{ if(!map.hasImage(sub)) map.addImage(sub, img); })
+          .catch(err=>console.warn('load image failed', sub, err))
+          .finally(res);
+      })));
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
@@ -7044,9 +7051,9 @@ document.addEventListener('pointerdown', handleDocInteract);
       const color = COLORS[colorIdx % COLORS.length];
       colorIdx++;
       const slug = slugify(sub);
-      subcategoryIcons[sub] = `<img src="assets/subcategoryMarkers/${slug}.svg" width="20" height="20" alt="">`;
+      subcategoryIcons[sub] = `<img src="./assets/subcategoryMarkers/${slug}.svg" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = `assets/subcategoryMarkers/${slug}.svg`;
+      subcategoryMarkers[slug] = `./assets/subcategoryMarkers/${slug}.svg`;
     });
   });
   if(window.postsLoaded) addPostSource();
