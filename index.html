@@ -4912,6 +4912,16 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
+      map.on('styleimagemissing', (e)=>{
+        const svg = subcategoryMarkers[e.id];
+        if(svg){
+          const img = new Image();
+          img.onload = ()=>{ if(!map.hasImage(e.id)) map.addImage(e.id, img); };
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }else{
+          console.warn('Unknown image ID:', e.id);
+        }
+      });
       map.on('zoomend', checkLoadPosts);
       addControls();
       try{
