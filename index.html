@@ -5392,10 +5392,14 @@ function makePosts(){
         registerPopup(hoverPopup);
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
-      map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
-
-    }
-    window.addPostSource = addPostSource;
+        map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
+      } catch (err) {
+        console.error('addPostSource failed', err);
+      } finally {
+        addingPostSource = false;
+      }
+      }
+      window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       const sort = currentSort;
