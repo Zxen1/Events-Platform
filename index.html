@@ -69,7 +69,7 @@
         --calendar-height: 200px;
         --calendar-cell-w: calc(var(--calendar-width) / 7);
         --calendar-header-h: 20px;
-        --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h)) / 7);
+        --calendar-cell-h: calc((var(--calendar-height) - var(--calendar-header-h)) / 7);
         --calendar-past-bg: #f0f0f0;
         --calendar-future-bg: #ffffff;
         --session-available: #888888;
@@ -615,6 +615,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body{
   flex:1 1 auto;
   overflow-y:auto;
+  overflow-y:overlay;
   overflow-x:hidden;
   padding:0 0 20px;
   overscroll-behavior:contain;
@@ -680,6 +681,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   overflow-y:auto;
+  overflow-y:overlay;
   padding-bottom:10px;
 }
 
@@ -749,7 +751,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .calendar .grid{
   width:100%;
-  height:calc(var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h));
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
   display:grid;
   grid-template-columns:repeat(7,var(--calendar-cell-w));
   grid-template-rows:repeat(7,var(--calendar-cell-h));
@@ -1528,6 +1530,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:440px;
   padding:10px;
   overflow:auto;
+  overflow:overlay;
   background:rgba(0,0,0,0);
   pointer-events:auto;
   z-index:2;
@@ -1542,6 +1545,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding:0;
   margin:0;
   overflow:auto;
+  overflow:overlay;
   display:flex;
   flex-direction:column;
   gap:0;
@@ -1549,7 +1553,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-.post-board.two-columns{overflow:auto;}
+.post-board.two-columns{overflow:auto;overflow:overlay;}
 .post-board .post-card{
   width:100%;
 }
@@ -1572,7 +1576,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:440px;
   max-width:440px;
   padding:0;
-  border-right:1px solid #ffffff;
   display:flex;
   flex-direction:column;
 }
@@ -1650,6 +1653,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   flex-direction:column;
   overflow-y:auto;
+  overflow-y:overlay;
   height:calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--post-header-h,0px));
 }
 
@@ -1967,7 +1971,7 @@ body.filters-active #filterBtn{
 
 
 
-.post-board .posts{overflow:auto;padding:0;margin:0;}
+.post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
@@ -2333,6 +2337,7 @@ body.filters-active #filterBtn{
   box-sizing:border-box;
   max-height:250px;
   overflow-y:auto;
+  overflow-y:overlay;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
@@ -2448,7 +2453,7 @@ body.filters-active #filterBtn{
 .open-post .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
-  height:calc(var(--calendar-height) - var(--calendar-header-h) - var(--scrollbar-h));
+  height:calc(var(--calendar-height) - var(--calendar-header-h));
   display:grid;
   grid-template-columns:repeat(7,var(--calendar-cell-w));
   grid-template-rows:repeat(7,var(--calendar-cell-h));
@@ -2737,6 +2742,7 @@ body.filters-active #filterBtn{
     max-width:100%;
     height:90%;
     overflow:auto;
+    overflow:overlay;
     background:var(--list-background);
     border-radius:8px;
   }
@@ -2890,8 +2896,8 @@ body.filters-active #filterBtn{
 .multi-list{
   max-height: 360px;
   overflow-y: auto;
+  overflow-y: overlay;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
   padding: 2px 6px 2px 2px;
   box-sizing: border-box;
 }
@@ -3412,7 +3418,7 @@ img.thumb{
               #map-balloon-container .t{font-size:16px;font-weight:bold;}
               #map-balloon-container .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
               #map-balloon-container .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
-              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
+              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;overflow-y:overlay;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
               #map-balloon-container .shape-menu[hidden]{display:none;}
               #map-balloon-container .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
               #map-balloon-container .shape-button svg{width:24px;height:24px;vertical-align:middle;}
