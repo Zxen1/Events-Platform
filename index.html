@@ -1516,8 +1516,8 @@ button[aria-expanded="true"] .results-arrow{
   bottom:var(--footer-h);
   left:0;
   right:0;
-  padding-left:440px;
-  padding-right:440px;
+  padding-left:0;
+  padding-right:0;
   display:flex;
   justify-content:center;
   gap:var(--gap);
@@ -4054,6 +4054,7 @@ function uniqueTitle(seed, cityName, idx){
   function slugify(str){
     return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   }
+  window.slugify = slugify;
 
   function postUrl(p){
     return `${BASE_URL}#/post/${p.slug}-${p.created}`;
@@ -4973,11 +4974,11 @@ function makePosts(){
             attributionControl:true
           });
       map.on('styleimagemissing', (e)=>{
-        const svg = subcategoryMarkers[e.id];
-        if(svg){
-          const img = new Image();
-          img.onload = ()=>{ if(!map.hasImage(e.id)) map.addImage(e.id, img); };
-          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        const url = subcategoryMarkers[e.id];
+        if(url){
+          map.loadImage(url, (err, img)=>{
+            if(!err && img && !map.hasImage(e.id)) map.addImage(e.id, img);
+          });
         }else{
           console.warn('Unknown image ID:', e.id);
         }
@@ -5138,16 +5139,22 @@ function makePosts(){
 
     async function addPostSource(){
       if(!map) return;
-      ['cluster-count','clusters','unclustered','posts-heat'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-      if(map.getSource('posts')) map.removeSource('posts');
-        const shouldCluster = posts.length > 1 && clusterRadius > 0;
-        map.addSource('posts', { type:'geojson', data: postsToGeoJSON(posts), cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
-        await Promise.all(Object.entries(subcategoryMarkers).map(([sub, svg])=> new Promise(res=>{
-          if(map.hasImage(sub)) map.removeImage(sub);
-          const img = new Image();
-          img.onload = ()=>{ if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
-          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        })));
+      const layerIds = ['cluster-count','clusters','unclustered','posts-heat','hover-ring','hover-fill'];
+      layerIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+      const geojson = postsToGeoJSON(posts);
+      const shouldCluster = posts.length > 1 && clusterRadius > 0;
+      const existing = map.getSource('posts');
+      const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
+      if(existing && opts && opts.cluster === shouldCluster && opts.clusterRadius === clusterRadius && opts.clusterMaxZoom === clusterMaxZoom){
+        existing.setData(geojson);
+      } else {
+        if(existing) map.removeSource('posts');
+        map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
+      }
+      await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
+        if(map.hasImage(sub)) map.removeImage(sub);
+        map.loadImage(url, (err, img)=>{ if(!err && img && !map.hasImage(sub)) map.addImage(sub, img); res(); });
+      })));
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
@@ -6084,9 +6091,9 @@ function makePosts(){
           });
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
           if(subcategoryMarkers[subId]){
-            const mEl = document.createElement('div');
-            mEl.innerHTML = subcategoryMarkers[subId];
-            marker = new mapboxgl.Marker({element:mEl.firstChild}).setLngLat([loc.lng, loc.lat]).addTo(map);
+            const img = document.createElement('img');
+            img.src = subcategoryMarkers[subId];
+            marker = new mapboxgl.Marker({element:img}).setLngLat([loc.lng, loc.lat]).addTo(map);
           } else {
             marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
           }
@@ -7023,9 +7030,9 @@ document.addEventListener('pointerdown', handleDocInteract);
       const color = COLORS[colorIdx % COLORS.length];
       colorIdx++;
       const slug = slugify(sub);
-      subcategoryIcons[sub] = createBalloon(shape, color, 20).outerHTML;
+      subcategoryIcons[sub] = `<img src="assets/subcategoryMarkers/${slug}.svg" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = createBalloon(shape, color, 40).outerHTML;
+      subcategoryMarkers[slug] = `assets/subcategoryMarkers/${slug}.svg`;
     });
   });
   if(postsLoaded) addPostSource();
