@@ -1116,7 +1116,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .panel-header .panel-actions{
   margin-top:0;
-  margin-left:auto;
+  justify-content:center;
 }
 .panel-header h2{
   margin:0;
@@ -1142,9 +1142,6 @@ button[aria-expanded="true"] .results-arrow{
 .field-instance{margin:4px 0;}
 
 
-.filters-col{
-  min-height: 0;
-}
 
 .left-tools{
   display: flex;
@@ -1173,14 +1170,9 @@ button[aria-expanded="true"] .results-arrow{
 .field{
   display:flex;
   align-items:center;
-  justify-content:space-between;
   gap:8px;
   padding:8px 0;
   margin:0;
-}
-
-.field > *:last-child{
-  margin-left:auto;
 }
 
 .field .input{
@@ -3236,7 +3228,7 @@ img.thumb{
           <div id="geolocate-filter" class="geolocate-btn"></div>
           <div id="compass-filter" class="compass-btn"></div>
         </div>
-        <section class="filters-col" aria-label="Filters">
+        <section aria-label="Filters">
           <div id="filterSummary" class="filter-summary"></div>
           <div class="filter-basics-container">
             <div class="field keyword-row">
