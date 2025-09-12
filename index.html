@@ -4980,6 +4980,28 @@ function makePosts(){
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder) geoHolder.appendChild(geolocate.onAdd(map));
         const nav = new mapboxgl.NavigationControl({showZoom:false});
+        if (nav._onDown && nav._onMove) {
+          const origOnDown = nav._onDown.bind(nav);
+          nav._onDown = function(e){
+            const origAdd = document.addEventListener.bind(document);
+            document.addEventListener = function(type, listener, options){
+              if(type === 'touchmove'){
+                let opts = options;
+                if(opts === undefined){
+                  opts = {passive:true};
+                } else if(typeof opts === 'boolean'){
+                  opts = {capture:opts, passive:true};
+                } else if(typeof opts === 'object' && opts){
+                  opts = Object.assign({}, opts, {passive:true});
+                }
+                return origAdd(type, listener, opts);
+              }
+              return origAdd(type, listener, options);
+            };
+            origOnDown(e);
+            document.addEventListener = origAdd;
+          };
+        }
         const compassHolder = document.querySelector(sel.compass);
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
