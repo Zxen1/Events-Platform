@@ -4165,7 +4165,7 @@ function makePosts(){
       if(postsLoaded) return;
       posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
       postsLoaded = true;
-      addPostSource();
+      if(Object.keys(subcategoryMarkers).length) addPostSource();
       initAdBoard();
       applyFilters();
     }
@@ -6942,6 +6942,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryMarkers[sub] = createBalloon(shape, color, 40).outerHTML;
     });
   });
+  if(postsLoaded) addPostSource();
 })();
 </script>
 <script>
