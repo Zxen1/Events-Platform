@@ -3488,7 +3488,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/streets-v12',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
@@ -5062,7 +5062,7 @@ function makePosts(){
             .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
             .map(p => ({
               type:'Feature',
-              properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:p.subcategory},
+              properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:p.subcategory, layer:'poi', sizerank:1},
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             }))
         };
@@ -6008,7 +6008,7 @@ function makePosts(){
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
-            style: 'mapbox://styles/mapbox/standard',
+            style: mapStyle,
             center: [loc.lng, loc.lat],
             zoom: 10,
             interactive: false
