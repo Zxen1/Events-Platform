@@ -1509,8 +1509,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 
-.post-board{
-  width:900px;
+  .post-board{
+    width:880px;
   padding:0;
   margin:0;
   overflow:auto;
@@ -1531,10 +1531,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding-bottom:10px;
   gap:0;
 }
-@media (max-width:899px){
-  .post-board{width:440px;}
-  .post-board .post-body{flex-direction:column;}
-}
+  @media (max-width:879px){
+    .post-board{width:440px;}
+    .post-board .post-body{flex-direction:column;}
+  }
+  @media (max-width:439px){
+    .post-board{width:100%;min-width:360px;}
+  }
 
 .main-post-column{
   flex:0 0 440px;
@@ -1552,6 +1555,17 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:100%;
   display:flex;
   flex-direction:column;
+}
+
+@media (max-width:439px){
+  .main-post-column{
+    flex:0 0 auto;
+    width:100%;
+    max-width:none;
+  }
+  .thumbnail-row{
+    width:100%;
+  }
 }
 
 .post-board .post-header{
@@ -2691,17 +2705,20 @@ body.filters-active #filterBtn{
     z-index:3000;
   }
   #post-modal-container.hidden{display:none;}
-  #post-modal-container .post-modal{
-    width:900px;
+    #post-modal-container .post-modal{
+      width:880px;
     max-width:100%;
     height:90%;
     overflow:auto;
     background:var(--list-background);
     border-radius:8px;
   }
-  @media (max-width:899px){
-    #post-modal-container .post-modal{width:440px;}
-  }
+    @media (max-width:879px){
+      #post-modal-container .post-modal{width:440px;}
+    }
+    @media (max-width:439px){
+      #post-modal-container .post-modal{width:100%;min-width:360px;}
+    }
 
 
   .chip-small{
@@ -4928,10 +4945,18 @@ function makePosts(){
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
       }catch{}
-        map.on('style.load', () => {
-          map.setTerrain(null);
-          applySky(skyStyle);
-        });
+          map.on('style.load', () => {
+            if(!map.getSource('terrain-dem')){
+              map.addSource('terrain-dem', {
+                type:'raster-dem',
+                url:'mapbox://mapbox.terrain-rgb',
+                tileSize:512,
+                maxzoom:14
+              });
+            }
+            map.setTerrain({source:'terrain-dem'});
+            applySky(skyStyle);
+          });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
@@ -7251,27 +7276,34 @@ document.addEventListener('DOMContentLoaded', () => {
       const boardStyles = getComputedStyle(board);
       const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
       const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-      if(secondWidth < 440){
-        if(secondCol.style.display !== 'none'){
-          secondCol.style.display = 'none';
-          postImages.insertAdjacentElement('afterend', details);
-          details.style.padding = '0';
+        if(secondWidth < 440){
+          if(secondCol.style.display !== 'none'){
+            secondCol.style.display = 'none';
+            postImages.insertAdjacentElement('afterend', details);
+            details.style.padding = '0';
+          }
+          if(window.innerWidth < 440){
+            board.style.width = '100%';
+            board.style.minWidth = '360px';
+          } else {
+            board.style.width = '440px';
+            board.style.removeProperty('min-width');
+          }
+          if(thumbRow && selectedImageBox){
+            selectedImageBox.insertAdjacentElement('afterend', thumbRow);
+          }
+        } else {
+          if(secondCol.style.display === 'none'){
+            secondCol.style.display = '';
+            secondCol.appendChild(details);
+            details.style.padding = '';
+          }
+          board.style.width = '';
+          board.style.removeProperty('min-width');
+          if(thumbRow && selectedImageBox){
+            postImages.appendChild(thumbRow);
+          }
         }
-        board.style.width = '440px';
-        if(thumbRow && selectedImageBox){
-          selectedImageBox.insertAdjacentElement('afterend', thumbRow);
-        }
-      } else {
-        if(secondCol.style.display === 'none'){
-          secondCol.style.display = '';
-          secondCol.appendChild(details);
-          details.style.padding = '';
-        }
-        board.style.width = '';
-        if(thumbRow && selectedImageBox){
-          postImages.appendChild(thumbRow);
-        }
-      }
 
       const twoCols = secondCol.style.display !== 'none';
       board.classList.toggle('two-columns', twoCols);
