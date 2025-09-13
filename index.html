@@ -3897,6 +3897,30 @@ function buildClusterListHTML(items){
     const subcategoryMarkers = window.subcategoryMarkers = {};
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
+
+    function ensureSvgDimensions(svg){
+      try{
+        const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+        const el = doc.documentElement;
+        let w = parseFloat(el.getAttribute('width'));
+        let h = parseFloat(el.getAttribute('height'));
+        const viewBox = el.getAttribute('viewBox');
+        if((!w || !h) && viewBox){
+          const parts = viewBox.split(/[ ,]/).map(Number);
+          if(parts.length === 4){
+            w = w || parts[2];
+            h = h || parts[3];
+          }
+        }
+        if(!w) w = 40;
+        if(!h) h = 40;
+        el.setAttribute('width', w);
+        el.setAttribute('height', h);
+        return {svg: new XMLSerializer().serializeToString(el), width: w, height: h};
+      }catch(e){
+        return {svg, width:40, height:40};
+      }
+    }
 // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
@@ -5037,14 +5061,12 @@ function makePosts(){
         map.on('styleimagemissing', (e)=>{
           const svg = subcategoryMarkers[e.id];
           if(svg){
-            const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-            map.loadImage(url, (err, img) => {
-              if(err){
-                console.warn('load image failed', e.id, err);
-                return;
-              }
-              if(!map.hasImage(e.id)) map.addImage(e.id, img);
-            });
+            const {svg: svgData, width, height} = ensureSvgDimensions(svg);
+            const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+            const img = new Image(width, height);
+            img.onload = ()=> { if(!map.hasImage(e.id)) map.addImage(e.id, img); };
+            img.onerror = err => console.warn('load image failed', e.id, err);
+            img.src = url;
           } else {
             console.warn('Unknown image ID:', e.id);
           }
@@ -5222,15 +5244,12 @@ function makePosts(){
       }
         await Promise.all(Object.entries(subcategoryMarkers).map(([sub, svg])=> new Promise(res=>{
           if(map.hasImage(sub)) map.removeImage(sub);
-          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-          map.loadImage(url, (err, img) => {
-            if(err){
-              console.warn('load image failed', sub, err);
-              return res();
-            }
-            if(!map.hasImage(sub)) map.addImage(sub, img);
-            res();
-          });
+          const {svg: svgData, width, height} = ensureSvgDimensions(svg);
+          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+          const img = new Image(width, height);
+          img.onload = () => { if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
+          img.onerror = err => { console.warn('load image failed', sub, err); res(); };
+          img.src = url;
         })));
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
@@ -5239,16 +5258,17 @@ function makePosts(){
         const imgId = 'cluster-svg';
         if(map.hasImage(imgId)) map.removeImage(imgId);
         await new Promise(res=>{
-          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
-          map.loadImage(url, (err, img) => {
-            if(!err && !map.hasImage(imgId)) map.addImage(imgId, img);
-            res();
-          });
+          const {svg: svgData, width, height} = ensureSvgDimensions(clusterSvg);
+          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+          const img = new Image(width, height);
+          img.onload = () => { if(!map.hasImage(imgId)) map.addImage(imgId, img); res(); };
+          img.onerror = () => res();
+          img.src = url;
         });
-          map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
-          map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
-        } else if(shouldCluster){
+        map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
+        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
+        map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
+      } else if(shouldCluster){
           map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
             'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
             'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
@@ -6175,8 +6195,9 @@ function makePosts(){
             const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const svg = subcategoryMarkers[subId];
             if(svg){
-              const img = new Image();
-              img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+              const {svg: svgData, width, height} = ensureSvgDimensions(svg);
+              const img = new Image(width, height);
+              img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
               marker = new mapboxgl.Marker({element:img}).setLngLat([loc.lng, loc.lat]).addTo(map);
             } else {
               marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
