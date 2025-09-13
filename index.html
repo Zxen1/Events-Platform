@@ -5037,11 +5037,15 @@ function makePosts(){
         map.on('styleimagemissing', (e)=>{
           const svg = subcategoryMarkers[e.id];
           if(svg){
-            const img = new Image();
-            img.onload = () => { if(!map.hasImage(e.id)) map.addImage(e.id, img); };
-            img.onerror = err => console.warn('load image failed', e.id, err);
-            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-          }else{
+            const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            map.loadImage(url, (err, img) => {
+              if(err){
+                console.warn('load image failed', e.id, err);
+                return;
+              }
+              if(!map.hasImage(e.id)) map.addImage(e.id, img);
+            });
+          } else {
             console.warn('Unknown image ID:', e.id);
           }
         });
@@ -5218,10 +5222,15 @@ function makePosts(){
       }
         await Promise.all(Object.entries(subcategoryMarkers).map(([sub, svg])=> new Promise(res=>{
           if(map.hasImage(sub)) map.removeImage(sub);
-          const img = new Image();
-          img.onload = () => { if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
-          img.onerror = err => { console.warn('load image failed', sub, err); res(); };
-          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+          map.loadImage(url, (err, img) => {
+            if(err){
+              console.warn('load image failed', sub, err);
+              return res();
+            }
+            if(!map.hasImage(sub)) map.addImage(sub, img);
+            res();
+          });
         })));
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
@@ -5230,9 +5239,11 @@ function makePosts(){
         const imgId = 'cluster-svg';
         if(map.hasImage(imgId)) map.removeImage(imgId);
         await new Promise(res=>{
-          const img = new Image();
-          img.onload = ()=>{ if(!map.hasImage(imgId)) map.addImage(imgId, img); res(); };
-          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
+          const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clusterSvg);
+          map.loadImage(url, (err, img) => {
+            if(!err && !map.hasImage(imgId)) map.addImage(imgId, img);
+            res();
+          });
         });
           map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
           map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
