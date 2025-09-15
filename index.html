@@ -1509,6 +1509,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .mode-posts .post-mode-background{
   display:block;
+  pointer-events:auto;
 }
 
 .post-mode-boards{
@@ -3581,7 +3582,7 @@ img.thumb{
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
-    let mode = 'map';
+    let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
     const DEFAULT_WELCOME = '<p>Welcome to Funmap!</p><p>Choose an area on the map to search for events and listings.</p><p>Click the Filters button to refine your search.</p>';
     const firstVisit = !localStorage.getItem('hasVisited');
@@ -3606,7 +3607,7 @@ img.thumb{
       }
     }
 
-      let map, spinning = false, historyWasActive = false, expiredWasOn = false, dateStart = null, dateEnd = null,
+      let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
@@ -4810,9 +4811,15 @@ function makePosts(){
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
+        const filterPanel = document.getElementById('filterPanel');
+        const filterOpen = filterPanel && filterPanel.classList.contains('show');
+        boardsContainer.style.paddingLeft = filterOpen ? 'var(--panel-w)' : '10px';
+        if(historyBoard){
+          historyBoard.style.left = filterOpen ? 'var(--panel-w)' : '10px';
+        }
         if(small){
           document.body.classList.add('hide-ads');
-          boardsContainer.style.justifyContent = 'center';
+          boardsContainer.style.justifyContent = 'flex-start';
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
         } else {
@@ -4822,7 +4829,7 @@ function makePosts(){
             document.body.classList.remove('hide-ads');
           }
           const adsHidden = document.body.classList.contains('hide-ads');
-          boardsContainer.style.justifyContent = adsHidden ? 'flex-start' : 'center';
+          boardsContainer.style.justifyContent = (!filterOpen || adsHidden) ? 'flex-start' : 'center';
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
         }
@@ -6556,7 +6563,15 @@ function makePosts(){
     }
 
     // applyFilters();
-    setMode('map');
+    setMode(mode);
+    if(historyWasActive && mode === 'posts'){
+      document.body.classList.add('show-history');
+      adjustBoards();
+    }
+    window.addEventListener('beforeunload', () => {
+      localStorage.setItem('mode', mode);
+      localStorage.setItem('historyActive', document.body.classList.contains('show-history') ? 'true' : 'false');
+    });
   })();
   
 // 0577 helpers (safety)
@@ -7502,10 +7517,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, {passive:false});
   const postsPanel = document.querySelector('.post-board');
+  const postsBg = document.querySelector('.post-mode-background');
   if(postsPanel){
     postsPanel.addEventListener('click', e => {
-      if(e.target === postsPanel) setMode('map');
+      if(e.target === postsPanel || e.target.classList.contains('posts')) setMode('map');
     });
+  }
+  if(postsBg){
+    postsBg.addEventListener('click', () => setMode('map'));
   }
 });
 </script>
