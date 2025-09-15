@@ -3111,7 +3111,6 @@ img.thumb{
     object-fit:cover;
   }
 }
-
 @media (max-width:450px){
   :root{
     --footer-h:0;
@@ -6205,6 +6204,10 @@ function makePosts(){
             } else {
               marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
             }
+            const markerEl = marker.getElement();
+            markerEl.style.opacity = '0.9';
+            markerEl.style.pointerEvents = 'none';
+            markerEl.style.display = 'block';
           setTimeout(()=> map && map.resize(),0);
           window.addEventListener('resize', ()=>{ if(map) map.resize(); });
         } else {
