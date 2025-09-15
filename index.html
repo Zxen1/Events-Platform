@@ -4814,9 +4814,6 @@ function makePosts(){
         const filterPanel = document.getElementById('filterPanel');
         const filterOpen = filterPanel && filterPanel.classList.contains('show');
         boardsContainer.style.paddingLeft = filterOpen ? 'var(--panel-w)' : '10px';
-        if(historyBoard){
-          historyBoard.style.left = filterOpen ? 'var(--panel-w)' : '10px';
-        }
         if(small){
           document.body.classList.add('hide-ads');
           boardsContainer.style.justifyContent = 'flex-start';
@@ -4964,7 +4961,37 @@ function makePosts(){
 
     // Mapbox
     function loadMapbox(cb){
-      if(window.mapboxgl && window.MapboxGeocoder) return cb();
+      const cssSel = [
+        'link[href*"mapbox-gl.css"], link[href*"mapbox-gl@"], style[data-mapbox]',
+        'link[href*"mapbox-gl-geocoder.css"], link[href*"mapbox-gl-geocoder@"]'
+      ];
+      if(window.mapboxgl && window.MapboxGeocoder){
+        let pending = 0;
+        const done = () => { if(--pending === 0) cb(); };
+        cssSel.forEach((sel, i) => {
+          let link = document.querySelector(sel);
+          if(link && link.sheet) return;
+          pending++;
+          if(link){
+            link.addEventListener('load', done, {once:true});
+            link.addEventListener('error', done, {once:true});
+          } else {
+            link = document.createElement('link');
+            link.rel = 'stylesheet';
+            if(i===0){
+              link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css';
+              link.onerror = () => { link.href = 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css'; };
+            } else {
+              link.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css';
+              link.onerror = () => { link.href = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'; };
+            }
+            link.onload = done;
+            document.head.appendChild(link);
+          }
+        });
+        if(pending === 0) cb();
+        return;
+      }
 
       let cssLoaded = 0;
       const onCss = () => { if(++cssLoaded === 2) loadScripts(); };
