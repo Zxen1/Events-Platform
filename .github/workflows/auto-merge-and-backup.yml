@@ -27,8 +27,9 @@ jobs:
           commit_msg="${{ github.event.head_commit.message }}"
           safe_msg=$(echo "$commit_msg" | tr ' ' '-' | tr -cd '[:alnum:]-')
           cp index.html "backups/index-${datetime}-${safe_msg}.html"
+          echo "📦 Backup saved: backups/index-${datetime}-${safe_msg}.html"
 
-            - name: Commit backup
+      - name: Commit backup
         run: |
           git add backups/
           if git diff --cached --quiet; then
