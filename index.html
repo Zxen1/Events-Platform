@@ -4579,33 +4579,16 @@ function makePosts(){
           e.preventDefault();
         }
       });
-      let t;
-      scroller.addEventListener('scroll', ()=>{
-        const marker = scroller.querySelector('.today-marker');
-        if(marker){
-          const base = parseFloat(marker.dataset.pos || '0');
-          marker.style.left = `${base + Math.round(scroller.scrollLeft)}px`;
-        }
-        if(t) clearTimeout(t);
-        t = setTimeout(()=>{
-          const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
-          const w = m ? m.offsetWidth : 0;
-          if(w){
-            const max = scroller.scrollWidth - scroller.clientWidth;
-            let target;
-            if(scroller.scrollLeft >= max - 1){
-              target = max;
-            } else {
-              const i = Math.round(scroller.scrollLeft / w);
-              target = w*i;
-            }
-            smoothScroll(scroller, target, 600);
+        scroller.addEventListener('scroll', ()=>{
+          const marker = scroller.querySelector('.today-marker');
+          if(marker){
+            const base = parseFloat(marker.dataset.pos || '0');
+            marker.style.left = `${base + Math.round(scroller.scrollLeft)}px`;
           }
-        },100);
-      });
-    }
-    setupCalendarScroll(calendarScroll);
-    expiredWasOn = expiredToggle && expiredToggle.checked;
+        });
+      }
+      setupCalendarScroll(calendarScroll);
+      expiredWasOn = expiredToggle && expiredToggle.checked;
 
     function scrollCalendarToToday(behavior='auto'){
       const calScroll = $('#datePickerContainer');
@@ -4935,14 +4918,14 @@ function makePosts(){
 
       const resLists = $$('.history-board');
       resLists.forEach(list=>{
-        list.addEventListener('click', e=>{
-          const cardEl = e.target.closest('.history-card');
-          if(cardEl){
-            const id = cardEl.getAttribute('data-id');
-            if(id) { stopSpin(); openPost(id, true); }
-          }
+          list.addEventListener('click', e=>{
+            const cardEl = e.target.closest('.history-card');
+            if(cardEl){
+              const id = cardEl.getAttribute('data-id');
+              if(id) { stopSpin(); openPost(id, true, false, cardEl); }
+            }
+          });
         });
-      });
 
       const postsWide = $('.post-board');
       postsWide && postsWide.addEventListener('click', e=>{
@@ -5933,77 +5916,81 @@ function makePosts(){
         return wrap;
     }
 
-    async function openPost(id, fromQuick=false, fromMap=false){
-      touchMarker = null;
-      if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
-      spinEnabled = false;
-      localStorage.setItem('spinGlobe', 'false');
-      stopSpin();
-      const p = posts.find(x=>x.id===id); if(!p) return;
-      activePostId = id;
-      $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-      if(mode !== 'posts'){
-        setMode('posts', true);
-        await nextFrame();
-      }
-
-      if(!postsWideEl.children.length){ postsWideEl.appendChild(card(p, true)); }
-
-      const alreadyOpen = postsWideEl.querySelector(`.open-post[data-id="${id}"]`);
-      if(alreadyOpen){
-        return;
-      }
-
-      let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-
-      (function(){
-        const ex = postsWideEl.querySelector('.open-post');
-        if(ex){
-          const exId = ex.dataset && ex.dataset.id;
-          const prev = posts.find(x=> x.id===exId);
-          if(prev){ ex.replaceWith(card(prev, true)); } else { ex.remove(); }
+      async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
+        lockMap(false);
+        touchMarker = null;
+        if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
+        spinEnabled = false;
+        localStorage.setItem('spinGlobe', 'false');
+        stopSpin();
+        const p = posts.find(x=>x.id===id); if(!p) return;
+        activePostId = id;
+        $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        if(mode !== 'posts'){
+          setMode('posts', true);
+          await nextFrame();
         }
-      })();
 
-      target = postsWideEl.querySelector(`[data-id="${id}"]`);
+        const container = fromHistory ? document.getElementById('historyBoard') : postsWideEl;
+        if(!container) return;
 
-      if(!target){ target = card(p, true); postsWideEl.appendChild(target); }
-      const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
-      if(resCard){
-        resCard.setAttribute('aria-selected','true');
-        if(fromMap){
-          const qb = resCard.closest('.quick-list-board');
-          if(qb){
-            // intentionally skipping automatic scrolling
+        if(!container.children.length && !fromHistory){ container.appendChild(card(p, true)); }
+
+        const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
+        if(alreadyOpen){
+          return;
+        }
+
+        let target = originEl || container.querySelector(`[data-id="${id}"]`);
+
+        (function(){
+          const ex = container.querySelector('.open-post');
+          if(ex){
+            const exId = ex.dataset && ex.dataset.id;
+            const prev = posts.find(x=> x.id===exId);
+            if(prev){ ex.replaceWith(card(prev, fromHistory ? false : true)); } else { ex.remove(); }
+          }
+        })();
+
+        target = originEl || container.querySelector(`[data-id="${id}"]`);
+
+        if(!target){ target = card(p, fromHistory ? false : true); container.appendChild(target); }
+        const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
+        if(resCard){
+          resCard.setAttribute('aria-selected','true');
+          if(fromMap){
+            const qb = resCard.closest('.quick-list-board');
+            if(qb){
+              // intentionally skipping automatic scrolling
+            }
           }
         }
+        const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
+        if(mapCard) mapCard.setAttribute('aria-selected','true');
+
+        const detail = buildDetail(p);
+        target.replaceWith(detail);
+        hookDetailActions(detail, p);
+        if (typeof updateStickyImages === 'function') {
+          updateStickyImages();
+        }
+
+        await nextFrame();
+        const header = detail.querySelector('.post-header');
+        if(header){
+          const h = header.offsetHeight;
+          header.style.scrollMarginTop = h + 'px';
+        }
+
+        // no automatic scrolling
+
+        // Update history on open (keep newest-first)
+        viewHistory = viewHistory.filter(x=>x.id!==id);
+        viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
+        if(viewHistory.length>100) viewHistory.length=100;
+        saveHistory(); renderHistoryBoard();
       }
-      const mapCard = document.querySelector('.mapboxgl-popup.map-card .hover-card');
-      if(mapCard) mapCard.setAttribute('aria-selected','true');
-
-      const detail = buildDetail(p);
-      target.replaceWith(detail);
-      hookDetailActions(detail, p);
-      if (typeof updateStickyImages === 'function') {
-        updateStickyImages();
-      }
-
-      await nextFrame();
-      const header = detail.querySelector('.post-header');
-      if(header){
-        const h = header.offsetHeight;
-        header.style.scrollMarginTop = h + 'px';
-      }
-
-      // no automatic scrolling
-
-      // Update history on open (keep newest-first)
-      viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
-      if(viewHistory.length>100) viewHistory.length=100;
-      saveHistory(); renderHistoryBoard();
-    }
 
     function openPostModal(id){
       const p = posts.find(x=>x.id===id);
