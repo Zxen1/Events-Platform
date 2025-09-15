@@ -1774,7 +1774,6 @@ body.hide-ads .ad-board{
 
 
 #filterBtn,
-#postBtn,
 #memberBtn,
 #adminBtn{
   gap:4px;
@@ -1786,7 +1785,27 @@ body.hide-ads .ad-board{
   display:inline-block;
   vertical-align:middle;
   color: currentColor;
-  width:20px; height:20px;
+  width:30px; height:30px;
+}
+.mode-toggle{
+  display:flex;
+  height:40px;
+  border:1px solid var(--btn);
+  border-radius:8px;
+  overflow:hidden;
+}
+.mode-toggle button{
+  flex:1;
+  border:none;
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:600;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.mode-toggle button[aria-pressed="true"]{
+  background:var(--btn-selected);
+  color:var(--button-active-text);
 }
 body.filters-active #filterBtn{
   background: red;
@@ -3191,15 +3210,18 @@ img.thumb{
     </div>
     <nav class="view-toggle" aria-label="Primary" role="tablist">
       <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
-      <button id="historyBtn" aria-pressed="false">History</button>
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
-        <svg class="icon-search" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
-      <button id="postBtn" aria-pressed="false">Show Posts</button>
+      <div class="mode-toggle">
+        <button id="historyToggle" aria-pressed="false">History</button>
+        <button id="postsToggle" aria-pressed="false">Posts</button>
+        <button id="mapToggle" aria-pressed="true">Map</button>
+      </div>
     </nav>
     <div class="header-buttons">
       <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
@@ -4820,11 +4842,22 @@ function makePosts(){
         optionsBtn.setAttribute('aria-expanded','false');
       });
 
-      const historyBtn = $('#historyBtn');
       const historyBoard = $('#historyBoard');
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
+      const historyToggle = $('#historyToggle');
+      const postsToggle = $('#postsToggle');
+      const mapToggle = $('#mapToggle');
+
+      function updateModeToggle(){
+        const historyActive = document.body.classList.contains('show-history');
+        const currentMode = document.body.classList.contains('mode-posts') ? 'posts' : 'map';
+        historyToggle && historyToggle.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
+        postsToggle && postsToggle.setAttribute('aria-pressed', !historyActive && currentMode === 'posts' ? 'true' : 'false');
+        mapToggle && mapToggle.setAttribute('aria-pressed', !historyActive && currentMode === 'map' ? 'true' : 'false');
+      }
+
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
@@ -4853,7 +4886,7 @@ function makePosts(){
           postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
         }
         adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
-        historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
+        updateModeToggle();
       }
       adjustBoards();
       window.addEventListener('resize', adjustBoards);
@@ -4866,11 +4899,10 @@ function makePosts(){
           }
         }, 0);
 
-      historyBtn && historyBtn.addEventListener('click', ()=>{
-        const active = document.body.classList.toggle('show-history');
-        if(active){
-          renderHistoryBoard();
-        }
+      historyToggle && historyToggle.addEventListener('click', ()=>{
+        setMode('posts');
+        document.body.classList.add('show-history');
+        renderHistoryBoard();
         adjustBoards();
         window.adjustListHeight();
         setTimeout(()=>{
@@ -4879,6 +4911,26 @@ function makePosts(){
             updatePostPanel();
           }
         }, 310);
+        updateModeToggle();
+      });
+
+      postsToggle && postsToggle.addEventListener('click', ()=>{
+        document.body.classList.remove('show-history');
+        setMode('posts');
+        window.adjustListHeight();
+        setTimeout(()=>{
+          if(map && typeof map.resize === 'function'){
+            map.resize();
+            updatePostPanel();
+          }
+        }, 0);
+        updateModeToggle();
+      });
+
+      mapToggle && mapToggle.addEventListener('click', ()=>{
+        document.body.classList.remove('show-history');
+        setMode('map');
+        updateModeToggle();
       });
 
       const resLists = $$('.history-board');
@@ -4910,22 +4962,19 @@ function makePosts(){
         mode = m;
         document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
         document.body.classList.add('mode-'+m);
-          if(m==='map'){
-            document.body.classList.add('hide-ads');
-            document.body.classList.remove('show-history');
-            const historyBoardEl = document.getElementById('historyBoard');
-            if(historyBoardEl){
-              historyBoardEl.style.display = 'none';
-              historyBoardEl.setAttribute('aria-hidden','true');
-            }
-            const historyBtnEl = document.getElementById('historyBtn');
-            if(historyBtnEl){
-              historyBtnEl.setAttribute('aria-pressed','false');
-            }
-          } else {
-            document.body.classList.remove('hide-ads');
+        if(m==='map'){
+          document.body.classList.add('hide-ads');
+          document.body.classList.remove('show-history');
+          const historyBoardEl = document.getElementById('historyBoard');
+          if(historyBoardEl){
+            historyBoardEl.style.display = 'none';
+            historyBoardEl.setAttribute('aria-hidden','true');
           }
+        } else {
+          document.body.classList.remove('hide-ads');
+        }
         adjustBoards();
+        updateModeToggle();
         if(m === 'posts'){
           const boardEl = document.querySelector('.post-board');
           if(boardEl){
@@ -4934,11 +4983,6 @@ function makePosts(){
           if(window.adjust){
             window.adjust();
           }
-        }
-        const toggle = $('#postBtn');
-        if(toggle){
-          toggle.textContent = m === 'map' ? 'Show Posts' : 'Show Map';
-          toggle.setAttribute('aria-pressed', m === 'posts');
         }
         if(map){
           if(typeof map.resize === 'function'){
@@ -4954,7 +4998,6 @@ function makePosts(){
         if(!skipFilters) applyFilters();
       }
     window.setMode = setMode;
-    $('#postBtn').addEventListener('click',()=> setMode(mode === 'map' ? 'posts' : 'map'));
 
     // Mapbox
     function loadMapbox(cb){
@@ -5200,10 +5243,9 @@ function makePosts(){
       historyWasActive = document.body.classList.contains('show-history');
       if(historyWasActive){
         document.body.classList.remove('show-history');
-        const historyBtnEl = document.getElementById('historyBtn');
         const historyBoardEl = document.getElementById('historyBoard');
-        if(historyBtnEl) historyBtnEl.setAttribute('aria-pressed','false');
         if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
+        updateModeToggle();
       }
       function step(){
         if(!spinning || !map) return;
@@ -5224,10 +5266,9 @@ function makePosts(){
       historyWasActive = false;
       if(wasHistory){
         document.body.classList.add('show-history');
-        const historyBtnEl = document.getElementById('historyBtn');
         const historyBoardEl = document.getElementById('historyBoard');
-        if(historyBtnEl) historyBtnEl.setAttribute('aria-pressed','true');
         if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','false');
+        updateModeToggle();
       }
       applyFilters();
     }
@@ -6919,7 +6960,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       openWelcome();
       localStorage.setItem('welcome-seen','true');
     }
-    const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') !== 'false';
+    const shouldOpenFilter = window.innerWidth >= 1300 && localStorage.getItem('panel-open-filterPanel') === 'true';
     if(filterPanel && shouldOpenFilter){
       openPanel(filterPanel);
     }
