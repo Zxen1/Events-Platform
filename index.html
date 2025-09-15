@@ -3936,13 +3936,6 @@ function buildClusterListHTML(items){
         "Buy and Sell": "Buy-and-sell-category-icon",
         "For Hire": "For-hire-category-icon"
       };
-      const MARKER_BASE = window.MARKER_BASE = {
-        "What's On": "whats-on",
-        "Opportunities": "opportunities",
-        "Learning": "learning",
-        "Buy and Sell": "buy-and-sell",
-        "For Hire": "for-hire"
-      };
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
@@ -7236,10 +7229,9 @@ document.addEventListener('pointerdown', handleDocInteract);
       colorIdx++;
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
-      const markerPrefix = MARKER_BASE[cat.name];
       subcategoryIcons[sub] = `<img src="assets/icons-20/${iconPrefix}-${color}-20.webp" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = `assets/mapmarkers-40/${markerPrefix}-${color}-mapmarker-40.webp`;
+      subcategoryMarkers[slug] = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
     });
   });
   if(window.postsLoaded) addPostSource();
