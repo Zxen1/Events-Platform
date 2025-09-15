@@ -3,7 +3,7 @@ name: Auto Merge & Backup
 on:
   push:
     branches:
-      - main   # only runs when Codex pushes to main
+      - main
 
 jobs:
   merge-and-backup:
@@ -20,12 +20,6 @@ jobs:
           git config user.name "codex-bot"
           git config user.email "codex-bot@example.com"
 
-      - name: Attempt merge
-        run: |
-          set -e  # stop immediately on error
-          git pull origin main || { echo "❌ Merge failed!"; exit 1; }
-          echo "✅ Merge succeeded!"
-
       - name: Backup index.html
         run: |
           mkdir -p backups
@@ -33,21 +27,9 @@ jobs:
           commit_msg="${{ github.event.head_commit.message }}"
           safe_msg=$(echo "$commit_msg" | tr ' ' '-' | tr -cd '[:alnum:]-')
           cp index.html "backups/index-${datetime}-${safe_msg}.html"
-          echo "📦 Backup saved: backups/index-${datetime}-${safe_msg}.html"
 
       - name: Commit backup
         run: |
           git add backups/
           git commit -m "Backup index.html at $(date) for commit: ${{ github.sha }}" || echo "No new backup created"
           git push origin main
-
-      - name: Notify local listener
-        if: always()   # run even if earlier steps fail
-        run: |
-          status="failure"
-          if [ "${{ job.status }}" == "success" ]; then
-            status="success"
-          fi
-          curl -X POST -H "Content-Type: application/json" \
-            -d "{\"status\":\"$status\",\"commit\":\"${GITHUB_SHA}\"}" \
-            https://4ea124449b7e.ngrok-free.app 
