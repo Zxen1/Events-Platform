@@ -1,0 +1,39 @@
+name: Auto Merge & Backup
+
+on:
+  push:
+    branches:
+      - main   # only runs if something is pushed to main
+
+jobs:
+  merge-and-backup:
+    if: ${{ vars.AUTO_MERGE_BACKUP == 'true' }} # ON/OFF switch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "codex-bot"
+          git config user.email "codex-bot@example.com"
+
+      - name: Create backups folder if missing
+        run: mkdir -p backups
+
+      - name: Save backup of index.html
+        run: |
+          datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
+          commit_msg="${{ github.event.head_commit.message }}"
+          # Clean commit message for safe filename
+          safe_msg=$(echo "$commit_msg" | tr ' ' '-' | tr -cd '[:alnum:]-')
+          cp index.html "backups/index-${datetime}-${safe_msg}.html"
+
+      - name: Commit backup
+        run: |
+          git add backups/
+          git commit -m "Backup index.html at $(date) for commit: ${{ github.sha }}" || echo "No changes"
+          git push origin main
