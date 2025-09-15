@@ -5078,7 +5078,7 @@ function makePosts(){
         map.on('styleimagemissing', (e)=>{
           const url = subcategoryMarkers[e.id];
           if(url){
-            const img = new Image(40, 40);
+            const img = new Image();
             img.onload = ()=> { if(!map.hasImage(e.id)) map.addImage(e.id, img); };
             img.onerror = err => console.warn('load image failed', e.id, err);
             img.src = url;
@@ -5259,7 +5259,7 @@ function makePosts(){
       }
         await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
           if(map.hasImage(sub)) map.removeImage(sub);
-          const img = new Image(40, 40);
+          const img = new Image();
           img.onload = () => { if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
           img.onerror = err => { console.warn('load image failed', sub, err); res(); };
           img.src = url;
@@ -6208,7 +6208,7 @@ function makePosts(){
             const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const url = subcategoryMarkers[subId];
             if(url){
-              const img = new Image(40, 40);
+              const img = new Image();
               img.src = url;
               marker = new mapboxgl.Marker({element:img}).setLngLat([loc.lng, loc.lat]).addTo(map);
             } else {
