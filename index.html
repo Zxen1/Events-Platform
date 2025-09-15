@@ -2845,19 +2845,12 @@ body.filters-active #filterBtn{
 .card .thumb,
 .history-card .thumb,
 .post-card .thumb{
-  flex: 0 0 90px;
-  width: 90px;
-  height: 70px;
+  flex: 0 0 80px;
+  width: 80px;
+  height: 80px;
   display: block;
   object-fit: cover;
   border-radius: 8px;
-}
-
-.post-board .post-card .thumb{
-  flex-basis: 80px;
-  width: 80px;
-  height: 80px;
-  padding:0;
 }
 
 .card .meta,
@@ -5951,6 +5944,9 @@ function makePosts(){
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
         }
+        if (typeof initPostLayout === 'function') {
+          initPostLayout(container);
+        }
 
         await nextFrame();
         const header = detail.querySelector('.post-header');
@@ -7514,65 +7510,69 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const board = document.querySelector('.post-board');
-  const mainCol = document.querySelector('.main-post-column');
-  const secondCol = document.querySelector('.second-post-column');
-  const details = document.querySelector('.post-details');
-  const postImages = document.querySelector('.post-images');
-  const postHeader = document.querySelector('.post-header');
-  const thumbRow = document.querySelector('.thumbnail-row');
+let boardAdjustCleanup = null;
+function initPostLayout(board){
+  if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
+  if(!board) return;
+  const mainCol = board.querySelector('.main-post-column');
+  const secondCol = board.querySelector('.second-post-column');
+  const details = board.querySelector('.post-details');
+  const postImages = board.querySelector('.post-images');
+  const postHeader = board.querySelector('.post-header');
+  const thumbRow = board.querySelector('.thumbnail-row');
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
+  if(!mainCol || !secondCol || !details || !postImages || !postHeader) return;
 
   function adjust(){
-      const boardStyles = getComputedStyle(board);
-      const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
-      const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-        if(secondWidth < 440){
-          if(secondCol.style.display !== 'none'){
-            secondCol.style.display = 'none';
-            postImages.insertAdjacentElement('afterend', details);
-            details.style.padding = '0';
-          }
-          if(window.innerWidth < 440){
-            board.style.width = '100%';
-            board.style.minWidth = '360px';
-          } else {
-            board.style.width = '440px';
-            board.style.removeProperty('min-width');
-          }
-          if(thumbRow && selectedImageBox){
-            selectedImageBox.insertAdjacentElement('afterend', thumbRow);
-          }
-        } else {
-          if(secondCol.style.display === 'none'){
-            secondCol.style.display = '';
-            secondCol.appendChild(details);
-            details.style.padding = '';
-          }
-          board.style.width = '';
-          board.style.removeProperty('min-width');
-          if(thumbRow && selectedImageBox){
-            postImages.appendChild(thumbRow);
-          }
-        }
-
-      const twoCols = secondCol.style.display !== 'none';
-      board.classList.toggle('two-columns', twoCols);
-      if(twoCols){
-        document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
+    const boardStyles = getComputedStyle(board);
+    const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+    const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
+    if(secondWidth < 440){
+      if(secondCol.style.display !== 'none'){
+        secondCol.style.display = 'none';
+        postImages.insertAdjacentElement('afterend', details);
+        details.style.padding = '0';
+      }
+      if(window.innerWidth < 440){
+        board.style.width = '100%';
+        board.style.minWidth = '360px';
       } else {
-      document.documentElement.style.removeProperty('--post-header-h');
+        board.style.width = '440px';
+        board.style.removeProperty('min-width');
+      }
+      if(thumbRow && selectedImageBox){
+        selectedImageBox.insertAdjacentElement('afterend', thumbRow);
+      }
+    } else {
+      if(secondCol.style.display === 'none'){
+        secondCol.style.display = '';
+        secondCol.appendChild(details);
+        details.style.padding = '';
+      }
+      board.style.width = '';
+      board.style.removeProperty('min-width');
+      if(thumbRow && selectedImageBox){
+        postImages.appendChild(thumbRow);
       }
     }
+
+    const twoCols = secondCol.style.display !== 'none';
+    board.classList.toggle('two-columns', twoCols);
+    if(twoCols){
+      document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
+    } else {
+      document.documentElement.style.removeProperty('--post-header-h');
+    }
+  }
 
   window.adjust = adjust;
   adjust();
   window.addEventListener('load', adjust);
-  new ResizeObserver(() => adjust()).observe(board);
   window.addEventListener('resize', adjust);
+  const ro = new ResizeObserver(() => adjust());
+  ro.observe(board);
 
   function openImageModal(src){
     if(!imageModalContainer || !imageModal) return;
@@ -7583,12 +7583,15 @@ document.addEventListener('DOMContentLoaded', () => {
     imageModalContainer.classList.remove('hidden');
   }
 
-  imageModalContainer.addEventListener('click', e => {
-    if(e.target === imageModalContainer){
-      imageModalContainer.classList.add('hidden');
-      imageModal.innerHTML='';
-    }
-  });
+  if(imageModalContainer && !imageModalContainer._listenerAdded){
+    imageModalContainer.addEventListener('click', e => {
+      if(e.target === imageModalContainer){
+        imageModalContainer.classList.add('hidden');
+        imageModal.innerHTML='';
+      }
+    });
+    imageModalContainer._listenerAdded = true;
+  }
 
   if(thumbRow){
     thumbRow.addEventListener('dblclick', e => {
@@ -7603,6 +7606,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if(img) openImageModal(img.src);
     });
   }
+
+  boardAdjustCleanup = () => {
+    window.removeEventListener('load', adjust);
+    window.removeEventListener('resize', adjust);
+    ro.disconnect();
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initPostLayout(document.querySelector('.post-board'));
 });
 </script>
 </body>
