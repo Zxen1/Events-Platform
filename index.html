@@ -1786,7 +1786,7 @@ body.hide-ads .ad-board{
 }
 .mode-toggle{
   display:flex;
-  flex:1;
+  flex:0 1 auto;
   min-width:0;
   height:40px;
   border:1px solid var(--btn);
@@ -3752,7 +3752,8 @@ img.thumb{
           board.removeEventListener('scroll', stickyScrollHandler);
           stickyScrollHandler = null;
         }
-        const isColumnBelow = imgArea && secondColumn ? secondColumn.offsetTop > imgArea.offsetTop : false;
+        const secondColumnVisible = !!(body && secondColumn && getComputedStyle(secondColumn).display !== 'none' && secondColumn.offsetWidth > 0 && secondColumn.offsetHeight > 0);
+        const isColumnBelow = body ? !secondColumnVisible : false;
         root.classList.toggle('hide-map-calendar', isColumnBelow);
         if(body){
           const venueContainer = body.querySelector('.post-venue-selection-container');
@@ -3765,10 +3766,12 @@ img.thumb{
           }
           const details = body.querySelector('.post-details');
           if(details && mainColumn && secondColumn){
-            if(isColumnBelow && details.parentElement !== mainColumn){
+            if(secondColumnVisible){
+              if(details.parentElement !== secondColumn){
+                secondColumn.appendChild(details);
+              }
+            } else if(details.parentElement !== mainColumn){
               mainColumn.appendChild(details);
-            } else if(!isColumnBelow && details.parentElement !== secondColumn){
-              secondColumn.appendChild(details);
             }
           }
         }else{
@@ -3784,7 +3787,7 @@ img.thumb{
           document.documentElement.style.removeProperty('--open-post-header-h');
           return;
         }
-        const twoCols = !isColumnBelow;
+        const twoCols = secondColumnVisible;
         document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
         stickyScrollHandler = () => {
           root.classList.toggle('open-post-sticky-images', twoCols);
