@@ -1802,6 +1802,11 @@ body.hide-ads .ad-board{
   font-weight:600;
   cursor:pointer;
   transition:background .2s,border-color .2s,color .2s;
+  height:100%;
+  border-radius:0;
+}
+.mode-toggle button + button{
+  border-left:1px solid var(--btn);
 }
 .mode-toggle button[aria-pressed="true"]{
   background:var(--btn-selected);
