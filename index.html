@@ -1967,11 +1967,20 @@ body.filters-active #filterBtn{
 .mapboxgl-ctrl-compass{
   width:var(--control-h);
   height:var(--control-h);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+  background-position:center;
 }
 .geolocate-btn .mapboxgl-ctrl-group,
 .compass-btn .mapboxgl-ctrl-group{
   width:var(--control-h);
   height:var(--control-h);
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 
@@ -3881,20 +3890,20 @@ function buildClusterListHTML(items){
       { name:"Buy and Sell", subs:["Wanted","For Sale","Freebies"] },
       { name:"For Hire", subs:["Performers","Staff","Goods and Services"] }
     ];
-    const ICON_BASE = {
-      "What's On": "whats-on-category-icon",
-      "Opportunities": "opportunities-category-icon",
-      "Learning": "learning-category-icon",
-      "Buy and Sell": "Buy-and-sell-category-icon",
-      "For Hire": "For-hire-category-icon"
-    };
-    const MARKER_BASE = {
-      "What's On": "whats-on",
-      "Opportunities": "opportunities",
-      "Learning": "learning",
-      "Buy and Sell": "buy-and-sell",
-      "For Hire": "for-hire"
-    };
+      const ICON_BASE = window.ICON_BASE = {
+        "What's On": "whats-on-category-icon",
+        "Opportunities": "opportunities-category-icon",
+        "Learning": "learning-category-icon",
+        "Buy and Sell": "Buy-and-sell-category-icon",
+        "For Hire": "For-hire-category-icon"
+      };
+      const MARKER_BASE = window.MARKER_BASE = {
+        "What's On": "whats-on",
+        "Opportunities": "opportunities",
+        "Learning": "learning",
+        "Buy and Sell": "buy-and-sell",
+        "For Hire": "for-hire"
+      };
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
@@ -6561,6 +6570,10 @@ function openPanel(m){
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
+  if(m.id === 'welcome-modal'){
+    const mc = document.querySelector('.map-controls-map');
+    if(mc) mc.style.display = 'none';
+  }
   const btnId = panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
@@ -6637,6 +6650,10 @@ function closePanel(m){
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   const active = document.activeElement;
   if(active && m.contains(active)) active.blur();
+  if(m.id === 'welcome-modal'){
+    const mc = document.querySelector('.map-controls-map');
+    if(mc) mc.style.display = '';
+  }
   m.setAttribute('inert','');
   if(content && content.dataset.side){
     content.classList.remove('panel-visible');
