@@ -4908,6 +4908,13 @@ function makePosts(){
         }
       });
 
+      historyBoard && historyBoard.addEventListener('click', e=>{
+        if(e.target === historyBoard){
+          setMode('map');
+          document.body.classList.remove('show-history');
+        }
+      });
+
 
       function setMode(m, skipFilters = false){
         mode = m;
