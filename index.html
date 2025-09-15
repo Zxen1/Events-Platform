@@ -5833,20 +5833,10 @@ function makePosts(){
 
       const alreadyOpen = postsWideEl.querySelector(`.open-post[data-id="${id}"]`);
       if(alreadyOpen){
-        const header = alreadyOpen.querySelector('.post-header');
-        if(header){
-          const hh = document.querySelector('.header').offsetHeight;
-          const desired = hh + 10;
-          const r = header.getBoundingClientRect();
-          const container = postsWideEl.closest('.post-board');
-          if(container) container.scrollBy({top: r.top - desired, behavior:'smooth'});
-        }
         return;
       }
 
       let target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      const container = postsWideEl.closest('.post-board');
-      const initialTop = target && container ? target.getBoundingClientRect().top : null;
 
       (function(){
         const ex = postsWideEl.querySelector('.open-post');
@@ -5857,14 +5847,7 @@ function makePosts(){
         }
       })();
 
-      if(target && container && initialTop!==null){
-        const newTarget = postsWideEl.querySelector(`[data-id="${id}"]`) || target;
-        const newTop = newTarget.getBoundingClientRect().top;
-        container.scrollTop += newTop - initialTop;
-        target = newTarget;
-      } else {
-        target = postsWideEl.querySelector(`[data-id="${id}"]`);
-      }
+      target = postsWideEl.querySelector(`[data-id="${id}"]`);
 
       if(!target){ target = card(p, true); postsWideEl.appendChild(target); }
       const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
@@ -5873,10 +5856,7 @@ function makePosts(){
         if(fromMap){
           const qb = resCard.closest('.quick-list-board');
           if(qb){
-            const hh = document.querySelector('.header').offsetHeight;
-            const desired = hh + 10;
-            const r = resCard.getBoundingClientRect();
-            qb.scrollBy({top: r.top - desired, behavior:'smooth'});
+            // intentionally skipping automatic scrolling
           }
         }
       }
@@ -5897,16 +5877,7 @@ function makePosts(){
         header.style.scrollMarginTop = h + 'px';
       }
 
-      if(!container && window.innerWidth > 450){
-        (header || detail).scrollIntoView({block:'start', inline:'nearest', behavior:'auto'});
-      }
-      if(container && header){
-        const hh = document.querySelector('.header').offsetHeight;
-        const desired = hh + 10;
-        const r = header.getBoundingClientRect();
-        container.scrollBy({top: r.top - desired, behavior:'smooth'});
-      }
-
+      // no automatic scrolling
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
