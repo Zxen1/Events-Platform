@@ -4910,40 +4910,31 @@ function makePosts(){
       const onCss = () => { if(++cssLoaded === 2) loadScripts(); };
 
       function injectCleanCSS(url, fallback){
-        fetch(url).then(r=>r.text()).then(css=>{
-          css = css.replace(/-ms-high-contrast/g,'forced-colors')
-            .replace(/float:[^;]+;/g,'')
-            .replace(/margin:[^;]+;/g,'')
-            .replace(/background-color:[^;]+;/g,'')
-            .replace(/box-shadow:[^;]+;/g,'')
-            .replace(/border-radius:[^;]+;/g,'');
-          const style = document.createElement('style');
-          style.textContent = css;
-          document.head.appendChild(style);
-          const link = document.createElement('link');
-          link.rel='stylesheet';
-          link.href = url;
-          link.onload = onCss;
-          link.onerror = ()=>{
-            const lf = document.createElement('link');
-            lf.rel='stylesheet';
-            lf.href = fallback || url;
-            lf.onload = onCss;
-            lf.onerror = onCss;
-            document.head.appendChild(lf);
-          };
-          document.head.appendChild(link);
-        }).catch(()=>{
-          const link = document.createElement('link');
-          link.rel='stylesheet';
-          link.href = fallback || url;
-          link.onload = onCss;
-          link.onerror = onCss;
-          document.head.appendChild(link);
-        });
-      }
-
-      injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
+          fetch(url).then(r=>r.text()).then(css=>{
+            css = css.replace(/-ms-high-contrast/g,'forced-colors')
+              .replace(/float:[^;]+;/g,'')
+              .replace(/margin:[^;]+;/g,'')
+              .replace(/background-color:[^;]+;/g,'')
+              .replace(/box-shadow:[^;]+;/g,'')
+              .replace(/border-radius:[^;]+;/g,'');
+            if(url.includes('geocoder')) css += '.mapboxgl-ctrl-geocoder{width:unset!important;min-width:unset!important;}';
+            const style = document.createElement('style');
+            style.dataset.mapbox = 'true';
+            style.textContent = css;
+            document.head.appendChild(style);
+            onCss();
+            const old = document.querySelector(`link[href="${url}"]`);
+            if(old) old.remove();
+          }).catch(()=>{
+            const link = document.createElement('link');
+            link.rel='stylesheet';
+            link.href = fallback || url;
+            link.onload = onCss;
+            link.onerror = onCss;
+            document.head.appendChild(link);
+          });
+        }
+        injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
         'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css');
       injectCleanCSS('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
         'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
@@ -4979,7 +4970,7 @@ function makePosts(){
     document.head.appendChild(script);
     return;
   }
-  const cssLink = document.querySelector('link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"]');
+  const cssLink = document.querySelector('style[data-mapbox], link[href*"mapbox-gl.css"], link[href*"mapbox-gl@"]');
   if(!cssLink || !cssLink.sheet){
     setTimeout(addControls, 50);
     return;
