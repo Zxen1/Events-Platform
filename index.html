@@ -3511,6 +3511,23 @@ img.thumb{
   </div>
 
   <script>
+  (function(){
+    const origAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options){
+      if(type === 'touchmove'){
+        let opts = options;
+        if(opts === undefined){
+          opts = {passive:true};
+        } else if(typeof opts === 'boolean'){
+          opts = {capture:opts, passive:true};
+        } else if(typeof opts === 'object' && opts && !('passive' in opts)){
+          opts = Object.assign({}, opts, {passive:true});
+        }
+        return origAddEventListener.call(this, type, listener, opts);
+      }
+      return origAddEventListener.call(this, type, listener, options);
+    };
+  })();
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
 
@@ -3878,7 +3895,7 @@ function buildClusterListHTML(items){
       "Buy and Sell": "buy-and-sell",
       "For Hire": "for-hire"
     };
-    const COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
+    const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
@@ -7128,7 +7145,7 @@ document.addEventListener('pointerdown', handleDocInteract);
     const shape = shapeList[idx % shapeList.length];
     categoryShapes[cat.name] = shape;
     cat.subs.forEach(sub => {
-      const color = COLOR_NAMES[colorIdx % COLOR_NAMES.length];
+      const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
       colorIdx++;
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
