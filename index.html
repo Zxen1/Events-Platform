@@ -1961,7 +1961,7 @@ body.filters-active #filterBtn{
   z-index:1;
 }
 
-.map-control-row .geocoder{flex:1 1 auto;margin:0;}
+.map-control-row .geocoder{margin:0;}
 
 .mapboxgl-ctrl-geolocate,
 .mapboxgl-ctrl-compass{
@@ -4911,7 +4911,12 @@ function makePosts(){
 
       function injectCleanCSS(url, fallback){
         fetch(url).then(r=>r.text()).then(css=>{
-          css = css.replace(/-ms-high-contrast/g,'forced-colors');
+          css = css.replace(/-ms-high-contrast/g,'forced-colors')
+            .replace(/float:[^;]+;/g,'')
+            .replace(/margin:[^;]+;/g,'')
+            .replace(/background-color:[^;]+;/g,'')
+            .replace(/box-shadow:[^;]+;/g,'')
+            .replace(/border-radius:[^;]+;/g,'');
           const style = document.createElement('style');
           style.textContent = css;
           document.head.appendChild(style);
