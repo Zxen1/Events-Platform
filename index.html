@@ -1572,6 +1572,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .last-opened-label{
   font-size:12px;
   margin:10px;
+  background:#000;
+  color:#fff;
+  padding:2px 4px;
 }
 
 
@@ -1797,7 +1800,7 @@ body.filters-active #filterBtn{
 
 
 .card,
-.quick-card,
+.history-card,
 .post-card{
   display: grid;
   grid-template-columns:90px 1fr 36px;
@@ -2844,7 +2847,7 @@ body.filters-active #filterBtn{
 
 
 .card .thumb,
-.quick-card .thumb,
+.history-card .thumb,
 .post-card .thumb{
   flex: 0 0 90px;
   width: 90px;
@@ -2862,7 +2865,7 @@ body.filters-active #filterBtn{
 }
 
 .card .meta,
-.quick-card .meta,
+.history-card .meta,
 .post-card .meta{
   flex: 1 1 auto;
   min-width: 0;
@@ -2872,23 +2875,23 @@ body.filters-active #filterBtn{
 }
 
 .post-card .meta, .post-card .meta *,
-.quick-card .meta, .quick-card .meta *{
+.history-card .meta, .history-card .meta *{
   cursor: default;
 }
 
 .card .fav,
-.quick-card .fav,
+.history-card .fav,
 .post-card .fav{
   flex: 0 0 auto;
 }
 
-.quick-card[aria-selected="true"]{
+.history-card[aria-selected="true"]{
   position:relative;
   z-index:0;
   background:none;
 }
 
-.quick-card[aria-selected="true"]::before{
+.history-card[aria-selected="true"]::before{
   content:"";
   position:absolute;
   inset:0;
@@ -3074,7 +3077,7 @@ img.thumb{
   object-fit: cover;
 }
 
-#results .quick-card > img, #results .quick-card img.thumb{
+#results .history-card > img, #results .history-card img.thumb{
   width: 80px;
   height: 80px;
   aspect-ratio: 1/1;
@@ -3230,7 +3233,6 @@ img.thumb{
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
     <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board">
-      <div id="lastOpenedLabel" class="last-opened-label" aria-live="polite"></div>
     </section>
     <section class="post-board" aria-label="Post Board">
       <div class="post-header"></div>
@@ -4882,7 +4884,7 @@ function makePosts(){
       const resLists = $$('.history-board');
       resLists.forEach(list=>{
         list.addEventListener('click', e=>{
-          const cardEl = e.target.closest('.quick-card');
+          const cardEl = e.target.closest('.history-card');
           if(cardEl){
             const id = cardEl.getAttribute('data-id');
             if(id) { stopSpin(); openPost(id, true); }
@@ -5667,7 +5669,7 @@ function makePosts(){
 
     function card(p, wide=false){
       const el = document.createElement('article');
-      el.className = wide ? 'post-card' : 'quick-card';
+      el.className = wide ? 'post-card' : 'history-card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumbSrc = imgThumb(p);
@@ -5701,17 +5703,28 @@ function makePosts(){
     // History board
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
-
-    function updateLastOpenedLabel(){
-      const label = $('#lastOpenedLabel');
-      if(!label) return;
-      const last = localStorage.getItem('lastOpenedTime');
-      if(last){
-        const d = new Date(parseInt(last,10));
-        label.textContent = 'Last opened: ' + d.toLocaleString();
+    function formatLastOpened(ts){
+      if(!ts) return '';
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff/60000);
+      let ago;
+      if(mins < 60){
+        ago = mins + ' minute' + (mins===1?'':'s');
+      } else if(mins < 1440){
+        const hrs = Math.floor(mins/60);
+        ago = hrs + ' hour' + (hrs===1?'':'s');
       } else {
-        label.textContent = 'Last opened: never';
+        const days = Math.floor(mins/1440);
+        ago = days + ' day' + (days===1?'':'s');
       }
+      const d = new Date(ts);
+      const weekday = d.toLocaleDateString('en-GB', {weekday:'short'});
+      const day = d.getDate();
+      const month = d.toLocaleDateString('en-GB', {month:'short'});
+      const year = d.getFullYear();
+      const hour = String(d.getHours()).padStart(2,'0');
+      const minute = String(d.getMinutes()).padStart(2,'0');
+      return `Last opened ${ago} ago - ${weekday} ${day} ${month}, ${year} ${hour}:${minute}`;
     }
 
     function captureState(){
@@ -5783,16 +5796,18 @@ function makePosts(){
     }
     function renderHistoryBoard(){
       if(!historyBoard) return;
-      const label = historyBoard.querySelector('#lastOpenedLabel');
       historyBoard.innerHTML='';
-      if(label) historyBoard.appendChild(label);
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
       const items = viewHistory.slice(0,100);
-      updateLastOpenedLabel();
       for(const v of items){
         const p = posts.find(x=>x.id===v.id);
         if(!p) continue;
+        if(!v.lastOpened) v.lastOpened = Date.now();
+        const labelEl = document.createElement('div');
+        labelEl.className = 'last-opened-label';
+        labelEl.textContent = formatLastOpened(v.lastOpened);
+        historyBoard.appendChild(labelEl);
         const el = card(p);
         historyBoard.appendChild(el);
       }
@@ -5885,7 +5900,7 @@ function makePosts(){
       stopSpin();
       const p = posts.find(x=>x.id===id); if(!p) return;
       activePostId = id;
-      $$('.quick-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+      $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
       if(mode !== 'posts'){
         setMode('posts', true);
@@ -5944,9 +5959,8 @@ function makePosts(){
 
       // Update history on open (keep newest-first)
       viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
+      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
       if(viewHistory.length>100) viewHistory.length=100;
-      localStorage.setItem('lastOpenedTime', Date.now());
       saveHistory(); renderHistoryBoard();
     }
 
@@ -5993,9 +6007,8 @@ function makePosts(){
         }
       });
       viewHistory = viewHistory.filter(x=>x.id!==id);
-      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
+      viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p), lastOpened: Date.now()});
       if(viewHistory.length>100) viewHistory.length=100;
-      localStorage.setItem('lastOpenedTime', Date.now());
       saveHistory(); renderHistoryBoard();
       location.hash = `/post/${p.slug}-${p.created}`;
     }
@@ -6528,8 +6541,8 @@ function makePosts(){
         await openPost(id);
         const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
         if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
-        document.querySelectorAll('.quick-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        const quickCard = document.querySelector(`.history-board .quick-card[data-id="${id}"]`);
+        document.querySelectorAll('.history-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        const quickCard = document.querySelector(`.history-board .history-card[data-id="${id}"]`);
         if(quickCard){
           quickCard.setAttribute('aria-selected','true');
           quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -6936,7 +6949,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
-    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .quick-card .t','.quick-list-board .quick-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .quick-card']}},
+    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .history-card .t','.quick-list-board .history-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .history-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
     {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], popupText:['.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], title:['.mapboxgl-popup.map-card .hover-card .t','.mapboxgl-popup.map-card .hover-card .title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title','.mapboxgl-popup.map-card .multi-item.map-card .t','.mapboxgl-popup.map-card .multi-item.map-card .title']}},
