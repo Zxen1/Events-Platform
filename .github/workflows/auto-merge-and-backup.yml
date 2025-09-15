@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: write   # allow pushing changes back to the repo
+  contents: write   # allow pushing backups to the repo
 
 jobs:
   merge-and-backup:
@@ -27,6 +27,7 @@ jobs:
       - name: Backup index.html
         run: |
           mkdir -p backups
+          export TZ="Australia/Sydney"
           datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
           commit_msg="${{ github.event.head_commit.message }}"
           safe_msg=$(echo "$commit_msg" | tr ' ' '-' | tr -cd '[:alnum:]-')
