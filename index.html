@@ -3721,7 +3721,7 @@ img.thumb{
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null;
+    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '';
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -6503,11 +6503,13 @@ function makePosts(){
 
     function refreshMarkers(render = true){
       if(!postsLoaded) return;
-      adPosts = filtered.filter(p => p.sponsored);
-      if(adPanel){
+      const newAdPosts = filtered.filter(p => p.sponsored);
+      const ids = newAdPosts.map(p => p.id).join(',');
+      if(adPanel && ids !== adIdsKey){
         adPanel.innerHTML = '';
         adIndex = -1;
         if(adTimer){ clearInterval(adTimer); }
+        adPosts = newAdPosts;
         if(adPosts.length){
           showNextAd();
           adTimer = setInterval(showNextAd,20000);
@@ -6520,6 +6522,9 @@ function makePosts(){
           img.style.objectFit = 'cover';
           adPanel.appendChild(img);
         }
+        adIdsKey = ids;
+      } else {
+        adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
