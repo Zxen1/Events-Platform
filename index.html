@@ -1545,6 +1545,35 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transition:transform 0.3s ease;
 }
 
+.history-board{
+  position:relative;
+  top:auto;
+  bottom:auto;
+  left:auto;
+  width:880px;
+  flex-shrink:0;
+  padding:0;
+  margin:0;
+  overflow:auto;
+  overflow:overlay;
+  background:rgba(0,0,0,0);
+  transition:margin 0.3s ease;
+}
+@media (max-width:1319px){
+  .history-board{width:440px;}
+}
+@media (max-width:879px){
+  .history-board{width:440px;}
+}
+@media (max-width:439px){
+  .history-board{width:100%;min-width:360px;}
+}
+
+.last-opened-label{
+  font-size:12px;
+  margin:10px;
+}
+
 
   .post-board{
     width:880px;
@@ -3200,7 +3229,9 @@ img.thumb{
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
-    <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board"></section>
+    <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board">
+      <div id="lastOpenedLabel" class="last-opened-label" aria-live="polite"></div>
+    </section>
     <section class="post-board" aria-label="Post Board">
       <div class="post-header"></div>
       <div class="post-body">
@@ -4815,6 +4846,10 @@ function makePosts(){
           historyBoard.style.display = historyActive ? '' : 'none';
           historyBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
         }
+        if(postBoard){
+          postBoard.style.display = historyActive ? 'none' : '';
+          postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
+        }
         adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
         historyBtn && historyBtn.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
       }
@@ -5666,6 +5701,18 @@ function makePosts(){
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
 
+    function updateLastOpenedLabel(){
+      const label = $('#lastOpenedLabel');
+      if(!label) return;
+      const last = localStorage.getItem('lastOpenedTime');
+      if(last){
+        const d = new Date(parseInt(last,10));
+        label.textContent = 'Last opened: ' + d.toLocaleString();
+      } else {
+        label.textContent = 'Last opened: never';
+      }
+    }
+
     function captureState(){
       const {start,end} = orderedRange();
       return {
@@ -5735,10 +5782,13 @@ function makePosts(){
     }
     function renderHistoryBoard(){
       if(!historyBoard) return;
+      const label = historyBoard.querySelector('#lastOpenedLabel');
       historyBoard.innerHTML='';
+      if(label) historyBoard.appendChild(label);
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
       const items = viewHistory.slice(0,100);
+      updateLastOpenedLabel();
       for(const v of items){
         const p = posts.find(x=>x.id===v.id);
         if(!p) continue;
@@ -5895,6 +5945,7 @@ function makePosts(){
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
+      localStorage.setItem('lastOpenedTime', Date.now());
       saveHistory(); renderHistoryBoard();
     }
 
@@ -5943,6 +5994,7 @@ function makePosts(){
       viewHistory = viewHistory.filter(x=>x.id!==id);
       viewHistory.unshift({id:p.id, title:p.title, url:postUrl(p)});
       if(viewHistory.length>100) viewHistory.length=100;
+      localStorage.setItem('lastOpenedTime', Date.now());
       saveHistory(); renderHistoryBoard();
       location.hash = `/post/${p.slug}-${p.created}`;
     }
