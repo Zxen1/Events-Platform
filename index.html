@@ -4931,8 +4931,9 @@ function makePosts(){
             css = css.replace(/-ms-high-contrast/g,'forced-colors')
               .replace(/float:[^;]+;/g,'')
               .replace(/margin:[^;]+;/g,'')
-              .replace(/background-color:[^;]+;/g,'')
-              .replace(/box-shadow:[^;]+;/g,'')
+              .replace(/background-color:[^;]+;/g,'');
+            css += '.mapboxgl-canary{background-color:rgba(0,0,0,0);}';
+            css = css.replace(/box-shadow:[^;]+;/g,'')
               .replace(/border-radius:[^;]+;/g,'');
             if(url.includes('geocoder')) css += '.mapboxgl-ctrl-geocoder{width:unset!important;min-width:unset!important;}';
             const style = document.createElement('style');
