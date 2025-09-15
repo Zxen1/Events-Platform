@@ -5926,17 +5926,19 @@ function makePosts(){
         const p = posts.find(x=>x.id===id); if(!p) return;
         activePostId = id;
 
-        if(document.body.classList.contains('show-history')){
-          document.body.classList.remove('show-history');
-          adjustBoards();
-          updateModeToggle();
+        if(!fromHistory){
+          if(document.body.classList.contains('show-history')){
+            document.body.classList.remove('show-history');
+            adjustBoards();
+            updateModeToggle();
+          }
+          if(mode !== 'posts'){
+            setMode('posts', true);
+            await nextFrame();
+          }
         }
         $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
         $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        if(mode !== 'posts'){
-          setMode('posts', true);
-          await nextFrame();
-        }
 
         const container = fromHistory ? document.getElementById('historyBoard') : postsWideEl;
         if(!container) return;
