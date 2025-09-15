@@ -3865,11 +3865,11 @@ function buildClusterListHTML(items){
       { name:"For Hire", subs:["Performers","Staff","Goods and Services"] }
     ];
     const ICON_BASE = {
-      "What's On": "whats on category icon",
-      "Opportunities": "opportunities category icon",
-      "Learning": "learning category icon",
-      "Buy and Sell": "Buy and sell category icon",
-      "For Hire": "For hire category icon"
+      "What's On": "whats-on-category-icon",
+      "Opportunities": "opportunities-category-icon",
+      "Learning": "learning-category-icon",
+      "Buy and Sell": "Buy-and-sell-category-icon",
+      "For Hire": "For-hire-category-icon"
     };
     const MARKER_BASE = {
       "What's On": "whats-on",
@@ -7133,9 +7133,9 @@ document.addEventListener('pointerdown', handleDocInteract);
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
       const markerPrefix = MARKER_BASE[cat.name];
-      subcategoryIcons[sub] = `<img src="assets/icons 20/${iconPrefix} ${color} 20.webp" width="20" height="20" alt="">`;
+      subcategoryIcons[sub] = `<img src="assets/icons-20/${iconPrefix}-${color}-20.webp" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = `assets/mapmarkers 40/${markerPrefix}-${color} 40.webp`;
+      subcategoryMarkers[slug] = `assets/mapmarkers-40/${markerPrefix}-${color}-mapmarker-40.webp`;
     });
   });
   if(window.postsLoaded) addPostSource();
