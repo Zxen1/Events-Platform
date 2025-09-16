@@ -6330,6 +6330,30 @@ function makePosts(){
         (function(){
           const ex = container.querySelector('.open-post');
           if(ex){
+            const seenDetailMaps = new Set();
+            const cleanupDetailMap = node=>{
+              if(!node || !node._detailMap) return;
+              const ref = node._detailMap;
+              if(!seenDetailMaps.has(ref)){
+                if(ref.resizeHandler){
+                  window.removeEventListener('resize', ref.resizeHandler);
+                }
+                if(ref.map && typeof ref.map.remove === 'function'){
+                  ref.map.remove();
+                }
+                seenDetailMaps.add(ref);
+              }
+              if(ref){
+                ref.map = null;
+                ref.resizeHandler = null;
+              }
+              delete node._detailMap;
+            };
+            cleanupDetailMap(ex);
+            const mapNode = ex.querySelector('.post-map');
+            if(mapNode){
+              cleanupDetailMap(mapNode);
+            }
             const exId = ex.dataset && ex.dataset.id;
             const prev = posts.find(x=> x.id===exId);
             if(prev){ ex.replaceWith(card(prev, fromHistory ? false : true)); } else { ex.remove(); }
@@ -6682,7 +6706,15 @@ function makePosts(){
         if(calScroll){
           setupCalendarScroll(calScroll);
         }
-        let map, marker, sessionHasMultiple = false, lastClickedCell = null;
+        let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
+        if(mapEl && mapEl._detailMap){
+          detailMapRef = mapEl._detailMap;
+          map = detailMapRef.map || map;
+          resizeHandler = detailMapRef.resizeHandler || resizeHandler;
+          if(!el._detailMap){
+            el._detailMap = detailMapRef;
+          }
+        }
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
@@ -6724,11 +6756,33 @@ function makePosts(){
               marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
             }
           setTimeout(()=> map && map.resize(),0);
-          window.addEventListener('resize', ()=>{ if(map) map.resize(); });
+          if(resizeHandler){
+            window.removeEventListener('resize', resizeHandler);
+          }
+          resizeHandler = ()=>{ if(map) map.resize(); };
+          window.addEventListener('resize', resizeHandler);
+          detailMapRef = detailMapRef || {};
+          detailMapRef.map = map;
+          detailMapRef.resizeHandler = resizeHandler;
+          if(mapEl){
+            mapEl._detailMap = detailMapRef;
+          }
+          if(el){
+            el._detailMap = detailMapRef;
+          }
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
           setTimeout(()=> map && map.resize(),0);
+          detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
+          detailMapRef.map = map;
+          detailMapRef.resizeHandler = resizeHandler;
+          if(mapEl){
+            mapEl._detailMap = detailMapRef;
+          }
+          if(el){
+            el._detailMap = detailMapRef;
+          }
         }
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
