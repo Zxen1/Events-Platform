@@ -5084,19 +5084,28 @@ function makePosts(){
         if(fallbackUrl && link.dataset && !link.dataset.fallback){
           link.dataset.fallback = fallbackUrl;
         }
-        if(link.sheet){
-          onReady();
-          return;
-        }
-        const cleanup = () => {
+
+        let settled = false;
+
+        function cleanup(){
           link.removeEventListener('load', handleLoad);
           link.removeEventListener('error', handleError);
-        };
-        const handleLoad = () => {
+        }
+
+        function finalize(){
+          if(settled){
+            return;
+          }
+          settled = true;
           cleanup();
           onReady();
-        };
-        const handleError = () => {
+        }
+
+        function handleLoad(){
+          finalize();
+        }
+
+        function handleError(){
           const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
           const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
           if(link.dataset){
@@ -5110,11 +5119,30 @@ function makePosts(){
           if(fallback && nextAttempts === 1){
             return;
           }
-          cleanup();
-          onReady();
-        };
-        link.addEventListener('load', handleLoad, {once:true});
-        link.addEventListener('error', handleError);
+          finalize();
+        }
+
+        function needsListeners(){
+          if(!link.sheet){
+            return true;
+          }
+          try {
+            void link.sheet.cssRules;
+            return false;
+          } catch(err){
+            if(err && (err.name === 'SecurityError' || err.code === 18)){
+              return false;
+            }
+            return true;
+          }
+        }
+
+        if(needsListeners()){
+          link.addEventListener('load', handleLoad, {once:true});
+          link.addEventListener('error', handleError);
+        } else {
+          finalize();
+        }
       }
 
       function ensureCss(index, onReady){
