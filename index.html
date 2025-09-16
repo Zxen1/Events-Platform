@@ -88,7 +88,7 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #ff0000;
+        --filter-active-color: #4b0082;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -635,7 +635,7 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
-  padding:20px;
+  padding:20px 10px;
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -644,7 +644,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 .panel-body > *{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   box-sizing:border-box;
   margin:0 auto;
 }
@@ -663,7 +663,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #adminPanel #styleControls > *{
   width:100%;
-  max-width:400px;
+  max-width:420px;
 }
 #adminPanel .admin-fieldset,
 .admin-fieldset{
@@ -672,7 +672,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
   padding:0;
   width:100%;
-  max-width:400px;
+  max-width:420px;
   box-sizing:border-box;
 }
 #adminPanel .admin-fieldset.collapsed{
@@ -845,18 +845,18 @@ button[aria-expanded="true"] .results-arrow{
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:420px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:400px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:420px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #post-mode-background-field{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   margin:0 auto;
 }
 #post-mode-background-row{
@@ -1082,7 +1082,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   gap:8px;
   width:100%;
-  max-width:400px;
+  max-width:420px;
 }
 #adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
@@ -1322,12 +1322,12 @@ button[aria-expanded="true"] .results-arrow{
   font-size:14px;
   margin:0 auto 10px;
   width:100%;
-  max-width:400px;
+  max-width:420px;
   text-align:center;
 }
 #filterPanel .panel-body > #filterSummary{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   padding:0;
   margin:0 auto;
 }
@@ -1336,7 +1336,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .sort-field,
 #filterPanel #filterSummary{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   margin:0 auto;
   padding:0;
 }
@@ -1355,12 +1355,12 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .sort-field .options-menu{
   width:100%;
-  max-width:400px;
+  max-width:420px;
 }
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   margin:0 auto;
   background:#444444;
   border-radius:4px;
@@ -1374,7 +1374,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .expired-row,
 #filterPanel #datePickerContainer{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   margin:0 auto;
 }
 #filterPanel .filter-category-container .cats,
@@ -1611,7 +1611,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .mode-posts .post-mode-background{
   display:block;
-  pointer-events:auto;
+  pointer-events:none;
 }
 
 .post-mode-boards{
@@ -1672,16 +1672,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   max-width:440px;
   flex-shrink:0;
 }
-
-.post-board.two-columns,
-.history-board.two-columns{
-  width:880px;
-  max-width:880px;
-}
-
-@media (max-width:879px){
-  .post-board .post-body{flex-direction:column;}
-}
 @media (max-width:439px){
   .post-board,
   .history-board{
@@ -1700,11 +1690,12 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 
-  .post-board{
+.post-board{
   padding:0;
   margin:0;
-  overflow:auto;
-  overflow:overlay;
+  overflow-y:auto;
+  overflow-y:overlay;
+  overflow-x:visible;
   display:flex;
   flex-direction:column;
   gap:0;
@@ -1712,8 +1703,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-.post-board.two-columns,
-.history-board.two-columns{overflow:auto;overflow:overlay;}
 .post-board .post-card{
   width:100%;
 }
@@ -1725,13 +1714,15 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .post-board .post-body,
 .history-board .post-body{
   display:flex;
+  flex-direction:column;
   padding-bottom:10px;
   gap:0;
+  position:relative;
 }
 
 .main-post-column{
-  flex:0 0 440px;
-  width:440px;
+  flex:0 0 100%;
+  width:100%;
   max-width:440px;
   padding:0;
   display:flex;
@@ -1761,14 +1752,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   position:sticky;
   top:0;
   z-index:1;
-}
-
-.post-board.two-columns .main-post-column,
-.history-board.two-columns .main-post-column{
-  position:sticky;
-  top:var(--post-header-h,0px);
-  align-self:flex-start;
-  border-right:1px solid var(--border);
 }
 
 .thumbnail-row{
@@ -1805,16 +1788,37 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .second-post-column{
-  width:440px;
-  max-width:440px;
-  min-width:440px;
-  flex:0 0 440px;
+  width:100%;
+  max-width:100%;
+  min-width:0;
   padding:0;
   display:flex;
   flex-direction:column;
   overflow-y:auto;
   overflow-y:overlay;
+  height:auto;
+  margin-top:var(--gap);
+  transition:transform 0.3s ease, opacity 0.3s ease;
+}
+
+.open-post.drawer-ready .second-post-column{
+  position:absolute;
+  top:0;
+  left:100%;
+  width:440px;
+  max-width:440px;
+  min-width:440px;
   height:calc(100vh - var(--header-h) - var(--subheader-h) - var(--footer-h) - var(--post-header-h,0px));
+  transform:translateX(20px);
+  opacity:0;
+  pointer-events:none;
+  margin-top:0;
+}
+
+.open-post.drawer-open .second-post-column{
+  transform:translateX(0);
+  opacity:1;
+  pointer-events:auto;
 }
 
 .post-venue-selection-container,
@@ -2135,7 +2139,7 @@ body.filters-active #filterBtn{
 
 .panel-body .map-control-row{
   width:100%;
-  max-width:400px;
+  max-width:420px;
   margin:0 auto;
   justify-content:center;
 }
@@ -2197,6 +2201,7 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
   gap:0;
+  position:relative;
 }
 
 .open-post .post-header{
@@ -2220,7 +2225,7 @@ body.filters-active #filterBtn{
 .open-post .post-body{
   padding:0 0 10px;
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:0;
   align-items:stretch;
   align-content:flex-start;
@@ -3499,7 +3504,6 @@ img.thumb{
         <div class="header-top">
           <h2>Create Post</h2>
           <div class="panel-actions">
-            <button type="submit" form="memberForm">Save</button>
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
             <button type="button" class="close-panel">Close</button>
@@ -3962,17 +3966,11 @@ img.thumb{
           }
         }
         const imgArea = body ? body.querySelector('.post-images') : null;
-        const mainColumn = body ? body.querySelector('.main-post-column') : null;
-        const secondColumn = body ? body.querySelector('.second-post-column') : null;
         const header = document.querySelector('.open-post .post-header');
         const board = document.querySelector('.post-board');
-        if(stickyScrollHandler && board){
-          board.removeEventListener('scroll', stickyScrollHandler);
-          stickyScrollHandler = null;
-        }
-        const secondColumnVisible = !!(body && secondColumn && getComputedStyle(secondColumn).display !== 'none' && secondColumn.offsetWidth > 0 && secondColumn.offsetHeight > 0);
-        const isColumnBelow = body ? !secondColumnVisible : false;
-        root.classList.toggle('hide-map-calendar', isColumnBelow);
+        const openPost = body ? body.closest('.open-post') : null;
+        const drawerMode = !!(openPost && openPost.classList.contains('drawer-open'));
+        root.classList.toggle('hide-map-calendar', !drawerMode);
         if(body){
           const venueContainer = body.querySelector('.post-venue-selection-container');
           const sessionContainer = body.querySelector('.post-session-selection-container');
@@ -3982,16 +3980,6 @@ img.thumb{
           if(sessionDropdownEl && sessionContainer && sessionDropdownEl.parentElement !== sessionContainer){
             sessionContainer.appendChild(sessionDropdownEl);
           }
-          const details = body.querySelector('.post-details');
-          if(details && mainColumn && secondColumn){
-            if(secondColumnVisible){
-              if(details.parentElement !== secondColumn){
-                secondColumn.appendChild(details);
-              }
-            } else if(details.parentElement !== mainColumn){
-              mainColumn.appendChild(details);
-            }
-          }
         }else{
           if(venueDropdownEl && venueDropdownParent && venueDropdownEl.parentElement !== venueDropdownParent){
             venueDropdownParent.appendChild(venueDropdownEl);
@@ -4000,18 +3988,18 @@ img.thumb{
             sessionDropdownParent.appendChild(sessionDropdownEl);
           }
         }
-        if(!body || !imgArea || !secondColumn || !header || !board){
+        if(!body || !imgArea || !header || !board){
           root.classList.remove('open-post-sticky-images');
           document.documentElement.style.removeProperty('--open-post-header-h');
           return;
         }
-        const twoCols = secondColumnVisible;
-        document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
-        stickyScrollHandler = () => {
-          root.classList.toggle('open-post-sticky-images', twoCols);
-        };
-        board.addEventListener('scroll', stickyScrollHandler);
-        stickyScrollHandler();
+        if(drawerMode){
+          document.documentElement.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
+          root.classList.add('open-post-sticky-images');
+        } else {
+          document.documentElement.style.removeProperty('--open-post-header-h');
+          root.classList.remove('open-post-sticky-images');
+        }
       }
 
     window.updateStickyImages = updateStickyImages;
@@ -7879,11 +7867,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const postsBg = document.querySelector('.post-mode-background');
   if(postsPanel){
     postsPanel.addEventListener('click', e => {
-      if(e.target === postsPanel || e.target.classList.contains('posts')) setMode('map');
+      if(e.target === postsPanel || e.target.classList.contains('posts')){
+        e.stopPropagation();
+      }
     });
   }
   if(postsBg){
-    postsBg.addEventListener('click', () => setMode('map'));
+    postsBg.addEventListener('click', e => e.stopPropagation());
   }
 });
 </script>
@@ -7891,51 +7881,52 @@ document.addEventListener('DOMContentLoaded', () => {
 let boardAdjustCleanup = null;
 function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
-  if(!board) return;
-  const mainCol = board.querySelector('.main-post-column');
-  const secondCol = board.querySelector('.second-post-column');
-  const details = board.querySelector('.post-details');
-  const postImages = board.querySelector('.post-images');
-  const postHeader = board.querySelector('.post-header');
-  const thumbRow = board.querySelector('.thumbnail-row');
-  const selectedImageBox = postImages ? postImages.querySelector('.selected-image') : null;
+  if(!board){
+    document.documentElement.style.removeProperty('--post-header-h');
+    return;
+  }
+  const openPost = board.querySelector('.open-post');
+  if(!openPost){
+    document.documentElement.style.removeProperty('--post-header-h');
+    return;
+  }
+  const postBody = openPost.querySelector('.post-body');
+  const mainCol = postBody ? postBody.querySelector('.main-post-column') : null;
+  const secondCol = postBody ? postBody.querySelector('.second-post-column') : null;
+  const details = postBody ? postBody.querySelector('.post-details') : null;
+  const postImages = postBody ? postBody.querySelector('.post-images') : null;
+  const postHeader = openPost.querySelector('.post-header');
+  const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
+  const selectedImageBox = postImages ? postImages.querySelector('.selected-image, .image-box') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
-  if(!mainCol || !secondCol || !details || !postImages || !postHeader) return;
+  if(!postBody || !mainCol || !secondCol || !details || !postImages || !postHeader) return;
+
+  let drawerAnimScheduled = false;
 
   function adjust(){
-    const baseWidth = 440;
-    const minTwoCols = baseWidth * 2;
-    const parent = board.parentElement;
-    const parentStyles = parent ? getComputedStyle(parent) : null;
-    const gap = parentStyles ? parseFloat(parentStyles.columnGap || parentStyles.gap || 0) : 0;
-    const available = parent ? parent.clientWidth - gap : window.innerWidth;
-    const twoCols = available >= minTwoCols && window.innerWidth >= minTwoCols;
+    const baseWidth = board.offsetWidth || 440;
+    const drawerWidth = secondCol.offsetWidth || 440;
+    const shouldDrawer = window.innerWidth >= (baseWidth + drawerWidth);
 
-    if(twoCols){
-      secondCol.style.display = '';
-      if(!secondCol.contains(details)){
-        secondCol.appendChild(details);
+    if(shouldDrawer){
+      openPost.classList.add('drawer-ready');
+      if(!openPost.classList.contains('drawer-open') && !drawerAnimScheduled){
+        drawerAnimScheduled = true;
+        requestAnimationFrame(() => {
+          if(!openPost.isConnected){
+            drawerAnimScheduled = false;
+            return;
+          }
+          openPost.classList.add('drawer-open');
+          drawerAnimScheduled = false;
+        });
       }
-      details.style.padding = '';
-      if(thumbRow && selectedImageBox && !postImages.contains(thumbRow)){
-        postImages.appendChild(thumbRow);
-      }
-    } else {
-      secondCol.style.display = 'none';
-      if(postImages && details && postImages.nextElementSibling !== details){
-        postImages.insertAdjacentElement('afterend', details);
-      }
-      details.style.padding = '0';
-      if(thumbRow && selectedImageBox && selectedImageBox.nextElementSibling !== thumbRow){
-        selectedImageBox.insertAdjacentElement('afterend', thumbRow);
-      }
-    }
-
-    board.classList.toggle('two-columns', twoCols);
-    if(twoCols){
       document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
     } else {
+      openPost.classList.remove('drawer-open');
+      openPost.classList.remove('drawer-ready');
+      drawerAnimScheduled = false;
       document.documentElement.style.removeProperty('--post-header-h');
     }
   }
@@ -7946,6 +7937,7 @@ function initPostLayout(board){
   window.addEventListener('resize', adjust);
   const ro = new ResizeObserver(() => adjust());
   ro.observe(board);
+  ro.observe(openPost);
 
   function openImageModal(src){
     if(!imageModalContainer || !imageModal) return;
