@@ -3864,6 +3864,85 @@ img.thumb{
         map.setFog(skyThemes[theme] || skyThemes.default);
       }
 
+      function applyMutedMapStyle(mapInstance){
+        if(!mapInstance || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setPaintProperty !== 'function'){
+          return;
+        }
+        let style;
+        try {
+          style = mapInstance.getStyle();
+        } catch(err){
+          return;
+        }
+        const layers = style && Array.isArray(style.layers) ? style.layers : null;
+        if(!layers) return;
+        const charcoal = '#26282b';
+        const water = '#1f252d';
+        const roadLineColor = '#3f434a';
+        const roadLineOpacity = 0.4;
+        const labelColor = '#8c8c8c';
+        const labelHalo = 'rgba(0,0,0,0.6)';
+        const paintSupport = {
+          background:new Set(['background-color']),
+          fill:new Set(['fill-color','fill-opacity']),
+          'fill-extrusion':new Set(['fill-color','fill-opacity']),
+          line:new Set(['line-color','line-opacity']),
+          symbol:new Set(['text-color','text-halo-color'])
+        };
+        const safeSetPaint = (layer, property, value) => {
+          if(!layer || !layer.id) return;
+          if(typeof mapInstance.getLayer === 'function'){
+            try {
+              if(!mapInstance.getLayer(layer.id)) return;
+            } catch(err){
+              return;
+            }
+          }
+          const type = layer.type;
+          const explicit = layer.paint && Object.prototype.hasOwnProperty.call(layer.paint, property);
+          const allowed = (type && paintSupport[type] && paintSupport[type].has(property)) || explicit;
+          if(!allowed) return;
+          try {
+            mapInstance.setPaintProperty(layer.id, property, value);
+          } catch(err){}
+        };
+        layers.forEach(layer => {
+          if(!layer || !layer.id) return;
+          const id = layer.id;
+          if(layer.type === 'background'){
+            safeSetPaint(layer, 'background-color', charcoal);
+          }
+          if(/^land/i.test(id) || /landcover/i.test(id)){
+            if(layer.type === 'fill' || layer.type === 'fill-extrusion'){
+              safeSetPaint(layer, 'fill-color', charcoal);
+            } else if(layer.type === 'line'){
+              safeSetPaint(layer, 'line-color', charcoal);
+            }
+          }
+          if(/water/i.test(id)){
+            if(layer.type === 'fill' || layer.type === 'fill-extrusion'){
+              safeSetPaint(layer, 'fill-color', water);
+            } else if(layer.type === 'line'){
+              safeSetPaint(layer, 'line-color', water);
+            } else if(layer.type === 'background'){
+              safeSetPaint(layer, 'background-color', water);
+            }
+          }
+          if(/^road/i.test(id)){
+            if(layer.type === 'line'){
+              safeSetPaint(layer, 'line-color', roadLineColor);
+              safeSetPaint(layer, 'line-opacity', roadLineOpacity);
+            }
+          }
+          if(/label/i.test(id)){
+            if(layer.type === 'symbol'){
+              safeSetPaint(layer, 'text-color', labelColor);
+              safeSetPaint(layer, 'text-halo-color', labelHalo);
+            }
+          }
+        });
+      }
+
       function getStyleBase(styleUrl){
         if(!styleUrl) return '';
         return String(styleUrl).split('?')[0];
@@ -5550,6 +5629,7 @@ function makePosts(){
         mapStyle = window.mapStyle = resolvedStyle;
         applyTerrainForStyle(resolvedStyle);
         applySky(skyStyle);
+        applyMutedMapStyle(map);
       });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
@@ -6338,6 +6418,9 @@ function makePosts(){
                 if(ref.resizeHandler){
                   window.removeEventListener('resize', ref.resizeHandler);
                 }
+                if(ref.mutedHandler && ref.map && typeof ref.map.off === 'function'){
+                  try { ref.map.off('style.load', ref.mutedHandler); } catch(err){}
+                }
                 if(ref.map && typeof ref.map.remove === 'function'){
                   ref.map.remove();
                 }
@@ -6346,6 +6429,7 @@ function makePosts(){
               if(ref){
                 ref.map = null;
                 ref.resizeHandler = null;
+                ref.mutedHandler = null;
               }
               delete node._detailMap;
             };
@@ -6746,6 +6830,11 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
+          const mutedHandler = () => applyMutedMapStyle(map);
+          map.on('style.load', mutedHandler);
+          if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
+            mutedHandler();
+          }
             const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const url = subcategoryMarkers[subId];
             if(url){
@@ -6764,6 +6853,7 @@ function makePosts(){
           detailMapRef = detailMapRef || {};
           detailMapRef.map = map;
           detailMapRef.resizeHandler = resizeHandler;
+          detailMapRef.mutedHandler = mutedHandler;
           if(mapEl){
             mapEl._detailMap = detailMapRef;
           }
@@ -6773,6 +6863,11 @@ function makePosts(){
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
+          if(detailMapRef && detailMapRef.mutedHandler){
+            detailMapRef.mutedHandler();
+          } else if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
+            applyMutedMapStyle(map);
+          }
           setTimeout(()=> map && map.resize(),0);
           detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
           detailMapRef.map = map;
