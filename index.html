@@ -1132,6 +1132,21 @@ button[aria-expanded="true"] .results-arrow{
 .panel-header h2{
   margin:0;
 }
+#filterPanel .panel-header{
+  padding:10px;
+}
+#filterPanel .panel-header .header-top{
+  width:100%;
+  justify-content:space-between;
+  gap:10px;
+}
+#filterPanel .panel-header .panel-actions{
+  margin-left:auto;
+  justify-content:flex-end;
+}
+#filterPanel .panel-header h2{
+  margin-left:0;
+}
 .palette{
   display:flex;
   gap:10px;
@@ -3672,7 +3687,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/streets-v12',
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
@@ -4889,9 +4904,7 @@ function makePosts(){
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
-        const filterPanel = document.getElementById('filterPanel');
-        const filterOpen = filterPanel && filterPanel.classList.contains('show');
-        boardsContainer.style.paddingLeft = filterOpen ? 'var(--panel-w)' : '10px';
+        boardsContainer.style.paddingLeft = '10px';
         if(small){
           document.body.classList.add('hide-ads');
           boardsContainer.style.justifyContent = 'flex-start';
@@ -4903,8 +4916,7 @@ function makePosts(){
           } else {
             document.body.classList.remove('hide-ads');
           }
-          const adsHidden = document.body.classList.contains('hide-ads');
-          boardsContainer.style.justifyContent = (!filterOpen || adsHidden) ? 'flex-start' : 'center';
+          boardsContainer.style.justifyContent = 'flex-start';
           postBoard.style.marginLeft = '';
           postBoard.style.marginRight = '';
         }
@@ -6068,7 +6080,11 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        // no automatic scrolling
+        if(fromMap){
+          if(typeof detail.scrollIntoView === 'function'){
+            detail.scrollIntoView({behavior:'smooth', block:'start'});
+          }
+        }
 
         // Update history on open (keep newest-first)
         viewHistory = viewHistory.filter(x=>x.id!==id);
