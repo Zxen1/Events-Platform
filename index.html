@@ -635,24 +635,25 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
-  padding:0 0 20px;
+  padding:20px;
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
   align-items:center;
+  gap:20px;
 }
 .panel-body > *{
-  width:420px !important;
-  max-width:420px !important;
+  width:100%;
+  max-width:400px;
   box-sizing:border-box;
-  padding:0 10px 10px;
+  margin:0 auto;
 }
 .panel-body > *:last-child{
-  padding-bottom:0;
+  margin-bottom:0;
 }
 .panel-body > * > *{
-  width:420px !important;
-  max-width:420px !important;
+  width:100%;
+  max-width:100%;
 }
 #adminPanel #styleControls{
   display:flex;
@@ -661,15 +662,17 @@ button[aria-expanded="true"] .results-arrow{
   gap:12px;
 }
 #adminPanel #styleControls > *{
-  width:440px;
+  width:100%;
+  max-width:400px;
 }
 #adminPanel .admin-fieldset,
 .admin-fieldset{
-  margin:0;
+  margin:0 auto;
   border:0;
   border-radius:8px;
   padding:0;
-  width:440px;
+  width:100%;
+  max-width:400px;
   box-sizing:border-box;
 }
 #adminPanel .admin-fieldset.collapsed{
@@ -842,22 +845,26 @@ button[aria-expanded="true"] .results-arrow{
     max-height:95%;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:440px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
-#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:0;padding:10px 0;width:440px;}
+#adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:400px;}
 #adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #post-mode-background-field{
-  width:400px;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
 }
 #post-mode-background-row{
   display:flex;
   align-items:center;
-  width:380px;
+  width:100%;
+  max-width:360px;
+  margin:0 auto;
   gap:8px;
   height:40px;
 }
@@ -868,8 +875,9 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 #post-mode-background-row input[type="range"]{
-  flex:0 0 300px;
-  width:300px;
+  flex:1 1 auto;
+  width:100%;
+  max-width:none;
 }
 #post-mode-background-row span{
   width:40px;
@@ -1069,13 +1077,14 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .marker-set svg.outline *{stroke:#000;stroke-width:1;}
 #adminPanel input[type=range]{width:100%;}
 .panel-field{
-  margin:8px 0;
+  margin:8px auto;
   display:flex;
   flex-direction:column;
   gap:8px;
-  width:440px;
+  width:100%;
+  max-width:400px;
 }
-#adminPanel .panel-field{margin:0;}
+#adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
 .admin-section{display:flex;flex-direction:column;gap:var(--gap);}
 #tab-forms .panel-field{max-width:none;}
@@ -1312,43 +1321,47 @@ button[aria-expanded="true"] .results-arrow{
 .filter-summary{
   font-size:14px;
   margin:0 auto 10px;
-  width:400px;
+  width:100%;
   max-width:400px;
+  text-align:center;
 }
 #filterPanel .panel-body > #filterSummary{
-  width:400px !important;
-  max-width:400px !important;
-  padding:0 10px;
-  margin:0 auto 10px;
+  width:100%;
+  max-width:400px;
+  padding:0;
+  margin:0 auto;
 }
 
 #filterPanel .reset-box,
 #filterPanel .sort-field,
 #filterPanel #filterSummary{
-  width:400px;
+  width:100%;
   max-width:400px;
+  margin:0 auto;
+  padding:0;
 }
 #filterPanel .reset-box{
-  margin:0 auto 10px;
-  padding:0 10px;
+  padding:0;
 }
 #filterPanel .panel-body > .reset-box{
-  padding:0 10px !important;
+  padding:0;
 }
 #filterPanel .reset-box #resetBtn{
   width:100%;
 }
-#filterPanel .sort-field .options-menu{
-  width:400px;
-}
 #filterPanel .sort-field{
-  margin:0 auto 10px;
-  padding:0;
+  display:flex;
   justify-content:center;
+}
+#filterPanel .sort-field .options-menu{
+  width:100%;
+  max-width:400px;
 }
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container{
-  width:420px;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
   background:#444444;
   border-radius:4px;
   padding:10px;
@@ -1360,11 +1373,13 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .daterange-row,
 #filterPanel .expired-row,
 #filterPanel #datePickerContainer{
-  width:400px;
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
 }
 #filterPanel .filter-category-container .cats,
 #filterPanel .filter-category-container .cat{
-  width:400px;
+  width:100%;
 }
 .switch{
   position:relative;
@@ -1645,26 +1660,35 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:overlay;
   background:rgba(0,0,0,0);
   transition:margin 0.3s ease;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  pointer-events:auto;
 }
 
 .post-board,
 .history-board{
-  width:auto;
+  width:440px;
+  max-width:440px;
   flex-shrink:0;
 }
 
-@media (max-width:1319px){
-  .post-board,
-  .history-board{width:auto;}
+.post-board.two-columns,
+.history-board.two-columns{
+  width:880px;
+  max-width:880px;
 }
+
 @media (max-width:879px){
-  .post-board,
-  .history-board{width:auto;}
   .post-board .post-body{flex-direction:column;}
 }
 @media (max-width:439px){
   .post-board,
-  .history-board{width:100%;min-width:360px;}
+  .history-board{
+    width:100%;
+    max-width:100%;
+    min-width:360px;
+  }
 }
 
 .last-opened-label{
@@ -1688,12 +1712,18 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   transition:margin 0.3s ease;
 }
-.post-board.two-columns{overflow:auto;overflow:overlay;}
+.post-board.two-columns,
+.history-board.two-columns{overflow:auto;overflow:overlay;}
 .post-board .post-card{
   width:100%;
 }
 
-.post-board .post-body{
+.history-board .history-card{
+  width:100%;
+}
+
+.post-board .post-body,
+.history-board .post-body{
   display:flex;
   padding-bottom:10px;
   gap:0;
@@ -1733,7 +1763,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   z-index:1;
 }
 
-.post-board.two-columns .main-post-column{
+.post-board.two-columns .main-post-column,
+.history-board.two-columns .main-post-column{
   position:sticky;
   top:var(--post-header-h,0px);
   align-self:flex-start;
@@ -1742,7 +1773,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .thumbnail-row{
   display:flex;
-  width:440px;
+  width:100%;
+  max-width:440px;
   padding:0;
   box-sizing:border-box;
   gap:5px;
@@ -1756,7 +1788,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .post-images .selected-image{
   width:100%;
-  height:auto;
+  max-width:440px;
+  aspect-ratio:1/1;
   background:#000;
   display:flex;
   align-items:center;
@@ -1765,16 +1798,17 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .post-images .selected-image img{
-  max-width:100%;
-  max-height:100%;
-  width:auto;
-  height:auto;
+  width:100%;
+  height:100%;
+  object-fit:cover;
   display:block;
 }
 
 .second-post-column{
-  width:auto;
-  flex:1 1 auto;
+  width:440px;
+  max-width:440px;
+  min-width:440px;
+  flex:0 0 440px;
   padding:0;
   display:flex;
   flex-direction:column;
@@ -2099,6 +2133,13 @@ body.filters-active #filterBtn{
   gap:var(--gap);
 }
 
+.panel-body .map-control-row{
+  width:100%;
+  max-width:400px;
+  margin:0 auto;
+  justify-content:center;
+}
+
 .mode-posts .map-controls-map{display:none;}
 
 .map-controls-map{
@@ -2187,9 +2228,9 @@ body.filters-active #filterBtn{
 
 .open-post .post-details{
   margin-top:0;
-  flex:1 1 420px;
-  min-width:400px;
-  max-width:420px;
+  width:100%;
+  max-width:440px;
+  min-width:440px;
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2217,6 +2258,7 @@ body.filters-active #filterBtn{
 
 .open-post .image-box{
   width:100%;
+  max-width:440px;
   height:auto;
   aspect-ratio:1/1;
   overflow:hidden;
@@ -3252,6 +3294,12 @@ img.thumb{
     flex:0 0 100%;
     width:100%;
   }
+  .open-post .post-details{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    padding:10px 0;
+  }
   .open-post .image-box{
     width:100%;
     height:auto;
@@ -3262,6 +3310,12 @@ img.thumb{
     width:100%;
     height:100%;
     object-fit:cover;
+  }
+  .second-post-column{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    flex:0 0 100%;
   }
 }
 
@@ -3384,6 +3438,11 @@ img.thumb{
         </div>
       </div>
       <div class="panel-body">
+        <div class="map-control-row map-controls-filter">
+          <div id="geocoder-filter" class="geocoder"></div>
+          <div id="geolocate-filter" class="geolocate-btn"></div>
+          <div id="compass-filter" class="compass-btn"></div>
+        </div>
         <div id="filterSummary" class="filter-summary"></div>
         <div class="reset-box">
           <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
@@ -5254,11 +5313,12 @@ function makePosts(){
     setTimeout(addControls, 50);
     return;
   }
-  const sets = [
-    {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
-    {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-    {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
-      ];
+    const sets = [
+      {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
+      {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
+      {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
+      {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
+        ];
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
           accessToken: mapboxgl.accessToken,
@@ -7803,31 +7863,34 @@ function initPostLayout(board){
   if(!mainCol || !secondCol || !details || !postImages || !postHeader) return;
 
   function adjust(){
-    board.style.width = 'auto';
-    board.style.removeProperty('min-width');
-    secondCol.style.display = '';
-    secondCol.style.width = 'auto';
-    if(!secondCol.contains(details)){
-      secondCol.appendChild(details);
-      details.style.padding = '';
-    }
-    if(thumbRow && selectedImageBox && !postImages.contains(thumbRow)){
-      postImages.appendChild(thumbRow);
-    }
+    const baseWidth = 440;
+    const minTwoCols = baseWidth * 2;
+    const parent = board.parentElement;
+    const parentStyles = parent ? getComputedStyle(parent) : null;
+    const gap = parentStyles ? parseFloat(parentStyles.columnGap || parentStyles.gap || 0) : 0;
+    const available = parent ? parent.clientWidth - gap : window.innerWidth;
+    const twoCols = available >= minTwoCols && window.innerWidth >= minTwoCols;
 
-    const boardStyles = getComputedStyle(board);
-    const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
-    const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
-    if(secondWidth < 440){
+    if(twoCols){
+      secondCol.style.display = '';
+      if(!secondCol.contains(details)){
+        secondCol.appendChild(details);
+      }
+      details.style.padding = '';
+      if(thumbRow && selectedImageBox && !postImages.contains(thumbRow)){
+        postImages.appendChild(thumbRow);
+      }
+    } else {
       secondCol.style.display = 'none';
-      postImages.insertAdjacentElement('afterend', details);
+      if(postImages && details && postImages.nextElementSibling !== details){
+        postImages.insertAdjacentElement('afterend', details);
+      }
       details.style.padding = '0';
-      if(thumbRow && selectedImageBox){
+      if(thumbRow && selectedImageBox && selectedImageBox.nextElementSibling !== thumbRow){
         selectedImageBox.insertAdjacentElement('afterend', thumbRow);
       }
     }
 
-    const twoCols = secondCol.style.display !== 'none';
     board.classList.toggle('two-columns', twoCols);
     if(twoCols){
       document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
