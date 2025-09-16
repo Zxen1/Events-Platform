@@ -3824,6 +3824,49 @@ img.thumb{
         map.setFog(skyThemes[theme] || skyThemes.default);
       }
 
+      function getStyleBase(styleUrl){
+        if(!styleUrl) return '';
+        return String(styleUrl).split('?')[0];
+      }
+
+      function styleAllowsTerrain(styleUrl){
+        const base = getStyleBase(styleUrl);
+        if(!base) return false;
+        const normalized = normalizeMapStyle(base) || base;
+        return Boolean(normalized) && !normalized.includes('/standard');
+      }
+
+      function applyTerrainForStyle(styleUrl){
+        if(!map || typeof map.setTerrain !== 'function'){
+          return;
+        }
+        if(!styleAllowsTerrain(styleUrl)){
+          try {
+            if(typeof map.getTerrain === 'function'){
+              const activeTerrain = map.getTerrain();
+              if(activeTerrain){
+                map.setTerrain(null);
+              }
+            } else {
+              map.setTerrain(null);
+            }
+          } catch(err){}
+          if(typeof map.getSource === 'function' && map.getSource('terrain-dem')){
+            try { map.removeSource('terrain-dem'); } catch(err){}
+          }
+          return;
+        }
+        if(!map.getSource('terrain-dem')){
+          map.addSource('terrain-dem', {
+            type:'raster-dem',
+            url:'mapbox://mapbox.terrain-rgb',
+            tileSize:512,
+            maxzoom:14
+          });
+        }
+        map.setTerrain({source:'terrain-dem'});
+      }
+
       function openWelcome(){
         const popup = document.getElementById('welcome-modal');
         const msgEl = document.getElementById('welcomeMessageBox');
@@ -5422,17 +5465,15 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('style.load', () => {
-            if(!map.getSource('terrain-dem')){
-              map.addSource('terrain-dem', {
-                type:'raster-dem',
-                url:'mapbox://mapbox.terrain-rgb',
-                tileSize:512,
-                maxzoom:14
-              });
-            }
-            map.setTerrain({source:'terrain-dem'});
-            applySky(skyStyle);
-          });
+        const styleObj = typeof map.getStyle === 'function' ? map.getStyle() : null;
+        const metadata = styleObj && styleObj.metadata ? styleObj.metadata : {};
+        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
+        const baseStyle = getStyleBase(originUrl);
+        const resolvedStyle = normalizeMapStyle(baseStyle) || baseStyle || mapStyle;
+        mapStyle = window.mapStyle = resolvedStyle;
+        applyTerrainForStyle(resolvedStyle);
+        applySky(skyStyle);
+      });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
