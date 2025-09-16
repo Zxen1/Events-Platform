@@ -11,6 +11,18 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css"
+    data-fallback="https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css"
+    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
+  />
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
+    data-fallback="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css"
+    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
+  />
   <style>:root{
   --header-h: 56px;
   --subheader-h: 0;
@@ -5051,59 +5063,104 @@ function makePosts(){
 
     // Mapbox
     function loadMapbox(cb){
-      const cssSel = [
-        'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-        'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]'
+      const cssSources = [
+        {
+          selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
+          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
+          fallback: 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css'
+        },
+        {
+          selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
+          primary: 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
+          fallback: 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'
+        }
       ];
-      if(window.mapboxgl && window.MapboxGeocoder){
-        let pending = 0;
-        const done = () => { if(--pending === 0) cb(); };
-        cssSel.forEach((sel, i) => {
-          let link = document.querySelector(sel);
-          if(link && link.sheet) return;
-          pending++;
-          if(link){
-            link.addEventListener('load', done, {once:true});
-            link.addEventListener('error', done, {once:true});
-          } else {
-            link = document.createElement('link');
-            link.rel = 'stylesheet';
-            if(i===0){
-              link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css';
-              link.onerror = () => { link.href = 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css'; };
-            } else {
-              link.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css';
-              link.onerror = () => { link.href = 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'; };
-            }
-            link.onload = done;
-            document.head.appendChild(link);
+
+      function monitorLink(link, onReady, fallbackUrl){
+        if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
+          onReady();
+          return;
+        }
+        if(fallbackUrl && link.dataset && !link.dataset.fallback){
+          link.dataset.fallback = fallbackUrl;
+        }
+        if(link.sheet){
+          onReady();
+          return;
+        }
+        const cleanup = () => {
+          link.removeEventListener('load', handleLoad);
+          link.removeEventListener('error', handleError);
+        };
+        const handleLoad = () => {
+          cleanup();
+          onReady();
+        };
+        const handleError = () => {
+          const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
+          const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
+          if(link.dataset){
+            link.dataset.fallbackErrors = String(nextAttempts);
           }
-        });
-        if(pending === 0) cb();
+          const fallback = link.dataset ? link.dataset.fallback : fallbackUrl;
+          if(fallback && link.href !== fallback){
+            link.href = fallback;
+            return;
+          }
+          if(fallback && nextAttempts === 1){
+            return;
+          }
+          cleanup();
+          onReady();
+        };
+        link.addEventListener('load', handleLoad, {once:true});
+        link.addEventListener('error', handleError);
+      }
+
+      function ensureCss(index, onReady){
+        const {selector, primary, fallback} = cssSources[index];
+        const selectors = selector.split(',').map(s => s.trim());
+        for(const sel of selectors){
+          const candidate = document.querySelector(sel);
+          if(candidate){
+            if(candidate.tagName && candidate.tagName.toLowerCase() === 'style'){
+              onReady();
+              return;
+            }
+            monitorLink(candidate, onReady, fallback);
+            return;
+          }
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = primary;
+        monitorLink(link, onReady, fallback);
+        document.head.appendChild(link);
+      }
+
+      if(window.mapboxgl && window.MapboxGeocoder){
+        let pending = cssSources.length;
+        if(pending === 0){
+          cb();
+          return;
+        }
+        const done = () => {
+          if(--pending === 0){
+            cb();
+          }
+        };
+        cssSources.forEach((_, i) => ensureCss(i, done));
         return;
       }
 
       let cssLoaded = 0;
-      const onCss = () => { if(++cssLoaded === 2) loadScripts(); };
-
-      function addLink(url, fallback){
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = url;
-        link.onload = onCss;
-        link.onerror = () => {
-          if (fallback && link.href !== fallback) {
-            link.href = fallback;
-          } else {
-            onCss();
-          }
-        };
-        document.head.appendChild(link);
-      }
-      addLink('https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
-              'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css');
-      addLink('https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
-              'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css');
+      const onCss = () => {
+        cssLoaded++;
+        if(cssLoaded === cssSources.length){
+          loadScripts();
+        }
+      };
+      cssSources.forEach((_, i) => ensureCss(i, onCss));
 
       function loadScripts(){
         const s = document.createElement('script');
