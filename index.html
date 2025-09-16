@@ -1645,17 +1645,17 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .post-board,
 .history-board{
-  width:880px;
+  width:auto;
   flex-shrink:0;
 }
 
 @media (max-width:1319px){
   .post-board,
-  .history-board{width:440px;}
+  .history-board{width:auto;}
 }
 @media (max-width:879px){
   .post-board,
-  .history-board{width:440px;}
+  .history-board{width:auto;}
   .post-board .post-body{flex-direction:column;}
 }
 @media (max-width:439px){
@@ -1769,6 +1769,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .second-post-column{
+  width:auto;
   flex:1 1 auto;
   padding:0;
   display:flex;
@@ -7747,35 +7748,27 @@ function initPostLayout(board){
   if(!mainCol || !secondCol || !details || !postImages || !postHeader) return;
 
   function adjust(){
+    board.style.width = 'auto';
+    board.style.removeProperty('min-width');
+    secondCol.style.display = '';
+    secondCol.style.width = 'auto';
+    if(!secondCol.contains(details)){
+      secondCol.appendChild(details);
+      details.style.padding = '';
+    }
+    if(thumbRow && selectedImageBox && !postImages.contains(thumbRow)){
+      postImages.appendChild(thumbRow);
+    }
+
     const boardStyles = getComputedStyle(board);
     const padding = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
     const secondWidth = board.offsetWidth - mainCol.offsetWidth - padding;
     if(secondWidth < 440){
-      if(secondCol.style.display !== 'none'){
-        secondCol.style.display = 'none';
-        postImages.insertAdjacentElement('afterend', details);
-        details.style.padding = '0';
-      }
-      if(window.innerWidth < 440){
-        board.style.width = '100%';
-        board.style.minWidth = '360px';
-      } else {
-        board.style.width = '440px';
-        board.style.removeProperty('min-width');
-      }
+      secondCol.style.display = 'none';
+      postImages.insertAdjacentElement('afterend', details);
+      details.style.padding = '0';
       if(thumbRow && selectedImageBox){
         selectedImageBox.insertAdjacentElement('afterend', thumbRow);
-      }
-    } else {
-      if(secondCol.style.display === 'none'){
-        secondCol.style.display = '';
-        secondCol.appendChild(details);
-        details.style.padding = '';
-      }
-      board.style.width = '';
-      board.style.removeProperty('min-width');
-      if(thumbRow && selectedImageBox){
-        postImages.appendChild(thumbRow);
       }
     }
 
