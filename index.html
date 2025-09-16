@@ -890,9 +890,16 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .sub-icon svg{
-  width:20px;
-  height:20px;
+  width:18px;
+  height:18px;
   vertical-align:middle;
+}
+.post-card .sub-icon img,
+.post-card .sub-icon svg,
+.history-card .sub-icon img,
+.history-card .sub-icon svg{
+  width:18px;
+  height:18px;
 }
 #adminPanel .color-group{
   flex:0 0 200px;
@@ -1276,15 +1283,28 @@ button[aria-expanded="true"] .results-arrow{
   font-size:14px;
 }
 .filter-summary{
-  margin-bottom:8px;
+  font-size:14px;
+  margin:0 auto 10px;
+  width:400px;
+  max-width:400px;
+}
+#filterPanel .panel-body > #filterSummary{
+  width:400px !important;
+  max-width:400px !important;
+  padding:0 10px 10px;
 }
 
 #filterPanel .reset-box,
 #filterPanel .sort-field,
-#filterPanel .map-control-row,
 #filterPanel #filterSummary{
   width:400px;
   max-width:400px;
+}
+#filterPanel .reset-box{
+  margin:0 auto 10px;
+}
+#filterPanel .panel-body > .reset-box{
+  padding-bottom:0 !important;
 }
 #filterPanel .reset-box #resetBtn{
   width:100%;
@@ -1292,12 +1312,18 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .sort-field .options-menu{
   width:400px;
 }
+#filterPanel .sort-field{
+  margin:0 auto;
+}
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container{
   width:420px;
   background:#444444;
   border-radius:4px;
   padding:10px;
+}
+#filterPanel .filter-category-container{
+  margin-top:10px;
 }
 #filterPanel .keyword-row,
 #filterPanel .daterange-row,
@@ -1376,7 +1402,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .cat{
   display: grid;
-  grid-template-columns: 1fr 38px;
+  grid-template-columns: 1fr auto;
   gap: 8px;
   align-items: center;
   margin: 8px 0;
@@ -1409,15 +1435,50 @@ button[aria-expanded="true"] .results-arrow{
   letter-spacing: .2px;
 }
 
-.cat .cfg{
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  cursor: pointer;
+.cat-switch{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:38px;
+  height:36px;
+  cursor:pointer;
+}
+.cat-switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.cat-switch .slider{
+  position:absolute;
+  top:8px;
+  left:0;
+  right:0;
+  margin:0 auto;
+  width:38px;
+  height:20px;
+  border-radius:16px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  transition:.2s;
+}
+.cat-switch .slider:before{
+  content:'';
+  position:absolute;
+  width:16px;
+  height:16px;
+  left:1px;
+  top:1px;
+  border-radius:50%;
+  background:var(--button-text);
+  transition:.2s;
+}
+.cat-switch input:checked + .slider{
+  background:var(--filter-active-color);
+  border-color:var(--filter-active-color);
+}
+.cat-switch input:checked + .slider:before{
+  transform:translateX(18px);
 }
 
 .sub{
@@ -1780,7 +1841,8 @@ body.hide-ads .ad-board{
   width:30px; height:30px;
 }
 .mode-toggle{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
   flex:0 1 auto;
   min-width:0;
   height:40px;
@@ -1789,7 +1851,7 @@ body.hide-ads .ad-board{
   overflow:hidden;
 }
 .mode-toggle button{
-  flex:1;
+  width:100%;
   border:none;
   background:var(--btn);
   color:var(--button-text);
@@ -1798,6 +1860,7 @@ body.hide-ads .ad-board{
   transition:background .2s,border-color .2s,color .2s;
   height:100%;
   border-radius:0;
+  min-width:0;
 }
 .mode-toggle button + button{
   border-left:1px solid var(--btn);
@@ -2847,7 +2910,7 @@ body.filters-active #filterBtn{
   height: 80px;
   display: block;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .card .meta,
@@ -3064,6 +3127,7 @@ img.thumb{
   width: 80px;
   height: 80px;
   object-fit: cover;
+  border-radius: 4px;
 }
 
 #results .history-card > img, #results .history-card img.thumb{
@@ -3072,6 +3136,7 @@ img.thumb{
   aspect-ratio: 1/1;
   object-fit: cover;
   display: block;
+  border-radius: 4px;
 }
 
 
@@ -3190,14 +3255,14 @@ img.thumb{
       </div>
     </nav>
     <div class="header-buttons">
-      <button id="memberBtn" aria-pressed="false" aria-label="Open members area">
+      <button id="memberBtn" type="button" aria-pressed="false" aria-label="Open members area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="adminBtn" aria-pressed="false" aria-label="Open admin area">
+      <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
@@ -3264,6 +3329,7 @@ img.thumb{
         </div>
       </div>
       <div class="panel-body">
+        <div id="filterSummary" class="filter-summary"></div>
         <div class="reset-box">
           <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
             Reset All Filters
@@ -3282,13 +3348,7 @@ img.thumb{
             </div>
           </div>
         </div>
-        <div class="map-control-row map-controls-filter">
-          <div id="geocoder-filter" class="geocoder"></div>
-          <div id="geolocate-filter" class="geolocate-btn"></div>
-          <div id="compass-filter" class="compass-btn"></div>
-        </div>
         <section aria-label="Filters">
-          <div id="filterSummary" class="filter-summary"></div>
           <div class="filter-basics-container">
             <div class="field keyword-row">
               <div class="input"><input id="keyword-textbox" type="text" placeholder="Keywords" aria-label="Keywords" />
@@ -4405,18 +4465,41 @@ function makePosts(){
       const bar = document.createElement('div'); bar.className='bar';
       const dot = document.createElement('div'); dot.className='dot'; dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
       const label = document.createElement('div'); label.className='label'; label.textContent=c.name;
-      const cfg = document.createElement('div'); cfg.className='cfg'; cfg.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M7 12h10M10 17h4"/></svg>';
+      const toggle = document.createElement('label'); toggle.className='cat-switch';
+      const input = document.createElement('input'); input.type='checkbox'; input.setAttribute('aria-label',`Toggle ${c.name} category`);
+      const slider = document.createElement('span'); slider.className='slider';
+      toggle.appendChild(input); toggle.appendChild(slider);
       const sub = document.createElement('div'); sub.className='sub';
       c.subs.forEach(s=>{ const chip=document.createElement('div'); chip.className='chip'; chip.innerHTML='<span class="badge"></span>'+s; chip.addEventListener('click',()=>{ chip.classList.toggle('on'); const key=c.name+'::'+s; if(selection.subs.has(key)) selection.subs.delete(key); else selection.subs.add(key); applyFilters(); }); sub.appendChild(chip); });
       bar.appendChild(dot); bar.appendChild(label);
-      bar.addEventListener('click',()=>{ const ex = el.getAttribute('aria-expanded')==='true'; el.setAttribute('aria-expanded',ex?'false':'true'); if(ex){ selection.cats.delete(c.name); } else { selection.cats.add(c.name); } applyFilters(); });
-      el.appendChild(bar); el.appendChild(cfg); el.appendChild(sub); catsEl.appendChild(el);
+      function setCategoryState(active){
+        el.setAttribute('aria-expanded', active ? 'true' : 'false');
+        input.checked = active;
+        if(active){
+          selection.cats.add(c.name);
+        } else {
+          selection.cats.delete(c.name);
+        }
+        applyFilters();
+      }
+      bar.addEventListener('click',()=>{
+        const next = el.getAttribute('aria-expanded') !== 'true';
+        setCategoryState(next);
+      });
+      input.addEventListener('change',()=>{
+        setCategoryState(input.checked);
+      });
+      el.appendChild(bar); el.appendChild(toggle); el.appendChild(sub); catsEl.appendChild(el);
     });
 
     // Reset
     $('#resetBtn').addEventListener('click',()=>{
       selection.cats.clear(); selection.subs.clear();
-      $$('.cat').forEach(el=>el.setAttribute('aria-expanded','false'));
+      $$('.cat').forEach(el=>{
+        el.setAttribute('aria-expanded','false');
+        const toggle = el.querySelector('.cat-switch input');
+        if(toggle) toggle.checked = false;
+      });
       $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#keyword-textbox').value='';
       $('#daterange-textbox').value='';
@@ -5049,7 +5132,6 @@ function makePosts(){
   const sets = [
     {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
     {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-    {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
     {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
       sets.forEach((sel, idx)=>{
@@ -5793,6 +5875,8 @@ function makePosts(){
         const label = el.querySelector('.label').textContent;
         const expanded = selection.cats.has(label);
         el.setAttribute('aria-expanded', expanded?'true':'false');
+        const toggle = el.querySelector('.cat-switch input');
+        if(toggle) toggle.checked = expanded;
         el.querySelectorAll('.sub .chip').forEach(ch=>{
           const subName = ch.textContent.trim();
           const key = label+'::'+subName;
@@ -6889,10 +6973,12 @@ document.addEventListener('pointerdown', handleDocInteract);
   const filterPanel = document.getElementById('filterPanel');
   const sg = window.spinGlobals || {};
 
-  memberBtn && memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
-    adminBtn && adminBtn.addEventListener('click', ()=>{
-      togglePanel(adminPanel);
-    });
+  if(memberBtn && memberPanel){
+    memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
+  }
+  if(adminBtn && adminPanel){
+    adminBtn.addEventListener('click', ()=> togglePanel(adminPanel));
+  }
   filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -7448,14 +7534,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!canFS || enabled === false) {
       fsBtn.style.display = 'none';
     } else {
+      const getFull = () => document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      const updateFsState = () => {
+        fsBtn.setAttribute('aria-pressed', getFull() ? 'true' : 'false');
+      };
+      updateFsState();
+      ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt => {
+        document.addEventListener(evt, updateFsState);
+      });
       fsBtn.addEventListener('click', () => {
-        const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        const isFull = getFull();
         if (!isFull) {
           const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-          if (req) req.call(docEl).catch(() => {});
+          if (req) {
+            try {
+              const result = req.call(docEl);
+              if (result && typeof result.catch === 'function') result.catch(() => {});
+            } catch (err) {
+              updateFsState();
+            }
+          }
         } else {
           const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-          if (exit) exit.call(document);
+          if (exit) {
+            try {
+              const result = exit.call(document);
+              if (result && typeof result.catch === 'function') result.catch(() => {});
+            } catch (err) {
+              updateFsState();
+            }
+          }
         }
       });
     }
