@@ -29,10 +29,13 @@ jobs:
           mkdir -p backups
           export TZ="Australia/Sydney"
           datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
-          commit_msg="${{ github.event.head_commit.message }}"
-          safe_msg=$(echo "$commit_msg" | tr ' ' '-' | tr -cd '[:alnum:]-')
-          cp index.html "backups/index-${datetime}-${safe_msg}.html"
-          echo "📦 Backup saved: backups/index-${datetime}-${safe_msg}.html"
+
+          # Use PR extended description if available, else commit message
+          desc="${{ github.event.pull_request.body || github.event.head_commit.message }}"
+          safe_desc=$(echo "$desc" | head -n 1 | tr ' ' '-' | tr -cd '[:alnum:]-')
+
+          cp index.html "backups/index-${datetime}-${safe_desc}.html"
+          echo "📦 Backup saved: backups/index-${datetime}-${safe_desc}.html"
 
       - name: Commit backup
         run: |
