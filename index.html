@@ -109,7 +109,7 @@
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   border-color: var(--border) !important;
 }
 
@@ -178,7 +178,7 @@ html,body{
   }
   .panel-content, .options-menu, .calendar-scroll{
     overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: auto;
   }
 
   h1, h2, h3, h4, h5, h6{
@@ -1318,7 +1318,8 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-body > #filterSummary{
   width:400px !important;
   max-width:400px !important;
-  padding:0 10px 10px;
+  padding:0 10px;
+  margin:0 auto 10px;
 }
 
 #filterPanel .reset-box,
@@ -1329,9 +1330,10 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .reset-box{
   margin:0 auto 10px;
+  padding:0 10px;
 }
 #filterPanel .panel-body > .reset-box{
-  padding-bottom:0 !important;
+  padding:0 10px !important;
 }
 #filterPanel .reset-box #resetBtn{
   width:100%;
@@ -1340,7 +1342,9 @@ button[aria-expanded="true"] .results-arrow{
   width:400px;
 }
 #filterPanel .sort-field{
-  margin:0 auto;
+  margin:0 auto 10px;
+  padding:0;
+  justify-content:center;
 }
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container{
@@ -2183,8 +2187,9 @@ body.filters-active #filterBtn{
 
 .open-post .post-details{
   margin-top:0;
-  flex:1 1 400px;
+  flex:1 1 420px;
   min-width:400px;
+  max-width:420px;
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2541,6 +2546,7 @@ body.filters-active #filterBtn{
     align-items:flex-start;
     flex:1 1 auto;
     width:100%;
+    max-width:420px;
     height:auto;
   }
 .open-post .location-section .options-menu{
@@ -2555,6 +2561,7 @@ body.filters-active #filterBtn{
 
 .open-post .post-calendar{
   width:var(--calendar-width);
+  max-width:420px;
   position:relative;
   font-size:14px;
 }
@@ -3077,6 +3084,26 @@ body.filters-active #filterBtn{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.mapboxgl-popup,
+.mapboxgl-popup-content{
+  color: var(--popup-text) !important;
+}
+
+.mapboxgl-popup-content{
+  background: var(--popup-bg) !important;
+}
+
+.mapboxgl-popup-tip{
+  border-top-color: var(--popup-bg) !important;
+  border-bottom-color: var(--popup-bg) !important;
+  border-left-color: var(--popup-bg) !important;
+  border-right-color: var(--popup-bg) !important;
+}
+
+.mapboxgl-popup-close-button{
+  color: var(--popup-text) !important;
 }
 
 .multi-ctrls{
