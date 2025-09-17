@@ -1675,7 +1675,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 @media (max-width:439px){
   .post-board,
   .history-board,
-  .post-detail-board{
+  .post-detail-board.is-visible{
     width:100%;
     max-width:100%;
     min-width:360px;
@@ -1683,9 +1683,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .post-detail-board{
-  width:440px;
-  max-width:440px;
-  flex-shrink:0;
+  flex:0 1 560px;
+  width:100%;
+  max-width:560px;
   overflow-y:auto;
   overflow-y:overlay;
   background:rgba(0,0,0,0.7);
@@ -1695,21 +1695,27 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   opacity:0;
   transform:translateX(20px);
-  transition:transform 0.3s ease, opacity 0.3s ease;
+  transition:transform 0.3s ease, opacity 0.3s ease, max-width 0.3s ease, border-left-width 0.3s ease;
   border-left:1px solid rgba(255,255,255,0.12);
 }
 .post-detail-board.is-visible{
   opacity:1;
   transform:translateX(0);
+  max-width:560px;
+  flex:0 1 560px;
 }
 .post-detail-board:not(.is-visible){
   pointer-events:none;
+  max-width:0;
+  border-left-width:0;
+  flex:0 0 0;
 }
 .post-detail-board .second-post-column{
   width:100%;
   max-width:100%;
   min-width:0;
-  padding:0;
+  padding:10px;
+  box-sizing:border-box;
   display:flex;
   flex-direction:column;
   overflow-y:auto;
@@ -1718,8 +1724,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 .post-detail-board .post-details{
   width:100%;
-  max-width:440px;
+  max-width:100%;
   min-width:0;
+}
+.open-post .second-post-placeholder{
+  width:100%;
+  min-height:0;
+  pointer-events:none;
+  visibility:hidden;
 }
 
 .last-opened-label{
@@ -2948,18 +2960,7 @@ body.filters-active #filterBtn{
 
 .desc{
   margin-top:8px;
-  display:-webkit-box;
-  line-clamp:4;
-  -webkit-line-clamp:4;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
   cursor:default;
-}
-.desc.expanded{
-  display:block;
-  line-clamp:unset;
-  -webkit-line-clamp:unset;
-  overflow:visible;
 }
 
 
@@ -4205,21 +4206,70 @@ img.thumb{
         const body = document.querySelector('.open-post .post-body');
         if(!venueDropdownEl || !document.contains(venueDropdownEl)){
           const vd = document.querySelector('.venue-dropdown');
-          if(vd){
-            venueDropdownEl = vd;
-            if(!venueDropdownParent && vd.parentElement){
-              venueDropdownParent = vd.parentElement;
-            }
-          }
+          venueDropdownEl = vd || null;
         }
         if(!sessionDropdownEl || !document.contains(sessionDropdownEl)){
           const sd = document.querySelector('.session-dropdown');
-          if(sd){
-            sessionDropdownEl = sd;
-            if(!sessionDropdownParent && sd.parentElement){
-              sessionDropdownParent = sd.parentElement;
+          sessionDropdownEl = sd || null;
+        }
+        if(venueDropdownEl){
+          const currentParent = venueDropdownEl.parentElement;
+          const currentInDom = currentParent && document.contains(currentParent);
+          const isDetailSlot = currentParent && currentParent.classList.contains('post-venue-selection-container');
+          if(currentInDom && !isDetailSlot){
+            venueDropdownEl._homeParent = currentParent;
+          }
+          if(venueDropdownEl._homeParent && !document.contains(venueDropdownEl._homeParent)){
+            venueDropdownEl._homeParent = null;
+          }
+          if(!venueDropdownEl._homeParent && venueDropdownEl.id){
+            const suffix = venueDropdownEl.id.replace(/^venue-/, '');
+            if(suffix){
+              const mapEl = document.getElementById(`map-${suffix}`);
+              if(mapEl && mapEl.parentElement && document.contains(mapEl.parentElement)){
+                venueDropdownEl._homeParent = mapEl.parentElement;
+              }
             }
           }
+          if(venueDropdownEl._homeParent && document.contains(venueDropdownEl._homeParent)){
+            venueDropdownParent = venueDropdownEl._homeParent;
+          } else if(currentInDom && !isDetailSlot){
+            venueDropdownParent = currentParent;
+          } else if(venueDropdownParent && !document.contains(venueDropdownParent)){
+            venueDropdownParent = null;
+          }
+        } else {
+          venueDropdownParent = null;
+        }
+        if(sessionDropdownEl){
+          const currentParent = sessionDropdownEl.parentElement;
+          const currentInDom = currentParent && document.contains(currentParent);
+          const isDetailSlot = currentParent && currentParent.classList.contains('post-session-selection-container');
+          if(currentInDom && !isDetailSlot){
+            sessionDropdownEl._homeParent = currentParent;
+          }
+          if(sessionDropdownEl._homeParent && !document.contains(sessionDropdownEl._homeParent)){
+            sessionDropdownEl._homeParent = null;
+          }
+          if(!sessionDropdownEl._homeParent && sessionDropdownEl.id){
+            const suffix = sessionDropdownEl.id.replace(/^sess-/, '');
+            if(suffix){
+              const calEl = document.getElementById(`cal-${suffix}`);
+              const container = calEl ? calEl.closest('.calendar-container') : null;
+              if(container && document.contains(container)){
+                sessionDropdownEl._homeParent = container;
+              }
+            }
+          }
+          if(sessionDropdownEl._homeParent && document.contains(sessionDropdownEl._homeParent)){
+            sessionDropdownParent = sessionDropdownEl._homeParent;
+          } else if(currentInDom && !isDetailSlot){
+            sessionDropdownParent = currentParent;
+          } else if(sessionDropdownParent && !document.contains(sessionDropdownParent)){
+            sessionDropdownParent = null;
+          }
+        } else {
+          sessionDropdownParent = null;
         }
         const imgArea = body ? body.querySelector('.post-images') : null;
         const header = document.querySelector('.open-post .post-header');
@@ -4228,19 +4278,20 @@ img.thumb{
         const detailColumn = detailBoard ? detailBoard.querySelector('.second-post-column') : null;
         const venueContainer = detailColumn ? detailColumn.querySelector('.post-venue-selection-container') : null;
         const sessionContainer = detailColumn ? detailColumn.querySelector('.post-session-selection-container') : null;
-        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible'));
+        const detailColumnMounted = !!(detailColumn && document.contains(detailColumn));
+        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible') && detailColumnMounted);
         root.classList.toggle('hide-map-calendar', !detailVisible);
         if(venueDropdownEl){
-          if(venueContainer && venueDropdownEl.parentElement !== venueContainer){
+          if(venueContainer && document.contains(venueContainer) && venueDropdownEl.parentElement !== venueContainer){
             venueContainer.appendChild(venueDropdownEl);
-          } else if(venueDropdownParent && venueDropdownEl.parentElement !== venueDropdownParent){
+          } else if(venueDropdownParent && document.contains(venueDropdownParent) && venueDropdownEl.parentElement !== venueDropdownParent){
             venueDropdownParent.appendChild(venueDropdownEl);
           }
         }
         if(sessionDropdownEl){
-          if(sessionContainer && sessionDropdownEl.parentElement !== sessionContainer){
+          if(sessionContainer && document.contains(sessionContainer) && sessionDropdownEl.parentElement !== sessionContainer){
             sessionContainer.appendChild(sessionDropdownEl);
-          } else if(sessionDropdownParent && sessionDropdownEl.parentElement !== sessionDropdownParent){
+          } else if(sessionDropdownParent && document.contains(sessionDropdownParent) && sessionDropdownEl.parentElement !== sessionDropdownParent){
             sessionDropdownParent.appendChild(sessionDropdownEl);
           }
         }
@@ -5290,12 +5341,20 @@ function makePosts(){
         const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
         const filterPinned = !!(filterPanel && filterPanel.classList.contains('show') && pinBtn && pinBtn.getAttribute('aria-pressed') === 'true');
         const detailBoard = document.querySelector('.post-detail-board');
-        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible') && !historyActive);
+        const historyOpenPost = historyBoard ? historyBoard.querySelector('.open-post') : null;
+        const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
+        const activeOpenPost = historyActive ? (historyOpenPost || postsOpenPost) : (postsOpenPost || historyOpenPost);
+        const activeOpenId = activeOpenPost && activeOpenPost.dataset ? activeOpenPost.dataset.id : null;
+        const anyOpenPost = historyOpenPost || postsOpenPost;
+        const anyOpenId = anyOpenPost && anyOpenPost.dataset ? anyOpenPost.dataset.id : null;
+        const detailMatchesActive = !!(detailBoard && activeOpenId && detailBoard.dataset && detailBoard.dataset.id === activeOpenId);
+        const detailMatchesAny = !!(detailBoard && anyOpenId && detailBoard.dataset && detailBoard.dataset.id === anyOpenId);
+        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible') && detailMatchesActive);
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
         let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
         const postWidth = postBoard ? (postBoard.offsetWidth || 440) : 0;
         const historyWidth = historyBoard ? (historyBoard.offsetWidth || 440) : 0;
-        const detailWidth = detailVisible && detailBoard ? (detailBoard.offsetWidth || 440) : 0;
+        const detailWidth = detailBoard && detailMatchesAny ? (detailBoard.offsetWidth || 560) : 0;
         const boardsWidths = [];
         if(historyActive && historyBoard){
           boardsWidths.push(historyWidth);
@@ -5336,12 +5395,16 @@ function makePosts(){
           postBoard.style.display = historyActive ? 'none' : '';
           postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
         }
-        if(historyActive && detailBoard){
-          detailBoard.classList.remove('is-visible');
-          detailBoard.removeAttribute('data-id');
-          document.body.classList.remove('detail-open');
-          if(typeof updateStickyImages === 'function') updateStickyImages();
+        if(detailBoard){
+          if(detailMatchesActive && !detailBoard.classList.contains('is-visible')){
+            detailBoard.classList.add('is-visible');
+          } else if(!detailVisible && !detailMatchesAny){
+            detailBoard.classList.remove('is-visible');
+            detailBoard.removeAttribute('data-id');
+            if(typeof updateStickyImages === 'function') updateStickyImages();
+          }
         }
+        document.body.classList.toggle('detail-open', detailVisible || detailMatchesAny);
         if(hideAds || !adBoard){
           document.body.classList.add('hide-ads');
         } else {
@@ -6605,10 +6668,16 @@ function makePosts(){
         target.replaceWith(detail);
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
-          updateStickyImages();
+          const mountedDetailColumn = document.querySelector('.post-detail-board .second-post-column');
+          if(mountedDetailColumn){
+            updateStickyImages();
+          }
         }
         if (typeof initPostLayout === 'function') {
           initPostLayout(container);
+          if (typeof updateStickyImages === 'function') {
+            updateStickyImages();
+          }
         }
 
         await nextFrame();
@@ -6761,15 +6830,6 @@ function makePosts(){
     });
 
     function hookDetailActions(el, p){
-  const descWrap = el.querySelector(".desc-wrap");
-  if(descWrap){
-    const desc = descWrap.querySelector(".desc");
-    if(desc){
-      desc.addEventListener('click', ()=>{
-        desc.classList.toggle('expanded');
-      });
-    }
-  }
       const headerEl = el.querySelector('.post-header');
       if(headerEl){
         headerEl.addEventListener('click', evt=>{
@@ -8309,21 +8369,26 @@ let boardAdjustCleanup = null;
 function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
   const detailBoard = document.querySelector('.post-detail-board');
-  if(detailBoard){
-    detailBoard.classList.remove('is-visible');
-    detailBoard.innerHTML='';
-    detailBoard.removeAttribute('data-id');
-  }
-  if(!board){
+  const openPost = (board && board.querySelector('.open-post')) || document.querySelector('.post-board .open-post, #historyBoard .open-post');
+  document.querySelectorAll('.second-post-placeholder').forEach(placeholder => {
+    if(!openPost || placeholder.closest('.open-post') !== openPost){
+      placeholder.remove();
+    }
+  });
+  if(!detailBoard){
     document.documentElement.style.removeProperty('--post-header-h');
-    document.body.classList.remove('detail-open');
+    if(!openPost){
+      document.body.classList.remove('detail-open');
+    }
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
   }
-  const openPost = board.querySelector('.open-post');
   if(!openPost){
-    document.documentElement.style.removeProperty('--post-header-h');
+    detailBoard.classList.remove('is-visible');
+    detailBoard.innerHTML='';
+    detailBoard.removeAttribute('data-id');
     document.body.classList.remove('detail-open');
+    document.documentElement.style.removeProperty('--post-header-h');
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
   }
@@ -8336,17 +8401,53 @@ function initPostLayout(board){
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
 
-  if(detailBoard){
+  let placeholder = openPost.querySelector('.second-post-placeholder');
+  if(!placeholder){
+    placeholder = document.createElement('div');
+    placeholder.className = 'second-post-placeholder';
+    placeholder.setAttribute('aria-hidden', 'true');
+  }
+  if(postBody){
+    placeholder.dataset.postId = openPost.dataset ? openPost.dataset.id || '' : '';
     if(secondCol){
-      detailBoard.innerHTML='';
-      detailBoard.appendChild(secondCol);
-      detailBoard.classList.add('is-visible');
-      detailBoard.setAttribute('data-id', openPost.dataset.id || '');
-      document.body.classList.add('detail-open');
-    } else {
-      detailBoard.classList.remove('is-visible');
-      detailBoard.removeAttribute('data-id');
-      document.body.classList.remove('detail-open');
+      if(placeholder.parentElement !== postBody){
+        postBody.insertBefore(placeholder, secondCol);
+      } else {
+        postBody.insertBefore(placeholder, secondCol);
+      }
+    } else if(!placeholder.parentElement){
+      postBody.appendChild(placeholder);
+    }
+  }
+
+  detailBoard.innerHTML='';
+  if(secondCol){
+    detailBoard.appendChild(secondCol);
+    detailBoard.classList.add('is-visible');
+    detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
+    document.body.classList.add('detail-open');
+  } else {
+    placeholder.remove();
+    detailBoard.classList.remove('is-visible');
+    detailBoard.removeAttribute('data-id');
+    document.body.classList.remove('detail-open');
+  }
+
+  function updatePlaceholder(){
+    if(placeholder && placeholder.isConnected){
+      if(secondCol && document.contains(secondCol)){
+        const height = secondCol.offsetHeight;
+        if(height){
+          placeholder.style.height = height + 'px';
+          placeholder.style.minHeight = height + 'px';
+        } else {
+          placeholder.style.removeProperty('height');
+          placeholder.style.removeProperty('min-height');
+        }
+      } else {
+        placeholder.style.removeProperty('height');
+        placeholder.style.removeProperty('min-height');
+      }
     }
   }
 
@@ -8356,9 +8457,11 @@ function initPostLayout(board){
     } else {
       document.documentElement.style.removeProperty('--post-header-h');
     }
+    updatePlaceholder();
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
   }
 
+  updatePlaceholder();
   updateMetrics();
   window.addEventListener('resize', updateMetrics);
   window.addEventListener('load', updateMetrics);
