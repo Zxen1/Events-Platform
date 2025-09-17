@@ -8503,7 +8503,13 @@ function initPostLayout(board){
   const postHeader = openPost.querySelector('.post-header');
   const postImages = postBody ? postBody.querySelector('.post-images') : null;
   const mainColumn = postBody ? postBody.querySelector('.main-post-column') : null;
-  const secondCol = openPost.querySelector('.second-post-column');
+  const openPostId = openPost && openPost.dataset ? (openPost.dataset.id || '') : '';
+  const detailBoardId = detailBoard ? (detailBoard.getAttribute('data-id') || '') : '';
+  let secondCol = openPost ? openPost.querySelector('.second-post-column') : null;
+  const existingDetailCol = detailBoard ? detailBoard.querySelector('.second-post-column') : null;
+  if(!secondCol && existingDetailCol && openPostId === detailBoardId){
+    secondCol = existingDetailCol;
+  }
   const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image, .image-box') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
@@ -8512,12 +8518,21 @@ function initPostLayout(board){
   const usingSharedBoard = Boolean(detailBoard && secondCol && availableWidth >= 440);
   let detailDocked = usingSharedBoard;
   if(usingSharedBoard){
-    detailBoard.innerHTML='';
     if(secondCol){
-      detailBoard.appendChild(secondCol);
-      detailBoard.classList.add('is-visible');
-      detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
-      document.body.classList.add('detail-open');
+      const alreadyMounted = detailBoard && secondCol.parentElement === detailBoard;
+      if(!alreadyMounted){
+        detailBoard.innerHTML='';
+        detailBoard.appendChild(secondCol);
+      }
+      if(detailBoard && detailBoard.getAttribute('data-id') !== openPostId){
+        detailBoard.setAttribute('data-id', openPostId);
+      }
+      if(detailBoard && !detailBoard.classList.contains('is-visible')){
+        detailBoard.classList.add('is-visible');
+      }
+      if(!alreadyMounted && !document.body.classList.contains('detail-open')){
+        document.body.classList.add('detail-open');
+      }
       triggerDetailMapResize(secondCol);
     } else if(postBody){
       clearPreservedHeight(postBody);
