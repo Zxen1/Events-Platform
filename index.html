@@ -3874,6 +3874,13 @@ img.thumb{
         } catch(err){
           return;
         }
+        const metadata = style && style.metadata ? style.metadata : {};
+        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
+        const baseUrl = getStyleBase(originUrl);
+        const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
+        if(typeof normalizedUrl === 'string' && normalizedUrl.includes('/standard')){
+          return;
+        }
         const layers = style && Array.isArray(style.layers) ? style.layers : null;
         if(!layers) return;
         const charcoal = '#26282b';
