@@ -2407,6 +2407,7 @@ body.filters-active #filterBtn{
     padding:0;
   }
   .open-post .location-section .map-container,
+  .post-detail-board .location-section .map-container,
   .open-post .venue-dropdown,
   .open-post .session-dropdown{
     min-width:250px;
@@ -2465,7 +2466,8 @@ body.filters-active #filterBtn{
   margin-bottom:6px;
 }
 
-.open-post .location-section .map-container{
+.open-post .location-section .map-container,
+.post-detail-board .location-section .map-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2479,7 +2481,8 @@ body.filters-active #filterBtn{
   width:100%;
 }
 
-.open-post .post-map{
+.open-post .post-map,
+.post-detail-board .post-map{
   flex:0 0 auto;
   width:100%;
   max-width:420px;
