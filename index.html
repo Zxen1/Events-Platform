@@ -2419,23 +2419,31 @@ body.filters-active #filterBtn{
     padding:0;
   }
   .open-post .venue-dropdown,
-  .open-post .session-dropdown,
-  .post-detail-board .second-post-column .venue-dropdown,
-  .post-detail-board .second-post-column .session-dropdown{
+  .open-post .session-dropdown{
     width:100%;
     max-width:420px;
     padding:0;
   }
+  .post-detail-board .second-post-column .venue-dropdown,
+  .post-detail-board .second-post-column .session-dropdown{
+    width:100%;
+    max-width:100%;
+    padding:0;
+  }
   .open-post .location-section .map-container,
   .post-detail-board .location-section .map-container,
-  .post-detail-board .second-post-column .location-section .map-container,
   .open-post .venue-dropdown,
-  .open-post .session-dropdown,
+  .open-post .session-dropdown{
+    min-width:250px;
+    width:100%;
+    max-width:420px;
+  }
+  .post-detail-board .second-post-column .location-section .map-container,
   .post-detail-board .second-post-column .venue-dropdown,
   .post-detail-board .second-post-column .session-dropdown{
     min-width:250px;
     width:100%;
-    max-width:420px;
+    max-width:100%;
   }
 }
 
@@ -2519,8 +2527,9 @@ body.filters-active #filterBtn{
   border-radius:8px;
 }
 
+
 .post-detail-board .second-post-column .location-section .map-container{
-  flex-basis:100%;
+  flex:1 1 100%;
   max-width:100%;
 }
 
@@ -2531,13 +2540,18 @@ body.filters-active #filterBtn{
 
 
 .open-post .venue-dropdown,
-.open-post .session-dropdown,
+.open-post .session-dropdown{
+  position:relative;
+  min-width:250px;
+  width:100%;
+  max-width:420px;
+}
 .post-detail-board .second-post-column .venue-dropdown,
 .post-detail-board .second-post-column .session-dropdown{
   position:relative;
   min-width:250px;
   width:100%;
-  max-width:420px;
+  max-width:100%;
 }
 
 .open-post .calendar-container .session-dropdown,
@@ -2622,7 +2636,6 @@ body.filters-active #filterBtn{
   left:0;
   width:100%;
   min-width:250px;
-  max-width:420px;
   box-sizing:border-box;
   max-height:250px;
   overflow-y:auto;
@@ -2635,6 +2648,14 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:6px;
    z-index:30;
+}
+.open-post .venue-menu,
+.open-post .session-menu{
+  max-width:420px;
+}
+.post-detail-board .second-post-column .venue-menu,
+.post-detail-board .second-post-column .session-menu{
+  max-width:100%;
 }
 
 .open-post .venue-menu[hidden],
@@ -2700,11 +2721,17 @@ body.filters-active #filterBtn{
     gap:var(--gap);
     position:relative;
     align-items:flex-start;
-    flex:1 1 420px;
     min-width:250px;
     width:100%;
-    max-width:420px;
     height:auto;
+  }
+.open-post .location-section .calendar-container{
+    flex:1 1 420px;
+    max-width:420px;
+  }
+.post-detail-board .second-post-column .location-section .calendar-container{
+    flex:1 1 100%;
+    max-width:100%;
   }
 .open-post .location-section .options-menu,
 .post-detail-board .second-post-column .location-section .options-menu{
@@ -2732,7 +2759,6 @@ body.filters-active #filterBtn{
 .open-post .calendar-container .calendar-scroll,
 .post-detail-board .second-post-column .calendar-container .calendar-scroll{
   width:100%;
-  max-width:420px;
   height:var(--calendar-height);
   max-height:var(--calendar-height);
   overflow-x:auto;
@@ -2745,6 +2771,12 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:stretch;
   flex:1 1 auto;
+}
+.open-post .calendar-container .calendar-scroll{
+  max-width:420px;
+}
+.post-detail-board .second-post-column .calendar-container .calendar-scroll{
+  max-width:100%;
 }
 .open-post .post-calendar .calendar,
 .post-detail-board .post-calendar .calendar,
