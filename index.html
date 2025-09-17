@@ -2652,7 +2652,8 @@ body.filters-active #filterBtn{
   display:none;
 }
 
-.open-post .post-calendar{
+.open-post .post-calendar,
+.post-detail-board .post-calendar{
   position:relative;
   font-size:14px;
   min-width:var(--calendar-width);
@@ -2676,7 +2677,8 @@ body.filters-active #filterBtn{
   align-items:stretch;
   flex:1 1 auto;
 }
-.open-post .post-calendar .calendar{
+.open-post .post-calendar .calendar,
+.post-detail-board .post-calendar .calendar{
   margin:0;
   box-sizing:border-box;
   display:flex;
@@ -2689,7 +2691,8 @@ body.filters-active #filterBtn{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
 }
-.open-post .post-calendar .month{
+.open-post .post-calendar .month,
+.post-detail-board .post-calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
   min-width:var(--calendar-width);
@@ -2697,10 +2700,12 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
 }
-.open-post .post-calendar .month:not(:first-child){
+.open-post .post-calendar .month:not(:first-child),
+.post-detail-board .post-calendar .month:not(:first-child){
   border-left:1px solid var(--calendar-past-bg);
 }
-.open-post .post-calendar .grid{
+.open-post .post-calendar .grid,
+.post-detail-board .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
   height:calc(var(--calendar-height) - var(--calendar-header-h));
@@ -2708,7 +2713,8 @@ body.filters-active #filterBtn{
   grid-template-columns:repeat(7,var(--calendar-cell-w));
   grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
-.open-post .post-calendar .calendar-header{
+.open-post .post-calendar .calendar-header,
+.post-detail-board .post-calendar .calendar-header{
   height:var(--calendar-header-h);
   display:flex;
   align-items:center;
@@ -2720,7 +2726,9 @@ body.filters-active #filterBtn{
   color:#fff;
 }
 .open-post .post-calendar .weekday,
-.open-post .post-calendar .day{
+.open-post .post-calendar .day,
+.post-detail-board .post-calendar .weekday,
+.post-detail-board .post-calendar .day{
   width:var(--calendar-cell-w);
   height:var(--calendar-cell-h);
   display:flex;
@@ -2728,12 +2736,14 @@ body.filters-active #filterBtn{
   justify-content:center;
   line-height:var(--calendar-cell-h);
 }
-.open-post .post-calendar .weekday{
+.open-post .post-calendar .weekday,
+.post-detail-board .post-calendar .weekday{
   font-size:10px;
   font-weight:bold;
   color:var(--dropdown-text);
 }
-.open-post .post-calendar .day{
+.open-post .post-calendar .day,
+.post-detail-board .post-calendar .day{
   cursor:pointer;
   font-size:12px;
   border-radius:8px;
@@ -2741,35 +2751,45 @@ body.filters-active #filterBtn{
   color:var(--dropdown-text);
   transition:background .2s,color .2s;
 }
-.open-post .post-calendar .day.empty{
+.open-post .post-calendar .day.empty,
+.post-detail-board .post-calendar .day.empty{
   cursor:default;
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
   opacity:0.6;
 }
-.open-post .post-calendar .day.available-day{
+.open-post .post-calendar .day.available-day,
+.post-detail-board .post-calendar .day.available-day{
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
 }
-.open-post .post-calendar .day.available-day:hover{
+.open-post .post-calendar .day.available-day:hover,
+.post-detail-board .post-calendar .day.available-day:hover{
   background:var(--session-available);
   color:#fff;
 }
-.open-post .post-calendar .day.selected{
+.open-post .post-calendar .day.selected,
+.post-detail-board .post-calendar .day.selected{
   background:var(--session-selected);
   color:#fff;
 }
-.open-post .post-calendar .day.selected:hover{
+.open-post .post-calendar .day.selected:hover,
+.post-detail-board .post-calendar .day.selected:hover{
   background:var(--session-selected);
   color:#fff;
 }
-.open-post .post-calendar .day.today{color:var(--today) !important;}
+.open-post .post-calendar .day.today,
+.post-detail-board .post-calendar .day.today{color:var(--today) !important;}
 .open-post .post-calendar .day.available-day.today,
 .open-post .post-calendar .day.available-day.selected.today,
-.open-post .post-calendar .day.selected.today{color:var(--today) !important;}
+.open-post .post-calendar .day.selected.today,
+.post-detail-board .post-calendar .day.available-day.today,
+.post-detail-board .post-calendar .day.available-day.selected.today,
+.post-detail-board .post-calendar .day.selected.today{color:var(--today) !important;}
 
 
-.open-post .post-calendar .selected-month-name{
+.open-post .post-calendar .selected-month-name,
+.post-detail-board .post-calendar .selected-month-name{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:8px;
