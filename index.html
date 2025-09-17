@@ -1675,17 +1675,17 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 @media (max-width:439px){
   .post-board,
   .history-board,
-  .post-detail-board.is-visible{
+  .post-mode-boards > .second-post-column.is-visible{
     width:100%;
     max-width:100%;
     min-width:360px;
   }
-  .post-detail-board{
+  .post-mode-boards > .second-post-column{
     display:none;
   }
 }
 
-.post-detail-board{
+.post-mode-boards > .second-post-column{
   flex:0 1 560px;
   width:100%;
   max-width:560px;
@@ -1700,35 +1700,27 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transform:translateX(20px);
   transition:transform 0.3s ease, opacity 0.3s ease, max-width 0.3s ease, border-left-width 0.3s ease;
   border-left:1px solid rgba(255,255,255,0.12);
+  padding:10px;
+  box-sizing:border-box;
+  min-width:0;
+  height:100%;
 }
-.post-detail-board.is-visible{
+.post-mode-boards > .second-post-column.is-visible{
   opacity:1;
   transform:translateX(0);
   max-width:560px;
   flex:0 1 560px;
+  display:flex;
 }
-.post-detail-board:not(.is-visible){
+.post-mode-boards > .second-post-column:not(.is-visible){
   pointer-events:none;
   max-width:0;
   border-left-width:0;
   flex:0 0 0;
 }
-.post-detail-board .second-post-column{
+.post-mode-boards > .second-post-column .post-details{
   width:100%;
   max-width:520px;
-  min-width:0;
-  padding:10px;
-  box-sizing:border-box;
-  display:flex;
-  flex-direction:column;
-  overflow-y:auto;
-  overflow-y:overlay;
-  height:100%;
-  flex:0 1 520px;
-}
-.post-detail-board .post-details{
-  width:100%;
-  max-width:100%;
   min-width:0;
 }
 .last-opened-label{
@@ -2415,23 +2407,23 @@ body.filters-active #filterBtn{
     max-width:420px;
     padding:0;
   }
-  .post-detail-board .second-post-column .venue-dropdown,
-  .post-detail-board .second-post-column .session-dropdown{
+  .post-mode-boards > .second-post-column .venue-dropdown,
+  .post-mode-boards > .second-post-column .session-dropdown{
     width:100%;
     max-width:100%;
     padding:0;
   }
   .open-post .location-section .map-container,
-  .post-detail-board .location-section .map-container,
+  .post-mode-boards > .second-post-column .location-section .map-container,
   .open-post .venue-dropdown,
   .open-post .session-dropdown{
     min-width:250px;
     width:100%;
     max-width:420px;
   }
-  .post-detail-board .second-post-column .location-section .map-container,
-  .post-detail-board .second-post-column .venue-dropdown,
-  .post-detail-board .second-post-column .session-dropdown{
+  .post-mode-boards > .second-post-column .location-section .map-container,
+  .post-mode-boards > .second-post-column .venue-dropdown,
+  .post-mode-boards > .second-post-column .session-dropdown{
     min-width:250px;
     width:100%;
     max-width:100%;
@@ -2481,7 +2473,7 @@ body.filters-active #filterBtn{
 
 
 .open-post .location-section,
-.post-detail-board .second-post-column .location-section{
+.post-mode-boards > .second-post-column .location-section{
   display:flex;
   flex-wrap:wrap;
   gap:var(--gap);
@@ -2490,8 +2482,8 @@ body.filters-active #filterBtn{
 }
 
   .open-post .location-section .map-container,
-  .post-detail-board .location-section .map-container,
-  .post-detail-board .second-post-column .location-section .map-container{
+  .post-mode-boards > .second-post-column .location-section .map-container,
+  .post-mode-boards > .second-post-column .location-section .map-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2502,13 +2494,13 @@ body.filters-active #filterBtn{
   height:auto;
 }
 .open-post .map-container .venue-dropdown,
-.post-detail-board .second-post-column .map-container .venue-dropdown{
+.post-mode-boards > .second-post-column .map-container .venue-dropdown{
   width:100%;
 }
 
 .open-post .post-map,
-.post-detail-board .post-map,
-.post-detail-board .second-post-column .post-map{
+.post-mode-boards > .second-post-column .post-map,
+.post-mode-boards > .second-post-column .post-map{
   flex:0 0 auto;
   width:100%;
   max-width:420px;
@@ -2519,12 +2511,12 @@ body.filters-active #filterBtn{
 }
 
 
-.post-detail-board .second-post-column .location-section .map-container{
+.post-mode-boards > .second-post-column .location-section .map-container{
   flex:1 1 100%;
   max-width:100%;
 }
 
-.post-detail-board .second-post-column .post-map{
+.post-mode-boards > .second-post-column .post-map{
   flex-basis:100%;
   max-width:100%;
 }
@@ -2537,8 +2529,8 @@ body.filters-active #filterBtn{
   width:100%;
   max-width:420px;
 }
-.post-detail-board .second-post-column .venue-dropdown,
-.post-detail-board .second-post-column .session-dropdown{
+.post-mode-boards > .second-post-column .venue-dropdown,
+.post-mode-boards > .second-post-column .session-dropdown{
   position:relative;
   min-width:250px;
   width:100%;
@@ -2546,7 +2538,7 @@ body.filters-active #filterBtn{
 }
 
 .open-post .calendar-container .session-dropdown,
-.post-detail-board .second-post-column .calendar-container .session-dropdown{
+.post-mode-boards > .second-post-column .calendar-container .session-dropdown{
   margin-top:0;
   width:100%;
 }
@@ -2554,7 +2546,7 @@ body.filters-active #filterBtn{
 
 
 .open-post .venue-dropdown > button,
-.post-detail-board .second-post-column .venue-dropdown > button{
+.post-mode-boards > .second-post-column .venue-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2570,7 +2562,7 @@ body.filters-active #filterBtn{
 }
 
 .open-post .session-dropdown > button,
-.post-detail-board .second-post-column .session-dropdown > button{
+.post-mode-boards > .second-post-column .session-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2586,42 +2578,42 @@ body.filters-active #filterBtn{
 
 
 .open-post .venue-dropdown > button .venue-name,
-.post-detail-board .second-post-column .venue-dropdown > button .venue-name{
+.post-mode-boards > .second-post-column .venue-dropdown > button .venue-name{
   font-weight:bold;
   display:block;
 }
 
 .open-post .venue-dropdown > button .venue-address,
-.post-detail-board .second-post-column .venue-dropdown > button .venue-address{
+.post-mode-boards > .second-post-column .venue-dropdown > button .venue-address{
   display:block;
 }
 
 .open-post .venue-menu button .venue-name,
-.post-detail-board .second-post-column .venue-menu button .venue-name{
+.post-mode-boards > .second-post-column .venue-menu button .venue-name{
   font-weight:bold;
   display:block;
 }
 
 .open-post .venue-menu button .venue-address,
-.post-detail-board .second-post-column .venue-menu button .venue-address{
+.post-mode-boards > .second-post-column .venue-menu button .venue-address{
   display:block;
 }
 
 .open-post .venue-dropdown > button .venue-name,
-.post-detail-board .second-post-column .venue-dropdown > button .venue-name,
+.post-mode-boards > .second-post-column .venue-dropdown > button .venue-name,
 .open-post .venue-dropdown > button .venue-address,
-.post-detail-board .second-post-column .venue-dropdown > button .venue-address,
+.post-mode-boards > .second-post-column .venue-dropdown > button .venue-address,
 .open-post .venue-menu button .venue-name,
-.post-detail-board .second-post-column .venue-menu button .venue-name,
+.post-mode-boards > .second-post-column .venue-menu button .venue-name,
 .open-post .venue-menu button .venue-address,
-.post-detail-board .second-post-column .venue-menu button .venue-address{
+.post-mode-boards > .second-post-column .venue-menu button .venue-address{
   line-height:1.2;
 }
 
 .open-post .venue-menu,
 .open-post .session-menu,
-.post-detail-board .second-post-column .venue-menu,
-.post-detail-board .second-post-column .session-menu{
+.post-mode-boards > .second-post-column .venue-menu,
+.post-mode-boards > .second-post-column .session-menu{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2644,18 +2636,18 @@ body.filters-active #filterBtn{
 .open-post .session-menu{
   max-width:420px;
 }
-.post-detail-board .second-post-column .venue-menu,
-.post-detail-board .second-post-column .session-menu{
+.post-mode-boards > .second-post-column .venue-menu,
+.post-mode-boards > .second-post-column .session-menu{
   max-width:100%;
 }
 
 .open-post .venue-menu[hidden],
 .open-post .session-menu[hidden],
-.post-detail-board .second-post-column .venue-menu[hidden],
-.post-detail-board .second-post-column .session-menu[hidden]{display:none;}
+.post-mode-boards > .second-post-column .venue-menu[hidden],
+.post-mode-boards > .second-post-column .session-menu[hidden]{display:none;}
 
 .open-post .venue-menu button,
-.post-detail-board .second-post-column .venue-menu button{
+.post-mode-boards > .second-post-column .venue-menu button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2671,7 +2663,7 @@ body.filters-active #filterBtn{
 }
 
 .open-post .session-menu button,
-.post-detail-board .second-post-column .session-menu button{
+.post-mode-boards > .second-post-column .session-menu button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -2687,26 +2679,26 @@ body.filters-active #filterBtn{
 
 .open-post .venue-menu button.selected,
 .open-post .session-menu button.selected,
-.post-detail-board .second-post-column .venue-menu button.selected,
-.post-detail-board .second-post-column .session-menu button.selected{
+.post-mode-boards > .second-post-column .venue-menu button.selected,
+.post-mode-boards > .second-post-column .session-menu button.selected{
   background:var(--dropdown-selected-bg);
   color:var(--dropdown-selected-text);
 }
 
 .open-post .session-menu button .session-time,
-.post-detail-board .second-post-column .session-menu button .session-time{
+.post-mode-boards > .second-post-column .session-menu button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
 .open-post .session-dropdown > button .session-time,
-.post-detail-board .second-post-column .session-dropdown > button .session-time{
+.post-mode-boards > .second-post-column .session-dropdown > button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
 
 
 .open-post .location-section .calendar-container,
-.post-detail-board .second-post-column .location-section .calendar-container{
+.post-mode-boards > .second-post-column .location-section .calendar-container{
     display:flex;
     flex-direction:column;
     gap:var(--gap);
@@ -2720,26 +2712,26 @@ body.filters-active #filterBtn{
     flex:1 1 420px;
     max-width:420px;
   }
-.post-detail-board .second-post-column .location-section .calendar-container{
+.post-mode-boards > .second-post-column .location-section .calendar-container{
     flex:1 1 100%;
     max-width:100%;
   }
 .open-post .location-section .options-menu,
-.post-detail-board .second-post-column .location-section .options-menu{
+.post-mode-boards > .second-post-column .location-section .options-menu{
   width:100%;
   box-sizing:border-box;
 }
 
 .hide-map-calendar .open-post .map-container,
 .hide-map-calendar .open-post .calendar-container,
-.hide-map-calendar .post-detail-board .second-post-column .map-container,
-.hide-map-calendar .post-detail-board .second-post-column .calendar-container{
+.hide-map-calendar .post-mode-boards > .second-post-column .map-container,
+.hide-map-calendar .post-mode-boards > .second-post-column .calendar-container{
   display:none;
 }
 
 .open-post .post-calendar,
-.post-detail-board .post-calendar,
-.post-detail-board .second-post-column .post-calendar{
+.post-mode-boards > .second-post-column .post-calendar,
+.post-mode-boards > .second-post-column .post-calendar{
   position:relative;
   font-size:14px;
   min-width:var(--calendar-width);
@@ -2748,7 +2740,7 @@ body.filters-active #filterBtn{
 
 
 .open-post .calendar-container .calendar-scroll,
-.post-detail-board .second-post-column .calendar-container .calendar-scroll{
+.post-mode-boards > .second-post-column .calendar-container .calendar-scroll{
   width:100%;
   height:var(--calendar-height);
   max-height:var(--calendar-height);
@@ -2766,12 +2758,12 @@ body.filters-active #filterBtn{
 .open-post .calendar-container .calendar-scroll{
   max-width:420px;
 }
-.post-detail-board .second-post-column .calendar-container .calendar-scroll{
+.post-mode-boards > .second-post-column .calendar-container .calendar-scroll{
   max-width:100%;
 }
 .open-post .post-calendar .calendar,
-.post-detail-board .post-calendar .calendar,
-.post-detail-board .second-post-column .post-calendar .calendar{
+.post-mode-boards > .second-post-column .post-calendar .calendar,
+.post-mode-boards > .second-post-column .post-calendar .calendar{
   margin:0;
   box-sizing:border-box;
   display:flex;
@@ -2785,8 +2777,8 @@ body.filters-active #filterBtn{
   color:var(--dropdown-text);
 }
 .open-post .post-calendar .month,
-.post-detail-board .post-calendar .month,
-.post-detail-board .second-post-column .post-calendar .month{
+.post-mode-boards > .second-post-column .post-calendar .month,
+.post-mode-boards > .second-post-column .post-calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
   min-width:var(--calendar-width);
@@ -2795,13 +2787,13 @@ body.filters-active #filterBtn{
   flex-direction:column;
 }
 .open-post .post-calendar .month:not(:first-child),
-.post-detail-board .post-calendar .month:not(:first-child),
-.post-detail-board .second-post-column .post-calendar .month:not(:first-child){
+.post-mode-boards > .second-post-column .post-calendar .month:not(:first-child),
+.post-mode-boards > .second-post-column .post-calendar .month:not(:first-child){
   border-left:1px solid var(--calendar-past-bg);
 }
 .open-post .post-calendar .grid,
-.post-detail-board .post-calendar .grid,
-.post-detail-board .second-post-column .post-calendar .grid{
+.post-mode-boards > .second-post-column .post-calendar .grid,
+.post-mode-boards > .second-post-column .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
   height:calc(var(--calendar-height) - var(--calendar-header-h));
@@ -2810,8 +2802,8 @@ body.filters-active #filterBtn{
   grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
 .open-post .post-calendar .calendar-header,
-.post-detail-board .post-calendar .calendar-header,
-.post-detail-board .second-post-column .post-calendar .calendar-header{
+.post-mode-boards > .second-post-column .post-calendar .calendar-header,
+.post-mode-boards > .second-post-column .post-calendar .calendar-header{
   height:var(--calendar-header-h);
   display:flex;
   align-items:center;
@@ -2824,10 +2816,10 @@ body.filters-active #filterBtn{
 }
 .open-post .post-calendar .weekday,
 .open-post .post-calendar .day,
-.post-detail-board .post-calendar .weekday,
-.post-detail-board .post-calendar .day,
-.post-detail-board .second-post-column .post-calendar .weekday,
-.post-detail-board .second-post-column .post-calendar .day{
+.post-mode-boards > .second-post-column .post-calendar .weekday,
+.post-mode-boards > .second-post-column .post-calendar .day,
+.post-mode-boards > .second-post-column .post-calendar .weekday,
+.post-mode-boards > .second-post-column .post-calendar .day{
   width:var(--calendar-cell-w);
   height:var(--calendar-cell-h);
   display:flex;
@@ -2836,15 +2828,15 @@ body.filters-active #filterBtn{
   line-height:var(--calendar-cell-h);
 }
 .open-post .post-calendar .weekday,
-.post-detail-board .post-calendar .weekday,
-.post-detail-board .second-post-column .post-calendar .weekday{
+.post-mode-boards > .second-post-column .post-calendar .weekday,
+.post-mode-boards > .second-post-column .post-calendar .weekday{
   font-size:10px;
   font-weight:bold;
   color:var(--dropdown-text);
 }
 .open-post .post-calendar .day,
-.post-detail-board .post-calendar .day,
-.post-detail-board .second-post-column .post-calendar .day{
+.post-mode-boards > .second-post-column .post-calendar .day,
+.post-mode-boards > .second-post-column .post-calendar .day{
   cursor:pointer;
   font-size:12px;
   border-radius:8px;
@@ -2853,54 +2845,54 @@ body.filters-active #filterBtn{
   transition:background .2s,color .2s;
 }
 .open-post .post-calendar .day.empty,
-.post-detail-board .post-calendar .day.empty,
-.post-detail-board .second-post-column .post-calendar .day.empty{
+.post-mode-boards > .second-post-column .post-calendar .day.empty,
+.post-mode-boards > .second-post-column .post-calendar .day.empty{
   cursor:default;
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
   opacity:0.6;
 }
 .open-post .post-calendar .day.available-day,
-.post-detail-board .post-calendar .day.available-day,
-.post-detail-board .second-post-column .post-calendar .day.available-day{
+.post-mode-boards > .second-post-column .post-calendar .day.available-day,
+.post-mode-boards > .second-post-column .post-calendar .day.available-day{
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
 }
 .open-post .post-calendar .day.available-day:hover,
-.post-detail-board .post-calendar .day.available-day:hover,
-.post-detail-board .second-post-column .post-calendar .day.available-day:hover{
+.post-mode-boards > .second-post-column .post-calendar .day.available-day:hover,
+.post-mode-boards > .second-post-column .post-calendar .day.available-day:hover{
   background:var(--session-available);
   color:#fff;
 }
 .open-post .post-calendar .day.selected,
-.post-detail-board .post-calendar .day.selected,
-.post-detail-board .second-post-column .post-calendar .day.selected{
+.post-mode-boards > .second-post-column .post-calendar .day.selected,
+.post-mode-boards > .second-post-column .post-calendar .day.selected{
   background:var(--session-selected);
   color:#fff;
 }
 .open-post .post-calendar .day.selected:hover,
-.post-detail-board .post-calendar .day.selected:hover,
-.post-detail-board .second-post-column .post-calendar .day.selected:hover{
+.post-mode-boards > .second-post-column .post-calendar .day.selected:hover,
+.post-mode-boards > .second-post-column .post-calendar .day.selected:hover{
   background:var(--session-selected);
   color:#fff;
 }
 .open-post .post-calendar .day.today,
-.post-detail-board .post-calendar .day.today,
-.post-detail-board .second-post-column .post-calendar .day.today{color:var(--today) !important;}
+.post-mode-boards > .second-post-column .post-calendar .day.today,
+.post-mode-boards > .second-post-column .post-calendar .day.today{color:var(--today) !important;}
 .open-post .post-calendar .day.available-day.today,
 .open-post .post-calendar .day.available-day.selected.today,
 .open-post .post-calendar .day.selected.today,
-.post-detail-board .post-calendar .day.available-day.today,
-.post-detail-board .post-calendar .day.available-day.selected.today,
-.post-detail-board .post-calendar .day.selected.today,
-.post-detail-board .second-post-column .post-calendar .day.available-day.today,
-.post-detail-board .second-post-column .post-calendar .day.available-day.selected.today,
-.post-detail-board .second-post-column .post-calendar .day.selected.today{color:var(--today) !important;}
+.post-mode-boards > .second-post-column .post-calendar .day.available-day.today,
+.post-mode-boards > .second-post-column .post-calendar .day.available-day.selected.today,
+.post-mode-boards > .second-post-column .post-calendar .day.selected.today,
+.post-mode-boards > .second-post-column .post-calendar .day.available-day.today,
+.post-mode-boards > .second-post-column .post-calendar .day.available-day.selected.today,
+.post-mode-boards > .second-post-column .post-calendar .day.selected.today{color:var(--today) !important;}
 
 
 .open-post .post-calendar .selected-month-name,
-.post-detail-board .post-calendar .selected-month-name,
-.post-detail-board .second-post-column .post-calendar .selected-month-name{
+.post-mode-boards > .second-post-column .post-calendar .selected-month-name,
+.post-mode-boards > .second-post-column .post-calendar .selected-month-name{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:8px;
@@ -2908,13 +2900,13 @@ body.filters-active #filterBtn{
 }
 
 .open-post .calendar-container .time-popup,
-.post-detail-board .second-post-column .calendar-container .time-popup{
+.post-mode-boards > .second-post-column .calendar-container .time-popup{
   position:absolute;
   z-index:10;
 }
 
 .open-post .calendar-container .time-popup .time-list,
-.post-detail-board .second-post-column .calendar-container .time-popup .time-list{
+.post-mode-boards > .second-post-column .calendar-container .time-popup .time-list{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
   padding:8px;
@@ -2925,7 +2917,7 @@ body.filters-active #filterBtn{
    }
 
 .open-post .calendar-container .time-popup .time-list button,
-.post-detail-board .second-post-column .calendar-container .time-popup .time-list button{
+.post-mode-boards > .second-post-column .calendar-container .time-popup .time-list button{
   background:var(--btn);
   border:1px solid var(--btn);
   color:var(--button-text);
@@ -2936,15 +2928,15 @@ body.filters-active #filterBtn{
 
 .open-post .venue-info,
 .open-post .session-info,
-.post-detail-board .second-post-column .venue-info,
-.post-detail-board .second-post-column .session-info{
+.post-mode-boards > .second-post-column .venue-info,
+.post-mode-boards > .second-post-column .session-info{
   color: inherit;
   font-size: inherit;
 }
 .open-post .venue-info,
-.post-detail-board .second-post-column .venue-info{margin-top:4px;}
+.post-mode-boards > .second-post-column .venue-info{margin-top:4px;}
 .open-post .session-info,
-.post-detail-board .second-post-column .session-info{margin-top:8px;}
+.post-mode-boards > .second-post-column .session-info{margin-top:8px;}
 
 
 
@@ -3024,7 +3016,7 @@ body.filters-active #filterBtn{
     flex-direction:column;
   }
   .open-post .post-details .location-section,
-  .post-detail-board .second-post-column .post-details .location-section{
+  .post-mode-boards > .second-post-column .post-details .location-section{
     order:-1;
   }
   .open-post .image-box{
@@ -3036,8 +3028,8 @@ body.filters-active #filterBtn{
   }
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
-  .post-detail-board .second-post-column .venue-dropdown,
-  .post-detail-board .second-post-column .session-dropdown{
+  .post-mode-boards > .second-post-column .venue-dropdown,
+  .post-mode-boards > .second-post-column .session-dropdown{
     display:block;
   }
 }
@@ -3639,7 +3631,6 @@ img.thumb{
         </div>
       </div>
     </section>
-    <section class="post-detail-board" aria-label="Post Details Board"></section>
     <section class="ad-board" aria-label="Ad Board">
       <div class="ad-panel">
       </div>
@@ -4237,7 +4228,7 @@ img.thumb{
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.history-board, .posts, .post-detail-board').forEach(list=>{
+      document.querySelectorAll('.history-board, .posts, .post-mode-boards > .second-post-column').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
@@ -4321,12 +4312,11 @@ img.thumb{
         const imgArea = body ? body.querySelector('.post-images') : null;
         const header = document.querySelector('.open-post .post-header');
         const board = document.querySelector('.post-board');
-        const detailBoard = document.querySelector('.post-detail-board');
-        const detailColumn = detailBoard ? detailBoard.querySelector('.second-post-column') : null;
+        const detailColumn = document.querySelector('.post-mode-boards > .second-post-column');
         const venueContainer = detailColumn ? detailColumn.querySelector('.post-venue-selection-container') : null;
         const sessionContainer = detailColumn ? detailColumn.querySelector('.post-session-selection-container') : null;
         const detailColumnMounted = !!(detailColumn && document.contains(detailColumn));
-        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible') && detailColumnMounted);
+        const detailVisible = !!(detailColumn && detailColumn.classList.contains('is-visible') && detailColumnMounted);
         root.classList.toggle('hide-map-calendar', !detailVisible);
         if(venueDropdownEl){
           if(venueContainer && document.contains(venueContainer) && venueDropdownEl.parentElement !== venueContainer){
@@ -5387,21 +5377,22 @@ function makePosts(){
         const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
         const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
         const filterPinned = !!(filterPanel && filterPanel.classList.contains('show') && pinBtn && pinBtn.getAttribute('aria-pressed') === 'true');
-        const detailBoard = document.querySelector('.post-detail-board');
         const historyOpenPost = historyBoard ? historyBoard.querySelector('.open-post') : null;
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const activeOpenPost = historyActive ? (historyOpenPost || postsOpenPost) : (postsOpenPost || historyOpenPost);
         const activeOpenId = activeOpenPost && activeOpenPost.dataset ? activeOpenPost.dataset.id : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const anyOpenId = anyOpenPost && anyOpenPost.dataset ? anyOpenPost.dataset.id : null;
-        const detailMatchesActive = !!(detailBoard && activeOpenId && detailBoard.dataset && detailBoard.dataset.id === activeOpenId);
-        const detailMatchesAny = !!(detailBoard && anyOpenId && detailBoard.dataset && detailBoard.dataset.id === anyOpenId);
-        const detailVisible = !!(detailBoard && detailBoard.classList.contains('is-visible') && detailMatchesActive);
+        const detailColumn = document.querySelector('.post-mode-boards > .second-post-column');
+        const columnId = detailColumn && detailColumn.dataset ? detailColumn.dataset.openPostId || '' : '';
+        const detailMatchesActive = !!(detailColumn && activeOpenId && columnId === activeOpenId);
+        const detailMatchesAny = !!(detailColumn && anyOpenId && columnId === anyOpenId);
+        const detailVisible = !!(detailColumn && detailColumn.classList.contains('is-visible') && detailMatchesActive);
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
         let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
         const postWidth = postBoard ? (postBoard.offsetWidth || 440) : 0;
         const historyWidth = historyBoard ? (historyBoard.offsetWidth || 440) : 0;
-        const detailWidth = detailBoard && detailMatchesAny ? (detailBoard.offsetWidth || 560) : 0;
+        const detailWidth = detailColumn && detailMatchesAny ? (detailColumn.offsetWidth || 560) : 0;
         const boardsWidths = [];
         if(historyActive && historyBoard){
           boardsWidths.push(historyWidth);
@@ -5442,12 +5433,12 @@ function makePosts(){
           postBoard.style.display = historyActive ? 'none' : '';
           postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
         }
-        if(detailBoard){
-          if(detailMatchesActive && !detailBoard.classList.contains('is-visible')){
-            detailBoard.classList.add('is-visible');
+        if(detailColumn){
+          if(detailMatchesActive && !detailColumn.classList.contains('is-visible')){
+            detailColumn.classList.add('is-visible');
           } else if(!detailVisible && !detailMatchesAny){
-            detailBoard.classList.remove('is-visible');
-            detailBoard.removeAttribute('data-id');
+            detailColumn.classList.remove('is-visible');
+            if(detailColumn.dataset) delete detailColumn.dataset.openPostId;
             if(typeof updateStickyImages === 'function') updateStickyImages();
           }
         }
@@ -6715,7 +6706,7 @@ function makePosts(){
         target.replaceWith(detail);
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
-          const mountedDetailColumn = document.querySelector('.post-detail-board .second-post-column');
+          const mountedDetailColumn = document.querySelector('.post-mode-boards > .second-post-column');
           if(mountedDetailColumn){
             updateStickyImages();
           }
@@ -6768,11 +6759,11 @@ function makePosts(){
         const isHistory = container && container.id === 'historyBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
         const post = id ? posts.find(x => x.id === id) : null;
-        const detailBoard = document.querySelector('.post-detail-board');
-        if(detailBoard){
-          detailBoard.classList.remove('is-visible');
-          detailBoard.innerHTML='';
-          detailBoard.removeAttribute('data-id');
+        const detachedColumn = document.querySelector('.post-mode-boards > .second-post-column');
+        if(detachedColumn){
+          detachedColumn.classList.remove('is-visible');
+          if(detachedColumn.dataset) delete detachedColumn.dataset.openPostId;
+          detachedColumn.remove();
         }
         document.body.classList.remove('detail-open');
         $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=> el.removeAttribute('aria-selected'));
@@ -8419,9 +8410,11 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script>
 let boardAdjustCleanup = null;
+
 function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
-  const detailBoard = document.querySelector('.post-detail-board');
+  const boardsContainer = document.querySelector('.post-mode-boards');
+  const adBoard = document.querySelector('.ad-board');
   const openPost = (board && board.querySelector('.open-post')) || document.querySelector('.post-board .open-post, #historyBoard .open-post');
   const getAvailableWidth = () => {
     const values = [];
@@ -8475,7 +8468,12 @@ function initPostLayout(board){
     if(parentBody) clearPreservedHeight(parentBody);
     node.remove();
   });
-  if(!detailBoard){
+  const getMountedColumn = () => {
+    if(!boardsContainer) return null;
+    return Array.from(boardsContainer.children).find(node => node.classList && node.classList.contains('second-post-column')) || null;
+  };
+  let mountedColumn = getMountedColumn();
+  if(!boardsContainer){
     document.documentElement.style.removeProperty('--post-header-h');
     if(!openPost){
       document.body.classList.remove('detail-open');
@@ -8484,13 +8482,22 @@ function initPostLayout(board){
       const body = openPost.querySelector('.post-body');
       if(body) clearPreservedHeight(body);
     }
+    if(mountedColumn){
+      mountedColumn.classList.remove('is-visible');
+      if(mountedColumn.dataset) delete mountedColumn.dataset.openPostId;
+      mountedColumn.remove();
+      mountedColumn = null;
+    }
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
   }
   if(!openPost){
-    detailBoard.classList.remove('is-visible');
-    detailBoard.innerHTML='';
-    detailBoard.removeAttribute('data-id');
+    if(mountedColumn){
+      mountedColumn.classList.remove('is-visible');
+      if(mountedColumn.dataset) delete mountedColumn.dataset.openPostId;
+      mountedColumn.remove();
+      mountedColumn = null;
+    }
     document.body.classList.remove('detail-open');
     document.documentElement.style.removeProperty('--post-header-h');
     if(board){
@@ -8504,39 +8511,43 @@ function initPostLayout(board){
   const postImages = postBody ? postBody.querySelector('.post-images') : null;
   const mainColumn = postBody ? postBody.querySelector('.main-post-column') : null;
   const openPostId = openPost && openPost.dataset ? (openPost.dataset.id || '') : '';
-  const detailBoardId = detailBoard ? (detailBoard.getAttribute('data-id') || '') : '';
   let secondCol = openPost ? openPost.querySelector('.second-post-column') : null;
-  const existingDetailCol = detailBoard ? detailBoard.querySelector('.second-post-column') : null;
-  if(!secondCol && existingDetailCol && openPostId === detailBoardId){
-    secondCol = existingDetailCol;
+  if(!secondCol && mountedColumn){
+    const mountedId = mountedColumn.dataset ? mountedColumn.dataset.openPostId || '' : '';
+    if(mountedId === openPostId){
+      secondCol = mountedColumn;
+    }
+  }
+  if(mountedColumn && secondCol !== mountedColumn){
+    mountedColumn.classList.remove('is-visible');
+    if(mountedColumn.dataset) delete mountedColumn.dataset.openPostId;
+    mountedColumn.remove();
+    mountedColumn = null;
   }
   const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image, .image-box') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
   const availableWidth = getAvailableWidth();
-  const usingSharedBoard = Boolean(detailBoard && secondCol && availableWidth >= 440);
-  let detailDocked = usingSharedBoard;
-  if(usingSharedBoard){
-    if(secondCol){
-      const alreadyMounted = detailBoard && secondCol.parentElement === detailBoard;
-      if(!alreadyMounted){
-        detailBoard.innerHTML='';
-        detailBoard.appendChild(secondCol);
+  const shouldDock = Boolean(boardsContainer && secondCol && availableWidth >= 440);
+  const isDocked = Boolean(secondCol && boardsContainer && secondCol.parentElement === boardsContainer);
+  if(shouldDock && secondCol){
+    if(!isDocked){
+      const referenceNode = adBoard && adBoard.parentElement === boardsContainer ? adBoard : null;
+      if(referenceNode){
+        boardsContainer.insertBefore(secondCol, referenceNode);
+      } else {
+        boardsContainer.appendChild(secondCol);
       }
-      if(detailBoard && detailBoard.getAttribute('data-id') !== openPostId){
-        detailBoard.setAttribute('data-id', openPostId);
-      }
-      if(detailBoard && !detailBoard.classList.contains('is-visible')){
-        detailBoard.classList.add('is-visible');
-      }
-      if(!alreadyMounted && !document.body.classList.contains('detail-open')){
-        document.body.classList.add('detail-open');
-      }
-      triggerDetailMapResize(secondCol);
-    } else if(postBody){
-      clearPreservedHeight(postBody);
     }
+    if(secondCol.dataset) secondCol.dataset.openPostId = openPostId;
+    if(!secondCol.classList.contains('is-visible')){
+      secondCol.classList.add('is-visible');
+    }
+    if(!document.body.classList.contains('detail-open')){
+      document.body.classList.add('detail-open');
+    }
+    triggerDetailMapResize(secondCol);
   } else {
     if(secondCol && postBody && secondCol.parentElement !== postBody){
       if(mainColumn && mainColumn.parentElement === postBody){
@@ -8545,10 +8556,10 @@ function initPostLayout(board){
         postBody.appendChild(secondCol);
       }
     }
-    if(postBody) clearPreservedHeight(postBody);
-    detailBoard.classList.remove('is-visible');
-    detailBoard.innerHTML='';
-    detailBoard.removeAttribute('data-id');
+    if(secondCol && secondCol.classList.contains('is-visible')){
+      secondCol.classList.remove('is-visible');
+    }
+    if(secondCol && secondCol.dataset) delete secondCol.dataset.openPostId;
     document.body.classList.remove('detail-open');
     triggerDetailMapResize(secondCol);
   }
@@ -8557,16 +8568,14 @@ function initPostLayout(board){
     if(!postBody){
       return;
     }
-    if(!detailDocked){
+    if(!(secondCol && boardsContainer && secondCol.parentElement === boardsContainer)){
       clearPreservedHeight(postBody);
       return;
     }
-    if(secondCol && detailBoard.contains(secondCol)){
-      const height = secondCol.offsetHeight;
-      if(height){
-        applyPreservedHeight(postBody, height);
-        return;
-      }
+    const height = secondCol.offsetHeight;
+    if(height){
+      applyPreservedHeight(postBody, height);
+      return;
     }
     const storedHeight = postBody.dataset ? postBody.dataset.secondPostHeight : null;
     if(storedHeight){
@@ -8581,8 +8590,9 @@ function initPostLayout(board){
 
   function updateMetrics(){
     const widthNow = getAvailableWidth();
-    const shouldUseSharedBoard = Boolean(detailBoard && secondCol && widthNow >= 440);
-    if(shouldUseSharedBoard !== detailDocked){
+    const dockNow = Boolean(boardsContainer && secondCol && widthNow >= 440);
+    const currentlyDocked = Boolean(secondCol && boardsContainer && secondCol.parentElement === boardsContainer);
+    if(dockNow !== currentlyDocked){
       initPostLayout(board);
       return;
     }
