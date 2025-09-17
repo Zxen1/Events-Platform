@@ -2518,6 +2518,16 @@ body.filters-active #filterBtn{
   border-radius:8px;
 }
 
+.post-detail-board .second-post-column .location-section .map-container{
+  flex-basis:100%;
+  max-width:100%;
+}
+
+.post-detail-board .second-post-column .post-map{
+  flex-basis:100%;
+  max-width:100%;
+}
+
 
 .open-post .venue-dropdown,
 .open-post .session-dropdown,
@@ -8385,6 +8395,23 @@ function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
   const detailBoard = document.querySelector('.post-detail-board');
   const openPost = (board && board.querySelector('.open-post')) || document.querySelector('.post-board .open-post, #historyBoard .open-post');
+  const scheduleMapResize = mapInstance => {
+    if(!mapInstance || typeof mapInstance.resize !== 'function') return;
+    if(typeof requestAnimationFrame === 'function'){
+      requestAnimationFrame(() => mapInstance.resize());
+    } else {
+      setTimeout(() => mapInstance.resize(), 0);
+    }
+  };
+  const triggerDetailMapResize = target => {
+    if(!target) return;
+    const mapNode = typeof target.querySelector === 'function' ? target.querySelector('.post-map') : null;
+    const ref = target._detailMap || (mapNode && mapNode._detailMap) || null;
+    const mapInstance = ref && ref.map;
+    if(mapInstance && typeof mapInstance.resize === 'function'){
+      scheduleMapResize(mapInstance);
+    }
+  };
   const clearPreservedHeight = target => {
     if(target){
       target.style.removeProperty('--second-post-height');
@@ -8469,6 +8496,7 @@ function initPostLayout(board){
     detailBoard.classList.add('is-visible');
     detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
     document.body.classList.add('detail-open');
+    triggerDetailMapResize(secondCol);
   } else {
     if(postBody) clearPreservedHeight(postBody);
     if(placeholder.dataset) delete placeholder.dataset.lastHeight;
