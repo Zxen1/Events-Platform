@@ -8424,8 +8424,13 @@ function initPostLayout(board){
     if(document.documentElement && typeof document.documentElement.clientWidth === 'number' && !Number.isNaN(document.documentElement.clientWidth)){
       values.push(document.documentElement.clientWidth);
     }
-    if(board && typeof board.clientWidth === 'number' && board.clientWidth > 0){
-      values.push(board.clientWidth);
+    if(board){
+      const rect = typeof board.getBoundingClientRect === 'function' ? board.getBoundingClientRect() : null;
+      if(rect && rect.width){
+        values.push(rect.width);
+      } else if(typeof board.offsetWidth === 'number' && board.offsetWidth > 0){
+        values.push(board.offsetWidth);
+      }
     }
     return values.length ? Math.min(...values) : 0;
   };
