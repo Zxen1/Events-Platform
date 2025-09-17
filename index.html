@@ -1680,6 +1680,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
     max-width:100%;
     min-width:360px;
   }
+  .post-detail-board{
+    display:none;
+  }
 }
 
 .post-detail-board{
@@ -3539,6 +3542,14 @@ img.thumb{
     max-width:520px;
     min-width:0;
     flex:0 0 100%;
+  }
+  .open-post .second-post-column{
+    height:auto;
+    max-height:none;
+    overflow:visible;
+  }
+  .open-post .second-post-column .post-details{
+    height:auto;
   }
 }
 
@@ -8428,6 +8439,19 @@ function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
   const detailBoard = document.querySelector('.post-detail-board');
   const openPost = (board && board.querySelector('.open-post')) || document.querySelector('.post-board .open-post, #historyBoard .open-post');
+  const getAvailableWidth = () => {
+    const values = [];
+    if(typeof window !== 'undefined' && typeof window.innerWidth === 'number' && !Number.isNaN(window.innerWidth)){
+      values.push(window.innerWidth);
+    }
+    if(document.documentElement && typeof document.documentElement.clientWidth === 'number' && !Number.isNaN(document.documentElement.clientWidth)){
+      values.push(document.documentElement.clientWidth);
+    }
+    if(board && typeof board.clientWidth === 'number' && board.clientWidth > 0){
+      values.push(board.clientWidth);
+    }
+    return values.length ? Math.min(...values) : 0;
+  };
   const scheduleMapResize = mapInstance => {
     if(!mapInstance || typeof mapInstance.resize !== 'function') return;
     if(typeof requestAnimationFrame === 'function'){
@@ -8462,6 +8486,7 @@ function initPostLayout(board){
       clearPreservedHeight(target);
     }
   };
+  let placeholder = openPost ? openPost.querySelector('.second-post-placeholder') : null;
   document.querySelectorAll('.second-post-placeholder').forEach(placeholder => {
     const parentBody = placeholder.parentElement;
     const belongsToOpen = openPost && placeholder.closest('.open-post') === openPost;
@@ -8498,75 +8523,107 @@ function initPostLayout(board){
   const postBody = openPost.querySelector('.post-body');
   const postHeader = openPost.querySelector('.post-header');
   const postImages = postBody ? postBody.querySelector('.post-images') : null;
+  const mainColumn = postBody ? postBody.querySelector('.main-post-column') : null;
   const secondCol = openPost.querySelector('.second-post-column');
   const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
   const selectedImageBox = postImages ? postImages.querySelector('.selected-image, .image-box') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
-
-  let placeholder = openPost.querySelector('.second-post-placeholder');
-  if(!placeholder){
-    placeholder = document.createElement('div');
-    placeholder.className = 'second-post-placeholder';
-    placeholder.setAttribute('aria-hidden', 'true');
-  }
-  if(postBody){
-    placeholder.dataset.postId = openPost.dataset ? openPost.dataset.id || '' : '';
-    if(secondCol){
-      if(placeholder.parentElement !== postBody){
-        postBody.insertBefore(placeholder, secondCol);
-      } else {
-        postBody.insertBefore(placeholder, secondCol);
-      }
-    } else if(!placeholder.parentElement){
-      postBody.appendChild(placeholder);
+  const availableWidth = getAvailableWidth();
+  const usingSharedBoard = Boolean(detailBoard && secondCol && availableWidth >= 440);
+  let detailDocked = usingSharedBoard;
+  const ensurePlaceholder = () => {
+    if(!postBody) return null;
+    if(!placeholder){
+      placeholder = document.createElement('div');
+      placeholder.className = 'second-post-placeholder';
+      placeholder.setAttribute('aria-hidden', 'true');
     }
-  }
-
-  detailBoard.innerHTML='';
-  if(secondCol){
-    detailBoard.appendChild(secondCol);
-    detailBoard.classList.add('is-visible');
-    detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
-    document.body.classList.add('detail-open');
-    triggerDetailMapResize(secondCol);
-  } else {
-    if(postBody) clearPreservedHeight(postBody);
+    if(placeholder.parentElement !== postBody){
+      if(secondCol && secondCol.parentElement === postBody){
+        postBody.insertBefore(placeholder, secondCol);
+      } else if(mainColumn && mainColumn.parentElement === postBody){
+        mainColumn.insertAdjacentElement('afterend', placeholder);
+      } else {
+        postBody.appendChild(placeholder);
+      }
+    }
+    if(placeholder.dataset){
+      placeholder.dataset.postId = openPost.dataset ? openPost.dataset.id || '' : '';
+    }
+    return placeholder;
+  };
+  const removePlaceholder = () => {
+    if(!placeholder) return;
+    const parentBody = placeholder.parentElement;
+    if(parentBody) clearPreservedHeight(parentBody);
     if(placeholder.dataset) delete placeholder.dataset.lastHeight;
     placeholder.remove();
+    placeholder = null;
+  };
+
+  if(usingSharedBoard){
+    ensurePlaceholder();
+    detailBoard.innerHTML='';
+    if(secondCol){
+      detailBoard.appendChild(secondCol);
+      detailBoard.classList.add('is-visible');
+      detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
+      document.body.classList.add('detail-open');
+      triggerDetailMapResize(secondCol);
+    }
+  } else {
+    if(secondCol && postBody && secondCol.parentElement !== postBody){
+      if(placeholder && placeholder.parentElement === postBody){
+        postBody.insertBefore(secondCol, placeholder);
+      } else if(mainColumn && mainColumn.parentElement === postBody){
+        mainColumn.insertAdjacentElement('afterend', secondCol);
+      } else {
+        postBody.appendChild(secondCol);
+      }
+    }
+    removePlaceholder();
+    if(postBody) clearPreservedHeight(postBody);
     detailBoard.classList.remove('is-visible');
+    detailBoard.innerHTML='';
     detailBoard.removeAttribute('data-id');
     document.body.classList.remove('detail-open');
+    triggerDetailMapResize(secondCol);
   }
 
   function updatePlaceholder(){
-    if(!placeholder || !placeholder.isConnected) return;
-    const body = placeholder.parentElement;
+    if(!detailDocked){
+      if(postBody) clearPreservedHeight(postBody);
+      return;
+    }
+    const activePlaceholder = placeholder && placeholder.isConnected ? placeholder : null;
+    if(!activePlaceholder) return;
+    const body = activePlaceholder.parentElement;
     if(!body) return;
-    if(secondCol && document.contains(secondCol)){
+    if(secondCol && detailBoard.contains(secondCol)){
       const height = secondCol.offsetHeight;
       if(height){
         applyPreservedHeight(body, height);
-        placeholder.dataset.lastHeight = String(height);
-      } else if(placeholder.dataset && placeholder.dataset.lastHeight){
-        const stored = parseFloat(placeholder.dataset.lastHeight);
+        activePlaceholder.dataset.lastHeight = String(height);
+      } else if(activePlaceholder.dataset && activePlaceholder.dataset.lastHeight){
+        const stored = parseFloat(activePlaceholder.dataset.lastHeight);
         if(!Number.isNaN(stored)){
           applyPreservedHeight(body, stored);
         } else {
           clearPreservedHeight(body);
-          delete placeholder.dataset.lastHeight;
+          delete activePlaceholder.dataset.lastHeight;
         }
       } else {
         clearPreservedHeight(body);
-        if(placeholder.dataset) delete placeholder.dataset.lastHeight;
+        if(activePlaceholder.dataset) delete activePlaceholder.dataset.lastHeight;
       }
-    } else if(placeholder.dataset && placeholder.dataset.lastHeight){
-      const stored = parseFloat(placeholder.dataset.lastHeight);
+    } else if(activePlaceholder.dataset && activePlaceholder.dataset.lastHeight){
+      const stored = parseFloat(activePlaceholder.dataset.lastHeight);
       if(!Number.isNaN(stored)){
         applyPreservedHeight(body, stored);
       } else {
         clearPreservedHeight(body);
-        delete placeholder.dataset.lastHeight;
+        delete activePlaceholder.dataset.lastHeight;
       }
     } else {
       clearPreservedHeight(body);
@@ -8574,6 +8631,12 @@ function initPostLayout(board){
   }
 
   function updateMetrics(){
+    const widthNow = getAvailableWidth();
+    const shouldUseSharedBoard = Boolean(detailBoard && secondCol && widthNow >= 440);
+    if(shouldUseSharedBoard !== detailDocked){
+      initPostLayout(board);
+      return;
+    }
     if(postHeader){
       document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
     } else {
