@@ -1729,9 +1729,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 .open-post .second-post-placeholder{
   width:100%;
-  min-height:0;
   pointer-events:none;
   visibility:hidden;
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:0;
+  min-height:0;
 }
 
 .last-opened-label{
@@ -6711,6 +6716,16 @@ function makePosts(){
           if(typeof window.adjustBoards === 'function') window.adjustBoards();
           return;
         }
+        const openBody = openEl.querySelector('.post-body');
+        if(openBody){
+          openBody.style.removeProperty('--second-post-height');
+          openBody.style.removeProperty('min-height');
+          if(openBody.dataset) delete openBody.dataset.secondPostHeight;
+        }
+        const openPlaceholder = openEl.querySelector('.second-post-placeholder');
+        if(openPlaceholder && openPlaceholder.dataset){
+          delete openPlaceholder.dataset.lastHeight;
+        }
         const container = openEl.closest('.post-board, #historyBoard') || postsWideEl;
         const isHistory = container && container.id === 'historyBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
@@ -8370,8 +8385,29 @@ function initPostLayout(board){
   if(boardAdjustCleanup){ boardAdjustCleanup(); boardAdjustCleanup = null; }
   const detailBoard = document.querySelector('.post-detail-board');
   const openPost = (board && board.querySelector('.open-post')) || document.querySelector('.post-board .open-post, #historyBoard .open-post');
+  const clearPreservedHeight = target => {
+    if(target){
+      target.style.removeProperty('--second-post-height');
+      target.style.removeProperty('min-height');
+      if(target.dataset) delete target.dataset.secondPostHeight;
+    }
+  };
+  const applyPreservedHeight = (target, height) => {
+    if(!target) return;
+    if(height){
+      target.style.setProperty('--second-post-height', height + 'px');
+      target.style.minHeight = height + 'px';
+      if(target.dataset) target.dataset.secondPostHeight = height;
+    } else {
+      clearPreservedHeight(target);
+    }
+  };
   document.querySelectorAll('.second-post-placeholder').forEach(placeholder => {
-    if(!openPost || placeholder.closest('.open-post') !== openPost){
+    const parentBody = placeholder.parentElement;
+    const belongsToOpen = openPost && placeholder.closest('.open-post') === openPost;
+    if(!belongsToOpen){
+      if(parentBody) clearPreservedHeight(parentBody);
+      if(placeholder.dataset) delete placeholder.dataset.lastHeight;
       placeholder.remove();
     }
   });
@@ -8379,6 +8415,10 @@ function initPostLayout(board){
     document.documentElement.style.removeProperty('--post-header-h');
     if(!openPost){
       document.body.classList.remove('detail-open');
+    }
+    if(openPost){
+      const body = openPost.querySelector('.post-body');
+      if(body) clearPreservedHeight(body);
     }
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
@@ -8389,6 +8429,9 @@ function initPostLayout(board){
     detailBoard.removeAttribute('data-id');
     document.body.classList.remove('detail-open');
     document.documentElement.style.removeProperty('--post-header-h');
+    if(board){
+      board.querySelectorAll('.post-body').forEach(clearPreservedHeight);
+    }
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
   }
@@ -8427,6 +8470,8 @@ function initPostLayout(board){
     detailBoard.setAttribute('data-id', openPost.dataset && openPost.dataset.id ? openPost.dataset.id : '');
     document.body.classList.add('detail-open');
   } else {
+    if(postBody) clearPreservedHeight(postBody);
+    if(placeholder.dataset) delete placeholder.dataset.lastHeight;
     placeholder.remove();
     detailBoard.classList.remove('is-visible');
     detailBoard.removeAttribute('data-id');
@@ -8434,20 +8479,36 @@ function initPostLayout(board){
   }
 
   function updatePlaceholder(){
-    if(placeholder && placeholder.isConnected){
-      if(secondCol && document.contains(secondCol)){
-        const height = secondCol.offsetHeight;
-        if(height){
-          placeholder.style.height = height + 'px';
-          placeholder.style.minHeight = height + 'px';
+    if(!placeholder || !placeholder.isConnected) return;
+    const body = placeholder.parentElement;
+    if(!body) return;
+    if(secondCol && document.contains(secondCol)){
+      const height = secondCol.offsetHeight;
+      if(height){
+        applyPreservedHeight(body, height);
+        placeholder.dataset.lastHeight = String(height);
+      } else if(placeholder.dataset && placeholder.dataset.lastHeight){
+        const stored = parseFloat(placeholder.dataset.lastHeight);
+        if(!Number.isNaN(stored)){
+          applyPreservedHeight(body, stored);
         } else {
-          placeholder.style.removeProperty('height');
-          placeholder.style.removeProperty('min-height');
+          clearPreservedHeight(body);
+          delete placeholder.dataset.lastHeight;
         }
       } else {
-        placeholder.style.removeProperty('height');
-        placeholder.style.removeProperty('min-height');
+        clearPreservedHeight(body);
+        if(placeholder.dataset) delete placeholder.dataset.lastHeight;
       }
+    } else if(placeholder.dataset && placeholder.dataset.lastHeight){
+      const stored = parseFloat(placeholder.dataset.lastHeight);
+      if(!Number.isNaN(stored)){
+        applyPreservedHeight(body, stored);
+      } else {
+        clearPreservedHeight(body);
+        delete placeholder.dataset.lastHeight;
+      }
+    } else {
+      clearPreservedHeight(body);
     }
   }
 
