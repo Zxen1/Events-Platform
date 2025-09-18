@@ -4062,6 +4062,9 @@ img.thumb{
 
     function normalizeMapStyle(style){
       switch(style){
+        case 'mapbox://styles/mapbox/standard':
+        case 'mapbox://styles/mapbox/standard-beta':
+          return 'mapbox://styles/mapbox/streets-v12';
         case 'mapbox://styles/mapbox/standard-dark':
           return 'mapbox://styles/mapbox/dark-v11';
         case 'mapbox://styles/mapbox/standard-light':
@@ -4115,6 +4118,70 @@ img.thumb{
           rainbow:{ 'color':'#ffe29f','high-color':'#ffa99f','space-color':'#667eea','horizon-blend':0.3 }
         };
         map.setFog(skyThemes[theme] || skyThemes.default);
+      }
+
+      function expressionContainsSizerank(value){
+        if(!Array.isArray(value)) return false;
+        if(value[0] === 'get' && value[1] === 'sizerank') return true;
+        for(let i=1;i<value.length;i++){
+          if(expressionContainsSizerank(value[i])) return true;
+        }
+        return false;
+      }
+
+      function patchSizerankExpression(value){
+        if(!Array.isArray(value)) return {value, changed:false};
+        let changed = false;
+        const op = value[0];
+        const patchedChildren = [];
+        for(let i=1;i<value.length;i++){
+          const child = patchSizerankExpression(value[i]);
+          if(child.changed) changed = true;
+          patchedChildren.push(child.value);
+        }
+        const patched = [op, ...patchedChildren];
+        if(op === 'number'){
+          const firstChild = patchedChildren[0];
+          if(firstChild !== undefined && expressionContainsSizerank(firstChild) && value.length < 3){
+            patched.push(0);
+            changed = true;
+          }
+        }
+        return {value:patched, changed};
+      }
+
+      function fixSizerankExpressions(mapInstance){
+        if(!mapInstance || typeof mapInstance.getStyle !== 'function') return;
+        let styleObj;
+        try {
+          styleObj = mapInstance.getStyle();
+        } catch(err){
+          return;
+        }
+        if(!styleObj || !Array.isArray(styleObj.layers)) return;
+        let anyChanged = false;
+        styleObj.layers.forEach(layer => {
+          if(!layer || !layer.id) return;
+          ['layout','paint'].forEach(section => {
+            const props = layer[section];
+            if(!props) return;
+            Object.keys(props).forEach(prop => {
+              const original = props[prop];
+              if(!Array.isArray(original) || !expressionContainsSizerank(original)) return;
+              const patched = patchSizerankExpression(original);
+              if(!patched.changed) return;
+              try {
+                if(section === 'layout'){
+                  mapInstance.setLayoutProperty(layer.id, prop, patched.value);
+                } else {
+                  mapInstance.setPaintProperty(layer.id, prop, patched.value);
+                }
+                anyChanged = true;
+              } catch(err){}
+            });
+          });
+        });
+        return anyChanged;
       }
 
       function applyMutedMapStyle(mapInstance){
@@ -4212,11 +4279,28 @@ img.thumb{
         const base = getStyleBase(styleUrl);
         if(!base) return false;
         const normalized = normalizeMapStyle(base) || base;
-        return Boolean(normalized) && !normalized.includes('/standard');
+        if(!normalized) return false;
+        if(normalized.includes('/standard')) return false;
+        if(normalized.includes('/terrain-v2')) return false;
+        return true;
       }
 
       function applyTerrainForStyle(styleUrl){
         if(!map || typeof map.setTerrain !== 'function'){
+          return;
+        }
+        let styleObj = null;
+        try {
+          styleObj = map.getStyle();
+        } catch(err){}
+        const terrainSourceId = styleObj && styleObj.terrain && styleObj.terrain.source;
+        if(terrainSourceId){
+          try {
+            map.setTerrain(styleObj.terrain);
+          } catch(err){}
+          if(typeof map.getSource === 'function' && map.getSource('terrain-dem')){
+            try { map.removeSource('terrain-dem'); } catch(err){}
+          }
           return;
         }
         if(!styleAllowsTerrain(styleUrl)){
@@ -5936,6 +6020,11 @@ function makePosts(){
             console.warn('Unknown image ID:', e.id);
           }
         });
+      map.on('styledata', (event)=>{
+        if(event && event.dataType === 'style'){
+          fixSizerankExpressions(map);
+        }
+      });
       map.on('zoomend', checkLoadPosts);
       addControls();
       try{
@@ -5949,6 +6038,7 @@ function makePosts(){
         const baseStyle = getStyleBase(originUrl);
         const resolvedStyle = normalizeMapStyle(baseStyle) || baseStyle || mapStyle;
         mapStyle = window.mapStyle = resolvedStyle;
+        fixSizerankExpressions(map);
         applyTerrainForStyle(resolvedStyle);
         applySky(skyStyle);
         applyMutedMapStyle(map);
