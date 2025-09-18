@@ -1824,7 +1824,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding:0;
   margin:0;
   overflow-y:auto;
-  overflow-y:overlay;
   overflow-x:visible;
   display:flex;
   flex-direction:column;
@@ -2410,7 +2409,12 @@ body.filters-active #filterBtn{
 
 .map-control-row .geocoder{margin:0;}
 
-.post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
+.post-board .posts{
+  overflow:auto;
+  padding:0;
+  margin:0;
+  scrollbar-gutter:stable;
+}
 .post-board .posts,
 .recents-board{
   scrollbar-width:thin;
