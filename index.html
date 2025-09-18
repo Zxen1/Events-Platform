@@ -4266,6 +4266,7 @@ img.thumb{
   })();
   let startPitch, startBearing, logoEls = [], geocoder, closeWelcomeOnMove = false, welcomeCloseResetTimer = null, welcomeModalEl = null;
   const geocoders = [];
+  let syncSpinTypeButtons = null;
 
   function scheduleWelcomeClose(){
     closeWelcomeOnMove = true;
@@ -6675,11 +6676,27 @@ function makePosts(){
 
       map.on('click','clusters', async (e)=>{
         stopSpin();
-        const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
-        const clusterId = features[0].properties.cluster_id;
+        if(!map.getLayer('clusters')) return;
+        let features;
+        try {
+          features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+        } catch(err){
+          console.warn('cluster query failed', err);
+          return;
+        }
+        const feature = features && features[0];
+        const clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
+        if(clusterId === undefined) return;
         const leaves = await getClusterLeavesAll('posts', clusterId);
-        if(!leaves.length) return;
-        const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
+        if(!Array.isArray(leaves) || !leaves.length) return;
+        const first = leaves[0];
+        const firstCoords = first && first.geometry && Array.isArray(first.geometry.coordinates) ? first.geometry.coordinates : null;
+        if(!firstCoords) return;
+        const bounds = leaves.reduce((b,f)=>{
+          const coords = f && f.geometry && Array.isArray(f.geometry.coordinates) ? f.geometry.coordinates : null;
+          if(coords) b.extend(coords);
+          return b;
+        }, new mapboxgl.LngLatBounds(firstCoords, firstCoords));
         map.fitBounds(bounds);
       });
       
@@ -8610,7 +8627,20 @@ document.addEventListener('pointerdown', handleDocInteract);
   const adminPanel = document.getElementById('adminPanel');
   const filterPanel = document.getElementById('filterPanel');
   const sg = window.spinGlobals || {};
-  let syncSpinTypeButtons = null;
+  syncSpinTypeButtons = null;
+  let fallbackSpinLoadType = typeof sg.spinLoadType !== 'undefined' ? sg.spinLoadType : (()=>{
+    try {
+      return localStorage.getItem('spinLoadType') || 'all';
+    } catch(err){
+      return 'all';
+    }
+  })();
+  const getSpinLoadType = ()=>{
+    if(window.spinGlobals && typeof window.spinGlobals.spinLoadType !== 'undefined'){
+      return window.spinGlobals.spinLoadType;
+    }
+    return fallbackSpinLoadType;
+  };
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
@@ -8644,8 +8674,9 @@ document.addEventListener('pointerdown', handleDocInteract);
   if(spinTypeToggle){
     const spinButtons = Array.from(spinTypeToggle.querySelectorAll('button'));
     const syncButtons = ()=>{
+      const currentType = getSpinLoadType();
       spinButtons.forEach(btn=>{
-        const active = btn.dataset.value === spinLoadType;
+        const active = btn.dataset.value === currentType;
         btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
     };
@@ -8654,13 +8685,13 @@ document.addEventListener('pointerdown', handleDocInteract);
     spinButtons.forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const value = btn.dataset.value;
-        if(!value || value === spinLoadType) return;
+        const currentType = getSpinLoadType();
+        if(!value || value === currentType) return;
         if(window.spinGlobals && 'spinLoadType' in window.spinGlobals){
           window.spinGlobals.spinLoadType = value;
         } else {
-          spinLoadType = value;
+          fallbackSpinLoadType = value;
           try{ localStorage.setItem('spinLoadType', value); }catch(err){}
-          updateSpinState();
           syncButtons();
         }
       });
