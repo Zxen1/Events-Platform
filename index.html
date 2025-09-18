@@ -4318,17 +4318,25 @@ img.thumb{
       }
     }
 
+      const storedMapStyle = localStorage.getItem('mapStyle');
+      const normalizedStoredMapStyle = normalizeMapStyle(storedMapStyle);
+      const defaultNormalizedMapStyle = normalizeMapStyle('mapbox://styles/mapbox/standard') || 'mapbox://styles/mapbox/streets-v12';
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = normalizedStoredMapStyle || defaultNormalizedMapStyle,
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
+        if(storedMapStyle !== mapStyle){
+          try {
+            localStorage.setItem('mapStyle', mapStyle);
+          } catch(err){}
+        }
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
@@ -4496,14 +4504,19 @@ img.thumb{
         return String(styleUrl).split('?')[0];
       }
 
+      const TERRAIN_ALLOW_TOKENS = ['/satellite', '/outdoors', '/terrain'];
+      const TERRAIN_BLOCK_TOKENS = ['/streets-', '/light-', '/dark-', '/navigation-day', '/navigation-night'];
+
       function styleAllowsTerrain(styleUrl){
         const base = getStyleBase(styleUrl);
         if(!base) return false;
         const normalized = normalizeMapStyle(base) || base;
         if(!normalized) return false;
-        if(normalized.includes('/standard')) return false;
-        if(normalized.includes('/terrain-v2')) return false;
-        return true;
+        const lower = normalized.toLowerCase();
+        if(lower.includes('/standard')) return false;
+        if(lower.includes('/terrain-v2')) return false;
+        if(TERRAIN_BLOCK_TOKENS.some(token => lower.includes(token))) return false;
+        return TERRAIN_ALLOW_TOKENS.some(token => lower.includes(token));
       }
 
       function applyTerrainForStyle(styleUrl){
@@ -6345,6 +6358,11 @@ function makePosts(){
         const baseStyle = getStyleBase(originUrl);
         const resolvedStyle = normalizeMapStyle(baseStyle) || baseStyle || mapStyle;
         mapStyle = window.mapStyle = resolvedStyle;
+        if(resolvedStyle && localStorage.getItem('mapStyle') !== resolvedStyle){
+          try {
+            localStorage.setItem('mapStyle', resolvedStyle);
+          } catch(err){}
+        }
         fixSizerankExpressions(map);
         applyTerrainForStyle(resolvedStyle);
         applyMutedMapStyle(map);
