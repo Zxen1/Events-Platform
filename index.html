@@ -28,7 +28,8 @@
   --header-h: 56px;
   --subheader-h: 0;
   --panel-w: 440px;
-  --results-w: 440px;
+  --results-w: 530px;
+  --post-board-max-w: 530px;
   --gap: 10px;
     --filter-panel-offset: 0px;
     --media-h: 200px;
@@ -1666,7 +1667,16 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
 }
 
-.post-board,
+.post-board{
+  width:var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
+  flex-shrink:0;
+  position:relative;
+  left:0;
+  opacity:1;
+  transition:left 0.3s ease, opacity 0.3s ease;
+}
+
 .history-board{
   width:440px;
   max-width:440px;
@@ -1705,7 +1715,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
-  transition:margin 0.3s ease;
+  transition:left 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
 }
 .post-board .post-card{
   width:100%;
@@ -1734,7 +1744,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .main-post-column{
   flex:0 0 100%;
   width:100%;
-  max-width:440px;
+  max-width:var(--post-board-max-w);
   padding:0;
   display:flex;
   flex-direction:column;
@@ -1768,7 +1778,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .thumbnail-row{
   display:flex;
   width:100%;
-  max-width:440px;
+  max-width:var(--post-board-max-w);
   padding:0;
   box-sizing:border-box;
   gap:5px;
@@ -1782,7 +1792,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .post-images .selected-image{
   width:100%;
-  max-width:440px;
+  max-width:var(--post-board-max-w);
   aspect-ratio:1/1;
   background:#000;
   display:flex;
@@ -2187,15 +2197,44 @@ body.filters-active #filterBtn{
 .post-board .post-card .thumb{border-radius:0;}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 
+.post-board-empty{
+  padding:20px 16px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+.post-board-empty-summary{
+  margin:0 0 10px;
+  width:100%;
+  max-width:var(--post-board-max-w);
+}
+
+.post-board-empty-image{
+  margin-top:10px;
+  width:auto;
+  max-width:100%;
+  height:auto;
+}
+
+.post-board-empty-message{
+  margin:10px 0 0;
+}
+
 
 .mode-posts .post-board{
-  display: block;
-  z-index: 1;
-  pointer-events: auto;
+  left:0;
+  opacity:1;
+  z-index:1;
+  pointer-events:auto;
 }
 
 .mode-map .post-board{
-  display: none;
+  left:calc(-100vw - var(--filter-panel-offset));
+  opacity:0;
+  pointer-events:none;
 }
 .map-area{
   position: fixed;
@@ -2210,7 +2249,7 @@ body.filters-active #filterBtn{
   border:none;
   border-radius:0;
   margin:0;
-  padding-top:10px;
+  padding-top:0;
   overflow:visible;
   color:#fff;
   font-size:14px;
@@ -2248,9 +2287,9 @@ body.filters-active #filterBtn{
   align-content:flex-start;
 }
 .open-post .post-body > .main-post-column{
-  flex:0 0 440px;
-  max-width:440px;
-  width:440px;
+  flex:0 0 var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
+  width:var(--post-board-max-w);
 }
 .open-post .post-body > .second-post-column{
   flex:1 1 100%;
@@ -2261,8 +2300,8 @@ body.filters-active #filterBtn{
 .open-post .post-details{
   margin-top:0;
   width:100%;
-  max-width:440px;
-  min-width:440px;
+  max-width:var(--post-board-max-w);
+  min-width:var(--post-board-max-w);
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -2290,7 +2329,7 @@ body.filters-active #filterBtn{
 
 .open-post .image-box{
   width:100%;
-  max-width:440px;
+  max-width:var(--post-board-max-w);
   height:auto;
   aspect-ratio:1/1;
   overflow:hidden;
@@ -2315,7 +2354,7 @@ body.filters-active #filterBtn{
 .open-post .thumbnail-row{
   display:flex;
   flex-direction:row;
-  width:440px;
+  width:var(--post-board-max-w);
   padding:0;
   box-sizing:border-box;
   height:auto;
@@ -2463,10 +2502,6 @@ body.filters-active #filterBtn{
 .open-post .member-avatar-row span,
 .second-post-column .member-avatar-row span{
   padding-left:10px;
-}
-
-.second-post-column .column-post-header{
-  margin-bottom:var(--gap);
 }
 
 .second-post-column .desc-wrap{
@@ -5441,7 +5476,7 @@ function makePosts(){
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
         let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
-        const postWidth = postBoard ? (postBoard.offsetWidth || 440) : 0;
+        const postWidth = postBoard ? (postBoard.offsetWidth || 530) : 0;
         const historyWidth = historyBoard ? (historyBoard.offsetWidth || 440) : 0;
         const boardsWidths = [];
         if(historyActive && historyBoard){
@@ -5457,7 +5492,7 @@ function makePosts(){
         let hideAds = small || document.body.classList.contains('mode-map') || document.body.classList.contains('hide-posts-ui') || window.innerWidth < 1920;
         let requiredWidth = totalBoardsWidth;
         if(filterPinned && filterWidth){
-          requiredWidth += filterWidth + gap;
+          requiredWidth += filterWidth;
         } else {
           filterWidth = 0;
         }
@@ -5470,7 +5505,7 @@ function makePosts(){
         }
         const canAnchor = filterPinned && filterWidth && requiredWidth <= window.innerWidth;
         document.body.classList.toggle('filter-anchored', canAnchor);
-        document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth + gap}px` : '0px');
+        document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
         if(historyBoard){
           historyBoard.style.display = historyActive ? '' : 'none';
@@ -6344,9 +6379,34 @@ function makePosts(){
       if(postBatchObserver) postBatchObserver.disconnect();
       postsWideEl.removeEventListener('scroll', onPostBoardScroll);
       if(postSentinel) postSentinel.remove();
+      postSentinel = null;
 
       if(resultsEl) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
+
+      if(!arr.length){
+        updateResultCount(0);
+        const emptyWrap = document.createElement('div');
+        emptyWrap.className = 'post-board-empty';
+        const summaryEl = $('#filterSummary');
+        const summaryText = summaryEl ? summaryEl.textContent.trim() : '';
+        const summaryCopy = document.createElement('div');
+        summaryCopy.className = 'filter-summary post-board-empty-summary';
+        summaryCopy.textContent = summaryText || 'No results match your filters.';
+        emptyWrap.appendChild(summaryCopy);
+        const emptyImg = document.createElement('img');
+        emptyImg.src = 'assets/monkeys/Firefly_cute little monkey in red cape pointing up 937096.jpg';
+        emptyImg.alt = 'Firefly cute little monkey in red cape pointing up';
+        emptyImg.className = 'post-board-empty-image';
+        emptyWrap.appendChild(emptyImg);
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'post-board-empty-message';
+        emptyMsg.textContent = 'There are no posts here. Try moving the map or changing your filter settings.';
+        emptyWrap.appendChild(emptyMsg);
+        postsWideEl.appendChild(emptyWrap);
+        return;
+      }
+
       postSentinel = document.createElement('div');
       postSentinel.style.height = '1px';
       postsWideEl.appendChild(postSentinel);
@@ -6606,9 +6666,6 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="second-post-column">
-            <div class="post-header column-post-header">
-              ${headerInner}
-            </div>
             <div class="post-details">
               <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
               <div class="post-venue-selection-container"></div>
