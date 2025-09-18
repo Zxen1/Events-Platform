@@ -702,7 +702,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#222222;
+  background:#999999;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -838,9 +838,10 @@ button[aria-expanded="true"] .results-arrow{
   max-width:280px;
   width:100%;
   height:auto;
-  margin-top:20px;
+  margin-top:10px;
+  border-radius:8px;
 }
-#welcome-modal{background:transparent;}
+#welcome-modal{background:rgba(0,0,0,0.7);}
 #welcome-modal .modal-content{
   position:absolute;
   width:600px;
@@ -932,8 +933,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 .post-card .sub-icon img,
 .post-card .sub-icon svg,
-.history-card .sub-icon img,
-.history-card .sub-icon svg{
+.recents-card .sub-icon img,
+.recents-card .sub-icon svg{
   width:18px;
   height:18px;
 }
@@ -1760,7 +1761,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 
-.history-board{
+.recents-board{
   position:relative;
   top:auto;
   bottom:auto;
@@ -1787,14 +1788,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
-.history-board{
-  width:440px;
-  max-width:440px;
+.recents-board{
+  width:var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
   flex-shrink:0;
 }
 @media (max-width:439px){
   .post-board,
-  .history-board,
+  .recents-board,
   .second-post-column.is-visible{
     width:100%;
     max-width:100%;
@@ -1807,7 +1808,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .last-opened-label{
   font-size:12px;
-  margin:10px;
+  margin:0;
   background:#000;
   color:#fff;
   padding:2px 4px;
@@ -1831,19 +1832,19 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:100%;
 }
 
-.history-board .history-card{
+.recents-board .recents-card{
   width:100%;
 }
-.history-board .history-card{
+.recents-board .recents-card{
   margin:0;
   border-radius:0;
   background-color:transparent;
   border-bottom:1px solid rgba(255,255,255,0.12);
 }
-.history-board .history-card:last-child{border-bottom:none;}
+.recents-board .recents-card:last-child{border-bottom:none;}
 
 .post-board .post-body,
-.history-board .post-body{
+.recents-board .post-body{
   display:flex;
   flex-direction:column;
   padding-bottom:10px;
@@ -1889,7 +1890,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   width:100%;
   max-width:var(--post-board-max-w);
-  padding:0;
+  padding:0 10px;
   box-sizing:border-box;
   gap:5px;
 }
@@ -1953,6 +1954,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   flex-direction:column;
   gap:var(--gap);
+}
+
+.post-details-description-container .desc,
+.post-details-description-container .desc-wrap{
+  border:none;
 }
 
 .ad-board{
@@ -2083,7 +2089,7 @@ body.filters-active #filterBtn{
 
 
 .card,
-.history-card,
+.recents-card,
 .post-card{
   display: grid;
   grid-template-columns:90px 1fr 36px;
@@ -2294,6 +2300,16 @@ body.filters-active #filterBtn{
   box-shadow:none;
 }
 
+.mapboxgl-ctrl-geolocate button,
+.mapboxgl-ctrl-compass button{
+  width:35px !important;
+  height:35px !important;
+  background:#ffffff !important;
+  border-radius:8px !important;
+  border:1px solid rgba(0,0,0,0.15) !important;
+  box-shadow:none !important;
+}
+
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
 .map-control-row .mapboxgl-ctrl-compass button:hover{
   background:#f2f2f2;
@@ -2499,7 +2515,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   width:100%;
   max-width:var(--post-board-max-w);
   height:auto;
-  aspect-ratio:1/1;
+  aspect-ratio:auto;
   overflow:hidden;
   border:none;
   border-radius:0;
@@ -2509,21 +2525,22 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .image-box img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  object-fit:contain;
   object-position:center;
   display:block;
 }
 .open-post .image-box img.ready{
-  object-fit:cover;
+  object-fit:contain;
 }
 
 .open-post .thumbnail-row{
   display:flex;
   flex-direction:row;
   width:var(--post-board-max-w);
-  padding:0;
+  padding:0 10px;
   box-sizing:border-box;
   height:auto;
   overflow-x:auto;
@@ -2583,17 +2600,20 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
   .open-post .image-box{
     width:100%;
-    height:100vw;
+    height:auto;
     margin:0;
     border-radius:0;
   }
   .open-post .image-box img{
-    object-fit:cover;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
     object-position:center;
   }
   .open-post .thumbnail-row{
     width:auto;
-    padding:0;
+    padding:0 10px;
   }
   .open-post .venue-dropdown,
   .open-post .session-dropdown{
@@ -2647,11 +2667,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .member-avatar-row,
 .second-post-column .member-avatar-row{
-  display:flex;
+  display:none;
   align-items:center;
   height:50px;
   gap:10px;
   margin:var(--gap) 0 0;
+}
+.open-post.desc-expanded .member-avatar-row,
+.open-post.desc-expanded .second-post-column .member-avatar-row{
+  display:flex;
 }
 .open-post .member-avatar-row img,
 .second-post-column .member-avatar-row img{
@@ -2697,8 +2721,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  margin-top:0;
-  margin-bottom:var(--gap);
+  margin:0;
 }
 
 .open-post .venue-dropdown,
@@ -3261,16 +3284,17 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     }
     .open-post .image-box{
       height:auto;
-      max-height:100vw;
+      max-height:none;
       margin-left:0;
       margin-right:0;
       padding-left:0;
       padding-right:0;
     }
     .open-post .image-box img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
+      width:auto;
+      height:auto;
+      max-width:100%;
+      object-fit:contain;
       margin-left:0;
       margin-right:0;
     }
@@ -3392,7 +3416,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 
 .card .thumb,
-.history-card .thumb,
+.recents-card .thumb,
 .post-card .thumb{
   flex: 0 0 80px;
   width: 80px;
@@ -3403,7 +3427,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .card .meta,
-.history-card .meta,
+.recents-card .meta,
 .post-card .meta{
   flex: 1 1 auto;
   min-width: 0;
@@ -3414,24 +3438,24 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .post-card,
 .post-card *,
-.history-card,
-.history-card *{
+.recents-card,
+.recents-card *{
   cursor: pointer;
 }
 
 .card .fav,
-.history-card .fav,
+.recents-card .fav,
 .post-card .fav{
   flex: 0 0 auto;
 }
 
-.history-card[aria-selected="true"]{
+.recents-card[aria-selected="true"]{
   position:relative;
   z-index:0;
   background:none;
 }
 
-.history-card[aria-selected="true"]::before{
+.recents-card[aria-selected="true"]::before{
   content:"";
   position:absolute;
   inset:0;
@@ -3642,7 +3666,7 @@ img.thumb{
   border-radius: 8px;
 }
 
-#results .history-card > img, #results .history-card img.thumb{
+#results .recents-card > img, #results .recents-card img.thumb{
   width: 80px;
   height: 80px;
   aspect-ratio: 1/1;
@@ -3720,9 +3744,10 @@ img.thumb{
     border-radius:8px;
   }
   .open-post .image-box img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    object-fit:contain;
   }
   .second-post-column{
     width:100%;
@@ -3779,7 +3804,7 @@ img.thumb{
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
       <div class="mode-toggle">
-        <button id="historyToggle" aria-pressed="false">History</button>
+        <button id="recents-button" aria-pressed="false">Recents</button>
         <button id="postsToggle" aria-pressed="false">Posts</button>
         <button id="mapToggle" aria-pressed="true">Map</button>
       </div>
@@ -3815,7 +3840,7 @@ img.thumb{
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
-    <section class="history-board quick-list-board" id="historyBoard" aria-label="History Board">
+    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board">
     </section>
     <section class="post-board" aria-label="Post Board">
     </section>
@@ -4517,7 +4542,7 @@ img.thumb{
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.history-board, .posts').forEach(list=>{
+      document.querySelectorAll('.recents-board, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
       });
     }
@@ -5734,18 +5759,18 @@ function makePosts(){
         optionsBtn.setAttribute('aria-expanded','false');
       });
 
-      const historyBoard = $('#historyBoard');
+      const recentsBoard = $('#recentsBoard');
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
-      const historyToggle = $('#historyToggle');
+      const recentsButton = $('#recents-button');
       const postsToggle = $('#postsToggle');
       const mapToggle = $('#mapToggle');
 
       function updateModeToggle(){
         const historyActive = document.body.classList.contains('show-history');
         const currentMode = document.body.classList.contains('mode-posts') ? 'posts' : 'map';
-        historyToggle && historyToggle.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
+        recentsButton && recentsButton.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
         postsToggle && postsToggle.setAttribute('aria-pressed', !historyActive && currentMode === 'posts' ? 'true' : 'false');
         mapToggle && mapToggle.setAttribute('aria-pressed', !historyActive && currentMode === 'map' ? 'true' : 'false');
       }
@@ -5757,15 +5782,15 @@ function makePosts(){
         const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
         const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
         const filterPinned = !!(filterPanel && filterPanel.classList.contains('show') && pinBtn && pinBtn.getAttribute('aria-pressed') === 'true');
-        const historyOpenPost = historyBoard ? historyBoard.querySelector('.open-post') : null;
+        const historyOpenPost = recentsBoard ? recentsBoard.querySelector('.open-post') : null;
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
         let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
         const postWidth = postBoard ? (postBoard.offsetWidth || 530) : 0;
-        const historyWidth = historyBoard ? (historyBoard.offsetWidth || 440) : 0;
+        const historyWidth = recentsBoard ? (recentsBoard.offsetWidth || 530) : 0;
         const boardsWidths = [];
-        if(historyActive && historyBoard){
+        if(historyActive && recentsBoard){
           boardsWidths.push(historyWidth);
         } else if(postBoard){
           boardsWidths.push(postWidth);
@@ -5793,9 +5818,9 @@ function makePosts(){
         document.body.classList.toggle('filter-anchored', canAnchor);
         document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
-        if(historyBoard){
-          historyBoard.style.display = historyActive ? '' : 'none';
-          historyBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
+        if(recentsBoard){
+          recentsBoard.style.display = historyActive ? '' : 'none';
+          recentsBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
         }
         if(postBoard){
           postBoard.style.display = historyActive ? 'none' : '';
@@ -5824,7 +5849,7 @@ function makePosts(){
           }
         }, 0);
 
-      historyToggle && historyToggle.addEventListener('click', ()=>{
+      recentsButton && recentsButton.addEventListener('click', ()=>{
         setMode('posts');
         document.body.classList.add('show-history');
         renderHistoryBoard();
@@ -5858,10 +5883,10 @@ function makePosts(){
         updateModeToggle();
       });
 
-      const resLists = $$('.history-board');
+      const resLists = $$('.recents-board');
       resLists.forEach(list=>{
           list.addEventListener('click', e=>{
-            const cardEl = e.target.closest('.history-card');
+            const cardEl = e.target.closest('.recents-card');
             if(cardEl){
               const id = cardEl.getAttribute('data-id');
               if(id) { stopSpin(); openPost(id, true, false, cardEl); }
@@ -5882,8 +5907,8 @@ function makePosts(){
         }
       });
 
-      historyBoard && historyBoard.addEventListener('click', e=>{
-        if(e.target === historyBoard){
+      recentsBoard && recentsBoard.addEventListener('click', e=>{
+        if(e.target === recentsBoard){
           setMode('map');
           document.body.classList.remove('show-history');
         }
@@ -5897,10 +5922,10 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.add('hide-ads');
           document.body.classList.remove('show-history');
-          const historyBoardEl = document.getElementById('historyBoard');
-          if(historyBoardEl){
-            historyBoardEl.style.display = 'none';
-            historyBoardEl.setAttribute('aria-hidden','true');
+          const recentsBoardEl = document.getElementById('recentsBoard');
+          if(recentsBoardEl){
+            recentsBoardEl.style.display = 'none';
+            recentsBoardEl.setAttribute('aria-hidden','true');
           }
         } else {
           document.body.classList.remove('hide-ads');
@@ -6286,8 +6311,8 @@ function makePosts(){
       historyWasActive = document.body.classList.contains('show-history');
       if(historyWasActive){
         document.body.classList.remove('show-history');
-        const historyBoardEl = document.getElementById('historyBoard');
-        if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','true');
+        const recentsBoardEl = document.getElementById('recentsBoard');
+        if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','true');
         updateModeToggle();
       }
       function step(){
@@ -6309,8 +6334,8 @@ function makePosts(){
       historyWasActive = false;
       if(wasHistory){
         document.body.classList.add('show-history');
-        const historyBoardEl = document.getElementById('historyBoard');
-        if(historyBoardEl) historyBoardEl.setAttribute('aria-hidden','false');
+        const recentsBoardEl = document.getElementById('recentsBoard');
+        if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','false');
         updateModeToggle();
       }
       applyFilters();
@@ -6894,7 +6919,7 @@ function makePosts(){
 
     function card(p, wide=false){
       const el = document.createElement('article');
-      el.className = wide ? 'post-card' : 'history-card';
+      el.className = wide ? 'post-card' : 'recents-card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
       const thumbSrc = imgThumb(p);
@@ -7030,8 +7055,8 @@ function makePosts(){
       updateCategoryResetBtn();
     }
     function renderHistoryBoard(){
-      if(!historyBoard) return;
-      historyBoard.innerHTML='';
+      if(!recentsBoard) return;
+      recentsBoard.innerHTML='';
       viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
       saveHistory();
       const items = viewHistory.slice(0,100);
@@ -7042,9 +7067,9 @@ function makePosts(){
         const labelEl = document.createElement('div');
         labelEl.className = 'last-opened-label';
         labelEl.textContent = formatLastOpened(v.lastOpened);
-        historyBoard.appendChild(labelEl);
+        recentsBoard.appendChild(labelEl);
         const el = card(p);
-        historyBoard.appendChild(el);
+        recentsBoard.appendChild(el);
       }
     }
 
@@ -7147,10 +7172,10 @@ function makePosts(){
             await nextFrame();
           }
         }
-        $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
         $$('.mapboxgl-popup.map-card .hover-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
 
-        const container = fromHistory ? document.getElementById('historyBoard') : postsWideEl;
+        const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container) return;
 
         if(!container.children.length && !fromHistory){ container.appendChild(card(p, true)); }
@@ -7252,7 +7277,7 @@ function makePosts(){
       }
 
       function closeActivePost(){
-        const openEl = document.querySelector('.post-board .open-post, #historyBoard .open-post');
+        const openEl = document.querySelector('.post-board .open-post, #recentsBoard .open-post');
         if(!openEl){
           document.body.classList.remove('detail-open');
           if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
@@ -7265,8 +7290,8 @@ function makePosts(){
           openBody.style.removeProperty('min-height');
           if(openBody.dataset) delete openBody.dataset.secondPostHeight;
         }
-        const container = openEl.closest('.post-board, #historyBoard') || postsWideEl;
-        const isHistory = container && container.id === 'historyBoard';
+        const container = openEl.closest('.post-board, #recentsBoard') || postsWideEl;
+        const isHistory = container && container.id === 'recentsBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
         const post = id ? posts.find(x => x.id === id) : null;
         const detachedColumn = document.querySelector('.post-mode-boards > .second-post-column');
@@ -7276,7 +7301,7 @@ function makePosts(){
           detachedColumn.remove();
         }
         document.body.classList.remove('detail-open');
-        $$('.history-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=> el.removeAttribute('aria-selected'));
+        $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=> el.removeAttribute('aria-selected'));
         if(post){
           const replacement = card(post, !isHistory);
           openEl.replaceWith(replacement);
@@ -7761,7 +7786,7 @@ function makePosts(){
             sessionCloseTimer = setTimeout(()=>{
               sessMenu.hidden = true;
               if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
-            }, 100);
+            }, 400);
           } else if(sessBtn){
             sessBtn.setAttribute('aria-expanded','false');
           }
@@ -7823,7 +7848,7 @@ function makePosts(){
                     venueCloseTimer = setTimeout(()=>{
                       venueMenu.hidden = true;
                       venueBtn.setAttribute('aria-expanded','false');
-                    }, 100);
+                    }, 400);
                   });
                 });
                 venueBtn.addEventListener('click', ()=>{
@@ -7967,8 +7992,8 @@ function makePosts(){
         await openPost(id);
         const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
         if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
-        document.querySelectorAll('.history-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        const quickCard = document.querySelector(`.history-board .history-card[data-id="${id}"]`);
+        document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
         if(quickCard){
           quickCard.setAttribute('aria-selected','true');
           quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -8390,7 +8415,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},
     {key:'body', label:'Body', selectors:{bg:['body'], border:[], hoverBorder:[], activeBorder:[]}},
-    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .history-card .t','.quick-list-board .history-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .history-card']}},
+    {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
     {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
     {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], popupText:['.mapboxgl-popup.map-card .hover-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .multi-item.map-card'], title:['.mapboxgl-popup.map-card .hover-card .t','.mapboxgl-popup.map-card .hover-card .title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title','.mapboxgl-popup.map-card .multi-item.map-card .t','.mapboxgl-popup.map-card .multi-item.map-card .title']}},
