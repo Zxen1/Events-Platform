@@ -2849,6 +2849,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .second-post-column .desc{
   display:-webkit-box;
+  line-clamp:2;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
@@ -2863,6 +2864,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .second-post-column .desc.expanded{
   display:block;
+  line-clamp:unset;
   -webkit-line-clamp:unset;
   overflow:visible;
   text-overflow:unset;
@@ -4462,7 +4464,8 @@ img.thumb{
         const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
         const baseUrl = getStyleBase(originUrl);
         const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
-        if(typeof normalizedUrl === 'string' && normalizedUrl.includes('/standard')){
+        const normalizedLower = typeof normalizedUrl === 'string' ? normalizedUrl.toLowerCase() : '';
+        if(normalizedLower.includes('/standard') || normalizedLower.includes('/streets-')){
           return;
         }
         const layers = style && Array.isArray(style.layers) ? style.layers : null;
@@ -4601,6 +4604,31 @@ img.thumb{
 
       function applyNightSky(mapInstance){
         if(!mapInstance) return;
+        let styleObj = null;
+        if(typeof mapInstance.getStyle === 'function'){
+          try {
+            styleObj = mapInstance.getStyle();
+          } catch(err){}
+        }
+        const metadata = styleObj && styleObj.metadata ? styleObj.metadata : {};
+        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
+        const baseUrl = getStyleBase(originUrl);
+        const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
+        const normalizedLower = typeof normalizedUrl === 'string' ? normalizedUrl.toLowerCase() : '';
+        const skipAtmosphere = normalizedLower.includes('/streets-') || normalizedLower.includes('/standard');
+        if(skipAtmosphere){
+          if(typeof mapInstance.setFog === 'function'){
+            try { mapInstance.setFog(null); } catch(err){}
+          }
+          if(typeof mapInstance.getLayer === 'function' && typeof mapInstance.removeLayer === 'function'){
+            try {
+              if(mapInstance.getLayer('night-sky')){
+                mapInstance.removeLayer('night-sky');
+              }
+            } catch(err){}
+          }
+          return;
+        }
         if(typeof mapInstance.setFog === 'function'){
           try {
             mapInstance.setFog({
