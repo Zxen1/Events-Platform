@@ -4180,10 +4180,23 @@ img.thumb{
         } catch(err){
           return;
         }
-        if(!styleObj || !Array.isArray(styleObj.layers)) return;
+        if(!styleObj) return;
+        const metadata = styleObj.metadata && typeof styleObj.metadata === 'object' ? styleObj.metadata : {};
+        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:originUrl'] || metadata['mapbox:requestedUrl'] || mapStyle;
+        const baseUrl = getStyleBase(originUrl);
+        const normalizedUrl = normalizeMapStyle(baseUrl || originUrl || '');
+        const canonicalStyleUrl = typeof normalizedUrl === 'string' && normalizedUrl ? normalizedUrl : String(baseUrl || originUrl || '');
+        const originHasStandard = typeof (baseUrl || originUrl) === 'string' && (baseUrl || originUrl).includes('/standard');
+        const canonicalHasStandard = typeof canonicalStyleUrl === 'string' && canonicalStyleUrl.includes('/standard');
+        if(metadata['mapbox:type'] === 'standard' || originHasStandard || canonicalHasStandard){
+          return;
+        }
+        if(!Array.isArray(styleObj.layers)) return;
         let anyChanged = false;
         styleObj.layers.forEach(layer => {
           if(!layer || !layer.id) return;
+          const layerMetadata = layer.metadata && typeof layer.metadata === 'object' ? layer.metadata : null;
+          if(layerMetadata && (layerMetadata['mapbox:featureComponent'] || layerMetadata['mapbox:featureset'])) return;
           ['layout','paint'].forEach(section => {
             const props = layer[section];
             if(!props) return;
