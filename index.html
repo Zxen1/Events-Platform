@@ -653,7 +653,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body > *:last-child{
   margin-bottom:0;
 }
-.panel-body > * > *{
+.panel-body > *:not(.map-control-row) > *{
   width:100%;
   max-width:100%;
 }
@@ -1801,7 +1801,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-shrink:0;
   position:relative;
   left:0;
-  opacity:1;
+  opacity:0;
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
@@ -1958,6 +1958,10 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:flex;
   flex-direction:column;
   gap:var(--gap);
+}
+.post-venue-selection-container:empty,
+.post-session-selection-container:empty{
+  display:none;
 }
 
 .post-details-title-container,
@@ -2359,6 +2363,20 @@ body.filters-active #filterBtn{
   max-width:100%;
   margin:0;
   justify-content:flex-start;
+  background:#ffffff;
+  border-radius:8px;
+  padding:4px;
+  box-sizing:border-box;
+}
+.panel-body .map-control-row > *{
+  flex:0 0 auto;
+  width:auto;
+  max-width:none;
+  background:transparent;
+  border-radius:8px;
+}
+.panel-body .map-control-row > .geocoder{
+  flex:1 1 auto;
 }
 
 .mode-posts .map-controls-map{display:none;}
@@ -2375,6 +2393,29 @@ body.filters-active #filterBtn{
 .map-control-row .geocoder{margin:0;}
 
 .post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
+.post-board .posts,
+.recents-board{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,0.4) rgba(0,0,0,0);
+}
+.post-board .posts::-webkit-scrollbar,
+.recents-board::-webkit-scrollbar{
+  width:8px;
+  height:8px;
+}
+.post-board .posts::-webkit-scrollbar-track,
+.recents-board::-webkit-scrollbar-track{
+  background-color:rgba(0,0,0,0);
+}
+.post-board .posts::-webkit-scrollbar-thumb,
+.recents-board::-webkit-scrollbar-thumb{
+  background-color:rgba(255,255,255,0.4);
+  border-radius:999px;
+}
+.post-board .posts::-webkit-scrollbar-corner,
+.recents-board::-webkit-scrollbar-corner{
+  background-color:rgba(0,0,0,0);
+}
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
@@ -2418,7 +2459,7 @@ body.filters-active #filterBtn{
 
 .mode-posts .post-board{
   left:0;
-  opacity:1;
+  opacity:0;
   z-index:1;
   pointer-events:auto;
 }
@@ -2510,7 +2551,11 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:var(--gap);
   width:100%;
+  max-width:var(--post-board-max-w);
   flex:0 0 100%;
+  box-sizing:border-box;
+  margin:0 auto;
+  align-self:center;
 }
 
 .open-post.desc-expanded .post-images,
@@ -2530,21 +2575,23 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .image-box{
   width:100%;
-  max-width:var(--post-board-max-w);
+  max-width:100%;
+  aspect-ratio:1/1;
   height:auto;
-  aspect-ratio:auto;
+  min-height:0;
   overflow:hidden;
   border:none;
   border-radius:0;
   flex-shrink:0;
   cursor:pointer;
   background: rgba(0,0,0,0);
+  display:grid;
+  place-items:center;
 }
 
 .open-post .image-box img{
-  width:auto;
-  height:auto;
-  max-width:100%;
+  width:100%;
+  height:100%;
   object-fit:contain;
   object-position:center;
   display:block;
@@ -2556,13 +2603,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .thumbnail-row{
   display:flex;
   flex-direction:row;
-  width:var(--post-board-max-w);
+  width:100%;
+  max-width:var(--post-board-max-w);
   padding:0 10px;
   box-sizing:border-box;
   height:auto;
   overflow-x:auto;
   gap:4px;
   position:relative;
+  margin:0 auto;
 }
 
 .open-post .thumbnail-row img{
@@ -2617,20 +2666,25 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
   .open-post .image-box{
     width:100%;
+    max-width:100%;
+    aspect-ratio:1/1;
     height:auto;
     margin:0;
     border-radius:0;
+    display:grid;
+    place-items:center;
   }
   .open-post .image-box img{
-    width:auto;
-    height:auto;
-    max-width:100%;
+    width:100%;
+    height:100%;
     object-fit:contain;
     object-position:center;
   }
   .open-post .thumbnail-row{
-    width:auto;
+    width:100%;
+    max-width:100%;
     padding:0 10px;
+    margin:0 auto;
   }
   .open-post .venue-dropdown,
   .open-post .session-dropdown{
@@ -3283,6 +3337,14 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .open-post .image-box{
     max-width:100%;
     width:100%;
+    aspect-ratio:1/1;
+    height:auto;
+    display:grid;
+    place-items:center;
+  }
+  .open-post .image-box img{
+    width:100%;
+    height:100%;
   }
   .open-post .post-calendar{
     display:none;
@@ -3311,21 +3373,21 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     .open-post .image-box{
       width:100%;
       max-width:100%;
-      border:none;
-      border-radius:8px;
-    }
-    .open-post .image-box{
+      aspect-ratio:1/1;
       height:auto;
       max-height:none;
       margin-left:0;
       margin-right:0;
       padding-left:0;
       padding-right:0;
+      border:none;
+      border-radius:8px;
+      display:grid;
+      place-items:center;
     }
     .open-post .image-box img{
-      width:auto;
-      height:auto;
-      max-width:100%;
+      width:100%;
+      height:100%;
       object-fit:contain;
       margin-left:0;
       margin-right:0;
@@ -3771,14 +3833,17 @@ img.thumb{
   }
   .open-post .image-box{
     width:100%;
+    max-width:100%;
+    aspect-ratio:1/1;
     height:auto;
     flex:0 0 100%;
     border-radius:8px;
+    display:grid;
+    place-items:center;
   }
   .open-post .image-box img{
-    width:auto;
-    height:auto;
-    max-width:100%;
+    width:100%;
+    height:100%;
     object-fit:contain;
   }
   .second-post-column{
@@ -7466,18 +7531,16 @@ function makePosts(){
     }
     show(0);
     setupHorizontalWheel(thumbCol);
-    thumbCol.addEventListener('mouseover', e=>{
-      const t = e.target.closest('img');
-      if(!t) return;
-      const idx = parseInt(t.dataset.index,10);
-      show(idx);
-    });
     thumbCol.addEventListener('click', e=>{
       const t = e.target.closest('img');
       if(!t) return;
       const idx = parseInt(t.dataset.index,10);
-      show(idx);
-      openImagePopup(idx);
+      const currentIdx = parseInt(mainImg.dataset.index||'0',10);
+      if(currentIdx === idx && t.classList.contains('selected')){
+        openImagePopup(idx);
+      } else {
+        show(idx);
+      }
     });
       thumbCol.addEventListener('keydown', e=>{
         const cur = parseInt(mainImg.dataset.index||'0',10);
@@ -7561,6 +7624,38 @@ function makePosts(){
         }
         let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
         let sessionCloseTimer = null;
+        function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
+          if(!sessMenu) return;
+          if(sessionCloseTimer){
+            clearTimeout(sessionCloseTimer);
+            sessionCloseTimer = null;
+          }
+          const begin = ()=>{
+            requestAnimationFrame(()=>requestAnimationFrame(()=>{
+              sessionCloseTimer = setTimeout(()=>{
+                sessMenu.hidden = true;
+                if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
+                sessionCloseTimer = null;
+              }, 100);
+            }));
+          };
+          if(waitForScroll && calScroll && targetLeft !== null){
+            let attempts = 0;
+            const maxAttempts = 60;
+            const check = ()=>{
+              const distance = Math.abs(calScroll.scrollLeft - targetLeft);
+              if(distance <= 0.5 || attempts >= maxAttempts){
+                begin();
+              } else {
+                attempts += 1;
+                requestAnimationFrame(check);
+              }
+            };
+            requestAnimationFrame(check);
+          } else {
+            begin();
+          }
+        }
         if(mapEl && mapEl._detailMap){
           detailMapRef = mapEl._detailMap;
           map = detailMapRef.map || map;
@@ -7728,6 +7823,8 @@ function makePosts(){
           const btn = sessionOptions.querySelector(`button[data-index="${i}"]`);
           if(btn) btn.classList.add('selected');
           const dt = loc.dates[i];
+          let waitForScroll = false;
+          let targetScrollLeft = null;
           if(dt){
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
@@ -7735,7 +7832,20 @@ function makePosts(){
             const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
             if(cell && calScroll){
               const monthEl = cell.closest('.month');
-              if(monthEl) calScroll.scrollTo({left:monthEl.offsetLeft, behavior:'smooth'});
+              if(monthEl){
+                targetScrollLeft = monthEl.offsetLeft;
+                if(typeof calScroll.scrollTo === 'function'){
+                  const currentLeft = calScroll.scrollLeft;
+                  if(Math.abs(currentLeft - targetScrollLeft) > 1){
+                    waitForScroll = true;
+                    calScroll.scrollTo({left:targetScrollLeft, behavior:'smooth'});
+                  } else {
+                    calScroll.scrollLeft = targetScrollLeft;
+                  }
+                } else {
+                  calScroll.scrollLeft = targetScrollLeft;
+                }
+              }
             }
           } else {
             sessionInfo.innerHTML = defaultInfoHTML;
@@ -7743,14 +7853,8 @@ function makePosts(){
             selectedIndex = null;
             markSelected();
           }
-          if(sessionCloseTimer){
-            clearTimeout(sessionCloseTimer);
-          }
           if(!sessMenu.hidden){
-            sessionCloseTimer = setTimeout(()=>{
-              sessMenu.hidden = true;
-              if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
-            }, 400);
+            scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
           } else if(sessBtn){
             sessBtn.setAttribute('aria-expanded','false');
           }
@@ -7812,7 +7916,8 @@ function makePosts(){
                     venueCloseTimer = setTimeout(()=>{
                       venueMenu.hidden = true;
                       venueBtn.setAttribute('aria-expanded','false');
-                    }, 400);
+                      venueCloseTimer = null;
+                    }, 100);
                   });
                 });
                 venueBtn.addEventListener('click', ()=>{
