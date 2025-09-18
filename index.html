@@ -676,7 +676,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#555555;
+  background:#2e3a72;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -2573,6 +2573,7 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:0;
   position:relative;
+  background:var(--closed-card-bg);
 }
 
 .open-post .post-header{
@@ -2622,6 +2623,14 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:var(--gap);
   padding:10px;
+}
+
+.open-post:not(.desc-expanded) .post-details > :not(.post-details-description-container){
+  display:none;
+}
+
+.open-post:not(.desc-expanded) .post-details-description-container .member-avatar-row{
+  display:none;
 }
 
 .open-post .post-details .info{
@@ -7313,21 +7322,16 @@ function makePosts(){
       if(!openEl) return;
       const key = sourceKey || (img && (img.currentSrc || img.src)) || '__default__';
       openEl.dataset.bgSource = key;
-      const overlay = 'rgba(0,0,0,0.5)';
-      const applyGradient = color => {
+      const clearBackground = () => {
         if(!openEl || openEl.dataset.bgSource !== key) return;
-        const gradient = `linear-gradient(${overlay}, ${overlay}), ${color}`;
-        openEl.style.background = gradient;
+        openEl.style.removeProperty('background');
+        openEl.style.removeProperty('background-image');
         openEl.querySelectorAll('.post-header').forEach(head => {
-          head.style.background = gradient;
+          head.style.removeProperty('background');
+          head.style.removeProperty('background-image');
         });
       };
-      applyGradient('rgb(34, 34, 34)');
-      if(!img) return;
-      const color = extractDominantColor(img);
-      if(color){
-        applyGradient(`rgb(${color.r}, ${color.g}, ${color.b})`);
-      }
+      clearBackground();
     }
 
     function card(p, wide=false){
