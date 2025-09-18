@@ -4322,7 +4322,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -4375,18 +4375,7 @@ img.thumb{
         } catch(err){
           return;
         }
-        if(!styleObj) return;
-        const metadata = styleObj.metadata && typeof styleObj.metadata === 'object' ? styleObj.metadata : {};
-        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:originUrl'] || metadata['mapbox:requestedUrl'] || mapStyle;
-        const baseUrl = getStyleBase(originUrl);
-        const normalizedUrl = normalizeMapStyle(baseUrl || originUrl || '');
-        const canonicalStyleUrl = typeof normalizedUrl === 'string' && normalizedUrl ? normalizedUrl : String(baseUrl || originUrl || '');
-        const originHasStandard = typeof (baseUrl || originUrl) === 'string' && (baseUrl || originUrl).includes('/standard');
-        const canonicalHasStandard = typeof canonicalStyleUrl === 'string' && canonicalStyleUrl.includes('/standard');
-        if(metadata['mapbox:type'] === 'standard' || originHasStandard || canonicalHasStandard){
-          return;
-        }
-        if(!Array.isArray(styleObj.layers)) return;
+        if(!styleObj || !Array.isArray(styleObj.layers)) return;
         let anyChanged = false;
         styleObj.layers.forEach(layer => {
           if(!layer || !layer.id) return;
