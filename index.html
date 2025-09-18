@@ -91,7 +91,8 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #7c4dff;
+      --filter-active-color: #7c4dff;
+      --category-switch-active: #00b050;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -237,9 +238,9 @@ button.selected,
 [role="button"].selected,
 button.on,
 [role="button"].on{
-  background: var(--btn-selected);
-  border-color: var(--btn-selected) !important;
-  color: var(--button-active-text) !important;
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected))) !important;
+  color: var(--button-selected-text, var(--button-active-text)) !important;
 }
 
 button[aria-pressed="true"]:hover,
@@ -252,9 +253,9 @@ button.selected:hover,
 [role="button"].selected:hover,
 button.on:hover,
 [role="button"].on:hover{
-  background: var(--btn-selected-hover);
-  border-color: var(--btn-selected-hover) !important;
-  color: var(--button-active-text) !important;
+  background: var(--button-selected-hover, var(--btn-selected-hover));
+  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover))) !important;
+  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text))) !important;
 }
 
 button[aria-pressed="true"]:active,
@@ -267,9 +268,9 @@ button.selected:active,
 [role="button"].selected:active,
 button.on:active,
 [role="button"].on:active{
-  background: var(--btn-selected-active);
-  border-color: var(--btn-selected-active) !important;
-  color: var(--button-active-text) !important;
+  background: var(--button-selected-active, var(--btn-selected-active));
+  border-color: var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active))) !important;
+  color: var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text))) !important;
 }
 
 
@@ -1369,6 +1370,11 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
+.sort-options .sort-option[aria-pressed="true"]{
+  background:#2e3a72;
+  color:var(--button-active-text);
+  border-color:#2e3a72;
+}
 #filterPanel .filter-basics-container,
 #filterPanel .filter-category-container{
   width:100%;
@@ -1522,6 +1528,7 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:flex-end;
   width:38px;
   height:36px;
+  flex:0 0 38px;
   cursor:pointer;
 }
 .filter-category-menu .cat-switch input{
@@ -1554,8 +1561,8 @@ button[aria-expanded="true"] .results-arrow{
   transition:.2s;
 }
 .filter-category-menu .cat-switch input:checked + .slider{
-  background:var(--filter-active-color);
-  border-color:var(--filter-active-color);
+  background:var(--category-switch-active);
+  border-color:var(--category-switch-active);
 }
 .filter-category-menu .cat-switch input:checked + .slider:before{
   transform:translateX(18px);
@@ -1584,6 +1591,8 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:flex-start;
   gap:var(--gap);
   border-radius:6px;
+  border:1px solid transparent;
+  box-sizing:border-box;
   padding:0 12px;
 }
 
@@ -1641,12 +1650,20 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--dropdown-selected-bg);
   color: var(--dropdown-selected-text);
   border-color: var(--dropdown-selected-bg);
+  --button-selected-bg: var(--dropdown-selected-bg);
+  --button-selected-border: var(--dropdown-selected-bg);
+  --button-selected-text: var(--dropdown-selected-text);
+}
+.filter-category-menu .options-menu button.on{
+  --button-selected-bg: var(--dropdown-selected-bg);
+  --button-selected-border: var(--dropdown-selected-bg);
+  --button-selected-text: var(--dropdown-selected-text);
 }
 
 .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .track,
 .filter-category-menu .options-menu button.on .subcategory-switch .track{
-  background:var(--filter-active-color);
-  border-color:var(--filter-active-color);
+  background:var(--category-switch-active);
+  border-color:var(--category-switch-active);
 }
 
 .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .thumb,
@@ -2902,13 +2919,30 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   justify-content:flex-start;
 }
 
+.open-post .venue-menu,
+.open-post .session-menu,
+.second-post-column .venue-menu,
+.second-post-column .session-menu,
+.sort-options{
+  --button-selected-bg: #2e3a72;
+  --button-selected-border: #2e3a72;
+  --button-selected-text: var(--button-active-text);
+  --button-selected-hover: #2e3a72;
+  --button-selected-hover-border: #2e3a72;
+  --button-selected-hover-text: var(--button-active-text);
+  --button-selected-active: #2e3a72;
+  --button-selected-active-border: #2e3a72;
+  --button-selected-active-text: var(--button-active-text);
+}
+
 
 .open-post .venue-menu button.selected,
 .open-post .session-menu button.selected,
 .second-post-column .venue-menu button.selected,
 .second-post-column .session-menu button.selected{
-  background:var(--dropdown-selected-bg);
-  color:var(--dropdown-selected-text);
+  background:#2e3a72;
+  color:var(--button-active-text);
+  border-color:#2e3a72;
 }
 
 .open-post .session-menu button .session-time,
@@ -2940,7 +2974,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .second-post-column .post-calendar,
 .second-post-column .post-calendar{
   position:relative;
-  font-size:14px;
+  font-size:var(--panel-label-size);
   min-width:var(--calendar-width);
   width:max-content;
 }
@@ -2993,6 +3027,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   transform-origin:top left;
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
+  font-size:inherit;
 }
 .open-post .post-calendar .month,
 .second-post-column .post-calendar .month,
@@ -3031,6 +3066,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   line-height:var(--calendar-header-h);
   background:#2e3a72;
   color:#fff;
+  font-size:inherit;
 }
 .open-post .post-calendar .weekday,
 .open-post .post-calendar .day,
@@ -3040,15 +3076,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .second-post-column .post-calendar .day{
   width:var(--calendar-cell-w);
   height:var(--calendar-cell-h);
-  display:flex;
-  align-items:center;
-  justify-content:center;
   line-height:var(--calendar-cell-h);
+  text-align:center;
+  font-size:inherit;
 }
 .open-post .post-calendar .weekday,
 .second-post-column .post-calendar .weekday,
 .second-post-column .post-calendar .weekday{
-  font-size:10px;
   font-weight:bold;
   color:var(--dropdown-text);
 }
@@ -3056,8 +3090,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .second-post-column .post-calendar .day,
 .second-post-column .post-calendar .day{
   cursor:pointer;
-  font-size:12px;
-  border-radius:8px;
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
   transition:background .2s,color .2s;
@@ -3980,50 +4012,6 @@ img.thumb{
       </div>
       <form id="adminForm" class="panel-body">
         <div id="tab-map" class="tab-panel active">
-          <div class="map-theme-container">
-            <div class="panel-field">
-              <label for="mapTheme">Theme</label>
-              <select id="mapTheme">
-                <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
-                <option value="mapbox://styles/mapbox/streets-v12">Streets</option>
-                <option value="mapbox://styles/mapbox/light-v11">Light</option>
-                <option value="mapbox://styles/mapbox/dark-v11">Dark</option>
-                <option value="mapbox://styles/mapbox/satellite-streets-v12">Satellite Streets</option>
-                <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
-                <option value="mapbox://styles/mapbox/navigation-day-v1">Navigation Day</option>
-                <option value="mapbox://styles/mapbox/navigation-night-v1">Navigation Night</option>
-                  <option value="mapbox://styles/mapbox/standard">Standard</option>
-                  <option value="mapbox://styles/mapbox/satellite-streets-v12">Standard Satellite</option>
-                <option value="mapbox://styles/mapbox/traffic-day-v2">Traffic Day</option>
-                <option value="mapbox://styles/mapbox/traffic-night-v2">Traffic Night</option>
-                  <option value="mapbox://styles/mapbox/terrain-v2">Terrain</option>
-                  <option value="mapbox://styles/mapbox/light-v11">Standard Light</option>
-                  <option value="mapbox://styles/mapbox/dark-v11">Standard Dark</option>
-                <option value="mapbox://styles/mapbox/streets-v8">Streets Classic</option>
-                <option value="mapbox://styles/mapbox/emerald-v8">Emerald</option>
-                <option value="mapbox://styles/mapbox/wheatpaste-v9">Wheatpaste</option>
-                <option value="mapbox://styles/mapbox/pencil-v2">Pencil</option>
-                <option value="mapbox://styles/mapbox/vintage-v10">Vintage</option>
-              </select>
-            </div>
-            <div class="panel-field">
-              <label for="skyTheme">Sky</label>
-              <select id="skyTheme">
-                <option value="default">Default</option>
-                <option value="sunset">Sunset</option>
-                <option value="night">Night</option>
-                <option value="aurora">Aurora</option>
-                <option value="dawn">Dawn</option>
-                <option value="dusk">Dusk</option>
-                <option value="space">Space</option>
-                <option value="cloudy">Cloudy</option>
-                <option value="storm">Storm</option>
-                <option value="twilight">Twilight</option>
-                <option value="sunrise">Sunrise</option>
-                <option value="rainbow">Rainbow</option>
-              </select>
-            </div>
-          </div>
           <div class="map-spin-container">
             <div class="panel-field">
               <label for="spinSpeed">Spin speed</label>
@@ -4219,8 +4207,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizeMapStyle(localStorage.getItem('mapStyle')) || 'mapbox://styles/mapbox/standard',
-          skyStyle = window.skyStyle = localStorage.getItem('skyStyle') || 'night',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -4234,28 +4221,6 @@ img.thumb{
         });
       }
       updateLogoClickState();
-
-      function applySky(theme){
-        if(!map || typeof map.setFog !== 'function'){
-          console.warn('map.setFog is not available in this Mapbox GL JS version.');
-          return;
-        }
-        const skyThemes = {
-          default:{ 'color':'rgb(186,210,255)','high-color':'rgb(64,152,255)','space-color':'rgb(4,7,22)','horizon-blend':0.3 },
-          sunset:{ 'color':'#ffcf70','high-color':'#ff8f70','space-color':'#020014','horizon-blend':0.5 },
-          night:{ 'color':'#0b1d51','high-color':'#1a2849','space-color':'#000000','horizon-blend':0.1,'star-intensity':0.8 },
-          aurora:{ 'color':'#03172f','high-color':'#5dd9c1','space-color':'#000000','horizon-blend':0.2,'star-intensity':0.6 },
-          dawn:{ 'color':'#ffd1a1','high-color':'#ff9f85','space-color':'#4a1a74','horizon-blend':0.4 },
-          dusk:{ 'color':'#8e4e9e','high-color':'#3b1a69','space-color':'#020024','horizon-blend':0.3 },
-          space:{ 'color':'#000000','high-color':'#000000','space-color':'#000000','horizon-blend':0,'star-intensity':0.0 },
-          cloudy:{ 'color':'#cdd2d7','high-color':'#e4e7eb','space-color':'#adb5bd','horizon-blend':0.2 },
-          storm:{ 'color':'#5e5e5e','high-color':'#2a2a2a','space-color':'#000000','horizon-blend':0.1 },
-          twilight:{ 'color':'#2e3358','high-color':'#75517d','space-color':'#141429','horizon-blend':0.3 },
-          sunrise:{ 'color':'#ffd28c','high-color':'#ff6e7f','space-color':'#2c1055','horizon-blend':0.4 },
-          rainbow:{ 'color':'#ffe29f','high-color':'#ffa99f','space-color':'#667eea','horizon-blend':0.3 }
-        };
-        map.setFog(skyThemes[theme] || skyThemes.default);
-      }
 
       function expressionContainsSizerank(value){
         if(!Array.isArray(value)) return false;
@@ -6260,7 +6225,6 @@ function makePosts(){
         mapStyle = window.mapStyle = resolvedStyle;
         fixSizerankExpressions(map);
         applyTerrainForStyle(resolvedStyle);
-        applySky(skyStyle);
         applyMutedMapStyle(map);
       });
       map.on('load', ()=>{
@@ -8688,9 +8652,9 @@ document.addEventListener('pointerdown', handleDocInteract);
     });
   });
   const specialSubIconPaths = {
-    'Other Events': 'assets/icons-20/whats-on-category-icon-20.webp',
-    'Other Opportunities': 'assets/icons-20/opportunities-category-icon-20.webp',
-    'Other Learning': 'assets/icons-20/learning-category-icon-20.webp'
+    'Other Events': 'assets/icons-20/whats-on-category-icon-red-20.webp',
+    'Other Opportunities': 'assets/icons-20/opportunities-category-icon-red-20.webp',
+    'Other Learning': 'assets/icons-20/learning-category-icon-red-20.webp'
   };
   Object.entries(specialSubIconPaths).forEach(([name, path]) => {
     subcategoryIcons[name] = `<img src="${path}" width="20" height="20" alt="">`;
@@ -8822,11 +8786,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const opacityVal = document.getElementById('postModeBgOpacityVal');
   const root = document.documentElement;
   const settings = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
-  const themeSelect = document.getElementById('mapTheme');
-  const skySelect = document.getElementById('skyTheme');
-  if(themeSelect) themeSelect.value = window.mapStyle;
-  if(skySelect) skySelect.value = window.skyStyle;
-
   function hexToRgb(hex){
     const r = parseInt(hex.slice(1,3),16);
     const g = parseInt(hex.slice(3,5),16);
