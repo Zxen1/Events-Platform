@@ -803,6 +803,7 @@ button[aria-expanded="true"] .results-arrow{
   line-height:var(--calendar-cell-h);
   text-align:center;
   font-size:inherit;
+  border-radius:8px;
 }
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
@@ -810,7 +811,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
-.calendar .day.in-range{background:#add8e6;border-radius:0;}
+.calendar .day.in-range{background:#add8e6;}
 .calendar .day.selected{background:var(--session-selected);color:#fff;}
 .calendar .day.selected.today{color:var(--today) !important;}
 .calendar .day.range-start{border-radius:8px 0 0 8px;}
@@ -1475,7 +1476,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .filter-category-menu .filter-category-header{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:8px;
 }
 
@@ -1530,6 +1531,7 @@ button[aria-expanded="true"] .results-arrow{
   height:36px;
   flex:0 0 38px;
   cursor:pointer;
+  align-self:flex-start;
 }
 .filter-category-menu .cat-switch input{
   opacity:0;
@@ -1801,7 +1803,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-shrink:0;
   position:relative;
   left:0;
-  opacity:0;
+  opacity:1;
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
@@ -3668,13 +3670,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .mapboxgl-popup-content{
   background: var(--popup-bg) !important;
-}
-
-.mapboxgl-popup-tip{
-  border-top-color: var(--popup-bg) !important;
-  border-bottom-color: var(--popup-bg) !important;
-  border-left-color: var(--popup-bg) !important;
-  border-right-color: var(--popup-bg) !important;
 }
 
 .mapboxgl-popup-close-button{
@@ -6164,21 +6159,13 @@ function makePosts(){
           marker:false,
           placeholder:'Location',
           reverseGeocode:true,
-          collapsed:false,
-          flyTo:false
+          collapsed:false
         });
         gc.on('result', (e)=>{
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
           if(mode!=='map') setMode('map');
-          if(map){
-            map.flyTo({
-              center: e.result.center,
-              zoom: Math.max(map.getZoom(), 12),
-              essential: true
-            });
-          }
           gc.clear();
         });
         const gEl = document.querySelector(sel.geo);
@@ -6194,12 +6181,6 @@ function makePosts(){
         geolocate.on('geolocate', (e)=>{
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
-          map.flyTo({
-            center:[e.coords.longitude, e.coords.latitude],
-            zoom: Math.max(map.getZoom(), 12),
-            pitch:45,
-            essential:true
-          });
           if(geoCtrlEl) geoCtrlEl.classList.remove('locating');
         });
         geolocate.on('error', ()=>{ if(geoCtrlEl) geoCtrlEl.classList.remove('locating'); });
@@ -6501,7 +6482,7 @@ function makePosts(){
             'icon-image':['get','sub'],
             'icon-allow-overlap': true,
             'icon-ignore-placement': true,
-            'icon-anchor': 'bottom',
+            'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
             'symbol-z-order': 'viewport-y',
             'symbol-sort-key': 1100
@@ -6537,7 +6518,7 @@ function makePosts(){
                 'icon-image':['get','sub'],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'bottom',
+                'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
@@ -6553,7 +6534,7 @@ function makePosts(){
                 'icon-image':['get','sub'],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'bottom',
+                'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
@@ -6613,7 +6594,7 @@ function makePosts(){
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
-        map.fitBounds(bounds, { padding: 40, pitch: 45, maxZoom: 18, essential: true });
+        map.fitBounds(bounds);
       });
       
       map.on('click','unclustered', (e)=>{
@@ -7076,7 +7057,7 @@ function makePosts(){
       if(map && st.bounds){
         stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
-        map.fitBounds(bounds, {duration:0});
+        map.fitBounds(bounds);
         postPanel = bounds;
       }
       applyFilters();
@@ -7705,9 +7686,9 @@ function makePosts(){
             if(url){
               const img = new Image();
               img.src = url;
-              marker = new mapboxgl.Marker({element:img}).setLngLat([loc.lng, loc.lat]).addTo(map);
+              marker = new mapboxgl.Marker({element:img, anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
             } else {
-              marker = new mapboxgl.Marker().setLngLat([loc.lng, loc.lat]).addTo(map);
+              marker = new mapboxgl.Marker({anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
             }
           setTimeout(()=> map && map.resize(),0);
           if(resizeHandler){
