@@ -6873,18 +6873,21 @@ function makePosts(){
         lockMap(true); lastListOpenAt = Date.now();
       });
 
-      map.on('click','clusters', async (e)=>{
+      const handleClusterClick = async (e)=>{
         stopSpin();
         if(!map.getLayer('clusters')) return;
         if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
-        let features;
-        try {
-          features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
-        } catch(err){
-          console.warn('cluster query failed', err);
-          return;
+        let feature = e && e.features && e.features[0];
+        if(!feature){
+          let features;
+          try {
+            features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+          } catch(err){
+            console.warn('cluster query failed', err);
+            return;
+          }
+          feature = features && features[0];
         }
-        const feature = features && features[0];
         const clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
         if(clusterId === undefined) return;
         const coords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates) ? feature.geometry.coordinates.slice() : null;
@@ -6917,7 +6920,9 @@ function makePosts(){
         } catch(err){
           console.warn('cluster fitBounds failed', err);
         }
-      });
+      };
+      map.on('click','clusters', handleClusterClick);
+      map.on('click','cluster-count', handleClusterClick);
       
       map.on('click','unclustered', (e)=>{
         stopSpin();
