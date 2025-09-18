@@ -4624,7 +4624,8 @@ img.thumb{
         const baseUrl = getStyleBase(originUrl);
         const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
         const normalizedLower = typeof normalizedUrl === 'string' ? normalizedUrl.toLowerCase() : '';
-        const skipAtmosphere = normalizedLower.includes('/streets-') || normalizedLower.includes('/standard');
+        const unsupportedAtmospherePatterns = ['/standard'];
+        const skipAtmosphere = unsupportedAtmospherePatterns.some((pattern) => normalizedLower.includes(pattern));
         if(skipAtmosphere){
           if(typeof mapInstance.setFog === 'function'){
             try { mapInstance.setFog(null); } catch(err){}
