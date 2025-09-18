@@ -703,7 +703,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#999999;
+  background:#555555;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -804,6 +804,10 @@ button[aria-expanded="true"] .results-arrow{
   text-align:center;
   font-size:inherit;
   border-radius:8px;
+}
+#filterPanel .calendar .weekday,
+#filterPanel .calendar .day{
+  border-radius:0;
 }
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
@@ -1273,7 +1277,7 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--keyword-bg);
 }
 #filterPanel #daterange-textbox{
-  background: var(--date-range-bg);
+  background: #333333;
   color: var(--date-range-text);
 }
 
@@ -2469,7 +2473,7 @@ body.filters-active #filterBtn{
 
 .mode-posts .post-board{
   left:0;
-  opacity:0;
+  opacity:1;
   z-index:1;
   pointer-events:auto;
 }
@@ -2602,12 +2606,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .image-box img{
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:cover;
   object-position:center;
   display:block;
 }
 .open-post .image-box img.ready{
-  object-fit:contain;
+  object-fit:cover;
 }
 
 .open-post .thumbnail-row{
@@ -2785,8 +2789,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .second-post-column .desc:focus{
-  outline:1px solid var(--border-hover);
-  outline-offset:2px;
+  outline:none;
 }
 
 .second-post-column .desc.expanded{
@@ -3645,7 +3648,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .multi-item.map-card img{
   width: 64px;
-  height: 44px;
+  height: 64px;
+  aspect-ratio: 1 / 1;
   border-radius: 8px;
   object-fit: cover;
   display: block;
@@ -3673,6 +3677,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .mapboxgl-popup,
 .mapboxgl-popup-content{
+  border-radius:8px !important;
   color: var(--popup-text) !important;
 }
 
@@ -3959,7 +3964,6 @@ img.thumb{
       <div class="panel-body">
         <div class="panel-actions filter-panel-actions">
           <button type="button" class="pin-panel" aria-pressed="true" aria-label="Pin filter panel">📌</button>
-          <button type="button" class="close-panel">Close</button>
         </div>
         <div class="map-control-row map-controls-filter">
           <div id="geocoder-filter" class="geocoder"></div>
