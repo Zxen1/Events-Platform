@@ -617,7 +617,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:20px;
 }
-.panel-body > *{
+.panel-body > *:not(.map-control-row){
   width:100%;
   max-width:420px;
   box-sizing:border-box;
@@ -2356,14 +2356,27 @@ body.filters-active #filterBtn{
 }
 
 .panel-body .map-control-row{
-  width:100%;
-  max-width:100%;
   margin:0;
-  justify-content:flex-start;
   background:none;
   border-radius:0;
   padding:0;
   box-sizing:border-box;
+}
+.panel-body:not(#welcomeBody) .map-control-row{
+  width:100%;
+  max-width:100%;
+  justify-content:flex-start;
+}
+#welcomeBody .map-control-row{
+  width:auto;
+  max-width:none;
+  justify-content:center;
+}
+#welcomeBody .map-control-row > .geocoder{
+  flex:0 1 auto;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
+  width:min(320px, 100%);
 }
 .panel-body .map-control-row > *{
   flex:0 0 auto;
@@ -4251,8 +4264,19 @@ img.thumb{
       return origAddEventListener.call(this, type, listener, options);
     };
   })();
-  let startPitch, startBearing, logoEls = [], geocoder;
+  let startPitch, startBearing, logoEls = [], geocoder, closeWelcomeOnMove = false, welcomeCloseResetTimer = null, welcomeModalEl = null;
   const geocoders = [];
+
+  function scheduleWelcomeClose(){
+    closeWelcomeOnMove = true;
+    if(welcomeCloseResetTimer){
+      clearTimeout(welcomeCloseResetTimer);
+    }
+    welcomeCloseResetTimer = setTimeout(()=>{
+      closeWelcomeOnMove = false;
+      welcomeCloseResetTimer = null;
+    }, 2000);
+  }
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -4536,6 +4560,11 @@ img.thumb{
         const saved = JSON.parse(localStorage.getItem('admin-settings-current') || '{}');
         msgEl.innerHTML = saved.welcomeMessage || DEFAULT_WELCOME;
         openPanel(popup);
+        closeWelcomeOnMove = false;
+        if(welcomeCloseResetTimer){
+          clearTimeout(welcomeCloseResetTimer);
+          welcomeCloseResetTimer = null;
+        }
         const body = document.getElementById('welcomeBody');
         body.style.padding = '20px';
       }
@@ -6193,11 +6222,13 @@ function makePosts(){
           localStorage.setItem('spinGlobe','false');
           stopSpin();
           if(mode!=='map') setMode('map');
+          if(sel.geo === '#geocoder-welcome') scheduleWelcomeClose();
           gc.clear();
         });
         const gEl = document.querySelector(sel.geo);
         if(gEl){
-          gEl.appendChild(gc.onAdd(map));
+          const gcControl = gc.onAdd(map);
+          gEl.appendChild(gcControl);
           const input = gEl.querySelector('input[type="text"]');
           if(input) input.setAttribute('autocomplete','street-address');
         }
@@ -6207,10 +6238,22 @@ function makePosts(){
         geolocate.on('geolocate', ()=>{
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
+          if(sel.locate === '#geolocate-welcome') scheduleWelcomeClose();
+        });
+        geolocate.on('trackuserlocationstart', ()=>{
+          if(sel.locate === '#geolocate-welcome') scheduleWelcomeClose();
         });
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder){
-          geoHolder.appendChild(geolocate.onAdd(map));
+          const geolocateControl = geolocate.onAdd(map);
+          if(sel.locate === '#geolocate-welcome'){
+            const markWelcomeMove = ()=> scheduleWelcomeClose();
+            geolocateControl.addEventListener('click', markWelcomeMove, {capture:true});
+            geolocateControl.addEventListener('keydown', (ev)=>{
+              if(ev.key === 'Enter' || ev.key === ' ') markWelcomeMove();
+            }, {capture:true});
+          }
+          geoHolder.appendChild(geolocateControl);
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         if (nav._onDown && nav._onMove) {
@@ -6236,7 +6279,17 @@ function makePosts(){
           };
         }
         const compassHolder = document.querySelector(sel.compass);
-        if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
+        if(compassHolder){
+          const navControl = nav.onAdd(map);
+          if(sel.compass === '#compass-welcome'){
+            const markWelcomeMove = ()=> scheduleWelcomeClose();
+            navControl.addEventListener('pointerdown', markWelcomeMove, {capture:true});
+            navControl.addEventListener('keydown', (ev)=>{
+              if(ev.key === 'Enter' || ev.key === ' ') markWelcomeMove();
+            }, {capture:true});
+          }
+          compassHolder.appendChild(navControl);
+        }
       });
     }
 
@@ -6329,6 +6382,16 @@ function makePosts(){
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
         map.on('dragend', () => { if(geocoder) geocoder.clear(); });
         map.on('click', () => { if(geocoder) geocoder.clear(); });
+        map.on('movestart', () => {
+          if(closeWelcomeOnMove && welcomeModalEl && welcomeModalEl.classList.contains('show')){
+            closePanel(welcomeModalEl);
+          }
+          if(welcomeCloseResetTimer){
+            clearTimeout(welcomeCloseResetTimer);
+            welcomeCloseResetTimer = null;
+          }
+          closeWelcomeOnMove = false;
+        });
       }
 
     function startSpin(fromCurrent=false){
@@ -8404,6 +8467,11 @@ function closePanel(m){
   if(m.id === 'welcome-modal'){
     const mc = document.querySelector('.map-controls-map');
     if(mc) mc.style.display = '';
+    if(welcomeCloseResetTimer){
+      clearTimeout(welcomeCloseResetTimer);
+      welcomeCloseResetTimer = null;
+    }
+    closeWelcomeOnMove = false;
   }
   m.setAttribute('inert','');
   if(content && content.dataset.side){
@@ -8429,9 +8497,11 @@ function closePanel(m){
     if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
   }
 }
-const welcomeModalEl = document.getElementById('welcome-modal');
+welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
-  welcomeModalEl.addEventListener('click', () => closePanel(welcomeModalEl));
+  welcomeModalEl.addEventListener('click', (e) => {
+    if(e.target === welcomeModalEl) closePanel(welcomeModalEl);
+  });
 }
 function requestClosePanel(m){
   closePanel(m);
