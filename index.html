@@ -2368,15 +2368,20 @@ body.filters-active #filterBtn{
   justify-content:flex-start;
 }
 #welcomeBody .map-control-row{
-  width:auto;
-  max-width:none;
-  justify-content:center;
+  width:100%;
+  max-width:100%;
+  justify-content:flex-start;
+  align-self:stretch;
+}
+#welcomeBody .map-controls-welcome{
+  text-align:left;
 }
 #welcomeBody .map-control-row > .geocoder{
   flex:0 1 auto;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
   width:min(320px, 100%);
+  text-align:left;
 }
 .panel-body .map-control-row > *{
   flex:0 0 auto;
@@ -8517,7 +8522,15 @@ function closePanel(m){
 welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
   welcomeModalEl.addEventListener('click', (e) => {
-    if(e.target === welcomeModalEl) closePanel(welcomeModalEl);
+    const controlsRow = welcomeModalEl.querySelector('#welcomeBody .map-control-row');
+    const clickedInsideControls = e.target.closest('#welcomeBody .map-control-row');
+    if(clickedInsideControls && (!controlsRow || controlsRow.contains(clickedInsideControls))){
+      return;
+    }
+    if(!controlsRow && e.target !== welcomeModalEl){
+      return;
+    }
+    closePanel(welcomeModalEl);
   });
 }
 function requestClosePanel(m){
