@@ -4378,6 +4378,16 @@ img.thumb{
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
+      const DEFAULT_HOVER_RING_FILTER = ['==',['get','id'],'__none__'];
+      let pendingHoverRingFilter = DEFAULT_HOVER_RING_FILTER;
+      function setHoverRingFilter(filter){
+        pendingHoverRingFilter = filter;
+        if(!map || typeof map.getLayer !== 'function' || typeof map.setFilter !== 'function') return;
+        if(!map.getLayer('hover-ring')) return;
+        try {
+          map.setFilter('hover-ring', filter);
+        } catch(err){}
+      }
         if(storedMapStyle !== mapStyle){
           try {
             localStorage.setItem('mapStyle', mapStyle);
@@ -4670,7 +4680,20 @@ img.thumb{
           }
           target.anchor = 'map';
         };
+        const stripSunDirection = (target)=>{
+          if(!target || typeof target !== 'object') return;
+          const keys = ['sun-direction', 'sunDirection', 'direction', 'position'];
+          keys.forEach((key)=>{
+            if(Object.prototype.hasOwnProperty.call(target, key)){
+              delete target[key];
+            }
+          });
+          if(target.properties && typeof target.properties === 'object'){
+            stripSunDirection(target.properties);
+          }
+        };
         assignAnchor(updated);
+        stripSunDirection(updated);
         try {
           mapInstance.setLight(updated);
         } catch(err){}
@@ -7063,6 +7086,7 @@ function makePosts(){
         'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
         'circle-stroke-width': 2, 'circle-radius': 12
       }});
+      setHoverRingFilter(pendingHoverRingFilter);
 
       // Cursor + popup for unclustered points
       
@@ -7070,7 +7094,7 @@ function makePosts(){
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
         const id = f.properties.id; hoverId = id;
-        map.setFilter('hover-ring', ['==',['get','id'], id]);
+        setHoverRingFilter(['==',['get','id'], id]);
         const coords = f.geometry && f.geometry.coordinates;
         const multi = (coords && coords.length>=2) ? postsAtVenue(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
@@ -7141,7 +7165,7 @@ function makePosts(){
         setTimeout(()=>{
           if(!window.__overCard && hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
         }, 180);
-        hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
+        hoverId = null; setHoverRingFilter(DEFAULT_HOVER_RING_FILTER);
       });
 
 
