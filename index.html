@@ -531,33 +531,6 @@ button[aria-expanded="true"] .results-arrow{
   text-align:right;
   margin-left:8px;
 }
-  #spinType{
-    display:flex;
-    gap:6px;
-    margin-top:6px;
-  }
-  #spinType label{
-    flex:1;
-    border-radius:8px;
-    overflow:hidden;
-  }
-  #spinType input{
-    display:none;
-  }
-  #spinType span{
-    display:block;
-    padding:0 10px;
-    height:35px;
-    line-height:35px;
-    background:var(--btn);
-    color:var(--button-text);
-    font-weight:600;
-    cursor:pointer;
-    text-align:center;
-    transition:background .2s,border-color .2s,color .2s;
-    border:1px solid var(--btn);
-    border-radius:8px;
-  }
 
 
 .gear{
@@ -2086,7 +2059,8 @@ body.hide-ads .ad-board{
 }
 .mode-toggle{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
   flex:0 1 auto;
   min-width:0;
   height:40px;
@@ -2122,6 +2096,10 @@ body.filters-active #filterBtn{
 .options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index:30; }
 .options-menu[hidden]{ display:none; }
 .options-menu label{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+
+.spin-type-toggle{
+  margin-top:6px;
+}
 
 
 .card,
@@ -2434,6 +2412,17 @@ body.filters-active #filterBtn{
 .post-board .posts::-webkit-scrollbar-corner,
 .recents-board::-webkit-scrollbar-corner{
   background-color:rgba(0,0,0,0);
+}
+.post-board,
+.recents-board{
+  scrollbar-gutter:stable;
+}
+@media (min-width:1200px){
+  .post-board,
+  .post-board .posts,
+  .recents-board{
+    overflow:auto;
+  }
 }
 .post-board{color:#fff;}
 .post-board .post-card,
@@ -4137,9 +4126,9 @@ img.thumb{
                   <span class="slider"></span>
                 </label>
               </div>
-              <div id="spinType" class="option-group">
-                <label class="option-label"><span>Everyone</span><input type="radio" name="spinType" value="all" /></label>
-                <label class="option-label"><span>New Users</span><input type="radio" name="spinType" value="new" /></label>
+              <div id="spinTypeToggle" class="mode-toggle spin-type-toggle" role="group" aria-label="Spin audience">
+                <button type="button" data-value="all" aria-pressed="false">Everyone</button>
+                <button type="button" data-value="new" aria-pressed="false">New Users</button>
               </div>
             </div>
             <div class="panel-field">
@@ -4279,6 +4268,7 @@ img.thumb{
     const startZoom = savedView?.zoom || 1.5;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
+    let currentMapCenter = {lng:startCenter[0], lat:startCenter[1]};
 
     function normalizeMapStyle(style){
       switch(style){
@@ -5164,13 +5154,15 @@ function makePosts(){
       window.postsLoaded = postsLoaded;
       if(Object.keys(subcategoryMarkers).length) addPostSource();
       initAdBoard();
-      applyFilters();
     }
 
     function checkLoadPosts(){
-      if(!map) return;
-      if(!postsLoaded) loadPosts();
-      if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
+      if(!map || spinning) return;
+      if(!postsLoaded){
+        loadPosts();
+      }
+      if(!postsLoaded) return;
+      if(Object.keys(subcategoryMarkers).length) addPostSource();
       applyFilters();
     }
 
@@ -5179,6 +5171,7 @@ function makePosts(){
     const postsModeEl = $('.post-board');
 
     let sortedPostList = [];
+    let sortedIndexMap = new Map();
     let renderedPostCount = 0;
     let postBatchObserver = null;
     let postSentinel = null;
@@ -5840,13 +5833,11 @@ function makePosts(){
         const historyActive = document.body.classList.contains('show-history');
         const filterPanel = document.getElementById('filterPanel');
         const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
-        const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
-        const filterPinned = !!(filterPanel && filterPanel.classList.contains('show') && pinBtn && pinBtn.getAttribute('aria-pressed') === 'true');
+        const filterOpen = !!(filterPanel && filterPanel.classList.contains('show'));
         const historyOpenPost = recentsBoard ? recentsBoard.querySelector('.open-post') : null;
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
-        let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
         const postWidth = postBoard ? (postBoard.offsetWidth || 530) : 0;
         const historyWidth = recentsBoard ? (recentsBoard.offsetWidth || 530) : 0;
         const boardsWidths = [];
@@ -5861,22 +5852,23 @@ function makePosts(){
         }
         const adWidth = adBoard ? (adBoard.offsetWidth || 440) : 0;
         let hideAds = small || document.body.classList.contains('mode-map') || document.body.classList.contains('hide-posts-ui') || window.innerWidth < 1920;
-        let requiredWidth = totalBoardsWidth;
-        if(filterPinned && filterWidth){
-          requiredWidth += filterWidth;
-        } else {
-          filterWidth = 0;
-        }
+        let baseWidth = totalBoardsWidth;
         if(!hideAds && adWidth){
-          requiredWidth += adWidth + gap;
+          baseWidth += adWidth + gap;
         }
-        if(requiredWidth > window.innerWidth && !hideAds && adWidth){
+        const wantsAnchor = filterOpen && !small && filterContent;
+        const rawFilterWidth = wantsAnchor ? filterContent.getBoundingClientRect().width : 0;
+        let filterOffset = wantsAnchor && rawFilterWidth ? rawFilterWidth + gap : 0;
+        let totalRequired = baseWidth + filterOffset;
+        if(wantsAnchor && totalRequired > window.innerWidth && !hideAds && adWidth){
           hideAds = true;
-          requiredWidth -= adWidth + gap;
+          baseWidth -= adWidth + gap;
+          totalRequired = baseWidth + filterOffset;
         }
-        const canAnchor = filterPinned && filterWidth && requiredWidth <= window.innerWidth;
+        const canAnchor = wantsAnchor && rawFilterWidth && totalRequired <= window.innerWidth;
+        const offsetValue = canAnchor ? filterOffset : 0;
         document.body.classList.toggle('filter-anchored', canAnchor);
-        document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
+        document.documentElement.style.setProperty('--filter-panel-offset', offsetValue ? `${offsetValue}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
         if(recentsBoard){
           recentsBoard.style.display = historyActive ? '' : 'none';
@@ -5905,7 +5897,7 @@ function makePosts(){
           if(map && typeof map.resize === 'function'){
             map.resize();
             updatePostPanel();
-            applyFilters();
+            checkLoadPosts();
           }
         }, 0);
 
@@ -6302,8 +6294,9 @@ function makePosts(){
         if(spinEnabled){
           startSpin(true);
         }
+        const centerOnLoad = map.getCenter();
+        currentMapCenter = {lng:centerOnLoad.lng, lat:centerOnLoad.lat};
         updatePostPanel();
-        applyFilters();
         checkLoadPosts();
       });
 
@@ -6323,9 +6316,11 @@ function makePosts(){
         map.on('move', updateFilterCounts);
         const refreshMapView = () => {
           updateFilterCounts();
+          const centerLngLat = map.getCenter();
+          currentMapCenter = {lng:centerLngLat.lng, lat:centerLngLat.lat};
           refreshMarkers();
           updatePostPanel();
-          const center = map.getCenter().toArray();
+          const center = centerLngLat.toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
           const bearing = map.getBearing();
@@ -6340,7 +6335,6 @@ function makePosts(){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 3) return;
-      if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       historyWasActive = document.body.classList.contains('show-history');
       if(historyWasActive){
@@ -6372,7 +6366,7 @@ function makePosts(){
         if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','false');
         updateModeToggle();
       }
-      applyFilters();
+      checkLoadPosts();
     }
 
     function haltSpin(e){
@@ -6406,7 +6400,12 @@ function makePosts(){
       get spinLoadStart(){ return spinLoadStart; },
       set spinLoadStart(v){ spinLoadStart = v; },
       get spinLoadType(){ return spinLoadType; },
-      set spinLoadType(v){ spinLoadType = v; },
+      set spinLoadType(v){
+        spinLoadType = v;
+        try{ localStorage.setItem('spinLoadType', v); }catch(err){}
+        if(typeof syncSpinTypeButtons === 'function') syncSpinTypeButtons();
+        updateSpinState();
+      },
       get spinLogoClick(){ return spinLogoClick; },
       set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
       startSpin,
@@ -6810,6 +6809,7 @@ function makePosts(){
       if(favToTop) arr.sort((a,b)=> (b.fav - a.fav));
 
       sortedPostList = arr;
+      sortedIndexMap = new Map(arr.map((post, i)=>[post.id, i]));
       renderedPostCount = 0;
 
       if(postBatchObserver) postBatchObserver.disconnect();
@@ -6884,10 +6884,23 @@ function makePosts(){
       }
     }
     function formatDates(d){
-      if(!d || !d.length) return '';
-      const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      if(d.length===1) return fmt(d[0]);
-      return `${fmt(d[0])} + ${d.length-1} more`;
+      if(!Array.isArray(d) || !d.length) return '';
+      const sorted = d.slice().sort();
+      const fmt = iso => {
+        if(!iso) return '';
+        const date = parseISODate(iso);
+        if(!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+        const weekday = date.toLocaleDateString('en-GB', {weekday:'short'});
+        const day = date.getDate();
+        const month = date.toLocaleDateString('en-GB', {month:'short'});
+        return `${weekday} ${day} ${month}`;
+      };
+      const startText = fmt(sorted[0]);
+      const endText = fmt(sorted[sorted.length - 1]);
+      if(startText && (!endText || startText === endText)) return startText;
+      if(!startText) return endText;
+      if(!endText) return startText;
+      return `${startText} - ${endText}`;
     }
 
     function parseCreatedToDate(created){
@@ -6951,6 +6964,96 @@ function makePosts(){
       });
     }
 
+    function findClosestLocation(locations){
+      if(!locations || !locations.length) return null;
+      const ref = currentMapCenter || {lng:startCenter[0], lat:startCenter[1]};
+      let best = null;
+      let minDist = Number.POSITIVE_INFINITY;
+      locations.forEach(loc=>{
+        if(Number.isFinite(loc.lng) && Number.isFinite(loc.lat)){
+          const dist = distKm({lng:loc.lng, lat:loc.lat}, ref);
+          if(dist < minDist){
+            minDist = dist;
+            best = loc;
+          }
+        } else if(!best){
+          best = loc;
+        }
+      });
+      if(!best) best = locations[0];
+      return {location: best, extra: Math.max(0, locations.length - 1)};
+    }
+
+    function formatLocationSummary(p){
+      const result = findClosestLocation(p.locations);
+      if(!result){
+        return p.city || '';
+      }
+      const {location, extra} = result;
+      const base = (location && (location.venue || location.address)) || p.city || '';
+      if(extra > 0){
+        return `${base} + ${extra} more`;
+      }
+      return base;
+    }
+
+    const dominantColorCanvas = document.createElement('canvas');
+    const dominantColorCtx = dominantColorCanvas.getContext('2d', {willReadFrequently:true});
+
+    function extractDominantColor(img){
+      if(!img || !dominantColorCtx) return null;
+      const naturalWidth = img.naturalWidth || img.width || 0;
+      const naturalHeight = img.naturalHeight || img.height || 0;
+      if(!naturalWidth || !naturalHeight) return null;
+      const width = Math.max(1, Math.min(64, naturalWidth));
+      const height = Math.max(1, Math.min(64, naturalHeight));
+      dominantColorCanvas.width = width;
+      dominantColorCanvas.height = height;
+      try {
+        dominantColorCtx.clearRect(0, 0, width, height);
+        dominantColorCtx.drawImage(img, 0, 0, width, height);
+        const data = dominantColorCtx.getImageData(0, 0, width, height).data;
+        let r = 0, g = 0, b = 0, total = 0;
+        for(let i = 0; i < data.length; i += 4){
+          const alpha = data[i+3] / 255;
+          if(alpha <= 0.05) continue;
+          r += data[i] * alpha;
+          g += data[i+1] * alpha;
+          b += data[i+2] * alpha;
+          total += alpha;
+        }
+        if(total <= 0) return null;
+        return {
+          r: Math.round(r / total),
+          g: Math.round(g / total),
+          b: Math.round(b / total)
+        };
+      } catch(err){
+        return null;
+      }
+    }
+
+    function updateOpenPostBackground(openEl, img = null, sourceKey = ''){
+      if(!openEl) return;
+      const key = sourceKey || (img && (img.currentSrc || img.src)) || '__default__';
+      openEl.dataset.bgSource = key;
+      const overlay = 'rgba(0,0,0,0.5)';
+      const applyGradient = color => {
+        if(!openEl || openEl.dataset.bgSource !== key) return;
+        const gradient = `linear-gradient(${overlay}, ${overlay}), ${color}`;
+        openEl.style.background = gradient;
+        openEl.querySelectorAll('.post-header').forEach(head => {
+          head.style.background = gradient;
+        });
+      };
+      applyGradient('rgb(34, 34, 34)');
+      if(!img) return;
+      const color = extractDominantColor(img);
+      if(color){
+        applyGradient(`rgb(${color.r}, ${color.g}, ${color.b})`);
+      }
+    }
+
     function card(p, wide=false){
       const el = document.createElement('article');
       el.className = wide ? 'post-card' : 'recents-card';
@@ -6964,7 +7067,7 @@ function makePosts(){
           <div class="title">${p.title}</div>
           <div class="info">
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${formatLocationSummary(p)}</span></div>
             <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
@@ -7127,6 +7230,7 @@ function makePosts(){
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
       const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const thumbSrc = imgThumb(p);
+      const heroFull = heroUrl(p);
       const headerInner = `
           <div class="title-block">
             <div class="title">${p.title}</div>
@@ -7166,26 +7270,29 @@ function makePosts(){
                 <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
               </div>
             </div>
-            <div class="post-images">
-              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
-              <div class="thumbnail-row"></div>
+              <div class="post-images">
+                <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroFull}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+                <div class="thumbnail-row"></div>
+              </div>
             </div>
-          </div>
-        </div>`;
-      wrap.querySelectorAll('.post-header').forEach(head => {
-        head.style.background = '#555555';
-      });
-      wrap.style.background = '#555555';
+          </div>`;
+      updateOpenPostBackground(wrap, null, heroFull);
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
           if(img){
             const full = img.getAttribute('data-full');
             const hi = new Image();
+            hi.crossOrigin = 'anonymous';
             hi.referrerPolicy = 'no-referrer';
             hi.fetchPriority = 'high';
             hi.onload = ()=>{
-              const swap = ()=>{ img.src = full; img.classList.remove('lqip'); img.classList.add('ready'); };
+              const swap = ()=>{
+                img.src = full;
+                img.classList.remove('lqip');
+                img.classList.add('ready');
+                updateOpenPostBackground(wrap, hi, full);
+              };
               if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
             };
             hi.onerror = ()=>{};
@@ -7222,14 +7329,13 @@ function makePosts(){
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container) return;
 
-        if(!container.children.length && !fromHistory){ container.appendChild(card(p, true)); }
-
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
         if(alreadyOpen){
           return;
         }
 
-        let target = originEl || container.querySelector(`[data-id="${id}"]`);
+        const originWithinContainer = originEl && originEl.closest('.post-board, #recentsBoard') === container ? originEl : null;
+        let target = originWithinContainer || container.querySelector(`[data-id="${id}"]`);
 
         (function(){
           const ex = container.querySelector('.open-post');
@@ -7268,9 +7374,46 @@ function makePosts(){
           }
         })();
 
-        target = originEl || container.querySelector(`[data-id="${id}"]`);
+        target = originWithinContainer || container.querySelector(`[data-id="${id}"]`);
 
-        if(!target){ target = card(p, fromHistory ? false : true); container.appendChild(target); }
+        if(!target){
+          if(fromHistory){
+            target = card(p, false);
+            container.appendChild(target);
+          } else {
+            const insertCard = ()=>{
+              const newCard = card(p, true);
+              if(container === postsWideEl){
+                const sentinel = postSentinel && container.contains(postSentinel) ? postSentinel : null;
+                const postIndex = sortedIndexMap.has(p.id) ? sortedIndexMap.get(p.id) : null;
+                let inserted = false;
+                if(typeof postIndex === 'number'){
+                  const children = Array.from(container.children);
+                  for(const child of children){
+                    if(child === sentinel) break;
+                    const childId = child.dataset && child.dataset.id;
+                    if(!childId) continue;
+                    const childIndex = sortedIndexMap.get(childId);
+                    if(typeof childIndex === 'number' && childIndex > postIndex){
+                      container.insertBefore(newCard, child);
+                      inserted = true;
+                      break;
+                    }
+                  }
+                }
+                if(!inserted){
+                  container.insertBefore(newCard, sentinel || null);
+                }
+              } else {
+                container.appendChild(newCard);
+              }
+              return newCard;
+            };
+            target = insertCard();
+          }
+        }
+        const containerRect = container.getBoundingClientRect();
+        const anchorTop = target ? (target.getBoundingClientRect().top - containerRect.top + container.scrollTop) : null;
         const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
         if(resCard){
           resCard.setAttribute('aria-selected','true');
@@ -7286,6 +7429,15 @@ function makePosts(){
 
         const detail = buildDetail(p);
         target.replaceWith(detail);
+        if(anchorTop !== null){
+          requestAnimationFrame(()=>{
+            if(typeof container.scrollTo === 'function'){
+              container.scrollTo({top: anchorTop});
+            } else {
+              container.scrollTop = anchorTop;
+            }
+          });
+        }
         hookDetailActions(detail, p);
         if (typeof updateStickyImages === 'function') {
           updateStickyImages();
@@ -7509,6 +7661,7 @@ function makePosts(){
         descEl.addEventListener('keydown', toggleDesc);
       }
 
+      const openWrap = el.closest('.open-post') || el;
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       const thumbCol = el.querySelector('.thumbnail-row');
       const mainImg = el.querySelector('.image-box img');
@@ -7524,26 +7677,30 @@ function makePosts(){
         const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
         if(!t) return;
         if(mainImg.dataset.index == idx && mainImg.classList.contains('ready')) return;
+        const full = t.dataset.full || t.src;
+        updateOpenPostBackground(openWrap, null, full);
         mainImg.src = t.src;
         mainImg.dataset.index = idx;
         mainImg.classList.remove('ready');
         mainImg.classList.add('lqip');
         const hi = new Image();
-        const full = t.dataset.full;
+        hi.crossOrigin = 'anonymous';
+        hi.referrerPolicy = 'no-referrer';
         hi.onload = ()=>{
           const swap = ()=>{
             if(mainImg.dataset.index==idx){
               mainImg.src = full;
               mainImg.classList.remove('lqip');
               mainImg.classList.add('ready');
+              updateOpenPostBackground(openWrap, hi, full);
             }
           };
           if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
         };
-      hi.onerror = ()=>{};
-      hi.src = full;
-      thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
-    }
+        hi.onerror = ()=>{};
+        hi.src = full;
+        thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
+      }
     show(0);
     setupHorizontalWheel(thumbCol);
     thumbCol.addEventListener('click', e=>{
@@ -8359,15 +8516,6 @@ function handleDocInteract(e){
       closePanel(welcome);
     }
   }
-  const filterPanel = document.getElementById('filterPanel');
-  if(filterPanel && filterPanel.classList.contains('show')){
-    const content = filterPanel.querySelector('.panel-content');
-    const pinBtn = filterPanel.querySelector('.pin-panel');
-    const pinned = pinBtn && pinBtn.getAttribute('aria-pressed')==='true';
-    if(content && !content.contains(e.target) && !pinned){
-      closePanel(filterPanel);
-    }
-  }
   document.querySelectorAll('.img-popup').forEach(p=>{
     if(!p.contains(e.target)){
       p.remove();
@@ -8392,6 +8540,7 @@ document.addEventListener('pointerdown', handleDocInteract);
   const adminPanel = document.getElementById('adminPanel');
   const filterPanel = document.getElementById('filterPanel');
   const sg = window.spinGlobals || {};
+  let syncSpinTypeButtons = null;
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
@@ -8421,14 +8570,32 @@ document.addEventListener('pointerdown', handleDocInteract);
     });
   });
 
-  document.querySelectorAll('#filterPanel .pin-panel').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const pressed = btn.getAttribute('aria-pressed')==='true';
-      btn.setAttribute('aria-pressed', pressed ? 'false' : 'true');
-      if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
+  const spinTypeToggle = document.getElementById('spinTypeToggle');
+  if(spinTypeToggle){
+    const spinButtons = Array.from(spinTypeToggle.querySelectorAll('button'));
+    const syncButtons = ()=>{
+      spinButtons.forEach(btn=>{
+        const active = btn.dataset.value === spinLoadType;
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    };
+    syncSpinTypeButtons = syncButtons;
+    syncButtons();
+    spinButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const value = btn.dataset.value;
+        if(!value || value === spinLoadType) return;
+        if(window.spinGlobals && 'spinLoadType' in window.spinGlobals){
+          window.spinGlobals.spinLoadType = value;
+        } else {
+          spinLoadType = value;
+          try{ localStorage.setItem('spinLoadType', value); }catch(err){}
+          updateSpinState();
+          syncButtons();
+        }
+      });
     });
-  });
+  }
 
   document.querySelectorAll('.panel .panel-header').forEach(header=>{
     header.addEventListener('mousedown', e=>{
