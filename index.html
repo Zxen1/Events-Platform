@@ -4349,16 +4349,17 @@ img.thumb{
       }
     }
 
-      const storedMapStyle = localStorage.getItem('mapStyle');
-      const normalizedStoredMapStyle = normalizeMapStyle(storedMapStyle);
-      const defaultNormalizedMapStyle = normalizeMapStyle('mapbox://styles/mapbox/standard') || 'mapbox://styles/mapbox/streets-v12';
+    const DESIRED_MAP_STYLE = 'mapbox://styles/mapbox/streets-v12';
+
+      const storedMapStyleRaw = localStorage.getItem('mapStyle');
+      const storedMapStyle = normalizeMapStyle(storedMapStyleRaw);
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = normalizedStoredMapStyle || defaultNormalizedMapStyle,
+          mapStyle = window.mapStyle = DESIRED_MAP_STYLE,
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -4593,6 +4594,52 @@ img.thumb{
           });
         }
         map.setTerrain({source:'terrain-dem'});
+      }
+
+      function applyNightSky(mapInstance){
+        if(!mapInstance) return;
+        if(typeof mapInstance.setFog === 'function'){
+          try {
+            mapInstance.setFog({
+              color: 'rgba(11,13,23,0.6)',
+              'high-color': 'rgba(27,32,53,0.7)',
+              'horizon-blend': 0.15,
+              'space-color': '#010409',
+              'star-intensity': 0.4
+            });
+          } catch(err){}
+        }
+        if(typeof mapInstance.getLayer !== 'function') return;
+        let skyLayerId = null;
+        try {
+          if(mapInstance.getLayer('sky')){
+            skyLayerId = 'sky';
+          } else if(mapInstance.getLayer('night-sky')){
+            skyLayerId = 'night-sky';
+          } else if(typeof mapInstance.addLayer === 'function'){
+            mapInstance.addLayer({
+              id:'night-sky',
+              type:'sky',
+              paint:{
+                'sky-type':'atmosphere',
+                'sky-atmosphere-color':'#0b1d51',
+                'sky-atmosphere-halo-color':'#1a2a6c',
+                'sky-atmosphere-sun-intensity':0.1
+              }
+            });
+            skyLayerId = 'night-sky';
+          }
+        } catch(err){
+          skyLayerId = skyLayerId || (mapInstance.getLayer('sky') ? 'sky' : null);
+        }
+        if(!skyLayerId || typeof mapInstance.setPaintProperty !== 'function') return;
+        const setPaint = (prop, value) => {
+          try { mapInstance.setPaintProperty(skyLayerId, prop, value); } catch(err){}
+        };
+        setPaint('sky-type', 'atmosphere');
+        setPaint('sky-atmosphere-color', '#0b1d51');
+        setPaint('sky-atmosphere-halo-color', '#1a2a6c');
+        setPaint('sky-atmosphere-sun-intensity', 0.1);
       }
 
       function openWelcome(){
@@ -6422,9 +6469,16 @@ function makePosts(){
         const metadata = styleObj && styleObj.metadata ? styleObj.metadata : {};
         const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
         const baseStyle = getStyleBase(originUrl);
-        const resolvedStyle = normalizeMapStyle(baseStyle) || baseStyle || mapStyle;
+        const desiredBase = getStyleBase(DESIRED_MAP_STYLE);
+        if(desiredBase && baseStyle && desiredBase !== baseStyle){
+          try {
+            map.setStyle(DESIRED_MAP_STYLE);
+          } catch(err){}
+          return;
+        }
+        const resolvedStyle = DESIRED_MAP_STYLE;
         mapStyle = window.mapStyle = resolvedStyle;
-        if(resolvedStyle && localStorage.getItem('mapStyle') !== resolvedStyle){
+        if(localStorage.getItem('mapStyle') !== resolvedStyle){
           try {
             localStorage.setItem('mapStyle', resolvedStyle);
           } catch(err){}
@@ -6432,6 +6486,7 @@ function makePosts(){
         fixSizerankExpressions(map);
         applyTerrainForStyle(resolvedStyle);
         applyMutedMapStyle(map);
+        applyNightSky(map);
       });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
@@ -6758,7 +6813,7 @@ function makePosts(){
         const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
         root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
         root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', ()=>{
-          const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true);
+          const id = n.getAttribute('data-id'); touchMarker = null; close(); stopSpin(); openPost(id, false, true);
         }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
@@ -6767,6 +6822,7 @@ function makePosts(){
       map.on('click','clusters', async (e)=>{
         stopSpin();
         if(!map.getLayer('clusters')) return;
+        if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
         let features;
         try {
           features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
@@ -6777,17 +6833,36 @@ function makePosts(){
         const feature = features && features[0];
         const clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
         if(clusterId === undefined) return;
+        const coords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates) ? feature.geometry.coordinates.slice() : null;
+        if(!coords || coords.length < 2) return;
+        const source = typeof map.getSource === 'function' ? map.getSource('posts') : null;
+        if(source && typeof source.getClusterExpansionZoom === 'function'){
+          source.getClusterExpansionZoom(clusterId, (err, zoom)=>{
+            if(err){
+              console.warn('cluster expansion zoom failed', err);
+              return;
+            }
+            const targetZoom = Math.max(zoom, map.getZoom() + 1);
+            try {
+              map.easeTo({ center: coords, zoom: targetZoom, duration: 450, essential: true });
+            } catch(moveErr){
+              console.warn('cluster easeTo failed', moveErr);
+            }
+          });
+          return;
+        }
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!Array.isArray(leaves) || !leaves.length) return;
-        const first = leaves[0];
-        const firstCoords = first && first.geometry && Array.isArray(first.geometry.coordinates) ? first.geometry.coordinates : null;
-        if(!firstCoords) return;
         const bounds = leaves.reduce((b,f)=>{
-          const coords = f && f.geometry && Array.isArray(f.geometry.coordinates) ? f.geometry.coordinates : null;
-          if(coords) b.extend(coords);
+          const leafCoords = f && f.geometry && Array.isArray(f.geometry.coordinates) ? f.geometry.coordinates : null;
+          if(leafCoords) b.extend(leafCoords);
           return b;
-        }, new mapboxgl.LngLatBounds(firstCoords, firstCoords));
-        map.fitBounds(bounds);
+        }, new mapboxgl.LngLatBounds(coords, coords));
+        try {
+          map.fitBounds(bounds, { padding: 40, duration: 450, essential: true });
+        } catch(err){
+          console.warn('cluster fitBounds failed', err);
+        }
       });
       
       map.on('click','unclustered', (e)=>{
@@ -6803,7 +6878,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true); }));
+            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); touchMarker = null; close(); stopSpin(); openPost(id, false, true); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -6814,7 +6889,7 @@ function makePosts(){
                   var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
                   if(row){
                     var pid = row.getAttribute('data-id');
-                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
+                    if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
                   }
                 }, {capture:true});
               }
@@ -6893,7 +6968,7 @@ function makePosts(){
               var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
               if(row){
                 var pid = row.getAttribute('data-id');
-                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
+                if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
               }
             }, {capture:true});
           }
@@ -6926,7 +7001,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
-              try{ stopSpin(); openPost(id, false, true); }catch(e){ console.warn('openPost id missing', e); }
+              try{ touchMarker = null; stopSpin(); openPost(id, false, true); }catch(e){ console.warn('openPost id missing', e); }
             }, {capture:true});
           }
         })();
@@ -8037,7 +8112,7 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          const mutedHandler = () => applyMutedMapStyle(map);
+          const mutedHandler = () => { applyMutedMapStyle(map); applyNightSky(map); };
           map.on('style.load', mutedHandler);
           if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
             mutedHandler();
