@@ -1378,7 +1378,7 @@ button[aria-expanded="true"] .results-arrow{
   margin:0 auto;
 }
 #filterPanel .filter-category-container .cats,
-#filterPanel .filter-category-container .cat{
+#filterPanel .filter-category-container .filter-category-menu{
   width:100%;
 }
 .switch{
@@ -1444,23 +1444,35 @@ button[aria-expanded="true"] .results-arrow{
 
 .cats{
   margin:8px 0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
-.cat{
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  margin: 8px 0;
+.filter-category-menu{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
-.cat .bar{
-  height: 36px;
-  border-radius: 8px;
-  padding-left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.filter-category-menu .filter-category-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.filter-category-menu .filter-category-trigger-wrap{
+  flex:1;
+}
+
+.filter-category-menu .filter-category-trigger{
+  height:36px;
+  border-radius:8px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
   background: var(--btn);
   border: 1px solid var(--btn);
   cursor: pointer;
@@ -1471,22 +1483,27 @@ button[aria-expanded="true"] .results-arrow{
   margin: 0;
 }
 
-.cat .bar .dot{
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
+.filter-category-menu .category-logo{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.cat .bar .label{
-  font-weight: 700;
-  letter-spacing: .2px;
+.filter-category-menu .category-logo img{
+  width:24px;
+  height:24px;
 }
 
-.cat-switch{
+.filter-category-menu .filter-category-trigger .label{
+  font-weight:700;
+  letter-spacing:.2px;
+  flex:1;
+}
+
+.filter-category-menu .cat-switch{
   position:relative;
   display:flex;
   align-items:center;
@@ -1495,12 +1512,12 @@ button[aria-expanded="true"] .results-arrow{
   height:36px;
   cursor:pointer;
 }
-.cat-switch input{
+.filter-category-menu .cat-switch input{
   opacity:0;
   width:0;
   height:0;
 }
-.cat-switch .slider{
+.filter-category-menu .cat-switch .slider{
   position:absolute;
   top:8px;
   left:0;
@@ -1513,7 +1530,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid var(--btn);
   transition:.2s;
 }
-.cat-switch .slider:before{
+.filter-category-menu .cat-switch .slider:before{
   content:'';
   position:absolute;
   width:16px;
@@ -1524,43 +1541,64 @@ button[aria-expanded="true"] .results-arrow{
   background:var(--button-text);
   transition:.2s;
 }
-.cat-switch input:checked + .slider{
+.filter-category-menu .cat-switch input:checked + .slider{
   background:var(--filter-active-color);
   border-color:var(--filter-active-color);
 }
-.cat-switch input:checked + .slider:before{
+.filter-category-menu .cat-switch input:checked + .slider:before{
   transform:translateX(18px);
 }
 
-.sub{
-  margin: 6px 0 0 6px;
-  display: none;
-  grid-template-columns: 1fr;
-  gap: 6px;
+.filter-category-menu .options-dropdown{
+  width:100%;
 }
 
-.sub .chip{
-  height: 28px;
-  display: inline-block;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  font-size: 14px;
-  color: var(--ink-d);
-  width: max-content;
-  cursor: pointer;
-  line-height: 28px;
-}
-.sub .chip .badge{
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
+.filter-category-menu .options-menu{
+  width:100%;
+  box-sizing:border-box;
 }
 
+.filter-category-menu .options-menu button{
+  width:100%;
+  justify-content:flex-start;
+  border-radius:6px;
+  padding:0 12px;
+}
 
-.cat[aria-expanded="true"] .sub{
-  display: grid;
+.filter-category-menu .options-menu button .subcategory-logo{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.filter-category-menu .options-menu button .subcategory-logo img{
+  width:20px;
+  height:20px;
+}
+
+.filter-category-menu .options-menu button .subcategory-label{
+  flex:1;
+  text-align:left;
+}
+
+.filter-category-menu .options-menu button[aria-pressed="true"]{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+}
+
+.filter-category-menu[aria-expanded="true"] .filter-category-trigger{
+  border-color: var(--border-active);
+}
+
+.filter-category-menu.cat-off{
+  opacity:0.6;
+}
+
+.filter-category-menu.cat-off .filter-category-trigger{
+  cursor:default;
 }
 
 .reset-box{
@@ -5003,25 +5041,66 @@ function makePosts(){
     // Categories UI
     const categoryControllers = {};
     const catsEl = $('#cats');
+    function refreshSubcategoryLogos(){
+      Object.values(categoryControllers).forEach(ctrl=>{
+        if(ctrl && typeof ctrl.refreshLogos === 'function'){
+          ctrl.refreshLogos();
+        }
+      });
+    }
     if(catsEl){
       categories.forEach(c=>{
         const el = document.createElement('div');
-        el.className='cat';
+        el.className='filter-category-menu';
         el.dataset.category = c.name;
         el.setAttribute('role','group');
         el.setAttribute('aria-expanded','false');
+
+        const header = document.createElement('div');
+        header.className='filter-category-header';
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className='options-dropdown filter-category-trigger-wrap';
+
         const menuBtn = document.createElement('button');
         menuBtn.type='button';
-        menuBtn.className='bar';
+        menuBtn.className='filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup','true');
         menuBtn.setAttribute('aria-expanded','false');
-        const dot = document.createElement('div');
-        dot.className='dot';
-        dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
-        const label = document.createElement('div');
+        const menuId = `filter-category-menu-${slugify(c.name)}`;
+        menuBtn.setAttribute('aria-controls', menuId);
+
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className='category-logo';
+        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 24;
+          img.height = 24;
+          img.alt = '';
+          categoryLogo.appendChild(img);
+        } else {
+          categoryLogo.textContent = c.name.charAt(0) || '';
+        }
+
+        const label = document.createElement('span');
         label.className='label';
         label.textContent=c.name;
-        menuBtn.appendChild(dot);
-        menuBtn.appendChild(label);
+
+        const arrow = document.createElement('span');
+        arrow.className='dropdown-arrow';
+        arrow.setAttribute('aria-hidden','true');
+
+        menuBtn.append(categoryLogo, label, arrow);
+
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className='options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+
+        triggerWrap.append(menuBtn, optionsMenu);
+
         const toggle = document.createElement('label');
         toggle.className='cat-switch';
         const input = document.createElement('input');
@@ -5029,34 +5108,50 @@ function makePosts(){
         input.setAttribute('aria-label',`Toggle ${c.name} category`);
         const slider = document.createElement('span');
         slider.className='slider';
-        toggle.appendChild(input);
-        toggle.appendChild(slider);
-        const sub = document.createElement('div');
-        sub.className='sub';
+        toggle.append(input, slider);
+
+        const subButtons = [];
         c.subs.forEach(s=>{
-          const chip=document.createElement('div');
-          chip.className='chip';
-          chip.dataset.category = c.name;
-          chip.dataset.subcategory = s;
-          chip.innerHTML='<span class="badge"></span>'+s;
-          chip.addEventListener('click',()=>{
+          const subBtn=document.createElement('button');
+          subBtn.type='button';
+          subBtn.className='subcategory-option';
+          subBtn.dataset.category = c.name;
+          subBtn.dataset.subcategory = s;
+          subBtn.setAttribute('aria-pressed','false');
+          subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
+          const subLabel = subBtn.querySelector('.subcategory-label');
+          if(subLabel){
+            subLabel.textContent = s;
+          }
+          subBtn.addEventListener('click',()=>{
             if(!input.checked) return;
             const key=c.name+'::'+s;
-            const isActive = chip.classList.toggle('on');
+            const isActive = subBtn.getAttribute('aria-pressed') === 'true';
             if(isActive){
-              selection.subs.add(key);
-            } else {
+              subBtn.setAttribute('aria-pressed','false');
+              subBtn.classList.remove('on');
               selection.subs.delete(key);
+            } else {
+              subBtn.setAttribute('aria-pressed','true');
+              subBtn.classList.add('on');
+              selection.subs.add(key);
             }
             applyFilters();
           });
-          sub.appendChild(chip);
+          optionsMenu.appendChild(subBtn);
+          subButtons.push(subBtn);
         });
-        let openState = true;
+
+        header.append(triggerWrap, toggle);
+        el.appendChild(header);
+        catsEl.appendChild(el);
+
+        let openState = false;
         function syncExpanded(){
           const expanded = input.checked && openState;
           el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
           menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          optionsMenu.hidden = !expanded;
         }
         function setOpenState(next){
           openState = !!next;
@@ -5066,6 +5161,12 @@ function makePosts(){
           const enabled = !!active;
           input.checked = enabled;
           el.classList.toggle('cat-off', !enabled);
+          menuBtn.disabled = !enabled;
+          menuBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+          subButtons.forEach(btn=>{
+            btn.disabled = !enabled;
+            btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+          });
           if(enabled){
             selection.cats.add(c.name);
           } else {
@@ -5079,18 +5180,13 @@ function makePosts(){
           }
         }
         menuBtn.addEventListener('click', ()=>{
-          if(!input.checked) return;
+          if(menuBtn.disabled) return;
           setOpenState(!openState);
         });
         input.addEventListener('change', ()=>{
           setCategoryActive(input.checked);
         });
-        el.appendChild(menuBtn);
-        el.appendChild(toggle);
-        el.appendChild(sub);
-        catsEl.appendChild(el);
-        setCategoryActive(true, {silent:true});
-        syncExpanded();
+
         const controller = {
           name: c.name,
           element: el,
@@ -5099,15 +5195,30 @@ function makePosts(){
           getOpenState: ()=> openState,
           isActive: ()=> input.checked,
           syncSubs: ()=>{
-            sub.querySelectorAll('.chip').forEach(ch=>{
-              const subName = ch.dataset.subcategory;
+            subButtons.forEach(btn=>{
+              const subName = btn.dataset.subcategory;
               const key = c.name+'::'+subName;
-              ch.classList.toggle('on', selection.subs.has(key));
+              const selected = selection.subs.has(key);
+              btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+              btn.classList.toggle('on', selected);
+            });
+          },
+          refreshLogos: ()=>{
+            subButtons.forEach(btn=>{
+              const logoSpan = btn.querySelector('.subcategory-logo');
+              if(!logoSpan) return;
+              const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
+              logoSpan.innerHTML = iconHtml;
             });
           }
         };
         categoryControllers[c.name] = controller;
+        setCategoryActive(true, {silent:true});
+        controller.syncSubs();
+        syncExpanded();
       });
+      refreshSubcategoryLogos();
+      document.addEventListener('subcategory-icons-ready', refreshSubcategoryLogos);
       updateResetBtn();
     }
 
@@ -5117,7 +5228,7 @@ function makePosts(){
         selection.subs.clear();
         Object.values(categoryControllers).forEach(ctrl=>{
           ctrl.setActive(true, {silent:true});
-          ctrl.setOpen(true);
+          ctrl.setOpen(false);
           ctrl.syncSubs();
         });
         applyFilters();
@@ -6748,7 +6859,7 @@ function makePosts(){
         controllers.forEach(ctrl=>{
           const active = savedCats.has(ctrl.name);
           ctrl.setActive(active, {silent:true});
-          const shouldOpen = active && (openCats ? openCats.has(ctrl.name) : true);
+          const shouldOpen = active && (openCats ? openCats.has(ctrl.name) : false);
           ctrl.setOpen(shouldOpen);
           ctrl.syncSubs();
         });
@@ -8361,6 +8472,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryMarkers[slug] = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
     });
   });
+  document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded) addPostSource();
 })();
 </script>
