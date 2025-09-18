@@ -1340,6 +1340,9 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .reset-box{
   padding:0;
 }
+#filterPanel .reset-box + .reset-box{
+  margin-top:10px;
+}
 #filterPanel .panel-body > .reset-box{
   padding:0;
 }
@@ -1461,6 +1464,11 @@ button[aria-expanded="true"] .results-arrow{
   background: var(--btn);
   border: 1px solid var(--btn);
   cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: var(--button-text);
+  font: inherit;
+  margin: 0;
 }
 
 .cat .bar .dot{
@@ -3714,6 +3722,11 @@ img.thumb{
             Reset All Filters
           </div>
         </div>
+        <div class="reset-box">
+          <div id="resetCategoriesBtn" class="btn" role="button" aria-label="Reset all categories">
+            Reset All Categories
+          </div>
+        </div>
         <div class="field sort-field">
           <div class="options-dropdown">
             <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
@@ -4988,48 +5001,132 @@ function makePosts(){
     }
 
     // Categories UI
+    const categoryControllers = {};
     const catsEl = $('#cats');
-    categories.forEach(c=>{
-      const el = document.createElement('div'); el.className='cat'; el.setAttribute('role','group'); el.setAttribute('aria-expanded','false');
-      const bar = document.createElement('div'); bar.className='bar';
-      const dot = document.createElement('div'); dot.className='dot'; dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
-      const label = document.createElement('div'); label.className='label'; label.textContent=c.name;
-      const toggle = document.createElement('label'); toggle.className='cat-switch';
-      const input = document.createElement('input'); input.type='checkbox'; input.setAttribute('aria-label',`Toggle ${c.name} category`);
-      const slider = document.createElement('span'); slider.className='slider';
-      toggle.appendChild(input); toggle.appendChild(slider);
-      const sub = document.createElement('div'); sub.className='sub';
-      c.subs.forEach(s=>{ const chip=document.createElement('div'); chip.className='chip'; chip.innerHTML='<span class="badge"></span>'+s; chip.addEventListener('click',()=>{ chip.classList.toggle('on'); const key=c.name+'::'+s; if(selection.subs.has(key)) selection.subs.delete(key); else selection.subs.add(key); applyFilters(); }); sub.appendChild(chip); });
-      bar.appendChild(dot); bar.appendChild(label);
-      function setCategoryState(active){
-        el.setAttribute('aria-expanded', active ? 'true' : 'false');
-        input.checked = active;
-        if(active){
-          selection.cats.add(c.name);
-        } else {
-          selection.cats.delete(c.name);
+    if(catsEl){
+      categories.forEach(c=>{
+        const el = document.createElement('div');
+        el.className='cat';
+        el.dataset.category = c.name;
+        el.setAttribute('role','group');
+        el.setAttribute('aria-expanded','false');
+        const menuBtn = document.createElement('button');
+        menuBtn.type='button';
+        menuBtn.className='bar';
+        menuBtn.setAttribute('aria-expanded','false');
+        const dot = document.createElement('div');
+        dot.className='dot';
+        dot.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>';
+        const label = document.createElement('div');
+        label.className='label';
+        label.textContent=c.name;
+        menuBtn.appendChild(dot);
+        menuBtn.appendChild(label);
+        const toggle = document.createElement('label');
+        toggle.className='cat-switch';
+        const input = document.createElement('input');
+        input.type='checkbox';
+        input.setAttribute('aria-label',`Toggle ${c.name} category`);
+        const slider = document.createElement('span');
+        slider.className='slider';
+        toggle.appendChild(input);
+        toggle.appendChild(slider);
+        const sub = document.createElement('div');
+        sub.className='sub';
+        c.subs.forEach(s=>{
+          const chip=document.createElement('div');
+          chip.className='chip';
+          chip.dataset.category = c.name;
+          chip.dataset.subcategory = s;
+          chip.innerHTML='<span class="badge"></span>'+s;
+          chip.addEventListener('click',()=>{
+            if(!input.checked) return;
+            const key=c.name+'::'+s;
+            const isActive = chip.classList.toggle('on');
+            if(isActive){
+              selection.subs.add(key);
+            } else {
+              selection.subs.delete(key);
+            }
+            applyFilters();
+          });
+          sub.appendChild(chip);
+        });
+        let openState = true;
+        function syncExpanded(){
+          const expanded = input.checked && openState;
+          el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         }
+        function setOpenState(next){
+          openState = !!next;
+          syncExpanded();
+        }
+        function setCategoryActive(active, opts={}){
+          const enabled = !!active;
+          input.checked = enabled;
+          el.classList.toggle('cat-off', !enabled);
+          if(enabled){
+            selection.cats.add(c.name);
+          } else {
+            selection.cats.delete(c.name);
+            setOpenState(false);
+          }
+          syncExpanded();
+          if(!opts.silent){
+            applyFilters();
+            updateResetBtn();
+          }
+        }
+        menuBtn.addEventListener('click', ()=>{
+          if(!input.checked) return;
+          setOpenState(!openState);
+        });
+        input.addEventListener('change', ()=>{
+          setCategoryActive(input.checked);
+        });
+        el.appendChild(menuBtn);
+        el.appendChild(toggle);
+        el.appendChild(sub);
+        catsEl.appendChild(el);
+        setCategoryActive(true, {silent:true});
+        syncExpanded();
+        const controller = {
+          name: c.name,
+          element: el,
+          setActive: (active, opts={})=> setCategoryActive(active, opts),
+          setOpen: (open)=> setOpenState(open),
+          getOpenState: ()=> openState,
+          isActive: ()=> input.checked,
+          syncSubs: ()=>{
+            sub.querySelectorAll('.chip').forEach(ch=>{
+              const subName = ch.dataset.subcategory;
+              const key = c.name+'::'+subName;
+              ch.classList.toggle('on', selection.subs.has(key));
+            });
+          }
+        };
+        categoryControllers[c.name] = controller;
+      });
+      updateResetBtn();
+    }
+
+    const resetCategoriesBtn = $('#resetCategoriesBtn');
+    if(resetCategoriesBtn){
+      resetCategoriesBtn.addEventListener('click', ()=>{
+        selection.subs.clear();
+        Object.values(categoryControllers).forEach(ctrl=>{
+          ctrl.setActive(true, {silent:true});
+          ctrl.setOpen(true);
+          ctrl.syncSubs();
+        });
         applyFilters();
-      }
-      bar.addEventListener('click',()=>{
-        const next = el.getAttribute('aria-expanded') !== 'true';
-        setCategoryState(next);
+        updateResetBtn();
       });
-      input.addEventListener('change',()=>{
-        setCategoryState(input.checked);
-      });
-      el.appendChild(bar); el.appendChild(toggle); el.appendChild(sub); catsEl.appendChild(el);
-    });
+    }
 
     // Reset
     $('#resetBtn').addEventListener('click',()=>{
-      selection.cats.clear(); selection.subs.clear();
-      $$('.cat').forEach(el=>{
-        el.setAttribute('aria-expanded','false');
-        const toggle = el.querySelector('.cat-switch input');
-        if(toggle) toggle.checked = false;
-      });
-      $$('.chip.on').forEach(ch=>ch.classList.remove('on'));
       $('#keyword-textbox').value='';
       $('#daterange-textbox').value='';
       const expired = $('#expiredToggle');
@@ -5067,7 +5164,7 @@ function makePosts(){
     }
 
     function updateResetBtn(){
-      const active = nonLocationFiltersActive() || selection.cats.size > 0 || selection.subs.size > 0;
+      const active = nonLocationFiltersActive();
       document.body.classList.toggle('filters-active', active);
       const reset = $('#resetBtn');
       reset && reset.classList.toggle('active', active);
@@ -6073,19 +6170,110 @@ function makePosts(){
           img.onerror = () => res();
           img.src = url;
         });
-        map.addLayer({ id:'clusters', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'icon-image': imgId }, paint:{} });
-        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-        map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
+        map.addLayer({
+          id:'clusters',
+          type:'symbol',
+          source:'posts',
+          filter:['has','point_count'],
+          layout:{
+            'icon-image': imgId,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-pitch-alignment': 'viewport',
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': 1000
+          },
+          paint:{}
+        });
+        map.addLayer({
+          id:'cluster-count',
+          type:'symbol',
+          source:'posts',
+          filter:['has','point_count'],
+          layout:{
+            'text-field':['get','point_count_abbreviated'],
+            'text-size':12,
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': 1001
+          },
+          paint:{'text-color':'#fff'}
+        });
+        map.addLayer({
+          id:'unclustered',
+          type:'symbol',
+          source:'posts',
+          filter:['!', ['has','point_count']],
+          layout:{
+            'icon-image':['get','sub'],
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
+            'icon-anchor': 'bottom',
+            'icon-pitch-alignment': 'viewport',
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': 1100
+          },
+          paint:{}
+        });
       } else if(shouldCluster){
           map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
             'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
             'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
             'circle-opacity': 0.85, 'circle-stroke-color':'#0b1623', 'circle-stroke-width':1 } });
-        map.addLayer({ id:'cluster-count', type:'symbol', source:'posts', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-size':12 }, paint:{'text-color':'#fff'} });
-            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', filter:['!', ['has','point_count']], layout:{ 'icon-image':['get','sub'] }, paint:{} });
+        map.addLayer({
+          id:'cluster-count',
+          type:'symbol',
+          source:'posts',
+          filter:['has','point_count'],
+          layout:{
+            'text-field':['get','point_count_abbreviated'],
+            'text-size':12,
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': 1001
+          },
+          paint:{'text-color':'#fff'}
+        });
+            map.addLayer({
+              id:'unclustered',
+              type:'symbol',
+              source:'posts',
+              filter:['!', ['has','point_count']],
+              layout:{
+                'icon-image':['get','sub'],
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'bottom',
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': 1100
+              },
+              paint:{}
+            });
         } else {
-            map.addLayer({ id:'unclustered', type:'symbol', source:'posts', layout:{ 'icon-image':['get','sub'] }, paint:{} });
+            map.addLayer({
+              id:'unclustered',
+              type:'symbol',
+              source:'posts',
+              layout:{
+                'icon-image':['get','sub'],
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'bottom',
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': 1100
+              },
+              paint:{}
+            });
         }
+      ['hover-fill','hover-ring','cluster-count','clusters','unclustered'].forEach(id=>{
+        if(map.getLayer(id)){
+          try{ map.moveLayer(id); }catch(e){}
+        }
+      });
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -6503,6 +6691,7 @@ function makePosts(){
 
     function captureState(){
       const {start,end} = orderedRange();
+      const openCats = Object.values(categoryControllers).filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState()).map(ctrl=>ctrl.name);
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#keyword-textbox').value,
@@ -6511,7 +6700,8 @@ function makePosts(){
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
         cats: [...selection.cats],
-        subs: [...selection.subs]
+        subs: [...selection.subs],
+        openCats
       };
     }
 
@@ -6547,20 +6737,24 @@ function makePosts(){
       expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
       updateInput();
-      selection.cats = new Set(st.cats || []);
-      selection.subs = new Set(st.subs || []);
-      $$('.cat').forEach(el=>{
-        const label = el.querySelector('.label').textContent;
-        const expanded = selection.cats.has(label);
-        el.setAttribute('aria-expanded', expanded?'true':'false');
-        const toggle = el.querySelector('.cat-switch input');
-        if(toggle) toggle.checked = expanded;
-        el.querySelectorAll('.sub .chip').forEach(ch=>{
-          const subName = ch.textContent.trim();
-          const key = label+'::'+subName;
-          if(selection.subs.has(key)) ch.classList.add('on'); else ch.classList.remove('on');
+      const savedCatsArray = Array.isArray(st.cats) && st.cats.length ? st.cats : categories.map(cat=>cat.name);
+      const savedCats = new Set(savedCatsArray);
+      const savedSubs = Array.isArray(st.subs) ? st.subs : [];
+      const openCats = Array.isArray(st.openCats) ? new Set(st.openCats) : null;
+      selection.cats = new Set();
+      selection.subs = new Set(savedSubs);
+      const controllers = Object.values(categoryControllers);
+      if(controllers.length){
+        controllers.forEach(ctrl=>{
+          const active = savedCats.has(ctrl.name);
+          ctrl.setActive(active, {silent:true});
+          const shouldOpen = active && (openCats ? openCats.has(ctrl.name) : true);
+          ctrl.setOpen(shouldOpen);
+          ctrl.syncSubs();
         });
-      });
+      } else {
+        selection.cats = new Set(savedCatsArray);
+      }
       if(map && st.bounds){
         stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
