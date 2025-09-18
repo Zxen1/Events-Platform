@@ -1744,6 +1744,10 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 body.filter-anchored .post-mode-boards{
+  transition:none;
+}
+
+body.filter-anchored .post-mode-boards{
   justify-content:flex-start;
 }
 
@@ -1781,6 +1785,19 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-direction:column;
   gap:0;
   pointer-events:auto;
+}
+
+.recents-board{
+  scrollbar-width:none;
+}
+
+.recents-board::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
+
+.recents-board::-webkit-scrollbar-thumb{
+  background-color:transparent;
 }
 
 .post-board{
@@ -5879,6 +5896,8 @@ function makePosts(){
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
+      const filterPanelEl = document.getElementById('filterPanel');
+      const filterContentEl = filterPanelEl ? filterPanelEl.querySelector('.panel-content') : null;
       const recentsButton = $('#recents-button');
       const postsToggle = $('#postsToggle');
       const mapToggle = $('#mapToggle');
@@ -5894,9 +5913,14 @@ function makePosts(){
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
-        const filterPanel = document.getElementById('filterPanel');
-        const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
-        const filterOpen = !!(filterPanel && filterPanel.classList.contains('show'));
+        const filterPanel = filterPanelEl;
+        const filterContent = filterContentEl;
+        const filterRect = filterContent ? filterContent.getBoundingClientRect() : null;
+        const filterIsShowing = !!(filterPanel && filterPanel.classList.contains('show'));
+        const rawFilterWidth = filterRect ? filterRect.width : 0;
+        const filterVisibleWidth = filterRect ? Math.max(0, Math.min(filterRect.right, window.innerWidth) - Math.max(filterRect.left, 0)) : 0;
+        const filterEdge = filterRect ? Math.max(0, Math.min(filterRect.right, window.innerWidth)) : 0;
+        const wantsAnchor = !small && !!filterContent;
         const historyOpenPost = recentsBoard ? recentsBoard.querySelector('.open-post') : null;
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
@@ -5919,18 +5943,16 @@ function makePosts(){
         if(!hideAds && adWidth){
           baseWidth += adWidth + gap;
         }
-        const wantsAnchor = filterOpen && !small && filterContent;
-        const rawFilterWidth = wantsAnchor ? filterContent.getBoundingClientRect().width : 0;
-        let filterOffset = wantsAnchor && rawFilterWidth ? rawFilterWidth + gap : 0;
-        let totalRequired = baseWidth + filterOffset;
+        const layoutFilterWidth = wantsAnchor && filterIsShowing ? rawFilterWidth : filterVisibleWidth;
+        let totalRequired = baseWidth + (wantsAnchor ? layoutFilterWidth : 0);
         if(wantsAnchor && totalRequired > window.innerWidth && !hideAds && adWidth){
           hideAds = true;
           baseWidth -= adWidth + gap;
-          totalRequired = baseWidth + filterOffset;
+          totalRequired = baseWidth + (wantsAnchor ? layoutFilterWidth : 0);
         }
-        const canAnchor = wantsAnchor && rawFilterWidth && totalRequired <= window.innerWidth;
-        const offsetValue = canAnchor ? filterOffset : 0;
-        document.body.classList.toggle('filter-anchored', canAnchor);
+        const canAnchor = wantsAnchor && layoutFilterWidth && totalRequired <= window.innerWidth;
+        const offsetValue = canAnchor ? filterEdge : 0;
+        document.body.classList.toggle('filter-anchored', canAnchor && filterIsShowing);
         document.documentElement.style.setProperty('--filter-panel-offset', offsetValue ? `${offsetValue}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
         if(recentsBoard){
@@ -5951,6 +5973,36 @@ function makePosts(){
           adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
         }
         updateModeToggle();
+      }
+
+      let filterPanelTransitionFrame = null;
+      function stopFilterPanelSync(){
+        if(filterPanelTransitionFrame){
+          cancelAnimationFrame(filterPanelTransitionFrame);
+          filterPanelTransitionFrame = null;
+        }
+      }
+      function syncFilterPanel(){
+        stopFilterPanelSync();
+        const step = ()=>{
+          adjustBoards();
+          filterPanelTransitionFrame = requestAnimationFrame(step);
+        };
+        filterPanelTransitionFrame = requestAnimationFrame(step);
+      }
+      if(filterContentEl){
+        const handleFilterTransitionEnd = e=>{
+          if(e.propertyName !== 'transform') return;
+          stopFilterPanelSync();
+          adjustBoards();
+        };
+        filterContentEl.addEventListener('transitionstart', e=>{
+          if(e.propertyName === 'transform'){
+            syncFilterPanel();
+          }
+        });
+        filterContentEl.addEventListener('transitionend', handleFilterTransitionEnd);
+        filterContentEl.addEventListener('transitioncancel', handleFilterTransitionEnd);
       }
       window.adjustBoards = adjustBoards;
       adjustBoards();
