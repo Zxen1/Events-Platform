@@ -6380,7 +6380,7 @@ function makePosts(){
               paint:{}
             });
         }
-      ['hover-fill','hover-ring','cluster-count','clusters','unclustered'].forEach(id=>{
+      ['hover-fill','hover-ring','clusters','cluster-count','unclustered'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
