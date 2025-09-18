@@ -1331,21 +1331,28 @@ button[aria-expanded="true"] .results-arrow{
 }
 .filter-summary{
   font-size:14px;
-  margin:0 auto 10px;
   width:100%;
   max-width:420px;
+  margin:0 auto;
   text-align:center;
 }
-#filterPanel .panel-body > #filterSummary{
-  width:100%;
-  max-width:420px;
-  padding:0;
-  margin:0 auto;
+#filterPanel .panel-header{
+  align-items:center;
+}
+#filterPanel .panel-header #filterSummary{
+  margin:0;
+}
+#filterPanel .panel-body > .filter-panel-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+#filterPanel .panel-body > .filter-panel-actions button{
+  flex:0 0 auto;
 }
 
 #filterPanel .reset-box,
-#filterPanel .sort-field,
-#filterPanel #filterSummary{
+#filterPanel .sort-field{
   width:100%;
   max-width:420px;
   margin:0 auto;
@@ -2301,24 +2308,25 @@ body.filters-active #filterBtn{
   margin-left:var(--gap);
 }
 .map-control-row .geocoder{
-  background:#ffffff;
+  background-color:#ffffff;
   border-radius:8px;
 }
-@keyframes geolocate-pulse{
-  0%{box-shadow:0 0 0 0 rgba(92,111,177,0.6);}
-  70%{box-shadow:0 0 0 12px rgba(92,111,177,0);}
-  100%{box-shadow:0 0 0 0 rgba(92,111,177,0);}
+#filterPanel .map-control-row .geocoder,
+#filterPanel .map-control-row .mapboxgl-ctrl-geocoder,
+#filterPanel .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  background-color:#ffffff;
+  color:#000000;
 }
-.mapboxgl-ctrl-geolocate.locating button{
-  animation:geolocate-pulse 1.5s infinite;
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff !important;
 }
-
 .map-control-row .mapboxgl-ctrl-geolocate button,
 .map-control-row .mapboxgl-ctrl-compass button{
   width:35px;
   height:35px;
   border-radius:8px;
-  background:#ffffff;
+  background-color:#ffffff;
   border:1px solid rgba(0,0,0,0.15);
   box-shadow:none;
 }
@@ -2327,7 +2335,7 @@ body.filters-active #filterBtn{
 .mapboxgl-ctrl-compass button{
   width:35px !important;
   height:35px !important;
-  background:#ffffff !important;
+  background-color:#ffffff !important;
   border-radius:8px !important;
   border:1px solid rgba(0,0,0,0.15) !important;
   box-shadow:none !important;
@@ -2335,7 +2343,7 @@ body.filters-active #filterBtn{
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
 .map-control-row .mapboxgl-ctrl-compass button:hover{
-  background:#f2f2f2;
+  background-color:#f2f2f2;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button svg,
@@ -3946,21 +3954,18 @@ img.thumb{
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
     <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
       <div class="panel-header">
-        <div class="header-top">
-          <h2>Filters</h2>
-          <div class="panel-actions">
-            <button type="button" class="pin-panel" aria-pressed="true" aria-label="Pin filter panel">📌</button>
-            <button type="button" class="close-panel">Close</button>
-          </div>
-        </div>
+        <div id="filterSummary" class="filter-summary"></div>
       </div>
       <div class="panel-body">
+        <div class="panel-actions filter-panel-actions">
+          <button type="button" class="pin-panel" aria-pressed="true" aria-label="Pin filter panel">📌</button>
+          <button type="button" class="close-panel">Close</button>
+        </div>
         <div class="map-control-row map-controls-filter">
           <div id="geocoder-filter" class="geocoder"></div>
           <div id="geolocate-filter" class="geolocate-btn"></div>
           <div id="compass-filter" class="compass-btn"></div>
         </div>
-        <div id="filterSummary" class="filter-summary"></div>
         <div class="reset-box">
           <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
             Reset All Filters
@@ -6177,26 +6182,15 @@ function makePosts(){
         geocoders.push(gc);
         if(idx===1) geocoder = gc;
         const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
-        let geoCtrlEl = null;
-        geolocate.on('geolocate', (e)=>{
+        geolocate.on('geolocate', ()=>{
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
-          if(geoCtrlEl) geoCtrlEl.classList.remove('locating');
         });
-        geolocate.on('error', ()=>{ if(geoCtrlEl) geoCtrlEl.classList.remove('locating'); });
-        geolocate.on('outofmaxbounds', ()=>{ if(geoCtrlEl) geoCtrlEl.classList.remove('locating'); });
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder){
-          geoCtrlEl = geolocate.onAdd(map);
-          geoHolder.appendChild(geoCtrlEl);
-          const geoBtn = geoCtrlEl.querySelector('button');
-          if(geoBtn){
-            geoBtn.addEventListener('click', ()=>{
-              geoCtrlEl.classList.add('locating');
-            });
-          }
+          geoHolder.appendChild(geolocate.onAdd(map));
         }
-        const nav = new mapboxgl.NavigationControl({showZoom:false});
+        const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         if (nav._onDown && nav._onMove) {
           const origOnDown = nav._onDown.bind(nav);
           nav._onDown = function(e){
