@@ -2464,10 +2464,31 @@ body.filters-active #filterBtn{
   width:auto;
   max-width:100%;
   height:auto;
+  border-radius:8px;
 }
 
 .post-board-empty-message{
   margin:10px 0 0;
+}
+
+.recents-board-reminder{
+  margin:10px 0 20px;
+  padding:0 12px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+
+.recents-board-reminder img{
+  max-width:100%;
+  height:auto;
+  border-radius:8px;
+}
+
+.recents-board-reminder p{
+  margin:0;
 }
 
 
@@ -7082,6 +7103,16 @@ function makePosts(){
         const el = card(p);
         recentsBoard.appendChild(el);
       }
+      const reminderWrap = document.createElement('div');
+      reminderWrap.className = 'recents-board-reminder';
+      const reminderImg = document.createElement('img');
+      reminderImg.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
+      reminderImg.alt = 'Cute little monkey in red cape pointing up';
+      reminderWrap.appendChild(reminderImg);
+      const reminderMsg = document.createElement('p');
+      reminderMsg.textContent = 'When you log in as a member, I can remember your recent posts and favourites on any device.';
+      reminderWrap.appendChild(reminderMsg);
+      recentsBoard.appendChild(reminderWrap);
     }
 
     renderHistoryBoard();
