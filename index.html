@@ -1781,8 +1781,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .post-images{
-  margin-top:0;
-  padding-top:10px;
+  margin-top:var(--gap);
+  padding-top:0;
   width:100%;
   display:flex;
   flex-direction:column;
@@ -2421,7 +2421,7 @@ body.filters-active #filterBtn{
   .open-post .venue-dropdown,
   .open-post .session-dropdown{
     width:100%;
-    max-width:420px;
+    max-width:100%;
     padding:0;
   }
   .post-mode-boards > .second-post-column .venue-dropdown,
@@ -2436,7 +2436,7 @@ body.filters-active #filterBtn{
   .open-post .session-dropdown{
     min-width:250px;
     width:100%;
-    max-width:420px;
+    max-width:100%;
   }
   .post-mode-boards > .second-post-column .location-section .map-container,
   .post-mode-boards > .second-post-column .venue-dropdown,
@@ -2475,17 +2475,54 @@ body.filters-active #filterBtn{
   flex-wrap:wrap;
 }
 
-.open-post .member-avatar-row{
+.open-post .member-avatar-row,
+.post-mode-boards > .second-post-column .member-avatar-row{
   display:flex;
   align-items:center;
   height:50px;
   gap:10px;
-  margin:var(--gap) 0;
+  margin:0 0 var(--gap);
 }
-.open-post .member-avatar-row img{
+.open-post .member-avatar-row img,
+.post-mode-boards > .second-post-column .member-avatar-row img{
   width:50px;
   height:50px;
   object-fit:cover;
+}
+
+.open-post .member-avatar-row span,
+.post-mode-boards > .second-post-column .member-avatar-row span{
+  padding-left:10px;
+}
+
+.second-post-column .column-post-header{
+  margin-bottom:var(--gap);
+}
+
+.second-post-column .desc-wrap{
+  width:100%;
+}
+
+.second-post-column .desc{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  cursor:pointer;
+  white-space:normal;
+}
+
+.second-post-column .desc:focus{
+  outline:1px solid var(--border-hover);
+  outline-offset:2px;
+}
+
+.second-post-column .desc.expanded{
+  display:block;
+  -webkit-line-clamp:unset;
+  overflow:visible;
+  text-overflow:unset;
 }
 
 
@@ -2504,10 +2541,10 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  flex:1 1 420px;
+  flex:1 1 100%;
   min-width:250px;
   width:100%;
-  max-width:420px;
+  max-width:100%;
   height:auto;
 }
 .open-post .map-container .venue-dropdown,
@@ -2697,7 +2734,7 @@ body.filters-active #filterBtn{
 }
 .open-post .venue-menu,
 .open-post .session-menu{
-  max-width:420px;
+  max-width:100%;
 }
 .post-mode-boards > .second-post-column .venue-menu,
 .post-mode-boards > .second-post-column .session-menu{
@@ -2772,8 +2809,8 @@ body.filters-active #filterBtn{
     height:auto;
   }
 .open-post .location-section .calendar-container{
-    flex:1 1 420px;
-    max-width:420px;
+    flex:1 1 100%;
+    max-width:100%;
   }
 .post-mode-boards > .second-post-column .location-section .calendar-container{
     flex:1 1 100%;
@@ -3693,20 +3730,26 @@ img.thumb{
     <section class="post-board" aria-label="Post Board">
       <div class="post-header"></div>
       <div class="post-body">
-        <div class="main-post-column">
+        <div class="second-post-column">
+          <div class="post-header column-post-header"></div>
+          <div class="post-details">
+            <div class="post-details-member-container">
+              <div class="member-avatar-row"></div>
+            </div>
+            <div class="post-venue-selection-container"></div>
+            <div class="post-session-selection-container"></div>
+            <div class="location-section">
+              <div class="map-container"></div>
+              <div class="calendar-container"></div>
+            </div>
+            <div class="post-details-info-container"></div>
+            <div class="post-details-description-container">
+              <div class="desc-wrap"><div class="desc" tabindex="0" role="button" aria-expanded="false"></div></div>
+            </div>
+          </div>
           <div class="post-images">
             <div class="selected-image"></div>
             <div class="thumbnail-row"></div>
-          </div>
-        </div>
-        <div class="second-post-column">
-          <div class="post-details">
-            <div class="post-venue-selection-container"></div>
-            <div class="post-session-selection-container"></div>
-            <div class="post-details-title-container"></div>
-            <div class="post-details-member-container"></div>
-            <div class="post-details-info-container"></div>
-            <div class="post-details-description-container"></div>
           </div>
         </div>
       </div>
@@ -6714,8 +6757,7 @@ function makePosts(){
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
       const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const thumbSrc = imgThumb(p);
-      wrap.innerHTML = `
-        <div class="post-header">
+      const headerInner = `
           <div class="title-block">
             <div class="title">${p.title}</div>
             <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
@@ -6726,16 +6768,18 @@ function makePosts(){
           <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
+        `;
+      wrap.innerHTML = `
+        <div class="post-header">
+          ${headerInner}
         </div>
         <div class="post-body">
-          <div class="main-post-column">
-            <div class="post-images">
-              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
-              <div class="thumbnail-row"></div>
-            </div>
-          </div>
           <div class="second-post-column">
+            <div class="post-header column-post-header">
+              ${headerInner}
+            </div>
             <div class="post-details">
+              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
@@ -6750,19 +6794,25 @@ function makePosts(){
                   <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
                 </div>
               </div>
-              <h2 class="title">${p.title}</h2>
-              <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
-              <div id="venue-info-${p.id}" class="venue-info"></div>
-              <div id="session-info-${p.id}" class="session-info">
-                <div>${defaultInfo}</div>
+              <div class="post-details-info-container">
+                <div id="venue-info-${p.id}" class="venue-info"></div>
+                <div id="session-info-${p.id}" class="session-info">
+                  <div>${defaultInfo}</div>
+                </div>
               </div>
-              <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
+              <div class="post-details-description-container">
+                <div class="desc-wrap"><div class="desc" tabindex="0" role="button" aria-expanded="false">${p.desc}</div></div>
+              </div>
+            </div>
+            <div class="post-images">
+              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+              <div class="thumbnail-row"></div>
             </div>
           </div>
         </div>`;
-      const header = wrap.querySelector('.post-header');
-      if(header) header.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+      wrap.querySelectorAll('.post-header').forEach(head => {
+        head.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+      });
       wrap.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8))';
         // progressive hero swap
         (function(){
@@ -7044,16 +7094,14 @@ function makePosts(){
     });
 
     function hookDetailActions(el, p){
-      const headerEl = el.querySelector('.post-header');
-      if(headerEl){
+      el.querySelectorAll('.post-header').forEach(headerEl => {
         headerEl.addEventListener('click', evt=>{
           if(evt.target.closest('button')) return;
           evt.stopPropagation();
           closeActivePost();
         });
-      }
-      const favBtn = el.querySelector('.fav');
-      if(favBtn){
+      });
+      el.querySelectorAll('.fav').forEach(favBtn => {
         favBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           p.fav = !p.fav;
@@ -7067,15 +7115,30 @@ function makePosts(){
             replacement.replaceWith(detailEl);
           }
         });
-      }
+      });
 
-      const shareBtn = el.querySelector('.share');
-      if(shareBtn){
+      el.querySelectorAll('.share').forEach(shareBtn => {
         shareBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           const url = postUrl(p);
           navigator.clipboard.writeText(url).then(()=>{ showCopyMsg(shareBtn); });
         });
+      });
+
+      const descEl = el.querySelector('.post-details .desc');
+      if(descEl){
+        const toggleDesc = evt => {
+          const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
+          if(evt.type === 'keydown' && !allowed.includes(evt.key)){
+            return;
+          }
+          evt.preventDefault();
+          const expanded = !descEl.classList.contains('expanded');
+          descEl.classList.toggle('expanded', expanded);
+          descEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        };
+        descEl.addEventListener('click', toggleDesc);
+        descEl.addEventListener('keydown', toggleDesc);
       }
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
@@ -8604,6 +8667,7 @@ function initPostLayout(board){
     }
     return values.length ? Math.min(...values) : 0;
   };
+  const postsUIActive = () => document.body.classList.contains('mode-posts') && !document.body.classList.contains('hide-posts-ui');
   const scheduleMapResize = mapInstance => {
     if(!mapInstance || typeof mapInstance.resize !== 'function') return;
     if(typeof requestAnimationFrame === 'function'){
@@ -8681,10 +8745,9 @@ function initPostLayout(board){
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
     return;
   }
-  const postBody = openPost.querySelector('.post-body');
-  const postHeader = openPost.querySelector('.post-header');
+  const postBody = openPost ? openPost.querySelector('.post-body') : null;
+  const postHeader = openPost ? Array.from(openPost.children).find(node => node.classList && node.classList.contains('post-header')) : null;
   const postImages = postBody ? postBody.querySelector('.post-images') : null;
-  const mainColumn = postBody ? postBody.querySelector('.main-post-column') : null;
   const openPostId = openPost && openPost.dataset ? (openPost.dataset.id || '') : '';
   let secondCol = openPost ? openPost.querySelector('.second-post-column') : null;
   if(!secondCol && mountedColumn){
@@ -8704,9 +8767,27 @@ function initPostLayout(board){
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
   const availableWidth = getAvailableWidth();
-  const shouldDock = Boolean(boardsContainer && secondCol && availableWidth >= 440);
+  const activePostsUI = postsUIActive();
+  const canRender = Boolean(secondCol && activePostsUI && availableWidth >= 440);
+  const shouldDock = Boolean(canRender && boardsContainer);
   const isDocked = Boolean(secondCol && boardsContainer && secondCol.parentElement === boardsContainer);
-  if(shouldDock && secondCol){
+  if(!canRender){
+    if(secondCol){
+      if(postBody && secondCol.parentElement !== postBody){
+        postBody.appendChild(secondCol);
+      }
+      if(!secondCol.hasAttribute('hidden')){
+        secondCol.setAttribute('hidden', '');
+      }
+      secondCol.classList.remove('is-visible');
+      if(secondCol.dataset) delete secondCol.dataset.openPostId;
+    }
+    document.body.classList.remove('detail-open');
+    triggerDetailMapResize(secondCol);
+  } else if(shouldDock && secondCol){
+    if(secondCol.hasAttribute('hidden')){
+      secondCol.removeAttribute('hidden');
+    }
     if(!isDocked){
       const referenceNode = adBoard && adBoard.parentElement === boardsContainer ? adBoard : null;
       if(referenceNode){
@@ -8724,17 +8805,18 @@ function initPostLayout(board){
     }
     triggerDetailMapResize(secondCol);
   } else {
-    if(secondCol && postBody && secondCol.parentElement !== postBody){
-      if(mainColumn && mainColumn.parentElement === postBody){
-        mainColumn.insertAdjacentElement('afterend', secondCol);
-      } else {
+    if(secondCol){
+      if(postBody && secondCol.parentElement !== postBody){
         postBody.appendChild(secondCol);
       }
+      if(secondCol.hasAttribute('hidden')){
+        secondCol.removeAttribute('hidden');
+      }
+      if(secondCol.classList.contains('is-visible')){
+        secondCol.classList.remove('is-visible');
+      }
+      if(secondCol.dataset) delete secondCol.dataset.openPostId;
     }
-    if(secondCol && secondCol.classList.contains('is-visible')){
-      secondCol.classList.remove('is-visible');
-    }
-    if(secondCol && secondCol.dataset) delete secondCol.dataset.openPostId;
     document.body.classList.remove('detail-open');
     triggerDetailMapResize(secondCol);
   }
@@ -8743,7 +8825,7 @@ function initPostLayout(board){
     if(!postBody){
       return;
     }
-    if(!(secondCol && boardsContainer && secondCol.parentElement === boardsContainer)){
+    if(!(secondCol && secondCol.parentElement === postBody && !secondCol.hasAttribute('hidden'))){
       clearPreservedHeight(postBody);
       return;
     }
@@ -8765,11 +8847,21 @@ function initPostLayout(board){
 
   function updateMetrics(){
     const widthNow = getAvailableWidth();
-    const dockNow = Boolean(boardsContainer && secondCol && widthNow >= 440);
+    const activeNow = postsUIActive();
+    const canRenderNow = Boolean(secondCol && activeNow && widthNow >= 440);
+    const dockNow = Boolean(canRenderNow && boardsContainer);
     const currentlyDocked = Boolean(secondCol && boardsContainer && secondCol.parentElement === boardsContainer);
-    if(dockNow !== currentlyDocked){
-      initPostLayout(board);
-      return;
+    const currentlyHidden = Boolean(secondCol && secondCol.hasAttribute('hidden'));
+    if(!canRenderNow){
+      if(currentlyDocked || !currentlyHidden){
+        initPostLayout(board);
+        return;
+      }
+    } else {
+      if(currentlyHidden || dockNow !== currentlyDocked){
+        initPostLayout(board);
+        return;
+      }
     }
     if(postHeader){
       document.documentElement.style.setProperty('--post-header-h', postHeader.offsetHeight + 'px');
@@ -8778,6 +8870,25 @@ function initPostLayout(board){
     }
     updatePreservedHeight();
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
+  }
+
+  let bodyClassObserver = null;
+  if(typeof MutationObserver === 'function'){
+    bodyClassObserver = new MutationObserver(records => {
+      for(const record of records){
+        if(record.attributeName !== 'class') continue;
+        const oldVal = record.oldValue || '';
+        const oldClasses = new Set(oldVal.split(/\s+/).filter(Boolean));
+        const newClasses = new Set((document.body.className || '').split(/\s+/).filter(Boolean));
+        const relevant = ['mode-posts','mode-map','hide-posts-ui'];
+        const changed = relevant.some(cls => oldClasses.has(cls) !== newClasses.has(cls));
+        if(changed){
+          updateMetrics();
+          break;
+        }
+      }
+    });
+    bodyClassObserver.observe(document.body, {attributes:true, attributeFilter:['class'], attributeOldValue:true});
   }
 
   updatePreservedHeight();
@@ -8821,6 +8932,10 @@ function initPostLayout(board){
   boardAdjustCleanup = () => {
     window.removeEventListener('resize', updateMetrics);
     window.removeEventListener('load', updateMetrics);
+    if(bodyClassObserver){
+      bodyClassObserver.disconnect();
+      bodyClassObserver = null;
+    }
   };
 }
 
