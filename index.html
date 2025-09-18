@@ -2269,81 +2269,6 @@ body.filters-active #filterBtn{
   pointer-events: none;
 }
 
-.map-control-row{
-  display:flex;
-  align-items:center;
-  gap:0;
-}
-.map-control-row > * + *{
-  margin-left:var(--gap);
-}
-.map-control-row .geocoder{
-  background:#ffffff;
-  border-radius:8px;
-}
-@keyframes geolocate-pulse{
-  0%{box-shadow:0 0 0 0 rgba(92,111,177,0.6);}
-  70%{box-shadow:0 0 0 12px rgba(92,111,177,0);}
-  100%{box-shadow:0 0 0 0 rgba(92,111,177,0);}
-}
-.mapboxgl-ctrl-geolocate.locating button{
-  animation:geolocate-pulse 1.5s infinite;
-}
-
-.map-control-row .mapboxgl-ctrl-geolocate button,
-.map-control-row .mapboxgl-ctrl-compass button{
-  width:35px;
-  height:35px;
-  border-radius:8px;
-  background:#ffffff;
-  border:1px solid rgba(0,0,0,0.15);
-  box-shadow:none;
-}
-
-.mapboxgl-ctrl-geolocate button,
-.mapboxgl-ctrl-compass button{
-  width:35px !important;
-  height:35px !important;
-  background:#ffffff !important;
-  border-radius:8px !important;
-  border:1px solid rgba(0,0,0,0.15) !important;
-  box-shadow:none !important;
-}
-
-.map-control-row .mapboxgl-ctrl-geolocate button:hover,
-.map-control-row .mapboxgl-ctrl-compass button:hover{
-  background:#f2f2f2;
-}
-
-.map-control-row .mapboxgl-ctrl-geolocate button svg,
-.map-control-row .mapboxgl-ctrl-compass button svg{
-  filter:none;
-}
-
-.map-control-row .mapboxgl-ctrl-geocoder{
-  background:#ffffff;
-  border-radius:8px;
-  color:#000000;
-}
-
-.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
-  background:#ffffff;
-  color:#000000;
-}
-
-.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
-.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
-  color:#000000;
-  fill:#000000;
-}
-
-.panel-body .map-control-row{
-  width:100%;
-  max-width:100%;
-  margin:0;
-  justify-content:flex-start;
-}
-
 .mode-posts .map-controls-map{display:none;}
 
 .map-controls-map{
@@ -2354,8 +2279,6 @@ body.filters-active #filterBtn{
   width:auto;
   z-index:1;
 }
-
-.map-control-row .geocoder{margin:0;}
 
 .post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
 .post-board{color:#fff;}
@@ -3565,26 +3488,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.mapboxgl-popup,
-.mapboxgl-popup-content{
-  color: var(--popup-text) !important;
-}
-
-.mapboxgl-popup-content{
-  background: var(--popup-bg) !important;
-}
-
-.mapboxgl-popup-tip{
-  border-top-color: var(--popup-bg) !important;
-  border-bottom-color: var(--popup-bg) !important;
-  border-left-color: var(--popup-bg) !important;
-  border-right-color: var(--popup-bg) !important;
-}
-
-.mapboxgl-popup-close-button{
-  color: var(--popup-text) !important;
 }
 
 .multi-ctrls{
