@@ -2086,6 +2086,20 @@ body.hide-ads .ad-board{
   background:var(--btn-selected);
   color:var(--button-active-text);
 }
+.map-spin-container .spin-load-field{
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.map-spin-container .spin-load-field .option-label{
+  flex:1 1 auto;
+}
+.map-spin-container .spin-load-field .spin-type-toggle{
+  flex:0 0 auto;
+  width:160px;
+  min-width:140px;
+}
 body.filters-active #filterBtn{
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);
@@ -4138,7 +4152,7 @@ img.thumb{
                 <span id="bearingVal"></span>
               </div>
             </div>
-            <div class="panel-field">
+            <div class="panel-field spin-load-field">
               <div class="option-label">
                 <span>Spin on Load</span>
                 <label class="switch">
