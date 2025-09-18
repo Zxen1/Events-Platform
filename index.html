@@ -72,7 +72,7 @@
       --popup-bg: rgba(0,0,0,1);
       --popup-text: #ffffff;
       --dropdown-title: #000000;
-      --dropdown-selected-bg: #28a745;
+      --dropdown-selected-bg: #7c4dff;
       --dropdown-selected-text: #ffffff;
       --dropdown-text: #000000;
       --dropdown-bg: rgba(255,255,255,1);
@@ -91,7 +91,7 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #28a745;
+        --filter-active-color: #7c4dff;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -809,7 +809,7 @@ button[aria-expanded="true"] .results-arrow{
 .calendar .day.past{background:var(--calendar-past-bg);color:#b3b3b3;}
 .calendar .day.future{background:var(--calendar-future-bg);}
 .calendar .day.today{color:var(--today) !important;font-weight:bold;}
-.calendar .day.in-range{background:var(--session-available);border-radius:0;}
+.calendar .day.in-range{background:#add8e6;border-radius:0;}
 .calendar .day.selected{background:var(--session-selected);color:#fff;}
 .calendar .day.selected.today{color:var(--today) !important;}
 .calendar .day.range-start{border-radius:8px 0 0 8px;}
@@ -827,12 +827,18 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   text-align:center;
 }
-#welcomeBody img{
+#welcomeBody .welcome-logo{
   max-width:600px;
   width:100%;
   max-height:300px;
   height:auto;
   margin-bottom:10px;
+}
+#welcomeBody .welcome-illustration{
+  max-width:280px;
+  width:100%;
+  height:auto;
+  margin-top:20px;
 }
 #welcome-modal{background:transparent;}
 #welcome-modal .modal-content{
@@ -1561,6 +1567,13 @@ button[aria-expanded="true"] .results-arrow{
 .filter-category-menu .options-menu{
   width:100%;
   box-sizing:border-box;
+  position:static;
+  margin-top:6px;
+  background:transparent;
+  border:none;
+  padding:0;
+  border-radius:0;
+  z-index:auto;
 }
 
 .filter-category-menu .options-menu button{
@@ -3843,13 +3856,13 @@ img.thumb{
         </div>
         <div class="field sort-field">
           <div class="options-dropdown">
-            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Title A - Z</button>
+            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
             <div id="optionsMenu" class="options-menu" hidden>
               <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
               <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
-                <button class="sort-option" data-sort="az" aria-pressed="true">Title A - Z</button>
-                <button class="sort-option" data-sort="nearest" aria-pressed="false">Closest</button>
-                <button class="sort-option" data-sort="soon" aria-pressed="false">Soonest</button>
+                <button class="sort-option" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                <button class="sort-option" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                <button class="sort-option" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
               </div>
             </div>
           </div>
@@ -4084,7 +4097,7 @@ img.thumb{
               <button type="button" data-command="italic"><i>I</i></button>
               <button type="button" data-command="underline"><u>U</u></button>
             </div>
-            <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome to Funmap!</p><p>Choose an area on the map to search for events and listings.</p><p>Click the Filters button to refine your search.</p>"></div>
+            <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>"></div>
             <textarea id="welcomeMessage" hidden></textarea>
           </div>
         </div>
@@ -4111,13 +4124,14 @@ img.thumb{
     <!-- Welcome modal content (not a panel) -->
     <div class="modal-content">
       <div class="panel-body" id="welcomeBody">
-        <img src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />
+        <img class="welcome-logo" src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />
         <div class="map-control-row map-controls-welcome">
           <div id="geocoder-welcome" class="geocoder"></div>
           <div id="geolocate-welcome" class="geolocate-btn"></div>
           <div id="compass-welcome" class="compass-btn"></div>
         </div>
         <div id="welcomeMessageBox"></div>
+        <img class="welcome-illustration" src="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" alt="Friendly monkey mascot welcoming visitors" />
       </div>
     </div>
   </div>
@@ -4148,7 +4162,7 @@ img.thumb{
 
     let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
-    const DEFAULT_WELCOME = '<p>Welcome to Funmap!</p><p>Choose an area on the map to search for events and listings.</p><p>Click the Filters button to refine your search.</p>';
+    const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
@@ -5129,7 +5143,17 @@ function makePosts(){
 
     // Categories UI
     const categoryControllers = {};
+    const allSubcategoryKeys = [];
+    const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
+    function updateCategoryResetBtn(){
+      if(!resetCategoriesBtn) return;
+      const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
+      const totalSubs = allSubcategoryKeys.length;
+      const activeSubs = selection.subs instanceof Set ? selection.subs.size : 0;
+      const anySubOff = totalSubs > 0 && activeSubs < totalSubs;
+      resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
+    }
     function refreshSubcategoryLogos(){
       Object.values(categoryControllers).forEach(ctrl=>{
         if(ctrl && typeof ctrl.refreshLogos === 'function'){
@@ -5138,6 +5162,7 @@ function makePosts(){
       });
     }
     if(catsEl){
+      const seedSubs = selection.subs.size === 0;
       categories.forEach(c=>{
         const el = document.createElement('div');
         el.className='filter-category-menu';
@@ -5206,7 +5231,18 @@ function makePosts(){
           subBtn.className='subcategory-option';
           subBtn.dataset.category = c.name;
           subBtn.dataset.subcategory = s;
-          subBtn.setAttribute('aria-pressed','false');
+          const key = c.name+'::'+s;
+          if(!allSubcategoryKeys.includes(key)){
+            allSubcategoryKeys.push(key);
+          }
+          if(seedSubs){
+            selection.subs.add(key);
+          }
+          const isSelected = selection.subs.has(key);
+          subBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+          if(isSelected){
+            subBtn.classList.add('on');
+          }
           subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
@@ -5214,7 +5250,6 @@ function makePosts(){
           }
           subBtn.addEventListener('click',()=>{
             if(!input.checked) return;
-            const key=c.name+'::'+s;
             const isActive = subBtn.getAttribute('aria-pressed') === 'true';
             if(isActive){
               subBtn.setAttribute('aria-pressed','false');
@@ -5226,6 +5261,7 @@ function makePosts(){
               selection.subs.add(key);
             }
             applyFilters();
+            updateCategoryResetBtn();
           });
           optionsMenu.appendChild(subBtn);
           subButtons.push(subBtn);
@@ -5267,6 +5303,7 @@ function makePosts(){
             applyFilters();
             updateResetBtn();
           }
+          updateCategoryResetBtn();
         }
         menuBtn.addEventListener('click', ()=>{
           if(menuBtn.disabled) return;
@@ -5308,13 +5345,13 @@ function makePosts(){
       });
       refreshSubcategoryLogos();
       document.addEventListener('subcategory-icons-ready', refreshSubcategoryLogos);
+      updateCategoryResetBtn();
       updateResetBtn();
     }
 
-    const resetCategoriesBtn = $('#resetCategoriesBtn');
     if(resetCategoriesBtn){
       resetCategoriesBtn.addEventListener('click', ()=>{
-        selection.subs.clear();
+        selection.subs = new Set(allSubcategoryKeys);
         Object.values(categoryControllers).forEach(ctrl=>{
           ctrl.setActive(true, {silent:true});
           ctrl.setOpen(false);
@@ -5322,6 +5359,7 @@ function makePosts(){
         });
         applyFilters();
         updateResetBtn();
+        updateCategoryResetBtn();
       });
     }
 
@@ -6964,10 +7002,11 @@ function makePosts(){
       updateInput();
       const savedCatsArray = Array.isArray(st.cats) && st.cats.length ? st.cats : categories.map(cat=>cat.name);
       const savedCats = new Set(savedCatsArray);
-      const savedSubs = Array.isArray(st.subs) ? st.subs : [];
+      const savedSubsArray = Array.isArray(st.subs) ? st.subs : null;
+      const subsToUse = savedSubsArray && savedSubsArray.length ? savedSubsArray : allSubcategoryKeys;
       const openCats = Array.isArray(st.openCats) ? new Set(st.openCats) : null;
       selection.cats = new Set();
-      selection.subs = new Set(savedSubs);
+      selection.subs = new Set(subsToUse);
       const controllers = Object.values(categoryControllers);
       if(controllers.length){
         controllers.forEach(ctrl=>{
@@ -6988,6 +7027,7 @@ function makePosts(){
       }
       applyFilters();
       updateClearButtons();
+      updateCategoryResetBtn();
     }
     function renderHistoryBoard(){
       if(!historyBoard) return;
@@ -7834,7 +7874,15 @@ function makePosts(){
         return true;
       });
     }
-    function catMatch(p){ if(selection.cats.size===0 && selection.subs.size===0) return true; const cOk = selection.cats.size===0 || selection.cats.has(p.category); const sOk = selection.subs.size===0 || selection.subs.has(p.category+'::'+p.subcategory); return cOk && sOk; }
+    function catMatch(p){
+      if(selection.cats.size===0 && selection.subs.size===0) return true;
+      const cOk = selection.cats.size===0 || selection.cats.has(p.category);
+      if(!cOk) return false;
+      if(selection.subs.size===0){
+        return selection.cats.size===0;
+      }
+      return selection.subs.has(p.category+'::'+p.subcategory);
+    }
 
     function updateFilterCounts(){
       if(!postsLoaded) return;
@@ -8614,13 +8662,14 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryMarkers[slug] = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
     });
   });
-  const specialSubIcons = {
-    'Other Events': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8" fill="#28a745"></circle><path d="M9 6h2v8H9zM6 9h8v2H6z" fill="#ffffff"></path></svg>`,
-    'Other Opportunities': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><polygon points="10 2 18 10 10 18 2 10" fill="#28a745"></polygon><polygon points="10 5.5 14.5 10 10 14.5 5.5 10" fill="#ffffff" opacity="0.7"></polygon></svg>`,
-    'Other Learning': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path fill="#28a745" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H16v14H6.5A2.5 2.5 0 0 0 4 14.5V5.5z"></path><path fill="#ffffff" d="M6.5 5C5.672 5 5 5.672 5 6.5v7c0-.828.672-1.5 1.5-1.5H15V5H6.5z" opacity="0.8"></path></svg>`
+  const specialSubIconPaths = {
+    'Other Events': 'assets/icons-20/whats-on-category-icon-20.webp',
+    'Other Opportunities': 'assets/icons-20/opportunities-category-icon-20.webp',
+    'Other Learning': 'assets/icons-20/learning-category-icon-20.webp'
   };
-  Object.entries(specialSubIcons).forEach(([name, svg]) => {
-    subcategoryIcons[name] = svg;
+  Object.entries(specialSubIconPaths).forEach(([name, path]) => {
+    subcategoryIcons[name] = `<img src="${path}" width="20" height="20" alt="">`;
+    subcategoryMarkers[name] = path;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded) addPostSource();
