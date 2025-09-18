@@ -4316,7 +4316,7 @@ img.thumb{
       return origAddEventListener.call(this, type, listener, options);
     };
   })();
-  let startPitch, startBearing, logoEls = [], geocoder, closeWelcomeOnMove = false, welcomeCloseResetTimer = null, welcomeModalEl = null;
+  let startPitch, startBearing, logoEls = [], geocoder, closeWelcomeOnMove = false, welcomeCloseResetTimer = null, welcomeModalEl = null, welcomeControlsRow = null;
   const geocoders = [];
   let syncSpinTypeButtons = null;
 
@@ -6620,7 +6620,20 @@ function makePosts(){
 
     function haltSpin(e){
       const target = (e && e.originalEvent && e.originalEvent.target) || (e && e.target);
-      if(target instanceof Node && logoEls.some(el=>el.contains(target))) return;
+      const eventType = (e && e.type) || (e && e.originalEvent && e.originalEvent.type) || '';
+      if(target instanceof Node){
+        if(logoEls.some(el=>el.contains(target))) return;
+        if(welcomeModalEl && welcomeModalEl.classList.contains('show')){
+          if(!welcomeControlsRow && welcomeModalEl){
+            welcomeControlsRow = welcomeModalEl.querySelector('#welcomeBody .map-control-row');
+          }
+          if(welcomeControlsRow && welcomeControlsRow.contains(target)){
+            if(eventType === 'pointerdown' || eventType === 'touchstart' || eventType === 'wheel' || eventType === 'keydown'){
+              return;
+            }
+          }
+        }
+      }
       if(spinEnabled || spinning){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
@@ -8716,8 +8729,13 @@ function closePanel(m){
 }
 welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
+  welcomeControlsRow = welcomeModalEl.querySelector('#welcomeBody .map-control-row');
   welcomeModalEl.addEventListener('click', (e) => {
-    const controlsRow = welcomeModalEl.querySelector('#welcomeBody .map-control-row');
+    let controlsRow = welcomeControlsRow;
+    if(!controlsRow){
+      controlsRow = welcomeModalEl.querySelector('#welcomeBody .map-control-row');
+      if(controlsRow) welcomeControlsRow = controlsRow;
+    }
     const clickedInsideControls = e.target.closest('#welcomeBody .map-control-row');
     if(clickedInsideControls && (!controlsRow || controlsRow.contains(clickedInsideControls))){
       return;
