@@ -714,7 +714,7 @@ button[aria-expanded="true"] .results-arrow{
 
 #filterPanel .panel-body{
   gap:var(--gap);
-  padding:var(--gap) 10px;
+  padding:0 10px var(--gap);
 }
 
 #filterPanel button:not([class*="mapboxgl-"]),
@@ -832,26 +832,28 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   align-items:center;
   text-align:center;
+  padding:0;
+  gap:var(--gap);
 }
 #welcomeBody .welcome-logo{
-  max-width:600px;
-  width:100%;
+  max-width:100%;
+  width:min(100%, 600px);
   max-height:300px;
   height:auto;
-  margin-bottom:10px;
+  margin:0;
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;
   width:100%;
   height:auto;
-  margin-top:10px;
+  margin:0;
   border-radius:8px;
 }
 #welcome-modal{background:rgba(0,0,0,0.7);}
 #welcome-modal .modal-content{
   position:absolute;
-  width:600px;
-  max-width:600px;
+  width:min(600px, 90vw);
+  max-width:90vw;
   background:none;
   border-radius:0;
   display:flex;
@@ -2306,10 +2308,7 @@ body.filters-active #filterBtn{
 .map-control-row{
   display:flex;
   align-items:center;
-  gap:0;
-}
-.map-control-row > * + *{
-  margin-left:var(--gap);
+  gap:var(--gap);
 }
 .map-control-row .geocoder{
   background-color:#ffffff;
@@ -2324,6 +2323,12 @@ body.filters-active #filterBtn{
 #memberPanel .map-control-row .mapboxgl-ctrl-geolocate button,
 #memberPanel .map-control-row .mapboxgl-ctrl-compass button{
   background-color:#ffffff !important;
+  background-image:none !important;
+  box-shadow:none !important;
+}
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none !important;
 }
 .map-control-row .mapboxgl-ctrl-geolocate button,
 .map-control-row .mapboxgl-ctrl-compass button{
@@ -2377,9 +2382,9 @@ body.filters-active #filterBtn{
   max-width:100%;
   margin:0;
   justify-content:flex-start;
-  background:#ffffff;
-  border-radius:8px;
-  padding:4px;
+  background:none;
+  border-radius:0;
+  padding:0;
   box-sizing:border-box;
 }
 .panel-body .map-control-row > *{
@@ -3986,9 +3991,6 @@ img.thumb{
         <div id="filterSummary" class="filter-summary"></div>
       </div>
       <div class="panel-body">
-        <div class="panel-actions filter-panel-actions">
-          <button type="button" class="pin-panel" aria-pressed="true" aria-label="Pin filter panel">📌</button>
-        </div>
         <div class="map-control-row map-controls-filter">
           <div id="geocoder-filter" class="geocoder"></div>
           <div id="geolocate-filter" class="geolocate-btn"></div>
