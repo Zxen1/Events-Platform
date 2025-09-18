@@ -72,7 +72,7 @@
       --popup-bg: rgba(0,0,0,1);
       --popup-text: #ffffff;
       --dropdown-title: #000000;
-      --dropdown-selected-bg: #2e3a72;
+      --dropdown-selected-bg: #28a745;
       --dropdown-selected-text: #ffffff;
       --dropdown-text: #000000;
       --dropdown-bg: rgba(255,255,255,1);
@@ -91,7 +91,7 @@
         --session-selected: #2e3a72;
         --today: #ff0000;
         --image-panel-bg: rgba(0,0,0,0.7);
-        --filter-active-color: #4b0082;
+        --filter-active-color: #28a745;
       --keyword-bg: #FFFFFF;
       --date-range-bg: rgba(74,74,74,0.9);
       --date-range-text: rgba(255,255,255,1);
@@ -619,7 +619,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
-  transition:transform 0.3s;
+  transition:transform 0.3s ease;
 }
 
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
@@ -709,6 +709,11 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:auto;
   overflow-y:overlay;
   padding-bottom:10px;
+}
+
+#filterPanel .panel-body{
+  gap:var(--gap);
+  padding:var(--gap) 10px;
 }
 
 #filterPanel button:not([class*="mapboxgl-"]),
@@ -1341,7 +1346,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:0;
 }
 #filterPanel .reset-box + .reset-box{
-  margin-top:10px;
+  margin-top:0;
 }
 #filterPanel .panel-body > .reset-box{
   padding:0;
@@ -1560,7 +1565,10 @@ button[aria-expanded="true"] .results-arrow{
 
 .filter-category-menu .options-menu button{
   width:100%;
+  display:flex;
+  align-items:center;
   justify-content:flex-start;
+  gap:var(--gap);
   border-radius:6px;
   padding:0 12px;
 }
@@ -1584,9 +1592,52 @@ button[aria-expanded="true"] .results-arrow{
   text-align:left;
 }
 
+.filter-category-menu .options-menu button .subcategory-switch{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:34px;
+  height:18px;
+  position:relative;
+  pointer-events:none;
+}
+
+.filter-category-menu .options-menu button .subcategory-switch .track{
+  position:absolute;
+  inset:0;
+  border-radius:12px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  transition:.2s;
+}
+
+.filter-category-menu .options-menu button .subcategory-switch .thumb{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--button-text);
+  left:2px;
+  top:2px;
+  transition:.2s;
+}
+
 .filter-category-menu .options-menu button[aria-pressed="true"]{
   background: var(--dropdown-selected-bg);
   color: var(--dropdown-selected-text);
+  border-color: var(--dropdown-selected-bg);
+}
+
+.filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .track,
+.filter-category-menu .options-menu button.on .subcategory-switch .track{
+  background:var(--filter-active-color);
+  border-color:var(--filter-active-color);
+}
+
+.filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .thumb,
+.filter-category-menu .options-menu button.on .subcategory-switch .thumb{
+  transform:translateX(16px);
 }
 
 .filter-category-menu[aria-expanded="true"] .filter-category-trigger{
@@ -1602,7 +1653,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .reset-box{
-  margin:8px 0;
+  margin:0;
 }
 
 .reset-box .btn{
@@ -1883,6 +1934,12 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .post-details-info-container,
 .post-details-description-container{
   width:100%;
+}
+
+.post-details-description-container{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
 }
 
 .ad-board{
@@ -2201,6 +2258,10 @@ body.filters-active #filterBtn{
 .map-control-row > * + *{
   margin-left:var(--gap);
 }
+.map-control-row .geocoder{
+  background:#ffffff;
+  border-radius:8px;
+}
 @keyframes geolocate-pulse{
   0%{box-shadow:0 0 0 0 rgba(92,111,177,0.6);}
   70%{box-shadow:0 0 0 12px rgba(92,111,177,0);}
@@ -2210,8 +2271,8 @@ body.filters-active #filterBtn{
   animation:geolocate-pulse 1.5s infinite;
 }
 
-.mapboxgl-ctrl-geolocate button,
-.mapboxgl-ctrl-compass button{
+.map-control-row .mapboxgl-ctrl-geolocate button,
+.map-control-row .mapboxgl-ctrl-compass button{
   width:35px;
   height:35px;
   border-radius:8px;
@@ -2220,29 +2281,29 @@ body.filters-active #filterBtn{
   box-shadow:none;
 }
 
-.mapboxgl-ctrl-geolocate button:hover,
-.mapboxgl-ctrl-compass button:hover{
+.map-control-row .mapboxgl-ctrl-geolocate button:hover,
+.map-control-row .mapboxgl-ctrl-compass button:hover{
   background:#f2f2f2;
 }
 
-.mapboxgl-ctrl-geolocate button svg,
-.mapboxgl-ctrl-compass button svg{
+.map-control-row .mapboxgl-ctrl-geolocate button svg,
+.map-control-row .mapboxgl-ctrl-compass button svg{
   filter:none;
 }
 
-.mapboxgl-ctrl-geocoder{
+.map-control-row .mapboxgl-ctrl-geocoder{
   background:#ffffff;
   border-radius:8px;
   color:#000000;
 }
 
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   background:#ffffff;
   color:#000000;
 }
 
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
+.map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
   color:#000000;
   fill:#000000;
 }
@@ -2355,7 +2416,7 @@ body.filters-active #filterBtn{
   position:sticky;
   top:0;
   z-index:3;
-  background-color:transparent;
+  background-color:#555555;
 }
 .post-card .post-header{
   background-color:transparent;
@@ -2404,6 +2465,15 @@ body.filters-active #filterBtn{
   gap:var(--gap);
   width:100%;
   flex:0 0 100%;
+}
+
+.open-post.desc-expanded .post-images,
+body.open-post-sticky-images .open-post.desc-expanded .post-images{
+  position:static;
+}
+
+.open-post.desc-expanded .post-images{
+  margin-top:var(--gap);
 }
 
 .open-post-sticky-images .open-post .post-images{
@@ -2489,7 +2559,7 @@ body.filters-active #filterBtn{
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
   .open-post .post-details{
-    margin-bottom:6px;
+    margin-bottom:var(--gap);
   }
   .open-post .post-details{
     margin-bottom:0;
@@ -2568,7 +2638,7 @@ body.filters-active #filterBtn{
   align-items:center;
   height:50px;
   gap:10px;
-  margin:0 0 var(--gap);
+  margin:var(--gap) 0 0;
 }
 .open-post .member-avatar-row img,
 .second-post-column .member-avatar-row img{
@@ -2615,7 +2685,7 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:var(--gap);
   margin-top:0;
-  margin-bottom:6px;
+  margin-bottom:var(--gap);
 }
 
 .open-post .venue-dropdown,
@@ -2632,8 +2702,11 @@ body.filters-active #filterBtn{
 .session-options{
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:var(--gap);
   width:100%;
+  flex:1 1 auto;
+  max-height:250px;
+  overflow-y:auto;
 }
 
 .open-post .venue-menu .map-container,
@@ -2643,6 +2716,8 @@ body.filters-active #filterBtn{
   border-radius:8px;
   overflow:hidden;
   background:var(--dropdown-bg);
+  min-height:200px;
+  flex:0 0 auto;
 }
 
 .open-post .venue-menu .post-map,
@@ -2737,8 +2812,7 @@ body.filters-active #filterBtn{
   box-sizing:border-box;
   max-width:100%;
   max-height:80vh;
-  overflow-y:auto;
-  overflow-y:overlay;
+  overflow:hidden;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
@@ -2848,6 +2922,8 @@ body.filters-active #filterBtn{
   border-radius:8px;
   overflow:hidden;
   background:var(--dropdown-bg);
+  min-height:200px;
+  flex:0 0 auto;
 }
 
 .open-post .calendar-container .calendar-scroll,
@@ -4578,9 +4654,9 @@ function buildClusterListHTML(items){
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
     const categories = window.categories = [
-      { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Other"] },
-      { name:"Opportunities", subs:["Stage Auditions","Screen Auditions","Clubs","Jobs","Volunteers","Competitions","Other"] },
-      { name:"Learning", subs:["Tutors","Education Centres","Courses","Other"] },
+      { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Other Events"] },
+      { name:"Opportunities", subs:["Stage Auditions","Screen Auditions","Clubs","Jobs","Volunteers","Competitions","Other Opportunities"] },
+      { name:"Learning", subs:["Tutors","Education Centres","Courses","Other Learning"] },
       { name:"Buy and Sell", subs:["Wanted","For Sale","Freebies"] },
       { name:"For Hire", subs:["Performers","Staff","Goods and Services"] }
     ];
@@ -5131,7 +5207,7 @@ function makePosts(){
           subBtn.dataset.category = c.name;
           subBtn.dataset.subcategory = s;
           subBtn.setAttribute('aria-pressed','false');
-          subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
+          subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
             subLabel.textContent = s;
@@ -5721,7 +5797,7 @@ function makePosts(){
             map.resize();
             updatePostPanel();
           }
-        }, 310);
+        }, 300);
         updateModeToggle();
       });
 
@@ -6717,6 +6793,31 @@ function makePosts(){
       return `${fmt(d[0])} + ${d.length-1} more`;
     }
 
+    function parseCreatedToDate(created){
+      if(!created) return null;
+      const parts = created.split('T');
+      if(parts.length < 2) return null;
+      const [datePart, rawTime] = parts;
+      if(!datePart) return null;
+      const hasZ = rawTime.endsWith('Z');
+      const timeCore = hasZ ? rawTime.slice(0, -1) : rawTime;
+      const [hh = '00', mm = '00', ss = '00', ms = ''] = timeCore.split('-');
+      const iso = `${datePart}T${hh.padStart(2,'0')}:${mm.padStart(2,'0')}:${ss.padStart(2,'0')}${ms ? '.' + ms : ''}${hasZ ? 'Z' : ''}`;
+      const dt = new Date(iso);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function formatPostTimestamp(created){
+      const dt = parseCreatedToDate(created);
+      if(!dt) return '';
+      const y = dt.getUTCFullYear();
+      const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+      const d = String(dt.getUTCDate()).padStart(2,'0');
+      const hh = String(dt.getUTCHours()).padStart(2,'0');
+      const mm = String(dt.getUTCMinutes()).padStart(2,'0');
+      return `${y}-${m}-${d} ${hh}:${mm} UTC`;
+    }
+
     function prioritizeVisibleImages(){
       const roots = [postsWideEl];
       if(resultsEl) roots.push(resultsEl);
@@ -6929,6 +7030,9 @@ function makePosts(){
             <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
           </button>
         `;
+      const posterName = p.member ? p.member.username : 'Anonymous';
+      const postedTime = formatPostTimestamp(p.created);
+      const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
       wrap.innerHTML = `
         <div class="post-header">
           ${headerInner}
@@ -6936,7 +7040,6 @@ function makePosts(){
         <div class="post-body">
           <div class="second-post-column">
             <div class="post-details">
-              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${p.member ? p.member.username : 'Anonymous'} avatar" width="50" height="50"/><span>Posted by ${p.member ? p.member.username : 'Anonymous'}</span></div>
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
@@ -6950,7 +7053,8 @@ function makePosts(){
                 </div>
               </div>
               <div class="post-details-description-container">
-                <div class="desc-wrap"><div class="desc" tabindex="0" role="button" aria-expanded="false">${p.desc}</div></div>
+                <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+                <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
               </div>
             </div>
             <div class="post-images">
@@ -6960,7 +7064,7 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
-        head.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+        head.style.background = '#555555';
       });
       wrap.style.background = '#555555';
         // progressive hero swap
@@ -7176,7 +7280,7 @@ function makePosts(){
       bringToTop(container);
       requestAnimationFrame(()=>{
         const imgArea = detail.querySelector('.post-images');
-      const text = detail.querySelector('.post-details');
+        const text = detail.querySelector('.post-details');
         if(headerEl){
           headerEl.style.position='sticky';
           headerEl.style.top='0';
@@ -7282,6 +7386,15 @@ function makePosts(){
           const expanded = !descEl.classList.contains('expanded');
           descEl.classList.toggle('expanded', expanded);
           descEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          const openPostEl = el;
+          if(openPostEl){
+            openPostEl.classList.toggle('desc-expanded', expanded);
+          }
+          if(expanded){
+            document.body.classList.remove('open-post-sticky-images');
+          } else if(typeof updateStickyImages === 'function'){
+            updateStickyImages();
+          }
         };
         descEl.addEventListener('click', toggleDesc);
         descEl.addEventListener('keydown', toggleDesc);
@@ -7403,6 +7516,7 @@ function makePosts(){
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
       const venueOptions = venueMenu ? venueMenu.querySelector('.venue-options') : null;
+      let venueCloseTimer = null;
       const venueInfo = el.querySelector(`#venue-info-${p.id}`);
       const sessDropdown = el.querySelector(`#sess-${p.id}`);
       const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
@@ -7417,6 +7531,7 @@ function makePosts(){
           setupCalendarScroll(calScroll);
         }
         let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
+        let sessionCloseTimer = null;
         if(mapEl && mapEl._detailMap){
           detailMapRef = mapEl._detailMap;
           map = detailMapRef.map || map;
@@ -7599,8 +7714,17 @@ function makePosts(){
             selectedIndex = null;
             markSelected();
           }
-          sessMenu.hidden = true;
-          sessBtn && sessBtn.setAttribute('aria-expanded','false');
+          if(sessionCloseTimer){
+            clearTimeout(sessionCloseTimer);
+          }
+          if(!sessMenu.hidden){
+            sessionCloseTimer = setTimeout(()=>{
+              sessMenu.hidden = true;
+              if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
+            }, 100);
+          } else if(sessBtn){
+            sessBtn.setAttribute('aria-expanded','false');
+          }
         }
         function showTimePopup(matches){
           const existing = calContainer.querySelector('.time-popup');
@@ -7653,8 +7777,13 @@ function makePosts(){
                     venueOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
                     btn.classList.add('selected');
                     updateVenue(parseInt(btn.dataset.index,10));
-                    venueMenu.hidden = true;
-                    venueBtn.setAttribute('aria-expanded','false');
+                    if(venueCloseTimer){
+                      clearTimeout(venueCloseTimer);
+                    }
+                    venueCloseTimer = setTimeout(()=>{
+                      venueMenu.hidden = true;
+                      venueBtn.setAttribute('aria-expanded','false');
+                    }, 100);
                   });
                 });
                 venueBtn.addEventListener('click', ()=>{
@@ -8484,6 +8613,14 @@ document.addEventListener('pointerdown', handleDocInteract);
       subcategoryMarkerIds[sub] = slug;
       subcategoryMarkers[slug] = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
     });
+  });
+  const specialSubIcons = {
+    'Other Events': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8" fill="#28a745"></circle><path d="M9 6h2v8H9zM6 9h8v2H6z" fill="#ffffff"></path></svg>`,
+    'Other Opportunities': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><polygon points="10 2 18 10 10 18 2 10" fill="#28a745"></polygon><polygon points="10 5.5 14.5 10 10 14.5 5.5 10" fill="#ffffff" opacity="0.7"></polygon></svg>`,
+    'Other Learning': `<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path fill="#28a745" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H16v14H6.5A2.5 2.5 0 0 0 4 14.5V5.5z"></path><path fill="#ffffff" d="M6.5 5C5.672 5 5 5.672 5 6.5v7c0-.828.672-1.5 1.5-1.5H15V5H6.5z" opacity="0.8"></path></svg>`
+  };
+  Object.entries(specialSubIcons).forEach(([name, svg]) => {
+    subcategoryIcons[name] = svg;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded) addPostSource();
