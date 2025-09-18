@@ -4611,6 +4611,71 @@ img.thumb{
         map.setTerrain({source:'terrain-dem'});
       }
 
+      function ensureMapLightAnchor(mapInstance){
+        if(!mapInstance || typeof mapInstance.getLight !== 'function' || typeof mapInstance.setLight !== 'function'){
+          return;
+        }
+        let lightConfig = null;
+        try {
+          lightConfig = mapInstance.getLight();
+        } catch(err){
+          return;
+        }
+        if(!lightConfig || typeof lightConfig !== 'object'){
+          return;
+        }
+        const resolveAnchor = (source)=>{
+          if(!source || typeof source !== 'object') return null;
+          const anchor = source.anchor;
+          if(typeof anchor === 'string') return anchor;
+          if(Array.isArray(anchor) && anchor.length >= 2 && anchor[0] === 'literal' && typeof anchor[1] === 'string'){
+            return anchor[1];
+          }
+          if(source.properties && typeof source.properties === 'object'){
+            return resolveAnchor(source.properties);
+          }
+          return null;
+        };
+        const currentAnchor = resolveAnchor(lightConfig);
+        if(!currentAnchor || currentAnchor === 'map' || currentAnchor === 'auto'){
+          return;
+        }
+        const clone = (value)=>{
+          if(typeof structuredClone === 'function'){
+            try { return structuredClone(value); } catch(err){}
+          }
+          if(!value || typeof value !== 'object') return value;
+          if(Array.isArray(value)){
+            return value.map(clone);
+          }
+          const copy = {};
+          Object.keys(value).forEach((key)=>{
+            copy[key] = clone(value[key]);
+          });
+          return copy;
+        };
+        const updated = clone(lightConfig);
+        if(!updated || typeof updated !== 'object'){
+          return;
+        }
+        const assignAnchor = (target)=>{
+          if(!target || typeof target !== 'object') return;
+          if(Object.prototype.hasOwnProperty.call(target, 'anchor')){
+            target.anchor = Array.isArray(target.anchor) ? ['literal', 'map'] : 'map';
+            return;
+          }
+          if(target.properties && typeof target.properties === 'object'){
+            assignAnchor(target.properties);
+            return;
+          }
+          target.anchor = 'map';
+        };
+        assignAnchor(updated);
+        try {
+          mapInstance.setLight(updated);
+        } catch(err){}
+      }
+
       function applyNightSky(mapInstance){
         if(!mapInstance) return;
         let styleObj = null;
@@ -6506,6 +6571,7 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('style.load', () => {
+        ensureMapLightAnchor(map);
         const styleObj = typeof map.getStyle === 'function' ? map.getStyle() : null;
         const metadata = styleObj && styleObj.metadata ? styleObj.metadata : {};
         const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
@@ -8166,7 +8232,7 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          const mutedHandler = () => { applyMutedMapStyle(map); applyNightSky(map); };
+          const mutedHandler = () => { ensureMapLightAnchor(map); applyMutedMapStyle(map); applyNightSky(map); };
           map.on('style.load', mutedHandler);
           if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
             mutedHandler();
