@@ -457,14 +457,14 @@ input[type="checkbox"]{
   line-height:1;
 }
 .header button{
-  border-radius:4px;
+  border-radius:8px;
 }
 .options-menu button{
   border-radius:0;
 }
 .header .gear,
 .header a{
-  border-radius:4px;
+  border-radius:8px;
 }
 
 
@@ -895,7 +895,7 @@ button[aria-expanded="true"] .results-arrow{
   background:#444444;
   width:420px;
   padding:10px;
-  border-radius:4px;
+  border-radius:8px;
   display:flex;
   flex-direction:column;
   gap:8px;
@@ -911,7 +911,7 @@ button[aria-expanded="true"] .results-arrow{
   background:#444444;
   width:420px;
   padding:10px;
-  border-radius:4px;
+  border-radius:8px;
 }
 
 .sub-icon svg{
@@ -1360,7 +1360,7 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   margin:0 auto;
   background:#444444;
-  border-radius:4px;
+  border-radius:8px;
   padding:10px;
 }
 #filterPanel .filter-category-container{
@@ -1562,7 +1562,7 @@ button[aria-expanded="true"] .results-arrow{
 .reset-box .btn{
   width:100%;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--btn);
   border: 1px solid var(--btn);
   display: flex;
@@ -1788,6 +1788,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:40px;
   height:40px;
   object-fit:cover;
+  border-radius:8px;
+  cursor:pointer;
 }
 
 .post-images .selected-image{
@@ -1872,7 +1874,7 @@ body.hide-ads .ad-board{
   height:100%;
   position:relative;
   overflow:hidden;
-  border-radius:4px;
+  border-radius:8px;
 }
 
 .ad-panel .ad-slide{
@@ -1981,7 +1983,7 @@ body.filters-active #filterBtn{
 
 .post-card{
   border:none;
-  border-radius:4px;
+  border-radius:8px;
   padding-top:10px;
   margin-top:10px;
 }
@@ -2160,6 +2162,43 @@ body.filters-active #filterBtn{
 }
 .mapboxgl-ctrl-geolocate.locating button{
   animation:geolocate-pulse 1.5s infinite;
+}
+
+.mapboxgl-ctrl-geolocate button,
+.mapboxgl-ctrl-compass button{
+  width:35px;
+  height:35px;
+  border-radius:8px;
+  background:#ffffff;
+  border:1px solid rgba(0,0,0,0.15);
+  box-shadow:none;
+}
+
+.mapboxgl-ctrl-geolocate button:hover,
+.mapboxgl-ctrl-compass button:hover{
+  background:#f2f2f2;
+}
+
+.mapboxgl-ctrl-geolocate button svg,
+.mapboxgl-ctrl-compass button svg{
+  filter:none;
+}
+
+.mapboxgl-ctrl-geocoder{
+  background:#ffffff;
+  border-radius:8px;
+  color:#000000;
+}
+
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  background:#ffffff;
+  color:#000000;
+}
+
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
+  color:#000000;
+  fill:#000000;
 }
 
 .panel-body .map-control-row{
@@ -2383,7 +2422,7 @@ body.filters-active #filterBtn{
     gap:0;
     padding:0;
     margin:10px 0 12px;
-    border-radius:4px;
+    border-radius:8px;
   }
   .post-board .post-card .thumb{
     width:100%;
@@ -2439,18 +2478,11 @@ body.filters-active #filterBtn{
     max-width:100%;
     padding:0;
   }
-  .open-post .location-section .map-container,
-  .second-post-column .location-section .map-container,
   .open-post .venue-dropdown,
-  .open-post .session-dropdown{
-    min-width:250px;
-    width:100%;
-    max-width:100%;
-  }
-  .second-post-column .location-section .map-container,
+  .open-post .session-dropdown,
   .second-post-column .venue-dropdown,
   .second-post-column .session-dropdown{
-    min-width:250px;
+    min-width:0;
     width:100%;
     max-width:100%;
   }
@@ -2534,119 +2566,50 @@ body.filters-active #filterBtn{
 .open-post .location-section,
 .second-post-column .location-section{
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:var(--gap);
   margin-top:0;
   margin-bottom:6px;
 }
 
-  .open-post .location-section .map-container,
-  .second-post-column .location-section .map-container,
-  .second-post-column .location-section .map-container{
-  display:flex;
-  flex-direction:column;
-  gap:var(--gap);
-  flex:1 1 100%;
-  min-width:250px;
-  width:100%;
-  max-width:100%;
-  height:auto;
-}
-.open-post .map-container .venue-dropdown,
-.second-post-column .map-container .venue-dropdown{
-  width:100%;
-}
-
-.open-post .post-map,
-.second-post-column .post-map,
-.second-post-column .post-map{
-  flex:0 0 auto;
+.open-post .venue-dropdown,
+.open-post .session-dropdown,
+.second-post-column .venue-dropdown,
+.second-post-column .session-dropdown{
+  position:relative;
   width:100%;
   max-width:100%;
   min-width:0;
+}
+
+.venue-options,
+.session-options{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:100%;
+}
+
+.open-post .venue-menu .map-container,
+.second-post-column .venue-menu .map-container{
+  position:relative;
+  width:100%;
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--dropdown-bg);
+}
+
+.open-post .venue-menu .post-map,
+.second-post-column .venue-menu .post-map{
+  width:100%;
   height:200px;
   min-height:200px;
   border:none;
   border-radius:8px;
 }
 
-
-@media (max-width:529px){
-  .second-post-column .location-section .map-container{
-    flex:1 1 100%;
-    max-width:100%;
-  }
-  .second-post-column .post-map{
-    flex-basis:100%;
-    max-width:100%;
-  }
-}
-
-@media (min-width:530px){
-  .open-post .location-section,
-  .second-post-column .location-section{
-    flex-wrap:nowrap;
-  }
-  .open-post .location-section .map-container,
-  .open-post .location-section .calendar-container,
-  .second-post-column .location-section .map-container,
-  .second-post-column .location-section .calendar-container{
-    flex:0 0 250px;
-    max-width:250px;
-    width:250px;
-  }
-  .open-post .post-body > .second-post-column{
-    flex:1 1 100%;
-    max-width:100%;
-  }
-}
-
-
-.open-post .venue-dropdown,
-.open-post .session-dropdown{
-  position:relative;
-  min-width:250px;
-  width:100%;
-  max-width:420px;
-}
-.second-post-column .venue-dropdown,
-.second-post-column .session-dropdown{
-  position:relative;
-  min-width:250px;
-  width:100%;
-  max-width:100%;
-}
-.open-post .map-container,
-.second-post-column .map-container{
-  position:relative;
-}
-.open-post .map-container .venue-dropdown,
-.second-post-column .map-container .venue-dropdown{
-  position:static;
-}
-.open-post .map-container .venue-menu,
-.second-post-column .map-container .venue-menu{
-  left:0;
-  right:0;
-  width:auto;
-  top:calc(100% - var(--gap) - 40px);
-}
-.open-post .calendar-container .session-dropdown,
-.second-post-column .calendar-container .session-dropdown{
-  position:static;
-}
-.open-post .calendar-container .session-menu,
-.second-post-column .calendar-container .session-menu{
-  left:0;
-  right:0;
-  width:auto;
-  top:calc(100% - var(--gap) - 40px);
-}
-
-.open-post .calendar-container .session-dropdown,
-.second-post-column .calendar-container .session-dropdown{
-  margin-top:0;
-  width:100%;
+.post-map{
+  border-radius:8px;
 }
 
 
@@ -2724,9 +2687,10 @@ body.filters-active #filterBtn{
   top:calc(100% + 4px);
   left:0;
   width:100%;
-  min-width:250px;
+  min-width:0;
   box-sizing:border-box;
-  max-height:250px;
+  max-width:100%;
+  max-height:80vh;
   overflow-y:auto;
   overflow-y:overlay;
   background:var(--dropdown-bg);
@@ -2735,8 +2699,8 @@ body.filters-active #filterBtn{
   padding:10px;
   display:flex;
   flex-direction:column;
-  gap:6px;
-   z-index:30;
+  gap:10px;
+  z-index:30;
 }
 .open-post .venue-menu,
 .open-post .session-menu{
@@ -2803,25 +2767,6 @@ body.filters-active #filterBtn{
 }
 
 
-.open-post .location-section .calendar-container,
-.second-post-column .location-section .calendar-container{
-    display:flex;
-    flex-direction:column;
-    gap:var(--gap);
-    position:relative;
-    align-items:flex-start;
-    min-width:250px;
-    width:100%;
-    height:auto;
-  }
-.open-post .location-section .calendar-container{
-    flex:1 1 100%;
-    max-width:100%;
-  }
-.second-post-column .location-section .calendar-container{
-    flex:1 1 100%;
-    max-width:100%;
-  }
 .open-post .location-section .options-menu,
 .second-post-column .location-section .options-menu{
   width:100%;
@@ -2845,6 +2790,20 @@ body.filters-active #filterBtn{
 }
 
 
+.open-post .session-menu .calendar-container,
+.second-post-column .session-menu .calendar-container{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+  position:relative;
+  width:100%;
+  min-width:0;
+  height:auto;
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--dropdown-bg);
+}
+
 .open-post .calendar-container .calendar-scroll,
 .second-post-column .calendar-container .calendar-scroll{
   width:100%;
@@ -2860,11 +2819,6 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:stretch;
   flex:1 1 auto;
-}
-.open-post .calendar-container .calendar-scroll{
-  max-width:420px;
-}
-.second-post-column .calendar-container .calendar-scroll{
   max-width:100%;
 }
 .open-post .post-calendar .calendar,
@@ -3097,7 +3051,7 @@ body.filters-active #filterBtn{
 
 .desc{
   margin-top:8px;
-  cursor:default;
+  cursor:pointer;
 }
 
 
@@ -3130,13 +3084,7 @@ body.filters-active #filterBtn{
   }
   .open-post .location-section,
   .second-post-column .location-section{
-    flex-wrap:wrap;
-  }
-  .open-post .location-section .map-container,
-  .open-post .location-section .calendar-container{
-    flex:1 1 100%;
-    max-width:100%;
-    width:100%;
+    flex-direction:column;
   }
   .open-post .post-details .location-section,
   .second-post-column .post-details .location-section{
@@ -3164,7 +3112,7 @@ body.filters-active #filterBtn{
       width:100%;
       max-width:100%;
       border:none;
-      border-radius:4px;
+      border-radius:8px;
     }
     .post-board,
     .open-post{
@@ -3219,7 +3167,7 @@ body.filters-active #filterBtn{
     background:rgba(0,0,0,0.8);
     color:#fff;
     padding:4px 8px;
-    border-radius:4px;
+    border-radius:8px;
     opacity:0;
     transition:opacity .3s;
     pointer-events:none;
@@ -3316,7 +3264,7 @@ body.filters-active #filterBtn{
   height: 80px;
   display: block;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .card .meta,
@@ -3329,9 +3277,11 @@ body.filters-active #filterBtn{
   gap: 6px;
 }
 
-.post-card .meta, .post-card .meta *,
-.history-card .meta, .history-card .meta *{
-  cursor: default;
+.post-card,
+.post-card *,
+.history-card,
+.history-card *{
+  cursor: pointer;
 }
 
 .card .fav,
@@ -3360,6 +3310,7 @@ body.filters-active #filterBtn{
   gap: 10px;
   align-items: flex-start;
   max-width: 400px;
+  cursor: pointer;
 }
 
 .hover-card img{
@@ -3553,7 +3504,7 @@ img.thumb{
   width: 80px;
   height: 80px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 #results .history-card > img, #results .history-card img.thumb{
@@ -3562,7 +3513,7 @@ img.thumb{
   aspect-ratio: 1/1;
   object-fit: cover;
   display: block;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 
@@ -3607,14 +3558,14 @@ img.thumb{
   .post-board .post-card{
     width:100%;
     margin:10px 0 12px;
-    border-radius:4px;
+    border-radius:8px;
   }
   .post-board .open-post{
     margin:10px 0 12px;
   }
   .open-post{
     width:100%;
-    border-radius:4px;
+    border-radius:8px;
     margin:10px 0 12px;
   }
   .open-post .post-images{
@@ -6671,16 +6622,8 @@ function makePosts(){
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
-                <div class="map-container">
-                  <div id="map-${p.id}" class="post-map"></div>
-                  <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden>${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div>
-                </div>
-                <div class="calendar-container">
-                  <div class="calendar-scroll">
-                    <div id="cal-${p.id}" class="post-calendar"></div>
-                  </div>
-                  <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden></div></div>
-                </div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
               </div>
               <div class="post-details-info-container">
                 <div id="venue-info-${p.id}" class="venue-info"></div>
@@ -7141,10 +7084,12 @@ function makePosts(){
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
+      const venueOptions = venueMenu ? venueMenu.querySelector('.venue-options') : null;
       const venueInfo = el.querySelector(`#venue-info-${p.id}`);
       const sessDropdown = el.querySelector(`#sess-${p.id}`);
       const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
       const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
+      const sessionOptions = sessMenu ? sessMenu.querySelector('.session-options') : null;
         const sessionInfo = el.querySelector(`#session-info-${p.id}`);
         const calendarEl = el.querySelector(`#cal-${p.id}`);
         const mapEl = el.querySelector(`#map-${p.id}`);
@@ -7315,10 +7260,10 @@ function makePosts(){
           }
         }
         function selectSession(i){
-          if(!sessMenu) return;
+          if(!sessMenu || !sessionOptions) return;
           selectedIndex = i;
-          sessMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-          const btn = sessMenu.querySelector(`button[data-index="${i}"]`);
+          sessionOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+          const btn = sessionOptions.querySelector(`button[data-index="${i}"]`);
           if(btn) btn.classList.add('selected');
           const dt = loc.dates[i];
           if(dt){
@@ -7358,9 +7303,11 @@ function makePosts(){
         setTimeout(()=>{
           if(map && typeof map.resize === 'function') map.resize();
         },0);
-        if(sessMenu){
-          sessMenu.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
-          sessMenu.scrollTop = 0;
+        if(sessionOptions){
+          sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+          if(sessMenu){
+            sessMenu.scrollTop = 0;
+          }
           if(sessionHasMultiple){
             sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
@@ -7372,7 +7319,7 @@ function makePosts(){
               if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
             }
           }
-          sessMenu.querySelectorAll('button').forEach(btn=>{
+          sessionOptions.querySelectorAll('button').forEach(btn=>{
             btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
           });
         }
@@ -7381,11 +7328,11 @@ function makePosts(){
           setTimeout(()=>{
             loadMapbox(()=>{
               updateVenue(0);
-              if(venueMenu && venueBtn){
-                venueMenu.querySelectorAll('button').forEach(btn=>{
+              if(venueMenu && venueBtn && venueOptions){
+                venueOptions.querySelectorAll('button').forEach(btn=>{
                   if(btn.dataset.index==='0') btn.classList.add('selected');
                   btn.addEventListener('click', ()=>{
-                    venueMenu.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+                    venueOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
                     btn.classList.add('selected');
                     updateVenue(parseInt(btn.dataset.index,10));
                     venueMenu.hidden = true;
@@ -7396,6 +7343,9 @@ function makePosts(){
                   const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
                   venueBtn.setAttribute('aria-expanded', String(!expanded));
                   venueMenu.hidden = expanded;
+                  if(!expanded){
+                    setTimeout(()=>{ if(map && typeof map.resize === 'function') map.resize(); },0);
+                  }
                 });
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
               }
