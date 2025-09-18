@@ -2370,10 +2370,13 @@ body.filters-active #filterBtn{
 #welcomeBody .map-control-row{
   width:100%;
   max-width:100%;
-  justify-content:flex-start;
-  align-self:stretch;
+  justify-content:center;
+  align-self:center;
 }
 #welcomeBody .map-controls-welcome{
+  text-align:left;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--suggestions{
   text-align:left;
 }
 #welcomeBody .map-control-row > .geocoder{
@@ -4595,6 +4598,16 @@ img.thumb{
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
+    if(!viewHistory.length){
+      if(historyWasActive){
+        historyWasActive = false;
+        localStorage.setItem('historyActive','false');
+      }
+      if(mode !== 'map'){
+        mode = 'map';
+        localStorage.setItem('mode','map');
+      }
+    }
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
