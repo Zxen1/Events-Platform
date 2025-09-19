@@ -7115,12 +7115,10 @@ function makePosts(){
         if(clusterId === undefined && map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
           try {
             const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
-            for(const candidate of features){
-              if(candidate && candidate.properties && candidate.properties.cluster_id !== undefined){
-                feature = candidate;
-                clusterId = candidate.properties.cluster_id;
-                break;
-              }
+            const fallback = features.find((candidate)=> candidate && candidate.properties && candidate.properties.cluster_id !== undefined);
+            if(fallback){
+              feature = fallback;
+              clusterId = fallback.properties.cluster_id;
             }
           } catch(err){
             console.warn('cluster query failed', err);
