@@ -7980,11 +7980,6 @@ function makePosts(){
         }
 
         await nextFrame();
-        const header = detail.querySelector('.post-header');
-        if(header){
-          const h = header.offsetHeight;
-          header.style.scrollMarginTop = h + 'px';
-        }
 
         if(fromMap){
           if(typeof detail.scrollIntoView === 'function'){
