@@ -7100,16 +7100,17 @@ function makePosts(){
         let feature = e && e.features && e.features[0];
         let clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
         if(clusterId === undefined && map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
-          let fallbackFeature;
           try {
             const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
-            fallbackFeature = features.find(f=> f && f.properties && f.properties.cluster_id !== undefined);
+            for(const candidate of features){
+              if(candidate && candidate.properties && candidate.properties.cluster_id !== undefined){
+                feature = candidate;
+                clusterId = candidate.properties.cluster_id;
+                break;
+              }
+            }
           } catch(err){
             console.warn('cluster query failed', err);
-          }
-          if(fallbackFeature){
-            feature = fallbackFeature;
-            clusterId = fallbackFeature.properties.cluster_id;
           }
         }
         if(clusterId === undefined){
