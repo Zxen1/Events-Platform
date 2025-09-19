@@ -431,7 +431,7 @@ input[type="checkbox"]{
   padding: 0 14px;
   background: var(--btn);
   color: var(--button-text);
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s;
 }
@@ -676,7 +676,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#2e3a72;
+  background:#222222;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -1685,7 +1685,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: .2px;
   color: var(--ink);
   cursor: pointer;
@@ -2622,7 +2622,7 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  padding:10px;
+  padding:10px 20px;
 }
 
 .open-post:not(.desc-expanded) .post-details > :not(.post-details-description-container){
@@ -4349,9 +4349,8 @@ img.thumb{
 
     function normalizeMapStyle(style){
       switch(style){
-        case 'mapbox://styles/mapbox/standard':
         case 'mapbox://styles/mapbox/standard-beta':
-          return 'mapbox://styles/mapbox/streets-v12';
+          return 'mapbox://styles/mapbox/standard';
         case 'mapbox://styles/mapbox/standard-dark':
           return 'mapbox://styles/mapbox/dark-v11';
         case 'mapbox://styles/mapbox/standard-light':
@@ -4363,7 +4362,7 @@ img.thumb{
       }
     }
 
-    const DESIRED_MAP_STYLE = 'mapbox://styles/mapbox/streets-v12';
+    const DESIRED_MAP_STYLE = 'mapbox://styles/mapbox/standard';
 
       const storedMapStyleRaw = localStorage.getItem('mapStyle');
       const storedMapStyle = normalizeMapStyle(storedMapStyleRaw);
