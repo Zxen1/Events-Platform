@@ -8739,12 +8739,6 @@ function closePanel(m){
 }
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
-  const controlRow = welcomeModalEl.querySelector('.map-controls-welcome');
-  if(controlRow){
-    ['click','mousedown','touchstart'].forEach(evt => {
-      controlRow.addEventListener(evt, e => e.stopPropagation(), {capture:true});
-    });
-  }
   welcomeModalEl.addEventListener('click', event => {
     if(event.target.closest('.map-controls-welcome')) return;
     closePanel(welcomeModalEl);
