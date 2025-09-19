@@ -8325,6 +8325,33 @@ function makePosts(){
         }
         let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
         let sessionCloseTimer = null;
+        let selectedIndex = null;
+        let currentLoc = null;
+        function scrollCalendarToIso(iso, {preferSmooth=false}={}){
+          if(!calendarEl || !calScroll || !iso) return {target:null, smooth:false};
+          const cell = calendarEl.querySelector(`.day[data-iso="${iso}"]`);
+          if(!cell) return {target:null, smooth:false};
+          const monthEl = cell.closest('.month');
+          if(!monthEl) return {target:null, smooth:false};
+          const target = monthEl.offsetLeft;
+          if(typeof calScroll.scrollTo === 'function'){
+            const difference = Math.abs(calScroll.scrollLeft - target);
+            if(preferSmooth && difference > 1){
+              calScroll.scrollTo({left:target, behavior:'smooth'});
+              return {target, smooth:true};
+            }
+            calScroll.scrollTo({left:target});
+          } else {
+            calScroll.scrollLeft = target;
+          }
+          return {target, smooth:false};
+        }
+        function scrollCalendarToSelected({preferSmooth=false}={}){
+          if(selectedIndex===null || !currentLoc) return {target:null, smooth:false};
+          const dt = currentLoc.dates[selectedIndex];
+          if(!dt) return {target:null, smooth:false};
+          return scrollCalendarToIso(dt.full, {preferSmooth});
+        }
         function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
           if(!sessMenu) return;
           if(sessionCloseTimer){
@@ -8367,6 +8394,7 @@ function makePosts(){
         }
       function updateVenue(idx){
         const loc = p.locations[idx];
+        currentLoc = loc;
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
         const currentYear = new Date().getFullYear();
         const parseDate = s => {
@@ -8508,7 +8536,7 @@ function makePosts(){
           current.setMonth(current.getMonth()+1);
         }
         calendarEl.appendChild(cal);
-        let selectedIndex = null;
+        selectedIndex = null;
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         function markSelected(){
           calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
@@ -8517,33 +8545,6 @@ function makePosts(){
             const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
             if(cell) cell.classList.add('selected');
           }
-        }
-
-        function scrollCalendarToIso(iso, {preferSmooth=false}={}){
-          if(!calScroll || !iso) return {target:null, smooth:false};
-          const cell = calendarEl.querySelector(`.day[data-iso="${iso}"]`);
-          if(!cell) return {target:null, smooth:false};
-          const monthEl = cell.closest('.month');
-          if(!monthEl) return {target:null, smooth:false};
-          const target = monthEl.offsetLeft;
-          if(typeof calScroll.scrollTo === 'function'){
-            const difference = Math.abs(calScroll.scrollLeft - target);
-            if(preferSmooth && difference > 1){
-              calScroll.scrollTo({left:target, behavior:'smooth'});
-              return {target, smooth:true};
-            }
-            calScroll.scrollTo({left:target});
-          } else {
-            calScroll.scrollLeft = target;
-          }
-          return {target, smooth:false};
-        }
-
-        function scrollCalendarToSelected({preferSmooth=false}={}){
-          if(selectedIndex===null) return {target:null, smooth:false};
-          const dt = loc.dates[selectedIndex];
-          if(!dt) return {target:null, smooth:false};
-          return scrollCalendarToIso(dt.full, {preferSmooth});
         }
         function selectSession(i, {skipAutoClose=false, preferSmooth=true}={}){
           if(!sessMenu || !sessionOptions) return;
