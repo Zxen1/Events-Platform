@@ -11,17 +11,18 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link href='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css' rel='stylesheet' />
   <link
     rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css"
-    data-fallback="https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css"
+    href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
+    data-fallback="https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css"
+    data-mapbox="core-css"
     onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
   />
   <link
     rel="stylesheet"
     href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
     data-fallback="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css"
+    data-mapbox="geocoder-css"
     onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
   />
   <style>:root{
@@ -4850,17 +4851,21 @@ img.thumb{
         const baseUrl = getStyleBase(originUrl);
         const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
         const normalizedLower = typeof normalizedUrl === 'string' ? normalizedUrl.toLowerCase() : '';
-        const unsupportedAtmospherePatterns = ['/standard'];
-        const skipAtmosphere = unsupportedAtmospherePatterns.some((pattern) => normalizedLower.includes(pattern));
-        if(skipAtmosphere){
-          if(typeof mapInstance.setFog === 'function'){
-            try { mapInstance.setFog(null); } catch(err){}
-          }
+        const isStandardBasemap = normalizedLower.includes('/standard');
+        if(isStandardBasemap){
           if(typeof mapInstance.getLayer === 'function' && typeof mapInstance.removeLayer === 'function'){
             try {
               if(mapInstance.getLayer('night-sky')){
                 mapInstance.removeLayer('night-sky');
               }
+            } catch(err){}
+          }
+          if(typeof mapInstance.setFog === 'function'){
+            try { mapInstance.setFog(null); } catch(err){}
+          }
+          if(typeof mapInstance.setConfigProperty === 'function'){
+            try {
+              mapInstance.setConfigProperty('basemap', 'skyPreset', 'night');
             } catch(err){}
           }
           return;
@@ -6443,8 +6448,8 @@ function makePosts(){
       const cssSources = [
         {
           selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css',
-          fallback: 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css'
+          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css',
+          fallback: 'https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css'
         },
         {
           selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
@@ -6569,7 +6574,7 @@ function makePosts(){
 
       function loadScripts(){
         const s = document.createElement('script');
-        s.src='https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js';
+        s.src='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
         s.onload = ()=>{
           const g = document.createElement('script');
           g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
