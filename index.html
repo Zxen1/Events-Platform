@@ -6967,18 +6967,28 @@ function makePosts(){
         if(!map.getLayer('clusters')) return;
         if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
         let feature = e && e.features && e.features[0];
-        if(!feature){
+        let clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
+        if(clusterId === undefined){
           let features;
           try {
-            features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+            if(e && e.point){
+              features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] });
+            }
           } catch(err){
             console.warn('cluster query failed', err);
             return;
           }
-          feature = features && features[0];
+          if(features && features.length){
+            const withClusterId = features.find(f=> f && f.properties && f.properties.cluster_id !== undefined);
+            if(withClusterId){
+              feature = withClusterId;
+              clusterId = withClusterId.properties.cluster_id;
+            }
+          }
         }
-        const clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
-        if(clusterId === undefined) return;
+        if(clusterId === undefined){
+          return;
+        }
         const coords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates) ? feature.geometry.coordinates.slice() : null;
         if(!coords || coords.length < 2) return;
         const source = typeof map.getSource === 'function' ? map.getSource('posts') : null;
