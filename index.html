@@ -842,6 +842,17 @@ button[aria-expanded="true"] .results-arrow{
   height:auto;
   margin:0;
 }
+#welcomeBody .map-control-row{
+  width:auto;
+  max-width:100%;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+#welcomeBody .map-control-row > .geocoder{
+  flex:0 1 320px;
+  max-width:320px;
+  width:100%;
+}
 #welcomeBody .welcome-illustration{
   max-width:280px;
   width:100%;
@@ -1776,6 +1787,32 @@ body.filter-anchored .post-mode-boards{
 
 body.hide-ads .post-mode-boards{padding-right:0;}
 
+.board-scroll{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  margin:0;
+  pointer-events:auto;
+  background:rgba(0,0,0,0.7);
+  height:100%;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overflow-y:overlay;
+}
+
+.post-board-scroll{
+  width:var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
+  flex:0 0 var(--post-board-max-w);
+}
+
+.recents-board-scroll{
+  width:var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
+  flex:0 0 var(--post-board-max-w);
+}
+
 .quick-list-board{
   position:fixed;
   top:var(--header-h);
@@ -1785,7 +1822,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   padding:10px;
   overflow:auto;
   overflow:overlay;
-  background:rgba(0,0,0,0);
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
@@ -1800,9 +1836,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   left:auto;
   padding:0;
   margin:0;
-  overflow:auto;
-  overflow:overlay;
-  background:rgba(0,0,0,0.7);
+  overflow:visible;
   transition:margin 0.3s ease;
   display:flex;
   flex-direction:column;
@@ -1811,9 +1845,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .post-board{
-  width:var(--post-board-max-w);
-  max-width:var(--post-board-max-w);
-  flex-shrink:0;
+  width:100%;
+  max-width:100%;
+  flex:1 1 auto;
   position:relative;
   left:0;
   opacity:1;
@@ -1821,12 +1855,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .recents-board{
-  width:var(--post-board-max-w);
-  max-width:var(--post-board-max-w);
-  flex-shrink:0;
+  width:100%;
+  max-width:100%;
+  flex:1 1 auto;
 }
 @media (max-width:439px){
+  .post-board-scroll,
   .post-board,
+  .recents-board-scroll,
   .recents-board,
   .second-post-column.is-visible{
     width:100%;
@@ -1850,13 +1886,10 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .post-board{
   padding:0;
   margin:0;
-  overflow-y:auto;
-  overflow-y:overlay;
-  overflow-x:visible;
+  overflow:visible;
   display:flex;
   flex-direction:column;
   gap:0;
-  background:rgba(0,0,0,0.7);
   pointer-events:auto;
   transition:left 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
 }
@@ -2412,27 +2445,27 @@ body.filters-active #filterBtn{
 .map-control-row .geocoder{margin:0;}
 
 .post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
-.post-board .posts,
-.recents-board{
+.post-board-scroll,
+.recents-board-scroll{
   scrollbar-width:thin;
   scrollbar-color:rgba(255,255,255,0.4) rgba(0,0,0,0);
 }
-.post-board .posts::-webkit-scrollbar,
-.recents-board::-webkit-scrollbar{
+.post-board-scroll::-webkit-scrollbar,
+.recents-board-scroll::-webkit-scrollbar{
   width:8px;
   height:8px;
 }
-.post-board .posts::-webkit-scrollbar-track,
-.recents-board::-webkit-scrollbar-track{
+.post-board-scroll::-webkit-scrollbar-track,
+.recents-board-scroll::-webkit-scrollbar-track{
   background-color:rgba(0,0,0,0);
 }
-.post-board .posts::-webkit-scrollbar-thumb,
-.recents-board::-webkit-scrollbar-thumb{
+.post-board-scroll::-webkit-scrollbar-thumb,
+.recents-board-scroll::-webkit-scrollbar-thumb{
   background-color:rgba(255,255,255,0.4);
   border-radius:999px;
 }
-.post-board .posts::-webkit-scrollbar-corner,
-.recents-board::-webkit-scrollbar-corner{
+.post-board-scroll::-webkit-scrollbar-corner,
+.recents-board-scroll::-webkit-scrollbar-corner{
   background-color:rgba(0,0,0,0);
 }
 .post-board{color:#fff;}
@@ -2550,6 +2583,70 @@ body.filters-active #filterBtn{
 }
 .open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
+.open-post .post-summary{
+  display:flex;
+  align-items:flex-start;
+  gap:var(--gap);
+  margin:10px 10px 0;
+  padding:0;
+  cursor:pointer;
+}
+
+.open-post .post-summary-info{
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  text-align:left;
+}
+
+.open-post .post-summary-info > div{
+  text-align:left;
+}
+
+.open-post .post-summary-info .session-info > div{
+  display:inline-block;
+}
+
+.open-post .post-toggle{
+  background:transparent;
+  border:none;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px;
+  margin-left:auto;
+  cursor:pointer;
+  transition:transform 0.3s ease;
+}
+
+.open-post .post-toggle svg{
+  width:20px;
+  height:20px;
+  transition:transform 0.3s ease;
+}
+
+.open-post.is-expanded .post-toggle svg{
+  transform:rotate(180deg);
+}
+
+.open-post.is-collapsed .post-details{
+  display:none;
+}
+
+.open-post.is-expanded .post-details{
+  display:flex;
+}
+
+.open-post.is-collapsed .post-images{
+  margin-top:10px;
+}
+
+.open-post.is-expanded .post-summary-info{
+  display:none;
+}
+
 .open-post .post-body{
   padding:0 0 10px;
   display:flex;
@@ -2598,16 +2695,16 @@ body.filters-active #filterBtn{
   align-self:center;
 }
 
-.open-post.desc-expanded .post-images,
-body.open-post-sticky-images .open-post.desc-expanded .post-images{
+.open-post.is-expanded .post-images,
+body.open-post-sticky-images .open-post.is-expanded .post-images{
   position:static;
 }
 
-.open-post.desc-expanded .post-images{
+.open-post.is-expanded .post-images{
   margin-top:var(--gap);
 }
 
-.open-post-sticky-images .open-post .post-images{
+.open-post-sticky-images .open-post.is-expanded .post-images{
   position:sticky;
   top:var(--open-post-header-h,0px);
   align-self:start;
@@ -2784,8 +2881,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   gap:10px;
   margin:var(--gap) 0 0;
 }
-.open-post.desc-expanded .member-avatar-row,
-.open-post.desc-expanded .second-post-column .member-avatar-row{
+.open-post.is-expanded .member-avatar-row,
+.open-post.is-expanded .second-post-column .member-avatar-row{
   display:flex;
 }
 .open-post .member-avatar-row img,
@@ -2805,24 +2902,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .second-post-column .desc{
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  cursor:pointer;
+  display:block;
+  overflow:visible;
+  text-overflow:unset;
+  cursor:default;
   white-space:normal;
 }
 
 .second-post-column .desc:focus{
   outline:none;
-}
-
-.second-post-column .desc.expanded{
-  display:block;
-  -webkit-line-clamp:unset;
-  overflow:visible;
-  text-overflow:unset;
 }
 
 
@@ -3974,10 +4062,14 @@ img.thumb{
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
-    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board">
-    </section>
-    <section class="post-board" aria-label="Post Board">
-    </section>
+    <div class="board-scroll quick-list-board recents-board-scroll">
+      <section class="recents-board" id="recentsBoard" aria-label="Recents Board">
+      </section>
+    </div>
+    <div class="board-scroll post-board-scroll">
+      <section class="post-board" aria-label="Post Board">
+      </section>
+    </div>
     <section class="ad-board" aria-label="Ad Board">
       <div class="ad-panel">
       </div>
@@ -4616,11 +4708,11 @@ img.thumb{
         const imgArea = body ? body.querySelector('.post-images') : null;
         const header = openPost ? openPost.querySelector('.post-header') : null;
         document.body.classList.remove('hide-map-calendar');
-        if(!openPost || !body || !imgArea || !header){
-          document.body.classList.remove('open-post-sticky-images');
-          root.style.removeProperty('--open-post-header-h');
-          return;
-        }
+      if(!openPost || !body || !imgArea || !header || !openPost.classList.contains('is-expanded')){
+        document.body.classList.remove('open-post-sticky-images');
+        root.style.removeProperty('--open-post-header-h');
+        return;
+      }
         root.style.setProperty('--open-post-header-h', header.offsetHeight + 'px');
         document.body.classList.add('open-post-sticky-images');
       }
@@ -5176,7 +5268,9 @@ function makePosts(){
 
     const resultsEl = $('#results');
     const postsWideEl = $('.post-board');
-    const postsModeEl = $('.post-board');
+    const postsScrollEl = postsWideEl ? postsWideEl.closest('.board-scroll') : null;
+    const postsModeEl = postsScrollEl || postsWideEl;
+    const postScrollTarget = postsScrollEl || postsWideEl;
 
     let sortedPostList = [];
     let renderedPostCount = 0;
@@ -5199,13 +5293,15 @@ function makePosts(){
       renderedPostCount += slice.length;
       if(renderedPostCount >= sortedPostList.length){
         if(postBatchObserver) postBatchObserver.disconnect();
-        postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+        if(postScrollTarget) postScrollTarget.removeEventListener('scroll', onPostBoardScroll);
       }
       prioritizeVisibleImages();
     }
 
     function onPostBoardScroll(){
-      if(postsWideEl.scrollTop + postsWideEl.clientHeight >= postsWideEl.scrollHeight - 200){
+      const scrollEl = postScrollTarget || postsWideEl;
+      if(!scrollEl) return;
+      if(scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 200){
         appendPostBatch();
       }
     }
@@ -6813,7 +6909,7 @@ function makePosts(){
       renderedPostCount = 0;
 
       if(postBatchObserver) postBatchObserver.disconnect();
-      postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+      if(postScrollTarget) postScrollTarget.removeEventListener('scroll', onPostBoardScroll);
       if(postSentinel) postSentinel.remove();
       postSentinel = null;
 
@@ -6863,6 +6959,7 @@ function makePosts(){
 
       updateResultCount(arr.length);
 
+      const observerRootEl = postScrollTarget || postsWideEl;
       if('IntersectionObserver' in window){
         postBatchObserver = new IntersectionObserver(entries => {
           entries.forEach(entry => {
@@ -6870,10 +6967,10 @@ function makePosts(){
               appendPostBatch();
             }
           });
-        }, {root: postsWideEl, rootMargin:'0px 0px 200px 0px'});
+        }, {root: observerRootEl, rootMargin:'0px 0px 200px 0px'});
         postBatchObserver.observe(postSentinel);
       } else {
-        postsWideEl.addEventListener('scroll', onPostBoardScroll);
+        if(observerRootEl) observerRootEl.addEventListener('scroll', onPostBoardScroll);
       }
     }
     function updateResultCount(n){
@@ -6916,13 +7013,18 @@ function makePosts(){
     }
 
     function prioritizeVisibleImages(){
-      const roots = [postsWideEl];
+      const roots = [];
+      if(postScrollTarget){
+        roots.push(postScrollTarget);
+      } else if(postsWideEl){
+        roots.push(postsWideEl);
+      }
       if(resultsEl) roots.push(resultsEl);
       roots.forEach(root => {
         const imgs = root.querySelectorAll('img.thumb');
         if(!imgs.length) return;
         if('IntersectionObserver' in window){
-          const observerRoot = root === postsWideEl ? root.closest('.post-board') : root;
+          const observerRoot = root || postsWideEl;
           const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
               if(entry.isIntersecting){
@@ -7121,7 +7223,7 @@ function makePosts(){
 
     function buildDetail(p){
       const wrap = document.createElement('div');
-      wrap.className = 'open-post';
+      wrap.className = 'open-post is-collapsed';
       wrap.dataset.id = p.id;
       const loc0 = p.locations[0];
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
@@ -7146,29 +7248,34 @@ function makePosts(){
         <div class="post-header">
           ${headerInner}
         </div>
+        <div class="post-summary">
+          <div class="post-summary-info post-details-info-container">
+            <div id="venue-info-${p.id}" class="venue-info"></div>
+            <div id="session-info-${p.id}" class="session-info">
+              <div>${defaultInfo}</div>
+            </div>
+          </div>
+          <button type="button" class="post-toggle" aria-label="Expand post details" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 15.5 6 9.5h12z"/></svg>
+          </button>
+        </div>
         <div class="post-body">
           <div class="second-post-column">
+            <div class="post-images">
+              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+              <div class="thumbnail-row"></div>
+            </div>
             <div class="post-details">
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class=\"venue-name\">${loc.venue}</span><span class=\"venue-address\">${loc.address}</span></button>`).join('')}</div></div></div>
                 <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
               </div>
-              <div class="post-details-info-container">
-                <div id="venue-info-${p.id}" class="venue-info"></div>
-                <div id="session-info-${p.id}" class="session-info">
-                  <div>${defaultInfo}</div>
-                </div>
-              </div>
               <div class="post-details-description-container">
-                <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+                <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
                 <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
               </div>
-            </div>
-            <div class="post-images">
-              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
-              <div class="thumbnail-row"></div>
             </div>
           </div>
         </div>`;
@@ -7453,11 +7560,68 @@ function makePosts(){
     });
 
     function hookDetailActions(el, p){
+      const openPostEl = el;
+      const summaryEl = el.querySelector('.post-summary');
+      const toggleBtn = el.querySelector('.post-toggle');
+
+      const setExpanded = expanded => {
+        if(!openPostEl) return;
+        openPostEl.classList.toggle('is-expanded', expanded);
+        openPostEl.classList.toggle('is-collapsed', !expanded);
+        if(summaryEl){
+          summaryEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+        if(toggleBtn){
+          toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          toggleBtn.setAttribute('aria-label', expanded ? 'Collapse post details' : 'Expand post details');
+        }
+        if(typeof window.adjustBoards === 'function') window.adjustBoards();
+        if(expanded){
+          if(typeof updateStickyImages === 'function') updateStickyImages();
+        } else {
+          document.body.classList.remove('open-post-sticky-images');
+        }
+      };
+
+      const handleToggle = evt => {
+        if(evt && evt.type === 'keydown'){
+          const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
+          if(!allowed.includes(evt.key)) return;
+          evt.preventDefault();
+        } else if(evt){
+          evt.preventDefault();
+        }
+        if(evt) evt.stopPropagation();
+        const expanded = openPostEl.classList.contains('is-expanded');
+        setExpanded(!expanded);
+      };
+
+      if(summaryEl){
+        summaryEl.setAttribute('role', 'button');
+        summaryEl.setAttribute('tabindex', '0');
+        summaryEl.setAttribute('aria-expanded', 'false');
+        summaryEl.addEventListener('click', evt => {
+          if(evt.target.closest('button')) return;
+          handleToggle(evt);
+        });
+        summaryEl.addEventListener('keydown', evt => {
+          if(evt.target.closest('button')) return;
+          handleToggle(evt);
+        });
+      }
+
+      if(toggleBtn){
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.addEventListener('click', evt => {
+          evt.stopPropagation();
+          handleToggle(evt);
+        });
+      }
+
       el.querySelectorAll('.post-header').forEach(headerEl => {
         headerEl.addEventListener('click', evt=>{
           if(evt.target.closest('button')) return;
-          evt.stopPropagation();
-          closeActivePost();
+          handleToggle(evt);
         });
       });
       el.querySelectorAll('.fav').forEach(favBtn => {
@@ -7484,30 +7648,7 @@ function makePosts(){
         });
       });
 
-      const descEl = el.querySelector('.post-details .desc');
-      if(descEl){
-        const toggleDesc = evt => {
-          const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
-          if(evt.type === 'keydown' && !allowed.includes(evt.key)){
-            return;
-          }
-          evt.preventDefault();
-          const expanded = !descEl.classList.contains('expanded');
-          descEl.classList.toggle('expanded', expanded);
-          descEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          const openPostEl = el;
-          if(openPostEl){
-            openPostEl.classList.toggle('desc-expanded', expanded);
-          }
-          if(expanded){
-            document.body.classList.remove('open-post-sticky-images');
-          } else if(typeof updateStickyImages === 'function'){
-            updateStickyImages();
-          }
-        };
-        descEl.addEventListener('click', toggleDesc);
-        descEl.addEventListener('keydown', toggleDesc);
-      }
+      setExpanded(openPostEl.classList.contains('is-expanded'));
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       const thumbCol = el.querySelector('.thumbnail-row');
