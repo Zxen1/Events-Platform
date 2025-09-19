@@ -7099,22 +7099,17 @@ function makePosts(){
         if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
         let feature = e && e.features && e.features[0];
         let clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
-        if(clusterId === undefined){
-          let features;
+        if(clusterId === undefined && map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
+          let fallbackFeature;
           try {
-            if(e && e.point){
-              features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] });
-            }
+            const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
+            fallbackFeature = features.find(f=> f && f.properties && f.properties.cluster_id !== undefined);
           } catch(err){
             console.warn('cluster query failed', err);
-            return;
           }
-          if(features && features.length){
-            const withClusterId = features.find(f=> f && f.properties && f.properties.cluster_id !== undefined);
-            if(withClusterId){
-              feature = withClusterId;
-              clusterId = withClusterId.properties.cluster_id;
-            }
+          if(fallbackFeature){
+            feature = fallbackFeature;
+            clusterId = fallbackFeature.properties.cluster_id;
           }
         }
         if(clusterId === undefined){
