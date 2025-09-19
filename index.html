@@ -865,6 +865,8 @@ button[aria-expanded="true"] .results-arrow{
   max-width:100%;
   justify-content:center;
   flex-wrap:wrap;
+  gap:10px;
+  row-gap:10px;
 }
 #welcomeBody .map-control-row > .geocoder{
   flex:0 1 320px;
@@ -2648,8 +2650,39 @@ body.filters-active #filterBtn{
   text-align:left;
 }
 
-.open-post .post-summary-info .session-info > div{
-  display:inline-block;
+.open-post .collapsed-info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:100%;
+}
+
+.open-post .collapsed-info .loc-line,
+.open-post .collapsed-info .date-line{
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  width:100%;
+}
+
+.open-post .collapsed-info .badge{
+  align-self:flex-start;
+}
+
+.open-post .collapsed-info .venue-info,
+.open-post .collapsed-info .session-info{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.open-post .collapsed-info .venue-info .venue-name{
+  font-weight:600;
+}
+
+.open-post .collapsed-info .venue-info .venue-address{
+  opacity:0.9;
 }
 
 .open-post .post-toggle{
@@ -4477,6 +4510,14 @@ img.thumb{
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
+        let welcomeMoveHandler = null;
+        window.__cancelWelcomeMove = () => {
+          if(welcomeMoveHandler && map){
+            try{ map.off('moveend', welcomeMoveHandler); }catch(err){}
+          }
+          welcomeMoveHandler = null;
+          window.__welcomeMoveHandler = null;
+        };
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
@@ -5994,6 +6035,7 @@ function makePosts(){
       });
 
       const recentsBoard = $('#recentsBoard');
+      const recentsBoardWrap = $('.recents-board-scroll');
       const adBoard = $('.ad-board');
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
@@ -6019,11 +6061,19 @@ function makePosts(){
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
+        const boardMaxWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--post-board-max-w')) || 530;
         let filterWidth = filterOpen && filterContent ? filterContent.getBoundingClientRect().width : 0;
-        const postWidth = postBoard ? (postBoard.offsetWidth || 530) : 0;
-        const historyWidth = recentsBoard ? (recentsBoard.offsetWidth || 530) : 0;
+        if(recentsBoardWrap){
+          recentsBoardWrap.style.display = historyActive ? '' : 'none';
+          recentsBoardWrap.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
+        }
+        if(recentsBoard){
+          recentsBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
+        }
+        const postWidth = postBoard ? (postBoard.offsetWidth || boardMaxWidth) : boardMaxWidth;
+        const historyWidth = historyActive && recentsBoardWrap ? (recentsBoardWrap.offsetWidth || boardMaxWidth) : 0;
         const boardsWidths = [];
-        if(historyActive && recentsBoard){
+        if(historyActive && recentsBoardWrap){
           boardsWidths.push(historyWidth);
         } else if(postBoard){
           boardsWidths.push(postWidth);
@@ -6049,9 +6099,8 @@ function makePosts(){
         document.body.classList.toggle('filter-anchored', shouldOffset);
         document.documentElement.style.setProperty('--filter-panel-offset', shouldOffset ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
-        if(recentsBoard){
-          recentsBoard.style.display = historyActive ? '' : 'none';
-          recentsBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
+        if(recentsBoardWrap && !historyActive){
+          recentsBoardWrap.scrollTop = 0;
         }
         if(postBoard){
           postBoard.style.display = historyActive ? 'none' : '';
@@ -6153,9 +6202,13 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.add('hide-ads');
           document.body.classList.remove('show-history');
+          const recentsBoardWrapEl = document.querySelector('.recents-board-scroll');
+          if(recentsBoardWrapEl){
+            recentsBoardWrapEl.style.display = 'none';
+            recentsBoardWrapEl.setAttribute('aria-hidden','true');
+          }
           const recentsBoardEl = document.getElementById('recentsBoard');
           if(recentsBoardEl){
-            recentsBoardEl.style.display = 'none';
             recentsBoardEl.setAttribute('aria-hidden','true');
           }
         } else {
@@ -6338,6 +6391,29 @@ function makePosts(){
     }
     loadMapbox(initMap);
 
+    function scheduleWelcomeCloseAfterMove(){
+      const welcomeModal = document.getElementById('welcome-modal');
+      if(!welcomeModal || !welcomeModal.classList.contains('show')) return;
+      if(!map || typeof map.once !== 'function'){
+        window.__welcomeMoveHandler = null;
+        closePanel(welcomeModal);
+        return;
+      }
+      if(typeof window.__cancelWelcomeMove === 'function'){
+        window.__cancelWelcomeMove();
+      }
+      welcomeMoveHandler = () => {
+        if(typeof window.__cancelWelcomeMove === 'function'){
+          window.__cancelWelcomeMove();
+        } else {
+          window.__welcomeMoveHandler = null;
+        }
+        closePanel(welcomeModal);
+      };
+      window.__welcomeMoveHandler = welcomeMoveHandler;
+      map.once('moveend', welcomeMoveHandler);
+    }
+
     function addControls(){
       if(typeof MapboxGeocoder === 'undefined'){
         const script = document.createElement('script');
@@ -6373,6 +6449,7 @@ function makePosts(){
           stopSpin();
           if(mode!=='map') setMode('map');
           gc.clear();
+          if(idx === 0) scheduleWelcomeCloseAfterMove();
         });
         const gEl = document.querySelector(sel.geo);
         if(gEl){
@@ -6386,6 +6463,7 @@ function makePosts(){
         geolocate.on('geolocate', ()=>{
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
+          if(idx === 0) scheduleWelcomeCloseAfterMove();
         });
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder){
@@ -6518,6 +6596,7 @@ function makePosts(){
         document.body.classList.remove('show-history');
         const recentsBoardEl = document.getElementById('recentsBoard');
         if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','true');
+        if(typeof adjustBoards === 'function') adjustBoards();
         updateModeToggle();
       }
       function step(){
@@ -6541,6 +6620,7 @@ function makePosts(){
         document.body.classList.add('show-history');
         const recentsBoardEl = document.getElementById('recentsBoard');
         if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','false');
+        if(typeof adjustBoards === 'function') adjustBoards();
         updateModeToggle();
       }
       applyFilters();
@@ -7308,7 +7388,11 @@ function makePosts(){
       wrap.dataset.id = p.id;
       const loc0 = p.locations[0];
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
-      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
+      const firstDate = dsorted[0];
+      const lastDate = dsorted[dsorted.length-1] || firstDate;
+      const defaultRange = firstDate
+        ? (lastDate && lastDate.full !== firstDate.full ? `${firstDate.date} - ${lastDate.date}` : firstDate.date)
+        : '';
       const thumbSrc = imgThumb(p);
       const headerInner = `
           <div class="title-block">
@@ -7331,9 +7415,15 @@ function makePosts(){
         </div>
         <div class="post-summary">
           <div class="post-summary-info post-details-info-container">
-            <div id="venue-info-${p.id}" class="venue-info"></div>
-            <div id="session-info-${p.id}" class="session-info">
-              <div>${defaultInfo}</div>
+            <div class="info collapsed-info">
+              <div class="loc-line">
+                <span class="badge" title="Venue">📍</span>
+                <div id="venue-info-${p.id}" class="venue-info"></div>
+              </div>
+              <div class="date-line">
+                <span class="badge" title="Dates">📅</span>
+                <div id="session-info-${p.id}" class="session-info">${defaultRange || 'Select Session'}</div>
+              </div>
             </div>
           </div>
           <button type="button" class="post-toggle" aria-label="Expand post details" aria-expanded="false">
@@ -7914,17 +8004,20 @@ function makePosts(){
           const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
         };
-        let defaultInfoHTML = '';
-        if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
-        sessionHasMultiple = loc.dates.length > 1;
-        if(sessionInfo){
-          const firstDate = loc.dates[0];
-          const lastDate = loc.dates[loc.dates.length-1];
-          const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
-          defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}<span style="display:inline-block;margin-left:10px;">(Select Session)</span></div>`;
-          sessionInfo.innerHTML = defaultInfoHTML;
-        }
+      let defaultInfoText = '';
+      if(venueInfo) venueInfo.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
+      if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+      sessionHasMultiple = loc.dates.length > 1;
+      if(sessionInfo){
+        const firstDate = loc.dates[0];
+        const lastDate = loc.dates[loc.dates.length-1];
+        const startText = firstDate ? formatDate(firstDate) : '';
+        const endText = lastDate ? formatDate(lastDate) : '';
+        const sameDay = firstDate && lastDate && firstDate.full === lastDate.full;
+        const rangeText = startText ? (sameDay ? startText : `${startText} - ${endText}`) : '';
+        defaultInfoText = rangeText || 'Select Session';
+        sessionInfo.textContent = defaultInfoText;
+      }
         if(!map){
           map = new mapboxgl.Map({
             container: mapEl,
@@ -8099,7 +8192,7 @@ function makePosts(){
           let targetScrollLeft = null;
           if(dt){
             updateMonthDisplay(dt.full);
-            sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+            sessionInfo.textContent = `${formatDate(dt)} ${dt.time}`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
             const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
@@ -8121,7 +8214,7 @@ function makePosts(){
               }
             }
           } else {
-            sessionInfo.innerHTML = defaultInfoHTML;
+            sessionInfo.textContent = defaultInfoText;
             if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
             selectedIndex = null;
             markSelected();
@@ -8158,14 +8251,14 @@ function makePosts(){
             sessMenu.scrollTop = 0;
           }
           if(sessionHasMultiple){
-            sessionInfo.innerHTML = defaultInfoHTML;
+            sessionInfo.textContent = defaultInfoText;
             if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
             updateMonthDisplay(null);
           } else {
             if(loc.dates.length){
               selectSession(0);
             } else {
-              sessionInfo.innerHTML = defaultInfoHTML;
+              sessionInfo.textContent = defaultInfoText;
               if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
               updateMonthDisplay(null);
             }
@@ -8432,10 +8525,6 @@ function openPanel(m){
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
-  if(m.id === 'welcome-modal'){
-    const mc = document.querySelector('.map-controls-map');
-    if(mc) mc.style.display = 'none';
-  }
   const btnId = panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
@@ -8514,8 +8603,11 @@ function closePanel(m){
   const active = document.activeElement;
   if(active && m.contains(active)) active.blur();
   if(m.id === 'welcome-modal'){
-    const mc = document.querySelector('.map-controls-map');
-    if(mc) mc.style.display = '';
+    if(typeof window.__cancelWelcomeMove === 'function'){
+      window.__cancelWelcomeMove();
+    } else {
+      window.__welcomeMoveHandler = null;
+    }
   }
   m.setAttribute('inert','');
   if(content && content.dataset.side){
@@ -8543,7 +8635,16 @@ function closePanel(m){
 }
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
-  welcomeModalEl.addEventListener('click', () => closePanel(welcomeModalEl));
+  const controlRow = welcomeModalEl.querySelector('.map-controls-welcome');
+  if(controlRow){
+    ['click','mousedown','touchstart'].forEach(evt => {
+      controlRow.addEventListener(evt, e => e.stopPropagation(), {capture:true});
+    });
+  }
+  welcomeModalEl.addEventListener('click', event => {
+    if(event.target.closest('.map-controls-welcome')) return;
+    closePanel(welcomeModalEl);
+  });
 }
 function requestClosePanel(m){
   closePanel(m);
