@@ -871,7 +871,8 @@ button[aria-expanded="true"] .results-arrow{
 #welcomeBody .map-control-row > .geocoder{
   flex:0 1 320px;
   max-width:320px;
-  width:100%;
+  width:auto;
+  min-width:0;
 }
 #welcomeBody .welcome-illustration{
   max-width:280px;
@@ -1849,6 +1850,12 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   transition:transform 0.3s ease;
 }
 
+.quick-list-board.recents-board-scroll{
+  width:var(--post-board-max-w);
+  max-width:var(--post-board-max-w);
+  flex:0 0 var(--post-board-max-w);
+}
+
 
 .recents-board{
   position:relative;
@@ -2636,6 +2643,11 @@ body.filters-active #filterBtn{
   margin:10px 10px 0;
   padding:0;
   cursor:pointer;
+}
+
+.open-post.is-collapsed .post-summary{
+  order:-1;
+  margin-bottom:10px;
 }
 
 .open-post .post-summary-info{
@@ -7432,10 +7444,6 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="second-post-column">
-            <div class="post-images">
-              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
-              <div class="thumbnail-row"></div>
-            </div>
             <div class="post-details">
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
@@ -7447,6 +7455,10 @@ function makePosts(){
                 <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
                 <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
               </div>
+            </div>
+            <div class="post-images">
+              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+              <div class="thumbnail-row"></div>
             </div>
           </div>
         </div>`;
