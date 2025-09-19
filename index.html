@@ -8518,6 +8518,33 @@ function makePosts(){
             if(cell) cell.classList.add('selected');
           }
         }
+
+        function scrollCalendarToIso(iso, {preferSmooth=false}={}){
+          if(!calScroll || !iso) return {target:null, smooth:false};
+          const cell = calendarEl.querySelector(`.day[data-iso="${iso}"]`);
+          if(!cell) return {target:null, smooth:false};
+          const monthEl = cell.closest('.month');
+          if(!monthEl) return {target:null, smooth:false};
+          const target = monthEl.offsetLeft;
+          if(typeof calScroll.scrollTo === 'function'){
+            const difference = Math.abs(calScroll.scrollLeft - target);
+            if(preferSmooth && difference > 1){
+              calScroll.scrollTo({left:target, behavior:'smooth'});
+              return {target, smooth:true};
+            }
+            calScroll.scrollTo({left:target});
+          } else {
+            calScroll.scrollLeft = target;
+          }
+          return {target, smooth:false};
+        }
+
+        function scrollCalendarToSelected({preferSmooth=false}={}){
+          if(selectedIndex===null) return {target:null, smooth:false};
+          const dt = loc.dates[selectedIndex];
+          if(!dt) return {target:null, smooth:false};
+          return scrollCalendarToIso(dt.full, {preferSmooth});
+        }
         function selectSession(i){
           if(!sessMenu || !sessionOptions) return;
           selectedIndex = i;
@@ -8531,23 +8558,10 @@ function makePosts(){
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
-            const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
-            if(cell && calScroll){
-              const monthEl = cell.closest('.month');
-              if(monthEl){
-                targetScrollLeft = monthEl.offsetLeft;
-                if(typeof calScroll.scrollTo === 'function'){
-                  const currentLeft = calScroll.scrollLeft;
-                  if(Math.abs(currentLeft - targetScrollLeft) > 1){
-                    waitForScroll = true;
-                    calScroll.scrollTo({left:targetScrollLeft, behavior:'smooth'});
-                  } else {
-                    calScroll.scrollLeft = targetScrollLeft;
-                  }
-                } else {
-                  calScroll.scrollLeft = targetScrollLeft;
-                }
-              }
+            if(calScroll){
+              const result = scrollCalendarToIso(dt.full, {preferSmooth:true});
+              targetScrollLeft = result.target;
+              waitForScroll = result.smooth;
             }
           } else {
             sessionInfo.innerHTML = defaultInfoHTML;
@@ -8637,6 +8651,9 @@ function makePosts(){
                   const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
                   sessBtn.setAttribute('aria-expanded', String(!expanded));
                   sessMenu.hidden = expanded;
+                  if(!expanded){
+                    requestAnimationFrame(()=> scrollCalendarToSelected());
+                  }
                 });
                 document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
               }
