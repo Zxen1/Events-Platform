@@ -4464,11 +4464,7 @@ img.thumb{
         if(!style || typeof style !== 'object'){
           return;
         }
-        const metadata = style.metadata && typeof style.metadata === 'object' ? style.metadata : null;
-        if(metadata && metadata[MAPBOX_STYLE_FIX_FLAG]){
-          if(typeof mapInstance.off === 'function'){
-            try { mapInstance.off('styledata', handler); } catch(err){}
-          }
+        if(style.metadata?.[MAPBOX_STYLE_FIX_FLAG]){
           return;
         }
         let clonedStyle;
@@ -4485,15 +4481,13 @@ img.thumb{
         if(!clonedStyle || typeof clonedStyle !== 'object'){
           return;
         }
-        if(!clonedStyle.metadata || typeof clonedStyle.metadata !== 'object'){
-          clonedStyle.metadata = {};
-        }
+        const clonedMetadata = clonedStyle.metadata && typeof clonedStyle.metadata === 'object' ? clonedStyle.metadata : (clonedStyle.metadata = {});
         try {
           harmonizeSelectors(clonedStyle);
         } catch(err){
           console.warn('Failed to harmonize Mapbox standard style selectors', err);
         }
-        clonedStyle.metadata[MAPBOX_STYLE_FIX_FLAG] = true;
+        clonedMetadata[MAPBOX_STYLE_FIX_FLAG] = true;
         try {
           applying = true;
           mapInstance.setStyle(clonedStyle, {diff:false});
