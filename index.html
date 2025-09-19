@@ -2657,16 +2657,19 @@ body.filters-active #filterBtn{
   margin-bottom:10px;
 }
 
-.open-post .post-summary-info{
+.open-post .post-summary-snippet{
   flex:1 1 auto;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
   text-align:left;
 }
 
-.open-post .post-summary-info > div{
-  text-align:left;
+.open-post .post-summary-snippet .snippet-text{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:normal;
+  line-height:1.4;
 }
 
 .open-post .collapsed-info{
@@ -2739,7 +2742,7 @@ body.filters-active #filterBtn{
   margin-top:10px;
 }
 
-.open-post.is-expanded .post-summary-info{
+.open-post.is-expanded .post-summary-snippet{
   display:none;
 }
 
@@ -7491,17 +7494,8 @@ function makePosts(){
           ${headerInner}
         </div>
         <div class="post-summary">
-          <div class="post-summary-info post-details-info-container">
-            <div class="info collapsed-info">
-              <div class="loc-line">
-                <span class="badge" title="Venue">📍</span>
-                <div id="venue-info-${p.id}" class="venue-info"></div>
-              </div>
-              <div class="date-line">
-                <span class="badge" title="Dates">📅</span>
-                <div id="session-info-${p.id}" class="session-info">${defaultRange || 'Select Session'}</div>
-              </div>
-            </div>
+          <div class="post-summary-snippet">
+            <div class="snippet-text">${p.desc}</div>
           </div>
           <button type="button" class="post-toggle" aria-label="Expand post details" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 15.5 6 9.5h12z"/></svg>
@@ -7510,6 +7504,18 @@ function makePosts(){
         <div class="post-body">
           <div class="second-post-column">
             <div class="post-details">
+              <div class="post-details-info-container">
+                <div class="info collapsed-info">
+                  <div class="loc-line">
+                    <span class="badge" title="Venue">📍</span>
+                    <div id="venue-info-${p.id}" class="venue-info"></div>
+                  </div>
+                  <div class="date-line">
+                    <span class="badge" title="Dates">📅</span>
+                    <div id="session-info-${p.id}" class="session-info">${defaultRange || 'Select Session'}</div>
+                  </div>
+                </div>
+              </div>
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
