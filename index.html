@@ -630,7 +630,7 @@ button[aria-expanded="true"] .results-arrow{
   left:50%;
   top:var(--header-h);
   bottom:var(--footer-h);
-  width:440px;
+  width:100%;
   max-width:440px;
   height:calc(100vh - var(--header-h) - var(--footer-h));
   border-radius:0;
@@ -700,7 +700,7 @@ button[aria-expanded="true"] .results-arrow{
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    width:440px;
+    width:100%;
     max-width:440px;
     max-height:90%;
     display:flex;
@@ -902,10 +902,14 @@ button[aria-expanded="true"] .results-arrow{
 }
   @media (max-width:600px){
   #adminPanel .panel-content,
-  #memberPanel .panel-content,
-  #filterPanel .panel-content{
-    width:440px;
+  #memberPanel .panel-content{
+    width:100%;
     max-width:440px;
+    max-height:95%;
+  }
+  #filterPanel .panel-content{
+    width:100%;
+    max-width:380px;
     max-height:95%;
   }
 }
@@ -999,7 +1003,7 @@ button[aria-expanded="true"] .results-arrow{
   align-items:center;
   gap:8px;
   margin-left:0;
-  width:440px;
+  width:100%;
   max-width:440px;
 }
 #autoTheme-row button{
@@ -1854,7 +1858,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   top:var(--header-h);
   bottom:var(--footer-h);
   left:0;
-  width:440px;
+  width:100%;
+  max-width:440px;
   padding:10px;
   overflow:auto;
   overflow:overlay;
@@ -1903,13 +1908,22 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 @media (max-width:439px){
   .post-board-scroll,
+  .recents-board-scroll{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    flex:1 1 auto;
+  }
   .post-board,
-  .recents-board-scroll,
   .recents-board,
   .second-post-column.is-visible{
     width:100%;
     max-width:100%;
-    min-width:360px;
+    min-width:0;
+  }
+  .quick-list-board{
+    width:100%;
+    max-width:100%;
   }
   .second-post-column{
     display:none;
@@ -2077,7 +2091,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   top:var(--header-h);
   bottom:var(--footer-h);
   right:0;
-  width:440px;
+  width:100%;
+  max-width:440px;
   padding:10px;
   background:rgba(0,0,0,0);
   pointer-events:auto;
@@ -2876,6 +2891,16 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
 }
 
 @media (max-width: 450px){
+  .open-post .post-body > .main-post-column{
+    flex:1 1 100%;
+    max-width:100%;
+    width:100%;
+  }
+  .open-post .post-details{
+    min-width:0;
+    max-width:100%;
+    width:auto;
+  }
   .post-board .posts{padding:0;}
   .post-board .post-card{
     grid-template-columns:1fr;
@@ -3609,7 +3634,7 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
     }
     .post-board,
     .open-post{
-      min-width:360px;
+      min-width:0;
     }
     .open-post .image-box{
       width:100%;
@@ -3701,19 +3726,19 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
   }
   #post-modal-container.hidden{display:none;}
     #post-modal-container .post-modal{
-      width:880px;
-    max-width:100%;
-    height:90%;
-    overflow:auto;
-    overflow:overlay;
-    background:var(--list-background);
-    border-radius:8px;
-  }
+      width:100%;
+      max-width:880px;
+      height:90%;
+      overflow:auto;
+      overflow:overlay;
+      background:var(--list-background);
+      border-radius:8px;
+    }
     @media (max-width:879px){
-      #post-modal-container .post-modal{width:440px;}
+      #post-modal-container .post-modal{max-width:440px;}
     }
     @media (max-width:439px){
-      #post-modal-container .post-modal{width:100%;min-width:360px;}
+      #post-modal-container .post-modal{max-width:100%;min-width:0;}
     }
 
 
@@ -4882,7 +4907,7 @@ img.thumb{
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
-    let hoverPopup = null, hoverId = null;
+    let hoverPopup = null, hoverId = null, selectedMarkerId = null;
     let touchMarker = null;
     let activePostId = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
@@ -6768,6 +6793,7 @@ function makePosts(){
             .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
             .map(p => ({
               type:'Feature',
+              id:p.id,
               properties:{id:p.id, title:p.title, city:p.city, cat:p.category, sub:(subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory)), layer:'poi', sizerank:1},
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             }))
@@ -6853,6 +6879,7 @@ function makePosts(){
             'icon-ignore-placement': true,
             'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
+            'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
             'symbol-z-order': 'viewport-y',
             'symbol-sort-key': 1100
           },
@@ -6889,6 +6916,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
+                'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
               },
@@ -6905,6 +6933,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
+                'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
               },
@@ -6916,6 +6945,7 @@ function makePosts(){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
+      updateSelectedMarker(selectedMarkerId, {force:true});
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -7579,6 +7609,7 @@ function makePosts(){
         stopSpin();
         const p = posts.find(x=>x.id===id); if(!p) return;
         activePostId = id;
+        updateSelectedMarker(id);
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -7728,6 +7759,7 @@ function makePosts(){
           openEl.remove();
         }
         activePostId = null;
+        updateSelectedMarker(null);
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
@@ -7737,6 +7769,7 @@ function makePosts(){
       const p = posts.find(x=>x.id===id);
       if(!p) return;
       activePostId = id;
+      updateSelectedMarker(id);
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       const modal = container.querySelector('.post-modal');
@@ -8462,6 +8495,21 @@ function makePosts(){
       updateResetBtn();
     }
 
+    function updateSelectedMarker(id, {force=false} = {}){
+      const desired = id || null;
+      const previous = selectedMarkerId;
+      selectedMarkerId = desired;
+      if(!map || typeof map.getSource !== 'function') return;
+      const source = map.getSource('posts');
+      if(!source) return;
+      if(previous && (force || previous !== desired)){
+        try{ map.setFeatureState({source:'posts', id:previous}, {selected:false}); }catch(err){}
+      }
+      if(desired){
+        try{ map.setFeatureState({source:'posts', id:desired}, {selected:true}); }catch(err){}
+      }
+    }
+
     function refreshMarkers(render = true){
       if(!postsLoaded) return;
       const newAdPosts = filtered.filter(p => p.sponsored);
@@ -8488,7 +8536,10 @@ function makePosts(){
         adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
-      if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      if(map && map.getSource('posts')){
+        map.getSource('posts').setData(postsToGeoJSON(filtered));
+        updateSelectedMarker(selectedMarkerId, {force:true});
+      }
     }
 
     function applyFilters(render = true){
