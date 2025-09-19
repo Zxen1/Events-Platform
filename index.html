@@ -8551,7 +8551,7 @@ function makePosts(){
           if(!dt) return {target:null, smooth:false};
           return scrollCalendarToIso(dt.full, {preferSmooth});
         }
-        function selectSession(i){
+        function selectSession(i, {skipAutoClose=false, preferSmooth=true}={}){
           if(!sessMenu || !sessionOptions) return;
           selectedIndex = i;
           sessionOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
@@ -8563,9 +8563,12 @@ function makePosts(){
           if(dt){
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            if(loc){
+              loc.selectedSessionKey = {full: dt.full, time: dt.time || null};
+            }
             markSelected();
             if(calScroll){
-              const result = scrollCalendarToIso(dt.full, {preferSmooth:true});
+              const result = scrollCalendarToIso(dt.full, {preferSmooth});
               targetScrollLeft = result.target;
               waitForScroll = result.smooth;
             }
@@ -8573,12 +8576,17 @@ function makePosts(){
             sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
             selectedIndex = null;
+            if(loc && loc.selectedSessionKey){
+              delete loc.selectedSessionKey;
+            }
             markSelected();
           }
-          if(!sessMenu.hidden){
+          if(!skipAutoClose && !sessMenu.hidden){
             scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
-          } else if(sessBtn){
-            sessBtn.setAttribute('aria-expanded','false');
+          } else if(sessMenu.hidden){
+            if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
+          } else if(skipAutoClose && sessBtn){
+            sessBtn.setAttribute('aria-expanded','true');
           }
         }
         function showTimePopup(matches){
@@ -8605,15 +8613,47 @@ function makePosts(){
           if(sessMenu){
             sessMenu.scrollTop = 0;
           }
+          let restoredSelection = false;
+          const storedSelection = loc && loc.selectedSessionKey;
+          if(storedSelection && Array.isArray(loc.dates) && loc.dates.length){
+            const matchesStoredTime = d => storedSelection.time != null ? d.time === storedSelection.time : true;
+            let matchIndex = loc.dates.findIndex(d => d.full === storedSelection.full && matchesStoredTime(d));
+            if(matchIndex === -1 && storedSelection.full){
+              matchIndex = loc.dates.findIndex(d => d.full === storedSelection.full);
+            }
+            if(matchIndex !== -1){
+              selectSession(matchIndex, {skipAutoClose:true, preferSmooth:false});
+              restoredSelection = true;
+            } else {
+              delete loc.selectedSessionKey;
+            }
+          }
           if(sessionHasMultiple){
-            sessionInfo.innerHTML = defaultInfoHTML;
-            if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            if(!restoredSelection){
+              sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessBtn){
+                sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
+                sessBtn.setAttribute('aria-expanded','false');
+              }
+              selectedIndex = null;
+              markSelected();
+            }
           } else {
             if(loc.dates.length){
-              selectSession(0);
+              if(!restoredSelection){
+                selectSession(0);
+              }
             } else {
               sessionInfo.innerHTML = defaultInfoHTML;
-              if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+              if(sessBtn){
+                sessBtn.textContent = 'Select Session';
+                sessBtn.setAttribute('aria-expanded','false');
+              }
+              selectedIndex = null;
+              markSelected();
+              if(loc && loc.selectedSessionKey){
+                delete loc.selectedSessionKey;
+              }
             }
           }
           sessionOptions.querySelectorAll('button').forEach(btn=>{
