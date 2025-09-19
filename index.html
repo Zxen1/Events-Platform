@@ -4362,136 +4362,130 @@ img.thumb{
       }
     }
 
-    function installMapboxStandardStyleFix(){
-      if(typeof window === 'undefined' || typeof window.fetch !== 'function' || window.__standardStyleFixInstalled){
-        return;
+    const harmonizeSelectors = (root)=>{
+      if(!root || typeof root !== 'object'){
+        return false;
       }
-      window.__standardStyleFixInstalled = true;
-      const originalFetch = window.fetch.bind(window);
-      const styleUrlPattern = /^https:\/\/api\.mapbox\.com\/styles\/v1\/[^/]+\/standard(?:[/?]|$)/i;
-
-      const harmonizeSelectors = (root)=>{
-        if(!root || typeof root !== 'object'){
-          return false;
+      let changed = false;
+      const visited = new Set();
+      const visit = (node)=>{
+        if(!node || typeof node !== 'object'){
+          return;
         }
-        let changed = false;
-        const visited = new Set();
-        const visit = (node)=>{
-          if(!node || typeof node !== 'object'){
-            return;
-          }
-          if(visited.has(node)){
-            return;
-          }
-          visited.add(node);
-          if(Array.isArray(node)){
-            node.forEach(visit);
-            return;
-          }
-          if(Array.isArray(node.selectors)){
-            const namespaceSources = Object.create(null);
-            const pending = Object.create(null);
-            node.selectors.forEach((selector)=>{
-              if(!selector || typeof selector !== 'object'){
-                return;
-              }
-              const namespace = selector.featureNamespace;
-              if(!namespace){
-                return;
-              }
-              const source = typeof selector.source === 'string' ? selector.source : null;
-              if(source){
-                if(namespaceSources[namespace] === undefined){
-                  namespaceSources[namespace] = source;
-                  if(pending[namespace]){
-                    pending[namespace].forEach((pendingSelector)=>{
-                      if(pendingSelector.source !== source){
-                        pendingSelector.source = source;
-                        changed = true;
-                      }
-                    });
-                    delete pending[namespace];
-                  }
-                } else if(namespaceSources[namespace] !== source){
-                  selector.source = namespaceSources[namespace];
-                  changed = true;
+        if(visited.has(node)){
+          return;
+        }
+        visited.add(node);
+        if(Array.isArray(node)){
+          node.forEach(visit);
+          return;
+        }
+        if(Array.isArray(node.selectors)){
+          const namespaceSources = Object.create(null);
+          const pending = Object.create(null);
+          node.selectors.forEach((selector)=>{
+            if(!selector || typeof selector !== 'object'){
+              return;
+            }
+            const namespace = selector.featureNamespace;
+            if(!namespace){
+              return;
+            }
+            const source = typeof selector.source === 'string' ? selector.source : null;
+            if(source){
+              if(namespaceSources[namespace] === undefined){
+                namespaceSources[namespace] = source;
+                if(pending[namespace]){
+                  pending[namespace].forEach((pendingSelector)=>{
+                    if(pendingSelector.source !== source){
+                      pendingSelector.source = source;
+                      changed = true;
+                    }
+                  });
+                  delete pending[namespace];
                 }
-              } else {
-                (pending[namespace] || (pending[namespace] = [])).push(selector);
+              } else if(namespaceSources[namespace] !== source){
+                selector.source = namespaceSources[namespace];
+                changed = true;
               }
-            });
-            Object.keys(pending).forEach((namespace)=>{
-              const resolved = namespaceSources[namespace];
-              if(typeof resolved !== 'string'){
-                return;
-              }
-              pending[namespace].forEach((selector)=>{
-                if(selector.source !== resolved){
-                  selector.source = resolved;
-                  changed = true;
-                }
-              });
-            });
-          }
-          Object.keys(node).forEach((key)=>{
-            const value = node[key];
-            if(value && typeof value === 'object'){
-              visit(value);
+            } else {
+              (pending[namespace] || (pending[namespace] = [])).push(selector);
             }
           });
-        };
-        visit(root);
-        return changed;
-      };
-
-      window.fetch = async function(resource, init){
-        const response = await originalFetch(resource, init);
-        try {
-          const requestUrl = typeof resource === 'string' ? resource : (resource && resource.url) ? resource.url : '';
-          if(!requestUrl || !styleUrlPattern.test(requestUrl)){
-            return response;
-          }
-          if(!response || typeof response.clone !== 'function' || response.status !== 200){
-            return response;
-          }
-          const contentType = response.headers && typeof response.headers.get === 'function' ? response.headers.get('content-type') || '' : '';
-          if(contentType && !/json/i.test(contentType)){
-            return response;
-          }
-          const cloned = response.clone();
-          let styleData;
-          try {
-            styleData = await cloned.json();
-          } catch(err){
-            return response;
-          }
-          if(!styleData || typeof styleData !== 'object'){
-            return response;
-          }
-          if(!harmonizeSelectors(styleData)){
-            return response;
-          }
-          if(!styleData.metadata || typeof styleData.metadata !== 'object'){
-            styleData.metadata = {};
-          }
-          styleData.metadata['funmap:featureset-source-fixed'] = true;
-          const headers = typeof Headers === 'function' ? new Headers(response.headers) : response.headers;
-          if(headers && typeof headers.set === 'function' && !headers.get('content-type')){
-            headers.set('content-type', 'application/json');
-          }
-          return new Response(JSON.stringify(styleData), {
-            status: response.status,
-            statusText: response.statusText,
-            headers
+          Object.keys(pending).forEach((namespace)=>{
+            const resolved = namespaceSources[namespace];
+            if(typeof resolved !== 'string'){
+              return;
+            }
+            pending[namespace].forEach((selector)=>{
+              if(selector.source !== resolved){
+                selector.source = resolved;
+                changed = true;
+              }
+            });
           });
-        } catch(err){
-          console.warn('Failed to harmonize Mapbox standard style selectors', err);
         }
-        return response;
+        Object.keys(node).forEach((key)=>{
+          const value = node[key];
+          if(value && typeof value === 'object'){
+            visit(value);
+          }
+        });
       };
-    }
+      visit(root);
+      return changed;
+    };
 
-    installMapboxStandardStyleFix();
+    const MAPBOX_STYLE_FIX_FLAG = 'funmap:featureset-source-fixed';
+
+    function ensureMapStyleHarmonized(mapInstance){
+      if(!mapInstance || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setStyle !== 'function'){
+        return true;
+      }
+      let style;
+      try {
+        style = mapInstance.getStyle();
+      } catch(err){
+        console.warn('Failed to retrieve current map style', err);
+        return true;
+      }
+      if(!style || typeof style !== 'object'){
+        return true;
+      }
+      if(style.metadata && typeof style.metadata === 'object' && style.metadata[MAPBOX_STYLE_FIX_FLAG]){
+        return true;
+      }
+      let clonedStyle;
+      try {
+        if(typeof structuredClone === 'function'){
+          clonedStyle = structuredClone(style);
+        } else {
+          clonedStyle = JSON.parse(JSON.stringify(style));
+        }
+      } catch(err){
+        console.warn('Failed to clone map style for harmonization', err);
+        return true;
+      }
+      if(!clonedStyle || typeof clonedStyle !== 'object'){
+        return true;
+      }
+      if(!clonedStyle.metadata || typeof clonedStyle.metadata !== 'object'){
+        clonedStyle.metadata = {};
+      }
+      try {
+        harmonizeSelectors(clonedStyle);
+      } catch(err){
+        console.warn('Failed to harmonize Mapbox standard style selectors', err);
+      }
+      clonedStyle.metadata[MAPBOX_STYLE_FIX_FLAG] = true;
+      try {
+        mapInstance.setStyle(clonedStyle);
+      } catch(err){
+        console.warn('Failed to apply harmonized map style', err);
+        return true;
+      }
+      return false;
+    }
 
     const DESIRED_MAP_STYLE = 'mapbox://styles/mapbox/standard';
 
@@ -6713,11 +6707,17 @@ function makePosts(){
             console.warn('Unknown image ID:', e.id);
           }
         });
-      map.on('styledata', (event)=>{
-        if(event && event.dataType === 'style'){
-          fixSizerankExpressions(map);
+      const handleStyleUpdate = (event)=>{
+        if(event && event.type === 'styledata' && event.dataType !== 'style'){
+          return;
         }
-      });
+        if(!ensureMapStyleHarmonized(map)){
+          return;
+        }
+        fixSizerankExpressions(map);
+      };
+      map.on('styledata', handleStyleUpdate);
+      map.on('style.load', handleStyleUpdate);
       map.on('zoomend', checkLoadPosts);
       addControls();
       try{
