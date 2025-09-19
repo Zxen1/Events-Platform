@@ -4438,13 +4438,16 @@ img.thumb{
 
     const MAPBOX_STYLE_FIX_FLAG = 'funmap:featureset-source-fixed';
 
-    function createMapStyleHarmonizer(mapInstance){
-      if(!mapInstance || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setStyle !== 'function'){
+    function installMapStyleHarmonizer(mapInstance){
+      if(!mapInstance || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setStyle !== 'function' || typeof mapInstance.on !== 'function'){
         return null;
       }
+      let applying = false;
       const handler = (event)=>{
-        const isStyleEvent = !event || event.type !== 'styledata' || !event.dataType || event.dataType === 'style';
-        if(!isStyleEvent){
+        if(applying){
+          return;
+        }
+        if(!event || event.dataType !== 'style'){
           return;
         }
         let style;
@@ -4459,6 +4462,9 @@ img.thumb{
         }
         const metadata = style.metadata && typeof style.metadata === 'object' ? style.metadata : null;
         if(metadata && metadata[MAPBOX_STYLE_FIX_FLAG]){
+          if(typeof mapInstance.off === 'function'){
+            try { mapInstance.off('styledata', handler); } catch(err){}
+          }
           return;
         }
         let clonedStyle;
@@ -4485,9 +4491,12 @@ img.thumb{
         }
         clonedStyle.metadata[MAPBOX_STYLE_FIX_FLAG] = true;
         try {
+          applying = true;
           mapInstance.setStyle(clonedStyle, {diff:false});
         } catch(err){
           console.warn('Failed to apply harmonized map style', err);
+        } finally {
+          applying = false;
         }
       };
       mapInstance.on('styledata', handler);
@@ -6715,7 +6724,7 @@ function makePosts(){
           }
         });
 
-      createMapStyleHarmonizer(map);
+      installMapStyleHarmonizer(map);
 
       const handleStyleUpdate = (event)=>{
         if(event && event.type === 'styledata' && event.dataType !== 'style'){
@@ -8389,7 +8398,7 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          createMapStyleHarmonizer(map);
+          installMapStyleHarmonizer(map);
           const mutedHandler = () => { ensureMapLightAnchor(map); applyMutedMapStyle(map); applyNightSky(map); };
           map.on('style.load', mutedHandler);
           if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
