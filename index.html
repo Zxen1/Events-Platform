@@ -7113,14 +7113,16 @@ function makePosts(){
         stopSpin();
         if(!map.getLayer('clusters')) return;
         if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
-        let feature;
-        if(map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
-          try {
-            const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
-            feature = features.find((candidate)=> candidate && candidate.properties && candidate.properties.cluster_id !== undefined);
-          } catch(err){
-            console.warn('cluster query failed', err);
-            return;
+        let feature = e && e.features && e.features[0] ? e.features[0] : null;
+        if(!feature || !feature.properties || feature.properties.cluster_id === undefined){
+          if(map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
+            try {
+              const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
+              feature = features.find((candidate)=> candidate && candidate.properties && candidate.properties.cluster_id !== undefined);
+            } catch(err){
+              console.warn('cluster query failed', err);
+              return;
+            }
           }
         }
         if(!feature || !feature.properties || feature.properties.cluster_id === undefined){
