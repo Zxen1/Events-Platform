@@ -4517,7 +4517,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/outdoors-v12',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/streets-v12',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -4631,8 +4631,11 @@ img.thumb{
         const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
         const baseUrl = getStyleBase(originUrl);
         const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
-        if(typeof normalizedUrl === 'string' && (normalizedUrl.includes('/standard') || normalizedUrl.includes('/outdoors'))){
-          return;
+        if(typeof normalizedUrl === 'string'){
+          const lower = normalizedUrl.toLowerCase();
+          if(lower.includes('/standard') || lower.includes('/outdoors') || lower.includes('/streets')){
+            return;
+          }
         }
         const layers = style && Array.isArray(style.layers) ? style.layers : null;
         if(!layers) return;
@@ -4761,6 +4764,60 @@ img.thumb{
           });
         }
         map.setTerrain({source:'terrain-dem'});
+      }
+
+      function applyClearNightSky(mapInstance){
+        if(!mapInstance){
+          return;
+        }
+        if(typeof mapInstance.setFog === 'function'){
+          try {
+            mapInstance.setFog({
+              range:[1.5, 10],
+              color:'rgba(8,13,37,0)',
+              'horizon-blend':0.02,
+              'high-color':'#0b1d51',
+              'space-color':'#00010a',
+              'star-intensity':0.7
+            });
+          } catch(err){}
+        }
+        let skyLayerId = null;
+        if(typeof mapInstance.getLayer === 'function'){
+          try {
+            if(mapInstance.getLayer('sky')){
+              skyLayerId = 'sky';
+            } else if(mapInstance.getLayer('night-sky')){
+              skyLayerId = 'night-sky';
+            }
+          } catch(err){}
+        }
+        if(!skyLayerId && typeof mapInstance.addLayer === 'function'){
+          try {
+            mapInstance.addLayer({
+              id:'night-sky',
+              type:'sky',
+              paint:{
+                'sky-type':'atmosphere',
+                'sky-atmosphere-color':'#0b1d51',
+                'sky-atmosphere-halo-color':'#1a2a6c',
+                'sky-atmosphere-sun-intensity':0
+              }
+            });
+            skyLayerId = 'night-sky';
+          } catch(err){}
+        }
+        if(!skyLayerId || typeof mapInstance.setPaintProperty !== 'function'){
+          return;
+        }
+        const setPaint = (prop, value) => {
+          try { mapInstance.setPaintProperty(skyLayerId, prop, value); } catch(err){}
+        };
+        setPaint('sky-type', 'atmosphere');
+        setPaint('sky-atmosphere-color', '#0b1d51');
+        setPaint('sky-atmosphere-halo-color', '#1a2a6c');
+        setPaint('sky-atmosphere-sun', [0, 0]);
+        setPaint('sky-atmosphere-sun-intensity', 0);
       }
 
       function openWelcome(){
@@ -6557,6 +6614,7 @@ function makePosts(){
         fixSizerankExpressions(map);
         applyTerrainForStyle(resolvedStyle);
         applyMutedMapStyle(map);
+        applyClearNightSky(map);
       });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
