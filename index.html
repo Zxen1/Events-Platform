@@ -864,14 +864,21 @@ button[aria-expanded="true"] .results-arrow{
   width:auto;
   max-width:100%;
   justify-content:center;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   gap:10px;
-  row-gap:10px;
 }
 #welcomeBody .map-control-row > .geocoder{
   flex:0 1 320px;
   max-width:320px;
   width:auto;
+  min-width:220px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
+  width:auto;
+  min-width:220px;
+  max-width:320px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   min-width:0;
 }
 #welcomeBody .welcome-illustration{
@@ -2499,6 +2506,10 @@ body.filters-active #filterBtn{
   transform:translateX(-50%);
   width:auto;
   z-index:1;
+}
+
+body.welcome-modal-open .map-controls-map{
+  display:none;
 }
 
 .map-control-row .geocoder{margin:0;}
@@ -6708,7 +6719,10 @@ function makePosts(){
 
     function haltSpin(e){
       const target = (e && e.originalEvent && e.originalEvent.target) || (e && e.target);
-      if(target instanceof Node && logoEls.some(el=>el.contains(target))) return;
+      if(target instanceof Node){
+        if(logoEls.some(el=>el.contains(target))) return;
+        if(target.closest('.map-controls-welcome')) return;
+      }
       if(spinEnabled || spinning){
         spinEnabled = false;
         localStorage.setItem('spinGlobe','false');
@@ -8608,6 +8622,9 @@ function openPanel(m){
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
+  if(m.id === 'welcome-modal' && document.body){
+    document.body.classList.add('welcome-modal-open');
+  }
   const btnId = panelButtons[m && m.id];
   if(btnId){
     const btn = document.getElementById(btnId);
@@ -8677,7 +8694,11 @@ function openPanel(m){
   if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
 }
 function closePanel(m){
+  if(!m) return;
   const btnId = panelButtons[m && m.id];
+  if(m.id === 'welcome-modal' && document.body){
+    document.body.classList.remove('welcome-modal-open');
+  }
   if(btnId){
     const btn = document.getElementById(btnId);
     btn && btn.setAttribute('aria-pressed','false');
