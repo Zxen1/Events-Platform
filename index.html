@@ -431,7 +431,7 @@ input[type="checkbox"]{
   padding: 0 14px;
   background: var(--btn);
   color: var(--button-text);
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: background .2s,border-color .2s,color .2s;
 }
@@ -456,6 +456,7 @@ input[type="checkbox"]{
   justify-content:center;
   gap:6px;
   line-height:1;
+  font-weight:400;
 }
 .header button{
   border-radius:8px;
@@ -531,32 +532,49 @@ button[aria-expanded="true"] .results-arrow{
   text-align:right;
   margin-left:8px;
 }
-  #spinType{
+  .spin-toggle-row{
     display:flex;
-    gap:6px;
-    margin-top:6px;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
   }
-  #spinType label{
-    flex:1;
-    border-radius:8px;
-    overflow:hidden;
+  .spin-toggle-row .option-label{
+    flex:1 1 auto;
   }
-  #spinType input{
-    display:none;
-  }
-  #spinType span{
-    display:block;
-    padding:0 10px;
-    height:35px;
-    line-height:35px;
-    background:var(--btn);
-    color:var(--button-text);
-    font-weight:600;
-    cursor:pointer;
-    text-align:center;
-    transition:background .2s,border-color .2s,color .2s;
+  #spinType.spin-type-toggle{
+    display:flex;
     border:1px solid var(--btn);
     border-radius:8px;
+    overflow:hidden;
+    height:35px;
+  }
+  #spinType.spin-type-toggle button{
+    flex:1 1 auto;
+    background:var(--btn);
+    border:none;
+    color:var(--button-text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:0 12px;
+    font-size:13px;
+    font-weight:400;
+    cursor:pointer;
+    height:100%;
+    border-radius:0;
+    transition:background .2s,border-color .2s,color .2s;
+    min-width:0;
+  }
+  #spinType.spin-type-toggle button + button{
+    border-left:1px solid var(--btn);
+  }
+  #spinType.spin-type-toggle button[aria-pressed="true"]{
+    background:var(--btn-selected);
+    color:var(--button-active-text);
+  }
+  #spinType.spin-type-toggle span{
+    white-space:nowrap;
   }
 
 
@@ -703,7 +721,7 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
-  background:#555555;
+  background:#222222;
   color:#fff;
   display:flex;
   flex-direction:column;
@@ -1325,8 +1343,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .keyword-clear-button.active,
 #filterPanel .daterange-clear-button.active{
-  background: var(--filter-active-color);
-  color: var(--button-text);
+  background:#5f0e1f;
+  color:#ffffff;
   opacity:1;
 }
 
@@ -1723,14 +1741,15 @@ button[aria-expanded="true"] .results-arrow{
   align-items: center;
   gap: 10px;
   padding: 0 14px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: .2px;
   color: var(--ink);
   cursor: pointer;
 }
 .reset-box .btn.active{
-  background: var(--filter-active-color);
-  border-color: var(--filter-active-color);
+  background:#5f0e1f;
+  border-color:#5f0e1f;
+  color:#ffffff;
 }
 
 .reset-box .btn svg{
@@ -2132,12 +2151,24 @@ body.hide-ads .ad-board{
   border:none;
   background:var(--btn);
   color:var(--button-text);
-  font-weight:600;
+  font-weight:400;
   cursor:pointer;
   transition:background .2s,border-color .2s,color .2s;
   height:100%;
   border-radius:0;
   min-width:0;
+}
+.mode-toggle button .mode-icon{
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.mode-toggle button .mode-icon svg{
+  width:18px;
+  height:18px;
+}
+.mode-toggle button .mode-text{
+  display:inline;
 }
 .mode-toggle button + button{
   border-left:1px solid var(--btn);
@@ -2146,10 +2177,22 @@ body.hide-ads .ad-board{
   background:var(--btn-selected);
   color:var(--button-active-text);
 }
-body.filters-active #filterBtn{
-  background: var(--filter-active-color);
-  border-color: var(--filter-active-color);
+@media (max-width:700px){
+  .mode-toggle button{
+    padding:0 10px;
   }
+  .mode-toggle button .mode-text{
+    display:none;
+  }
+  .mode-toggle button .mode-icon{
+    display:inline-flex;
+  }
+}
+body.filters-active #filterBtn{
+  background:#5f0e1f;
+  border-color:#5f0e1f;
+  color:#ffffff;
+}
 
 .options-dropdown{ position:relative; }
 .options-menu{ position:absolute; top:calc(100% + 4px); left:0; background:var(--dropdown-bg); color:var(--dropdown-text); border:1px solid var(--border); border-radius:var(--dropdown-radius); padding:10px; display:flex; flex-direction:column; gap:6px;  z-index:30; }
@@ -2164,7 +2207,7 @@ body.filters-active #filterBtn{
   grid-template-columns:90px 1fr 36px;
   gap:12px;
   align-items: flex-start;
-  background-color: transparent;
+  background-color: var(--list-background);
   border: none;
   border-radius:8px;
   padding:12px;
@@ -2471,7 +2514,7 @@ body.filters-active #filterBtn{
 .post-board{color:#fff;}
 .post-board .post-card,
 .post-board .open-post{
-  background-color:transparent;
+  background-color:var(--list-background);
   margin:0;
   border:none;
   border-radius:0;
@@ -2557,6 +2600,7 @@ body.filters-active #filterBtn{
   margin:0;
   padding-top:0;
   overflow:visible;
+  background-color:var(--list-background);
   color:#fff;
   font-size:14px;
   display:flex;
@@ -2576,7 +2620,7 @@ body.filters-active #filterBtn{
   position:sticky;
   top:0;
   z-index:3;
-  background-color:#555555;
+  background-color:var(--list-background);
 }
 .post-card .post-header{
   background-color:transparent;
@@ -2676,6 +2720,7 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:var(--gap);
   padding:10px;
+  padding-right:20px;
 }
 
 .open-post .post-details .info{
@@ -3321,19 +3366,22 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
 .second-post-column .post-calendar .day.selected.today{color:var(--today) !important;}
 
 
-.open-post .post-calendar .selected-month-name,
-.second-post-column .post-calendar .selected-month-name,
-.second-post-column .post-calendar .selected-month-name{
+.open-post .session-menu .calendar-container .selected-month-name,
+.second-post-column .session-menu .calendar-container .selected-month-name{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:8px;
-  padding:0 4px;
+  padding:4px 8px;
+  align-self:flex-start;
+  margin:10px 10px 0;
+  font-weight:600;
+  white-space:nowrap;
 }
 
 .open-post .calendar-container .time-popup,
 .second-post-column .calendar-container .time-popup{
   position:absolute;
-  z-index:10;
+  z-index:200;
 }
 
 .open-post .calendar-container .time-popup .time-list,
@@ -3524,7 +3572,7 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
       gap:0;
     }
     .open-post .post-details{
-      padding:10px;
+      padding:10px 20px 10px 10px;
     }
   }
 
@@ -3954,7 +4002,7 @@ img.thumb{
     width:100%;
     max-width:100%;
     min-width:0;
-    padding:10px 0;
+    padding:10px 20px 10px 10px;
   }
   .open-post .image-box{
     width:100%;
@@ -4026,9 +4074,38 @@ img.thumb{
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
       <div class="mode-toggle">
-        <button id="recents-button" aria-pressed="false">Recents</button>
-        <button id="postsToggle" aria-pressed="false">Posts</button>
-        <button id="mapToggle" aria-pressed="true">Map</button>
+        <button id="recents-button" aria-pressed="false" aria-label="Recents">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <polyline points="12 7 12 12 15 15"></polyline>
+            </svg>
+          </span>
+          <span class="mode-text">Recents</span>
+        </button>
+        <button id="postsToggle" aria-pressed="false" aria-label="Posts">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="8" y1="18" x2="20" y2="18"></line>
+              <circle cx="5" cy="6" r="1" fill="currentColor" stroke="none"></circle>
+              <circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"></circle>
+              <circle cx="5" cy="18" r="1" fill="currentColor" stroke="none"></circle>
+            </svg>
+          </span>
+          <span class="mode-text">Posts</span>
+        </button>
+        <button id="mapToggle" aria-pressed="true" aria-label="Map">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 6 3 21 9 18 15 21 21 18 21 3 15 6 9 3 3 6"></polygon>
+              <line x1="9" y1="3" x2="9" y2="18"></line>
+              <line x1="15" y1="6" x2="15" y2="21"></line>
+            </svg>
+          </span>
+          <span class="mode-text">Map</span>
+        </button>
       </div>
     </nav>
     <div class="header-buttons">
@@ -4222,16 +4299,18 @@ img.thumb{
               </div>
             </div>
             <div class="panel-field">
-              <div class="option-label">
-                <span>Spin on Load</span>
-                <label class="switch">
-                  <input type="checkbox" id="spinLoadStart" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div id="spinType" class="option-group">
-                <label class="option-label"><span>Everyone</span><input type="radio" name="spinType" value="all" /></label>
-                <label class="option-label"><span>New Users</span><input type="radio" name="spinType" value="new" /></label>
+              <div class="spin-toggle-row">
+                <div class="option-label">
+                  <span>Spin on Load</span>
+                  <label class="switch">
+                    <input type="checkbox" id="spinLoadStart" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="spinType" class="spin-type-toggle" role="group" aria-label="Spin applies to">
+                  <button type="button" data-value="all" aria-pressed="false"><span>Everyone</span></button>
+                  <button type="button" data-value="new" aria-pressed="false"><span>New Users</span></button>
+                </div>
               </div>
             </div>
             <div class="panel-field">
@@ -4374,9 +4453,8 @@ img.thumb{
 
     function normalizeMapStyle(style){
       switch(style){
-        case 'mapbox://styles/mapbox/standard':
         case 'mapbox://styles/mapbox/standard-beta':
-          return 'mapbox://styles/mapbox/streets-v12';
+          return 'mapbox://styles/mapbox/standard';
         case 'mapbox://styles/mapbox/standard-dark':
           return 'mapbox://styles/mapbox/dark-v11';
         case 'mapbox://styles/mapbox/standard-light':
@@ -4394,7 +4472,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/outdoors-v12',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -4500,7 +4578,7 @@ img.thumb{
         const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
         const baseUrl = getStyleBase(originUrl);
         const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
-        if(typeof normalizedUrl === 'string' && normalizedUrl.includes('/standard')){
+        if(typeof normalizedUrl === 'string' && (normalizedUrl.includes('/standard') || normalizedUrl.includes('/outdoors'))){
           return;
         }
         const layers = style && Array.isArray(style.layers) ? style.layers : null;
@@ -5936,13 +6014,12 @@ function makePosts(){
         const historyActive = document.body.classList.contains('show-history');
         const filterPanel = document.getElementById('filterPanel');
         const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
-        const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
-        const filterPinned = !!(filterPanel && filterPanel.classList.contains('show') && pinBtn && pinBtn.getAttribute('aria-pressed') === 'true');
+        const filterOpen = !!(filterPanel && filterPanel.classList.contains('show'));
         const historyOpenPost = recentsBoard ? recentsBoard.querySelector('.open-post') : null;
         const postsOpenPost = postBoard ? postBoard.querySelector('.open-post') : null;
         const anyOpenPost = historyOpenPost || postsOpenPost;
         const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 10;
-        let filterWidth = filterPinned && filterContent ? filterContent.getBoundingClientRect().width : 0;
+        let filterWidth = filterOpen && filterContent ? filterContent.getBoundingClientRect().width : 0;
         const postWidth = postBoard ? (postBoard.offsetWidth || 530) : 0;
         const historyWidth = recentsBoard ? (recentsBoard.offsetWidth || 530) : 0;
         const boardsWidths = [];
@@ -5956,12 +6033,10 @@ function makePosts(){
           totalBoardsWidth += gap * (boardsWidths.length - 1);
         }
         const adWidth = adBoard ? (adBoard.offsetWidth || 440) : 0;
-        let hideAds = small || document.body.classList.contains('mode-map') || document.body.classList.contains('hide-posts-ui') || window.innerWidth < 1920;
+        let hideAds = small || document.body.classList.contains('mode-map') || document.body.classList.contains('hide-posts-ui') || window.innerWidth < 1900;
         let requiredWidth = totalBoardsWidth;
-        if(filterPinned && filterWidth){
+        if(filterWidth){
           requiredWidth += filterWidth;
-        } else {
-          filterWidth = 0;
         }
         if(!hideAds && adWidth){
           requiredWidth += adWidth + gap;
@@ -5970,9 +6045,9 @@ function makePosts(){
           hideAds = true;
           requiredWidth -= adWidth + gap;
         }
-        const canAnchor = filterPinned && filterWidth && requiredWidth <= window.innerWidth;
-        document.body.classList.toggle('filter-anchored', canAnchor);
-        document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
+        const shouldOffset = filterWidth > 0;
+        document.body.classList.toggle('filter-anchored', shouldOffset);
+        document.documentElement.style.setProperty('--filter-panel-offset', shouldOffset ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
         if(recentsBoard){
           recentsBoard.style.display = historyActive ? '' : 'none';
@@ -6976,7 +7051,13 @@ function makePosts(){
     function updateResultCount(n){
       const el = $('#resultCount');
       if(el){
-        el.innerHTML = `<strong>${n}</strong> Results`;
+        const value = Number.isFinite(n) ? String(n) : '';
+        el.textContent = value;
+        if(value){
+          el.setAttribute('aria-label', `${value} results`);
+        } else {
+          el.removeAttribute('aria-label');
+        }
         el.style.display = '';
       }
     }
@@ -7270,7 +7351,7 @@ function makePosts(){
               <div class="post-session-selection-container"></div>
               <div class="location-section">
                 <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class=\"venue-name\">${loc.venue}</span><span class=\"venue-address\">${loc.address}</span></button>`).join('')}</div></div></div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
+                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="selected-month-name" aria-live="polite"></div><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
               </div>
               <div class="post-details-description-container">
                 <div class="desc-wrap"><div class="desc">${p.desc}</div></div>
@@ -7280,9 +7361,9 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
-        head.style.background = '#555555';
+        head.style.background = 'var(--list-background)';
       });
-      wrap.style.background = '#555555';
+      wrap.style.background = 'var(--list-background)';
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
@@ -7775,6 +7856,7 @@ function makePosts(){
         const mapEl = el.querySelector(`#map-${p.id}`);
         const calContainer = el.querySelector('.calendar-container');
         const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
+        const monthLabelEl = calContainer ? calContainer.querySelector('.selected-month-name') : null;
         if(calScroll){
           setupCalendarScroll(calScroll);
         }
@@ -7962,7 +8044,41 @@ function makePosts(){
           current.setMonth(current.getMonth()+1);
         }
         calendarEl.appendChild(cal);
+        const getIsoForIndex = idx => {
+          const entry = loc.dates[idx];
+          return entry ? entry.full : null;
+        };
+        const fallbackIso = () => (loc.dates.length ? loc.dates[0].full : null);
+        const formatMonthLabel = iso => {
+          if(!iso) return '';
+          const parsed = parseDate(iso);
+          return parsed instanceof Date && !Number.isNaN(parsed.getTime())
+            ? parsed.toLocaleDateString('en-GB',{month:'long', year:'numeric'})
+            : '';
+        };
+        const updateMonthDisplay = iso => {
+          if(!monthLabelEl) return;
+          const targetIso = iso || fallbackIso();
+          if(targetIso){
+            const text = formatMonthLabel(targetIso);
+            monthLabelEl.textContent = text;
+            monthLabelEl.hidden = !text;
+          } else {
+            monthLabelEl.textContent = '';
+            monthLabelEl.hidden = true;
+          }
+        };
+        const scrollMonthIntoView = iso => {
+          const targetIso = iso || fallbackIso();
+          if(!calScroll || !targetIso) return;
+          const cell = calendarEl.querySelector(`.day[data-iso="${targetIso}"]`);
+          if(!cell) return;
+          const monthEl = cell.closest('.month');
+          if(!monthEl) return;
+          calScroll.scrollLeft = monthEl.offsetLeft;
+        };
         let selectedIndex = null;
+        updateMonthDisplay(null);
         calendarEl.addEventListener('click', e=> e.stopPropagation());
         function markSelected(){
           calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
@@ -7982,6 +8098,7 @@ function makePosts(){
           let waitForScroll = false;
           let targetScrollLeft = null;
           if(dt){
+            updateMonthDisplay(dt.full);
             sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
             if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
@@ -8008,6 +8125,7 @@ function makePosts(){
             if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
             selectedIndex = null;
             markSelected();
+            updateMonthDisplay(null);
           }
           if(!sessMenu.hidden){
             scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
@@ -8042,12 +8160,14 @@ function makePosts(){
           if(sessionHasMultiple){
             sessionInfo.innerHTML = defaultInfoHTML;
             if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            updateMonthDisplay(null);
           } else {
             if(loc.dates.length){
               selectSession(0);
             } else {
               sessionInfo.innerHTML = defaultInfoHTML;
               if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+              updateMonthDisplay(null);
             }
           }
           sessionOptions.querySelectorAll('button').forEach(btn=>{
@@ -8086,14 +8206,22 @@ function makePosts(){
                 });
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
               }
-              if(sessBtn && sessMenu){
-                sessBtn.addEventListener('click', ()=>{
-                  const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-                  sessBtn.setAttribute('aria-expanded', String(!expanded));
-                  sessMenu.hidden = expanded;
-                });
-                document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
-              }
+                if(sessBtn && sessMenu){
+                  sessBtn.addEventListener('click', ()=>{
+                    const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
+                    const willExpand = !expanded;
+                    sessBtn.setAttribute('aria-expanded', String(willExpand));
+                    sessMenu.hidden = expanded;
+                    if(willExpand){
+                      requestAnimationFrame(()=>{
+                        const iso = selectedIndex !== null ? getIsoForIndex(selectedIndex) : null;
+                        scrollMonthIntoView(iso);
+                        updateMonthDisplay(iso);
+                      });
+                    }
+                  });
+                  document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
+                }
               if(map && typeof map.resize === 'function') map.resize();
             });
           },0);
@@ -9036,6 +9164,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const slider = document.createElement('span');
     slider.className = 'slider';
     cb.after(slider);
+  });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const spinToggle = document.getElementById('spinType');
+  if(!spinToggle) return;
+  const buttons = Array.from(spinToggle.querySelectorAll('button[data-value]'));
+  if(!buttons.length) return;
+  const sg = window.spinGlobals || {};
+  const stored = localStorage.getItem('spinLoadType');
+  const validValues = new Set(buttons.map(btn => btn.dataset.value));
+  const initialFromStore = stored && validValues.has(stored) ? stored : null;
+  const globalValue = typeof sg.spinLoadType === 'string' && validValues.has(sg.spinLoadType) ? sg.spinLoadType : null;
+  const fallbackValue = buttons[0] ? buttons[0].dataset.value : 'all';
+  const resolvedValue = initialFromStore || globalValue || fallbackValue || 'all';
+
+  const setActive = value => {
+    buttons.forEach(btn => btn.setAttribute('aria-pressed', btn.dataset.value === value ? 'true' : 'false'));
+  };
+
+  const applyValue = value => {
+    if(!value) return;
+    localStorage.setItem('spinLoadType', value);
+    if(sg && typeof sg.spinLoadType !== 'undefined'){
+      try { sg.spinLoadType = value; } catch(err){}
+    }
+    if(sg && typeof sg.updateSpinState === 'function'){
+      try { sg.updateSpinState(); } catch(err){}
+    }
+  };
+
+  setActive(resolvedValue);
+  applyValue(resolvedValue);
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const value = btn.dataset.value;
+      if(!value || btn.getAttribute('aria-pressed') === 'true') return;
+      setActive(value);
+      applyValue(value);
+    });
   });
 });
 </script>
