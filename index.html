@@ -7113,48 +7113,33 @@ function makePosts(){
         stopSpin();
         if(!map.getLayer('clusters')) return;
         if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
-        let feature = e && e.features && e.features[0];
-        let clusterId = feature && feature.properties ? feature.properties.cluster_id : undefined;
-        if(clusterId === undefined && map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
+        let feature;
+        if(map && typeof map.queryRenderedFeatures === 'function' && e && e.point){
           try {
             const features = map.queryRenderedFeatures(e.point, { layers:['clusters','cluster-count'] }) || [];
-            const fallback = features.find((candidate)=> candidate && candidate.properties && candidate.properties.cluster_id !== undefined);
-            if(fallback){
-              feature = fallback;
-              clusterId = fallback.properties.cluster_id;
-            }
+            feature = features.find((candidate)=> candidate && candidate.properties && candidate.properties.cluster_id !== undefined);
           } catch(err){
             console.warn('cluster query failed', err);
+            return;
           }
         }
-        if(clusterId === undefined){
+        if(!feature || !feature.properties || feature.properties.cluster_id === undefined){
           return;
         }
-        const coords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates) ? feature.geometry.coordinates.slice() : null;
-        if(!coords || coords.length < 2) return;
-        const source = typeof map.getSource === 'function' ? map.getSource('posts') : null;
-        if(source && typeof source.getClusterExpansionZoom === 'function'){
-          source.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-            if(err){
-              console.warn('cluster expansion zoom failed', err);
-              return;
-            }
-            const targetZoom = Math.max(zoom, map.getZoom() + 1);
-            try {
-              map.easeTo({ center: coords, zoom: targetZoom, duration: 450, essential: true });
-            } catch(moveErr){
-              console.warn('cluster easeTo failed', moveErr);
-            }
-          });
-          return;
-        }
+        const clusterId = feature.properties.cluster_id;
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!Array.isArray(leaves) || !leaves.length) return;
+        const initialCoords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates)
+          ? feature.geometry.coordinates
+          : leaves[0].geometry && Array.isArray(leaves[0].geometry.coordinates)
+            ? leaves[0].geometry.coordinates
+            : null;
+        if(!initialCoords || initialCoords.length < 2) return;
         const bounds = leaves.reduce((b,f)=>{
           const leafCoords = f && f.geometry && Array.isArray(f.geometry.coordinates) ? f.geometry.coordinates : null;
           if(leafCoords) b.extend(leafCoords);
           return b;
-        }, new mapboxgl.LngLatBounds(coords, coords));
+        }, new mapboxgl.LngLatBounds(initialCoords, initialCoords));
         try {
           map.fitBounds(bounds, { padding: 40, duration: 450, essential: true });
         } catch(err){
