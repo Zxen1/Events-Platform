@@ -4438,7 +4438,7 @@ img.thumb{
 
     const MAPBOX_STYLE_FIX_FLAG = 'funmap:featureset-source-fixed';
 
-    function attachStandardStyleHarmonizer(mapInstance){
+    function installMapboxStandardStyleFix(mapInstance){
       if(!mapInstance || typeof mapInstance.on !== 'function' || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setStyle !== 'function'){
         return;
       }
@@ -6712,7 +6712,7 @@ function makePosts(){
             console.warn('Unknown image ID:', e.id);
           }
         });
-      attachStandardStyleHarmonizer(map);
+      installMapboxStandardStyleFix(map);
 
       const handleStyleUpdate = (event)=>{
         if(event && event.type === 'styledata' && event.dataType !== 'style'){
@@ -8401,7 +8401,7 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          attachStandardStyleHarmonizer(map);
+          installMapboxStandardStyleFix(map);
           const mutedHandler = () => { ensureMapLightAnchor(map); applyMutedMapStyle(map); applyNightSky(map); };
           map.on('style.load', mutedHandler);
           if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
