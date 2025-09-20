@@ -1822,7 +1822,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-direction:column;
   gap:0;
   pointer-events:auto;
-  scrollbar-gutter:stable;
 }
 
 .post-board{
@@ -1873,14 +1872,20 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
   transition:left 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
-  scrollbar-gutter:stable;
 }
 .post-board .post-card{
   width:100%;
+  max-width:100%;
+}
+
+.post-board .open-post{
+  width:100%;
+  max-width:100%;
 }
 
 .recents-board .recents-card{
   width:100%;
+  max-width:100%;
 }
 .recents-board .recents-card{
   margin:0;
@@ -2539,7 +2544,6 @@ body.filters-active #filterBtn{
   overflow-x:hidden;
   padding:0;
   margin:0;
-  scrollbar-gutter:stable;
 }
 .post-board .posts,
 .recents-board{
@@ -2701,8 +2705,8 @@ body.filters-active #filterBtn{
 
 .open-post .post-details{
   margin-top:0;
-  width:100%;
-  max-width:100%;
+  width:calc(100% - 20px);
+  max-width:calc(100% - 20px);
   min-width:0;
   display:flex;
   flex-direction:column;
@@ -2710,6 +2714,8 @@ body.filters-active #filterBtn{
   padding:10px;
   flex:1 1 auto;
   box-sizing:border-box;
+  margin-left:auto;
+  margin-right:auto;
 }
 
 .open-post:not(.desc-expanded) .post-venue-selection-container,
@@ -4136,10 +4142,12 @@ img.thumb{
     width:100%;
   }
   .open-post .post-details{
-    width:100%;
-    max-width:100%;
+    width:calc(100% - 20px);
+    max-width:calc(100% - 20px);
     min-width:0;
     padding:10px 0;
+    margin-left:auto;
+    margin-right:auto;
   }
   .open-post .image-box{
     width:100%;
