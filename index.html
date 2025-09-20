@@ -4633,11 +4633,15 @@ img.thumb{
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '';
+          clusterSvg = localStorage.getItem('clusterSvg') || '',
+          selectedMarkerId = null;
         const SMALL_MARKER_BREAKPOINT = 600;
         const markerSizeExpression = () => {
           const base = window.innerWidth <= SMALL_MARKER_BREAKPOINT ? 1.4 : 1;
-          return ['case', ['boolean', ['feature-state', 'selected'], false], base * 2, base];
+          if(selectedMarkerId){
+            return ['case', ['==', ['id'], selectedMarkerId], base * 2, base];
+          }
+          return base;
         };
         const applyMarkerSize = () => {
           if(!map || typeof map.getLayer !== 'function' || typeof map.setLayoutProperty !== 'function') return;
@@ -4983,7 +4987,7 @@ img.thumb{
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
-    let hoverPopup = null, hoverId = null, selectedMarkerId = null;
+    let hoverPopup = null, hoverId = null;
     let touchMarker = null;
     let activePostId = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
@@ -6981,7 +6985,7 @@ function makePosts(){
           source:'posts',
           filter:['!', ['has','point_count']],
           layout:{
-            'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
+            'icon-image': ['coalesce', ['image', ['get','sub']], ['image', 'default-marker']],
             'icon-allow-overlap': true,
             'icon-ignore-placement': true,
             'icon-anchor': 'center',
@@ -7018,7 +7022,7 @@ function makePosts(){
               source:'posts',
               filter:['!', ['has','point_count']],
               layout:{
-                'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
+                'icon-image': ['coalesce', ['image', ['get','sub']], ['image', 'default-marker']],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -7035,7 +7039,7 @@ function makePosts(){
               type:'symbol',
               source:'posts',
               layout:{
-                'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
+                'icon-image': ['coalesce', ['image', ['get','sub']], ['image', 'default-marker']],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -8608,16 +8612,9 @@ function makePosts(){
     function updateSelectedMarker(id, {force=false} = {}){
       const desired = id || null;
       const previous = selectedMarkerId;
+      if(!force && desired === previous) return;
       selectedMarkerId = desired;
-      if(!map || typeof map.getSource !== 'function') return;
-      const source = map.getSource('posts');
-      if(!source) return;
-      if(previous && (force || previous !== desired)){
-        try{ map.setFeatureState({source:'posts', id:previous}, {selected:false}); }catch(err){}
-      }
-      if(desired){
-        try{ map.setFeatureState({source:'posts', id:desired}, {selected:true}); }catch(err){}
-      }
+      applyMarkerSize();
     }
 
     function refreshMarkers(render = true){
