@@ -858,7 +858,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:0;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
+  overflow:visible;
   pointer-events:auto;
 }
   @media (max-width:440px){
@@ -2411,16 +2411,27 @@ body.filters-active #filterBtn{
 
 #welcomeBody .map-control-row{
   justify-content:center;
-  width:auto;
+  width:100%;
   max-width:100%;
   margin:0 auto;
   gap:10px;
+  flex-wrap:wrap;
 }
 #welcomeBody .map-control-row > *{
   flex:0 0 auto;
 }
+#welcomeBody .map-control-row > .geocoder{
+  flex:1 1 240px;
+  min-width:0;
+  width:100%;
+}
 #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
-  width:auto;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+}
+#welcomeBody .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  width:100%;
 }
 
 .mode-posts .map-controls-map{display:none;}
@@ -8502,6 +8513,10 @@ function closePanel(m){
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
   welcomeModalEl.addEventListener('click', () => closePanel(welcomeModalEl));
+  const welcomeContent = welcomeModalEl.querySelector('.modal-content');
+  if(welcomeContent){
+    welcomeContent.addEventListener('click', e => e.stopPropagation());
+  }
 }
 function requestClosePanel(m){
   closePanel(m);
