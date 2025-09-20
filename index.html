@@ -2368,6 +2368,16 @@ body.filters-active #filterBtn{
   font-size: 14px;
 }
 
+.venue-info-row .badge,
+.date-info-row .badge{
+  width:auto;
+  height:auto;
+  border-radius:0;
+  border:none;
+  display:inline;
+  padding:0;
+}
+
 .fav{
   width: 36px;
   height: 36px;
@@ -2715,26 +2725,19 @@ body.welcome-modal-open .map-controls-map{
 }
 .open-post .post-header .share{margin-left:auto;margin-right:var(--gap);}
 
-.open-post .post-summary{
-  display:flex;
-  align-items:flex-start;
-  gap:var(--gap);
+
+.open-post .collapsed-description{
+  display:none;
   margin:10px 10px 0;
-  padding:0;
   cursor:pointer;
 }
 
-.open-post.is-collapsed .post-summary{
-  order:-1;
-  margin-bottom:10px;
+.open-post .collapsed-description:focus{
+  outline:1px solid var(--border-active);
+  outline-offset:2px;
 }
 
-.open-post .post-summary-snippet{
-  flex:1 1 auto;
-  text-align:left;
-}
-
-.open-post .post-summary-snippet .snippet-text{
+.open-post .collapsed-description .collapsed-description-text{
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
@@ -2744,6 +2747,15 @@ body.welcome-modal-open .map-controls-map{
   line-height:1.4;
 }
 
+.open-post.is-collapsed .collapsed-description{
+  display:block;
+  margin-bottom:10px;
+}
+
+.open-post.is-expanded .collapsed-description{
+  display:none;
+}
+
 .open-post .collapsed-info{
   display:flex;
   flex-direction:column;
@@ -2751,8 +2763,8 @@ body.welcome-modal-open .map-controls-map{
   width:100%;
 }
 
-.open-post .collapsed-info .loc-line,
-.open-post .collapsed-info .date-line{
+.open-post .collapsed-info .venue-info-row,
+.open-post .collapsed-info .date-info-row{
   display:flex;
   align-items:flex-start;
   gap:6px;
@@ -2779,28 +2791,6 @@ body.welcome-modal-open .map-controls-map{
   opacity:0.9;
 }
 
-.open-post .post-toggle{
-  background:transparent;
-  border:none;
-  color:var(--ink);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:4px;
-  margin-left:auto;
-  cursor:pointer;
-  transition:transform 0.3s ease;
-}
-
-.open-post .post-toggle svg{
-  width:20px;
-  height:20px;
-  transition:transform 0.3s ease;
-}
-
-.open-post.is-expanded .post-toggle svg{
-  transform:rotate(180deg);
-}
 
 .open-post.is-collapsed .post-details{
   display:none;
@@ -2811,11 +2801,7 @@ body.welcome-modal-open .map-controls-map{
 }
 
 .open-post.is-collapsed .post-images{
-  margin-top:10px;
-}
-
-.open-post.is-expanded .post-summary-snippet{
-  display:none;
+  margin-top:0;
 }
 
 .open-post .post-body{
@@ -3053,7 +3039,7 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
   flex-direction:column;
 }
 
-.open-post .post-header .cat-line{
+.open-post .post-header .subcategory-info-row{
   font-size:14px;
   margin-top:4px;
   display:flex;
@@ -3695,11 +3681,15 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
     .open-post{
       min-width:0;
     }
+    .open-post .post-images{
+      width:100vw;
+      max-width:100vw;
+      margin:0;
+    }
     .open-post .image-box{
-      width:100%;
-      max-width:100%;
-      aspect-ratio:1/1;
-      height:auto;
+      width:100vw;
+      max-width:100vw;
+      height:100vw;
       max-height:none;
       margin-left:0;
       margin-right:0;
@@ -3716,6 +3706,12 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
       object-fit:cover;
       margin-left:0;
       margin-right:0;
+    }
+    .open-post .thumbnail-row{
+      width:100vw;
+      max-width:100vw;
+      margin:0;
+      padding:0 10px;
     }
     .open-post .post-body{
       padding:0;
@@ -7372,11 +7368,45 @@ function makePosts(){
         el.style.display = '';
       }
     }
+    function formatDateBase(dateObj){
+      return dateObj.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+    }
+
+    function formatDateLabel(iso){
+      if(!iso) return '';
+      const dateObj = parseISODate(iso);
+      if(!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return '';
+      const base = formatDateBase(dateObj);
+      return dateObj.getFullYear() === new Date().getFullYear() ? base : `${base}, ${dateObj.getFullYear()}`;
+    }
+
     function formatDates(d){
       if(!d || !d.length) return '';
-      const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      if(d.length===1) return fmt(d[0]);
-      return `${fmt(d[0])} + ${d.length-1} more`;
+      const isoList = Array.from(new Set(d.filter(Boolean)));
+      if(!isoList.length) return '';
+      isoList.sort();
+      const currentYear = new Date().getFullYear();
+      const parseSafe = iso => {
+        const dt = parseISODate(iso);
+        return dt instanceof Date && !Number.isNaN(dt.getTime()) ? dt : null;
+      };
+      const startDate = parseSafe(isoList[0]);
+      const endDate = parseSafe(isoList[isoList.length-1]);
+      if(!startDate) return '';
+      if(!endDate) return formatDateLabel(isoList[0]);
+      const startBase = formatDateBase(startDate);
+      const endBase = formatDateBase(endDate);
+      if(startDate.getTime() === endDate.getTime()){
+        return startDate.getFullYear() === currentYear ? startBase : `${startBase}, ${startDate.getFullYear()}`;
+      }
+      if(startDate.getFullYear() === endDate.getFullYear()){
+        const year = startDate.getFullYear();
+        const yearSuffix = year === currentYear ? '' : `, ${year}`;
+        return `${startBase} - ${endBase}${yearSuffix}`;
+      }
+      const startSuffix = startDate.getFullYear() === currentYear ? '' : `, ${startDate.getFullYear()}`;
+      const endSuffix = endDate.getFullYear() === currentYear ? '' : `, ${endDate.getFullYear()}`;
+      return `${startBase}${startSuffix} - ${endBase}${endSuffix}`;
     }
 
     function parseCreatedToDate(created){
@@ -7457,9 +7487,9 @@ function makePosts(){
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
-            <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
-            <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
+            <div class="subcategory-info-row"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="venue-info-row"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
+            <div class="date-info-row"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
         </div>
         <button class="fav" aria-pressed="${p.fav?'true':'false'}" aria-label="Toggle favourite">
@@ -7618,17 +7648,13 @@ function makePosts(){
       wrap.className = 'open-post is-collapsed';
       wrap.dataset.id = p.id;
       const loc0 = p.locations[0];
-      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
-      const firstDate = dsorted[0];
-      const lastDate = dsorted[dsorted.length-1] || firstDate;
-      const defaultRange = firstDate
-        ? (lastDate && lastDate.full !== firstDate.full ? `${firstDate.date} - ${lastDate.date}` : firstDate.date)
-        : '';
+      const sessionIsoDates = loc0 ? loc0.dates.map(d=>d.full).filter(Boolean).sort((a,b)=> a.localeCompare(b)) : [];
+      const defaultRange = sessionIsoDates.length ? formatDates(sessionIsoDates) : '';
       const thumbSrc = imgThumb(p);
       const headerInner = `
           <div class="title-block">
             <div class="title">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="subcategory-info-row"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
           <button class="share" aria-label="Share post">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
@@ -7644,24 +7670,19 @@ function makePosts(){
         <div class="post-header">
           ${headerInner}
         </div>
-        <div class="post-summary">
-          <div class="post-summary-snippet">
-            <div class="snippet-text">${p.desc}</div>
-          </div>
-          <button type="button" class="post-toggle" aria-label="Expand post details" aria-expanded="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 15.5 6 9.5h12z"/></svg>
-          </button>
-        </div>
         <div class="post-body">
           <div class="second-post-column">
+            <div class="collapsed-description" role="button" tabindex="0" aria-expanded="false">
+              <div class="collapsed-description-text">${p.desc}</div>
+            </div>
             <div class="post-details">
               <div class="post-details-info-container">
                 <div class="info collapsed-info">
-                  <div class="loc-line">
+                  <div class="venue-info-row">
                     <span class="badge" title="Venue">📍</span>
                     <div id="venue-info-${p.id}" class="venue-info"></div>
                   </div>
-                  <div class="date-line">
+                  <div class="date-info-row">
                     <span class="badge" title="Dates">📅</span>
                     <div id="session-info-${p.id}" class="session-info">${defaultRange || 'Select Session'}</div>
                   </div>
@@ -7969,19 +7990,14 @@ function makePosts(){
 
     function hookDetailActions(el, p){
       const openPostEl = el;
-      const summaryEl = el.querySelector('.post-summary');
-      const toggleBtn = el.querySelector('.post-toggle');
+      const collapsedDesc = el.querySelector('.collapsed-description');
 
       const setExpanded = expanded => {
         if(!openPostEl) return;
         openPostEl.classList.toggle('is-expanded', expanded);
         openPostEl.classList.toggle('is-collapsed', !expanded);
-        if(summaryEl){
-          summaryEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        }
-        if(toggleBtn){
-          toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          toggleBtn.setAttribute('aria-label', expanded ? 'Collapse post details' : 'Expand post details');
+        if(collapsedDesc){
+          collapsedDesc.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         }
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
         if(expanded){
@@ -8004,24 +8020,14 @@ function makePosts(){
         setExpanded(!expanded);
       };
 
-      if(summaryEl){
-        summaryEl.setAttribute('role', 'button');
-        summaryEl.setAttribute('tabindex', '0');
-        summaryEl.setAttribute('aria-expanded', 'false');
-        summaryEl.addEventListener('click', evt => {
-          if(evt.target.closest('button')) return;
+      if(collapsedDesc){
+        if(!collapsedDesc.hasAttribute('role')) collapsedDesc.setAttribute('role', 'button');
+        if(!collapsedDesc.hasAttribute('tabindex')) collapsedDesc.setAttribute('tabindex', '0');
+        collapsedDesc.setAttribute('aria-expanded', collapsedDesc.getAttribute('aria-expanded') || 'false');
+        collapsedDesc.addEventListener('click', evt => {
           handleToggle(evt);
         });
-        summaryEl.addEventListener('keydown', evt => {
-          if(evt.target.closest('button')) return;
-          handleToggle(evt);
-        });
-      }
-
-      if(toggleBtn){
-        toggleBtn.setAttribute('aria-expanded', 'false');
-        toggleBtn.addEventListener('click', evt => {
-          evt.stopPropagation();
+        collapsedDesc.addEventListener('keydown', evt => {
           handleToggle(evt);
         });
       }
@@ -8232,26 +8238,18 @@ function makePosts(){
       function updateVenue(idx){
         const loc = p.locations[idx];
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
-        const currentYear = new Date().getFullYear();
         const parseDate = s => {
           const [yy, mm, dd] = s.split('-').map(Number);
           return new Date(yy, mm - 1, dd);
         };
-        const formatDate = d => {
-          const y = parseDate(d.full).getFullYear();
-          return y !== currentYear ? `${d.date}, ${y}` : d.date;
-        };
+        const formatSessionDate = d => formatDateLabel(d.full);
       let defaultInfoText = '';
       if(venueInfo) venueInfo.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>`;
       if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
       sessionHasMultiple = loc.dates.length > 1;
       if(sessionInfo){
-        const firstDate = loc.dates[0];
-        const lastDate = loc.dates[loc.dates.length-1];
-        const startText = firstDate ? formatDate(firstDate) : '';
-        const endText = lastDate ? formatDate(lastDate) : '';
-        const sameDay = firstDate && lastDate && firstDate.full === lastDate.full;
-        const rangeText = startText ? (sameDay ? startText : `${startText} - ${endText}`) : '';
+        const isoRange = loc.dates.map(d=>d.full).filter(Boolean);
+        const rangeText = isoRange.length ? formatDates(isoRange) : '';
         defaultInfoText = rangeText || 'Select Session';
         sessionInfo.textContent = defaultInfoText;
       }
@@ -8429,8 +8427,8 @@ function makePosts(){
           let targetScrollLeft = null;
           if(dt){
             updateMonthDisplay(dt.full);
-            sessionInfo.textContent = `${formatDate(dt)} ${dt.time}`;
-            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            sessionInfo.textContent = `${formatSessionDate(dt)} ${dt.time}`;
+            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatSessionDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             markSelected();
             const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
             if(cell && calScroll){
@@ -8483,7 +8481,7 @@ function makePosts(){
           if(map && typeof map.resize === 'function') map.resize();
         },0);
         if(sessionOptions){
-          sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+      sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatSessionDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
           if(sessMenu){
             sessMenu.scrollTop = 0;
           }
