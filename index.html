@@ -1909,6 +1909,31 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   max-width:100%;
   flex:1 1 auto;
 }
+@media (max-width:700px){
+  .post-board-scroll,
+  .recents-board-scroll,
+  .quick-list-board.recents-board-scroll{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    flex:1 1 auto;
+  }
+  .post-board,
+  .recents-board{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+  .post-board .post-card,
+  .recents-board .recents-card{
+    grid-template-columns:72px 1fr 36px;
+  }
+  .post-board .post-card .thumb,
+  .recents-board .recents-card .thumb{
+    width:72px;
+    height:72px;
+  }
+}
 @media (max-width:439px){
   .post-board-scroll,
   .recents-board-scroll{
@@ -2481,17 +2506,35 @@ body.filters-active #filterBtn{
   background:#ffffff;
   border-radius:8px;
   color:#000000;
+  display:flex;
+  align-items:center;
+  gap:0;
+  height:var(--geocoder-h);
+  min-height:var(--geocoder-h);
+  overflow:hidden;
 }
 
 .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   background:#ffffff;
   color:#000000;
+  height:100%;
+  padding:0 12px;
+  line-height:var(--geocoder-h);
+  flex:1 1 auto;
+  min-width:0;
 }
 
 .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button,
 .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
   color:#000000;
   fill:#000000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  width:var(--geocoder-h);
+  min-width:var(--geocoder-h);
+  padding:0;
 }
 
 .panel-body .map-control-row{
@@ -2913,19 +2956,24 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
     width:auto;
   }
   .post-board .posts{padding:0;}
-  .post-board .post-card{
-    grid-template-columns:1fr;
-    gap:0;
-    padding:0;
+  .post-board .post-card,
+  .recents-board .recents-card{
+    grid-template-columns:72px 1fr 36px;
+    gap:10px;
+    padding:12px;
     margin:10px 0 12px;
     border-radius:8px;
   }
-  .post-board .post-card .thumb{
-    width:100%;
-    height:100vw;
-    border-radius:0;
+  .post-board .post-card .thumb,
+  .recents-board .recents-card .thumb{
+    width:72px;
+    height:72px;
+    border-radius:8px;
   }
-  .post-board .post-card .meta{padding:12px;}
+  .post-board .post-card .meta,
+  .recents-board .recents-card .meta{
+    padding:0;
+  }
   .open-post{
     margin:10px 0 12px;
   }
@@ -4061,7 +4109,7 @@ img.thumb{
 
 
 
-@media (max-width:649px){
+@media (max-width:768px){
   #filterPanel .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
     left:0;
@@ -4070,8 +4118,14 @@ img.thumb{
     width:100%;
     max-width:none;
     max-height:none;
+    margin:0;
     border-radius:0;
     padding-bottom:10px;
+    transform:none;
+    box-sizing:border-box;
+  }
+  #filterPanel .panel-body > *{
+    max-width:none;
   }
   #filterPanel .panel-content .resizer{
     display:none;
@@ -4579,6 +4633,16 @@ img.thumb{
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
+        const SMALL_MARKER_BREAKPOINT = 600;
+        const markerSizeExpression = () => {
+          const base = window.innerWidth <= SMALL_MARKER_BREAKPOINT ? 1.4 : 1;
+          return ['case', ['boolean', ['feature-state', 'selected'], false], base * 2, base];
+        };
+        const applyMarkerSize = () => {
+          if(!map || typeof map.getLayer !== 'function' || typeof map.setLayoutProperty !== 'function') return;
+          if(!map.getLayer('unclustered')) return;
+          try{ map.setLayoutProperty('unclustered', 'icon-size', markerSizeExpression()); }catch(err){}
+        };
         let welcomeMoveHandler = null;
         window.__cancelWelcomeMove = () => {
           if(welcomeMoveHandler && map){
@@ -6254,6 +6318,8 @@ function makePosts(){
       window.adjustBoards = adjustBoards;
       adjustBoards();
       window.addEventListener('resize', adjustBoards);
+      window.addEventListener('resize', applyMarkerSize);
+      window.addEventListener('orientationchange', applyMarkerSize);
       window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
@@ -6919,7 +6985,7 @@ function makePosts(){
             'icon-ignore-placement': true,
             'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
-            'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
+            'icon-size': markerSizeExpression(),
             'symbol-z-order': 'viewport-y',
             'symbol-sort-key': 1100
           },
@@ -6956,7 +7022,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
-                'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
+                'icon-size': markerSizeExpression(),
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
               },
@@ -6973,7 +7039,7 @@ function makePosts(){
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
-                'icon-size': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1],
+                'icon-size': markerSizeExpression(),
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': 1100
               },
@@ -7109,9 +7175,10 @@ function makePosts(){
         'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
         'circle-stroke-width': 2, 'circle-radius': 12
       }});
+      applyMarkerSize();
 
       // Cursor + popup for unclustered points
-      
+
       map.on('mouseenter','unclustered', (e)=>{
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
