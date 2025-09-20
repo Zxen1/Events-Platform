@@ -865,9 +865,9 @@ button[aria-expanded="true"] .results-arrow{
   #adminPanel .panel-content,
   #memberPanel .panel-content,
   #filterPanel .panel-content{
-    width:440px;
-    max-width:440px;
-    max-height:95%;
+    width:100%;
+    max-width:100%;
+    max-height:none;
   }
 }
 #adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:420px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
@@ -1831,7 +1831,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   .second-post-column.is-visible{
     width:100%;
     max-width:100%;
-    min-width:360px;
   }
   .second-post-column{
     display:none;
@@ -2105,6 +2104,18 @@ body.hide-ads .ad-board{
   height:100%;
   border-radius:0;
   min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:0 12px;
+}
+.mode-toggle .mode-icon{
+  display:none;
+  line-height:0;
+}
+.mode-toggle .mode-label{
+  white-space:nowrap;
 }
 .mode-toggle button + button{
   border-left:1px solid var(--btn);
@@ -3339,6 +3350,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 
 @media (max-width:650px){
+  .mode-toggle .mode-icon{
+    display:inline-flex;
+  }
+  .mode-toggle .mode-label{
+    display:none;
+  }
 }
 
 
@@ -3351,6 +3368,123 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
   .img-popup img{
     touch-action:pinch-zoom;
+  }
+}
+
+@media (max-width:650px){
+  .post-mode-boards{
+    top:calc(var(--header-h) + var(--safe-top));
+    bottom:0;
+    padding:0;
+    gap:0;
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .quick-list-board,
+  .post-board,
+  .recents-board{
+    width:100%;
+    max-width:100%;
+    left:0;
+    right:0;
+    padding:0;
+    border-radius:0;
+  }
+  .quick-list-board{
+    position:relative;
+    top:0;
+    bottom:auto;
+  }
+  .card,
+  .recents-card,
+  .post-card{
+    margin:0;
+    border-radius:0;
+    padding:12px;
+  }
+  .thumb,
+  .post-card .thumb,
+  .recents-card .thumb{
+    border-radius:0;
+  }
+  .post-board .post-card,
+  .recents-board .recents-card{
+    border-bottom:1px solid rgba(255,255,255,0.12);
+  }
+  .post-board .post-card:last-child,
+  .recents-board .recents-card:last-child{
+    border-bottom:none;
+  }
+  .panel-content{
+    left:0 !important;
+    right:0 !important;
+    top:calc(var(--header-h) + var(--safe-top));
+    bottom:0;
+    width:100% !important;
+    max-width:100% !important;
+    height:calc(100vh - var(--header-h) - var(--safe-top));
+    max-height:none;
+    border-radius:0;
+  }
+  .panel-body{
+    padding:10px;
+    align-items:stretch;
+  }
+  .panel-body > *{
+    max-width:100%;
+  }
+  #filterPanel .panel-body{
+    padding:10px;
+  }
+  #filterPanel .panel-body > *{
+    max-width:100%;
+  }
+  .post-details-description-container .desc-wrap{
+    margin:10px 10px 0;
+  }
+  .post-details-description-container .desc{
+    margin:0;
+  }
+  .post-details-description-container .desc[aria-expanded="false"]{
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .post-details-description-container .desc[aria-expanded="true"],
+  .post-details-description-container .desc.expanded{
+    display:block;
+  }
+  .post-images{
+    margin-top:10px;
+  }
+  .open-post .image-box{
+    width:100%;
+    max-width:100%;
+    aspect-ratio:1/1;
+    margin:0;
+    border-radius:0;
+    display:block;
+    overflow:hidden;
+  }
+  .open-post .image-box img{
+    border-radius:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .open-post .thumbnail-row{
+    padding:10px 0 0;
+    justify-content:center;
+    gap:8px;
+  }
+  .open-post .thumbnail-row img{
+    width:60px;
+    height:60px;
+    border-radius:0;
   }
 }
 
@@ -3403,11 +3537,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       width:100%;
       max-width:100%;
       border:none;
-      border-radius:8px;
+      border-radius:0;
     }
     .post-board,
     .open-post{
-      min-width:360px;
+      min-width:0;
     }
     .open-post .image-box{
       width:100%;
@@ -3415,21 +3549,19 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       aspect-ratio:1/1;
       height:auto;
       max-height:none;
-      margin-left:0;
-      margin-right:0;
-      padding-left:0;
-      padding-right:0;
+      margin:0;
+      padding:0;
       border:none;
-      border-radius:8px;
-      display:grid;
-      place-items:center;
+      border-radius:0;
+      display:block;
+      overflow:hidden;
     }
     .open-post .image-box img{
       width:100%;
       height:100%;
       object-fit:cover;
-      margin-left:0;
-      margin-right:0;
+      margin:0;
+      border-radius:0;
     }
     .open-post .post-body{
       padding:0;
@@ -3511,7 +3643,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       #post-modal-container .post-modal{width:440px;}
     }
     @media (max-width:439px){
-      #post-modal-container .post-modal{width:100%;min-width:360px;}
+      #post-modal-container .post-modal{width:100%;min-width:0;}
     }
 
 
@@ -3938,9 +4070,35 @@ img.thumb{
         <span id="resultCount" aria-live="polite" style="display:none"></span>
       </button>
       <div class="mode-toggle">
-        <button id="recents-button" aria-pressed="false">Recents</button>
-        <button id="postsToggle" aria-pressed="false">Posts</button>
-        <button id="mapToggle" aria-pressed="true">Map</button>
+        <button id="recents-button" aria-pressed="false" aria-label="Recents">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </span>
+          <span class="mode-label">Recents</span>
+        </button>
+        <button id="postsToggle" aria-pressed="false" aria-label="Posts">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="4" rx="1"></rect>
+              <rect x="3" y="10" width="18" height="4" rx="1"></rect>
+              <rect x="3" y="16" width="18" height="4" rx="1"></rect>
+            </svg>
+          </span>
+          <span class="mode-label">Posts</span>
+        </button>
+        <button id="mapToggle" aria-pressed="true" aria-label="Map">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon>
+              <line x1="9" y1="3" x2="9" y2="18"></line>
+              <line x1="15" y1="6" x2="15" y2="21"></line>
+            </svg>
+          </span>
+          <span class="mode-label">Map</span>
+        </button>
       </div>
     </nav>
     <div class="header-buttons">
@@ -4264,6 +4422,38 @@ img.thumb{
   })();
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
+
+  function getGeocoderInput(gc){
+    if(!gc) return null;
+    if(gc._inputReference) return gc._inputReference;
+    if(gc._inputEl) return gc._inputEl;
+    if(gc._container) return gc._container.querySelector('input[type="text"]');
+    return null;
+  }
+
+  function blurAllGeocoderInputs(){
+    geocoders.forEach(gc => {
+      const input = getGeocoderInput(gc);
+      if(input && typeof input.blur === 'function'){
+        input.blur();
+      }
+    });
+  }
+
+  function clearMapGeocoder(){
+    if(!geocoder || typeof geocoder.clear !== 'function') return;
+    const before = document.activeElement;
+    geocoder.clear();
+    const after = document.activeElement;
+    requestAnimationFrame(() => {
+      [after, before, getGeocoderInput(geocoder)].forEach(el => {
+        if(el && el.classList && el.classList.contains('mapboxgl-ctrl-geocoder--input') && typeof el.blur === 'function'){
+          el.blur();
+        }
+      });
+      blurAllGeocoderInputs();
+    });
+  }
 
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
@@ -6207,7 +6397,12 @@ function makePosts(){
         if(gEl){
           gEl.appendChild(gc.onAdd(map));
           const input = gEl.querySelector('input[type="text"]');
-          if(input) input.setAttribute('autocomplete','street-address');
+          if(input){
+            input.setAttribute('autocomplete','street-address');
+            gc._inputReference = input;
+          }
+          const container = gEl.querySelector('.mapboxgl-ctrl-geocoder');
+          if(container) gc._container = container;
         }
         geocoders.push(gc);
         if(idx===1) geocoder = gc;
@@ -6332,8 +6527,9 @@ function makePosts(){
           localStorage.setItem('mapView', JSON.stringify({center, zoom, pitch, bearing}));
         };
         ['moveend','zoomend','rotateend','pitchend'].forEach(ev => map.on(ev, refreshMapView));
-        map.on('dragend', () => { if(geocoder) geocoder.clear(); });
-        map.on('click', () => { if(geocoder) geocoder.clear(); });
+        map.on('dragend', clearMapGeocoder);
+        map.on('click', clearMapGeocoder);
+        map.on('touchstart', () => requestAnimationFrame(blurAllGeocoderInputs));
       }
 
     function startSpin(fromCurrent=false){
@@ -6879,7 +7075,7 @@ function makePosts(){
     function updateResultCount(n){
       const el = $('#resultCount');
       if(el){
-        el.innerHTML = `<strong>${n}</strong> Results`;
+        el.innerHTML = `<strong>${n}</strong>`;
         el.style.display = '';
       }
     }
