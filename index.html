@@ -107,6 +107,7 @@
       --post-mode-bg-color: 0,0,0;
       --post-mode-bg-opacity: 0;
       --safe-top: env(safe-area-inset-top, 0px);
+      --header-offset: 0px;
 }
 
 *:not([class*="mapboxgl-"]){
@@ -392,6 +393,8 @@ input[type="checkbox"]{
     right: 0;
     z-index: 20;
     background: rgba(0,0,0,0.7);
+    transform: translate3d(0, var(--header-offset), 0);
+    will-change: transform;
   }
 
   .logo{
@@ -2888,6 +2891,14 @@ body.open-post-sticky-images .open-post.is-expanded .post-images{
   cursor:pointer;
   position:relative;
   z-index:1;
+}
+
+@media (max-width: 600px){
+  .thumbnail-row img,
+  .open-post .thumbnail-row img{
+    width:clamp(48px, 20vw, 72px);
+    height:clamp(48px, 20vw, 72px);
+  }
 }
 
 @media (max-width: 450px){
@@ -6065,19 +6076,27 @@ function makePosts(){
 
     $$('#filterPanel .keyword-clear-button, #filterPanel .daterange-clear-button').forEach(btn=> btn.addEventListener('click',()=>{
       const input = btn.parentElement.querySelector('input');
-      if(input){
-        if(input.id==='daterange-textbox'){
-          dateStart = null;
-          dateEnd = null;
-          updateRangeClasses();
-          updateInput();
-        } else {
-          input.value='';
+        if(input){
+          if(input.id==='daterange-textbox'){
+            dateStart = null;
+            dateEnd = null;
+            updateRangeClasses();
+            updateInput();
+          } else {
+            input.value='';
+          }
+          const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+          const isSmall = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(max-width: 600px)').matches
+            : window.innerWidth <= 600;
+          if(isTouch && isSmall){
+            input.blur();
+          } else {
+            input.focus();
+          }
+          applyFilters();
+          updateClearButtons();
         }
-        input.focus();
-        applyFilters();
-        updateClearButtons();
-      }
     }));
     if(expiredToggle){
       expiredToggle.addEventListener('change', ()=>{
@@ -6817,7 +6836,28 @@ function makePosts(){
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       }
+        if(!map.hasImage('default-marker')){
+          const size = 64;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if(ctx){
+            ctx.clearRect(0,0,size,size);
+            const radius = size / 2 - 4;
+            ctx.fillStyle = '#3E5393';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+            const imageData = ctx.getImageData(0,0,size,size);
+            try{ map.addImage('default-marker', imageData, {pixelRatio:2}); }catch(err){ /* noop */ }
+          }
+        }
         await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
+          if(!url){ res(); return; }
           if(map.hasImage(sub)) map.removeImage(sub);
           const img = new Image();
           img.onload = () => { if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
@@ -6874,7 +6914,7 @@ function makePosts(){
           source:'posts',
           filter:['!', ['has','point_count']],
           layout:{
-            'icon-image':['get','sub'],
+            'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
             'icon-allow-overlap': true,
             'icon-ignore-placement': true,
             'icon-anchor': 'center',
@@ -6911,7 +6951,7 @@ function makePosts(){
               source:'posts',
               filter:['!', ['has','point_count']],
               layout:{
-                'icon-image':['get','sub'],
+                'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -6928,7 +6968,7 @@ function makePosts(){
               type:'symbol',
               source:'posts',
               layout:{
-                'icon-image':['get','sub'],
+                'icon-image':['case', ['has-image', ['get','sub']], ['get','sub'], 'default-marker'],
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -9296,7 +9336,10 @@ document.addEventListener('pointerdown', handleDocInteract);
     'Other Learning': 'assets/icons-20/learning-category-icon-red-20.webp'
   };
   Object.entries(specialSubIconPaths).forEach(([name, path]) => {
+    const slug = slugify(name);
     subcategoryIcons[name] = `<img src="${path}" width="20" height="20" alt="">`;
+    subcategoryMarkerIds[name] = slug;
+    subcategoryMarkers[slug] = path;
     subcategoryMarkers[name] = path;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
@@ -9512,8 +9555,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   updateViewport();
+  const rootEl = document.documentElement;
+  const applyHeaderOffset = () => {
+    const vv = window.visualViewport;
+    const rawOffset = vv && typeof vv.offsetTop === 'number' ? vv.offsetTop : 0;
+    const offset = rawOffset > 0 ? rawOffset : 0;
+    const shift = offset ? -offset : 0;
+    rootEl.style.setProperty('--header-offset', `${shift}px`);
+  };
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', applyHeaderOffset);
+    window.visualViewport.addEventListener('scroll', applyHeaderOffset);
+  } else {
+    window.addEventListener('resize', applyHeaderOffset);
+    window.addEventListener('scroll', applyHeaderOffset, {passive:true});
+  }
+  applyHeaderOffset();
   window.addEventListener('resize', updateViewport);
-  window.addEventListener('orientationchange', updateViewport);
+  window.addEventListener('orientationchange', () => {
+    updateViewport();
+    applyHeaderOffset();
+  });
 
   const fsBtn = document.getElementById('fullscreenBtn');
   if (fsBtn) {
