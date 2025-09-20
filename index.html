@@ -835,6 +835,9 @@ button[aria-expanded="true"] .results-arrow{
   padding:0;
   gap:var(--gap);
 }
+#welcomeBody > :not(.map-control-row){
+  pointer-events:none;
+}
 #welcomeBody .welcome-logo{
   max-width:100%;
   width:min(100%, 600px);
@@ -2417,6 +2420,9 @@ body.filters-active #filterBtn{
   gap:10px;
   flex-wrap:wrap;
 }
+#welcomeBody .map-controls-welcome{
+  pointer-events:auto;
+}
 #welcomeBody .map-control-row > *{
   flex:0 0 auto;
 }
@@ -2429,6 +2435,32 @@ body.filters-active #filterBtn{
   width:100% !important;
   max-width:100% !important;
   min-width:0 !important;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
+  display:flex;
+  align-items:center;
+  gap:0;
+  height:var(--control-h);
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
+  flex:1 1 auto;
+  height:100%;
+  padding-top:0;
+  padding-bottom:0;
+  line-height:var(--control-h);
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  padding:0 8px;
+}
+#welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
 }
 #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   width:100%;
@@ -8567,10 +8599,17 @@ function closePanel(m){
 }
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
-  welcomeModalEl.addEventListener('click', () => closePanel(welcomeModalEl));
+  const welcomeControls = welcomeModalEl.querySelector('.map-controls-welcome');
+  welcomeModalEl.addEventListener('click', e => {
+    if(welcomeControls && welcomeControls.contains(e.target)) return;
+    closePanel(welcomeModalEl);
+  });
   const welcomeContent = welcomeModalEl.querySelector('.modal-content');
   if(welcomeContent){
-    welcomeContent.addEventListener('click', e => e.stopPropagation());
+    welcomeContent.addEventListener('click', e => {
+      if(welcomeControls && welcomeControls.contains(e.target)) return;
+      closePanel(welcomeModalEl);
+    });
   }
 }
 function requestClosePanel(m){
@@ -8651,8 +8690,8 @@ function handleDocInteract(e){
   if(e.target.closest('#filterBtn')) return;
   const welcome = document.getElementById('welcome-modal');
   if(welcome && welcome.classList.contains('show')){
-    const content = welcome.querySelector('.modal-content');
-    if(content && !content.contains(e.target)){
+    const controls = welcome.querySelector('.map-controls-welcome');
+    if(!controls || !controls.contains(e.target)){
       closePanel(welcome);
     }
   }
