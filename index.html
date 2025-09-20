@@ -2522,13 +2522,14 @@ body.filters-active #filterBtn{
   height:var(--geocoder-h);
   min-height:var(--geocoder-h);
   overflow:hidden;
+  position:relative;
 }
 
 .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--input{
   background:#ffffff;
   color:#000000;
   height:100%;
-  padding:0 12px;
+  padding:0 calc(var(--geocoder-h) + 20px) 0 12px;
   line-height:var(--geocoder-h);
   flex:1 1 auto;
   min-width:0;
@@ -2540,10 +2541,13 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   justify-content:center;
-  height:100%;
-  width:var(--geocoder-h);
+  height:var(--geocoder-h);
   min-width:var(--geocoder-h);
   padding:0;
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
 }
 
 .map-control-row .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon{
