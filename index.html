@@ -2499,8 +2499,13 @@ body.filters-active #filterBtn{
   left:50%;
   top:calc(var(--header-h) + 10px);
   transform:translateX(-50%);
-  width:auto;
+  width:min(600px, 90vw);
+  max-width:90vw;
   z-index:1;
+}
+
+.map-controls-map .geocoder{
+  max-width:100%;
 }
 
 .map-control-row .geocoder{margin:0;}
