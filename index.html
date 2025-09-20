@@ -8993,9 +8993,11 @@ document.addEventListener('pointerdown', handleDocInteract);
       colorIdx++;
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
-      subcategoryIcons[sub] = `<img src="assets/icons-20/${iconPrefix}-${color}-20.webp" width="20" height="20" alt="">`;
+      const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
+      const icon40 = `assets/icons-40/${iconPrefix}-${color}.webp-40.webp`;
+      subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
+      subcategoryMarkers[slug] = icon40;
     });
   });
   const specialSubIconPaths = {
@@ -9003,9 +9005,14 @@ document.addEventListener('pointerdown', handleDocInteract);
     'Other Opportunities': 'assets/icons-20/opportunities-category-icon-red-20.webp',
     'Other Learning': 'assets/icons-20/learning-category-icon-red-20.webp'
   };
-  Object.entries(specialSubIconPaths).forEach(([name, path]) => {
-    subcategoryIcons[name] = `<img src="${path}" width="20" height="20" alt="">`;
-    subcategoryMarkers[name] = path;
+  Object.entries(specialSubIconPaths).forEach(([name, path20]) => {
+    const markerPath = path20
+      .replace('icons-20', 'icons-40')
+      .replace('-20.webp', '.webp-40.webp');
+    subcategoryIcons[name] = `<img src="${path20}" width="20" height="20" alt="">`;
+    const slug = subcategoryMarkerIds[name] || slugify(name);
+    subcategoryMarkers[slug] = markerPath;
+    subcategoryMarkers[name] = markerPath;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded) addPostSource();
