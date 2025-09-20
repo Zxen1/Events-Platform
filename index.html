@@ -31,6 +31,7 @@
   --results-w: 530px;
   --post-board-max-w: 530px;
   --gap: 10px;
+  --logo-size: 40px;
     --filter-panel-offset: 0px;
     --media-h: 200px;
     --calendar-scale: 1;
@@ -385,7 +386,7 @@ input[type="checkbox"]{
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: var(--safe-top) 10px 0 10px;
+    padding: var(--safe-top) var(--gap) 0 var(--gap);
     position: fixed;
     top: 0;
     left: 0;
@@ -396,12 +397,12 @@ input[type="checkbox"]{
 
   .logo{
     position: absolute;
-    left: 10px;
+    left: var(--gap);
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--gap);
     font-weight: 800;
     letter-spacing: .4px;
     user-select: none;
@@ -409,15 +410,15 @@ input[type="checkbox"]{
   }
 
 .logo img{
-  width: 40px;
-  height: 40px;
+  width: var(--logo-size);
+  height: var(--logo-size);
   display: block;
 }
 
   .view-toggle{
   position: absolute;
-  left: 68px;
-  right: 10px;
+  left: calc(var(--gap) * 2 + var(--logo-size));
+  right: var(--gap);
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -4226,13 +4227,13 @@ img.thumb{
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
+      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
       <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
-      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
     </div>
   </header>
   
