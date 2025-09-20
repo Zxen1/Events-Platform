@@ -4979,7 +4979,10 @@ img.thumb{
       const root = document.documentElement;
       const header = document.querySelector('.header');
       if(header){
-        root.style.setProperty('--header-h', `${header.offsetHeight}px`);
+        const headerStyles = getComputedStyle(header);
+        const safeTop = parseFloat(headerStyles.paddingTop) || 0;
+        const measured = Math.max(0, header.scrollHeight - safeTop);
+        root.style.setProperty('--header-h', `${measured}px`);
       }
       if(typeof window.adjustListHeight === 'function'){
         window.adjustListHeight();
@@ -8968,6 +8971,13 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   storeTitleDefaults();
 
+  const headerEl = document.querySelector('.header');
+  if(headerEl && 'ResizeObserver' in window){
+    const headerObserver = new ResizeObserver(()=>{
+      updateLayoutVars();
+    });
+    headerObserver.observe(headerEl);
+  }
 
   window.addEventListener('resize', updateLayoutVars);
   window.addEventListener('resize', updateStickyImages);
