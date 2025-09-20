@@ -642,7 +642,7 @@ button[aria-expanded="true"] .results-arrow{
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  align-items:stretch;
   gap:20px;
 }
 .panel-body > *{
@@ -650,6 +650,7 @@ button[aria-expanded="true"] .results-arrow{
   max-width:420px;
   box-sizing:border-box;
   margin:0 auto;
+  min-width:0;
 }
 .panel-body > *:last-child{
   margin-bottom:0;
@@ -657,6 +658,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body > *:not(.map-control-row) > *{
   width:100%;
   max-width:100%;
+  min-width:0;
 }
 #adminPanel #styleControls{
   display:flex;
@@ -1112,21 +1114,28 @@ button[aria-expanded="true"] .results-arrow{
   gap:8px;
   width:100%;
   max-width:420px;
+  min-width:0;
 }
 #adminPanel .panel-field{margin:8px auto;}
 #adminPanel h3{margin:0;}
 .admin-section{display:flex;flex-direction:column;gap:var(--gap);}
 #tab-forms .panel-field{max-width:none;}
 .history-group,
-.color-group{display:flex;align-items:center;gap:8px;}
+.color-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .option-label{
   display:flex;
   align-items:center;
   gap:8px;
+  flex-wrap:wrap;
 }
 .option-group{
   display:flex;
   gap:10px;
+  flex-wrap:wrap;
+}
+.option-label > *,
+.option-group > *{
+  min-width:0;
 }
 .wysiwyg{
   border:1px solid #ccc;
@@ -1806,12 +1815,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   margin:0;
   overflow:auto;
   overflow:overlay;
+  overflow-x:hidden;
   background:rgba(0,0,0,0.7);
   transition:margin 0.3s ease;
   display:flex;
   flex-direction:column;
   gap:0;
   pointer-events:auto;
+  scrollbar-gutter:stable;
 }
 
 .post-board{
@@ -1855,13 +1866,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   margin:0;
   overflow-y:auto;
   overflow-y:overlay;
-  overflow-x:visible;
+  overflow-x:hidden;
   display:flex;
   flex-direction:column;
   gap:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
   transition:left 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+  scrollbar-gutter:stable;
 }
 .post-board .post-card{
   width:100%;
@@ -1987,6 +1999,15 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .post-details-info-container,
 .post-details-description-container{
   width:100%;
+  min-width:0;
+}
+.post-details-info-container{
+  display:flex;
+  flex-direction:column;
+  gap:var(--gap);
+}
+.post-details-info-container > *{
+  min-width:0;
 }
 
 .post-details-description-container{
@@ -2324,6 +2345,7 @@ body.filters-active #filterBtn{
   display:flex;
   align-items:center;
   gap:var(--gap);
+  flex-wrap:wrap;
 }
 .map-control-row .geocoder{
   background-color:#ffffff;
@@ -2438,6 +2460,7 @@ body.filters-active #filterBtn{
   max-width:none;
   background:transparent;
   border-radius:8px;
+  min-width:0;
 }
 .panel-body .map-control-row:not(.map-controls-welcome) > .geocoder{
   flex:1 1 auto;
@@ -2505,7 +2528,14 @@ body.filters-active #filterBtn{
 
 .map-control-row .geocoder{margin:0;}
 
-.post-board .posts{overflow:auto;overflow:overlay;padding:0;margin:0;}
+.post-board .posts{
+  overflow-y:auto;
+  overflow-y:overlay;
+  overflow-x:hidden;
+  padding:0;
+  margin:0;
+  scrollbar-gutter:stable;
+}
 .post-board .posts,
 .recents-board{
   scrollbar-width:thin;
@@ -2667,12 +2697,14 @@ body.filters-active #filterBtn{
 .open-post .post-details{
   margin-top:0;
   width:100%;
-  max-width:var(--post-board-max-w);
-  min-width:var(--post-board-max-w);
+  max-width:100%;
+  min-width:0;
   display:flex;
   flex-direction:column;
   gap:var(--gap);
   padding:10px;
+  flex:1 1 auto;
+  box-sizing:border-box;
 }
 
 .open-post:not(.desc-expanded) .post-venue-selection-container,
