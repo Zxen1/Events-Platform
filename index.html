@@ -2388,7 +2388,7 @@ body.filters-active #filterBtn{
   fill:#000000;
 }
 
-.panel-body .map-control-row{
+.panel-body .map-control-row:not(.map-controls-welcome){
   width:100%;
   max-width:100%;
   margin:0;
@@ -2398,15 +2398,29 @@ body.filters-active #filterBtn{
   padding:0;
   box-sizing:border-box;
 }
-.panel-body .map-control-row > *{
+.panel-body .map-control-row:not(.map-controls-welcome) > *{
   flex:0 0 auto;
   width:auto;
   max-width:none;
   background:transparent;
   border-radius:8px;
 }
-.panel-body .map-control-row > .geocoder{
+.panel-body .map-control-row:not(.map-controls-welcome) > .geocoder{
   flex:1 1 auto;
+}
+
+#welcomeBody .map-control-row{
+  justify-content:center;
+  width:auto;
+  max-width:100%;
+  margin:0 auto;
+  gap:10px;
+}
+#welcomeBody .map-control-row > *{
+  flex:0 0 auto;
+}
+#welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
+  width:auto;
 }
 
 .mode-posts .map-controls-map{display:none;}
@@ -2554,7 +2568,7 @@ body.filters-active #filterBtn{
   position:sticky;
   top:0;
   z-index:3;
-  background-color:#555555;
+  background:transparent;
 }
 .post-card .post-header{
   background-color:transparent;
@@ -2590,6 +2604,14 @@ body.filters-active #filterBtn{
   flex-direction:column;
   gap:var(--gap);
   padding:10px;
+}
+
+.open-post:not(.desc-expanded) .post-venue-selection-container,
+.open-post:not(.desc-expanded) .post-session-selection-container,
+.open-post:not(.desc-expanded) .location-section,
+.open-post:not(.desc-expanded) .post-details-info-container,
+.open-post:not(.desc-expanded) .member-avatar-row{
+  display:none;
 }
 
 .open-post .post-details .info{
@@ -4422,6 +4444,7 @@ img.thumb{
   })();
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
+  const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
 
   function getGeocoderInput(gc){
     if(!gc) return null;
@@ -4463,6 +4486,14 @@ img.thumb{
     const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
+    if(firstVisit){
+      mode = 'map';
+      localStorage.setItem('mode','map');
+      localStorage.setItem('historyActive','false');
+      ['filterPanel','memberPanel','adminPanel'].forEach(id => {
+        localStorage.setItem(`panel-open-${id}`,'false');
+      });
+    }
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
     const startCenter = savedView?.center || defaultCenter;
@@ -7168,7 +7199,7 @@ function makePosts(){
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.style.background = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+      el.style.background = CARD_SURFACE;
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
         p.fav = !p.fav;
@@ -7369,9 +7400,9 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
-        head.style.background = '#555555';
+        head.style.background = CARD_SURFACE;
       });
-      wrap.style.background = '#555555';
+      wrap.style.background = CARD_SURFACE;
         // progressive hero swap
         (function(){
           const img = wrap.querySelector('#hero-img');
