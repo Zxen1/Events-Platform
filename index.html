@@ -5015,8 +5015,27 @@ img.thumb{
       if(header){
         const headerStyles = getComputedStyle(header);
         const safeTop = parseFloat(headerStyles.paddingTop) || 0;
-        const measured = Math.max(0, header.scrollHeight - safeTop);
-        root.style.setProperty('--header-h', `${measured}px`);
+        const rect = header.getBoundingClientRect();
+        let measured = Number.isFinite(rect.height) ? rect.height : 0;
+        if(!measured || measured <= safeTop){
+          const fallbackOffset = Number.isFinite(header.offsetHeight) ? header.offsetHeight : 0;
+          measured = fallbackOffset;
+        }
+        if(!measured || measured <= safeTop){
+          const fallbackScroll = Number.isFinite(header.scrollHeight) ? header.scrollHeight : 0;
+          measured = fallbackScroll;
+        }
+        measured = Math.max(0, measured - safeTop);
+        if(!measured){
+          const rootStyles = getComputedStyle(root);
+          const current = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+          if(current > 0){
+            measured = current;
+          }
+        }
+        if(measured > 0){
+          root.style.setProperty('--header-h', `${measured}px`);
+        }
       }
       if(typeof window.adjustListHeight === 'function'){
         window.adjustListHeight();
