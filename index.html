@@ -5021,10 +5021,15 @@ img.thumb{
       const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-      const availableHeight = Math.max(0, window.innerHeight - headerH - subH - footerH - safeTop);
+      const viewport = window.visualViewport;
+      const layoutHeight = window.innerHeight || 0;
+      const docHeight = document.documentElement ? (document.documentElement.clientHeight || 0) : 0;
+      const visualHeight = viewport ? (viewport.height + viewport.offsetTop) : 0;
+      const viewportHeight = Math.max(layoutHeight, docHeight, visualHeight);
+      const availableHeight = Math.max(0, viewportHeight - headerH - subH - footerH - safeTop);
       const root = document.documentElement;
       if(root){
-        const vhUnit = window.innerHeight * 0.01;
+        const vhUnit = viewportHeight * 0.01;
         root.style.setProperty('--vh', `${vhUnit}px`);
         root.style.setProperty('--boards-area-height', `${availableHeight}px`);
       }
@@ -5034,6 +5039,10 @@ img.thumb{
       });
     }
     window.adjustListHeight = adjustListHeight;
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize', adjustListHeight);
+      window.visualViewport.addEventListener('scroll', adjustListHeight);
+    }
 
     let stickyScrollHandler = null;
       function updateStickyImages(){
