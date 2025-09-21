@@ -615,9 +615,9 @@ button[aria-expanded="true"] .results-arrow{
   bottom:var(--footer-h);
   width:440px;
   max-width:440px;
-  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+  min-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
   border-radius:0;
   display:flex;
   flex-direction:column;
@@ -691,8 +691,8 @@ button[aria-expanded="true"] .results-arrow{
   #memberPanel .panel-content{
     width:440px;
     max-width:440px;
-    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-    max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+    height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+    max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
     display:flex;
     flex-direction:column;
     overflow-y:auto;
@@ -717,12 +717,12 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow-y:auto;
   overflow-y:overlay;
-  padding-bottom:10px;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
 #filterPanel .panel-body{
   gap:var(--gap);
-  padding:0 10px var(--gap);
+  padding:0 10px calc(var(--gap) + env(safe-area-inset-bottom, 0px));
 }
 
 #filterPanel button:not([class*="mapboxgl-"]),
@@ -906,24 +906,25 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:center;
   width:100%;
-  max-width:360px;
-  margin:0 auto;
   gap:8px;
-  height:40px;
+  row-gap:8px;
+  flex-wrap:wrap;
 }
 #post-mode-background-row input[type="color"]{
   width:40px;
   height:40px;
   padding:0;
   border-radius:8px;
+  flex:0 0 40px;
 }
 #post-mode-background-row input[type="range"]{
-  flex:1 1 auto;
+  flex:1 1 160px;
   width:100%;
   max-width:none;
 }
 #post-mode-background-row span{
-  width:40px;
+  flex:0 0 auto;
+  min-width:40px;
   text-align:right;
 }
 
@@ -931,7 +932,8 @@ button[aria-expanded="true"] .results-arrow{
 .map-balloon-container,
 .map-spin-container{
   background:#444444;
-  width:420px;
+  width:100%;
+  max-width:420px;
   padding:10px;
   border-radius:8px;
   display:flex;
@@ -947,7 +949,8 @@ button[aria-expanded="true"] .results-arrow{
 .settings-style-container,
 .settings-welcome-container{
   background:#444444;
-  width:420px;
+  width:100%;
+  max-width:420px;
   padding:10px;
   border-radius:8px;
 }
@@ -1182,7 +1185,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-header{
   position:sticky;
   top:0;
-  padding:10px 20px;
+  padding:10px;
   border-top-left-radius:0;
   border-top-right-radius:0;
   z-index:1;
@@ -1206,6 +1209,19 @@ button[aria-expanded="true"] .results-arrow{
 }
 .panel-header h2{
   margin:0;
+}
+
+@media (max-width:440px){
+  .panel-header .panel-actions .move-left,
+  .panel-header .panel-actions .move-right{
+    display:none;
+  }
+  #post-mode-background-row input[type="range"]{
+    flex-basis:100%;
+  }
+  #post-mode-background-row span{
+    text-align:left;
+  }
 }
 #filterPanel .panel-header{
   padding:10px;
@@ -2854,6 +2870,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .open-post{
     margin:10px 0 12px;
   }
+  .post-board .post-card:last-child,
+  .post-board .open-post:last-child{
+    margin-bottom:0;
+  }
   .open-post .post-body{
     padding:0;
   }
@@ -4493,19 +4513,19 @@ img.thumb{
           <div id="map-balloon-container" class="map-balloon-container">
             <style>
               #map-balloon-container .t{font-size:16px;font-weight:bold;}
-              #map-balloon-container .shape-dropdown{position:relative;width:400px;height:35px;margin-bottom:8px;}
-              #map-balloon-container .shape-dropdown > button{width:400px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
-              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:400px;max-height:400px;overflow-y:auto;overflow-y:overlay;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
+              #map-balloon-container .shape-dropdown{position:relative;width:100%;max-width:100%;height:35px;margin-bottom:8px;}
+              #map-balloon-container .shape-dropdown > button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
+              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:100%;max-height:400px;overflow-y:auto;overflow-y:overlay;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
               #map-balloon-container .shape-menu[hidden]{display:none;}
               #map-balloon-container .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
               #map-balloon-container .shape-button svg{width:24px;height:24px;vertical-align:middle;}
               #map-balloon-container .shape-button.active{outline:2px solid var(--border);}
-              #map-balloon-container .panel-field{width:400px;}
-              #map-balloon-container #copySvgCode{width:400px;height:35px;padding:0;margin-bottom:8px;}
+              #map-balloon-container .panel-field{width:100%;max-width:100%;}
+              #map-balloon-container #copySvgCode{width:100%;height:35px;padding:0;margin-bottom:8px;}
               #map-balloon-container #shapeMenuBtn{padding:0;}
-              #map-balloon-container #balloonGrid{display:grid;grid-template-columns: repeat(10, 1fr); gap:4px;overflow-x:auto;margin-bottom:8px;}
+              #map-balloon-container #balloonGrid{display:grid;grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap:4px;overflow-x:auto;margin-bottom:8px;}
               #map-balloon-container #balloonGrid svg{cursor:pointer;}
-              #map-balloon-container #balloonSvgCode{width:400px;height:200px;}
+              #map-balloon-container #balloonSvgCode{width:100%;max-width:100%;min-height:200px;}
             </style>
             <div class="t">Balloon Icon Generator</div>
             <div class="shape-dropdown">
@@ -7802,6 +7822,31 @@ function makePosts(){
         }
 
         await nextFrame();
+
+        if(!fromMap && container){
+          let targetTop = detail.offsetTop;
+          if(typeof window.getComputedStyle === 'function'){
+            const detailStyle = getComputedStyle(detail);
+            if(detailStyle){
+              const marginTop = parseFloat(detailStyle.marginTop);
+              if(Number.isFinite(marginTop)){
+                targetTop -= marginTop;
+              }
+            }
+          }
+          if(!Number.isFinite(targetTop)){
+            targetTop = detail.offsetTop;
+          }
+          if(targetTop < 0){
+            targetTop = 0;
+          }
+          if(typeof container.scrollTo === 'function'){
+            container.scrollTo({top:targetTop, behavior:'smooth'});
+          } else {
+            container.scrollTop = targetTop;
+          }
+        }
+
         const header = detail.querySelector('.post-header');
         if(header){
           const h = header.offsetHeight;
