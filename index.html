@@ -1761,9 +1761,21 @@ button[aria-expanded="true"] .results-arrow{
 .post-mode-background{
   position:absolute;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   left:0;
   right:0;
+  height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  min-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  max-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
   background: rgba(var(--post-mode-bg-color), var(--post-mode-bg-opacity));
   z-index:1;
   pointer-events:none;
@@ -1778,7 +1790,7 @@ button[aria-expanded="true"] .results-arrow{
 .post-mode-boards{
   position:absolute;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   left:0;
   right:0;
   padding-left:var(--filter-panel-offset);
@@ -1790,9 +1802,18 @@ button[aria-expanded="true"] .results-arrow{
   z-index:2;
   pointer-events:none;
   transition:padding 0.3s ease;
-  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  min-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  max-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
 }
 
 body.filter-anchored .post-mode-boards{
@@ -1845,9 +1866,18 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   opacity:1;
   display:flex;
   flex-direction:column;
-  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  min-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  max-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
@@ -1855,9 +1885,18 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   flex-shrink:0;
-  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  min-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
+  max-height:var(
+    --boards-area-height,
+    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
+  );
 }
 @media (max-width:440px){
   .post-board,
@@ -4983,6 +5022,12 @@ img.thumb{
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
       const availableHeight = Math.max(0, window.innerHeight - headerH - subH - footerH - safeTop);
+      const root = document.documentElement;
+      if(root){
+        const vhUnit = window.innerHeight * 0.01;
+        root.style.setProperty('--vh', `${vhUnit}px`);
+        root.style.setProperty('--boards-area-height', `${availableHeight}px`);
+      }
       document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
         list.style.minHeight = `${availableHeight}px`;
