@@ -172,7 +172,7 @@ html,body{
     caret-color: transparent;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
     user-select: text;
     touch-action: manipulation;
   }
@@ -584,7 +584,7 @@ button[aria-expanded="true"] .results-arrow{
   left:0;
   right:0;
   width:100%;
-  height:100vh;
+  height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
   z-index:2000;
@@ -599,7 +599,7 @@ button[aria-expanded="true"] .results-arrow{
   left:0;
   right:0;
   width:100%;
-  height:100vh;
+  height:calc(var(--vh, 1vh) * 100);
   background:transparent;
   display:none;
   z-index:2000;
@@ -689,8 +689,8 @@ button[aria-expanded="true"] .results-arrow{
 }
   #adminPanel .panel-content,
   #memberPanel .panel-content{
-    width:440px;
-    max-width:440px;
+    width:min(440px, 100%);
+    max-width:100%;
     height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
     max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
     display:flex;
@@ -5014,6 +5014,22 @@ img.thumb{
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
 
+    function getViewportHeight(){
+      const viewport = window.visualViewport;
+      if(viewport && Number.isFinite(viewport.height)){
+        return viewport.height;
+      }
+      if(Number.isFinite(window.innerHeight)){
+        return window.innerHeight;
+      }
+      const doc = document.documentElement;
+      if(doc && Number.isFinite(doc.clientHeight)){
+        return doc.clientHeight;
+      }
+      const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
+      return bodyRect && Number.isFinite(bodyRect.height) ? bodyRect.height : 0;
+    }
+
     // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
       const rootStyles = getComputedStyle(document.documentElement);
@@ -5021,24 +5037,17 @@ img.thumb{
       const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-      const viewport = window.visualViewport;
-      const layoutHeight = window.innerHeight || 0;
-      const docHeight = document.documentElement ? (document.documentElement.clientHeight || 0) : 0;
-      const visualHeight = viewport ? (viewport.height + viewport.offsetTop) : 0;
-      let viewportHeight = Math.max(layoutHeight, docHeight, visualHeight);
-      if(!viewportHeight){
-        const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
-        if(bodyRect && bodyRect.height){
-          viewportHeight = bodyRect.height;
-        }
+      let viewportHeight = getViewportHeight();
+      if(!Number.isFinite(viewportHeight) || viewportHeight <= 0){
+        viewportHeight = headerH + subH + footerH + safeTop;
       }
       let availableHeight = Math.max(0, viewportHeight - headerH - subH - footerH - safeTop);
       const boardsContainer = document.querySelector('.post-mode-boards');
       if(boardsContainer){
         const boardsRect = boardsContainer.getBoundingClientRect();
         if(boardsRect && Number.isFinite(boardsRect.height) && boardsRect.height > 0){
-          availableHeight = Math.max(0, boardsRect.height);
-          viewportHeight = Math.max(viewportHeight, boardsRect.height + headerH + subH + footerH + safeTop);
+          const measured = Math.max(0, boardsRect.height);
+          availableHeight = availableHeight > 0 ? Math.min(availableHeight, measured) : measured;
         }
       }
       if(!Number.isFinite(availableHeight) || availableHeight < 0){
@@ -5056,9 +5065,12 @@ img.thumb{
       }
       document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .posts').forEach(list=>{
         if(availableHeight > 0){
-          list.style.maxHeight = `${availableHeight}px`;
-          list.style.minHeight = `${availableHeight}px`;
+          const value = `${availableHeight}px`;
+          list.style.height = value;
+          list.style.maxHeight = value;
+          list.style.minHeight = value;
         } else {
+          list.style.removeProperty('height');
           list.style.removeProperty('max-height');
           list.style.removeProperty('min-height');
         }
@@ -5069,6 +5081,8 @@ img.thumb{
       window.visualViewport.addEventListener('resize', adjustListHeight);
       window.visualViewport.addEventListener('scroll', adjustListHeight);
     }
+    window.addEventListener('resize', adjustListHeight);
+    window.addEventListener('orientationchange', adjustListHeight);
 
     let stickyScrollHandler = null;
       function updateStickyImages(){
@@ -7816,6 +7830,14 @@ function makePosts(){
         target = originEl || container.querySelector(`[data-id="${id}"]`);
 
         if(!target){ target = card(p, fromHistory ? false : true); container.appendChild(target); }
+        let targetAlignTop = null;
+        if(target && container){
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          if(containerRect && targetRect){
+            targetAlignTop = container.scrollTop + (targetRect.top - containerRect.top);
+          }
+        }
         const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
         if(resCard){
           resCard.setAttribute('aria-selected','true');
@@ -7845,8 +7867,14 @@ function makePosts(){
         await nextFrame();
 
         if(!fromMap && container){
-          let targetTop = detail.offsetTop;
-          if(typeof window.getComputedStyle === 'function'){
+          let targetTop = Number.isFinite(targetAlignTop) ? targetAlignTop : detail.offsetTop;
+          if(!Number.isFinite(targetTop)){
+            targetTop = detail.offsetTop;
+          }
+          if(!Number.isFinite(targetTop)){
+            targetTop = 0;
+          }
+          if(!Number.isFinite(targetAlignTop) && typeof window.getComputedStyle === 'function'){
             const detailStyle = getComputedStyle(detail);
             if(detailStyle){
               const marginTop = parseFloat(detailStyle.marginTop);
@@ -8754,12 +8782,13 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     if(m.id==='adminPanel' || m.id==='memberPanel'){
       const topPos = headerH + safeTop;
-      const availableHeight = window.innerHeight - footerH - topPos;
+      const viewportHeight = getViewportHeight();
+      const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
       content.style.left='auto';
       content.style.right='0';
       content.style.top=`${topPos}px`;
       content.style.bottom=`${footerH}px`;
-      content.style.maxHeight=`${availableHeight}px`;
+      content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
       content.dataset.side='right';
       content.classList.remove('panel-visible');
       content.style.transform='translateX(100%)';
@@ -8776,12 +8805,13 @@ function openPanel(m){
         content.dataset.side='left';
         translate = '-100%';
       } else {
-        const availableHeight = window.innerHeight - footerH - topPos;
+        const viewportHeight = getViewportHeight();
+        const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
         content.style.left='0';
         content.style.right='';
         content.style.top=`${topPos}px`;
         content.style.bottom='';
-        content.style.maxHeight=`${availableHeight}px`;
+        content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
         content.dataset.side='left';
         translate = '-100%';
       }
