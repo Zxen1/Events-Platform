@@ -2855,8 +2855,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex-shrink:0;
   cursor:pointer;
   background: rgba(0,0,0,0);
-  display:grid;
-  place-items:center;
+  position:relative;
+}
+
+.open-post .image-box .image-track{
+  display:flex;
+  width:100%;
+  height:100%;
+  gap:0;
+  align-items:stretch;
+  transition:transform 0.35s ease;
+  will-change:transform;
+  touch-action: pan-y;
 }
 
 .open-post .image-box img{
@@ -2866,6 +2876,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   object-fit:cover;
   object-position:center;
   display:block;
+  flex:0 0 100%;
 }
 .open-post .image-box img.ready{
   object-fit:cover;
@@ -2949,8 +2960,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     height:auto;
     margin:0;
     border-radius:0;
-    display:grid;
-    place-items:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .open-post .image-box .image-track{
+    display:flex;
+    width:100%;
+    height:100%;
+    gap:0;
+    align-items:stretch;
+    transition:transform 0.35s ease;
+    will-change:transform;
+    touch-action: pan-y;
   }
   .open-post .image-box img{
     width:100%;
@@ -2958,6 +2979,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     aspect-ratio:1/1;
     object-fit:cover;
     object-position:center;
+    flex:0 0 100%;
   }
   .open-post .thumbnail-row{
     width:100%;
@@ -3715,6 +3737,17 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     border-radius:0;
     display:block;
     overflow:hidden;
+    position:relative;
+  }
+  .open-post .image-box .image-track{
+    display:flex;
+    width:100%;
+    height:100%;
+    gap:0;
+    align-items:stretch;
+    transition:transform 0.35s ease;
+    will-change:transform;
+    touch-action: pan-y;
   }
   .open-post .image-box img{
     border-radius:0;
@@ -3723,6 +3756,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     aspect-ratio:1/1;
     object-fit:cover;
     display:block;
+    flex:0 0 100%;
   }
   .open-post .thumbnail-row{
     padding:0;
@@ -3760,13 +3794,25 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     width:100%;
     aspect-ratio:1/1;
     height:auto;
-    display:grid;
-    place-items:center;
+    display:block;
+    position:relative;
+    overflow:hidden;
   }
+    .open-post .image-box .image-track{
+      display:flex;
+      width:100%;
+      height:100%;
+      gap:0;
+      align-items:stretch;
+      transition:transform 0.35s ease;
+      will-change:transform;
+      touch-action: pan-y;
+    }
     .open-post .image-box img{
       width:100%;
       height:100%;
       aspect-ratio:1/1;
+      flex:0 0 100%;
     }
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
@@ -3801,6 +3847,17 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       border-radius:0;
       display:block;
       overflow:hidden;
+      position:relative;
+    }
+    .open-post .image-box .image-track{
+      display:flex;
+      width:100%;
+      height:100%;
+      gap:0;
+      align-items:stretch;
+      transition:transform 0.35s ease;
+      will-change:transform;
+      touch-action: pan-y;
     }
     .open-post .image-box img{
       width:100%;
@@ -3809,6 +3866,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       margin:0;
       border-radius:0;
       aspect-ratio:1/1;
+      flex:0 0 100%;
     }
     .open-post .post-body{
       padding:0;
@@ -4269,14 +4327,26 @@ img.thumb{
     height:auto;
     flex:0 0 auto;
     border-radius:0;
-    display:grid;
-    place-items:center;
+    display:block;
+    position:relative;
+    overflow:hidden;
+  }
+  .open-post .image-box .image-track{
+    display:flex;
+    width:100%;
+    height:100%;
+    gap:0;
+    align-items:stretch;
+    transition:transform 0.35s ease;
+    will-change:transform;
+    touch-action: pan-y;
   }
   .open-post .image-box img{
     width:100%;
     height:100%;
     object-fit:cover;
     aspect-ratio:1/1;
+    flex:0 0 100%;
   }
   .second-post-column{
     width:100%;
@@ -7771,7 +7841,7 @@ function makePosts(){
               </div>
             </div>
             <div class="post-images">
-              <div class="image-box"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div>
+              <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
               <div class="thumbnail-row"></div>
             </div>
           </div>
@@ -8154,69 +8224,164 @@ function makePosts(){
 
       const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
       const thumbCol = el.querySelector('.thumbnail-row');
-      const mainImg = el.querySelector('.image-box img');
-      imgs.forEach((url,i)=>{
-        const t = document.createElement('img');
-        t.src = url;
-        t.dataset.full = url;
-        t.dataset.index = i;
-        t.tabIndex = 0;
-        thumbCol.appendChild(t);
-      });
-      function show(idx){
-        const t = thumbCol.querySelector(`img[data-index="${idx}"]`);
-        if(!t) return;
-        if(mainImg.dataset.index == idx && mainImg.classList.contains('ready')) return;
-        mainImg.src = t.src;
-        mainImg.dataset.index = idx;
-        mainImg.classList.remove('ready');
-        mainImg.classList.add('lqip');
-        const hi = new Image();
-        const full = t.dataset.full;
-        hi.onload = ()=>{
-          const swap = ()=>{
-            if(mainImg.dataset.index==idx){
-              mainImg.src = full;
-              mainImg.classList.remove('lqip');
-              mainImg.classList.add('ready');
-            }
-          };
-          if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
-        };
-      hi.onerror = ()=>{};
-      hi.src = full;
-      thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
+      const imageBox = el.querySelector('.image-box');
+      const imageTrack = imageBox ? imageBox.querySelector('.image-track') : null;
+      const baseImg = imageTrack ? imageTrack.querySelector('img') : null;
+      const slides = [];
+      if(baseImg){
+        baseImg.dataset.index = '0';
+        baseImg.dataset.full = imgs[0];
+        if(!baseImg.classList.contains('ready')){
+          baseImg.classList.add('lqip');
+        }
+        slides[0] = baseImg;
       }
-      show(0);
+      if(imageTrack){
+        imageTrack.style.transform = 'translateX(0)';
+      }
+      for(let i=1;i<imgs.length;i++){
+        if(!imageTrack) break;
+        const slide = document.createElement('img');
+        slide.dataset.index = i;
+        slide.dataset.full = imgs[i];
+        slide.alt = '';
+        slide.decoding = 'async';
+        slide.loading = 'lazy';
+        slide.classList.add('lqip');
+        slide.src = imgs[i];
+        imageTrack.appendChild(slide);
+        slides[i] = slide;
+      }
+      if(thumbCol){
+        imgs.forEach((url,i)=>{
+          const t = document.createElement('img');
+          t.src = url;
+          t.dataset.full = url;
+          t.dataset.index = i;
+          t.tabIndex = 0;
+          thumbCol.appendChild(t);
+        });
+      }
+      const clampIdx = idx => Math.min(Math.max(idx, 0), imgs.length - 1);
+      let currentIdx = 0;
+      const ensureSlide = idx => {
+        if(!imageTrack) return null;
+        if(!slides[idx]){
+          const slide = document.createElement('img');
+          slide.dataset.index = idx;
+          slide.dataset.full = imgs[idx];
+          slide.alt = '';
+          slide.decoding = 'async';
+          slide.loading = 'lazy';
+          slide.classList.add('lqip');
+          slide.src = imgs[idx];
+          imageTrack.appendChild(slide);
+          slides[idx] = slide;
+        }
+        return slides[idx];
+      };
+      const scrollThumbIntoView = target => {
+        if(!thumbCol || !target) return;
+        const rowRect = thumbCol.getBoundingClientRect();
+        const tRect = target.getBoundingClientRect();
+        if(tRect.left < rowRect.left){
+          thumbCol.scrollBy({left: tRect.left - rowRect.left - 8, behavior:'smooth'});
+        } else if(tRect.right > rowRect.right){
+          thumbCol.scrollBy({left: tRect.right - rowRect.right + 8, behavior:'smooth'});
+        }
+      };
+      const moveTo = (idx, {instant=false}={})=>{
+        if(!imageTrack) return;
+        if(instant){
+          imageTrack.style.transition = 'none';
+        }
+        const apply = ()=>{ imageTrack.style.transform = `translateX(-${idx * 100}%)`; };
+        if(instant){
+          apply();
+          requestAnimationFrame(()=>{ imageTrack.style.transition = ''; });
+        } else {
+          apply();
+        }
+      };
+      function show(idx, {instant=false}={}){
+        idx = clampIdx(idx);
+        const t = thumbCol ? thumbCol.querySelector(`img[data-index="${idx}"]`) : null;
+        const slide = ensureSlide(idx);
+        if(!slide) return;
+        const prevIdx = currentIdx;
+        const alreadyReady = slide.classList.contains('ready');
+        currentIdx = idx;
+        if(prevIdx !== idx || instant){
+          moveTo(idx, {instant});
+        }
+        if(imageBox){
+          imageBox.dataset.index = idx;
+        }
+        if(slides.length){
+          slides.forEach((img,i)=>{
+            if(img){
+              img.classList.toggle('active', i===idx);
+            }
+          });
+        }
+        if(t && thumbCol){
+          thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
+          scrollThumbIntoView(t);
+        }
+        if(t && slide.src !== t.src){
+          slide.src = t.src;
+        }
+        const full = (t && (t.dataset.full || t.src)) || slide.dataset.full || slide.src;
+        if(!slide.dataset.full){
+          slide.dataset.full = full;
+        }
+        if(!alreadyReady || slide.src !== full){
+          slide.classList.remove('ready');
+          slide.classList.add('lqip');
+          const hi = new Image();
+          hi.onload = ()=>{
+            const swap = ()=>{
+              if(slide.dataset.full !== full){ slide.dataset.full = full; }
+              slide.src = full;
+              slide.classList.remove('lqip');
+              slide.classList.add('ready');
+            };
+            if(hi.decode){ hi.decode().then(swap).catch(swap); } else { swap(); }
+          };
+          hi.onerror = ()=>{};
+          hi.src = full;
+        }
+      }
+      show(0, {instant:true});
       if(thumbCol){
         thumbCol.scrollLeft = 0;
+        setupHorizontalWheel(thumbCol);
+        thumbCol.addEventListener('click', e=>{
+          const t = e.target.closest('img');
+          if(!t) return;
+          const idx = clampIdx(parseInt(t.dataset.index,10));
+          if(currentIdx === idx && t.classList.contains('selected')){
+            openImagePopup(idx);
+          } else {
+            show(idx);
+          }
+        });
+        thumbCol.addEventListener('keydown', e=>{
+          if(e.key==='ArrowDown'){
+            e.preventDefault();
+            const ni = clampIdx(currentIdx + 1);
+            show(ni);
+            const nextThumb = thumbCol.querySelector(`img[data-index="${ni}"]`);
+            if(nextThumb) nextThumb.focus();
+          } else if(e.key==='ArrowUp'){
+            e.preventDefault();
+            const ni = clampIdx(currentIdx - 1);
+            show(ni);
+            const prevThumb = thumbCol.querySelector(`img[data-index="${ni}"]`);
+            if(prevThumb) prevThumb.focus();
+          }
+        });
       }
-      setupHorizontalWheel(thumbCol);
-      thumbCol.addEventListener('click', e=>{
-        const t = e.target.closest('img');
-        if(!t) return;
-      const idx = parseInt(t.dataset.index,10);
-      const currentIdx = parseInt(mainImg.dataset.index||'0',10);
-      if(currentIdx === idx && t.classList.contains('selected')){
-        openImagePopup(idx);
-      } else {
-        show(idx);
-      }
-    });
-      thumbCol.addEventListener('keydown', e=>{
-        const cur = parseInt(mainImg.dataset.index||'0',10);
-        if(e.key==='ArrowDown'){
-          e.preventDefault();
-          const ni = Math.min(cur+1, imgs.length-1);
-          show(ni);
-          thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
-        } else if(e.key==='ArrowUp'){
-          e.preventDefault();
-          const ni = Math.max(cur-1,0);
-          show(ni);
-          thumbCol.querySelector(`img[data-index="${ni}"]`).focus();
-        }
-      });
       function openImagePopup(start){
         const panel = document.createElement('div');
         panel.className = 'img-popup';
@@ -8252,19 +8417,25 @@ function makePosts(){
         document.body.appendChild(panel);
         panelStack.push(entry);
       }
-      mainImg.addEventListener('click', e=>{ e.stopPropagation(); openImagePopup(parseInt(mainImg.dataset.index||'0',10)); });
-      let startX = null;
-      mainImg.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
-      mainImg.addEventListener('touchend', e=>{
-        if(startX===null) return;
-        const diff = e.changedTouches[0].clientX - startX;
-        if(Math.abs(diff) > 50){
-          const cur = parseInt(mainImg.dataset.index||'0',10);
-          if(diff < 0 && cur < imgs.length-1){ show(cur+1); }
-          else if(diff > 0 && cur > 0){ show(cur-1); }
-        }
-        startX = null;
-      }, {passive:true});
+      if(imageBox){
+        imageBox.addEventListener('click', e=>{
+          const imgTarget = e.target.closest('.image-track img');
+          if(!imgTarget) return;
+          e.stopPropagation();
+          openImagePopup(currentIdx);
+        });
+        let startX = null;
+        imageBox.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
+        imageBox.addEventListener('touchend', e=>{
+          if(startX===null) return;
+          const diff = e.changedTouches[0].clientX - startX;
+          if(Math.abs(diff) > 50){
+            if(diff < 0 && currentIdx < imgs.length-1){ show(currentIdx + 1); }
+            else if(diff > 0 && currentIdx > 0){ show(currentIdx - 1); }
+          }
+          startX = null;
+        }, {passive:true});
+      }
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
       const venueMenu = venueDropdown ? venueDropdown.querySelector('.venue-menu') : null;
