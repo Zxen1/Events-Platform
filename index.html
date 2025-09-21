@@ -611,17 +611,20 @@ button[aria-expanded="true"] .results-arrow{
 .panel-content{
   position:absolute;
   left:50%;
-  top:var(--header-h);
+  top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   width:440px;
   max-width:440px;
-  height:calc(100vh - var(--header-h) - var(--footer-h));
+  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
   border-radius:0;
   display:flex;
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
   transition:transform 0.3s ease;
+  box-sizing:border-box;
 }
 
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
@@ -635,6 +638,7 @@ button[aria-expanded="true"] .results-arrow{
 .panel-content .resizer.sw{bottom:0;left:0;width:10px;height:10px;cursor:sw-resize;}
 .panel-body{
   flex:1 1 auto;
+  min-height:0;
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
@@ -687,7 +691,8 @@ button[aria-expanded="true"] .results-arrow{
   #memberPanel .panel-content{
     width:440px;
     max-width:440px;
-    max-height:90%;
+    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+    max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
     display:flex;
     flex-direction:column;
     overflow-y:auto;
@@ -747,12 +752,15 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
   position:relative;
+  display:flex;
+  align-items:stretch;
   overflow-x:auto;
-  overflow-y:hidden;
+  overflow-y:auto;
   padding-bottom:0;
   box-sizing:content-box;
   width:auto;
   height:var(--calendar-height);
+  max-width:100%;
   border:1px solid var(--border);
   border-radius:8px;
 }
@@ -1752,7 +1760,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .post-mode-background{
   position:absolute;
-  top:var(--header-h);
+  top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   left:0;
   right:0;
@@ -1769,7 +1777,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .post-mode-boards{
   position:absolute;
-  top:var(--header-h);
+  top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   left:0;
   right:0;
@@ -1777,10 +1785,14 @@ button[aria-expanded="true"] .results-arrow{
   padding-right:0;
   display:flex;
   justify-content:center;
+  align-items:stretch;
   gap:var(--gap);
   z-index:2;
   pointer-events:none;
   transition:padding 0.3s ease;
+  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
 }
 
 body.filter-anchored .post-mode-boards{
@@ -1791,7 +1803,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .quick-list-board{
   position:fixed;
-  top:var(--header-h);
+  top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   left:0;
   width:440px;
@@ -1831,6 +1843,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   position:relative;
   left:0;
   opacity:1;
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
@@ -1838,6 +1855,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   flex-shrink:0;
+  height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  min-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+  max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
 }
 @media (max-width:440px){
   .post-board,
@@ -2029,7 +2049,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 
 .ad-board{
   position:fixed;
-  top:var(--header-h);
+  top:calc(var(--header-h) + var(--safe-top));
   bottom:var(--footer-h);
   right:0;
   width:440px;
@@ -2540,6 +2560,8 @@ body.filters-active #filterBtn{
 .map-control-row .geocoder{margin:0;}
 
 .post-board .posts{
+  flex:1 1 auto;
+  min-height:0;
   overflow-y:auto;
   overflow-y:overlay;
   overflow-x:hidden;
@@ -3104,8 +3126,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   min-width:0;
   box-sizing:border-box;
   max-width:100%;
-  max-height:80vh;
-  overflow:hidden;
+  max-height:min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
+  overflow:auto;
   background:var(--dropdown-bg);
   border:1px solid var(--border);
   border-radius:var(--dropdown-radius);
@@ -3241,8 +3263,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   width:100%;
   height:var(--calendar-height);
   max-height:var(--calendar-height);
+  display:flex;
+  align-items:stretch;
   overflow-x:auto;
-  overflow-y:hidden;
+  overflow-y:auto;
   padding-bottom:0;
   box-sizing:content-box;
   background:var(--dropdown-bg);
@@ -8914,9 +8938,10 @@ document.addEventListener('pointerdown', handleDocInteract);
       const defaultWidth = panel.id === 'filterPanel' ? '380px' : '440px';
       content.style.width = defaultWidth;
       content.style.maxWidth = defaultWidth;
-      content.style.top = 'var(--header-h)';
+      content.style.top = 'calc(var(--header-h) + var(--safe-top))';
       content.style.bottom = 'var(--footer-h)';
-      content.style.height = 'calc(100vh - var(--header-h) - var(--footer-h))';
+      content.style.height = 'calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h))';
+      content.style.maxHeight = 'calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h))';
     }
   });
 
