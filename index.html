@@ -6473,11 +6473,13 @@ function makePosts(){
           const isPostsMode = currentMode === 'posts';
           viewToggle.setAttribute('aria-pressed', isPostsMode ? 'true' : 'false');
           viewToggle.setAttribute('data-mode', historyActive ? 'history' : currentMode);
-          const toggleLabel = isPostsMode ? 'Switch to Map view' : 'Switch to Posts view';
+          const targetMode = currentMode === 'map' ? 'posts' : 'map';
+          const nextLabelText = targetMode === 'posts' ? 'Posts' : 'Map';
+          const toggleLabel = targetMode === 'posts' ? 'Switch to Posts view' : 'Switch to Map view';
           viewToggle.setAttribute('aria-label', historyActive ? 'Toggle between Posts and Map views' : toggleLabel);
           const visibleLabel = viewToggle.querySelector('.mode-label');
           if(visibleLabel){
-            visibleLabel.textContent = isPostsMode ? 'Map' : 'Posts';
+            visibleLabel.textContent = nextLabelText;
           }
         }
       }
