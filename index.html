@@ -4949,9 +4949,10 @@ img.thumb{
       const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
       const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
       const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-      const availableHeight = window.innerHeight - headerH - subH - footerH - safeTop;
-      document.querySelectorAll('.recents-board, .posts').forEach(list=>{
+      const availableHeight = Math.max(0, window.innerHeight - headerH - subH - footerH - safeTop);
+      document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .posts').forEach(list=>{
         list.style.maxHeight = `${availableHeight}px`;
+        list.style.minHeight = `${availableHeight}px`;
       });
     }
     window.adjustListHeight = adjustListHeight;
