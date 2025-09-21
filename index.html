@@ -755,7 +755,7 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   align-items:stretch;
   overflow-x:auto;
-  overflow-y:auto;
+  overflow-y:hidden;
   padding-bottom:0;
   box-sizing:content-box;
   width:auto;
@@ -763,6 +763,9 @@ button[aria-expanded="true"] .results-arrow{
   max-width:100%;
   border:1px solid var(--border);
   border-radius:8px;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x pan-y;
 }
 #filterPanel .calendar-container .today-marker{
   position:absolute;
@@ -775,6 +778,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel #datePicker{
   width:var(--calendar-width);
+  flex:0 0 auto;
 }
 #filterPanel .calendar{
   display:flex;
@@ -1759,23 +1763,11 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .post-mode-background{
-  position:absolute;
+  position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:auto;
+  bottom:var(--footer-h);
   left:0;
   right:0;
-  height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  min-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  max-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
   background: rgba(var(--post-mode-bg-color), var(--post-mode-bg-opacity));
   z-index:1;
   pointer-events:none;
@@ -1788,9 +1780,9 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .post-mode-boards{
-  position:absolute;
+  position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:auto;
+  bottom:var(--footer-h);
   left:0;
   right:0;
   padding-left:var(--filter-panel-offset);
@@ -1802,18 +1794,6 @@ button[aria-expanded="true"] .results-arrow{
   z-index:2;
   pointer-events:none;
   transition:padding 0.3s ease;
-  height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  min-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  max-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
 }
 
 body.filter-anchored .post-mode-boards{
@@ -1866,18 +1846,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   opacity:1;
   display:flex;
   flex-direction:column;
-  height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  min-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  max-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
+  height:100%;
+  min-height:0;
+  max-height:100%;
   transition:left 0.3s ease, opacity 0.3s ease;
 }
 
@@ -1885,18 +1856,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   flex-shrink:0;
-  height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  min-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
-  max-height:var(
-    --boards-area-height,
-    calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--subheader-h) - var(--safe-top) - var(--footer-h))
-  );
+  height:100%;
+  min-height:0;
+  max-height:100%;
 }
 @media (max-width:440px){
   .post-board,
@@ -3573,7 +3535,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 @media (max-width:440px){
   .post-mode-boards{
     top:calc(var(--header-h) + var(--safe-top));
-    bottom:0;
+    bottom:var(--footer-h);
     padding:0;
     gap:0;
     flex-direction:column;
@@ -3634,11 +3596,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     left:0 !important;
     right:0 !important;
     top:calc(var(--header-h) + var(--safe-top));
-    bottom:0;
+    bottom:var(--footer-h);
     width:100% !important;
     max-width:100% !important;
-    height:calc(100vh - var(--header-h) - var(--safe-top));
-    max-height:none;
+    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+    max-height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
     border-radius:0;
   }
   .panel-body{
@@ -3736,9 +3698,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       height:100%;
       aspect-ratio:1/1;
     }
-  .open-post .post-calendar{
-    display:none;
-  }
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
   .second-post-column .venue-dropdown,
@@ -5025,17 +4984,43 @@ img.thumb{
       const layoutHeight = window.innerHeight || 0;
       const docHeight = document.documentElement ? (document.documentElement.clientHeight || 0) : 0;
       const visualHeight = viewport ? (viewport.height + viewport.offsetTop) : 0;
-      const viewportHeight = Math.max(layoutHeight, docHeight, visualHeight);
-      const availableHeight = Math.max(0, viewportHeight - headerH - subH - footerH - safeTop);
+      let viewportHeight = Math.max(layoutHeight, docHeight, visualHeight);
+      if(!viewportHeight){
+        const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
+        if(bodyRect && bodyRect.height){
+          viewportHeight = bodyRect.height;
+        }
+      }
+      let availableHeight = Math.max(0, viewportHeight - headerH - subH - footerH - safeTop);
+      const boardsContainer = document.querySelector('.post-mode-boards');
+      if(boardsContainer){
+        const boardsRect = boardsContainer.getBoundingClientRect();
+        if(boardsRect && Number.isFinite(boardsRect.height) && boardsRect.height > 0){
+          availableHeight = Math.max(0, boardsRect.height);
+          viewportHeight = Math.max(viewportHeight, boardsRect.height + headerH + subH + footerH + safeTop);
+        }
+      }
+      if(!Number.isFinite(availableHeight) || availableHeight < 0){
+        availableHeight = 0;
+      }
       const root = document.documentElement;
       if(root){
-        const vhUnit = viewportHeight * 0.01;
-        root.style.setProperty('--vh', `${vhUnit}px`);
+        const fullHeight = (Number.isFinite(viewportHeight) && viewportHeight > 0)
+          ? viewportHeight
+          : (availableHeight + headerH + subH + footerH + safeTop);
+        if(Number.isFinite(fullHeight) && fullHeight > 0){
+          root.style.setProperty('--vh', `${(fullHeight / 100)}px`);
+        }
         root.style.setProperty('--boards-area-height', `${availableHeight}px`);
       }
       document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .posts').forEach(list=>{
-        list.style.maxHeight = `${availableHeight}px`;
-        list.style.minHeight = `${availableHeight}px`;
+        if(availableHeight > 0){
+          list.style.maxHeight = `${availableHeight}px`;
+          list.style.minHeight = `${availableHeight}px`;
+        } else {
+          list.style.removeProperty('max-height');
+          list.style.removeProperty('min-height');
+        }
       });
     }
     window.adjustListHeight = adjustListHeight;
