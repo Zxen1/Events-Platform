@@ -2580,7 +2580,7 @@ body.filters-active #filterBtn{
 }
 .post-board .post-card:last-child,
 .post-board .open-post:last-child{border-bottom:none;}
-.post-board .post-card .thumb{border-radius:0;}
+.post-board .post-card .thumb{border-radius:8px;}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 
 .post-board-empty{
@@ -3553,9 +3553,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     border-radius:0;
   }
   .thumb,
-  .post-card .thumb,
   .recents-card .thumb{
     border-radius:0;
+  }
+  .post-card .thumb{
+    border-radius:8px;
   }
   .post-board .post-card,
   .recents-board .recents-card{
