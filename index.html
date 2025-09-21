@@ -756,13 +756,15 @@ button[aria-expanded="true"] .results-arrow{
   align-items:stretch;
   overflow-x:auto;
   overflow-y:hidden;
-  padding-bottom:0;
+  padding-bottom:var(--scrollbar-h);
   box-sizing:content-box;
   width:auto;
   height:var(--calendar-height);
   max-width:100%;
   border:1px solid var(--border);
   border-radius:8px;
+  margin-bottom:calc(-1 * var(--scrollbar-h));
+  scrollbar-gutter: stable both-edges;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x pan-y;
@@ -959,6 +961,21 @@ button[aria-expanded="true"] .results-arrow{
   width:18px;
   height:18px;
   vertical-align:middle;
+}
+.cat-line{
+  display:flex;
+  align-items:center;
+}
+.cat-line .sub-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding-right:5px;
+}
+.cat-line .sub-icon:empty{
+  display:none;
+  padding-right:0;
 }
 .post-card .sub-icon img,
 .post-card .sub-icon svg,
@@ -1700,6 +1717,26 @@ button[aria-expanded="true"] .results-arrow{
   left:2px;
   top:2px;
   transition:.2s;
+}
+.filter-category-menu .options-menu button[aria-pressed="false"]{
+  color:var(--muted);
+}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
+  opacity:0.6;
+}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
+  filter:grayscale(1);
+}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
+  color:inherit;
+}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .track{
+  background:var(--btn);
+  border-color:var(--btn);
+}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .thumb{
+  transform:translateX(0);
+  opacity:0.7;
 }
 
 .filter-category-menu .options-menu button[aria-pressed="true"]{
@@ -2843,9 +2880,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing:border-box;
   height:auto;
   overflow-x:auto;
+  overflow-y:hidden;
   gap:4px;
   position:relative;
   margin:0 5px;
+  padding-bottom:var(--scrollbar-h);
+  margin-bottom:calc(-1 * var(--scrollbar-h));
+  scrollbar-gutter: stable both-edges;
 }
 
 .open-post .thumbnail-row img{
@@ -2964,7 +3005,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   margin-top:4px;
   display:flex;
   align-items:center;
-  gap:4px;
 }
 
 .open-post .meta{
@@ -3296,7 +3336,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   align-items:stretch;
   overflow-x:auto;
   overflow-y:auto;
-  padding-bottom:0;
+  padding-bottom:var(--scrollbar-h);
   box-sizing:content-box;
   background:var(--dropdown-bg);
   border:none;
@@ -3305,6 +3345,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   align-items:stretch;
   flex:1 1 auto;
   max-width:100%;
+  margin-bottom:calc(-1 * var(--scrollbar-h));
+  scrollbar-gutter: stable both-edges;
 }
 .open-post .post-calendar .calendar,
 .second-post-column .post-calendar .calendar,
@@ -5003,6 +5045,7 @@ img.thumb{
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     let activePostId = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
@@ -5207,6 +5250,7 @@ function buildClusterListHTML(items){
     function openListPopupAtPoint(point, htmlStr){
       // Remove previous
       if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+      touchMarker = null;
       // Place popup at the pointer, then adjust to keep fully in view by moving the lngLat
       const lngLat = map.unproject(point);
       hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop hover-multi-list map-card', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
@@ -7164,7 +7208,7 @@ function makePosts(){
         const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
         root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
         root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', ()=>{
-          const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true);
+          const id = n.getAttribute('data-id'); touchMarker = null; close(); stopSpin(); openPost(id, false, true);
         }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
@@ -7177,7 +7221,7 @@ function makePosts(){
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
-        map.fitBounds(bounds);
+        map.fitBounds(bounds, {padding:10});
       });
       
       map.on('click','unclustered', (e)=>{
@@ -7193,7 +7237,7 @@ function makePosts(){
             const root = hoverPopup.getElement();
             const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
             root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); close(); stopSpin(); openPost(id, false, true); }));
+            root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (e)=>{ e.stopPropagation(); const id = n.getAttribute('data-id'); touchMarker = null; close(); stopSpin(); openPost(id, false, true); }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -7204,7 +7248,7 @@ function makePosts(){
                   var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
                   if(row){
                     var pid = row.getAttribute('data-id');
-                    if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
+                    if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
                   }
                 }, {capture:true});
               }
@@ -7214,8 +7258,8 @@ function makePosts(){
           }
         }
         const id = f.properties.id;
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        if(isTouch){
+        const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+        if(touchClick){
           if(touchMarker === id){
             touchMarker = null;
             if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
@@ -7283,7 +7327,7 @@ function makePosts(){
               var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
               if(row){
                 var pid = row.getAttribute('data-id');
-                if(pid){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
+                if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
               }
             }, {capture:true});
           }
@@ -7316,6 +7360,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
+              touchMarker = null;
               try{ stopSpin(); openPost(id, false, true); }catch(e){ console.warn('openPost id missing', e); }
             }, {capture:true});
           }
@@ -7640,7 +7685,7 @@ function makePosts(){
       if(map && st.bounds){
         stopSpin();
         const bounds = new mapboxgl.LngLatBounds(st.bounds);
-        map.fitBounds(bounds);
+        map.fitBounds(bounds, {padding:10});
         postPanel = bounds;
       }
       applyFilters();
@@ -9767,6 +9812,9 @@ function initPostLayout(board){
   const selectedImageBox = postBody ? postBody.querySelector('.selected-image, .image-box') : null;
   const imageModalContainer = document.querySelector('.image-modal-container');
   const imageModal = imageModalContainer ? imageModalContainer.querySelector('.image-modal') : null;
+  if(thumbRow){
+    thumbRow.scrollLeft = 0;
+  }
   function openImageModal(src){
     if(!imageModalContainer || !imageModal) return;
     imageModal.innerHTML='';
