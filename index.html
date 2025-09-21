@@ -2237,21 +2237,7 @@ body.hide-ads .ad-board{
 .mode-toggle #viewToggle{
   gap:8px;
 }
-.mode-toggle #viewToggle .toggle-option{
-  opacity:0.6;
-  transition:opacity .2s;
-  font-weight:600;
-}
-.mode-toggle #viewToggle .toggle-divider{
-  opacity:0.5;
-}
-.mode-toggle #viewToggle[data-mode="posts"] .toggle-option[data-toggle-label="posts"],
-.mode-toggle #viewToggle[data-mode="map"] .toggle-option[data-toggle-label="map"]{
-  opacity:1;
-  font-weight:700;
-}
-.mode-toggle #viewToggle[data-mode="history"] .toggle-option{
-  opacity:0.4;
+.mode-toggle #viewToggle .mode-label{
   font-weight:600;
 }
 body.filters-active #filterBtn{
@@ -4438,9 +4424,7 @@ img.thumb{
           <span class="mode-label">Recents</span>
         </button>
         <button id="viewToggle" aria-pressed="false" aria-label="Toggle between Posts and Map views" data-mode="map">
-          <span class="toggle-option" data-toggle-label="posts">Posts</span>
-          <span class="toggle-divider" aria-hidden="true">/</span>
-          <span class="toggle-option" data-toggle-label="map">Map</span>
+          <span class="mode-label">Posts</span>
         </button>
       </div>
     </nav>
@@ -6486,10 +6470,15 @@ function makePosts(){
         const currentMode = document.body.classList.contains('mode-posts') ? 'posts' : 'map';
         recentsButton && recentsButton.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
         if(viewToggle){
-          viewToggle.setAttribute('aria-pressed', !historyActive && currentMode === 'posts' ? 'true' : 'false');
+          const isPostsMode = currentMode === 'posts';
+          viewToggle.setAttribute('aria-pressed', isPostsMode ? 'true' : 'false');
           viewToggle.setAttribute('data-mode', historyActive ? 'history' : currentMode);
-          const toggleLabel = currentMode === 'posts' ? 'Switch to Map view' : 'Switch to Posts view';
+          const toggleLabel = isPostsMode ? 'Switch to Map view' : 'Switch to Posts view';
           viewToggle.setAttribute('aria-label', historyActive ? 'Toggle between Posts and Map views' : toggleLabel);
+          const visibleLabel = viewToggle.querySelector('.mode-label');
+          if(visibleLabel){
+            visibleLabel.textContent = isPostsMode ? 'Map' : 'Posts';
+          }
         }
       }
 
