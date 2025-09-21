@@ -2712,7 +2712,7 @@ body.filters-active #filterBtn{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
-  padding:10px;
+  padding:10px 0;
   flex:1 1 auto;
   box-sizing:border-box;
   margin-left:auto;
@@ -3723,7 +3723,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
       gap:0;
     }
     .open-post .post-details{
-      padding:10px;
+      padding:10px 0;
     }
   }
 
@@ -4153,7 +4153,7 @@ img.thumb{
     width:calc(100% - 20px);
     max-width:calc(100% - 20px);
     min-width:0;
-    padding:10px;
+    padding:10px 0;
     margin-left:auto;
     margin-right:auto;
   }
@@ -7965,12 +7965,15 @@ function makePosts(){
       hi.onerror = ()=>{};
       hi.src = full;
       thumbCol.querySelectorAll('img').forEach(im=> im.classList.toggle('selected', im===t));
-    }
-    show(0);
-    setupHorizontalWheel(thumbCol);
-    thumbCol.addEventListener('click', e=>{
-      const t = e.target.closest('img');
-      if(!t) return;
+      }
+      show(0);
+      if(thumbCol){
+        thumbCol.scrollLeft = 0;
+      }
+      setupHorizontalWheel(thumbCol);
+      thumbCol.addEventListener('click', e=>{
+        const t = e.target.closest('img');
+        if(!t) return;
       const idx = parseInt(t.dataset.index,10);
       const currentIdx = parseInt(mainImg.dataset.index||'0',10);
       if(currentIdx === idx && t.classList.contains('selected')){
