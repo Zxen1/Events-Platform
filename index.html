@@ -7559,9 +7559,26 @@ function makePosts(){
     }
     function formatDates(d){
       if(!d || !d.length) return '';
-      const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      if(d.length===1) return fmt(d[0]);
-      return `${fmt(d[0])} + ${d.length-1} more`;
+      const sorted = d.slice().sort();
+      const currentYear = new Date().getFullYear();
+      const formatPart = (dateObj, includeYear=false)=>{
+        const base = dateObj.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+        return includeYear ? `${base}, ${dateObj.getFullYear()}` : base;
+      };
+      const first = parseISODate(sorted[0]);
+      const last = parseISODate(sorted[sorted.length-1]);
+      if(sorted.length === 1){
+        const includeYear = first.getFullYear() !== currentYear;
+        return formatPart(first, includeYear);
+      }
+      const firstYear = first.getFullYear();
+      const lastYear = last.getFullYear();
+      const crossYear = firstYear !== lastYear;
+      const firstIncludeYear = crossYear && firstYear !== currentYear;
+      const lastIncludeYear = (crossYear && lastYear !== currentYear) || (!crossYear && lastYear !== currentYear);
+      const startText = formatPart(first, firstIncludeYear);
+      const endText = formatPart(last, lastIncludeYear);
+      return `${startText} - ${endText}`;
     }
 
     function parseCreatedToDate(created){
@@ -8418,23 +8435,88 @@ function makePosts(){
         panelStack.push(entry);
       }
       if(imageBox){
+        let dragStartX = null;
+        let dragStartY = null;
+        let dragActive = false;
+        let lastDragTime = 0;
+        const resetDragState = ()=>{
+          dragStartX = null;
+          dragStartY = null;
+          dragActive = false;
+          if(imageTrack){
+            imageTrack.style.transition = '';
+          }
+        };
         imageBox.addEventListener('click', e=>{
+          if(Date.now() - lastDragTime < 400){
+            e.preventDefault();
+            return;
+          }
           const imgTarget = e.target.closest('.image-track img');
           if(!imgTarget) return;
           e.stopPropagation();
           openImagePopup(currentIdx);
         });
-        let startX = null;
-        imageBox.addEventListener('touchstart', e=>{ startX = e.touches[0].clientX; }, {passive:true});
-        imageBox.addEventListener('touchend', e=>{
-          if(startX===null) return;
-          const diff = e.changedTouches[0].clientX - startX;
-          if(Math.abs(diff) > 50){
-            if(diff < 0 && currentIdx < imgs.length-1){ show(currentIdx + 1); }
-            else if(diff > 0 && currentIdx > 0){ show(currentIdx - 1); }
-          }
-          startX = null;
+        imageBox.addEventListener('touchstart', e=>{
+          if(e.touches.length !== 1) return;
+          dragStartX = e.touches[0].clientX;
+          dragStartY = e.touches[0].clientY;
+          dragActive = false;
         }, {passive:true});
+        imageBox.addEventListener('touchmove', e=>{
+          if(dragStartX===null || !imageTrack) return;
+          const touch = e.touches[0];
+          const deltaX = touch.clientX - dragStartX;
+          const deltaY = touch.clientY - dragStartY;
+          if(!dragActive){
+            if(Math.abs(deltaX) < 5) return;
+            if(Math.abs(deltaY) > Math.abs(deltaX)){
+              resetDragState();
+              return;
+            }
+            dragActive = true;
+            imageTrack.style.transition = 'none';
+          }
+          const width = imageBox.clientWidth || 1;
+          let adjustedDelta = deltaX;
+          if((currentIdx === 0 && adjustedDelta > 0) || (currentIdx === imgs.length-1 && adjustedDelta < 0)){
+            adjustedDelta *= 0.3;
+          }
+          const deltaPercent = (adjustedDelta / width) * 100;
+          const basePercent = -currentIdx * 100;
+          imageTrack.style.transform = `translateX(${basePercent + deltaPercent}%)`;
+          e.preventDefault();
+        }, {passive:false});
+        imageBox.addEventListener('touchend', e=>{
+          if(dragStartX===null){
+            resetDragState();
+            return;
+          }
+          const deltaX = e.changedTouches[0].clientX - dragStartX;
+          if(imageTrack){
+            imageTrack.style.transition = '';
+          }
+          if(dragActive){
+            const prevIdx = currentIdx;
+            let targetIdx = prevIdx;
+            const threshold = (imageBox.clientWidth || 1) * 0.15;
+            if(deltaX <= -threshold && prevIdx < imgs.length - 1){
+              targetIdx = prevIdx + 1;
+            } else if(deltaX >= threshold && prevIdx > 0){
+              targetIdx = prevIdx - 1;
+            }
+            lastDragTime = Date.now();
+            requestAnimationFrame(()=> show(targetIdx));
+          }
+          resetDragState();
+        }, {passive:true});
+        imageBox.addEventListener('touchcancel', ()=>{
+          if(dragActive && imageTrack){
+            imageTrack.style.transition = '';
+            requestAnimationFrame(()=> show(currentIdx));
+          }
+          resetDragState();
+        });
       }
       const venueDropdown = el.querySelector(`#venue-${p.id}`);
       const venueBtn = venueDropdown ? venueDropdown.querySelector('.venue-btn') : null;
