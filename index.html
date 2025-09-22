@@ -4747,6 +4747,30 @@ img.thumb{
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+  const IMAGE_FALLBACK = 'assets/balloons/balloons-icon-16185.png';
+
+  function addImageFallback(img, extraFallbacks){
+    if(!(img instanceof Element)) return;
+    const fallbacks = [];
+    if(Array.isArray(extraFallbacks)){
+      extraFallbacks.forEach(src => {
+        if(typeof src === 'string' && src){
+          fallbacks.push(src);
+        }
+      });
+    }
+    fallbacks.push(IMAGE_FALLBACK);
+    const handler = () => {
+      const next = fallbacks.shift();
+      if(next){
+        img.src = next;
+      } else {
+        img.removeEventListener('error', handler);
+      }
+    };
+    img.addEventListener('error', handler);
+    img.addEventListener('load', () => img.classList.remove('lqip'), {once:true});
+  }
 
   function getGeocoderInput(gc){
     if(!gc) return null;
@@ -7671,6 +7695,8 @@ function makePosts(){
         </button>
       `;
       el.style.background = CARD_SURFACE;
+      const thumbImg = el.querySelector('.thumb');
+      addImageFallback(thumbImg);
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
         p.fav = !p.fav;
@@ -7865,7 +7891,7 @@ function makePosts(){
               </div>
             </div>
             <div class="post-images">
-              <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
+              <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer"/></div></div>
               <div class="thumbnail-row"></div>
             </div>
           </div>
@@ -8258,6 +8284,7 @@ function makePosts(){
         if(!baseImg.classList.contains('ready')){
           baseImg.classList.add('lqip');
         }
+        addImageFallback(baseImg);
         slides[0] = baseImg;
       }
       if(imageTrack){
@@ -8273,6 +8300,7 @@ function makePosts(){
         slide.loading = 'lazy';
         slide.classList.add('lqip');
         slide.src = imgs[i];
+        addImageFallback(slide);
         imageTrack.appendChild(slide);
         slides[i] = slide;
       }
@@ -8284,6 +8312,7 @@ function makePosts(){
           t.dataset.index = i;
           t.tabIndex = 0;
           thumbCol.appendChild(t);
+          addImageFallback(t);
         });
       }
       const clampIdx = idx => Math.min(Math.max(idx, 0), imgs.length - 1);
@@ -8299,6 +8328,7 @@ function makePosts(){
           slide.loading = 'lazy';
           slide.classList.add('lqip');
           slide.src = imgs[idx];
+          addImageFallback(slide);
           imageTrack.appendChild(slide);
           slides[idx] = slide;
         }
