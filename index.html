@@ -2195,7 +2195,7 @@ body.hide-ads .ad-board{
 }
 .mode-toggle{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,1fr);
   flex:0 1 auto;
   min-width:0;
   height:40px;
@@ -2217,15 +2217,20 @@ body.hide-ads .ad-board{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  padding:0 12px;
+  gap:0;
+  padding:0;
 }
 .mode-toggle .mode-icon{
-  display:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   line-height:0;
+  width:100%;
+  height:100%;
 }
-.mode-toggle .mode-label{
-  white-space:nowrap;
+.mode-toggle button svg{
+  width:20px;
+  height:20px;
 }
 .mode-toggle button + button{
   border-left:1px solid var(--btn);
@@ -2233,12 +2238,6 @@ body.hide-ads .ad-board{
 .mode-toggle button[aria-pressed="true"]{
   background:var(--btn-selected);
   color:var(--button-active-text);
-}
-.mode-toggle #viewToggle{
-  gap:8px;
-}
-.mode-toggle #viewToggle .mode-label{
-  font-weight:600;
 }
 body.filters-active #filterBtn{
   background: var(--filter-active-color);
@@ -3614,16 +3613,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 
 @media (max-width:440px){
-  .mode-toggle .mode-icon{
-    display:inline-flex;
-  }
-  .mode-toggle .mode-label{
-    display:none;
-  }
-}
-
-
-@media (max-width:440px){
   html{
     touch-action:pan-x pan-y;
   }
@@ -4416,15 +4405,28 @@ img.thumb{
       <div class="mode-toggle">
         <button id="recents-button" aria-pressed="false" aria-label="Recents">
           <span class="mode-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </span>
-          <span class="mode-label">Recents</span>
         </button>
-        <button id="viewToggle" aria-pressed="false" aria-label="Toggle between Posts and Map views" data-mode="map">
-          <span class="mode-label">Posts</span>
+        <button id="posts-button" aria-pressed="false" aria-label="Posts">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="6" x2="19" y2="6"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <line x1="5" y1="18" x2="13" y2="18"></line>
+            </svg>
+          </span>
+        </button>
+        <button id="map-button" aria-pressed="true" aria-label="Map">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
+              <circle cx="12" cy="11" r="2.5"></circle>
+            </svg>
+          </span>
         </button>
       </div>
     </nav>
@@ -6463,24 +6465,21 @@ function makePosts(){
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
       const recentsButton = $('#recents-button');
-      const viewToggle = $('#viewToggle');
+      const postsButton = $('#posts-button');
+      const mapButton = $('#map-button');
 
       function updateModeToggle(){
         const historyActive = document.body.classList.contains('show-history');
-        const currentMode = document.body.classList.contains('mode-posts') ? 'posts' : 'map';
-        recentsButton && recentsButton.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
-        if(viewToggle){
-          const isPostsMode = currentMode === 'posts';
-          viewToggle.setAttribute('aria-pressed', isPostsMode ? 'true' : 'false');
-          viewToggle.setAttribute('data-mode', historyActive ? 'history' : currentMode);
-          const targetMode = currentMode === 'map' ? 'posts' : 'map';
-          const nextLabelText = targetMode === 'posts' ? 'Posts' : 'Map';
-          const toggleLabel = targetMode === 'posts' ? 'Switch to Posts view' : 'Switch to Map view';
-          viewToggle.setAttribute('aria-label', historyActive ? 'Toggle between Posts and Map views' : toggleLabel);
-          const visibleLabel = viewToggle.querySelector('.mode-label');
-          if(visibleLabel){
-            visibleLabel.textContent = nextLabelText;
-          }
+        const isPostsMode = document.body.classList.contains('mode-posts');
+        const isMapMode = document.body.classList.contains('mode-map');
+        if(recentsButton){
+          recentsButton.setAttribute('aria-pressed', historyActive ? 'true' : 'false');
+        }
+        if(postsButton){
+          postsButton.setAttribute('aria-pressed', !historyActive && isPostsMode ? 'true' : 'false');
+        }
+        if(mapButton){
+          mapButton.setAttribute('aria-pressed', isMapMode ? 'true' : 'false');
         }
       }
 
@@ -6573,12 +6572,12 @@ function makePosts(){
         updateModeToggle();
       });
 
-      viewToggle && viewToggle.addEventListener('click', ()=>{
-        const currentMode = document.body.classList.contains('mode-posts') ? 'posts' : 'map';
-        const nextMode = currentMode === 'posts' ? 'map' : 'posts';
+      postsButton && postsButton.addEventListener('click', ()=>{
+        const historyActive = document.body.classList.contains('show-history');
+        const isPostsMode = document.body.classList.contains('mode-posts');
         document.body.classList.remove('show-history');
-        setMode(nextMode);
-        if(nextMode === 'posts'){
+        if(!isPostsMode || historyActive){
+          setMode('posts');
           window.adjustListHeight();
           setTimeout(()=>{
             if(map && typeof map.resize === 'function'){
@@ -6586,8 +6585,19 @@ function makePosts(){
               updatePostPanel();
             }
           }, 0);
+        } else {
+          updateModeToggle();
         }
-        updateModeToggle();
+      });
+
+      mapButton && mapButton.addEventListener('click', ()=>{
+        const isMapMode = document.body.classList.contains('mode-map');
+        if(!isMapMode){
+          setMode('map');
+        } else if(document.body.classList.contains('show-history')){
+          document.body.classList.remove('show-history');
+          updateModeToggle();
+        }
       });
 
       const resLists = $$('.recents-board');
