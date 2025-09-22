@@ -2195,7 +2195,7 @@ body.hide-ads .ad-board{
 }
 .mode-toggle{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(3,minmax(64px,1fr));
   flex:0 1 auto;
   min-width:0;
   height:40px;
@@ -2218,7 +2218,7 @@ body.hide-ads .ad-board{
   align-items:center;
   justify-content:center;
   gap:0;
-  padding:0;
+  padding:0 12px;
 }
 .mode-toggle .mode-icon{
   display:flex;
