@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link href='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css' rel='stylesheet' />
+  <!-- MUST be in <head> before the map is created -->
   <link
     rel="stylesheet"
     href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
@@ -4758,23 +4758,82 @@ img.thumb{
   </div>
 
   <script>
-  (function(){
-    const origAddEventListener = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function(type, listener, options){
-      if(type === 'touchmove'){
-        let opts = options;
-        if(opts === undefined){
-          opts = {passive:true};
-        } else if(typeof opts === 'boolean'){
-          opts = {capture:opts, passive:true};
-        } else if(typeof opts === 'object' && opts && !('passive' in opts)){
-          opts = Object.assign({}, opts, {passive:true});
+  /* --- Fix Pack v2: Input yielding + rAF sanity ---------------------------------- */
+
+  // 1) Mark when we are inside an input/event path (so we can yield heavy work)
+  (function setupInputYieldFlag(){
+    const mark = () => { document.__inInputEvent = true; queueMicrotask(() => { document.__inInputEvent = false; }); };
+    ['pointerdown','mousedown','touchstart','click'].forEach(t => {
+      document.addEventListener(t, mark, { capture: true });
+    });
+  })();
+
+  // 2) Wrap heavy functions so they never execute synchronously inside input handlers
+  (function wrapHeavyFns(){
+    function createWrapper(fnName, fn){
+      const wrapped = function(...args){
+        if (document.__inInputEvent) return setTimeout(() => fn.apply(this, args), 0);
+        return fn.apply(this, args);
+      };
+      wrapped.__wrappedForYield = true;
+      try { Object.defineProperty(wrapped, 'name', { value: fnName }); } catch {}
+      return wrapped;
+    }
+
+    function wrapYield(fnName){
+      const fn = window[fnName];
+      if (typeof fn !== 'function') return false;
+      if (fn.__wrappedForYield) return true;
+      window[fnName] = createWrapper(fnName, fn);
+      return true;
+    }
+
+    ['openPost','updateVenue','hookDetailActions','ensureMapForVenue'].forEach(fnName => {
+      if (wrapYield(fnName)) return;
+      const desc = Object.getOwnPropertyDescriptor(window, fnName);
+      if (desc && desc.get && !desc.configurable) return;
+      Object.defineProperty(window, fnName, {
+        configurable: true,
+        enumerable: true,
+        get(){ return undefined; },
+        set(value){
+          if (typeof value === 'function'){
+            const wrapped = value.__wrappedForYield ? value : createWrapper(fnName, value);
+            Object.defineProperty(window, fnName, {
+              value: wrapped,
+              writable: true,
+              configurable: true,
+              enumerable: true
+            });
+          } else {
+            Object.defineProperty(window, fnName, {
+              value,
+              writable: true,
+              configurable: true,
+              enumerable: true
+            });
+          }
         }
-        return origAddEventListener.call(this, type, listener, opts);
-      }
-      return origAddEventListener.call(this, type, listener, options);
+      });
+    });
+  })();
+
+  // 3) Make scroll/touch listeners passive where we don't call preventDefault()
+  (function makePassive(){
+    const add = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, opts){
+      try {
+        // Only force passive for known scroll/touch where preventDefault isn't used
+        if ((type === 'wheel' || type === 'touchstart' || type === 'touchmove')) {
+          if (opts === undefined) opts = { passive: true };
+          else if (typeof opts === 'boolean') opts = { capture: opts, passive: true };
+          else if (typeof opts === 'object' && !('passive' in opts)) opts = { ...opts, passive: true };
+        }
+      } catch {}
+      return add.call(this, type, listener, opts);
     };
   })();
+
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
@@ -4867,22 +4926,22 @@ img.thumb{
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '',
-          skyColor = localStorage.getItem('skyColor') || DEFAULT_SKY_COLOR,
-          sunAzimuth = parseFloat(localStorage.getItem('sunAzimuth')),
-          sunIntensity = parseFloat(localStorage.getItem('sunIntensity')),
-          animateSun = localStorage.getItem('animateSun') === 'true';
+          clusterSvg = localStorage.getItem('clusterSvg') || '';
         const adminSettings = window.adminSettings || {};
-        const ADMIN_SKY_COLOR = isValidHexColor(adminSettings.skyColor) ? adminSettings.skyColor : DEFAULT_SKY_COLOR;
-        const ADMIN_SUN_INTENSITY = typeof adminSettings.sunIntensity === 'number' ? clampSunIntensity(adminSettings.sunIntensity) : DEFAULT_SUN_INTENSITY;
-        const ADMIN_ANIMATE_SUN = !!adminSettings.animateSun;
+        const SKY_COLOR = isValidHexColor(adminSettings.skyColor) ? adminSettings.skyColor : DEFAULT_SKY_COLOR;
+        const SKY_INTENSITY = typeof adminSettings.sunIntensity === 'number' ? clampSunIntensity(adminSettings.sunIntensity) : DEFAULT_SUN_INTENSITY;
+        const SKY_ANIMATE = !!adminSettings.animateSun;
+        let skyColor = localStorage.getItem('skyColor') || SKY_COLOR;
+        let storedAzimuth = parseFloat(localStorage.getItem('sunAzimuth'));
+        let sunIntensity = parseFloat(localStorage.getItem('sunIntensity'));
+        let animateSun = localStorage.getItem('animateSun') === 'true';
         if(!isValidHexColor(skyColor)){
-          skyColor = ADMIN_SKY_COLOR;
+          skyColor = SKY_COLOR;
         }
-        sunAzimuth = normalizeAzimuth(sunAzimuth);
-        sunIntensity = Number.isFinite(sunIntensity) ? clampSunIntensity(sunIntensity) : ADMIN_SUN_INTENSITY;
+        let sunAzimuth = Number.isFinite(storedAzimuth) ? normalizeAzimuth(storedAzimuth) : DEFAULT_SUN_AZIMUTH;
+        sunIntensity = Number.isFinite(sunIntensity) ? clampSunIntensity(sunIntensity) : SKY_INTENSITY;
         if(localStorage.getItem('animateSun') === null && Object.prototype.hasOwnProperty.call(adminSettings, 'animateSun')){
-          animateSun = ADMIN_ANIMATE_SUN;
+          animateSun = SKY_ANIMATE;
         }
         try{
           localStorage.setItem('skyColor', skyColor);
@@ -4897,22 +4956,21 @@ img.thumb{
           intensityVal: null,
           animate: null
         };
-        const SKY_SUN_ALTITUDE = 0;
         const SKY_FPS = 5;
         const SKY_FRAME = 1000 / SKY_FPS;
         const SKY_STEP = 0.5;
         let skyAnim = {
-          angle: Number.isFinite(sunAzimuth) ? sunAzimuth : DEFAULT_SUN_AZIMUTH,
+          angle: normalizeAzimuth(sunAzimuth),
           rafId: null,
           started: false,
           last: 0
         };
-        skyAnim.angle = normalizeAzimuth(skyAnim.angle);
         sunAzimuth = skyAnim.angle;
         let sunStoreTimer = 0;
         let skyVisibilityListenerAttached = false;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
+        let ensureMapIcon = null;
       function updateLogoClickState(){
         logoEls.forEach(el=>{
           el.style.cursor = 'pointer';
@@ -4959,7 +5017,7 @@ img.thumb{
 
       function applySky(angle = skyAnim.angle){
         if(!map) return;
-        const color = isValidHexColor(skyColor) ? skyColor : DEFAULT_SKY_COLOR;
+        const color = isValidHexColor(skyColor) ? skyColor : SKY_COLOR;
         const azimuth = normalizeAzimuth(angle);
         const intensity = clampSunIntensity(sunIntensity);
         if(typeof map.setSky === 'function'){
@@ -4967,7 +5025,7 @@ img.thumb{
             map.setSky({
               'sky-type':'atmosphere',
               'sky-atmosphere-color': color,
-              'sky-atmosphere-sun':[azimuth, SKY_SUN_ALTITUDE],
+              'sky-atmosphere-sun':[azimuth, 0],
               'sky-atmosphere-sun-intensity': intensity
             });
             return;
@@ -4993,7 +5051,7 @@ img.thumb{
             paint:{
               'sky-type':'atmosphere',
               'sky-atmosphere-color': color,
-              'sky-atmosphere-sun':[azimuth, SKY_SUN_ALTITUDE],
+              'sky-atmosphere-sun':[azimuth, 0],
               'sky-atmosphere-sun-intensity': intensity
             }
           });
@@ -5057,7 +5115,7 @@ img.thumb{
           return;
         }
         if(skyAnim.last === 0 || timestamp - skyAnim.last >= SKY_FRAME){
-          skyAnim.angle = normalizeAzimuth(skyAnim.angle + SKY_STEP);
+          skyAnim.angle = normalizeAzimuth((skyAnim.angle + SKY_STEP) % 360);
           sunAzimuth = skyAnim.angle;
           applySky(skyAnim.angle);
           if(timestamp - sunStoreTimer >= SUN_ANIMATION_STORAGE_INTERVAL){
@@ -5077,11 +5135,9 @@ img.thumb{
               cancelAnimationFrame(skyAnim.rafId);
               skyAnim.rafId = null;
             }
-          } else if(animateSun && map){
+          } else if(!skyAnim.rafId && animateSun && map){
             skyAnim.last = 0;
-            if(!skyAnim.rafId){
-              skyAnim.rafId = requestAnimationFrame(sunLoop);
-            }
+            skyAnim.rafId = requestAnimationFrame(sunLoop);
           }
         });
         skyVisibilityListenerAttached = true;
@@ -5444,6 +5500,106 @@ function buildClusterListHTML(items){
     const subcategoryMarkers = window.subcategoryMarkers = {};
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
+
+    // --- Icon loader: preload known names + styleimagemissing fallback ---
+    function setupMapIcons(mapInstance){
+      if(!mapInstance) return () => Promise.resolve(false);
+      const KNOWN_ICONS = [
+        'freebies','live-sport','volunteers','goods-and-services','clubs','artwork','live-gigs',
+        'for-sale','education-centres','tutors'
+      ];
+      const ICON_BASES = [
+        'assets/icons/subcategories/',
+        'assets/icons/',
+        'assets/images/icons/'
+      ];
+      const pendingLoads = new Map();
+
+      function pickUrl(name){
+        const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
+        const manual = (window.subcategoryMarkers && window.subcategoryMarkers[name]) || null;
+        const candidates = [];
+        if(manual){
+          candidates.push({ url: manual, base: 'manual' });
+        }
+        ICON_BASES.forEach(base => candidates.push({ url: `${base}${name}${ratio}.png`, base }));
+        ICON_BASES.forEach(base => candidates.push({ url: `${base}${name}.png`, base }));
+        return candidates;
+      }
+
+      function loadImageCompat(url){
+        return new Promise((resolve, reject) => {
+          if(typeof mapInstance.loadImage === 'function'){
+            mapInstance.loadImage(url, (err, img) => err ? reject(err) : resolve(img));
+          } else {
+            fetch(url)
+              .then(resp => resp.ok ? resp.blob() : Promise.reject(new Error(resp.status)))
+              .then(blob => createImageBitmap(blob))
+              .then(resolve)
+              .catch(reject);
+          }
+        });
+      }
+
+      function makePlaceholder(name){
+        const canvas = document.createElement('canvas');
+        const size = 48;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#222';
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText((name && name[0] ? name[0] : '?').toUpperCase(), size/2, size/2);
+        return canvas;
+      }
+
+      async function addIcon(name){
+        if(!name) return false;
+        if(mapInstance.hasImage && mapInstance.hasImage(name)) return true;
+        if(pendingLoads.has(name)) return pendingLoads.get(name);
+        const task = (async () => {
+          const candidates = pickUrl(name);
+          const pixelRatio = (window.devicePixelRatio || 1) >= 2 ? 2 : 1;
+          for(const {url} of candidates){
+            try{
+              const img = await loadImageCompat(url);
+              if(mapInstance.hasImage && mapInstance.hasImage(name)) return true;
+              mapInstance.addImage(name, img, { sdf: false, pixelRatio });
+              return true;
+            }catch(err){
+              // try next candidate
+            }
+          }
+          try{
+            mapInstance.addImage(name, makePlaceholder(name), { sdf: false, pixelRatio: 1 });
+          }catch(err){}
+          return false;
+        })().finally(() => pendingLoads.delete(name));
+        pendingLoads.set(name, task);
+        return task;
+      }
+
+      mapInstance.on('style.load', async () => {
+        const markers = window.subcategoryMarkers || {};
+        const preload = new Set([...KNOWN_ICONS, ...Object.keys(markers)]);
+        for(const iconName of preload){
+          try{ await addIcon(iconName); }catch(err){}
+        }
+      });
+
+      mapInstance.on('styleimagemissing', async e => {
+        if(!e || !e.id) return;
+        try{ await addIcon(e.id); }catch(err){}
+      });
+
+      return addIcon;
+    }
 
     const MULTI_VENUE_MARKER_ID = 'multi-venue-marker';
     const MULTI_VENUE_MARKER_URL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
@@ -7078,27 +7234,18 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
-        map.on('style.load', ()=>{
-          try{
-            map.setFog(null);
-          }catch(e){}
-          applySkySettings();
-          if(!skyAnim.started){
-            skyAnim.started = true;
-          }
-          updateSunAnimationState();
-        });
-        map.on('styleimagemissing', (e)=>{
-          const url = subcategoryMarkers[e.id];
-          if(url){
-            const img = new Image();
-            img.onload = ()=> { if(!map.hasImage(e.id)) map.addImage(e.id, img); };
-            img.onerror = err => console.warn('load image failed', e.id, err);
-            img.src = url;
-          } else {
-            console.warn('Unknown image ID:', e.id);
+        // --- Night sky + fog off + throttled animation ---
+        map.on('style.load', () => {
+          if(skyAnim.started) return;
+          skyAnim.started = true;
+          applySky(skyAnim.angle);
+          try{ map.setFog(null); }catch(e){}
+          if(animateSun && !skyAnim.rafId){
+            skyAnim.last = 0;
+            skyAnim.rafId = requestAnimationFrame(sunLoop);
           }
         });
+        ensureMapIcon = setupMapIcons(map);
       map.on('zoomend', checkLoadPosts);
       addControls();
       try{
@@ -7283,13 +7430,10 @@ function makePosts(){
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       }
-        await Promise.all(Object.entries(subcategoryMarkers).map(([sub, url])=> new Promise(res=>{
-          if(map.hasImage(sub)) map.removeImage(sub);
-          const img = new Image();
-          img.onload = () => { if(!map.hasImage(sub)) map.addImage(sub, img); res(); };
-          img.onerror = err => { console.warn('load image failed', sub, err); res(); };
-          img.src = url;
-        })));
+        if(typeof ensureMapIcon === 'function'){
+          const iconIds = Object.keys(subcategoryMarkers);
+          await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+        }
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
         'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
         'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)'] } });
@@ -9783,6 +9927,14 @@ document.addEventListener('pointerdown', handleDocInteract);
   if (typeof updateStickyImages === 'function') {
     updateStickyImages();
   }
+  if(typeof window.openPost !== 'function') window.openPost = openPost;
+  if(typeof window.updateVenue !== 'function') window.updateVenue = updateVenue;
+  if(typeof window.hookDetailActions !== 'function') window.hookDetailActions = hookDetailActions;
+  if(typeof window.ensureMapForVenue !== 'function') window.ensureMapForVenue = ensureMapForVenue;
+  if(typeof window.openPost === 'function') openPost = window.openPost;
+  if(typeof window.updateVenue === 'function') updateVenue = window.updateVenue;
+  if(typeof window.hookDetailActions === 'function') hookDetailActions = window.hookDetailActions;
+  if(typeof window.ensureMapForVenue === 'function') ensureMapForVenue = window.ensureMapForVenue;
 })();
 </script>
 
