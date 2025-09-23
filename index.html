@@ -5146,6 +5146,14 @@ img.thumb{
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    function closestElement(target, selector){
+      if(!target) return null;
+      if(target instanceof Element){
+        return target.closest(selector);
+      }
+      const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
+      return parent ? parent.closest(selector) : null;
+    }
     const clamp = (n, a, b)=> Math.max(a, Math.min(b, n));
     const toRad = d => d * Math.PI / 180;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
@@ -6632,7 +6640,7 @@ function makePosts(){
       const resLists = $$('.recents-board');
       resLists.forEach(list=>{
           list.addEventListener('click', e=>{
-            const cardEl = e.target.closest('.recents-card');
+            const cardEl = closestElement(e.target, '.recents-card');
             if(cardEl){
               const id = cardEl.getAttribute('data-id');
               if(id) { stopSpin(); openPost(id, true, false, cardEl); }
@@ -6642,7 +6650,7 @@ function makePosts(){
 
       const postsWide = $('.post-board');
       postsWide && postsWide.addEventListener('click', e=>{
-        const cardEl = e.target.closest('.post-card');
+        const cardEl = closestElement(e.target, '.post-card');
         if(cardEl){
           const id = cardEl.getAttribute('data-id');
           if(id){ stopSpin(); openPost(id, false, false, cardEl); }
@@ -7356,7 +7364,7 @@ function makePosts(){
               if(__root){
                 __root.addEventListener('click', function(ev){
                   ev.stopPropagation();
-                  var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
+                  const row = closestElement(ev.target, '.multi-item.map-card');
                   if(row){
                     var pid = row.getAttribute('data-id');
                     if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); stopSpin(); openPost(pid, false, true); return; }
@@ -7443,7 +7451,7 @@ function makePosts(){
           if(__root){
             __root.addEventListener('click', function(ev){
               ev.stopPropagation();
-              var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
+              const row = closestElement(ev.target, '.multi-item.map-card');
               if(row){
                 var pid = row.getAttribute('data-id');
                 if(pid){ touchMarker = null; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } stopSpin(); openPost(pid, false, true); return; }
@@ -8234,7 +8242,7 @@ function makePosts(){
     });
 
     document.addEventListener('click', (ev)=>{
-      const card = ev.target.closest('.mapboxgl-popup.map-card .hover-card');
+      const card = closestElement(ev.target, '.mapboxgl-popup.map-card .hover-card');
       if(card){
         const pid = card.getAttribute('data-id') || (card.closest('.multi-item.map-card') && card.closest('.multi-item.map-card').getAttribute('data-id'));
         if(pid){ touchMarker = null; stopSpin(); openPost(pid, false, true); }
@@ -8244,7 +8252,7 @@ function makePosts(){
     function hookDetailActions(el, p){
       el.querySelectorAll('.post-header').forEach(headerEl => {
         headerEl.addEventListener('click', evt=>{
-          if(evt.target.closest('button')) return;
+          if(closestElement(evt.target, 'button')) return;
           evt.stopPropagation();
           closeActivePost();
         });
@@ -8437,7 +8445,7 @@ function makePosts(){
         thumbCol.scrollLeft = 0;
         setupHorizontalWheel(thumbCol);
         thumbCol.addEventListener('click', e=>{
-          const t = e.target.closest('img');
+          const t = closestElement(e.target, 'img');
           if(!t) return;
           const idx = clampIdx(parseInt(t.dataset.index,10));
           if(currentIdx === idx && t.classList.contains('selected')){
@@ -8515,7 +8523,7 @@ function makePosts(){
             e.preventDefault();
             return;
           }
-          const imgTarget = e.target.closest('.image-track img');
+          const imgTarget = closestElement(e.target, '.image-track img');
           if(!imgTarget) return;
           e.stopPropagation();
           openImagePopup(currentIdx);
@@ -9031,7 +9039,7 @@ function makePosts(){
       adPanel = document.querySelector('.ad-panel');
       if(!adPanel) return;
       adPanel.addEventListener('click', async e => {
-        const slide = e.target.closest('.ad-slide');
+        const slide = closestElement(e.target, '.ad-slide');
         if(!slide) return;
         e.preventDefault();
         const id = slide.dataset.id;
@@ -9324,9 +9332,9 @@ document.addEventListener('keydown', e=>{
 });
 
 function handleDocInteract(e){
-  if(e.target.closest('.img-popup')) return;
+  if(closestElement(e.target, '.img-popup')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
-  if(e.target.closest('#filterBtn')) return;
+  if(closestElement(e.target, '#filterBtn')) return;
   const welcome = document.getElementById('welcome-modal');
   if(welcome && welcome.classList.contains('show')){
     const controls = welcome.querySelector('.map-controls-welcome');
@@ -9407,7 +9415,7 @@ document.addEventListener('pointerdown', handleDocInteract);
 
   document.querySelectorAll('.panel .panel-header').forEach(header=>{
     header.addEventListener('mousedown', e=>{
-      if(e.target.closest('button')) return;
+      if(closestElement(e.target, 'button')) return;
       const panel = header.closest('.panel');
       const content = panel ? panel.querySelector('.panel-content') : null;
       if(!content) return;
@@ -10058,7 +10066,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('wheel', e => {
-    if(e.target.closest('.post-board, .panel-content, .options-menu, .calendar-scroll')){
+    if(closestElement(e.target, '.post-board, .panel-content, .options-menu, .calendar-scroll')){
       e.stopPropagation();
     }
   }, {passive:false});
@@ -10150,7 +10158,7 @@ function initPostLayout(board){
   }
   if(thumbRow && !thumbRow._imageModalListener){
     thumbRow.addEventListener('dblclick', e => {
-      const img = e.target.closest('img');
+      const img = closestElement(e.target, 'img');
       if(img) openImageModal(img.src);
     });
     thumbRow._imageModalListener = true;
