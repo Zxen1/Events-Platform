@@ -6844,8 +6844,6 @@ function makePosts(){
                 cat:p.category,
                 sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
                 baseSub,
-                layer:'poi',
-                sizerank:1,
                 multi:isMultiVenue ? 1 : 0
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
