@@ -11,11 +11,11 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <link href='https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.css' rel='stylesheet' />
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css' rel='stylesheet' />
   <link
     rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.css"
-    data-fallback="https://unpkg.com/mapbox-gl@3.16.0/dist/mapbox-gl.css"
+    href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
+    data-fallback="https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css"
     onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
   />
   <link
@@ -6434,8 +6434,8 @@ function makePosts(){
       const cssSources = [
         {
           selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.css',
-          fallback: 'https://unpkg.com/mapbox-gl@3.16.0/dist/mapbox-gl.css'
+          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css',
+          fallback: 'https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css'
         },
         {
           selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
@@ -6583,11 +6583,11 @@ function makePosts(){
         };
 
         const s = document.createElement('script');
-        s.src='https://api.mapbox.com/mapbox-gl-js/v3.16.0/mapbox-gl.js';
+        s.src='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
         s.onload = loadGeocoder;
         s.onerror = ()=>{
           const sf = document.createElement('script');
-          sf.src='https://unpkg.com/mapbox-gl@3.16.0/dist/mapbox-gl.js';
+          sf.src='https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.js';
           sf.onload = loadGeocoder;
           sf.onerror = done;
           document.head.appendChild(sf);
