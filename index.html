@@ -4861,7 +4861,7 @@ img.thumb{
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '';
+    let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -5556,6 +5556,10 @@ function makePosts(){
     window.postsLoaded = postsLoaded;
     function loadPosts(){
       if(postsLoaded) return;
+      if(spinning){
+        pendingPostLoad = true;
+        return;
+      }
       posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
@@ -5566,6 +5570,11 @@ function makePosts(){
 
     function checkLoadPosts(){
       if(!map) return;
+      if(spinning){
+        if(!postsLoaded) pendingPostLoad = true;
+        hideResultIndicators();
+        return;
+      }
       if(!postsLoaded) loadPosts();
       if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
       applyFilters();
@@ -6762,6 +6771,7 @@ function makePosts(){
       if(map.getZoom() >= 3) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
+      hideResultIndicators();
       historyWasActive = document.body.classList.contains('show-history');
       if(historyWasActive){
         document.body.classList.remove('show-history');
@@ -6791,6 +6801,12 @@ function makePosts(){
         const recentsBoardEl = document.getElementById('recentsBoard');
         if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','false');
         updateModeToggle();
+      }
+      const shouldLoadPosts = pendingPostLoad;
+      pendingPostLoad = false;
+      if(shouldLoadPosts){
+        checkLoadPosts();
+        return;
       }
       applyFilters();
     }
@@ -7319,10 +7335,14 @@ function makePosts(){
     }
     function updateResultCount(n){
       const el = $('#resultCount');
-      if(el){
-        el.innerHTML = `<strong>${n}</strong>`;
-        el.style.display = '';
+      if(!el) return;
+      if(spinning){
+        el.innerHTML = '';
+        el.style.display = 'none';
+        return;
       }
+      el.innerHTML = `<strong>${n}</strong>`;
+      el.style.display = '';
     }
     function formatDates(d){
       if(!d || !d.length) return '';
@@ -8644,7 +8664,24 @@ function makePosts(){
       return selection.subs.has(p.category+'::'+p.subcategory);
     }
 
+    function hideResultIndicators(){
+      const resultCountEl = $('#resultCount');
+      if(resultCountEl){
+        resultCountEl.innerHTML = '';
+        resultCountEl.style.display = 'none';
+      }
+      const summaryEl = $('#filterSummary');
+      if(summaryEl){
+        summaryEl.textContent = '';
+      }
+    }
+
     function updateFilterCounts(){
+      if(spinning){
+        hideResultIndicators();
+        updateResetBtn();
+        return;
+      }
       if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
       const today = new Date(); today.setHours(0,0,0,0);
@@ -8655,6 +8692,7 @@ function makePosts(){
     }
 
     function refreshMarkers(render = true){
+      if(spinning) return;
       if(!postsLoaded) return;
       const newAdPosts = filtered.filter(p => p.sponsored);
       const ids = newAdPosts.map(p => p.id).join(',');
@@ -8684,6 +8722,10 @@ function makePosts(){
     }
 
     function applyFilters(render = true){
+      if(spinning){
+        hideResultIndicators();
+        return;
+      }
       updateFilterCounts();
       refreshMarkers(render);
     }
