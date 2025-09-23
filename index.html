@@ -4809,7 +4809,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/streets-v12',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -6708,6 +6708,36 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
+        map.on('style.load', ()=>{
+          try{
+            map.setFog(null);
+          }catch(e){}
+          try{
+            const style = map.getStyle();
+            if(style && Array.isArray(style.layers)){
+              style.layers.filter(layer => layer && layer.type === 'sky' && layer.id).forEach(layer => {
+                if(map.getLayer(layer.id)){
+                  map.removeLayer(layer.id);
+                }
+              });
+            }
+            if(map.getLayer('night-sky')){
+              map.removeLayer('night-sky');
+            }
+            map.addLayer({
+              id:'night-sky',
+              type:'sky',
+              paint:{
+                'sky-type':'atmosphere',
+                'sky-atmosphere-color':'#0b0d28',
+                'sky-atmosphere-sun':[90,0],
+                'sky-atmosphere-sun-intensity':0.1
+              }
+            });
+          }catch(err){
+            console.warn('Failed to apply night sky', err);
+          }
+        });
         map.on('styleimagemissing', (e)=>{
           const url = subcategoryMarkers[e.id];
           if(url){
