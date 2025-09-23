@@ -4634,37 +4634,6 @@ img.thumb{
               </div>
           </div>
         </div>
-        <div class="map-theme-container">
-          <div class="panel-field">
-            <div class="control-row">
-              <label for="skyColor">Sky color</label>
-              <input type="color" id="skyColor" value="#0b0d28" />
-            </div>
-          </div>
-          <div class="panel-field">
-            <label for="sunAzimuth">Sun azimuth</label>
-            <div class="range-wrap">
-              <input type="range" id="sunAzimuth" min="0" max="360" step="1" value="90" />
-              <span id="sunAzimuthVal">90</span>
-            </div>
-          </div>
-          <div class="panel-field">
-            <label for="sunIntensity">Sun intensity</label>
-            <div class="range-wrap">
-              <input type="range" id="sunIntensity" min="0" max="1" step="0.01" value="0.10" />
-              <span id="sunIntensityVal">0.10</span>
-            </div>
-          </div>
-          <div class="panel-field">
-            <div class="option-label">
-              <span>Animate Sun</span>
-              <label class="switch">
-                <input type="checkbox" id="animateSun" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
         <div id="map-balloon-container" class="map-balloon-container">
           <style>
               #map-balloon-container .t{font-size:16px;font-weight:bold;}
@@ -4814,65 +4783,42 @@ img.thumb{
     }, 16);
   }
 
-  /* --- Fix Pack v2: Input yielding + rAF sanity ---------------------------------- */
-
-  // 1) Mark when we are inside an input/event path (so we can yield heavy work)
-  (function setupInputYieldFlag(){
+  // Mark when we're inside an input event so heavy functions auto-yield
+  (function(){
     const mark = () => { document.__inInputEvent = true; queueMicrotask(() => { document.__inInputEvent = false; }); };
     ['pointerdown','mousedown','touchstart','click'].forEach(t => {
       document.addEventListener(t, mark, { capture: true });
     });
   })();
 
-  // 2) Wrap heavy functions so they never execute synchronously inside input handlers
-  (function wrapHeavyFns(){
-    function createWrapper(fnName, fn){
+  // Wrap heavy functions to yield out of the input event
+  (function(){
+    function wrap(fnName){
+      const fn = window[fnName];
+      if (typeof fn !== 'function' || fn.__wrappedForYield) return;
       const wrapped = function(...args){
         if (document.__inInputEvent) return setTimeout(() => fn.apply(this, args), 0);
         return fn.apply(this, args);
       };
       wrapped.__wrappedForYield = true;
-      try { Object.defineProperty(wrapped, 'name', { value: fnName }); } catch {}
-      return wrapped;
+      window[fnName] = wrapped;
     }
-
-    function wrapYield(fnName){
-      const fn = window[fnName];
-      if (typeof fn !== 'function') return false;
-      if (fn.__wrappedForYield) return true;
-      window[fnName] = createWrapper(fnName, fn);
-      return true;
-    }
-
-    ['openPost','updateVenue','hookDetailActions','ensureMapForVenue'].forEach(fnName => {
-      if (wrapYield(fnName)) return;
-      const desc = Object.getOwnPropertyDescriptor(window, fnName);
-      if (desc && desc.get && !desc.configurable) return;
-      Object.defineProperty(window, fnName, {
-        configurable: true,
-        enumerable: true,
-        get(){ return undefined; },
-        set(value){
-          if (typeof value === 'function'){
-            const wrapped = value.__wrappedForYield ? value : createWrapper(fnName, value);
-            Object.defineProperty(window, fnName, {
-              value: wrapped,
-              writable: true,
-              configurable: true,
-              enumerable: true
-            });
-          } else {
-            Object.defineProperty(window, fnName, {
-              value,
-              writable: true,
-              configurable: true,
-              enumerable: true
-            });
-          }
-        }
-      });
-    });
+    // Include any that run a lot on click/open
+    ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(wrap);
+    window.__wrapForInputYield = wrap;
   })();
+
+  // rAF throttle helper and replacement for mousemove listeners we own
+  function rafThrottle(fn){
+    let scheduled = false, lastArgs, lastThis;
+    return function(...args){
+      lastArgs = args; lastThis = this;
+      if (!scheduled){
+        scheduled = true;
+        requestAnimationFrame(() => { scheduled = false; fn.apply(lastThis, lastArgs); });
+      }
+    };
+  }
 
   // 3) Make scroll/touch listeners passive where we don't call preventDefault()
   (function makePassive(){
@@ -4931,29 +4877,7 @@ img.thumb{
 
     let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
-    const DEFAULT_SKY_COLOR = '#0b0d28';
-    const DEFAULT_SUN_AZIMUTH = 90;
-    const DEFAULT_SUN_INTENSITY = 0.1;
-    const SUN_ANIMATION_STORAGE_INTERVAL = 1000;
     const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
-    function normalizeAzimuth(value){
-      const num = Number(value);
-      if(!Number.isFinite(num)) return DEFAULT_SUN_AZIMUTH;
-      let normalized = num % 360;
-      if(normalized < 0) normalized += 360;
-      return normalized;
-    }
-
-    function clampSunIntensity(value){
-      const num = Number(value);
-      if(!Number.isFinite(num)) return DEFAULT_SUN_INTENSITY;
-      const clamped = Math.min(1, Math.max(0, num));
-      return Math.round(clamped * 100) / 100;
-    }
-
-    function isValidHexColor(value){
-      return typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value.trim());
-    }
 
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
@@ -4983,47 +4907,6 @@ img.thumb{
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
-        const adminSettings = window.adminSettings || {};
-        const SKY_COLOR = isValidHexColor(adminSettings.skyColor) ? adminSettings.skyColor : DEFAULT_SKY_COLOR;
-        const SKY_INTENSITY = typeof adminSettings.sunIntensity === 'number' ? clampSunIntensity(adminSettings.sunIntensity) : DEFAULT_SUN_INTENSITY;
-        const SKY_ANIMATE = !!adminSettings.animateSun;
-        let skyColor = localStorage.getItem('skyColor') || SKY_COLOR;
-        let storedAzimuth = parseFloat(localStorage.getItem('sunAzimuth'));
-        let sunIntensity = parseFloat(localStorage.getItem('sunIntensity'));
-        let animateSun = localStorage.getItem('animateSun') === 'true';
-        if(!isValidHexColor(skyColor)){
-          skyColor = SKY_COLOR;
-        }
-        let sunAzimuth = Number.isFinite(storedAzimuth) ? normalizeAzimuth(storedAzimuth) : DEFAULT_SUN_AZIMUTH;
-        sunIntensity = Number.isFinite(sunIntensity) ? clampSunIntensity(sunIntensity) : SKY_INTENSITY;
-        if(localStorage.getItem('animateSun') === null && Object.prototype.hasOwnProperty.call(adminSettings, 'animateSun')){
-          animateSun = SKY_ANIMATE;
-        }
-        try{
-          localStorage.setItem('skyColor', skyColor);
-          localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2));
-          localStorage.setItem('sunIntensity', sunIntensity.toFixed(2));
-        }catch(err){}
-        const skyInputRefs = {
-          color: null,
-          azimuth: null,
-          azimuthVal: null,
-          intensity: null,
-          intensityVal: null,
-          animate: null
-        };
-        const SKY_FPS = 5;
-        const SKY_FRAME = 1000 / SKY_FPS;
-        const SKY_STEP = 0.5;
-        let skyAnim = {
-          angle: normalizeAzimuth(sunAzimuth),
-          rafId: null,
-          started: false,
-          last: 0
-        };
-        sunAzimuth = skyAnim.angle;
-        let sunStoreTimer = 0;
-        let skyVisibilityListenerAttached = false;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
@@ -5034,216 +4917,6 @@ img.thumb{
         });
       }
       updateLogoClickState();
-
-      function ensureSkyInputRefs(){
-        const isConnected = el => el && el.isConnected;
-        if(!isConnected(skyInputRefs.color)) skyInputRefs.color = document.getElementById('skyColor');
-        if(!isConnected(skyInputRefs.azimuth)) skyInputRefs.azimuth = document.getElementById('sunAzimuth');
-        if(!isConnected(skyInputRefs.azimuthVal)) skyInputRefs.azimuthVal = document.getElementById('sunAzimuthVal');
-        if(!isConnected(skyInputRefs.intensity)) skyInputRefs.intensity = document.getElementById('sunIntensity');
-        if(!isConnected(skyInputRefs.intensityVal)) skyInputRefs.intensityVal = document.getElementById('sunIntensityVal');
-        if(!isConnected(skyInputRefs.animate)) skyInputRefs.animate = document.getElementById('animateSun');
-        return skyInputRefs;
-      }
-
-      function syncSkyInputs(){
-        const refs = ensureSkyInputRefs();
-        if(refs.color && refs.color.value !== skyColor){
-          refs.color.value = skyColor;
-        }
-        const azValue = Math.max(0, Math.min(360, Math.round(normalizeAzimuth(skyAnim.angle))));
-        if(refs.azimuth && refs.azimuth.value !== String(azValue)){
-          refs.azimuth.value = String(azValue);
-        }
-        if(refs.azimuthVal){
-          refs.azimuthVal.textContent = String(azValue);
-        }
-        const intensityValue = clampSunIntensity(sunIntensity);
-        const intensityStr = intensityValue.toFixed(2);
-        if(refs.intensity && refs.intensity.value !== intensityStr){
-          refs.intensity.value = intensityStr;
-        }
-        if(refs.intensityVal){
-          refs.intensityVal.textContent = intensityStr;
-        }
-        if(refs.animate && refs.animate.checked !== animateSun){
-          refs.animate.checked = animateSun;
-        }
-      }
-
-      function applySky(angle = skyAnim.angle){
-        if(!map) return;
-        const color = isValidHexColor(skyColor) ? skyColor : SKY_COLOR;
-        const azimuth = normalizeAzimuth(angle);
-        const intensity = clampSunIntensity(sunIntensity);
-        if(typeof map.setSky === 'function'){
-          try{
-            map.setSky({
-              'sky-type':'atmosphere',
-              'sky-atmosphere-color': color,
-              'sky-atmosphere-sun':[azimuth, 0],
-              'sky-atmosphere-sun-intensity': intensity
-            });
-            return;
-          }catch(err){
-            console.warn('Failed to apply sky settings', err);
-          }
-        }
-        try{
-          const style = map.getStyle();
-          if(style && Array.isArray(style.layers)){
-            style.layers.filter(layer => layer && layer.type === 'sky' && layer.id).forEach(layer => {
-              if(map.getLayer(layer.id)){
-                map.removeLayer(layer.id);
-              }
-            });
-          }
-          if(map.getLayer && map.getLayer('night-sky')){
-            map.removeLayer('night-sky');
-          }
-          map.addLayer({
-            id:'night-sky',
-            type:'sky',
-            paint:{
-              'sky-type':'atmosphere',
-              'sky-atmosphere-color': color,
-              'sky-atmosphere-sun':[azimuth, 0],
-              'sky-atmosphere-sun-intensity': intensity
-            }
-          });
-        }catch(err){
-          console.warn('Failed to apply sky settings', err);
-        }
-      }
-
-      function applySkySettings(){
-        applySky(skyAnim.angle);
-      }
-
-      function setSkyColor(value, opts = {}){
-        const next = isValidHexColor(value) ? value : DEFAULT_SKY_COLOR;
-        skyColor = next;
-        if(!opts.skipStore){
-          try{ localStorage.setItem('skyColor', skyColor); }catch(err){}
-        }
-        if(!opts.skipApply) applySkySettings();
-        if(!opts.skipSync) syncSkyInputs();
-      }
-
-      function setSunAzimuth(value, opts = {}){
-        const next = normalizeAzimuth(value);
-        sunAzimuth = next;
-        skyAnim.angle = next;
-        if(!opts.skipStore){
-          try{ localStorage.setItem('sunAzimuth', next.toFixed(2)); }catch(err){}
-        }
-        if(!opts.skipApply) applySkySettings();
-        if(!opts.skipSync) syncSkyInputs();
-      }
-
-      function setSunIntensity(value, opts = {}){
-        const next = clampSunIntensity(value);
-        sunIntensity = next;
-        if(!opts.skipStore){
-          try{ localStorage.setItem('sunIntensity', next.toFixed(2)); }catch(err){}
-        }
-        if(!opts.skipApply) applySkySettings();
-        if(!opts.skipSync) syncSkyInputs();
-      }
-
-      function stopSunAnimation(){
-        if(skyAnim.rafId){
-          cancelAnimationFrame(skyAnim.rafId);
-          skyAnim.rafId = null;
-        }
-        skyAnim.last = 0;
-        sunStoreTimer = 0;
-        try{ localStorage.setItem('sunAzimuth', normalizeAzimuth(skyAnim.angle).toFixed(2)); }catch(err){}
-      }
-
-      function sunLoop(timestamp){
-        if(!map || !animateSun){
-          stopSunAnimation();
-          return;
-        }
-        if(document.hidden){
-          skyAnim.rafId = requestAnimationFrame(sunLoop);
-          return;
-        }
-        if(skyAnim.last === 0 || timestamp - skyAnim.last >= SKY_FRAME){
-          skyAnim.angle = normalizeAzimuth((skyAnim.angle + SKY_STEP) % 360);
-          sunAzimuth = skyAnim.angle;
-          applySky(skyAnim.angle);
-          if(timestamp - sunStoreTimer >= SUN_ANIMATION_STORAGE_INTERVAL){
-            sunStoreTimer = timestamp;
-            try{ localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2)); }catch(err){}
-          }
-          skyAnim.last = timestamp;
-        }
-        skyAnim.rafId = requestAnimationFrame(sunLoop);
-      }
-
-      function ensureSkyVisibilityHandler(){
-        if(skyVisibilityListenerAttached) return;
-        document.addEventListener('visibilitychange', () => {
-          if(document.hidden){
-            if(skyAnim.rafId){
-              cancelAnimationFrame(skyAnim.rafId);
-              skyAnim.rafId = null;
-            }
-          } else if(!skyAnim.rafId && animateSun && map){
-            skyAnim.last = 0;
-            skyAnim.rafId = requestAnimationFrame(sunLoop);
-          }
-        });
-        skyVisibilityListenerAttached = true;
-      }
-
-      function startSunAnimation(){
-        if(!animateSun) return;
-        if(!map) return;
-        ensureSkyVisibilityHandler();
-        if(skyAnim.rafId) return;
-        skyAnim.last = 0;
-        sunStoreTimer = 0;
-        skyAnim.rafId = requestAnimationFrame(sunLoop);
-      }
-
-      function setAnimateSunState(value, opts = {}){
-        animateSun = Boolean(value);
-        if(!opts.skipStore){
-          try{ localStorage.setItem('animateSun', animateSun ? 'true' : 'false'); }catch(err){}
-        }
-        updateSunAnimationState();
-        if(!opts.skipSync) syncSkyInputs();
-      }
-
-      function updateSunAnimationState(){
-        if(!map){
-          return;
-        }
-        if(animateSun){
-          startSunAnimation();
-        } else {
-          stopSunAnimation();
-          applySkySettings();
-        }
-      }
-
-      window.skyGlobals = {
-        get color(){ return skyColor; },
-        set color(v){ setSkyColor(v); },
-        get sunAzimuth(){ return sunAzimuth; },
-        set sunAzimuth(v){ setSunAzimuth(v); },
-        get sunIntensity(){ return sunIntensity; },
-        set sunIntensity(v){ setSunIntensity(v); },
-        get animateSun(){ return animateSun; },
-        set animateSun(v){ setAnimateSunState(v); },
-        apply: applySkySettings,
-        sync: syncSkyInputs,
-        updateAnimation: updateSunAnimationState
-      };
-      syncSkyInputs();
 
       function openWelcome(){
         const popup = document.getElementById('welcome-modal');
@@ -5299,22 +4972,6 @@ img.thumb{
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
     const sleep = ms => new Promise(r=>setTimeout(r,ms));
     const nextFrame = ()=> new Promise(r=> requestAnimationFrame(()=>r()));
-
-    function getViewportHeight(){
-      const viewport = window.visualViewport;
-      if(viewport && Number.isFinite(viewport.height)){
-        return viewport.height;
-      }
-      if(Number.isFinite(window.innerHeight)){
-        return window.innerHeight;
-      }
-      const doc = document.documentElement;
-      if(doc && Number.isFinite(doc.clientHeight)){
-        return doc.clientHeight;
-      }
-      const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
-      return bodyRect && Number.isFinite(bodyRect.height) ? bodyRect.height : 0;
-    }
 
     // Ensure result lists occupy available space between the header and footer
     function adjustListHeight(){
@@ -7253,16 +6910,11 @@ function makePosts(){
             bearing: startBearing,
             attributionControl:true
           });
-        // --- Night sky + fog off + throttled animation ---
         map.on('style.load', () => {
-          if(skyAnim.started) return;
-          skyAnim.started = true;
-          applySky(skyAnim.angle);
-          try{ map.setFog(null); }catch(e){}
-          if(animateSun && !skyAnim.rafId){
-            skyAnim.last = 0;
-            skyAnim.rafId = requestAnimationFrame(sunLoop);
-          }
+          // Default atmospheric sky (black with stars, no custom color, no animation)
+          map.setSky({ 'sky-type': 'atmosphere' });
+          // No fog for performance
+          map.setFog(null);
         });
         ensureMapIcon = attachIconLoader(map);
       map.on('zoomend', checkLoadPosts);
@@ -7279,7 +6931,6 @@ function makePosts(){
         updatePostPanel();
         applyFilters();
         checkLoadPosts();
-        updateSunAnimationState();
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -9203,10 +8854,6 @@ function makePosts(){
           const center = [loc.lng, loc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
-          const detailSettings = window.adminSettings || {};
-          const detailSkyColor = isValidHexColor(detailSettings.skyColor) ? detailSettings.skyColor : DEFAULT_SKY_COLOR;
-          const detailSunIntensity = typeof detailSettings.sunIntensity === 'number' ? clampSunIntensity(detailSettings.sunIntensity) : DEFAULT_SUN_INTENSITY;
-
           const assignDetailRef = ()=>{
             detailMapRef = detailMapRef || {};
             detailMapRef.map = map;
@@ -9233,15 +8880,10 @@ function makePosts(){
               attachIconLoader(map);
 
               map.on('style.load', () => {
-                try{
-                  map.setSky({
-                    'sky-type': 'atmosphere',
-                    'sky-atmosphere-color': detailSkyColor,
-                    'sky-atmosphere-sun': [90, 0],
-                    'sky-atmosphere-sun-intensity': detailSunIntensity
-                  });
-                  map.setFog(null);
-                }catch(e){}
+                // Default atmospheric sky (black with stars, no custom color, no animation)
+                map.setSky({ 'sky-type': 'atmosphere' });
+                // No fog for performance
+                map.setFog(null);
               });
 
               const placeMarker = () => {
@@ -9526,6 +9168,21 @@ function makePosts(){
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
+function getViewportHeight(){
+  const viewport = window.visualViewport;
+  if(viewport && Number.isFinite(viewport.height)){
+    return viewport.height;
+  }
+  if(Number.isFinite(window.innerHeight)){
+    return window.innerHeight;
+  }
+  const doc = document.documentElement;
+  if(doc && Number.isFinite(doc.clientHeight)){
+    return doc.clientHeight;
+  }
+  const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
+  return bodyRect && Number.isFinite(bodyRect.height) ? bodyRect.height : 0;
+}
 const panelStack = [];
 function bringToTop(item){
   const idx = panelStack.indexOf(item);
@@ -9599,60 +9256,68 @@ function openPanel(m){
   }
   localStorage.setItem(`panel-open-${m.id}`,'true');
   if(content){
-    const rootStyles = getComputedStyle(document.documentElement);
-    const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
-    const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
-    const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
-    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
-    if(m.id==='adminPanel' || m.id==='memberPanel'){
-      const topPos = headerH + safeTop;
-      const viewportHeight = getViewportHeight();
-      const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
-      content.style.left='auto';
-      content.style.right='0';
-      content.style.top=`${topPos}px`;
-      content.style.bottom=`${footerH}px`;
-      content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
-      content.dataset.side='right';
-      content.classList.remove('panel-visible');
-      content.style.transform='translateX(100%)';
-      requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
-    } else if(m.id==='filterPanel'){
-      const topPos = headerH + subH + safeTop;
-      let translate;
-      if(window.innerWidth < 450){
-        content.style.left='0';
-        content.style.right='0';
-        content.style.top=`${topPos}px`;
-        content.style.bottom=`${footerH}px`;
-        content.style.maxHeight='';
-        content.dataset.side='left';
-        translate = '-100%';
-      } else {
-        const viewportHeight = getViewportHeight();
-        const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
-        content.style.left='0';
-        content.style.right='';
-        content.style.top=`${topPos}px`;
-        content.style.bottom='';
-        content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
-        content.dataset.side='left';
-        translate = '-100%';
-      }
-      content.classList.remove('panel-visible');
-      content.style.transform=`translateX(${translate})`;
-      requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
-    } else if(m.id==='welcome-modal'){
-      const topPos = headerH + safeTop + 10;
-      content.style.left='50%';
-      content.style.top=`${topPos}px`;
-      content.style.transform='translateX(-50%)';
-    } else {
-      content.style.left='50%';
-      content.style.top='50%';
-      content.style.transform='translate(-50%, -50%)';
-    }
-    if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
+    requestAnimationFrame(() => {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const metrics = {
+        headerH: parseFloat(rootStyles.getPropertyValue('--header-h')) || 0,
+        subH: parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0,
+        footerH: parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0,
+        safeTop: parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0,
+        viewportHeight: getViewportHeight(),
+        innerWidth: window.innerWidth
+      };
+      requestAnimationFrame(() => {
+        const {headerH, subH, footerH, safeTop, viewportHeight, innerWidth} = metrics;
+        if(!content.isConnected) return;
+        if(m.id==='adminPanel' || m.id==='memberPanel'){
+          const topPos = headerH + safeTop;
+          const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+          content.style.left='auto';
+          content.style.right='0';
+          content.style.top=`${topPos}px`;
+          content.style.bottom=`${footerH}px`;
+          content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+          content.dataset.side='right';
+          content.classList.remove('panel-visible');
+          content.style.transform='translateX(100%)';
+          requestAnimationFrame(()=>{ if(content.isConnected){ content.classList.add('panel-visible'); content.style.transform=''; } });
+        } else if(m.id==='filterPanel'){
+          const topPos = headerH + subH + safeTop;
+          let translate;
+          if(innerWidth < 450){
+            content.style.left='0';
+            content.style.right='0';
+            content.style.top=`${topPos}px`;
+            content.style.bottom=`${footerH}px`;
+            content.style.maxHeight='';
+            content.dataset.side='left';
+            translate = '-100%';
+          } else {
+            const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+            content.style.left='0';
+            content.style.right='';
+            content.style.top=`${topPos}px`;
+            content.style.bottom='';
+            content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+            content.dataset.side='left';
+            translate = '-100%';
+          }
+          content.classList.remove('panel-visible');
+          content.style.transform=`translateX(${translate})`;
+          requestAnimationFrame(()=>{ if(content.isConnected){ content.classList.add('panel-visible'); content.style.transform=''; } });
+        } else if(m.id==='welcome-modal'){
+          const topPos = headerH + safeTop + 10;
+          content.style.left='50%';
+          content.style.top=`${topPos}px`;
+          content.style.transform='translateX(-50%)';
+        } else {
+          content.style.left='50%';
+          content.style.top='50%';
+          content.style.transform='translate(-50%, -50%)';
+        }
+        if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
+      });
+    });
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
@@ -9829,69 +9494,6 @@ document.addEventListener('pointerdown', handleDocInteract);
   const memberPanel = document.getElementById('memberPanel');
   const adminPanel = document.getElementById('adminPanel');
   const filterPanel = document.getElementById('filterPanel');
-  const sg = window.spinGlobals || {};
-  const sky = window.skyGlobals;
-  const skyColorInput = document.getElementById('skyColor');
-  const sunAzimuthInput = document.getElementById('sunAzimuth');
-  const sunAzimuthVal = document.getElementById('sunAzimuthVal');
-  const sunIntensityInput = document.getElementById('sunIntensity');
-  const sunIntensityVal = document.getElementById('sunIntensityVal');
-  const animateSunInput = document.getElementById('animateSun');
-  const hasSky = !!sky;
-
-  if(hasSky && typeof sky.sync === 'function'){
-    sky.sync();
-  } else {
-    if(sunAzimuthInput && sunAzimuthVal){
-      const val = Number(sunAzimuthInput.value);
-      sunAzimuthVal.textContent = Number.isFinite(val) ? String(Math.round(val)) : '0';
-    }
-    if(sunIntensityInput && sunIntensityVal){
-      const val = Number(sunIntensityInput.value);
-      sunIntensityVal.textContent = Number.isFinite(val) ? Number(val).toFixed(2) : '0.00';
-    }
-    if(animateSunInput){
-      animateSunInput.checked = false;
-    }
-  }
-
-  if(skyColorInput){
-    skyColorInput.addEventListener('input', () => {
-      if(hasSky){
-        sky.color = skyColorInput.value;
-      }
-    });
-  }
-
-  if(sunAzimuthInput){
-    sunAzimuthInput.addEventListener('input', () => {
-      if(hasSky){
-        sky.sunAzimuth = Number(sunAzimuthInput.value);
-      } else if(sunAzimuthVal){
-        const val = Number(sunAzimuthInput.value);
-        sunAzimuthVal.textContent = Number.isFinite(val) ? String(Math.round(val)) : '0';
-      }
-    });
-  }
-
-  if(sunIntensityInput){
-    sunIntensityInput.addEventListener('input', () => {
-      if(hasSky){
-        sky.sunIntensity = Number(sunIntensityInput.value);
-      } else if(sunIntensityVal){
-        const val = Number(sunIntensityInput.value);
-        sunIntensityVal.textContent = Number.isFinite(val) ? Number(val).toFixed(2) : '0.00';
-      }
-    });
-  }
-
-  if(animateSunInput){
-    animateSunInput.addEventListener('change', () => {
-      if(hasSky){
-        sky.animateSun = animateSunInput.checked;
-      }
-    });
-  }
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
@@ -9940,7 +9542,7 @@ document.addEventListener('pointerdown', handleDocInteract);
       const rect = content.getBoundingClientRect();
       const startX = e.clientX;
       const startLeft = rect.left;
-      function onMove(ev){
+      const onMove = (ev)=>{
         const dx = ev.clientX - startX;
         let newLeft = startLeft + dx;
         const maxLeft = window.innerWidth - rect.width;
@@ -9948,12 +9550,13 @@ document.addEventListener('pointerdown', handleDocInteract);
         if(newLeft > maxLeft) newLeft = maxLeft;
         content.style.left = `${newLeft}px`;
         content.style.right = 'auto';
-      }
+      };
+      const throttledMove = rafThrottle(onMove);
       function onUp(){
-        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mousemove', throttledMove);
         document.removeEventListener('mouseup', onUp);
       }
-      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mousemove', throttledMove);
       document.addEventListener('mouseup', onUp);
     });
   });
@@ -10072,6 +9675,9 @@ document.addEventListener('pointerdown', handleDocInteract);
   if(typeof window.updateVenue === 'function') updateVenue = window.updateVenue;
   if(typeof window.hookDetailActions === 'function') hookDetailActions = window.hookDetailActions;
   if(typeof window.ensureMapForVenue === 'function') ensureMapForVenue = window.ensureMapForVenue;
+  if(typeof window.__wrapForInputYield === 'function'){
+    ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(name => window.__wrapForInputYield(name));
+  }
 })();
 </script>
 
