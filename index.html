@@ -4819,7 +4819,6 @@ img.thumb{
     const DEFAULT_SKY_COLOR = '#0b0d28';
     const DEFAULT_SUN_AZIMUTH = 90;
     const DEFAULT_SUN_INTENSITY = 0.1;
-    const SUN_ANIMATION_SPEED = 5;
     const SUN_ANIMATION_STORAGE_INTERVAL = 1000;
     const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
     function normalizeAzimuth(value){
@@ -4873,11 +4872,18 @@ img.thumb{
           sunAzimuth = parseFloat(localStorage.getItem('sunAzimuth')),
           sunIntensity = parseFloat(localStorage.getItem('sunIntensity')),
           animateSun = localStorage.getItem('animateSun') === 'true';
+        const adminSettings = window.adminSettings || {};
+        const ADMIN_SKY_COLOR = isValidHexColor(adminSettings.skyColor) ? adminSettings.skyColor : DEFAULT_SKY_COLOR;
+        const ADMIN_SUN_INTENSITY = typeof adminSettings.sunIntensity === 'number' ? clampSunIntensity(adminSettings.sunIntensity) : DEFAULT_SUN_INTENSITY;
+        const ADMIN_ANIMATE_SUN = !!adminSettings.animateSun;
         if(!isValidHexColor(skyColor)){
-          skyColor = DEFAULT_SKY_COLOR;
+          skyColor = ADMIN_SKY_COLOR;
         }
         sunAzimuth = normalizeAzimuth(sunAzimuth);
-        sunIntensity = clampSunIntensity(sunIntensity);
+        sunIntensity = Number.isFinite(sunIntensity) ? clampSunIntensity(sunIntensity) : ADMIN_SUN_INTENSITY;
+        if(localStorage.getItem('animateSun') === null && Object.prototype.hasOwnProperty.call(adminSettings, 'animateSun')){
+          animateSun = ADMIN_ANIMATE_SUN;
+        }
         try{
           localStorage.setItem('skyColor', skyColor);
           localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2));
@@ -4891,10 +4897,20 @@ img.thumb{
           intensityVal: null,
           animate: null
         };
-        let sunAnimationFrame = null;
-        let lastSunAnimationTime = 0;
-        let lastSunStorageTime = 0;
         const SKY_SUN_ALTITUDE = 0;
+        const SKY_FPS = 5;
+        const SKY_FRAME = 1000 / SKY_FPS;
+        const SKY_STEP = 0.5;
+        let skyAnim = {
+          angle: Number.isFinite(sunAzimuth) ? sunAzimuth : DEFAULT_SUN_AZIMUTH,
+          rafId: null,
+          started: false,
+          last: 0
+        };
+        skyAnim.angle = normalizeAzimuth(skyAnim.angle);
+        sunAzimuth = skyAnim.angle;
+        let sunStoreTimer = 0;
+        let skyVisibilityListenerAttached = false;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
@@ -4921,7 +4937,7 @@ img.thumb{
         if(refs.color && refs.color.value !== skyColor){
           refs.color.value = skyColor;
         }
-        const azValue = Math.max(0, Math.min(360, Math.round(normalizeAzimuth(sunAzimuth))));
+        const azValue = Math.max(0, Math.min(360, Math.round(normalizeAzimuth(skyAnim.angle))));
         if(refs.azimuth && refs.azimuth.value !== String(azValue)){
           refs.azimuth.value = String(azValue);
         }
@@ -4941,10 +4957,10 @@ img.thumb{
         }
       }
 
-      function applySkySettings(){
+      function applySky(angle = skyAnim.angle){
         if(!map) return;
         const color = isValidHexColor(skyColor) ? skyColor : DEFAULT_SKY_COLOR;
-        const azimuth = normalizeAzimuth(sunAzimuth);
+        const azimuth = normalizeAzimuth(angle);
         const intensity = clampSunIntensity(sunIntensity);
         if(typeof map.setSky === 'function'){
           try{
@@ -4986,6 +5002,10 @@ img.thumb{
         }
       }
 
+      function applySkySettings(){
+        applySky(skyAnim.angle);
+      }
+
       function setSkyColor(value, opts = {}){
         const next = isValidHexColor(value) ? value : DEFAULT_SKY_COLOR;
         skyColor = next;
@@ -4999,6 +5019,7 @@ img.thumb{
       function setSunAzimuth(value, opts = {}){
         const next = normalizeAzimuth(value);
         sunAzimuth = next;
+        skyAnim.angle = next;
         if(!opts.skipStore){
           try{ localStorage.setItem('sunAzimuth', next.toFixed(2)); }catch(err){}
         }
@@ -5017,47 +5038,63 @@ img.thumb{
       }
 
       function stopSunAnimation(){
-        if(sunAnimationFrame !== null){
-          cancelAnimationFrame(sunAnimationFrame);
-          sunAnimationFrame = null;
+        if(skyAnim.rafId){
+          cancelAnimationFrame(skyAnim.rafId);
+          skyAnim.rafId = null;
         }
-        lastSunAnimationTime = 0;
-        lastSunStorageTime = 0;
-        try{ localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2)); }catch(err){}
+        skyAnim.last = 0;
+        sunStoreTimer = 0;
+        try{ localStorage.setItem('sunAzimuth', normalizeAzimuth(skyAnim.angle).toFixed(2)); }catch(err){}
       }
 
-      function sunAnimationStep(timestamp){
-        if(!animateSun){
+      function sunLoop(timestamp){
+        if(!map || !animateSun){
           stopSunAnimation();
           return;
         }
-        if(!map){
-          stopSunAnimation();
+        if(document.hidden){
+          skyAnim.rafId = requestAnimationFrame(sunLoop);
           return;
         }
-        if(lastSunAnimationTime){
-          const delta = timestamp - lastSunAnimationTime;
-          if(delta > 0){
-            const increment = (delta * SUN_ANIMATION_SPEED) / 1000;
-            const nextValue = normalizeAzimuth(sunAzimuth + increment);
-            const shouldStore = (timestamp - lastSunStorageTime) >= SUN_ANIMATION_STORAGE_INTERVAL;
-            setSunAzimuth(nextValue, { skipStore: !shouldStore });
-            if(shouldStore){
-              lastSunStorageTime = timestamp;
+        if(skyAnim.last === 0 || timestamp - skyAnim.last >= SKY_FRAME){
+          skyAnim.angle = normalizeAzimuth(skyAnim.angle + SKY_STEP);
+          sunAzimuth = skyAnim.angle;
+          applySky(skyAnim.angle);
+          if(timestamp - sunStoreTimer >= SUN_ANIMATION_STORAGE_INTERVAL){
+            sunStoreTimer = timestamp;
+            try{ localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2)); }catch(err){}
+          }
+          skyAnim.last = timestamp;
+        }
+        skyAnim.rafId = requestAnimationFrame(sunLoop);
+      }
+
+      function ensureSkyVisibilityHandler(){
+        if(skyVisibilityListenerAttached) return;
+        document.addEventListener('visibilitychange', () => {
+          if(document.hidden){
+            if(skyAnim.rafId){
+              cancelAnimationFrame(skyAnim.rafId);
+              skyAnim.rafId = null;
+            }
+          } else if(animateSun && map){
+            skyAnim.last = 0;
+            if(!skyAnim.rafId){
+              skyAnim.rafId = requestAnimationFrame(sunLoop);
             }
           }
-        }
-        lastSunAnimationTime = timestamp;
-        sunAnimationFrame = requestAnimationFrame(sunAnimationStep);
+        });
+        skyVisibilityListenerAttached = true;
       }
 
       function startSunAnimation(){
         if(!animateSun) return;
         if(!map) return;
-        if(sunAnimationFrame !== null) return;
-        lastSunAnimationTime = 0;
-        lastSunStorageTime = 0;
-        sunAnimationFrame = requestAnimationFrame(sunAnimationStep);
+        ensureSkyVisibilityHandler();
+        if(skyAnim.rafId) return;
+        skyAnim.last = 0;
+        sunStoreTimer = 0;
+        skyAnim.rafId = requestAnimationFrame(sunLoop);
       }
 
       function setAnimateSunState(value, opts = {}){
@@ -5070,10 +5107,14 @@ img.thumb{
       }
 
       function updateSunAnimationState(){
+        if(!map){
+          return;
+        }
         if(animateSun){
           startSunAnimation();
         } else {
           stopSunAnimation();
+          applySkySettings();
         }
       }
 
@@ -6645,17 +6686,55 @@ function makePosts(){
         });
 
       const postsWide = $('.post-board');
-      postsWide && postsWide.addEventListener('click', e=>{
-        const cardEl = e.target.closest('.post-card');
-        if(cardEl){
+      if(postsWide){
+        let lastPointerdownId = null;
+        postsWide.addEventListener('pointerdown', e=>{
+          if(typeof e.pointerType === 'string' && e.pointerType !== 'mouse'){
+            lastPointerdownId = null;
+            return;
+          }
+          const cardEl = e.target.closest('.post-card');
+          if(!cardEl){
+            lastPointerdownId = null;
+            return;
+          }
           const id = cardEl.getAttribute('data-id');
-          if(id){ stopSpin(); openPost(id); }
-          return;
-        }
-        if(e.target === postsWide && postsWide.querySelector('.open-post')){
-          setMode('map');
-        }
-      });
+          if(!id){
+            lastPointerdownId = null;
+            return;
+          }
+          lastPointerdownId = id;
+          setTimeout(()=>{
+            try{
+              stopSpin();
+              openPost(id);
+            }catch(err){}
+            lastPointerdownId = null;
+          }, 0);
+        }, {passive:true});
+        postsWide.addEventListener('click', e=>{
+          const cardEl = e.target.closest('.post-card');
+          if(cardEl){
+            const id = cardEl.getAttribute('data-id');
+            if(id){
+              if(id === lastPointerdownId){
+                lastPointerdownId = null;
+                return;
+              }
+              setTimeout(()=>{
+                try{
+                  stopSpin();
+                  openPost(id);
+                }catch(err){}
+              }, 0);
+            }
+            return;
+          }
+          if(e.target === postsWide && postsWide.querySelector('.open-post')){
+            setTimeout(()=> setMode('map'), 0);
+          }
+        });
+      }
 
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
@@ -6705,6 +6784,26 @@ function makePosts(){
         if(!skipFilters) applyFilters();
       }
     window.setMode = setMode;
+
+    // --- ensureMapboxCss: inject matching CSS for the loaded mapbox-gl.js ---
+    function ensureMapboxCss(){
+      const hasCss = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .some(l => /api\.mapbox\.com\/mapbox-gl-js\/v\d+\.\d+\.\d+\/mapbox-gl\.css/.test(l.href));
+      if(hasCss) return;
+
+      const glScript = Array.from(document.scripts)
+        .find(s => /api\.mapbox\.com\/mapbox-gl-js\/v\d+\.\d+\.\d+\/mapbox-gl\.js/.test(s.src));
+      if(!glScript) return;
+
+      const version = (glScript.src.match(/(v\d+\.\d+\.\d+)/) || [])[1];
+      if(!version) return;
+
+      const href = `https://api.mapbox.com/mapbox-gl-js/${version}/mapbox-gl.css`;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    }
 
     // Mapbox
     function loadMapbox(cb){
@@ -6814,11 +6913,13 @@ function makePosts(){
       if(window.mapboxgl && window.MapboxGeocoder){
         let pending = cssSources.length;
         if(pending === 0){
+          ensureMapboxCss();
           cb();
           return;
         }
         const done = () => {
           if(--pending === 0){
+            ensureMapboxCss();
             cb();
           }
         };
@@ -6841,6 +6942,7 @@ function makePosts(){
           return ()=>{
             if(called) return;
             called = true;
+            ensureMapboxCss();
             cb();
           };
         })();
@@ -6968,7 +7070,7 @@ function makePosts(){
           mapboxgl.accessToken = MAPBOX_TOKEN;
           map = new mapboxgl.Map({
             container:'map',
-            style: mapStyle,
+            style:'mapbox://styles/mapbox/streets-v12',
             projection:'globe',
             center: startCenter,
             zoom: startZoom,
@@ -6981,6 +7083,9 @@ function makePosts(){
             map.setFog(null);
           }catch(e){}
           applySkySettings();
+          if(!skyAnim.started){
+            skyAnim.started = true;
+          }
           updateSunAnimationState();
         });
         map.on('styleimagemissing', (e)=>{
@@ -8638,8 +8743,13 @@ function makePosts(){
           }
         }
       function updateVenue(idx){
-        const loc = p.locations[idx];
+        const loc = Array.isArray(p.locations) ? p.locations[idx] : null;
+        if(!loc || !Array.isArray(loc.dates) || !loc.dates.length){
+          return;
+        }
+
         loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+
         const currentYear = new Date().getFullYear();
         const parseDate = s => {
           const [yy, mm, dd] = s.split('-').map(Number);
@@ -8649,10 +8759,16 @@ function makePosts(){
           const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
         };
-        let defaultInfoHTML = '';
-        if(venueInfo) venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
-        if(venueBtn) venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+
+        if(venueInfo){
+          venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
+        }
+        if(venueBtn){
+          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+        }
+
         sessionHasMultiple = loc.dates.length > 1;
+        let defaultInfoHTML = '';
         if(sessionInfo){
           const firstDate = loc.dates[0];
           const lastDate = loc.dates[loc.dates.length-1];
@@ -8660,82 +8776,123 @@ function makePosts(){
           defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}<span style="display:inline-block;margin-left:10px;">(Select Session)</span></div>`;
           sessionInfo.innerHTML = defaultInfoHTML;
         }
-        if(!map){
-          map = new mapboxgl.Map({
-            container: mapEl,
-            style: mapStyle,
-            center: [loc.lng, loc.lat],
-            zoom: 10,
-            interactive: false
-          });
-            const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
-            const url = subcategoryMarkers[subId];
-            if(url){
-              const img = new Image();
-              img.src = url;
-              marker = new mapboxgl.Marker({element:img, anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
-            } else {
-              marker = new mapboxgl.Marker({anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
-            }
-          setTimeout(()=> map && map.resize(),0);
-          if(resizeHandler){
-            window.removeEventListener('resize', resizeHandler);
-          }
-          resizeHandler = ()=>{ if(map) map.resize(); };
-          window.addEventListener('resize', resizeHandler);
-          detailMapRef = detailMapRef || {};
-          detailMapRef.map = map;
-          detailMapRef.resizeHandler = resizeHandler;
-          if(mapEl){
-            mapEl._detailMap = detailMapRef;
-          }
-          if(el){
-            el._detailMap = detailMapRef;
-          }
-        } else {
-          map.setCenter([loc.lng, loc.lat]);
-          marker.setLngLat([loc.lng, loc.lat]);
-          setTimeout(()=> map && map.resize(),0);
-          detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
-          detailMapRef.map = map;
-          detailMapRef.resizeHandler = resizeHandler;
-          if(mapEl){
-            mapEl._detailMap = detailMapRef;
-          }
-          if(el){
-            el._detailMap = detailMapRef;
-          }
-        }
+
         const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
         const allowedSet = new Set(dateStrings);
         const minDate = parseDate(dateStrings[0]);
         const maxDate = parseDate(dateStrings[dateStrings.length-1]);
-        calendarEl.innerHTML='';
-        const cal = document.createElement('div');
-        cal.className='calendar';
-        let current = new Date(minDate.getFullYear(), minDate.getMonth(),1);
-        const end = new Date(maxDate.getFullYear(), maxDate.getMonth(),1);
-        while(current <= end){
+        let cal = null;
+        let selectedIndex = null;
+
+        const months = [];
+        if(minDate && maxDate){
+          const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+          const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+          while(cursor <= limit){
+            months.push(new Date(cursor));
+            cursor.setMonth(cursor.getMonth() + 1);
+          }
+        }
+
+        function markSelected(){
+          if(!calendarEl) return;
+          calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
+          if(selectedIndex!==null){
+            const dt = loc.dates[selectedIndex];
+            const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
+            if(cell) cell.classList.add('selected');
+          }
+        }
+
+        function selectSession(i){
+          if(!sessMenu || !sessionOptions) return;
+          selectedIndex = Number.isInteger(i) ? i : null;
+          sessionOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
+          const btn = selectedIndex !== null ? sessionOptions.querySelector(`button[data-index="${selectedIndex}"]`) : null;
+          if(btn) btn.classList.add('selected');
+          const dt = selectedIndex !== null ? loc.dates[selectedIndex] : null;
+          let waitForScroll = false;
+          let targetScrollLeft = null;
+          if(dt){
+            if(sessionInfo){
+              sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
+            }
+            if(sessBtn){
+              sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            }
+            markSelected();
+            const cell = calendarEl ? calendarEl.querySelector(`.day[data-iso="${dt.full}"]`) : null;
+            if(cell && calScroll){
+              const monthEl = cell.closest('.month');
+              if(monthEl){
+                targetScrollLeft = monthEl.offsetLeft;
+                if(typeof calScroll.scrollTo === 'function'){
+                  const currentLeft = calScroll.scrollLeft;
+                  if(Math.abs(currentLeft - targetScrollLeft) > 1){
+                    waitForScroll = true;
+                    calScroll.scrollTo({left:targetScrollLeft, behavior:'smooth'});
+                  } else {
+                    calScroll.scrollLeft = targetScrollLeft;
+                  }
+                } else {
+                  calScroll.scrollLeft = targetScrollLeft;
+                }
+              }
+            }
+          } else {
+            if(sessionInfo){
+              sessionInfo.innerHTML = defaultInfoHTML;
+            }
+            if(sessBtn){
+              sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
+              sessBtn.setAttribute('aria-expanded','false');
+            }
+            markSelected();
+          }
+          if(!sessMenu.hidden){
+            scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
+          } else if(sessBtn){
+            sessBtn.setAttribute('aria-expanded','false');
+          }
+        }
+
+        function showTimePopup(matches){
+          if(!calContainer) return;
+          const existing = calContainer.querySelector('.time-popup');
+          if(existing) existing.remove();
+          const popup = document.createElement('div');
+          popup.className = 'time-popup';
+          popup.innerHTML = `<div class="time-list">${matches.map(m=>`<button data-index="${m.i}">${m.d.time}</button>`).join('')}</div>`;
+          calContainer.appendChild(popup);
+          if(lastClickedCell){
+            const rect = lastClickedCell.getBoundingClientRect();
+            const containerRect = calContainer.getBoundingClientRect();
+            popup.style.left = (rect.left - containerRect.left) + 'px';
+            popup.style.top = (rect.bottom - containerRect.top + 4) + 'px';
+          }
+          popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
+          setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
+        }
+
+        function renderMonth(monthDate){
+          if(!cal) return;
           const monthEl = document.createElement('div');
           monthEl.className='month';
           const header = document.createElement('div');
           header.className='calendar-header';
-          header.textContent = current.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+          header.textContent = monthDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
           monthEl.appendChild(header);
           const grid = document.createElement('div');
           grid.className='grid';
-
-          const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-          weekdays.forEach(wd=>{
+          ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(wd=>{
             const w=document.createElement('div');
             w.className='weekday';
             w.textContent=wd;
             grid.appendChild(w);
           });
-
-          const firstDay = new Date(current.getFullYear(), current.getMonth(),1);
+          const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(),1);
           const startDow = firstDay.getDay();
-          const daysInMonth = new Date(current.getFullYear(), current.getMonth()+1,0).getDate();
+          const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth()+1,0).getDate();
           const totalCells = 42;
           for(let i=0;i<totalCells;i++){
             const cell=document.createElement('div');
@@ -8745,7 +8902,7 @@ function makePosts(){
               cell.classList.add('empty');
             }else{
               cell.textContent=dayNum;
-              const dateObj=new Date(current.getFullYear(), current.getMonth(), dayNum);
+              const dateObj=new Date(monthDate.getFullYear(), monthDate.getMonth(), dayNum);
               const iso=toISODate(dateObj);
               cell.dataset.iso = iso;
               if(allowedSet.has(iso)){
@@ -8765,101 +8922,120 @@ function makePosts(){
           }
           monthEl.appendChild(grid);
           cal.appendChild(monthEl);
-          current.setMonth(current.getMonth()+1);
         }
-        calendarEl.appendChild(cal);
-        let selectedIndex = null;
-        calendarEl.addEventListener('click', e=> e.stopPropagation());
-        function markSelected(){
-          calendarEl.querySelectorAll('.day').forEach(d=> d.classList.remove('selected'));
-          if(selectedIndex!==null){
-            const dt = loc.dates[selectedIndex];
-            const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
-            if(cell) cell.classList.add('selected');
-          }
+
+        function buildCalendarShell(){
+          if(!calendarEl) return;
+          calendarEl.innerHTML='';
+          cal = document.createElement('div');
+          cal.className='calendar';
+          calendarEl.appendChild(cal);
+          calendarEl.addEventListener('click', e=> e.stopPropagation());
         }
-        function selectSession(i){
-          if(!sessMenu || !sessionOptions) return;
-          selectedIndex = i;
-          sessionOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
-          const btn = sessionOptions.querySelector(`button[data-index="${i}"]`);
-          if(btn) btn.classList.add('selected');
-          const dt = loc.dates[i];
-          let waitForScroll = false;
-          let targetScrollLeft = null;
-          if(dt){
-            sessionInfo.innerHTML = `<div><strong>${formatDate(dt)} ${dt.time}</strong></div><div>Adults $20, Kids $10, Pensioners $15</div><div>🎫 Buy at venue | ♿ Accessible | 👶 Kid-friendly</div>`;
-            if(sessBtn) sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
-            markSelected();
-            const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
-            if(cell && calScroll){
-              const monthEl = cell.closest('.month');
-              if(monthEl){
-                targetScrollLeft = monthEl.offsetLeft;
-                if(typeof calScroll.scrollTo === 'function'){
-                  const currentLeft = calScroll.scrollLeft;
-                  if(Math.abs(currentLeft - targetScrollLeft) > 1){
-                    waitForScroll = true;
-                    calScroll.scrollTo({left:targetScrollLeft, behavior:'smooth'});
-                  } else {
-                    calScroll.scrollLeft = targetScrollLeft;
-                  }
-                } else {
-                  calScroll.scrollLeft = targetScrollLeft;
-                }
-              }
+
+        function finalizeCalendar(){
+          markSelected();
+        }
+
+        function updateSessionOptionsList(){
+          if(sessionOptions){
+            sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+            if(sessMenu){
+              sessMenu.scrollTop = 0;
             }
-          } else {
-            sessionInfo.innerHTML = defaultInfoHTML;
-            if(sessBtn) sessBtn.innerHTML = sessionHasMultiple ? 'Select Session<span class="results-arrow" aria-hidden="true"></span>' : 'Select Session';
-            selectedIndex = null;
-            markSelected();
-          }
-          if(!sessMenu.hidden){
-            scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
-          } else if(sessBtn){
-            sessBtn.setAttribute('aria-expanded','false');
-          }
-        }
-        function showTimePopup(matches){
-          const existing = calContainer.querySelector('.time-popup');
-          if(existing) existing.remove();
-          const popup = document.createElement('div');
-          popup.className = 'time-popup';
-          popup.innerHTML = `<div class="time-list">${matches.map(m=>`<button data-index="${m.i}">${m.d.time}</button>`).join('')}</div>`;
-          calContainer.appendChild(popup);
-          if(lastClickedCell){
-            const rect = lastClickedCell.getBoundingClientRect();
-            const containerRect = calContainer.getBoundingClientRect();
-            popup.style.left = (rect.left - containerRect.left) + 'px';
-            popup.style.top = (rect.bottom - containerRect.top + 4) + 'px';
-          }
-          popup.querySelectorAll('button').forEach(b=> b.addEventListener('click',()=>{ selectSession(parseInt(b.dataset.index,10)); popup.remove(); }));
-          setTimeout(()=> document.addEventListener('click', function handler(e){ if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click', handler); } }),0);
-        }
-        setTimeout(()=>{
-          if(map && typeof map.resize === 'function') map.resize();
-        },0);
-        if(sessionOptions){
-          sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
-          if(sessMenu){
-            sessMenu.scrollTop = 0;
-          }
-          if(sessionHasMultiple){
-            sessionInfo.innerHTML = defaultInfoHTML;
-            if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
-          } else {
-            if(loc.dates.length){
+            if(sessionHasMultiple){
+              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            } else if(loc.dates.length){
               selectSession(0);
             } else {
-              sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
               if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
             }
+            sessionOptions.querySelectorAll('button').forEach(btn=>{
+              btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
+            });
           }
-          sessionOptions.querySelectorAll('button').forEach(btn=>{
-            btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
-          });
+          setTimeout(()=>{
+            if(map && typeof map.resize === 'function') map.resize();
+          },0);
         }
+
+        function ensureMapForVenue(){
+          if(!mapEl) return;
+          if(!map){
+            map = new mapboxgl.Map({
+              container: mapEl,
+              style: mapStyle,
+              center: [loc.lng, loc.lat],
+              zoom: 10,
+              interactive: false
+            });
+            const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
+            const url = subcategoryMarkers[subId];
+            if(url){
+              const img = new Image();
+              img.src = url;
+              marker = new mapboxgl.Marker({element:img, anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
+            } else {
+              marker = new mapboxgl.Marker({anchor:'center'}).setLngLat([loc.lng, loc.lat]).addTo(map);
+            }
+            setTimeout(()=> map && map.resize(),0);
+            if(resizeHandler){
+              window.removeEventListener('resize', resizeHandler);
+            }
+            resizeHandler = ()=>{ if(map) map.resize(); };
+            window.addEventListener('resize', resizeHandler);
+            detailMapRef = detailMapRef || {};
+            detailMapRef.map = map;
+            detailMapRef.resizeHandler = resizeHandler;
+            if(mapEl){
+              mapEl._detailMap = detailMapRef;
+            }
+            if(el){
+              el._detailMap = detailMapRef;
+            }
+          } else {
+            map.setCenter([loc.lng, loc.lat]);
+            if(marker) marker.setLngLat([loc.lng, loc.lat]);
+            setTimeout(()=> map && map.resize(),0);
+            detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
+            detailMapRef.map = map;
+            detailMapRef.resizeHandler = resizeHandler;
+            if(mapEl){
+              mapEl._detailMap = detailMapRef;
+            }
+            if(el){
+              el._detailMap = detailMapRef;
+            }
+          }
+        }
+
+        const tasks = [];
+        if(mapEl){
+          tasks.push(()=> ensureMapForVenue());
+        }
+        if(calendarEl){
+          tasks.push(()=> buildCalendarShell());
+          months.forEach(monthDate => tasks.push(()=> renderMonth(monthDate)));
+          tasks.push(()=> finalizeCalendar());
+        }
+        tasks.push(()=> updateSessionOptionsList());
+
+        function runNext(){
+          const task = tasks.shift();
+          if(!task) return;
+          const start = performance.now();
+          try{ task(); }catch(err){}
+          if(performance.now() - start > 6){
+            setTimeout(runNext, 0);
+          } else {
+            runNext();
+          }
+        }
+        runNext();
+      }
+
       }
         if(mapEl){
           setTimeout(()=>{
@@ -10130,7 +10306,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(e.target.closest('.post-board, .panel-content, .options-menu, .calendar-scroll')){
       e.stopPropagation();
     }
-  }, {passive:false});
+  }, {passive:true});
   const postsPanel = document.querySelector('.post-board');
   const postsBg = document.querySelector('.post-mode-background');
   if(postsPanel){
