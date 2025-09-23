@@ -4757,15 +4757,6 @@ img.thumb{
     };
   })();
 
-  function closestElement(target, selector){
-    if(!target) return null;
-    if(target instanceof Element){
-      return target.closest(selector);
-    }
-    const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
-    return parent ? parent.closest(selector) : null;
-  }
-  window.closestElement = closestElement;
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
@@ -9071,6 +9062,16 @@ function makePosts(){
     });
   })();
   
+function closestElement(target, selector){
+  if(!target) return null;
+  if(target instanceof Element){
+    return target.closest(selector);
+  }
+  const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
+  return parent ? parent.closest(selector) : null;
+}
+window.closestElement = closestElement;
+
 // 0577 helpers (safety)
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
