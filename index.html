@@ -7369,7 +7369,15 @@ function makePosts(){
           }
         }
         const id = f.properties.id;
-        const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+        const originalEvent = e.originalEvent || {};
+        let pointerType = '';
+        if(typeof originalEvent.pointerType === 'string'){
+          pointerType = originalEvent.pointerType.toLowerCase();
+        } else if(typeof originalEvent.pointerType === 'number'){
+          pointerType = ({2:'touch',3:'pen',4:'mouse'})[originalEvent.pointerType] || '';
+        }
+        const inferredTouch = !pointerType && typeof TouchEvent !== 'undefined' && originalEvent instanceof TouchEvent;
+        const touchClick = pointerType === 'touch' || pointerType === 'pen' || inferredTouch;
         if(touchClick){
           if(touchMarker === id){
             touchMarker = null;
