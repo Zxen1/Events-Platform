@@ -8094,8 +8094,15 @@ function makePosts(){
       }
 
       function closeActivePost(){
+        const ensurePostMode = () => {
+          if(mode === 'posts'){
+            document.body.classList.add('mode-posts');
+            document.body.classList.remove('mode-map');
+          }
+        };
         const openEl = document.querySelector('.post-board .open-post, #recentsBoard .open-post');
         if(!openEl){
+          ensurePostMode();
           document.body.classList.remove('detail-open');
           if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
           if(typeof window.adjustBoards === 'function') window.adjustBoards();
@@ -8117,6 +8124,7 @@ function makePosts(){
           if(detachedColumn.dataset) delete detachedColumn.dataset.openPostId;
           detachedColumn.remove();
         }
+        ensurePostMode();
         document.body.classList.remove('detail-open');
         $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=> el.removeAttribute('aria-selected'));
         if(post){
