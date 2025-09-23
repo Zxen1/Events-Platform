@@ -4759,6 +4759,16 @@ img.thumb{
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
   const IMAGE_FALLBACK = 'assets/balloons/balloons-icon-16185.png';
 
+  function closestElement(target, selector){
+    if(!target) return null;
+    if(target instanceof Element){
+      return target.closest(selector);
+    }
+    const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
+    return parent ? parent.closest(selector) : null;
+  }
+  window.closestElement = closestElement;
+
   function addImageFallback(img, extraFallbacks){
     if(!(img instanceof Element)) return;
     const fallbacks = [];
@@ -5146,14 +5156,6 @@ img.thumb{
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-    function closestElement(target, selector){
-      if(!target) return null;
-      if(target instanceof Element){
-        return target.closest(selector);
-      }
-      const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
-      return parent ? parent.closest(selector) : null;
-    }
     const clamp = (n, a, b)=> Math.max(a, Math.min(b, n));
     const toRad = d => d * Math.PI / 180;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
