@@ -4739,14 +4739,15 @@ img.thumb{
   </div>
 
   <script>
-  window.closestElement = function closestElement(target, selector){
+  function closestElement(target, selector){
     if(!target) return null;
     if(target instanceof Element){
       return target.closest(selector);
     }
     const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
     return parent ? parent.closest(selector) : null;
-  };
+  }
+  window.closestElement = closestElement;
 
   (function(){
     const origAddEventListener = EventTarget.prototype.addEventListener;
