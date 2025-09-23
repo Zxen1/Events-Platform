@@ -4739,15 +4739,6 @@ img.thumb{
   </div>
 
   <script>
-  const closestElement = window.closestElement = (target, selector) => {
-    if(!target) return null;
-    if(target instanceof Element){
-      return target.closest(selector);
-    }
-    const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
-    return parent ? parent.closest(selector) : null;
-  };
-
   (function(){
     const origAddEventListener = EventTarget.prototype.addEventListener;
     EventTarget.prototype.addEventListener = function(type, listener, options){
@@ -4765,6 +4756,16 @@ img.thumb{
       return origAddEventListener.call(this, type, listener, options);
     };
   })();
+
+  function closestElement(target, selector){
+    if(!target) return null;
+    if(target instanceof Element){
+      return target.closest(selector);
+    }
+    const parent = target.parentElement || (target.parentNode instanceof Element ? target.parentNode : null);
+    return parent ? parent.closest(selector) : null;
+  }
+  window.closestElement = closestElement;
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
