@@ -4632,10 +4632,41 @@ img.thumb{
                   <span class="slider"></span>
                 </label>
               </div>
+          </div>
+        </div>
+        <div class="map-theme-container">
+          <div class="panel-field">
+            <div class="control-row">
+              <label for="skyColor">Sky color</label>
+              <input type="color" id="skyColor" value="#0b0d28" />
             </div>
           </div>
-          <div id="map-balloon-container" class="map-balloon-container">
-            <style>
+          <div class="panel-field">
+            <label for="sunAzimuth">Sun azimuth</label>
+            <div class="range-wrap">
+              <input type="range" id="sunAzimuth" min="0" max="360" step="1" value="90" />
+              <span id="sunAzimuthVal">90</span>
+            </div>
+          </div>
+          <div class="panel-field">
+            <label for="sunIntensity">Sun intensity</label>
+            <div class="range-wrap">
+              <input type="range" id="sunIntensity" min="0" max="1" step="0.01" value="0.10" />
+              <span id="sunIntensityVal">0.10</span>
+            </div>
+          </div>
+          <div class="panel-field">
+            <div class="option-label">
+              <span>Animate Sun</span>
+              <label class="switch">
+                <input type="checkbox" id="animateSun" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div id="map-balloon-container" class="map-balloon-container">
+          <style>
               #map-balloon-container .t{font-size:16px;font-weight:bold;}
               #map-balloon-container .shape-dropdown{position:relative;width:100%;max-width:100%;height:35px;margin-bottom:8px;}
               #map-balloon-container .shape-dropdown > button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
@@ -4785,7 +4816,31 @@ img.thumb{
 
     let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
+    const DEFAULT_SKY_COLOR = '#0b0d28';
+    const DEFAULT_SUN_AZIMUTH = 90;
+    const DEFAULT_SUN_INTENSITY = 0.1;
+    const SUN_ANIMATION_SPEED = 5;
+    const SUN_ANIMATION_STORAGE_INTERVAL = 1000;
     const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
+    function normalizeAzimuth(value){
+      const num = Number(value);
+      if(!Number.isFinite(num)) return DEFAULT_SUN_AZIMUTH;
+      let normalized = num % 360;
+      if(normalized < 0) normalized += 360;
+      return normalized;
+    }
+
+    function clampSunIntensity(value){
+      const num = Number(value);
+      if(!Number.isFinite(num)) return DEFAULT_SUN_INTENSITY;
+      const clamped = Math.min(1, Math.max(0, num));
+      return Math.round(clamped * 100) / 100;
+    }
+
+    function isValidHexColor(value){
+      return typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value.trim());
+    }
+
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
     if(firstVisit){
@@ -4813,7 +4868,33 @@ img.thumb{
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '';
+          clusterSvg = localStorage.getItem('clusterSvg') || '',
+          skyColor = localStorage.getItem('skyColor') || DEFAULT_SKY_COLOR,
+          sunAzimuth = parseFloat(localStorage.getItem('sunAzimuth')),
+          sunIntensity = parseFloat(localStorage.getItem('sunIntensity')),
+          animateSun = localStorage.getItem('animateSun') === 'true';
+        if(!isValidHexColor(skyColor)){
+          skyColor = DEFAULT_SKY_COLOR;
+        }
+        sunAzimuth = normalizeAzimuth(sunAzimuth);
+        sunIntensity = clampSunIntensity(sunIntensity);
+        try{
+          localStorage.setItem('skyColor', skyColor);
+          localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2));
+          localStorage.setItem('sunIntensity', sunIntensity.toFixed(2));
+        }catch(err){}
+        const skyInputRefs = {
+          color: null,
+          azimuth: null,
+          azimuthVal: null,
+          intensity: null,
+          intensityVal: null,
+          animate: null
+        };
+        let sunAnimationFrame = null;
+        let lastSunAnimationTime = 0;
+        let lastSunStorageTime = 0;
+        const SKY_SUN_ALTITUDE = 0;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
       function updateLogoClickState(){
@@ -4823,6 +4904,193 @@ img.thumb{
         });
       }
       updateLogoClickState();
+
+      function ensureSkyInputRefs(){
+        const isConnected = el => el && el.isConnected;
+        if(!isConnected(skyInputRefs.color)) skyInputRefs.color = document.getElementById('skyColor');
+        if(!isConnected(skyInputRefs.azimuth)) skyInputRefs.azimuth = document.getElementById('sunAzimuth');
+        if(!isConnected(skyInputRefs.azimuthVal)) skyInputRefs.azimuthVal = document.getElementById('sunAzimuthVal');
+        if(!isConnected(skyInputRefs.intensity)) skyInputRefs.intensity = document.getElementById('sunIntensity');
+        if(!isConnected(skyInputRefs.intensityVal)) skyInputRefs.intensityVal = document.getElementById('sunIntensityVal');
+        if(!isConnected(skyInputRefs.animate)) skyInputRefs.animate = document.getElementById('animateSun');
+        return skyInputRefs;
+      }
+
+      function syncSkyInputs(){
+        const refs = ensureSkyInputRefs();
+        if(refs.color && refs.color.value !== skyColor){
+          refs.color.value = skyColor;
+        }
+        const azValue = Math.max(0, Math.min(360, Math.round(normalizeAzimuth(sunAzimuth))));
+        if(refs.azimuth && refs.azimuth.value !== String(azValue)){
+          refs.azimuth.value = String(azValue);
+        }
+        if(refs.azimuthVal){
+          refs.azimuthVal.textContent = String(azValue);
+        }
+        const intensityValue = clampSunIntensity(sunIntensity);
+        const intensityStr = intensityValue.toFixed(2);
+        if(refs.intensity && refs.intensity.value !== intensityStr){
+          refs.intensity.value = intensityStr;
+        }
+        if(refs.intensityVal){
+          refs.intensityVal.textContent = intensityStr;
+        }
+        if(refs.animate && refs.animate.checked !== animateSun){
+          refs.animate.checked = animateSun;
+        }
+      }
+
+      function applySkySettings(){
+        if(!map) return;
+        const color = isValidHexColor(skyColor) ? skyColor : DEFAULT_SKY_COLOR;
+        const azimuth = normalizeAzimuth(sunAzimuth);
+        const intensity = clampSunIntensity(sunIntensity);
+        if(typeof map.setSky === 'function'){
+          try{
+            map.setSky({
+              'sky-type':'atmosphere',
+              'sky-atmosphere-color': color,
+              'sky-atmosphere-sun':[azimuth, SKY_SUN_ALTITUDE],
+              'sky-atmosphere-sun-intensity': intensity
+            });
+            return;
+          }catch(err){
+            console.warn('Failed to apply sky settings', err);
+          }
+        }
+        try{
+          const style = map.getStyle();
+          if(style && Array.isArray(style.layers)){
+            style.layers.filter(layer => layer && layer.type === 'sky' && layer.id).forEach(layer => {
+              if(map.getLayer(layer.id)){
+                map.removeLayer(layer.id);
+              }
+            });
+          }
+          if(map.getLayer && map.getLayer('night-sky')){
+            map.removeLayer('night-sky');
+          }
+          map.addLayer({
+            id:'night-sky',
+            type:'sky',
+            paint:{
+              'sky-type':'atmosphere',
+              'sky-atmosphere-color': color,
+              'sky-atmosphere-sun':[azimuth, SKY_SUN_ALTITUDE],
+              'sky-atmosphere-sun-intensity': intensity
+            }
+          });
+        }catch(err){
+          console.warn('Failed to apply sky settings', err);
+        }
+      }
+
+      function setSkyColor(value, opts = {}){
+        const next = isValidHexColor(value) ? value : DEFAULT_SKY_COLOR;
+        skyColor = next;
+        if(!opts.skipStore){
+          try{ localStorage.setItem('skyColor', skyColor); }catch(err){}
+        }
+        if(!opts.skipApply) applySkySettings();
+        if(!opts.skipSync) syncSkyInputs();
+      }
+
+      function setSunAzimuth(value, opts = {}){
+        const next = normalizeAzimuth(value);
+        sunAzimuth = next;
+        if(!opts.skipStore){
+          try{ localStorage.setItem('sunAzimuth', next.toFixed(2)); }catch(err){}
+        }
+        if(!opts.skipApply) applySkySettings();
+        if(!opts.skipSync) syncSkyInputs();
+      }
+
+      function setSunIntensity(value, opts = {}){
+        const next = clampSunIntensity(value);
+        sunIntensity = next;
+        if(!opts.skipStore){
+          try{ localStorage.setItem('sunIntensity', next.toFixed(2)); }catch(err){}
+        }
+        if(!opts.skipApply) applySkySettings();
+        if(!opts.skipSync) syncSkyInputs();
+      }
+
+      function stopSunAnimation(){
+        if(sunAnimationFrame !== null){
+          cancelAnimationFrame(sunAnimationFrame);
+          sunAnimationFrame = null;
+        }
+        lastSunAnimationTime = 0;
+        lastSunStorageTime = 0;
+        try{ localStorage.setItem('sunAzimuth', sunAzimuth.toFixed(2)); }catch(err){}
+      }
+
+      function sunAnimationStep(timestamp){
+        if(!animateSun){
+          stopSunAnimation();
+          return;
+        }
+        if(!map){
+          stopSunAnimation();
+          return;
+        }
+        if(lastSunAnimationTime){
+          const delta = timestamp - lastSunAnimationTime;
+          if(delta > 0){
+            const increment = (delta * SUN_ANIMATION_SPEED) / 1000;
+            const nextValue = normalizeAzimuth(sunAzimuth + increment);
+            const shouldStore = (timestamp - lastSunStorageTime) >= SUN_ANIMATION_STORAGE_INTERVAL;
+            setSunAzimuth(nextValue, { skipStore: !shouldStore });
+            if(shouldStore){
+              lastSunStorageTime = timestamp;
+            }
+          }
+        }
+        lastSunAnimationTime = timestamp;
+        sunAnimationFrame = requestAnimationFrame(sunAnimationStep);
+      }
+
+      function startSunAnimation(){
+        if(!animateSun) return;
+        if(!map) return;
+        if(sunAnimationFrame !== null) return;
+        lastSunAnimationTime = 0;
+        lastSunStorageTime = 0;
+        sunAnimationFrame = requestAnimationFrame(sunAnimationStep);
+      }
+
+      function setAnimateSunState(value, opts = {}){
+        animateSun = Boolean(value);
+        if(!opts.skipStore){
+          try{ localStorage.setItem('animateSun', animateSun ? 'true' : 'false'); }catch(err){}
+        }
+        updateSunAnimationState();
+        if(!opts.skipSync) syncSkyInputs();
+      }
+
+      function updateSunAnimationState(){
+        if(animateSun){
+          startSunAnimation();
+        } else {
+          stopSunAnimation();
+        }
+      }
+
+      window.skyGlobals = {
+        get color(){ return skyColor; },
+        set color(v){ setSkyColor(v); },
+        get sunAzimuth(){ return sunAzimuth; },
+        set sunAzimuth(v){ setSunAzimuth(v); },
+        get sunIntensity(){ return sunIntensity; },
+        set sunIntensity(v){ setSunIntensity(v); },
+        get animateSun(){ return animateSun; },
+        set animateSun(v){ setAnimateSunState(v); },
+        apply: applySkySettings,
+        sync: syncSkyInputs,
+        updateAnimation: updateSunAnimationState
+      };
+      syncSkyInputs();
 
       function openWelcome(){
         const popup = document.getElementById('welcome-modal');
@@ -6712,31 +6980,8 @@ function makePosts(){
           try{
             map.setFog(null);
           }catch(e){}
-          try{
-            const style = map.getStyle();
-            if(style && Array.isArray(style.layers)){
-              style.layers.filter(layer => layer && layer.type === 'sky' && layer.id).forEach(layer => {
-                if(map.getLayer(layer.id)){
-                  map.removeLayer(layer.id);
-                }
-              });
-            }
-            if(map.getLayer('night-sky')){
-              map.removeLayer('night-sky');
-            }
-            map.addLayer({
-              id:'night-sky',
-              type:'sky',
-              paint:{
-                'sky-type':'atmosphere',
-                'sky-atmosphere-color':'#0b0d28',
-                'sky-atmosphere-sun':[90,0],
-                'sky-atmosphere-sun-intensity':0.1
-              }
-            });
-          }catch(err){
-            console.warn('Failed to apply night sky', err);
-          }
+          applySkySettings();
+          updateSunAnimationState();
         });
         map.on('styleimagemissing', (e)=>{
           const url = subcategoryMarkers[e.id];
@@ -6763,6 +7008,7 @@ function makePosts(){
         updatePostPanel();
         applyFilters();
         checkLoadPosts();
+        updateSunAnimationState();
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -9128,6 +9374,68 @@ document.addEventListener('pointerdown', handleDocInteract);
   const adminPanel = document.getElementById('adminPanel');
   const filterPanel = document.getElementById('filterPanel');
   const sg = window.spinGlobals || {};
+  const sky = window.skyGlobals;
+  const skyColorInput = document.getElementById('skyColor');
+  const sunAzimuthInput = document.getElementById('sunAzimuth');
+  const sunAzimuthVal = document.getElementById('sunAzimuthVal');
+  const sunIntensityInput = document.getElementById('sunIntensity');
+  const sunIntensityVal = document.getElementById('sunIntensityVal');
+  const animateSunInput = document.getElementById('animateSun');
+  const hasSky = !!sky;
+
+  if(hasSky && typeof sky.sync === 'function'){
+    sky.sync();
+  } else {
+    if(sunAzimuthInput && sunAzimuthVal){
+      const val = Number(sunAzimuthInput.value);
+      sunAzimuthVal.textContent = Number.isFinite(val) ? String(Math.round(val)) : '0';
+    }
+    if(sunIntensityInput && sunIntensityVal){
+      const val = Number(sunIntensityInput.value);
+      sunIntensityVal.textContent = Number.isFinite(val) ? Number(val).toFixed(2) : '0.00';
+    }
+    if(animateSunInput){
+      animateSunInput.checked = false;
+    }
+  }
+
+  if(skyColorInput){
+    skyColorInput.addEventListener('input', () => {
+      if(hasSky){
+        sky.color = skyColorInput.value;
+      }
+    });
+  }
+
+  if(sunAzimuthInput){
+    sunAzimuthInput.addEventListener('input', () => {
+      if(hasSky){
+        sky.sunAzimuth = Number(sunAzimuthInput.value);
+      } else if(sunAzimuthVal){
+        const val = Number(sunAzimuthInput.value);
+        sunAzimuthVal.textContent = Number.isFinite(val) ? String(Math.round(val)) : '0';
+      }
+    });
+  }
+
+  if(sunIntensityInput){
+    sunIntensityInput.addEventListener('input', () => {
+      if(hasSky){
+        sky.sunIntensity = Number(sunIntensityInput.value);
+      } else if(sunIntensityVal){
+        const val = Number(sunIntensityInput.value);
+        sunIntensityVal.textContent = Number.isFinite(val) ? Number(val).toFixed(2) : '0.00';
+      }
+    });
+  }
+
+  if(animateSunInput){
+    animateSunInput.addEventListener('change', () => {
+      if(hasSky){
+        sky.animateSun = animateSunInput.checked;
+      }
+    });
+  }
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
