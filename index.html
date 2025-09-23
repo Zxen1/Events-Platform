@@ -4803,22 +4803,6 @@ img.thumb{
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
 
-    function normalizeMapStyle(style){
-      switch(style){
-        case 'mapbox://styles/mapbox/standard':
-        case 'mapbox://styles/mapbox/standard-beta':
-          return 'mapbox://styles/mapbox/streets-v12';
-        case 'mapbox://styles/mapbox/standard-dark':
-          return 'mapbox://styles/mapbox/dark-v11';
-        case 'mapbox://styles/mapbox/standard-light':
-          return 'mapbox://styles/mapbox/light-v11';
-        case 'mapbox://styles/mapbox/standard-satellite':
-          return 'mapbox://styles/mapbox/satellite-streets-v12';
-        default:
-          return style;
-      }
-    }
-
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
@@ -4839,229 +4823,6 @@ img.thumb{
         });
       }
       updateLogoClickState();
-
-      function expressionContainsSizerank(value){
-        if(!Array.isArray(value)) return false;
-        if(value[0] === 'get' && value[1] === 'sizerank') return true;
-        for(let i=1;i<value.length;i++){
-          if(expressionContainsSizerank(value[i])) return true;
-        }
-        return false;
-      }
-
-      function patchSizerankExpression(value){
-        if(!Array.isArray(value)) return {value, changed:false};
-        let changed = false;
-        const op = value[0];
-        const patchedChildren = [];
-        for(let i=1;i<value.length;i++){
-          const child = patchSizerankExpression(value[i]);
-          if(child.changed) changed = true;
-          patchedChildren.push(child.value);
-        }
-        const patched = [op, ...patchedChildren];
-        if(op === 'number'){
-          const firstChild = patchedChildren[0];
-          if(firstChild !== undefined && expressionContainsSizerank(firstChild) && value.length < 3){
-            patched.push(0);
-            changed = true;
-          }
-        }
-        return {value:patched, changed};
-      }
-
-      function fixSizerankExpressions(mapInstance){
-        if(!mapInstance || typeof mapInstance.getStyle !== 'function') return;
-        let styleObj;
-        try {
-          styleObj = mapInstance.getStyle();
-        } catch(err){
-          return;
-        }
-        if(!styleObj) return;
-        const metadata = styleObj.metadata && typeof styleObj.metadata === 'object' ? styleObj.metadata : {};
-        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:originUrl'] || metadata['mapbox:requestedUrl'] || mapStyle;
-        const baseUrl = getStyleBase(originUrl);
-        const normalizedUrl = normalizeMapStyle(baseUrl || originUrl || '');
-        const canonicalStyleUrl = typeof normalizedUrl === 'string' && normalizedUrl ? normalizedUrl : String(baseUrl || originUrl || '');
-        const originHasStandard = typeof (baseUrl || originUrl) === 'string' && (baseUrl || originUrl).includes('/standard');
-        const canonicalHasStandard = typeof canonicalStyleUrl === 'string' && canonicalStyleUrl.includes('/standard');
-        if(metadata['mapbox:type'] === 'standard' || originHasStandard || canonicalHasStandard){
-          return;
-        }
-        if(!Array.isArray(styleObj.layers)) return;
-        let anyChanged = false;
-        styleObj.layers.forEach(layer => {
-          if(!layer || !layer.id) return;
-          const layerMetadata = layer.metadata && typeof layer.metadata === 'object' ? layer.metadata : null;
-          if(layerMetadata && (layerMetadata['mapbox:featureComponent'] || layerMetadata['mapbox:featureset'])) return;
-          ['layout','paint'].forEach(section => {
-            const props = layer[section];
-            if(!props) return;
-            Object.keys(props).forEach(prop => {
-              const original = props[prop];
-              if(!Array.isArray(original) || !expressionContainsSizerank(original)) return;
-              const patched = patchSizerankExpression(original);
-              if(!patched.changed) return;
-              try {
-                if(section === 'layout'){
-                  mapInstance.setLayoutProperty(layer.id, prop, patched.value);
-                } else {
-                  mapInstance.setPaintProperty(layer.id, prop, patched.value);
-                }
-                anyChanged = true;
-              } catch(err){}
-            });
-          });
-        });
-        return anyChanged;
-      }
-
-      function applyMutedMapStyle(mapInstance){
-        if(!mapInstance || typeof mapInstance.getStyle !== 'function' || typeof mapInstance.setPaintProperty !== 'function'){
-          return;
-        }
-        let style;
-        try {
-          style = mapInstance.getStyle();
-        } catch(err){
-          return;
-        }
-        const metadata = style && style.metadata ? style.metadata : {};
-        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
-        const baseUrl = getStyleBase(originUrl);
-        const normalizedUrl = normalizeMapStyle(baseUrl) || baseUrl || '';
-        if(typeof normalizedUrl === 'string' && normalizedUrl.includes('/standard')){
-          return;
-        }
-        const layers = style && Array.isArray(style.layers) ? style.layers : null;
-        if(!layers) return;
-        const charcoal = '#26282b';
-        const water = '#1f252d';
-        const roadLineColor = '#3f434a';
-        const roadLineOpacity = 0.4;
-        const labelColor = '#8c8c8c';
-        const labelHalo = 'rgba(0,0,0,0.6)';
-        const paintSupport = {
-          background:new Set(['background-color']),
-          fill:new Set(['fill-color','fill-opacity']),
-          'fill-extrusion':new Set(['fill-color','fill-opacity']),
-          line:new Set(['line-color','line-opacity']),
-          symbol:new Set(['text-color','text-halo-color'])
-        };
-        const safeSetPaint = (layer, property, value) => {
-          if(!layer || !layer.id) return;
-          if(typeof mapInstance.getLayer === 'function'){
-            try {
-              if(!mapInstance.getLayer(layer.id)) return;
-            } catch(err){
-              return;
-            }
-          }
-          const type = layer.type;
-          const explicit = layer.paint && Object.prototype.hasOwnProperty.call(layer.paint, property);
-          const allowed = (type && paintSupport[type] && paintSupport[type].has(property)) || explicit;
-          if(!allowed) return;
-          try {
-            mapInstance.setPaintProperty(layer.id, property, value);
-          } catch(err){}
-        };
-        layers.forEach(layer => {
-          if(!layer || !layer.id) return;
-          const id = layer.id;
-          if(layer.type === 'background'){
-            safeSetPaint(layer, 'background-color', charcoal);
-          }
-          if(/^land/i.test(id) || /landcover/i.test(id)){
-            if(layer.type === 'fill' || layer.type === 'fill-extrusion'){
-              safeSetPaint(layer, 'fill-color', charcoal);
-            } else if(layer.type === 'line'){
-              safeSetPaint(layer, 'line-color', charcoal);
-            }
-          }
-          if(/water/i.test(id)){
-            if(layer.type === 'fill' || layer.type === 'fill-extrusion'){
-              safeSetPaint(layer, 'fill-color', water);
-            } else if(layer.type === 'line'){
-              safeSetPaint(layer, 'line-color', water);
-            } else if(layer.type === 'background'){
-              safeSetPaint(layer, 'background-color', water);
-            }
-          }
-          if(/^road/i.test(id)){
-            if(layer.type === 'line'){
-              safeSetPaint(layer, 'line-color', roadLineColor);
-              safeSetPaint(layer, 'line-opacity', roadLineOpacity);
-            }
-          }
-          if(/label/i.test(id)){
-            if(layer.type === 'symbol'){
-              safeSetPaint(layer, 'text-color', labelColor);
-              safeSetPaint(layer, 'text-halo-color', labelHalo);
-            }
-          }
-        });
-      }
-
-      function getStyleBase(styleUrl){
-        if(!styleUrl) return '';
-        return String(styleUrl).split('?')[0];
-      }
-
-      function styleAllowsTerrain(styleUrl){
-        const base = getStyleBase(styleUrl);
-        if(!base) return false;
-        const normalized = normalizeMapStyle(base) || base;
-        if(!normalized) return false;
-        if(normalized.includes('/standard')) return false;
-        if(normalized.includes('/terrain-v2')) return false;
-        return true;
-      }
-
-      function applyTerrainForStyle(styleUrl){
-        if(!map || typeof map.setTerrain !== 'function'){
-          return;
-        }
-        let styleObj = null;
-        try {
-          styleObj = map.getStyle();
-        } catch(err){}
-        const terrainSourceId = styleObj && styleObj.terrain && styleObj.terrain.source;
-        if(terrainSourceId){
-          try {
-            map.setTerrain(styleObj.terrain);
-          } catch(err){}
-          if(typeof map.getSource === 'function' && map.getSource('terrain-dem')){
-            try { map.removeSource('terrain-dem'); } catch(err){}
-          }
-          return;
-        }
-        if(!styleAllowsTerrain(styleUrl)){
-          try {
-            if(typeof map.getTerrain === 'function'){
-              const activeTerrain = map.getTerrain();
-              if(activeTerrain){
-                map.setTerrain(null);
-              }
-            } else {
-              map.setTerrain(null);
-            }
-          } catch(err){}
-          if(typeof map.getSource === 'function' && map.getSource('terrain-dem')){
-            try { map.removeSource('terrain-dem'); } catch(err){}
-          }
-          return;
-        }
-        if(!map.getSource('terrain-dem')){
-          map.addSource('terrain-dem', {
-            type:'raster-dem',
-            url:'mapbox://mapbox.terrain-rgb',
-            tileSize:512,
-            maxzoom:14
-          });
-        }
-        map.setTerrain({source:'terrain-dem'});
-      }
 
       function openWelcome(){
         const popup = document.getElementById('welcome-modal');
@@ -6932,28 +6693,12 @@ function makePosts(){
             console.warn('Unknown image ID:', e.id);
           }
         });
-      map.on('styledata', (event)=>{
-        if(event && event.dataType === 'style'){
-          fixSizerankExpressions(map);
-        }
-      });
       map.on('zoomend', checkLoadPosts);
       addControls();
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
-      map.on('style.load', () => {
-        const styleObj = typeof map.getStyle === 'function' ? map.getStyle() : null;
-        const metadata = styleObj && styleObj.metadata ? styleObj.metadata : {};
-        const originUrl = metadata['mapbox:origin'] || metadata['mapbox:requestedUrl'] || metadata['mapbox:style_url'] || metadata['mapbox:originUrl'] || mapStyle;
-        const baseStyle = getStyleBase(originUrl);
-        const resolvedStyle = normalizeMapStyle(baseStyle) || baseStyle || mapStyle;
-        mapStyle = window.mapStyle = resolvedStyle;
-        fixSizerankExpressions(map);
-        applyTerrainForStyle(resolvedStyle);
-        applyMutedMapStyle(map);
-      });
       map.on('load', ()=>{
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
@@ -7940,9 +7685,6 @@ function makePosts(){
                 if(ref.resizeHandler){
                   window.removeEventListener('resize', ref.resizeHandler);
                 }
-                if(ref.mutedHandler && ref.map && typeof ref.map.off === 'function'){
-                  try { ref.map.off('style.load', ref.mutedHandler); } catch(err){}
-                }
                 if(ref.map && typeof ref.map.remove === 'function'){
                   ref.map.remove();
                 }
@@ -7951,7 +7693,6 @@ function makePosts(){
               if(ref){
                 ref.map = null;
                 ref.resizeHandler = null;
-                ref.mutedHandler = null;
               }
               delete node._detailMap;
             };
@@ -8616,11 +8357,6 @@ function makePosts(){
             zoom: 10,
             interactive: false
           });
-          const mutedHandler = () => applyMutedMapStyle(map);
-          map.on('style.load', mutedHandler);
-          if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
-            mutedHandler();
-          }
             const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const url = subcategoryMarkers[subId];
             if(url){
@@ -8639,7 +8375,6 @@ function makePosts(){
           detailMapRef = detailMapRef || {};
           detailMapRef.map = map;
           detailMapRef.resizeHandler = resizeHandler;
-          detailMapRef.mutedHandler = mutedHandler;
           if(mapEl){
             mapEl._detailMap = detailMapRef;
           }
@@ -8649,11 +8384,6 @@ function makePosts(){
         } else {
           map.setCenter([loc.lng, loc.lat]);
           marker.setLngLat([loc.lng, loc.lat]);
-          if(detailMapRef && detailMapRef.mutedHandler){
-            detailMapRef.mutedHandler();
-          } else if(typeof map.isStyleLoaded === 'function' ? map.isStyleLoaded() : false){
-            applyMutedMapStyle(map);
-          }
           setTimeout(()=> map && map.resize(),0);
           detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
           detailMapRef.map = map;
