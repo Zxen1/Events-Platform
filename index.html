@@ -191,7 +191,7 @@ html,body{
     background: var(--background);
     color: var(--text);
     overflow: hidden;
-    cursor: default;
+    cursor: auto;
     caret-color: transparent;
     display: flex;
     flex-direction: column;
@@ -2705,6 +2705,7 @@ body.filters-active #filterBtn{
 }
 .post-board .post-card:last-child,
 .post-board .open-post:last-child{border-bottom:none;}
+.post-board > *:last-child{margin-bottom:0 !important;}
 .post-board .post-card .thumb{border-radius:8px;}
 .post-board button{background:var(--btn);border-color:var(--btn);color:var(--ink);}
 
@@ -6898,42 +6899,11 @@ function makePosts(){
 
       const postsWide = $('.post-board');
       if(postsWide){
-        let lastPointerdownId = null;
-        postsWide.addEventListener('pointerdown', e=>{
-          if(typeof e.pointerType === 'string' && e.pointerType !== 'mouse'){
-            lastPointerdownId = null;
-            return;
-          }
-          const cardEl = e.target.closest('.post-card');
-          if(!cardEl){
-            lastPointerdownId = null;
-            return;
-          }
-          const id = cardEl.getAttribute('data-id');
-          if(!id){
-            lastPointerdownId = null;
-            return;
-          }
-          lastPointerdownId = id;
-          callWhenDefined('openPost', (fn)=>{
-            requestAnimationFrame(() => {
-              try{
-                stopSpin();
-                fn(id);
-              }catch(err){ console.error(err); }
-              setTimeout(()=>{ if(lastPointerdownId === id) lastPointerdownId = null; }, 0);
-            });
-          });
-        }, {passive:true, capture:true});
         postsWide.addEventListener('click', e=>{
           const cardEl = e.target.closest('.post-card');
           if(cardEl){
             const id = cardEl.getAttribute('data-id');
             if(id){
-              if(id === lastPointerdownId){
-                lastPointerdownId = null;
-                return;
-              }
               e.preventDefault();
               callWhenDefined('openPost', (fn)=>{
                 requestAnimationFrame(() => {
@@ -8701,16 +8671,20 @@ function openPostModal(id){
       const sessBtn = sessDropdown ? sessDropdown.querySelector('.sess-btn') : null;
       const sessMenu = sessDropdown ? sessDropdown.querySelector('.session-menu') : null;
       const sessionOptions = sessMenu ? sessMenu.querySelector('.session-options') : null;
-        const sessionInfo = el.querySelector(`#session-info-${p.id}`);
-        const calendarEl = el.querySelector(`#cal-${p.id}`);
-        const mapEl = el.querySelector(`#map-${p.id}`);
-        const calContainer = el.querySelector('.calendar-container');
-        const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
-        if(calScroll){
-          setupCalendarScroll(calScroll);
-        }
-        let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
-        let sessionCloseTimer = null;
+      const showMenu = menu => { if(menu) menu.removeAttribute('hidden'); };
+      const hideMenu = menu => { if(menu) menu.setAttribute('hidden',''); };
+      const isMenuOpen = menu => !!(menu && !menu.hasAttribute('hidden'));
+      const sessionInfo = el.querySelector(`#session-info-${p.id}`);
+      const calendarEl = el.querySelector(`#cal-${p.id}`);
+      const mapEl = el.querySelector(`#map-${p.id}`);
+      const calContainer = el.querySelector('.calendar-container');
+      const calScroll = calContainer ? calContainer.querySelector('.calendar-scroll') : null;
+      if(calScroll){
+        setupCalendarScroll(calScroll);
+      }
+      let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
+      let sessionCloseTimer = null;
+      let ensureMapForVenue = async ()=>{};
         function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
           if(!sessMenu) return;
           if(sessionCloseTimer){
@@ -8720,7 +8694,7 @@ function openPostModal(id){
           const begin = ()=>{
             requestAnimationFrame(()=>requestAnimationFrame(()=>{
               sessionCloseTimer = setTimeout(()=>{
-                sessMenu.hidden = true;
+                hideMenu(sessMenu);
                 if(sessBtn) sessBtn.setAttribute('aria-expanded','false');
                 sessionCloseTimer = null;
               }, 100);
@@ -8858,7 +8832,7 @@ function openPostModal(id){
             }
             markSelected();
           }
-          if(!sessMenu.hidden){
+          if(isMenuOpen(sessMenu)){
             scheduleSessionMenuClose({waitForScroll, targetLeft: targetScrollLeft});
           } else if(sessBtn){
             sessBtn.setAttribute('aria-expanded','false');
@@ -8970,7 +8944,7 @@ function openPostModal(id){
           },0);
         }
 
-        async function ensureMapForVenue() {
+        ensureMapForVenue = async function(){
           if(!mapEl) return;
           try{
             await ensureMapboxCssFor(mapEl);
@@ -9065,7 +9039,7 @@ function openPostModal(id){
               el._detailMap = detailMapRef;
             }
           }
-        }
+        };
         window.ensureMapForVenue = ensureMapForVenue;
 
 
@@ -9116,29 +9090,39 @@ function openPostModal(id){
                       clearTimeout(venueCloseTimer);
                     }
                     venueCloseTimer = setTimeout(()=>{
-                      venueMenu.hidden = true;
-                      venueBtn.setAttribute('aria-expanded','false');
-                      venueCloseTimer = null;
-                    }, 100);
+                    hideMenu(venueMenu);
+                    venueBtn.setAttribute('aria-expanded','false');
+                    venueCloseTimer = null;
+                  }, 100);
                   });
                 });
                 venueBtn.addEventListener('click', ()=>{
                   const expanded = venueBtn.getAttribute('aria-expanded') === 'true';
-                  venueBtn.setAttribute('aria-expanded', String(!expanded));
-                  venueMenu.hidden = expanded;
-                  if(!expanded){
+                  const opening = !expanded;
+                  venueBtn.setAttribute('aria-expanded', String(opening));
+                  if(opening){
+                    showMenu(venueMenu);
+                  } else {
+                    hideMenu(venueMenu);
+                  }
+                  if(opening){
                     setTimeout(()=>{ if(map && typeof map.resize === 'function') map.resize(); },0);
                   }
                 });
-                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ venueMenu.hidden = true; venueBtn.setAttribute('aria-expanded','false'); } });
+                document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
               }
               if(sessBtn && sessMenu){
                 sessBtn.addEventListener('click', ()=>{
                   const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-                  sessBtn.setAttribute('aria-expanded', String(!expanded));
-                  sessMenu.hidden = expanded;
+                  const opening = !expanded;
+                  sessBtn.setAttribute('aria-expanded', String(opening));
+                  if(opening){
+                    showMenu(sessMenu);
+                  } else {
+                    hideMenu(sessMenu);
+                  }
                 });
-                document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ sessMenu.hidden = true; sessBtn.setAttribute('aria-expanded','false'); } });
+                document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ hideMenu(sessMenu); sessBtn.setAttribute('aria-expanded','false'); } });
               }
               if(map && typeof map.resize === 'function') map.resize();
             });
