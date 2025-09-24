@@ -2,20 +2,22 @@
 <html lang="en">
 <head>
 <script>
-/* minimal safety stub so calls never crash even if invoked early */
-window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
-  var t0 = performance.now(); timeoutMs = timeoutMs || 5000;
-  (function tick(){
-    var fn = window[name];
-    if (typeof fn === 'function') { try{ cb(fn); }catch(e){} return; }
-    if (performance.now() - t0 < timeoutMs) requestAnimationFrame(tick);
-  })();
-};
-window.ensureMapForVenue = window.ensureMapForVenue || function(){
-  var args = Array.prototype.slice.call(arguments);
-  window.callWhenDefined('__realEnsureMapForVenue', function(fn){ fn.apply(null, args); });
-};
+  // Wait for a global function by name, then run cb(fn)
+  window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
+    const start = performance.now(), max = timeoutMs ?? 5000;
+    (function check(){
+      const fn = window[name];
+      if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
+      if (performance.now() - start < max) requestAnimationFrame(check);
+    })();
+  };
 </script>
+
+<style>
+  @media (max-width: 600px){
+    .post-card, .post { position: relative; z-index: 2; }
+  }
+</style>
 
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -29,10 +31,9 @@ window.ensureMapForVenue = window.ensureMapForVenue || function(){
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
   <!-- MUST be in <head> before the map is created -->
   <link
+    id="mapbox-gl-css"
     rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
-    data-fallback="https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css"
-    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
+    href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css"
   />
   <style id="mapboxgl-critical-css">
     .mapboxgl-map{position:relative;width:100%;height:100%}
@@ -4869,15 +4870,15 @@ img.thumb{
       }
     };
   }
-  function callWhenDefined(name, invoke){
-    const start = performance.now();
+  const callWhenDefined = window.callWhenDefined || function(name, invoke, timeoutMs){
+    const start = performance.now(), max = timeoutMs ?? 5000;
     (function wait(){
       const fn = window[name];
       if(typeof fn === 'function'){
         try{ invoke(fn); }catch(err){ console.error(err); }
         return;
       }
-      if(performance.now() - start < 2000){
+      if(performance.now() - start < max){
         if(typeof requestAnimationFrame === 'function'){
           requestAnimationFrame(wait);
         } else {
@@ -4885,7 +4886,7 @@ img.thumb{
         }
       }
     })();
-  }
+  };
   window.callWhenDefined = callWhenDefined;
 
   // 3) Make scroll/touch listeners passive where we don't call preventDefault()
@@ -7285,9 +7286,6 @@ function makePosts(){
             attributionControl:true
           });
         map.on('style.load', () => {
-          if (typeof map.setSky === 'function') {
-            map.setSky({ 'sky-type': 'atmosphere' });
-          }
           if (typeof map.setFog === 'function') {
             map.setFog(null);
           }
@@ -8972,16 +8970,11 @@ function openPostModal(id){
           },0);
         }
 
-        async function __realEnsureMapForVenue() {
+        async function ensureMapForVenue() {
           if(!mapEl) return;
           try{
             await ensureMapboxCssFor(mapEl);
           }catch(err){}
-
-          if(mapEl.__map && mapEl.__map !== map){
-            try{ if(typeof mapEl.__map.remove === 'function') mapEl.__map.remove(); }catch(e){}
-            mapEl.__map = null;
-          }
 
           const center = [loc.lng, loc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
@@ -9001,6 +8994,10 @@ function openPostModal(id){
           if(!map){
             setTimeout(()=>{
               if(map) return;
+              if (mapEl && mapEl.__map && typeof mapEl.__map.remove === 'function') {
+                try { mapEl.__map.remove(); } catch(e) {}
+                mapEl.__map = null;
+              }
               map = new mapboxgl.Map({
                 container: mapEl,
                 style: mapStyle,
@@ -9015,9 +9012,6 @@ function openPostModal(id){
               attachIconLoader(map);
 
               map.on('style.load', () => {
-                if (typeof map.setSky === 'function') {
-                  map.setSky({ 'sky-type': 'atmosphere' });
-                }
                 if (typeof map.setFog === 'function') {
                   map.setFog(null);
                 }
@@ -9072,12 +9066,12 @@ function openPostModal(id){
             }
           }
         }
-window.ensureMapForVenue = __realEnsureMapForVenue;
+        window.ensureMapForVenue = ensureMapForVenue;
 
 
         const tasks = [];
         if(mapEl){
-          tasks.push(()=> ensureMapForVenue());
+          tasks.push(()=> callWhenDefined('ensureMapForVenue', fn => fn()));
         }
         if(calendarEl){
           tasks.push(()=> buildCalendarShell());
@@ -9631,7 +9625,10 @@ function handleDocInteract(e){
 }
 
 document.addEventListener('click', handleDocInteract);
-document.addEventListener('pointerdown', handleDocInteract);
+document.addEventListener('pointerdown', (e) => {
+  const target = e.target;
+  requestAnimationFrame(() => handleDocInteract({ target }));
+}, { passive: true });
 
 // Panels and admin/member interactions
 (function(){
