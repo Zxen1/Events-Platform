@@ -1,8 +1,13 @@
 <!doctype html> 
 <html lang="en">
 <head>
+  <script>
+    // Use the same version everywhere
+    window.MAPBOX_VERSION = "v3.15.0";
+  </script>
+
   <link id="mapbox-gl-css" rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" />
+        href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
 
   <style id="hotfixes">
     /* Hand cursor for DOM-based Mapbox markers */
@@ -4783,15 +4788,18 @@ img.thumb{
 
   <script>
   async function ensureMapboxCssFor(container) {
+    const ver = (window.MAPBOX_VERSION || "v3.15.0").replace(/^v/,'v');
+    const cssHref = `https://api.mapbox.com/mapbox-gl-js/${ver}/mapbox-gl.css`;
+
     const doc = (container && container.ownerDocument) || document;
     const root = container && container.getRootNode && container.getRootNode();
 
-    // If the map lives inside a ShadowRoot, inject CSS there
+    // For Shadow DOM maps, inject right into the shadow root
     if (root && root.host && typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot) {
       if (!root.querySelector('style[data-mapbox-gl]')) {
         const s = document.createElement('style');
         s.setAttribute('data-mapbox-gl','');
-        s.textContent = "@import url('https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css');";
+        s.textContent = `@import url('${cssHref}');`;
         root.prepend(s);
       }
       return;
@@ -4803,7 +4811,7 @@ img.thumb{
       link = doc.createElement('link');
       link.id = 'mapbox-gl-css';
       link.rel = 'stylesheet';
-      link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
+      link.href = cssHref;
       doc.head.appendChild(link);
     }
     if (link.sheet) return;
@@ -4876,14 +4884,46 @@ img.thumb{
 
   // rAF throttle helper and replacement for mousemove listeners we own
   function rafThrottle(fn){
-    let scheduled = false, lastArgs, lastThis;
+    let scheduled = false, lastArgs;
     return function(...args){
-      lastArgs = args; lastThis = this;
-      if (!scheduled){
-        scheduled = true;
-        requestAnimationFrame(() => { scheduled = false; fn.apply(lastThis, lastArgs); });
-      }
+      lastArgs = args;
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => { scheduled = false; fn.apply(this, lastArgs); });
     };
+  }
+
+  // Helper: do nothing until style is truly loaded
+  function whenStyleReady(map, fn){
+    if (map.isStyleLoaded && map.isStyleLoaded()) { fn(); return; }
+    const onLoad = () => { map.off('load', onLoad); fn(); };
+    map.on('load', onLoad);
+  }
+
+  // Attach pointer cursor only after style is ready, and re-attach if style changes later.
+  function armPointerOnSymbolLayers(map){
+    function attach(){
+      if (!map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
+      const st = map.getStyle();
+      if (!st || !st.layers) return;
+
+      map.__cursorArmed = map.__cursorArmed || new Set();
+      st.layers.forEach(l => {
+        if (l.type === 'symbol' && !map.__cursorArmed.has(l.id)) {
+          map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
+          map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
+          map.__cursorArmed.add(l.id);
+        }
+      });
+    }
+
+    // First time once the style is fully loaded
+    whenStyleReady(map, attach);
+
+    // If the style changes later, reattach *after* the new style finishes
+    map.on('styledata', () => {
+      if (map.isStyleLoaded && map.isStyleLoaded()) attach();
+    });
   }
   const callWhenDefined = window.callWhenDefined || function(name, invoke, timeoutMs){
     const start = performance.now(), max = timeoutMs ?? 5000;
@@ -6971,11 +7011,14 @@ function makePosts(){
 
     // Mapbox
     function loadMapbox(cb){
+      const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
+      const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
+      const mapboxVerNoV = mapboxVer.replace(/^v/, '');
       const cssSources = [
         {
           selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-          primary: 'https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css',
-          fallback: 'https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.css'
+          primary: `https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.css`,
+          fallback: `https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.css`
         },
         {
           selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
@@ -7134,11 +7177,11 @@ function makePosts(){
         };
 
         const s = document.createElement('script');
-        s.src='https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js';
+        s.src=`https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.js`;
         s.onload = loadGeocoder;
         s.onerror = ()=>{
           const sf = document.createElement('script');
-          sf.src='https://unpkg.com/mapbox-gl@3.15.0/dist/mapbox-gl.js';
+          sf.src=`https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.js`;
           sf.onload = loadGeocoder;
           sf.onerror = done;
           document.head.appendChild(sf);
@@ -8964,10 +9007,9 @@ function openPostModal(id){
             setTimeout(async () => {
               if(map) return;
 
-              // Make sure Mapbox CSS is applied where the container lives
               await ensureMapboxCssFor(mapEl);
 
-              // Prevent WebGL context leaks (remove any previous map on this element)
+              // Remove previous map on this element to avoid WebGL churn
               if (mapEl && mapEl.__map && typeof mapEl.__map.remove === 'function') {
                 try { mapEl.__map.remove(); } catch {}
                 mapEl.__map = null;
@@ -8980,51 +9022,33 @@ function openPostModal(id){
                 zoom: 10,
                 interactive: false
               });
-
-              // Remember map on the element so we can clean up next time
               mapEl.__map = map;
 
               MapRegistry.register(map);
               attachIconLoader(map);
 
-              // Pointer cursor when hovering rendered features
+              // Safe "hover pointer" for any rendered features (doesn't touch getStyle)
               map.on('mousemove', (e) => {
                 const has = !!(e.features && e.features.length);
                 map.getCanvas().style.cursor = has ? 'pointer' : '';
               });
 
-              // Also arm pointer on any symbol layers as styles load/change
-              function armPointerOnSymbolLayers() {
-                const st = map.getStyle && map.getStyle();
-                const layers = (st && st.layers) || [];
-                layers.forEach(l => {
-                  if (l.type === 'symbol') {
-                    if (!map.__cursorArmed) map.__cursorArmed = new Set();
-                    if (map.__cursorArmed.has(l.id)) return;
-                    map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
-                    map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
-                    map.__cursorArmed.add(l.id);
-                  }
-                });
-              }
-              map.on('styledata', armPointerOnSymbolLayers);
-              armPointerOnSymbolLayers();
+              // Arm pointer on symbol layers *without* touching getStyle until loaded
+              armPointerOnSymbolLayers(map);
 
-              // No sky; keep fog off
-              if (typeof map.setSky === 'function') { /* do nothing */ }
+              // No sky/fog
               if (typeof map.setFog === 'function') map.setFog(null);
 
-              // Fallback for missing sprite/images -> use YOUR existing file (no new assets)
+              // Keep 404 icon spam away while reusing existing assets
               map.on('styleimagemissing', (e) => {
                 if (map.hasImage(e.id)) return;
 
-                // Try common locations, then your existing fallback image
                 const base = document.baseURI || window.location.href;
                 const candidates = [
                   `assets/icons/subcategories/${e.id}.png`,
                   `assets/icons/${e.id}.png`,
                   `assets/images/icons/${e.id}.png`,
-                  // Use your existing multi-category icon as final fallback (no new files)
+                  // Final fallback to your existing file only:
                   `assets/icons/multi-category-icon-blue-40.png`,
                   `assets/images/icons/multi-category-icon-blue-40.png`
                 ].map(p => new URL(p, base).href);
