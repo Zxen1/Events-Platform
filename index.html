@@ -11,7 +11,11 @@
 
   <style id="hotfixes">
     /* Hand cursor for DOM-based Mapbox markers */
-    .mapboxgl-marker { cursor: pointer; }
+    .mapboxgl-marker,
+    .marker,
+    .is-clickable {
+      cursor: pointer;
+    }
 
     /* Menus stay clickable above overlays */
     .options-menu { z-index: 10000; }
@@ -4421,6 +4425,42 @@ img.thumb{
     .mapboxgl-canvas:active { cursor: grabbing !important; }
     * { -webkit-tap-highlight-color: transparent; }
   </style>
+  <script>
+  // --- tiny scheduler helpers ---
+  function rafThrottle(fn){
+    let scheduled = false, lastArgs, lastThis;
+    return function throttled(...args){
+      lastArgs = args; lastThis = this;
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => { scheduled = false; fn.apply(lastThis, lastArgs); });
+    };
+  }
+
+  // Prefer idle time, but don't stall forever.
+  function scheduleIdle(fn, timeout=200){
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(fn, { timeout });
+    } else {
+      setTimeout(fn, Math.min(timeout, 50));
+    }
+  }
+
+  // Make common high-frequency listeners passive by default (no visual change).
+  (function enablePassiveListeners(){
+    const PASSIVE = new Set(['wheel','mousewheel','touchstart','touchmove','touchend','touchcancel','scroll']);
+    const orig = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options){
+      // Respect explicit options from your code.
+      if (options === undefined && PASSIVE.has(type)) {
+        options = { passive: true };
+      } else if (options && typeof options === 'object' && PASSIVE.has(type) && options.passive === undefined) {
+        options = Object.assign({}, options, { passive: true });
+      }
+      return orig.call(this, type, listener, options);
+    };
+  })();
+  </script>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
@@ -4856,42 +4896,6 @@ img.thumb{
       }
     };
   })();
-
-  // Mark when we're inside an input event so heavy functions auto-yield
-  (function(){
-    const mark = () => { document.__inInputEvent = true; queueMicrotask(() => { document.__inInputEvent = false; }); };
-    ['pointerdown','mousedown','touchstart','click'].forEach(t => {
-      document.addEventListener(t, mark, { capture: true });
-    });
-  })();
-
-  // Wrap heavy functions to yield out of the input event
-  (function(){
-    function wrap(fnName){
-      const fn = window[fnName];
-      if (typeof fn !== 'function' || fn.__wrappedForYield) return;
-      const wrapped = function(...args){
-        if (document.__inInputEvent) return setTimeout(() => fn.apply(this, args), 0);
-        return fn.apply(this, args);
-      };
-      wrapped.__wrappedForYield = true;
-      window[fnName] = wrapped;
-    }
-    // Include any that run a lot on click/open
-    ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(wrap);
-    window.__wrapForInputYield = wrap;
-  })();
-
-  // rAF throttle helper and replacement for mousemove listeners we own
-  function rafThrottle(fn){
-    let scheduled = false, lastArgs;
-    return function(...args){
-      lastArgs = args;
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(() => { scheduled = false; fn.apply(this, lastArgs); });
-    };
-  }
 
   // Helper: do nothing until style is truly loaded
   function whenStyleReady(map, fn){
@@ -10540,18 +10544,68 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
-  // Default wheel/touch listeners to passive (unless explicitly opt-out)
-  (function(){
-    const orig = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function(type, listener, options){
-      if (type === 'wheel' || type === 'touchstart' || type === 'touchmove'){
-        if (options == null) options = { passive: true };
-        else if (typeof options === 'object' && options.passive == null)
-          options = { ...options, passive: true };
-      }
-      return orig.call(this, type, listener, options);
+// Wait helpers if your app exposes callWhenDefined; otherwise poll.
+(function(){
+  function whenDefined(name, cb){
+    if (window.callWhenDefined) return window.callWhenDefined(name, cb);
+    const iv = setInterval(() => {
+      if (typeof window[name] === 'function') { clearInterval(iv); cb(window[name]); }
+    }, 20);
+  }
+
+  // Debounce/guard in-flight jobs by name
+  const _inflight = new Map();
+  function guardOnce(name, fn){
+    return async function guarded(...args){
+      if (_inflight.get(name)) return; // drop duplicates
+      _inflight.set(name, true);
+      try { return await fn.apply(this, args); }
+      finally { _inflight.delete(name); }
     };
-  })();
+  }
+
+  const factories = new Map([
+    ['openPost', (orig) => rafThrottle(function(...args){
+      scheduleIdle(() => orig.apply(this, args));
+    })],
+    ['hookDetailActions', (orig) => {
+      const wrapped = rafThrottle(function(...args){
+        scheduleIdle(() => orig.apply(this, args));
+      });
+      return guardOnce('hookDetailActions', wrapped);
+    }],
+    ['ensureMapForVenue', (orig) => {
+      let token = 0;
+      return guardOnce('ensureMapForVenue', function(...args){
+        const myToken = ++token;
+        // Defer heavy create to idle; newest call wins.
+        scheduleIdle(async () => {
+          if (myToken !== token) return;
+          try { await orig.apply(this, args); } catch(e) { /* swallow */ }
+        }, 300);
+      });
+    }]
+  ]);
+
+  function applyWrapper(name){
+    const factory = factories.get(name);
+    if (!factory) return;
+    whenDefined(name, (orig) => {
+      if (typeof orig !== 'function' || orig.__inputWrapped) return;
+      const wrapped = factory(orig);
+      if (typeof wrapped === 'function'){
+        wrapped.__inputWrapped = true;
+        window[name] = wrapped;
+      }
+    });
+  }
+
+  ['openPost','hookDetailActions','ensureMapForVenue'].forEach(applyWrapper);
+
+  window.__wrapForInputYield = function(name){
+    applyWrapper(name);
+  };
+})();
 </script>
 </body>
 </html>
