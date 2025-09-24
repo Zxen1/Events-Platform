@@ -9041,7 +9041,11 @@ function openPostModal(id){
               armPointerOnSymbolLayers(map);
 
               // No sky/fog
-              if (typeof map.setFog === 'function') map.setFog(null);
+              if (typeof map.setFog === 'function') {
+                whenStyleReady(map, () => {
+                  try { map.setFog(null); } catch(e){}
+                });
+              }
 
               // Keep 404 icon spam away while reusing existing assets
               map.on('styleimagemissing', (e) => {
