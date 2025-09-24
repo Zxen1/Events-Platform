@@ -4382,6 +4382,13 @@ img.thumb{
 }
 
 </style>
+  <style id="cursor-fixes">
+    html, body { cursor: auto !important; }
+    a, button, [role="button"], .clickable { cursor: pointer !important; }
+    .mapboxgl-canvas { cursor: grab !important; }
+    .mapboxgl-canvas:active { cursor: grabbing !important; }
+    * { -webkit-tap-highlight-color: transparent; }
+  </style>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
@@ -6510,20 +6517,18 @@ function makePosts(){
 
       const resLists = $$('.recents-board');
       resLists.forEach(list=>{
-          list.addEventListener('click', e=>{
+          list.addEventListener('click', (e)=>{
             const cardEl = e.target.closest('.recents-card');
-            if(cardEl){
-              const id = cardEl.getAttribute('data-id');
-              if(id){
-                deferToAnimationFrame(()=>{
-                  try{
-                    stopSpin();
-                    openPost(id, true, false, cardEl);
-                  }catch(err){ console.error(err); }
-                });
-              }
-            }
-          });
+            if(!cardEl) return;
+            const id = cardEl.getAttribute('data-id');
+            if(!id) return;
+            requestAnimationFrame(() => {
+              try{
+                stopSpin();
+                openPost(id, true, false, cardEl);
+              }catch(err){ console.error(err); }
+            });
+          }, { capture: true });
         });
 
       const postsWide = $('.post-board');
@@ -6545,14 +6550,14 @@ function makePosts(){
             return;
           }
           lastPointerdownId = id;
-          deferToAnimationFrame(()=>{
+          requestAnimationFrame(() => {
             try{
               stopSpin();
               openPost(id);
             }catch(err){ console.error(err); }
             setTimeout(()=>{ if(lastPointerdownId === id) lastPointerdownId = null; }, 0);
           });
-        }, {passive:true});
+        }, {passive:true, capture:true});
         postsWide.addEventListener('click', e=>{
           const cardEl = e.target.closest('.post-card');
           if(cardEl){
@@ -6562,7 +6567,7 @@ function makePosts(){
                 lastPointerdownId = null;
                 return;
               }
-              deferToAnimationFrame(()=>{
+              requestAnimationFrame(() => {
                 try{
                   stopSpin();
                   openPost(id);
@@ -6574,7 +6579,7 @@ function makePosts(){
           if(e.target === postsWide && postsWide.querySelector('.open-post')){
             setTimeout(()=> setMode('map'), 0);
           }
-        });
+        }, { capture:true });
       }
 
       recentsBoard && recentsBoard.addEventListener('click', e=>{
@@ -6911,10 +6916,12 @@ function makePosts(){
             attributionControl:true
           });
         map.on('style.load', () => {
-          // Default atmospheric sky (black with stars, no custom color, no animation)
-          map.setSky({ 'sky-type': 'atmosphere' });
-          // No fog for performance
-          map.setFog(null);
+          if (typeof map.setSky === 'function') {
+            map.setSky({ 'sky-type': 'atmosphere' });
+          }
+          if (typeof map.setFog === 'function') {
+            map.setFog(null);
+          }
         });
         ensureMapIcon = attachIconLoader(map);
       map.on('zoomend', checkLoadPosts);
@@ -7257,7 +7264,7 @@ function makePosts(){
         root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', ()=>{
           const id = n.getAttribute('data-id');
           if(!id) return;
-          deferToAnimationFrame(()=>{
+          requestAnimationFrame(() => {
             try{
               touchMarker = null;
               close();
@@ -7265,7 +7272,7 @@ function makePosts(){
               openPost(id, false, true);
             }catch(err){ console.error(err); }
           });
-        }));
+        }, { capture: true }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
       });
@@ -7297,7 +7304,7 @@ function makePosts(){
               e.stopPropagation();
               const id = n.getAttribute('data-id');
               if(!id) return;
-              deferToAnimationFrame(()=>{
+              requestAnimationFrame(() => {
                 try{
                   touchMarker = null;
                   close();
@@ -7305,7 +7312,7 @@ function makePosts(){
                   openPost(id, false, true);
                 }catch(err){ console.error(err); }
               });
-            }));
+            }, { capture: true }));
             const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
             lockMap(true);
             (function(){
@@ -7317,7 +7324,7 @@ function makePosts(){
                   if(row){
                     var pid = row.getAttribute('data-id');
                     if(pid){
-                      deferToAnimationFrame(()=>{
+                      requestAnimationFrame(() => {
                         try{
                           touchMarker = null;
                           if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
@@ -7340,7 +7347,7 @@ function makePosts(){
         const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
         if(touchClick){
           if(touchMarker === id){
-            deferToAnimationFrame(()=>{
+            requestAnimationFrame(() => {
               try{
                 touchMarker = null;
                 if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
@@ -7360,18 +7367,18 @@ function makePosts(){
               if(cardEl){
                 cardEl.addEventListener('click', (e)=>{
                   e.stopPropagation();
-                  deferToAnimationFrame(()=>{
+                  requestAnimationFrame(() => {
                     try{
                       touchMarker=null;
                       openPost(id, false, true);
                     }catch(err){ console.error(err); }
                   });
-                });
+                }, { capture: true });
               }
             }
           }
         } else {
-          deferToAnimationFrame(()=>{
+          requestAnimationFrame(() => {
             try{
               openPost(id, false, true);
             }catch(err){ console.error(err); }
@@ -7423,7 +7430,7 @@ function makePosts(){
               if(row){
                 var pid = row.getAttribute('data-id');
                 if(pid){
-                  deferToAnimationFrame(()=>{
+                  requestAnimationFrame(() => {
                     try{
                       touchMarker = null;
                       if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
@@ -7465,7 +7472,7 @@ function makePosts(){
           if(__el){
             __el.addEventListener('click', function(ev){
               ev.stopPropagation();
-              deferToAnimationFrame(()=>{
+              requestAnimationFrame(() => {
                 try{
                   touchMarker = null;
                   stopSpin();
@@ -8126,7 +8133,9 @@ function makePosts(){
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
-      }
+    }
+
+    window.openPost = openPost;
 
     function openPostModal(id){
       const p = posts.find(x=>x.id===id);
@@ -8219,7 +8228,7 @@ function makePosts(){
       if(card){
         const pid = card.getAttribute('data-id') || (card.closest('.multi-item.map-card') && card.closest('.multi-item.map-card').getAttribute('data-id'));
         if(pid){
-          deferToAnimationFrame(()=>{
+          requestAnimationFrame(() => {
             try{
               touchMarker = null;
               stopSpin();
@@ -8228,7 +8237,7 @@ function makePosts(){
           });
         }
       }
-    });
+    }, { capture:true });
 
     function hookDetailActions(el, p){
       el.querySelectorAll('.post-header').forEach(headerEl => {
@@ -8880,10 +8889,12 @@ function makePosts(){
               attachIconLoader(map);
 
               map.on('style.load', () => {
-                // Default atmospheric sky (black with stars, no custom color, no animation)
-                map.setSky({ 'sky-type': 'atmosphere' });
-                // No fog for performance
-                map.setFog(null);
+                if (typeof map.setSky === 'function') {
+                  map.setSky({ 'sky-type': 'atmosphere' });
+                }
+                if (typeof map.setFog === 'function') {
+                  map.setFog(null);
+                }
               });
 
               const placeMarker = () => {
@@ -9135,21 +9146,30 @@ function makePosts(){
     function initAdBoard(){
       adPanel = document.querySelector('.ad-panel');
       if(!adPanel) return;
-      adPanel.addEventListener('click', async e => {
+      adPanel.addEventListener('click', e => {
         const slide = e.target.closest('.ad-slide');
         if(!slide) return;
         e.preventDefault();
         const id = slide.dataset.id;
-        await openPost(id);
-        const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
-        if(openEl){ openEl.scrollIntoView({behavior:'smooth', block:'start'}); }
-        document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
-        if(quickCard){
-          quickCard.setAttribute('aria-selected','true');
-          quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-        }
-      });
+        requestAnimationFrame(() => {
+          Promise.resolve(openPost(id)).then(() => {
+            requestAnimationFrame(() => {
+              const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
+              if(openEl){
+                openEl.scrollIntoView({behavior:'smooth', block:'start'});
+              }
+              document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+              const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
+              if(quickCard){
+                quickCard.setAttribute('aria-selected','true');
+                requestAnimationFrame(() => {
+                  quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+                });
+              }
+            });
+          }).catch(err => console.error(err));
+        });
+      }, { capture: true });
     }
 
     // applyFilters();
@@ -9169,19 +9189,7 @@ function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.ch
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
 function getViewportHeight(){
-  const viewport = window.visualViewport;
-  if(viewport && Number.isFinite(viewport.height)){
-    return viewport.height;
-  }
-  if(Number.isFinite(window.innerHeight)){
-    return window.innerHeight;
-  }
-  const doc = document.documentElement;
-  if(doc && Number.isFinite(doc.clientHeight)){
-    return doc.clientHeight;
-  }
-  const bodyRect = document.body ? document.body.getBoundingClientRect() : null;
-  return bodyRect && Number.isFinite(bodyRect.height) ? bodyRect.height : 0;
+  return window.innerHeight || document.documentElement.clientHeight || 0;
 }
 const panelStack = [];
 function bringToTop(item){
@@ -9667,11 +9675,9 @@ document.addEventListener('pointerdown', handleDocInteract);
   if (typeof updateStickyImages === 'function') {
     updateStickyImages();
   }
-  if(typeof window.openPost !== 'function') window.openPost = openPost;
   if(typeof window.updateVenue !== 'function') window.updateVenue = updateVenue;
   if(typeof window.hookDetailActions !== 'function') window.hookDetailActions = hookDetailActions;
   if(typeof window.ensureMapForVenue !== 'function') window.ensureMapForVenue = ensureMapForVenue;
-  if(typeof window.openPost === 'function') openPost = window.openPost;
   if(typeof window.updateVenue === 'function') updateVenue = window.updateVenue;
   if(typeof window.hookDetailActions === 'function') hookDetailActions = window.hookDetailActions;
   if(typeof window.ensureMapForVenue === 'function') ensureMapForVenue = window.ensureMapForVenue;
