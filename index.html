@@ -1,23 +1,32 @@
 <!doctype html> 
 <html lang="en">
 <head>
-<script>
-  // Wait for a global function by name, then run cb(fn)
-  window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
-    const start = performance.now(), max = timeoutMs ?? 5000;
-    (function check(){
-      const fn = window[name];
-      if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
-      if (performance.now() - start < max) requestAnimationFrame(check);
-    })();
-  };
-</script>
+  <link id="mapbox-gl-css" rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" />
 
-<style>
-  @media (max-width: 600px){
-    .post-card, .post { position: relative; z-index: 2; }
-  }
-</style>
+  <style id="hotfixes">
+    /* Hand cursor for DOM-based Mapbox markers */
+    .mapboxgl-marker { cursor: pointer; }
+
+    /* Menus stay clickable above overlays */
+    .options-menu { z-index: 10000; }
+
+    /* Cards stay clickable on narrow screens */
+    @media (max-width: 600px){
+      .post-card, .post { position: relative; z-index: 2; }
+    }
+  </style>
+
+  <script>
+    window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
+      const start = performance.now(), max = timeoutMs ?? 5000;
+      (function check(){
+        const fn = window[name];
+        if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
+        if (performance.now() - start < max) requestAnimationFrame(check);
+      })();
+    };
+  </script>
 
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -29,12 +38,6 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
   <link rel="manifest" href="assets/favicons/site.webmanifest" />
   <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
-  <!-- MUST be in <head> before the map is created -->
-  <link
-    id="mapbox-gl-css"
-    rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css"
-  />
   <style id="mapboxgl-critical-css">
     .mapboxgl-map{position:relative;width:100%;height:100%}
     .mapboxgl-canvas{position:absolute;left:0;top:0}
@@ -4741,6 +4744,27 @@ img.thumb{
   </div>
   </div>
 
+  <script>
+    // Remember where the user actually clicked/tapped
+    document.addEventListener('pointerdown', (e) => {
+      window.__lastPointerDown = e;
+    }, { capture: true });
+
+    // Place the opened post right after the clicked .post-card
+    function placeOpenPost(el) {
+      const anchor = window.__lastPointerDown &&
+                     window.__lastPointerDown.target &&
+                     window.__lastPointerDown.target.closest('.post-card');
+      if (anchor && anchor.parentElement) {
+        anchor.after(el);
+      } else {
+        const board = document.querySelector('.post-board');
+        if (board) board.prepend(el);
+      }
+      el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+  </script>
+
   <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <!-- Welcome modal content (not a panel) -->
     <div class="modal-content">
@@ -4758,42 +4782,32 @@ img.thumb{
   </div>
 
   <script>
-  async function ensureMapboxCssFor(container){
-    const root = (container && typeof container.getRootNode === 'function') ? container.getRootNode() : document;
-    const isShadow = String(root) === '[object ShadowRoot]';
-    const doc = isShadow ? (container && container.ownerDocument) || document : document;
-    const head = isShadow ? root : doc.head;
+  async function ensureMapboxCssFor(container) {
+    const doc = (container && container.ownerDocument) || document;
+    const root = container && container.getRootNode && container.getRootNode();
 
-    const version =
-      (window.mapboxgl && mapboxgl.version && `v${mapboxgl.version}`) ||
-      (Array.from(document.scripts)
-        .map(s => (s.src || '').match(/mapbox-gl-js\/(v\d+\.\d+\.\d+)\//)?.[1])
-        .find(Boolean)) ||
-      'v3.1.2';
-
-    const href = `https://api.mapbox.com/mapbox-gl-js/${version}/mapbox-gl.css`;
-
-    const hasCss = isShadow
-      ? Array.from(head.querySelectorAll('link[rel="stylesheet"],style')).some(node => {
-          const hrefMatch = node.href && node.href.includes('/mapbox-gl.css');
-          const inlineMatch = node.textContent && node.textContent.includes('.mapboxgl-ctrl');
-          return Boolean(hrefMatch || inlineMatch);
-        })
-      : Array.from(doc.querySelectorAll('link[rel="stylesheet"]')).some(link => (link.href || '').includes('/mapbox-gl.css'));
-    if(hasCss) return;
-
-    try{
-      const link = doc.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      head.appendChild(link);
-    }catch(err){
-      try{
-        const style = doc.createElement('style');
-        style.textContent = `@import url("${href}");`;
-        head.appendChild(style);
-      }catch(e){}
+    // If the map lives inside a ShadowRoot, inject CSS there
+    if (root && root.host && typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot) {
+      if (!root.querySelector('style[data-mapbox-gl]')) {
+        const s = document.createElement('style');
+        s.setAttribute('data-mapbox-gl','');
+        s.textContent = "@import url('https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css');";
+        root.prepend(s);
+      }
+      return;
     }
+
+    // Normal document (or iframe document)
+    let link = doc.getElementById('mapbox-gl-css');
+    if (!link) {
+      link = doc.createElement('link');
+      link.id = 'mapbox-gl-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css';
+      doc.head.appendChild(link);
+    }
+    if (link.sheet) return;
+    await new Promise(res => link.addEventListener('load', res, { once: true }));
   }
 
   (async () => {
@@ -4875,36 +4889,14 @@ img.thumb{
     const start = performance.now(), max = timeoutMs ?? 5000;
     (function wait(){
       const fn = window[name];
-      if(typeof fn === 'function'){
-        try{ invoke(fn); }catch(err){ console.error(err); }
+      if (typeof fn === 'function') {
+        try { invoke(fn); } catch(e){}
         return;
       }
-      if(performance.now() - start < max){
-        if(typeof requestAnimationFrame === 'function'){
-          requestAnimationFrame(wait);
-        } else {
-          setTimeout(wait, 16);
-        }
-      }
+      if (performance.now() - start < max) requestAnimationFrame(wait);
     })();
   };
-  window.callWhenDefined = callWhenDefined;
-
-  // 3) Make scroll/touch listeners passive where we don't call preventDefault()
-  (function makePassive(){
-    const add = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function(type, listener, opts){
-      try {
-        // Only force passive for known scroll/touch where preventDefault isn't used
-        if ((type === 'wheel' || type === 'touchstart' || type === 'touchmove')) {
-          if (opts === undefined) opts = { passive: true };
-          else if (typeof opts === 'boolean') opts = { capture: opts, passive: true };
-          else if (typeof opts === 'object' && !('passive' in opts)) opts = { ...opts, passive: true };
-        }
-      } catch {}
-      return add.call(this, type, listener, opts);
-    };
-  })();
+  window.callWhenDefined = window.callWhenDefined || callWhenDefined;
 
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
@@ -6699,7 +6691,10 @@ function makePosts(){
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container) return;
 
-        if(!container.children.length && !fromHistory){ container.appendChild(card(p, true)); }
+        if(!container.children.length && !fromHistory){
+          const initialCard = card(p, true);
+          placeOpenPost(initialCard);
+        }
 
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
         if(alreadyOpen){
@@ -6746,7 +6741,10 @@ function makePosts(){
 
         target = originEl || container.querySelector(`[data-id="${id}"]`);
 
-        if(!target){ target = card(p, fromHistory ? false : true); container.appendChild(target); }
+        if(!target){
+          target = card(p, fromHistory ? false : true);
+          placeOpenPost(target);
+        }
         let targetAlignTop = null;
         if(target && container){
           const containerRect = container.getBoundingClientRect();
@@ -8946,9 +8944,6 @@ function openPostModal(id){
 
         ensureMapForVenue = async function(){
           if(!mapEl) return;
-          try{
-            await ensureMapboxCssFor(mapEl);
-          }catch(err){}
 
           const center = [loc.lng, loc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
@@ -8966,12 +8961,18 @@ function openPostModal(id){
           };
 
           if(!map){
-            setTimeout(()=>{
+            setTimeout(async () => {
               if(map) return;
+
+              // Make sure Mapbox CSS is applied where the container lives
+              await ensureMapboxCssFor(mapEl);
+
+              // Prevent WebGL context leaks (remove any previous map on this element)
               if (mapEl && mapEl.__map && typeof mapEl.__map.remove === 'function') {
-                try { mapEl.__map.remove(); } catch(e) {}
+                try { mapEl.__map.remove(); } catch {}
                 mapEl.__map = null;
               }
+
               map = new mapboxgl.Map({
                 container: mapEl,
                 style: mapStyle,
@@ -8980,15 +8981,61 @@ function openPostModal(id){
                 interactive: false
               });
 
-              MapRegistry.register(map);
+              // Remember map on the element so we can clean up next time
               mapEl.__map = map;
 
+              MapRegistry.register(map);
               attachIconLoader(map);
 
-              map.on('style.load', () => {
-                if (typeof map.setFog === 'function') {
-                  map.setFog(null);
-                }
+              // Pointer cursor when hovering rendered features
+              map.on('mousemove', (e) => {
+                const has = !!(e.features && e.features.length);
+                map.getCanvas().style.cursor = has ? 'pointer' : '';
+              });
+
+              // Also arm pointer on any symbol layers as styles load/change
+              function armPointerOnSymbolLayers() {
+                const st = map.getStyle && map.getStyle();
+                const layers = (st && st.layers) || [];
+                layers.forEach(l => {
+                  if (l.type === 'symbol') {
+                    if (!map.__cursorArmed) map.__cursorArmed = new Set();
+                    if (map.__cursorArmed.has(l.id)) return;
+                    map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
+                    map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
+                    map.__cursorArmed.add(l.id);
+                  }
+                });
+              }
+              map.on('styledata', armPointerOnSymbolLayers);
+              armPointerOnSymbolLayers();
+
+              // No sky; keep fog off
+              if (typeof map.setSky === 'function') { /* do nothing */ }
+              if (typeof map.setFog === 'function') map.setFog(null);
+
+              // Fallback for missing sprite/images -> use YOUR existing file (no new assets)
+              map.on('styleimagemissing', (e) => {
+                if (map.hasImage(e.id)) return;
+
+                // Try common locations, then your existing fallback image
+                const base = document.baseURI || window.location.href;
+                const candidates = [
+                  `assets/icons/subcategories/${e.id}.png`,
+                  `assets/icons/${e.id}.png`,
+                  `assets/images/icons/${e.id}.png`,
+                  // Use your existing multi-category icon as final fallback (no new files)
+                  `assets/icons/multi-category-icon-blue-40.png`,
+                  `assets/images/icons/multi-category-icon-blue-40.png`
+                ].map(p => new URL(p, base).href);
+
+                (function tryNext(i){
+                  if (i >= candidates.length) return;
+                  map.loadImage(candidates[i], (err, img) => {
+                    if (err || !img) { tryNext(i+1); return; }
+                    try { map.addImage(e.id, img, { sdf: true }); } catch {}
+                  });
+                })(0);
               });
 
               const placeMarker = () => {
@@ -9045,7 +9092,17 @@ function openPostModal(id){
 
         const tasks = [];
         if(mapEl){
-          tasks.push(()=> callWhenDefined('ensureMapForVenue', fn => fn()));
+          tasks.push(()=> {
+            window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
+              const start = performance.now(), max = timeoutMs ?? 5000;
+              (function check(){
+                const fn = window[name];
+                if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
+                if (performance.now() - start < max) requestAnimationFrame(check);
+              })();
+            };
+            callWhenDefined('ensureMapForVenue', fn => fn());
+          });
         }
         if(calendarEl){
           tasks.push(()=> buildCalendarShell());
@@ -10456,6 +10513,21 @@ function initPostLayout(board){
 document.addEventListener('DOMContentLoaded', () => {
   initPostLayout(document.querySelector('.post-board'));
 });
+</script>
+
+<script>
+  // Default wheel/touch listeners to passive (unless explicitly opt-out)
+  (function(){
+    const orig = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options){
+      if (type === 'wheel' || type === 'touchstart' || type === 'touchmove'){
+        if (options == null) options = { passive: true };
+        else if (typeof options === 'object' && options.passive == null)
+          options = { ...options, passive: true };
+      }
+      return orig.call(this, type, listener, options);
+    };
+  })();
 </script>
 </body>
 </html>
