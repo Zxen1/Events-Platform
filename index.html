@@ -7746,12 +7746,31 @@ function makePosts(){
         if(e && e.preventDefault) e.preventDefault();
         const features = (e && e.features && e.features.length) ? e.features : map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         if(!features.length) return;
-        const clusterProps = features[0].properties || {};
+        const feature = features[0];
+        const clusterProps = feature.properties || {};
         const clusterId = clusterProps.cluster_id;
         if(typeof clusterId !== 'number' && typeof clusterId !== 'string') return;
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
+        const ne = bounds.getNorthEast();
+        const sw = bounds.getSouthWest();
+        const lngSpan = Math.abs(ne.lng - sw.lng);
+        const latSpan = Math.abs(ne.lat - sw.lat);
+        if((lngSpan <= 0.00001 && latSpan <= 0.00001) || typeof map.getSource !== 'function'){
+          const src = map.getSource && map.getSource('posts');
+          if(src && typeof src.getClusterExpansionZoom === 'function'){
+            src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
+              if(err) return;
+              try{
+                const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
+                const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
+                map.easeTo({ center: feature.geometry.coordinates, zoom: nextZoom });
+              }catch(ex){ console.error(ex); }
+            });
+            return;
+          }
+        }
         map.fitBounds(bounds, {padding:10});
       });
       
