@@ -5361,7 +5361,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/navigation-night-v1',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/dark-v11',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -5845,6 +5845,16 @@ function buildClusterListHTML(items){
 
       mapInstance.on('styleimagemissing', e => {
         if(!e || !e.id) return;
+        if(e.id.startsWith(`${MULTI_VENUE_MARKER_ID}-`)){
+          const suffix = e.id.slice(MULTI_VENUE_MARKER_ID.length + 1);
+          let count = parseInt(suffix, 10);
+          if(!Number.isFinite(count)) count = 0;
+          if(suffix.includes('plus')) count = Math.max(count, 100);
+          if(count > 1){
+            ensureMultiVenueIconFor(mapInstance, count).catch(()=>{});
+            return;
+          }
+        }
         addIcon(e.id);
       });
 
@@ -5856,6 +5866,96 @@ function buildClusterListHTML(items){
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
     subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
+
+    const multiVenueIconCache = new Map();
+    const multiVenueCountsInUse = new Set();
+    let multiVenueBaseImagePromise = null;
+
+    function multiVenueMarkerLabel(count){
+      if(!Number.isFinite(count) || count <= 1) return '';
+      return count >= 100 ? '99+' : String(count);
+    }
+
+    function multiVenueMarkerIdForCount(count){
+      const label = multiVenueMarkerLabel(count);
+      if(!label) return MULTI_VENUE_MARKER_ID;
+      return `${MULTI_VENUE_MARKER_ID}-${label.replace('+','plus')}`;
+    }
+
+    function loadMultiVenueBaseImage(){
+      if(!multiVenueBaseImagePromise){
+        multiVenueBaseImagePromise = new Promise(resolve => {
+          try{
+            const img = new Image();
+            img.decoding = 'async';
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = MULTI_VENUE_MARKER_URL;
+          }catch(err){
+            resolve(null);
+          }
+        });
+      }
+      return multiVenueBaseImagePromise;
+    }
+
+    async function ensureMultiVenueIconFor(mapInstance, count){
+      if(!mapInstance || !Number.isFinite(count) || count <= 1){
+        return MULTI_VENUE_MARKER_ID;
+      }
+      const iconId = multiVenueMarkerIdForCount(count);
+      if(mapInstance.hasImage?.(iconId)){
+        multiVenueCountsInUse.add(count);
+        return iconId;
+      }
+      if(multiVenueIconCache.has(iconId)){
+        await multiVenueIconCache.get(iconId);
+        return iconId;
+      }
+      const task = (async ()=>{
+        const pixelRatio = (window.devicePixelRatio || 1) >= 2 ? 2 : 1;
+        const baseSize = 30;
+        const canvas = document.createElement('canvas');
+        canvas.width = baseSize * pixelRatio;
+        canvas.height = baseSize * pixelRatio;
+        const ctx = canvas.getContext('2d');
+        if(!ctx){
+          return;
+        }
+        ctx.scale(pixelRatio, pixelRatio);
+        const baseImage = await loadMultiVenueBaseImage();
+        if(baseImage){
+          try{ ctx.drawImage(baseImage, 0, 0, baseSize, baseSize); }catch(err){
+            ctx.fillStyle = '#2d2d2d';
+            ctx.beginPath();
+            ctx.arc(baseSize/2, baseSize/2, baseSize/2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          ctx.fillStyle = '#2d2d2d';
+          ctx.beginPath();
+          ctx.arc(baseSize/2, baseSize/2, baseSize/2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#fff';
+        ctx.font = `600 14px system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(multiVenueMarkerLabel(count), baseSize / 2, baseSize / 2 + 0.5);
+        try{
+          mapInstance.addImage(iconId, canvas, { pixelRatio });
+        }catch(err){
+          // Ignore duplicate icon errors
+        }
+      })().finally(()=>{
+        multiVenueIconCache.delete(iconId);
+      });
+      multiVenueIconCache.set(iconId, task);
+      await task;
+      multiVenueCountsInUse.add(count);
+      return iconId;
+    }
 
     function setSelectedVenueHighlight(lng, lat){
       if(Number.isFinite(lng) && Number.isFinite(lat)){
@@ -6383,10 +6483,6 @@ function makePosts(){
             trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
             optionsMenu.hidden = !next;
           });
-        }
-        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
-        if(optionsMenu){
-          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
         }
         const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
         const syncCatState = checked =>{
@@ -7892,7 +7988,7 @@ function makePosts(){
           mapboxgl.accessToken = MAPBOX_TOKEN;
         map = new mapboxgl.Map({
           container:'map',
-          style:'mapbox://styles/mapbox/navigation-night-v1',
+          style:'mapbox://styles/mapbox/dark-v11',
           projection:'globe',
           center: startCenter,
           zoom: startZoom,
@@ -7902,6 +7998,9 @@ function makePosts(){
         });
         map.on('style.load', () => {
           applyNightSky(map);
+          multiVenueCountsInUse.forEach(count => {
+            ensureMultiVenueIconFor(map, count).catch(()=>{});
+          });
         });
         ensureMapIcon = attachIconLoader(map);
         const mapLoading = (() => {
@@ -8172,6 +8271,7 @@ function makePosts(){
             const key = venueKey(p.lng, p.lat);
             const count = coordCounts.get(key) || 1;
             const isMultiVenue = count > 1;
+            const multiIconId = isMultiVenue ? multiVenueMarkerIdForCount(count) : null;
             return {
               type:'Feature',
               properties:{
@@ -8179,11 +8279,11 @@ function makePosts(){
                 title:p.title,
                 city:p.city,
                 cat:p.category,
-                sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
+                sub: isMultiVenue ? multiIconId : baseSub,
                 baseSub,
                 multi:isMultiVenue ? 1 : 0,
                 multiCount: count,
-                multiLabel: String(count),
+                multiIconId,
                 venueKey: venueKey(p.lng, p.lat)
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
@@ -8198,6 +8298,16 @@ function makePosts(){
       addingPostSource = true;
       try{
       const geojson = postsToGeoJSON(posts);
+      const multiCounts = new Set();
+      geojson.features.forEach(f=>{
+        if(f && f.properties && f.properties.multi && f.properties.multiCount > 1){
+          multiCounts.add(f.properties.multiCount);
+        }
+      });
+      multiCounts.forEach(count => multiVenueCountsInUse.add(count));
+      if(map && multiCounts.size){
+        await Promise.all([...multiCounts].map(count => ensureMultiVenueIconFor(map, count).catch(()=>{})));
+      }
       const shouldCluster = posts.length > 1 && clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
@@ -8220,7 +8330,6 @@ function makePosts(){
         } });
       }
       const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
-      const multiLabelExpression = ['case', ['==', ['get', 'multi'], 1], ['coalesce', ['get', 'multiLabel'], ''], ''];
       const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
       const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
@@ -8318,19 +8427,8 @@ function makePosts(){
             'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1100,
-            'text-field': multiLabelExpression,
-            'text-font': ['Open Sans Regular','Arial Unicode MS Regular'],
-            'text-size': 14,
-            'text-anchor': 'center',
-            'text-offset': [0, 0],
-            'text-allow-overlap': true,
-            'text-ignore-placement': true,
-            'text-pitch-alignment': 'viewport'
-          },
-          paint:{
-            'text-color': '#fff'
-          },
+            'symbol-sort-key': 1100
+          }
         });
       }
       try{ map.setLayoutProperty('unclustered','icon-image',['get','sub']); }catch(e){}
@@ -8340,15 +8438,6 @@ function makePosts(){
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key',1100); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-field', multiLabelExpression); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-size',14); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-anchor','center'); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-offset',[0,0]); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-allow-overlap', true); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-ignore-placement', true); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-pitch-alignment','viewport'); }catch(e){}
-      try{ map.setPaintProperty('unclustered','text-color','#fff'); }catch(e){}
       if(shouldCluster){
         try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
       } else {
@@ -8589,7 +8678,7 @@ function makePosts(){
           'circle-stroke-color':'#ffffff',
           'circle-stroke-opacity': 0,
           'circle-stroke-width': 5,
-          'circle-radius': 17.5
+          'circle-radius': 15
         }});
       }
       updateSelectedMarkerRing();
