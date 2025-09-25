@@ -5424,6 +5424,7 @@ img.thumb{
     let touchMarker = null;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     let activePostId = null;
+    let selectedVenueKey = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -5597,7 +5598,14 @@ img.thumb{
       if(!map || typeof map.getLayer !== 'function') return;
       if(!map.getLayer(SELECTED_RING_LAYER)) return;
       const hasSelection = !!activePostId;
-      const filter = hasSelection ? ['==',['get','id'], activePostId] : ['==',['get','id'],'__none__'];
+      let filter;
+      if(hasSelection){
+        filter = selectedVenueKey
+          ? ['all', ['==',['get','id'], activePostId], ['==',['get','venueKey'], selectedVenueKey]]
+          : ['==',['get','id'], activePostId];
+      } else {
+        filter = ['==',['get','id'],'__none__'];
+      }
       try{ map.setFilter(SELECTED_RING_LAYER, filter); }catch(e){}
       try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 0.95 : 0); }catch(e){}
     }
@@ -5848,6 +5856,19 @@ function buildClusterListHTML(items){
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
     subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
+
+    function setSelectedVenueHighlight(lng, lat){
+      if(Number.isFinite(lng) && Number.isFinite(lat)){
+        const key = venueKey(lng, lat);
+        if(selectedVenueKey !== key){
+          selectedVenueKey = key;
+          updateSelectedMarkerRing();
+        }
+      } else if(selectedVenueKey !== null){
+        selectedVenueKey = null;
+        updateSelectedMarkerRing();
+      }
+    }
 
     function ensureSvgDimensions(svg){
       try{
@@ -7221,6 +7242,7 @@ function makePosts(){
         stopSpin();
         const p = posts.find(x=>x.id===id); if(!p) return;
         activePostId = id;
+        selectedVenueKey = null;
         updateSelectedMarkerRing();
 
         if(!fromHistory){
@@ -7415,6 +7437,7 @@ function makePosts(){
           openEl.remove();
         }
         activePostId = null;
+        selectedVenueKey = null;
         updateSelectedMarkerRing();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
@@ -8156,7 +8179,8 @@ function makePosts(){
                 baseSub,
                 multi:isMultiVenue ? 1 : 0,
                 multiCount: count,
-                multiLabel: String(count)
+                multiLabel: String(count),
+                venueKey: venueKey(p.lng, p.lat)
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             };
@@ -9553,6 +9577,11 @@ function openPostModal(id){
         }
       function updateVenue(idx){
         const loc = Array.isArray(p.locations) ? p.locations[idx] : null;
+        if(loc){
+          setSelectedVenueHighlight(loc.lng, loc.lat);
+        } else {
+          setSelectedVenueHighlight();
+        }
         if(!loc || !Array.isArray(loc.dates) || !loc.dates.length){
           return;
         }
