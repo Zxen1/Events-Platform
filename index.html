@@ -2057,7 +2057,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   width:100%;
   max-width:var(--post-board-max-w);
   box-sizing:border-box;
-  padding:0 5px calc(var(--scrollbar-h) + 5px) 0;
+  padding:0 15px calc(var(--scrollbar-h) + 5px) 0;
   margin:0;
   gap:5px;
   overflow-x:auto;
@@ -5999,7 +5999,72 @@ function makePosts(){
       if(!formbuilderCats || !catsEl) return;
       const frag = document.createDocumentFragment();
       catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        frag.appendChild(menu.cloneNode(true));
+        const clone = menu.cloneNode(true);
+        const trigger = clone.querySelector('.filter-category-trigger');
+        const optionsMenu = clone.querySelector('.options-menu');
+        if(optionsMenu){
+          const originalId = optionsMenu.id || '';
+          const cloneId = originalId ? `${originalId}-formbuilder` : '';
+          if(cloneId){
+            optionsMenu.id = cloneId;
+            if(trigger){
+              trigger.setAttribute('aria-controls', cloneId);
+            }
+          }
+        }
+        if(trigger && optionsMenu){
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          optionsMenu.hidden = !isExpanded;
+          trigger.addEventListener('click', ()=>{
+            if(trigger.getAttribute('aria-disabled') === 'true') return;
+            const open = clone.getAttribute('aria-expanded') === 'true';
+            const next = !open;
+            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            optionsMenu.hidden = !next;
+          });
+        }
+        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
+        const syncCatState = checked =>{
+          clone.classList.toggle('cat-off', !checked);
+          if(trigger){
+            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          }
+          optionButtons.forEach(btn=>{
+            btn.disabled = !checked;
+            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          });
+          if(!checked && optionsMenu){
+            optionsMenu.hidden = true;
+            clone.setAttribute('aria-expanded', 'false');
+            if(trigger){
+              trigger.setAttribute('aria-expanded', 'false');
+            }
+          }
+        };
+        const catSwitchInput = clone.querySelector('.cat-switch input');
+        if(catSwitchInput){
+          const initialActive = !clone.classList.contains('cat-off');
+          catSwitchInput.checked = initialActive;
+          syncCatState(initialActive);
+          catSwitchInput.addEventListener('change', ()=>{
+            syncCatState(catSwitchInput.checked);
+          });
+        } else {
+          syncCatState(!clone.classList.contains('cat-off'));
+        }
+        optionButtons.forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            if(btn.disabled) return;
+            const pressed = btn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            btn.classList.toggle('on', next);
+          });
+        });
+        frag.appendChild(clone);
       });
       formbuilderCats.innerHTML = '';
       formbuilderCats.appendChild(frag);
