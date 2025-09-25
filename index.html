@@ -1818,23 +1818,23 @@ button[aria-expanded="true"] .results-arrow{
   gap:8px;
 }
 
-.filter-category-menu{
+:where(#filterPanel, #tab-forms) .filter-category-menu{
   display:flex;
   flex-direction:column;
   gap:6px;
 }
 
-.filter-category-menu .filter-category-header{
+:where(#filterPanel, #tab-forms) .filter-category-menu .filter-category-header{
   display:flex;
   align-items:flex-start;
   gap:8px;
 }
 
-.filter-category-menu .filter-category-trigger-wrap{
+:where(#filterPanel, #tab-forms) .filter-category-menu .filter-category-trigger-wrap{
   flex:1;
 }
 
-.filter-category-menu .filter-category-trigger{
+:where(#filterPanel, #tab-forms) .filter-category-menu .filter-category-trigger{
   height:36px;
   border-radius:8px;
   padding:0 12px;
@@ -1852,7 +1852,7 @@ button[aria-expanded="true"] .results-arrow{
   margin: 0;
 }
 
-.filter-category-menu .category-logo{
+:where(#filterPanel, #tab-forms) .filter-category-menu .category-logo{
   flex:0 0 24px;
   width:24px;
   height:24px;
@@ -1861,18 +1861,18 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:center;
 }
 
-.filter-category-menu .category-logo img{
+:where(#filterPanel, #tab-forms) .filter-category-menu .category-logo img{
   width:24px;
   height:24px;
 }
 
-.filter-category-menu .filter-category-trigger .label{
+:where(#filterPanel, #tab-forms) .filter-category-menu .filter-category-trigger .label{
   font-weight:700;
   letter-spacing:.2px;
   flex:1;
 }
 
-.filter-category-menu .cat-switch{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch{
   position:relative;
   display:flex;
   align-items:center;
@@ -1883,12 +1883,12 @@ button[aria-expanded="true"] .results-arrow{
   cursor:pointer;
   align-self:flex-start;
 }
-.filter-category-menu .cat-switch input{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch input{
   opacity:0;
   width:0;
   height:0;
 }
-.filter-category-menu .cat-switch .slider{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch .slider{
   position:absolute;
   top:8px;
   left:0;
@@ -1901,7 +1901,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid var(--btn);
   transition:.2s;
 }
-.filter-category-menu .cat-switch .slider:before{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch .slider:before{
   content:'';
   position:absolute;
   width:16px;
@@ -1912,19 +1912,19 @@ button[aria-expanded="true"] .results-arrow{
   background:var(--button-text);
   transition:.2s;
 }
-.filter-category-menu .cat-switch input:checked + .slider{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch input:checked + .slider{
   background:var(--category-switch-active);
   border-color:var(--category-switch-active);
 }
-.filter-category-menu .cat-switch input:checked + .slider:before{
+:where(#filterPanel, #tab-forms) .filter-category-menu .cat-switch input:checked + .slider:before{
   transform:translateX(18px);
 }
 
-.filter-category-menu .options-dropdown{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-dropdown{
   width:100%;
 }
 
-.filter-category-menu .options-menu{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu{
   width:100%;
   box-sizing:border-box;
   position:static;
@@ -1936,7 +1936,7 @@ button[aria-expanded="true"] .results-arrow{
   z-index:auto;
 }
 
-.filter-category-menu .options-menu button{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button{
   width:100%;
   display:flex;
   align-items:center;
@@ -1948,7 +1948,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:0 12px;
 }
 
-.filter-category-menu .options-menu button .subcategory-logo{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-logo{
   flex:0 0 24px;
   width:24px;
   height:24px;
@@ -1957,17 +1957,17 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:center;
 }
 
-.filter-category-menu .options-menu button .subcategory-logo img{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-logo img{
   width:20px;
   height:20px;
 }
 
-.filter-category-menu .options-menu button .subcategory-label{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-label{
   flex:1;
   text-align:left;
 }
 
-.filter-category-menu .options-menu button .subcategory-switch{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-switch{
   flex:0 0 auto;
   display:flex;
   align-items:center;
@@ -1978,7 +1978,7 @@ button[aria-expanded="true"] .results-arrow{
   pointer-events:none;
 }
 
-.filter-category-menu .options-menu button .subcategory-switch .track{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-switch .track{
   position:absolute;
   inset:0;
   border-radius:12px;
@@ -1987,7 +1987,7 @@ button[aria-expanded="true"] .results-arrow{
   transition:.2s;
 }
 
-.filter-category-menu .options-menu button .subcategory-switch .thumb{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button .subcategory-switch .thumb{
   position:absolute;
   width:14px;
   height:14px;
@@ -1997,28 +1997,28 @@ button[aria-expanded="true"] .results-arrow{
   top:2px;
   transition:.2s;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"]{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"]{
   color:var(--muted);
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
   opacity:0.6;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
   filter:grayscale(1);
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
   color:inherit;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .track{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .track{
   background:var(--btn);
   border-color:var(--btn);
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .thumb{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .thumb{
   transform:translateX(0);
   opacity:0.7;
 }
 
-.filter-category-menu .options-menu button[aria-pressed="true"]{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="true"]{
   background: var(--dropdown-selected-bg);
   color: var(--dropdown-selected-text);
   border-color: var(--dropdown-selected-bg);
@@ -2026,33 +2026,38 @@ button[aria-expanded="true"] .results-arrow{
   --button-selected-border: var(--dropdown-selected-bg);
   --button-selected-text: var(--dropdown-selected-text);
 }
-.filter-category-menu .options-menu button.on{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button.on{
   --button-selected-bg: var(--dropdown-selected-bg);
   --button-selected-border: var(--dropdown-selected-bg);
   --button-selected-text: var(--dropdown-selected-text);
 }
 
-.filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .track,
-.filter-category-menu .options-menu button.on .subcategory-switch .track{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .track,
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button.on .subcategory-switch .track{
   background:var(--category-switch-active);
   border-color:var(--category-switch-active);
 }
 
-.filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .thumb,
-.filter-category-menu .options-menu button.on .subcategory-switch .thumb{
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .thumb,
+:where(#filterPanel, #tab-forms) .filter-category-menu .options-menu button.on .subcategory-switch .thumb{
   transform:translateX(16px);
 }
 
-.filter-category-menu[aria-expanded="true"] .filter-category-trigger{
+:where(#filterPanel, #tab-forms) .filter-category-menu[aria-expanded="true"] .filter-category-trigger{
   border-color: var(--border-active);
 }
 
-.filter-category-menu.cat-off{
+:where(#filterPanel, #tab-forms) .filter-category-menu.cat-off{
   opacity:0.6;
 }
 
-.filter-category-menu.cat-off .filter-category-trigger{
+:where(#filterPanel, #tab-forms) .filter-category-menu.cat-off .filter-category-trigger{
   cursor:default;
+}
+
+#tab-forms .filter-category-menu .cat-switch,
+#tab-forms .filter-category-menu .options-menu .subcategory-switch{
+  display:none;
 }
 
 .reset-box{
@@ -5597,17 +5602,18 @@ img.thumb{
     function updateSelectedMarkerRing(){
       if(!map || typeof map.getLayer !== 'function') return;
       if(!map.getLayer(SELECTED_RING_LAYER)) return;
-      const hasSelection = !!activePostId;
+      const hasSelection = activePostId !== null && activePostId !== undefined && activePostId !== '';
       let filter;
       if(hasSelection){
+        const idFilter = ['==', ['to-string', ['get','id']], String(activePostId)];
         filter = selectedVenueKey
-          ? ['all', ['==',['get','id'], activePostId], ['==',['get','venueKey'], selectedVenueKey]]
-          : ['==',['get','id'], activePostId];
+          ? ['all', idFilter, ['==',['get','venueKey'], selectedVenueKey]]
+          : idFilter;
       } else {
-        filter = ['==',['get','id'],'__none__'];
+        filter = ['==', ['to-string',['get','id']], '__none__'];
       }
       try{ map.setFilter(SELECTED_RING_LAYER, filter); }catch(e){}
-      try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 0.95 : 0); }catch(e){}
+      try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 1 : 0); }catch(e){}
     }
 
     function hashString(str){
@@ -5763,6 +5769,8 @@ function buildClusterListHTML(items){
         'assets/images/icons/'
       ];
       const pending = new Map();
+      const multiIconPattern = /^multi-venue-marker:(\d+)$/i;
+      let multiBasePromise = null;
 
       const urlsFor = (name) => {
         const urls = [];
@@ -5792,6 +5800,60 @@ function buildClusterListHTML(items){
         });
       }
 
+      async function loadMultiBase(){
+        if(multiBasePromise) return multiBasePromise;
+        multiBasePromise = (async () => {
+          try{
+            const img = await loadImageCompat(MULTI_VENUE_MARKER_URL);
+            if(!img) return null;
+            const width = typeof img.width === 'number' && img.width > 0 ? img.width : (typeof img.height === 'number' && img.height > 0 ? img.height : 30);
+            const height = typeof img.height === 'number' && img.height > 0 ? img.height : width;
+            const pixelRatio = width > 0 ? Math.max(1, width / 30) : 1;
+            return { image: img, width, height, pixelRatio };
+          } catch(err){
+            return null;
+          }
+        })();
+        return multiBasePromise;
+      }
+
+      async function createMultiVenueIcon(name, count){
+        if(mapInstance.hasImage?.(name)) return true;
+        const baseInfo = await loadMultiBase();
+        if(!baseInfo || !baseInfo.image) return false;
+        const { image, width, height, pixelRatio } = baseInfo;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if(!ctx){
+          try{ mapInstance.addImage(name, image, { sdf:false, pixelRatio }); }catch(err){}
+          return false;
+        }
+        ctx.clearRect(0, 0, width, height);
+        try{ ctx.drawImage(image, 0, 0, width, height); }catch(err){}
+        const text = String(count);
+        const fontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        let fontSize = Math.round(height * (text.length >= 3 ? 0.5 : 0.6));
+        fontSize = Math.max(12, fontSize);
+        ctx.font = `700 ${fontSize}px ${fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const offsetY = height * 0.02;
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.12));
+        ctx.fillStyle = '#ffffff';
+        try{ ctx.strokeText(text, width / 2, height / 2 + offsetY); }catch(err){}
+        try{ ctx.fillText(text, width / 2, height / 2 + offsetY); }catch(err){}
+        try{
+          mapInstance.addImage(name, canvas, { sdf:false, pixelRatio });
+          return true;
+        }catch(err){
+          return false;
+        }
+      }
+
       function placeholder(name){
         const canvas = document.createElement('canvas');
         canvas.width = 48;
@@ -5813,6 +5875,20 @@ function buildClusterListHTML(items){
         if(!name) return false;
         if(mapInstance.hasImage?.(name)) return true;
         if(pending.has(name)) return pending.get(name);
+        const multiMatch = multiIconPattern.exec(name);
+        if(multiMatch){
+          const count = parseInt(multiMatch[1], 10);
+          const task = (async () => {
+            if(!Number.isFinite(count) || count < 2){
+              return addIcon(MULTI_VENUE_MARKER_ID);
+            }
+            const created = await createMultiVenueIcon(name, count);
+            if(created) return true;
+            return addIcon(MULTI_VENUE_MARKER_ID);
+          })().catch(()=>false).finally(() => pending.delete(name));
+          pending.set(name, task);
+          return task;
+        }
         const pixelRatio = (window.devicePixelRatio || 1) >= 2 ? 2 : 1;
         const task = (async () => {
           const { urls, shouldLookupLocal } = urlsFor(name);
@@ -8172,6 +8248,7 @@ function makePosts(){
             const key = venueKey(p.lng, p.lat);
             const count = coordCounts.get(key) || 1;
             const isMultiVenue = count > 1;
+            const multiIconId = isMultiVenue ? `${MULTI_VENUE_MARKER_ID}:${count}` : null;
             return {
               type:'Feature',
               properties:{
@@ -8179,11 +8256,12 @@ function makePosts(){
                 title:p.title,
                 city:p.city,
                 cat:p.category,
-                sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
+                sub: isMultiVenue ? multiIconId : baseSub,
                 baseSub,
                 multi:isMultiVenue ? 1 : 0,
                 multiCount: count,
                 multiLabel: String(count),
+                multiIconId,
                 venueKey: venueKey(p.lng, p.lat)
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
@@ -8210,8 +8288,14 @@ function makePosts(){
         existing.setData(geojson);
       }
       if(typeof ensureMapIcon === 'function'){
-        const iconIds = Object.keys(subcategoryMarkers);
-        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+        const iconIds = new Set(Object.keys(subcategoryMarkers));
+        if(geojson && Array.isArray(geojson.features)){
+          geojson.features.forEach(f => {
+            const subId = f && f.properties ? f.properties.sub : null;
+            if(subId) iconIds.add(subId);
+          });
+        }
+        await Promise.all(Array.from(iconIds).map(id => ensureMapIcon(id).catch(()=>{})));
       }
       if(!map.getLayer('posts-heat')){
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
@@ -8220,7 +8304,7 @@ function makePosts(){
         } });
       }
       const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
-      const multiLabelExpression = ['case', ['==', ['get', 'multi'], 1], ['coalesce', ['get', 'multiLabel'], ''], ''];
+      const multiLabelExpression = ['case', ['==', ['get', 'multi'], 1], '', ''];
       const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
       const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
@@ -10158,7 +10242,10 @@ function openPostModal(id){
         adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
-      if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      if(map && map.getSource('posts')){
+        map.getSource('posts').setData(postsToGeoJSON(filtered));
+        updateSelectedMarkerRing();
+      }
     }
 
     function applyFilters(render = true){
