@@ -37,6 +37,140 @@
     };
   </script>
 
+  <script>
+    (function(){
+      const LOADING_GIF_SRC = 'data:image/gif;base64,R0lGODlhKAAoAJEAAAAAAP///4CAgEBAQCH/C05FVFNDQVBFMi4wAwEAAAAh+QQJBgAAACwAAAAAKAAoAAACLYQPU5fbH4xy0movznrz7j8wFEeyNE80VZ8AaNe0fWG6tm8813e+93/AoPBQAAAh+QQJBgAAACwAAAAAKAAoAAACK4QPU5fbH4xy0movznrz7j8wFEeyNE80VVe2dV84RgNaHunA1ne+939AVwEAIfkECQYAAAAsAAAAACgAKAAAAi2ED1OX2x+MctJqL8568+4/MBRHsjRPNFVXtnVfOJZnum4DAEdx/eRtwKAwVgAAIfkECQYAAAAsAAAAACgAKAAAAi2ED1OX2x+MctJqL8568+4/MBRHsjRPNFVXtnVfOJZnura3AMjvLt95wKDwUAAAIfkECQYAAAAsAAAAACgAKAAAAi2ED1OX2x+MctJqL8568+4/MBRHsjRPNFVXtnVfOJZnuv4CPMUDPbd/wKAQUQAAIfkECQYAAAAsAAAAACgAKAAAAiyED1OX2x+MctJqL8568+4/MBRHsjRPNFVXtnVfOH4CWh7pwNZ3vvd/wCCkAAAh+QQJBgAAACwAAAAAKAAoAAACLIQPU5fbH4xy0movznrz7j8wFEeyNE80zQKAVVXWfWe6tm8813e+93/AoK4AACH5BAkGAAAALAAAAAAoACgAAAIuhA9Tl9sfjHLSai/OevPuPzAUs6AclTI4k3R1XziWZ7q2bzzXd773f8CgcHgpAAAh+QQJBgAAACwAAAAAKAAoAAACLoQPU5fbH4xy0movzjhwPbnAk0CxNE80VVe2dV84lme6tm8813e+93/AoHBoKAAAIfkECQYAAAAsAAAAACgAKAAAAiyED1OX2x+MctJqV8h385qDLhRHsjRPNFVXtnVfOJZnurZvPNd3vvd/wCCqAAAh+QQJBgAAACwAAAAAKAAoAAACLoQPU5fbH4xy0movzjoG0DfOA8NvNE80VVe2dV84lme6tm8813e+93/AoHDYKAAAIfkECQYAAAAsAAAAACgAKAAAAi6ED1OX2x+MctJqL8568+4/MBSVoBxJ80TKQHVfOJZnurZvPNd3vvd/wKBw6CoAADs=';
+      let pendingCount = 0;
+      let logoImg = null;
+      let originalSrc = '';
+      let originalAlt = '';
+      let hadOriginalAlt = false;
+      let updatePending = false;
+
+      function ensureLogo(){
+        if(!logoImg){
+          logoImg = document.querySelector('.logo img');
+          if(logoImg){
+            if(!originalSrc){
+              originalSrc = logoImg.getAttribute('src') || '';
+            }
+            if(!hadOriginalAlt){
+              hadOriginalAlt = logoImg.hasAttribute('alt');
+              originalAlt = logoImg.getAttribute('alt') || '';
+            }
+          }
+        }
+        return logoImg;
+      }
+
+      function applyState(){
+        updatePending = false;
+        const img = ensureLogo();
+        if(!img || !originalSrc){
+          return;
+        }
+        if(pendingCount > 0){
+          if(img.getAttribute('src') !== LOADING_GIF_SRC){
+            img.setAttribute('src', LOADING_GIF_SRC);
+          }
+          img.setAttribute('alt', 'Loading…');
+        } else {
+          if(img.getAttribute('src') !== originalSrc){
+            img.setAttribute('src', originalSrc);
+          }
+          if(hadOriginalAlt){
+            img.setAttribute('alt', originalAlt);
+          } else {
+            img.removeAttribute('alt');
+          }
+        }
+      }
+
+      function scheduleUpdate(){
+        if(updatePending){
+          return;
+        }
+        updatePending = true;
+        if(typeof requestAnimationFrame === 'function'){
+          requestAnimationFrame(applyState);
+        } else {
+          setTimeout(applyState, 0);
+        }
+      }
+
+      function begin(){
+        pendingCount++;
+        scheduleUpdate();
+      }
+
+      function end(){
+        if(pendingCount > 0){
+          pendingCount--;
+        }
+        scheduleUpdate();
+      }
+
+      if(document.readyState === 'complete' || document.readyState === 'interactive'){
+        ensureLogo();
+        scheduleUpdate();
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          ensureLogo();
+          scheduleUpdate();
+        });
+      }
+
+      window.addEventListener('pageshow', () => {
+        ensureLogo();
+        scheduleUpdate();
+      });
+
+      const originalFetch = window.fetch;
+      if(typeof originalFetch === 'function'){
+        window.fetch = function(...args){
+          begin();
+          let finished = false;
+          const finalize = () => {
+            if(finished) return;
+            finished = true;
+            end();
+          };
+          try{
+            const response = originalFetch.apply(this, args);
+            Promise.resolve(response).then(finalize, finalize);
+            return response;
+          } catch(err){
+            finalize();
+            throw err;
+          }
+        };
+      }
+
+      if('XMLHttpRequest' in window && XMLHttpRequest.prototype){
+        const originalSend = XMLHttpRequest.prototype.send;
+        if(typeof originalSend === 'function'){
+          XMLHttpRequest.prototype.send = function(...args){
+            begin();
+            let finalized = false;
+            const finalize = () => {
+              if(finalized) return;
+              finalized = true;
+              this.removeEventListener('loadend', finalize);
+              end();
+            };
+            this.addEventListener('loadend', finalize);
+            try{
+              return originalSend.apply(this, args);
+            } catch(err){
+              finalize();
+              throw err;
+            }
+          };
+        }
+      }
+    })();
+  </script>
+
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Events Platform</title>
