@@ -4514,13 +4514,13 @@ img.thumb{
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
       <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
+      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
     </div>
   </header>
   
@@ -4774,6 +4774,9 @@ img.thumb{
         </div>
         </div>
         <div id="tab-forms" class="tab-panel">
+          <div class="formbuilder-container">
+            <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
+          </div>
           <style>
             #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:0;}
             #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
@@ -6556,19 +6559,16 @@ function makePosts(){
           totalBoardsWidth += gap * (boardsWidths.length - 1);
         }
         const adWidth = adBoard ? (adBoard.offsetWidth || 440) : 0;
-        let hideAds = small || document.body.classList.contains('mode-map') || document.body.classList.contains('hide-posts-ui') || window.innerWidth < 1920;
+        const shouldShowAds = adBoard && window.innerWidth >= 1900;
+        let hideAds = !shouldShowAds;
         let requiredWidth = totalBoardsWidth;
         if(filterPinned && filterWidth){
           requiredWidth += filterWidth;
         } else {
           filterWidth = 0;
         }
-        if(!hideAds && adWidth){
+        if(shouldShowAds && adWidth){
           requiredWidth += adWidth + gap;
-        }
-        if(requiredWidth > window.innerWidth && !hideAds && adWidth){
-          hideAds = true;
-          requiredWidth -= adWidth + gap;
         }
         const canAnchor = filterPinned && filterWidth && requiredWidth <= window.innerWidth;
         document.body.classList.toggle('filter-anchored', canAnchor);
@@ -6583,13 +6583,9 @@ function makePosts(){
           postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
         }
         document.body.classList.toggle('detail-open', !!anyOpenPost);
-        if(hideAds || !adBoard){
-          document.body.classList.add('hide-ads');
-        } else {
-          document.body.classList.remove('hide-ads');
-        }
         if(adBoard){
-          adBoard.setAttribute('aria-hidden', document.body.classList.contains('hide-ads') ? 'true' : 'false');
+          document.body.classList.toggle('hide-ads', hideAds);
+          adBoard.setAttribute('aria-hidden', hideAds ? 'true' : 'false');
         }
         updateModeToggle();
       }
@@ -6977,15 +6973,12 @@ function makePosts(){
         document.body.classList.remove('mode-map','mode-posts','hide-posts-ui');
         document.body.classList.add('mode-'+m);
         if(m==='map'){
-          document.body.classList.add('hide-ads');
           document.body.classList.remove('show-history');
           const recentsBoardEl = document.getElementById('recentsBoard');
           if(recentsBoardEl){
             recentsBoardEl.style.display = 'none';
             recentsBoardEl.setAttribute('aria-hidden','true');
           }
-        } else {
-          document.body.classList.remove('hide-ads');
         }
         adjustBoards();
         updateModeToggle();
