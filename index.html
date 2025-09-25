@@ -8030,10 +8030,12 @@ function makePosts(){
     }
 
     let addingPostSource = false;
-    async function addPostSource(){
+    function addPostSource(){
       if(!map || addingPostSource) return;
       addingPostSource = true;
-      try{
+
+      const finish = ()=>{ addingPostSource = false; };
+      const task = (async ()=>{
         const geojson = postsToGeoJSON(posts);
         const shouldCluster = posts.length > 1 && clusterRadius > 0;
         const existing = map.getSource('posts');
@@ -8597,11 +8599,15 @@ function makePosts(){
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
-      } catch (err) {
+      })();
+
+      return task.then((value)=>{
+        finish();
+        return value;
+      }, (err)=>{
         console.error('addPostSource failed', err);
-      } finally {
-        addingPostSource = false;
-      }
+        finish();
+      });
     }
     window.addPostSource = addPostSource;
     function renderLists(list){
