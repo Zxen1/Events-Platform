@@ -5390,6 +5390,13 @@ img.thumb{
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     let favToTop = false, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
+    function loadHistory(){
+      try {
+        return JSON.parse(localStorage.getItem('openHistoryV2') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
     let touchMarker = null;
@@ -8833,7 +8840,6 @@ function makePosts(){
     }
 
     // History board
-    function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
     function saveHistory(){ localStorage.setItem('openHistoryV2', JSON.stringify(viewHistory)); }
     function formatLastOpened(ts){
       if(!ts) return '';
