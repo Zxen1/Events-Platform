@@ -7654,6 +7654,7 @@ function makePosts(){
       {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
         ];
       const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
+      const cityZoomLevel = 12;
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
           accessToken: mapboxgl.accessToken,
@@ -7683,7 +7684,11 @@ function makePosts(){
         }
         geocoders.push(gc);
         if(idx===1) geocoder = gc;
-        const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
+        const geolocate = new mapboxgl.GeolocateControl({
+          positionOptions:{ enableHighAccuracy:true },
+          trackUserLocation:false,
+          fitBoundsOptions:{ maxZoom: cityZoomLevel }
+        });
         let geolocateLogoPending = 0;
         const startGeolocateLoading = () => {
           if(logoLoader && typeof logoLoader.begin === 'function' && geolocateLogoPending === 0){
@@ -7698,10 +7703,29 @@ function makePosts(){
           }
         };
         geolocate.on('trackuserlocationstart', () => { startGeolocateLoading(); });
-        geolocate.on('geolocate', ()=>{
+        geolocate.on('geolocate', (event)=>{
           stopGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
+          if(map && typeof map.easeTo === 'function' && event && event.coords){
+            let targetZoom = cityZoomLevel;
+            if(typeof map.getMaxZoom === 'function'){
+              try{
+                const maxZoom = map.getMaxZoom();
+                if(typeof maxZoom === 'number' && maxZoom < targetZoom){
+                  targetZoom = maxZoom;
+                }
+              }catch(err){}
+            }
+            const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
+            const needsZoomAdjust = typeof currentZoom !== 'number' || currentZoom > targetZoom + 0.05;
+            const center = [event.coords.longitude, event.coords.latitude];
+            if(needsZoomAdjust){
+              try{
+                map.easeTo({ center, zoom: targetZoom, duration: 800, essential: true });
+              }catch(err){}
+            }
+          }
         });
         geolocate.on('error', stopGeolocateLoading);
         geolocate.on('trackuserlocationend', stopGeolocateLoading);
@@ -7712,7 +7736,20 @@ function makePosts(){
           geoHolder.appendChild(controlEl);
           const geoButton = controlEl && controlEl.querySelector ? controlEl.querySelector('button') : null;
           if(geoButton && !geoButton.dataset.logoSpinBound){
-            geoButton.addEventListener('click', () => { startGeolocateLoading(); });
+            const triggerLoading = (ev) => {
+              if(ev && ev.type === 'keydown'){
+                const key = ev.key || ev.code;
+                if(key !== 'Enter' && key !== ' ' && key !== 'Space' && key !== 'Spacebar'){
+                  return;
+                }
+              }
+              startGeolocateLoading();
+            };
+            geoButton.addEventListener('pointerdown', triggerLoading, { passive: true });
+            geoButton.addEventListener('mousedown', triggerLoading, { passive: true });
+            geoButton.addEventListener('touchstart', triggerLoading, { passive: true });
+            geoButton.addEventListener('keydown', triggerLoading);
+            geoButton.addEventListener('click', triggerLoading);
             geoButton.dataset.logoSpinBound = 'true';
           }
         }
