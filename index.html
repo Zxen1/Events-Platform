@@ -7864,9 +7864,9 @@ function makePosts(){
           if(bVal) bVal.textContent = map.getBearing().toFixed(0);
         });
         const refreshMapView = () => {
+          updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
-          updatePostPanel();
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
