@@ -7174,16 +7174,38 @@ function makePosts(){
 
         target = originEl || container.querySelector(`[data-id="${id}"]`);
 
+        const pointerEvt = window.__lastPointerDown;
+        let pointerTarget = null;
+        if(pointerEvt && pointerEvt.target instanceof Element){
+          let consider = true;
+          if(typeof pointerEvt.timeStamp === 'number'){
+            const nowTs = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+            const evtTs = pointerEvt.timeStamp;
+            if(typeof evtTs === 'number'){
+              const diff = nowTs - evtTs;
+              if(Number.isFinite(diff) && (diff > 2000 || diff < -2000)){
+                consider = false;
+              }
+            }
+          }
+          if(consider){
+            pointerTarget = pointerEvt.target;
+          }
+        }
+        const pointerCard = pointerTarget ? pointerTarget.closest('.post-card') : null;
+        const pointerInsidePostBoard = pointerCard && container.contains(pointerCard);
+        const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
+        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsidePostBoard);
+
         if(!target){
           target = card(p, fromHistory ? false : true);
           placeOpenPost(target);
-        }
-        let targetAlignTop = null;
-        if(target && container){
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          if(containerRect && targetRect){
-            targetAlignTop = container.scrollTop + (targetRect.top - containerRect.top);
+        } else if(shouldAlignToTop && container.contains(target)){
+          const firstCard = container.querySelector('.open-post, .post-card');
+          if(firstCard && firstCard !== target){
+            container.insertBefore(target, firstCard);
+          } else if(!firstCard){
+            container.prepend(target);
           }
         }
         const resCard = resultsEl ? resultsEl.querySelector(`[data-id="${id}"]`) : null;
@@ -7220,10 +7242,18 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(fromMap){
-          if(typeof detail.scrollIntoView === 'function'){
-            requestAnimationFrame(() => { detail.scrollIntoView({behavior:'smooth', block:'start'}); });
-          }
+        if(shouldAlignToTop && container && container.contains(detail)){
+          requestAnimationFrame(() => {
+            const containerRect = container.getBoundingClientRect();
+            const detailRect = detail.getBoundingClientRect();
+            if(!containerRect || !detailRect) return;
+            const topTarget = container.scrollTop + (detailRect.top - containerRect.top);
+            if(typeof container.scrollTo === 'function'){
+              container.scrollTo({ top: Math.max(0, topTarget), behavior: 'smooth' });
+            } else {
+              container.scrollTop = Math.max(0, topTarget);
+            }
+          });
         }
 
         // Update history on open (keep newest-first)
@@ -7571,6 +7601,7 @@ function makePosts(){
       {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
       {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
         ];
+      const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
       sets.forEach((sel, idx)=>{
         const gc = new MapboxGeocoder({
           accessToken: mapboxgl.accessToken,
@@ -7601,13 +7632,37 @@ function makePosts(){
         geocoders.push(gc);
         if(idx===1) geocoder = gc;
         const geolocate = new mapboxgl.GeolocateControl({ positionOptions:{ enableHighAccuracy:true }, trackUserLocation:false });
+        let geolocateLogoPending = 0;
+        const startGeolocateLoading = () => {
+          if(logoLoader && typeof logoLoader.begin === 'function' && geolocateLogoPending === 0){
+            try{ logoLoader.begin(); }catch(err){}
+            geolocateLogoPending = 1;
+          }
+        };
+        const stopGeolocateLoading = () => {
+          if(geolocateLogoPending > 0 && logoLoader && typeof logoLoader.end === 'function'){
+            geolocateLogoPending = 0;
+            try{ logoLoader.end(); }catch(err){}
+          }
+        };
+        geolocate.on('trackuserlocationstart', () => { startGeolocateLoading(); });
         geolocate.on('geolocate', ()=>{
+          stopGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
         });
+        geolocate.on('error', stopGeolocateLoading);
+        geolocate.on('trackuserlocationend', stopGeolocateLoading);
+        geolocate.on('outofmaxbounds', stopGeolocateLoading);
         const geoHolder = document.querySelector(sel.locate);
         if(geoHolder){
-          geoHolder.appendChild(geolocate.onAdd(map));
+          const controlEl = geolocate.onAdd(map);
+          geoHolder.appendChild(controlEl);
+          const geoButton = controlEl && controlEl.querySelector ? controlEl.querySelector('button') : null;
+          if(geoButton && !geoButton.dataset.logoSpinBound){
+            geoButton.addEventListener('click', () => { startGeolocateLoading(); });
+            geoButton.dataset.logoSpinBound = 'true';
+          }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         if (nav._onDown && nav._onMove) {
@@ -11044,14 +11099,22 @@ function initPostLayout(board){
   if(thumbRow && !thumbRow._imageModalListener){
     thumbRow.addEventListener('dblclick', e => {
       const img = e.target.closest('img');
-      if(img) openImageModal(img.src);
+      if(img){
+        e.preventDefault();
+        e.stopPropagation();
+        openImageModal(img.src);
+      }
     });
     thumbRow._imageModalListener = true;
   }
   if(selectedImageBox && !selectedImageBox._imageModalListener){
-    selectedImageBox.addEventListener('click', () => {
+    selectedImageBox.addEventListener('click', evt => {
       const img = selectedImageBox.querySelector('img');
-      if(img) openImageModal(img.src);
+      if(img){
+        if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
+        if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        openImageModal(img.src);
+      }
     });
     selectedImageBox._imageModalListener = true;
   }
