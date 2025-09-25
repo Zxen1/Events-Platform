@@ -5681,8 +5681,7 @@ function buildClusterListHTML(items){
       if(!mapInstance) return () => Promise.resolve(false);
       const KNOWN = [
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
-        'live-gigs','for-sale','education-centres','tutors',
-        'multi-venue-marker'
+        'live-gigs','for-sale','education-centres','tutors'
       ];
       const BASES = [
         'assets/icons/subcategories/',
@@ -5778,11 +5777,8 @@ function buildClusterListHTML(items){
       return addIcon;
     }
 
-    const MULTI_VENUE_MARKER_ID = 'multi-venue-marker';
-    const MULTI_VENUE_MARKER_URL = 'assets/icons-40/multi-category-icon-blue-40.png';
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
-    subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
 
     function ensureSvgDimensions(svg){
       try{
@@ -7918,7 +7914,7 @@ function makePosts(){
       map.on('mousemove', (e)=>{
         if(!map) return;
         if(e && e.originalEvent && e.originalEvent.buttons) return;
-        const layers = ['clusters','unclustered'].filter(id => map.getLayer(id));
+        const layers = ['clusters','multi-venue-count','multi-venues','unclustered'].filter(id => map.getLayer(id));
         if(!layers.length) return;
         const feats = map.queryRenderedFeatures(e.point, { layers });
         map.getCanvas().style.cursor = feats.length ? 'pointer' : '';
@@ -8070,7 +8066,8 @@ function makePosts(){
           .map(p => {
             const baseSub = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const key = venueKey(p.lng, p.lat);
-            const isMultiVenue = (coordCounts.get(key) || 0) > 1;
+            const countAtVenue = coordCounts.get(key) || 0;
+            const isMultiVenue = countAtVenue > 1;
             return {
               type:'Feature',
               properties:{
@@ -8078,9 +8075,10 @@ function makePosts(){
                 title:p.title,
                 city:p.city,
                 cat:p.category,
-                sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
+                sub: baseSub,
                 baseSub,
-                multi:isMultiVenue ? 1 : 0
+                multi:isMultiVenue ? 1 : 0,
+                multiCount: countAtVenue
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             };
@@ -8099,7 +8097,7 @@ function makePosts(){
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
       if(sourceNeedsRebuild){
-        ['cluster-count','clusters','unclustered','posts-heat','hover-ring','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+        ['cluster-count','clusters','multi-venue-count','multi-venues','unclustered','posts-heat','hover-ring','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       } else if(existing){
@@ -8201,11 +8199,15 @@ function makePosts(){
         lastClusterSvgHash = '';
       }
 
+      const singleVenueFilter = ['all',['==',['get','multi'],0],['!',['has','point_count']]];
+      const multiVenueFilter = ['all',['==',['get','multi'],1],['!',['has','point_count']]];
+
       if(!map.getLayer('unclustered')){
         map.addLayer({
           id:'unclustered',
           type:'symbol',
           source:'posts',
+          filter: singleVenueFilter,
           layout:{
             'icon-image':['get','sub'],
             'icon-allow-overlap': true,
@@ -8225,12 +8227,59 @@ function makePosts(){
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key',1100); }catch(e){}
-      if(shouldCluster){
-        try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
-      } else {
-        try{ map.setFilter('unclustered', null); }catch(e){}
+      try{ map.setFilter('unclustered', singleVenueFilter); }catch(e){}
+
+      const multiCirclePaint = {
+        'circle-color': ['step',['get','multiCount'], '#24c6dc', 5, '#514a9d', 10, '#f7797d', 25, '#fbd786'],
+        'circle-radius': ['step',['get','multiCount'], 16, 5, 20, 10, 24, 25, 28],
+        'circle-opacity': 0.85,
+        'circle-stroke-color':'#0b1623',
+        'circle-stroke-width':1
+      };
+
+      if(!map.getLayer('multi-venues')){
+        map.addLayer({
+          id:'multi-venues',
+          type:'circle',
+          source:'posts',
+          filter: multiVenueFilter,
+          paint: multiCirclePaint
+        });
       }
-      ['hover-fill',SELECTED_RING_LAYER,'hover-ring','clusters','cluster-count','unclustered'].forEach(id=>{
+      try{ map.setPaintProperty('multi-venues','circle-color', multiCirclePaint['circle-color']); }catch(e){}
+      try{ map.setPaintProperty('multi-venues','circle-radius', multiCirclePaint['circle-radius']); }catch(e){}
+      try{ map.setPaintProperty('multi-venues','circle-opacity', 0.85); }catch(e){}
+      try{ map.setPaintProperty('multi-venues','circle-stroke-color','#0b1623'); }catch(e){}
+      try{ map.setPaintProperty('multi-venues','circle-stroke-width',1); }catch(e){}
+      try{ map.setFilter('multi-venues', multiVenueFilter); }catch(e){}
+
+      if(!map.getLayer('multi-venue-count')){
+        map.addLayer({
+          id:'multi-venue-count',
+          type:'symbol',
+          source:'posts',
+          filter: multiVenueFilter,
+          layout:{
+            'text-field':['to-string',['get','multiCount']],
+            'text-size':12,
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+            'symbol-z-order': 'viewport-y',
+            'symbol-sort-key': 1101
+          },
+          paint:{'text-color':'#fff'}
+        });
+      }
+      try{ map.setLayoutProperty('multi-venue-count','text-field',['to-string',['get','multiCount']]); }catch(e){}
+      try{ map.setLayoutProperty('multi-venue-count','text-size',12); }catch(e){}
+      try{ map.setLayoutProperty('multi-venue-count','text-allow-overlap', true); }catch(e){}
+      try{ map.setLayoutProperty('multi-venue-count','text-ignore-placement', true); }catch(e){}
+      try{ map.setLayoutProperty('multi-venue-count','symbol-z-order','viewport-y'); }catch(e){}
+      try{ map.setLayoutProperty('multi-venue-count','symbol-sort-key',1101); }catch(e){}
+      try{ map.setPaintProperty('multi-venue-count','text-color','#fff'); }catch(e){}
+      try{ map.setFilter('multi-venue-count', multiVenueFilter); }catch(e){}
+
+      ['hover-fill',SELECTED_RING_LAYER,'hover-ring','clusters','cluster-count','multi-venues','multi-venue-count','unclustered'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
@@ -8239,6 +8288,8 @@ function makePosts(){
         ['clusters','circle-opacity-transition'],
         ['clusters','icon-opacity-transition'],
         ['cluster-count','text-opacity-transition'],
+        ['multi-venues','circle-opacity-transition'],
+        ['multi-venue-count','text-opacity-transition'],
         ['unclustered','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
@@ -8259,7 +8310,7 @@ function makePosts(){
       });
       window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
       // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
-      map.on('contextmenu','unclustered', (e)=>{
+      const handleVenueContextMenu = (e)=>{
         const f = e.features && e.features[0]; if(!f) return;
         if(e.preventDefault) e.preventDefault();
         const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
@@ -8296,7 +8347,8 @@ function makePosts(){
         }, { capture: true }));
         const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
         lockMap(true); lastListOpenAt = Date.now();
-      });
+      };
+      ['unclustered','multi-venues','multi-venue-count'].forEach(layer => map.on('contextmenu', layer, handleVenueContextMenu));
 
       map.on('click','clusters', async (e)=>{
         stopSpin();
@@ -8338,7 +8390,7 @@ function makePosts(){
         }
       });
       
-      map.on('click','unclustered', (e)=>{
+      const handleVenueClick = (e)=>{
         stopSpin();
         const f = e.features && e.features[0]; if(!f) return;
         const coords = f.geometry && f.geometry.coordinates;
@@ -8396,7 +8448,7 @@ function makePosts(){
                 }, {capture:true});
               }
             })();
- lastListOpenAt = Date.now();
+            lastListOpenAt = Date.now();
             return;
           }
         }
@@ -8448,7 +8500,8 @@ function makePosts(){
             });
           });
         }
-      });
+      };
+      ['unclustered','multi-venues','multi-venue-count'].forEach(layer => map.on('click', layer, handleVenueClick));
 
       map.on('click', e=>{
         const feats = map.queryRenderedFeatures(e.point);
@@ -8480,7 +8533,7 @@ function makePosts(){
 
       // Cursor + popup for unclustered points
       
-      map.on('mouseenter','unclustered', (e)=>{
+      const handleVenueMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
         const id = f.properties.id; hoverId = id;
@@ -8490,42 +8543,42 @@ function makePosts(){
         if(multi && multi.length>1){
           openListPopupAtPoint(e.point, buildClusterListHTML(multi));
 
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-          
-        (function(){
-          const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__root){
-            __root.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
-              if(row){
-                var pid = row.getAttribute('data-id');
-                if(pid){
-                  callWhenDefined('openPost', (fn)=>{
-                    requestAnimationFrame(() => {
-                      try{
-                        touchMarker = null;
-                        if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-                        stopSpin();
-                        fn(pid, false, true);
-                      }catch(err){ console.error(err); }
+          (function(){
+            function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+            const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(_root){
+              ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            }
+          })();
+
+
+          (function(){
+            const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(__root){
+              __root.addEventListener('click', function(ev){
+                ev.stopPropagation();
+                ev.preventDefault();
+                var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
+                if(row){
+                  var pid = row.getAttribute('data-id');
+                  if(pid){
+                    callWhenDefined('openPost', (fn)=>{
+                      requestAnimationFrame(() => {
+                        try{
+                          touchMarker = null;
+                          if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+                          stopSpin();
+                          fn(pid, false, true);
+                        }catch(err){ console.error(err); }
+                      });
                     });
-                  });
-                  return;
+                    return;
+                  }
                 }
-              }
-            }, {capture:true});
-          }
-        })();
-// keep the hover popup alive when the pointer enters it
+              }, {capture:true});
+            }
+          })();
+          // keep the hover popup alive when the pointer enters it
           const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_el){
             _el.addEventListener('mouseenter', ()=>{ window.__overCard = true; });
@@ -8544,44 +8597,46 @@ function makePosts(){
             .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
           registerPopup(hoverPopup);
 
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-        
-        (function(){
-          const __el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__el){
-            __el.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    fn(id, false, true);
-                  }catch(e){ console.warn('openPost id missing', e); }
+          (function(){
+            function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+            const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(_root){
+              ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            }
+          })();
+
+
+          (function(){
+            const __el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(__el){
+              __el.addEventListener('click', function(ev){
+                ev.stopPropagation();
+                ev.preventDefault();
+                callWhenDefined('openPost', (fn)=>{
+                  requestAnimationFrame(() => {
+                    try{
+                      touchMarker = null;
+                      stopSpin();
+                      fn(id, false, true);
+                    }catch(e){ console.warn('openPost id missing', e); }
+                  });
                 });
-              });
-            }, {capture:true});
-          }
-        })();
-}
-      });
-    
-      map.on('mousemove','unclustered', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
-      
-      map.on('mouseleave','unclustered', ()=>{
+              }, {capture:true});
+            }
+          })();
+      };
+      const handleVenueMouseMove = (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); };
+      const handleVenueMouseLeave = ()=>{
         map.getCanvas().style.cursor = '';
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
         hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
+      };
+      ['unclustered','multi-venues','multi-venue-count'].forEach(layer => {
+        map.on('mouseenter', layer, handleVenueMouseEnter);
+        map.on('mousemove', layer, handleVenueMouseMove);
+        map.on('mouseleave', layer, handleVenueMouseLeave);
       });
 
 
