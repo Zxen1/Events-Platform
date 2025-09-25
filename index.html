@@ -7016,20 +7016,6 @@ function makePosts(){
 
         await nextFrame();
 
-        if(!fromMap && container){
-          let targetTop = Number.isFinite(targetAlignTop) ? targetAlignTop : detail.offsetTop;
-          if(!Number.isFinite(targetTop)) targetTop = detail.offsetTop;
-          if(!Number.isFinite(targetTop)) targetTop = 0;
-          if(targetTop < 0) targetTop = 0;
-          requestAnimationFrame(() => {
-            if(typeof container.scrollTo === 'function'){
-              container.scrollTo({top: targetTop, behavior:'auto'});
-            } else {
-              container.scrollTop = targetTop;
-            }
-          });
-        }
-
         const header = detail.querySelector('.post-header');
         if(header){
           const h = header.offsetHeight;
