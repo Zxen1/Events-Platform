@@ -1769,7 +1769,8 @@ button[aria-expanded="true"] .results-arrow{
   flex:1;
 }
 
-.filter-category-menu .filter-category-trigger{
+.filter-category-menu .filter-category-trigger,
+#tab-forms .formbuilder-container .form-category-menu-button{
   height:36px;
   border-radius:8px;
   padding:0 12px;
@@ -1785,6 +1786,28 @@ button[aria-expanded="true"] .results-arrow{
   color: var(--button-text);
   font: inherit;
   margin: 0;
+}
+
+#tab-forms .formbuilder-container #Add-Category-Menu-Button{
+  width:100%;
+  height:36px;
+  border-radius:8px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  cursor:pointer;
+  font:inherit;
+  margin-bottom:8px;
+}
+
+#tab-forms .formbuilder-container #Add-Category-Menu-Button:focus{
+  outline:2px solid var(--border);
+  outline-offset:2px;
+}
+
+#tab-forms .formbuilder-container .filter-category-menu.dragging,
+#tab-forms .formbuilder-container .subcategory-option.dragging{
+  opacity:0.6;
 }
 
 .filter-category-menu .category-logo{
@@ -4984,6 +5007,7 @@ img.thumb{
         </div>
         <div id="tab-forms" class="tab-panel">
           <div class="formbuilder-container">
+            <button type="button" id="Add-Category-Menu-Button">Add Category</button>
             <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
           </div>
           <style>
@@ -6262,81 +6286,6 @@ function makePosts(){
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
-    const formbuilderCats = document.getElementById('formbuilderCats');
-    const syncFormbuilderCats = ()=>{
-      if(!formbuilderCats || !catsEl) return;
-      const frag = document.createDocumentFragment();
-      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        const clone = menu.cloneNode(true);
-        const trigger = clone.querySelector('.filter-category-trigger');
-        const optionsMenu = clone.querySelector('.options-menu');
-        if(optionsMenu){
-          const originalId = optionsMenu.id || '';
-          const cloneId = originalId ? `${originalId}-formbuilder` : '';
-          if(cloneId){
-            optionsMenu.id = cloneId;
-            if(trigger){
-              trigger.setAttribute('aria-controls', cloneId);
-            }
-          }
-        }
-        if(trigger && optionsMenu){
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          optionsMenu.hidden = !isExpanded;
-          trigger.addEventListener('click', ()=>{
-            if(trigger.getAttribute('aria-disabled') === 'true') return;
-            const open = clone.getAttribute('aria-expanded') === 'true';
-            const next = !open;
-            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
-            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
-            optionsMenu.hidden = !next;
-          });
-        }
-        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
-        const syncCatState = checked =>{
-          clone.classList.toggle('cat-off', !checked);
-          if(trigger){
-            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          }
-          optionButtons.forEach(btn=>{
-            btn.disabled = !checked;
-            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          });
-          if(!checked && optionsMenu){
-            optionsMenu.hidden = true;
-            clone.setAttribute('aria-expanded', 'false');
-            if(trigger){
-              trigger.setAttribute('aria-expanded', 'false');
-            }
-          }
-        };
-        const catSwitchInput = clone.querySelector('.cat-switch input');
-        if(catSwitchInput){
-          const initialActive = !clone.classList.contains('cat-off');
-          catSwitchInput.checked = initialActive;
-          syncCatState(initialActive);
-          catSwitchInput.addEventListener('change', ()=>{
-            syncCatState(catSwitchInput.checked);
-          });
-        } else {
-          syncCatState(!clone.classList.contains('cat-off'));
-        }
-        optionButtons.forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            if(btn.disabled) return;
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            btn.classList.toggle('on', next);
-          });
-        });
-        frag.appendChild(clone);
-      });
-      formbuilderCats.innerHTML = '';
-      formbuilderCats.appendChild(frag);
-    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -6535,14 +6484,8 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      syncFormbuilderCats();
-      if(formbuilderCats){
-        const observer = new MutationObserver(()=> syncFormbuilderCats());
-        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
-      }
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
@@ -10881,6 +10824,254 @@ document.addEventListener('pointerdown', (e) => {
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded) addPostSource();
+})();
+</script>
+<script>
+(function(){
+  function newSubFactory(){
+    let subIdCounter = 0;
+    return function(label){
+      return { id: `form-sub-${subIdCounter++}`, label: label || 'Option' };
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const builderContainer = document.getElementById('formbuilderCats');
+    const addMenuButton = document.getElementById('Add-Category-Menu-Button');
+    if(!builderContainer || !addMenuButton) return;
+
+    let categoryIdCounter = 0;
+    const makeSub = newSubFactory();
+
+    const createCategoryState = (cat = {}) => {
+      const rawSubs = Array.isArray(cat.subs) && cat.subs.length ? cat.subs : ['New Option'];
+      return {
+        id: `form-cat-${categoryIdCounter++}`,
+        name: cat.name || `Category ${categoryIdCounter}`,
+        subs: rawSubs.map(label => makeSub(label)),
+        open: !!cat.open
+      };
+    };
+
+    let builderState = (Array.isArray(window.categories) ? window.categories : []).map(cat => createCategoryState({
+      name: cat && typeof cat.name === 'string' ? cat.name : undefined,
+      subs: cat && Array.isArray(cat.subs) ? cat.subs.slice() : []
+    }));
+
+    if(!builderState.length){
+      const seed = createCategoryState({ name: 'New Category', subs: ['New Option'] });
+      seed.open = true;
+      builderState.push(seed);
+    }
+
+    let draggingCategoryId = null;
+    let draggingSub = null;
+
+    function isBefore(event, element){
+      const rect = element.getBoundingClientRect();
+      return (event.clientY - rect.top) < rect.height / 2;
+    }
+
+    function reorderCategory(movingId, insertIndex){
+      const fromIndex = builderState.findIndex(cat => cat.id === movingId);
+      if(fromIndex === -1) return;
+      let targetIndex = insertIndex;
+      if(targetIndex > builderState.length) targetIndex = builderState.length;
+      if(fromIndex < targetIndex) targetIndex -= 1;
+      if(fromIndex === targetIndex) return;
+      const [item] = builderState.splice(fromIndex, 1);
+      builderState.splice(targetIndex, 0, item);
+      draggingCategoryId = null;
+      render(item.id);
+    }
+
+    function reorderSub(catId, subId, insertIndex){
+      const cat = builderState.find(c => c.id === catId);
+      if(!cat) return;
+      const fromIndex = cat.subs.findIndex(s => s.id === subId);
+      if(fromIndex === -1) return;
+      let targetIndex = insertIndex;
+      if(targetIndex > cat.subs.length) targetIndex = cat.subs.length;
+      if(fromIndex < targetIndex) targetIndex -= 1;
+      if(fromIndex === targetIndex) return;
+      const [item] = cat.subs.splice(fromIndex, 1);
+      cat.subs.splice(targetIndex, 0, item);
+      draggingSub = null;
+      render(cat.id);
+    }
+
+    function render(focusCatId){
+      builderContainer.innerHTML = '';
+      builderState.forEach((cat, index) => {
+        const menu = document.createElement('div');
+        menu.className = 'filter-category-menu';
+        menu.dataset.index = String(index);
+        menu.dataset.categoryId = cat.id;
+        menu.setAttribute('role', 'group');
+        menu.setAttribute('aria-expanded', cat.open ? 'true' : 'false');
+        menu.draggable = true;
+
+        const header = document.createElement('div');
+        header.className = 'filter-category-header';
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+
+        const triggerButton = document.createElement('button');
+        triggerButton.type = 'button';
+        triggerButton.className = 'form-category-menu-button';
+        triggerButton.setAttribute('aria-haspopup', 'true');
+        triggerButton.setAttribute('aria-expanded', cat.open ? 'true' : 'false');
+
+        const logo = document.createElement('span');
+        logo.className = 'category-logo';
+        const iconPrefix = (window.ICON_BASE || {})[cat.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 24;
+          img.height = 24;
+          img.alt = '';
+          logo.appendChild(img);
+        } else {
+          logo.textContent = cat.name ? cat.name.charAt(0) : '';
+        }
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = cat.name || 'Category';
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+
+        triggerButton.append(logo, label, arrow);
+        triggerWrap.append(triggerButton);
+        header.append(triggerWrap);
+        menu.append(header);
+
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.hidden = !cat.open;
+        optionsMenu.dataset.categoryId = cat.id;
+
+        cat.subs.forEach((sub, subIndex) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'subcategory-option';
+          btn.draggable = true;
+          btn.dataset.categoryId = cat.id;
+          btn.dataset.subId = sub.id;
+          btn.dataset.subIndex = String(subIndex);
+          btn.setAttribute('aria-pressed', 'false');
+
+          const subLogo = document.createElement('span');
+          subLogo.className = 'subcategory-logo';
+          const subIconHtml = (window.subcategoryIcons || {})[sub.label];
+          if(subIconHtml){
+            subLogo.innerHTML = subIconHtml;
+          } else {
+            subLogo.textContent = sub.label ? sub.label.charAt(0) : '';
+          }
+
+          const subLabel = document.createElement('span');
+          subLabel.className = 'subcategory-label';
+          subLabel.textContent = sub.label || 'Option';
+
+          btn.append(subLogo, subLabel);
+
+          btn.addEventListener('dragstart', e => {
+            draggingSub = { catId: cat.id, subId: sub.id };
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', sub.id);
+            btn.classList.add('dragging');
+          });
+          btn.addEventListener('dragend', () => {
+            draggingSub = null;
+            btn.classList.remove('dragging');
+          });
+          btn.addEventListener('dragover', e => {
+            if(!draggingSub || draggingSub.catId !== cat.id || draggingSub.subId === sub.id) return;
+            e.preventDefault();
+          });
+          btn.addEventListener('drop', e => {
+            if(!draggingSub || draggingSub.catId !== cat.id || draggingSub.subId === sub.id) return;
+            e.preventDefault();
+            const placeBefore = isBefore(e, btn);
+            const insertIndex = placeBefore ? subIndex : subIndex + 1;
+            reorderSub(cat.id, draggingSub.subId, insertIndex);
+          });
+
+          optionsMenu.appendChild(btn);
+        });
+
+        optionsMenu.addEventListener('dragover', e => {
+          if(draggingSub && draggingSub.catId === cat.id) {
+            e.preventDefault();
+          }
+        });
+        optionsMenu.addEventListener('drop', e => {
+          if(!draggingSub || draggingSub.catId !== cat.id) return;
+          e.preventDefault();
+          reorderSub(cat.id, draggingSub.subId, cat.subs.length);
+        });
+
+        menu.append(optionsMenu);
+
+        triggerButton.addEventListener('click', () => {
+          cat.open = !cat.open;
+          render(cat.id);
+        });
+
+        menu.addEventListener('dragstart', e => {
+          draggingCategoryId = cat.id;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', cat.id);
+          menu.classList.add('dragging');
+        });
+        menu.addEventListener('dragend', () => {
+          draggingCategoryId = null;
+          menu.classList.remove('dragging');
+        });
+        menu.addEventListener('dragover', e => {
+          if(!draggingCategoryId || draggingCategoryId === cat.id) return;
+          e.preventDefault();
+        });
+        menu.addEventListener('drop', e => {
+          if(!draggingCategoryId || draggingCategoryId === cat.id) return;
+          e.preventDefault();
+          const placeBefore = isBefore(e, menu);
+          const insertIndex = placeBefore ? index : index + 1;
+          reorderCategory(draggingCategoryId, insertIndex);
+        });
+
+        builderContainer.appendChild(menu);
+
+        if(focusCatId && focusCatId === cat.id){
+          try{ triggerButton.focus({ preventScroll: true }); }
+          catch(err){ triggerButton.focus(); }
+        }
+      });
+    }
+
+    builderContainer.addEventListener('dragover', e => {
+      if(draggingCategoryId){
+        e.preventDefault();
+      }
+    });
+    builderContainer.addEventListener('drop', e => {
+      if(!draggingCategoryId) return;
+      e.preventDefault();
+      reorderCategory(draggingCategoryId, builderState.length);
+    });
+
+    addMenuButton.addEventListener('click', () => {
+      const next = createCategoryState({ name: `Category ${builderState.length + 1}`, subs: ['New Option'] });
+      next.open = true;
+      builderState.push(next);
+      render(next.id);
+    });
+
+    render();
+  });
 })();
 </script>
 <script>
