@@ -8035,6 +8035,9 @@ function makePosts(){
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
+        // keep overlays on top so the selected ring is visible
+        ['hover-fill', (typeof SELECTED_RING_LAYER==='string' ? SELECTED_RING_LAYER : 'selected-ring'), 'hover-ring']
+          .forEach(id => { if (map.getLayer(id)) try { map.moveLayer(id); } catch (_) {} });
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
