@@ -9377,11 +9377,17 @@ function openPostModal(id){
       });
     }
     function catMatch(p){
-      if(selection.cats.size===0 && selection.subs.size===0) return true;
-      const cOk = selection.cats.size===0 || selection.cats.has(p.category);
+      const haveCategoryControllers = Object.keys(categoryControllers).length > 0;
+      if(!haveCategoryControllers){
+        return true;
+      }
+      if(selection.cats.size===0){
+        return false;
+      }
+      const cOk = selection.cats.has(p.category);
       if(!cOk) return false;
       if(selection.subs.size===0){
-        return selection.cats.size===0;
+        return false;
       }
       return selection.subs.has(p.category+'::'+p.subcategory);
     }
