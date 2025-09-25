@@ -5597,14 +5597,15 @@ img.thumb{
     function updateSelectedMarkerRing(){
       if(!map || typeof map.getLayer !== 'function') return;
       if(!map.getLayer(SELECTED_RING_LAYER)) return;
-      const hasSelection = !!activePostId;
+      const hasSelection = activePostId !== null && activePostId !== undefined && activePostId !== '';
       let filter;
       if(hasSelection){
+        const idFilter = ['==', ['to-string', ['get','id']], String(activePostId)];
         filter = selectedVenueKey
-          ? ['all', ['==',['get','id'], activePostId], ['==',['get','venueKey'], selectedVenueKey]]
-          : ['==',['get','id'], activePostId];
+          ? ['all', idFilter, ['==',['get','venueKey'], selectedVenueKey]]
+          : idFilter;
       } else {
-        filter = ['==',['get','id'],'__none__'];
+        filter = ['==',['to-string',['get','id']],'__none__'];
       }
       try{ map.setFilter(SELECTED_RING_LAYER, filter); }catch(e){}
       try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 0.95 : 0); }catch(e){}
