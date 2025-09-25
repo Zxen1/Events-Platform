@@ -7767,6 +7767,14 @@ function makePosts(){
             try{ logoLoader.end(); }catch(err){}
           }
         };
+        if(geolocate && typeof geolocate.trigger === 'function' && !geolocate.__logoLoadingWrapped){
+          const originalTrigger = geolocate.trigger.bind(geolocate);
+          geolocate.trigger = function(...args){
+            try{ startGeolocateLoading(); }catch(err){}
+            return originalTrigger(...args);
+          };
+          geolocate.__logoLoadingWrapped = true;
+        }
         geolocate.on('trackuserlocationstart', () => { startGeolocateLoading(); });
         geolocate.on('geolocate', (event)=>{
           stopGeolocateLoading();
