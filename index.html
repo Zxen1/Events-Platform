@@ -5823,6 +5823,14 @@ function makePosts(){
 
     let postsLoaded = window.postsLoaded || false;
     window.postsLoaded = postsLoaded;
+    let waitForInitialZoom = window.waitForInitialZoom ?? true;
+    let initialZoomStarted = false;
+    let postLoadRequested = false;
+    window.waitForInitialZoom = waitForInitialZoom;
+    if(postsLoaded){
+      waitForInitialZoom = false;
+      window.waitForInitialZoom = waitForInitialZoom;
+    }
     function loadPosts(){
       if(postsLoaded) return;
       if(spinning){
@@ -5838,12 +5846,18 @@ function makePosts(){
     }
 
     function checkLoadPosts(){
+      if(waitForInitialZoom){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
       if(!map) return;
       if(spinning){
         if(!postsLoaded) pendingPostLoad = true;
         hideResultIndicators();
         return;
       }
+      postLoadRequested = false;
       if(!postsLoaded) loadPosts();
       if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
       applyFilters();
@@ -6829,32 +6843,16 @@ function makePosts(){
 
         if(!fromMap && container){
           let targetTop = Number.isFinite(targetAlignTop) ? targetAlignTop : detail.offsetTop;
-          if(!Number.isFinite(targetTop)){
-            targetTop = detail.offsetTop;
-          }
-          if(!Number.isFinite(targetTop)){
-            targetTop = 0;
-          }
-          if(!Number.isFinite(targetAlignTop) && typeof window.getComputedStyle === 'function'){
-            const detailStyle = getComputedStyle(detail);
-            if(detailStyle){
-              const marginTop = parseFloat(detailStyle.marginTop);
-              if(Number.isFinite(marginTop)){
-                targetTop -= marginTop;
-              }
+          if(!Number.isFinite(targetTop)) targetTop = detail.offsetTop;
+          if(!Number.isFinite(targetTop)) targetTop = 0;
+          if(targetTop < 0) targetTop = 0;
+          requestAnimationFrame(() => {
+            if(typeof container.scrollTo === 'function'){
+              container.scrollTo({top: targetTop, behavior:'auto'});
+            } else {
+              container.scrollTop = targetTop;
             }
-          }
-          if(!Number.isFinite(targetTop)){
-            targetTop = detail.offsetTop;
-          }
-          if(targetTop < 0){
-            targetTop = 0;
-          }
-          if(typeof container.scrollTo === 'function'){
-            requestAnimationFrame(() => { container.scrollTo({top:targetTop, behavior:'smooth'}); });
-          } else {
-            requestAnimationFrame(() => { container.scrollTop = targetTop; });
-          }
+          });
         }
 
         const header = detail.querySelector('.post-header');
@@ -7308,7 +7306,31 @@ function makePosts(){
           }
         });
         ensureMapIcon = attachIconLoader(map);
-      map.on('zoomend', checkLoadPosts);
+      map.on('zoomstart', ()=>{
+        if(waitForInitialZoom){
+          initialZoomStarted = true;
+        }
+      });
+      map.on('zoomend', (e)=>{
+        if(waitForInitialZoom){
+          if(initialZoomStarted){
+            waitForInitialZoom = false;
+            window.waitForInitialZoom = waitForInitialZoom;
+            initialZoomStarted = false;
+            requestAnimationFrame(checkLoadPosts);
+          }
+          return;
+        }
+        checkLoadPosts();
+      });
+      map.on('mousemove', (e)=>{
+        if(!map) return;
+        if(e && e.originalEvent && e.originalEvent.buttons) return;
+        const layers = ['clusters','unclustered'].filter(id => map.getLayer(id));
+        if(!layers.length) return;
+        const feats = map.queryRenderedFeatures(e.point, { layers });
+        map.getCanvas().style.cursor = feats.length ? 'pointer' : '';
+      });
       addControls();
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
@@ -7612,6 +7634,16 @@ function makePosts(){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
+      [
+        ['clusters','circle-opacity-transition'],
+        ['clusters','icon-opacity-transition'],
+        ['cluster-count','text-opacity-transition'],
+        ['unclustered','icon-opacity-transition']
+      ].forEach(([layer, prop])=>{
+        if(map.getLayer(layer)){
+          try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
+        }
+      });
       // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
       // Close list on outside click or ESC
       map.on('click', (e)=>{
@@ -7666,8 +7698,12 @@ function makePosts(){
 
       map.on('click','clusters', async (e)=>{
         stopSpin();
-        const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
-        const clusterId = features[0].properties.cluster_id;
+        if(e && e.preventDefault) e.preventDefault();
+        const features = (e && e.features && e.features.length) ? e.features : map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+        if(!features.length) return;
+        const clusterProps = features[0].properties || {};
+        const clusterId = clusterProps.cluster_id;
+        if(typeof clusterId !== 'number' && typeof clusterId !== 'string') return;
         const leaves = await getClusterLeavesAll('posts', clusterId);
         if(!leaves.length) return;
         const bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
