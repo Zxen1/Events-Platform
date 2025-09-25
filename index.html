@@ -5710,8 +5710,8 @@ function buildClusterListHTML(items){
         "What's On": "whats-on-category-icon",
         "Opportunities": "opportunities-category-icon",
         "Learning": "learning-category-icon",
-        "Buy and Sell": "Buy-and-sell-category-icon",
-        "For Hire": "For-hire-category-icon"
+        "Buy and Sell": "buy-and-sell-category-icon",
+        "For Hire": "for-hire-category-icon"
       };
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
@@ -5729,6 +5729,8 @@ function buildClusterListHTML(items){
       const BASES = [
         'assets/icons/subcategories/',
         'assets/icons/',
+        'assets/icons-40/',
+        'assets/icons-20/',
         'assets/images/icons/'
       ];
       const pending = new Map();
@@ -5741,8 +5743,10 @@ function buildClusterListHTML(items){
         if(manual) urls.push(manual);
         if(shouldLookupLocal){
           const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
-          BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`));
-          BASES.forEach(base => urls.push(`${base}${name}.png`));
+          // try PNGs
+          BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`, `${base}${name}.png`));
+          // try WEBPs
+          BASES.forEach(base => urls.push(`${base}${name}${ratio}.webp`, `${base}${name}.webp`));
         }
         return { urls, shouldLookupLocal };
       };
@@ -6345,7 +6349,8 @@ function makePosts(){
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className='category-logo';
-        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        const iconBase = window.ICON_BASE || {};
+        const iconPrefix = (iconBase[c.name] || '').toLowerCase();
         if(iconPrefix){
           const img = document.createElement('img');
           img.src = `assets/icons-20/${iconPrefix}-20.webp`;
@@ -10827,7 +10832,8 @@ document.addEventListener('pointerdown', (e) => {
       const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
       colorIdx++;
       const slug = slugify(sub);
-      const iconPrefix = ICON_BASE[cat.name];
+      const iconPrefix = (ICON_BASE[cat.name] || '').toLowerCase();
+      if(!iconPrefix) return;
       const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
       const icon40 = `assets/icons-40/${iconPrefix}-${color}-40.webp`;
       subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
@@ -10843,7 +10849,7 @@ document.addEventListener('pointerdown', (e) => {
   Object.entries(specialSubIconPaths).forEach(([name, path20]) => {
     const markerPath = path20
       .replace('icons-20', 'icons-40')
-      .replace('-20.webp', '.webp-40.webp');
+      .replace('-20.webp', '-40.webp');
     subcategoryIcons[name] = `<img src="${path20}" width="20" height="20" alt="">`;
     const slug = subcategoryMarkerIds[name] || slugify(name);
     subcategoryMarkers[slug] = markerPath;
@@ -10952,7 +10958,8 @@ document.addEventListener('pointerdown', (e) => {
 
         const logo = document.createElement('span');
         logo.className = 'category-logo';
-        const iconPrefix = (window.ICON_BASE || {})[cat.name];
+        const iconBase = window.ICON_BASE || {};
+        const iconPrefix = (iconBase[cat.name] || '').toLowerCase();
         if(iconPrefix){
           const img = document.createElement('img');
           img.src = `assets/icons-20/${iconPrefix}-20.webp`;
