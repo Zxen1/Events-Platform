@@ -3402,12 +3402,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .calendar-container .calendar-scroll,
 .second-post-column .calendar-container .calendar-scroll{
   width:100%;
-  height:var(--calendar-height);
-  max-height:var(--calendar-height);
+  min-height:var(--calendar-height);
+  height:auto;
+  max-height:none;
   display:flex;
   align-items:stretch;
   overflow-x:auto;
-  overflow-y:auto;
+  overflow-y:hidden;
   padding-bottom:var(--scrollbar-h);
   box-sizing:content-box;
   background:var(--dropdown-bg);
@@ -3417,7 +3418,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   align-items:stretch;
   flex:1 1 auto;
   max-width:100%;
-  margin-bottom:calc(-1 * var(--scrollbar-h));
+  margin-bottom:0;
   scrollbar-gutter: stable both-edges;
 }
 .open-post .post-calendar .calendar,
