@@ -6,6 +6,19 @@
     window.MAPBOX_VERSION = "v3.15.0";
   </script>
 
+  <script>
+    // Throttle any hot handler to 1 call per animation frame
+    window.rafThrottle = fn => {
+      let scheduled = false, lastArgs, lastThis;
+      return function throttled(...args){
+        lastArgs = args; lastThis = this;
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => { scheduled = false; fn.apply(lastThis, lastArgs); });
+      };
+    };
+  </script>
+
   <link id="mapbox-gl-css" rel="stylesheet"
         href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
 
@@ -8016,14 +8029,6 @@ function makePosts(){
         }
         checkLoadPosts();
       });
-      map.on('mousemove', (e)=>{
-        if(!map) return;
-        if(e && e.originalEvent && e.originalEvent.buttons) return;
-        const layers = ['clusters','unclustered'].filter(id => map.getLayer(id));
-        if(!layers.length) return;
-        const feats = map.queryRenderedFeatures(e.point, { layers });
-        map.getCanvas().style.cursor = feats.length ? 'pointer' : '';
-      });
       addControls();
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
@@ -8053,7 +8058,9 @@ function makePosts(){
           if(bIn) bIn.value = map.getBearing();
           if(bVal) bVal.textContent = map.getBearing().toFixed(0);
         });
+        let suppressNextRefresh = false;
         const refreshMapView = () => {
+          if(suppressNextRefresh) return;
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
@@ -8085,6 +8092,11 @@ function makePosts(){
       }
       function step(){
         if(!spinning || !map) return;
+        const isBusy = (map.isMoving && map.isMoving()) || (map.areTilesLoaded && !map.areTilesLoaded());
+        if(isBusy){
+          requestAnimationFrame(step);
+          return;
+        }
         const c = map.getCenter();
         map.setCenter([c.lng + spinSpeed, c.lat]);
         requestAnimationFrame(step);
@@ -8423,49 +8435,49 @@ function makePosts(){
         lockMap(true); lastListOpenAt = Date.now();
       });
 
-      map.on('click','clusters', async (e)=>{
+      map.on('click','clusters', (e)=>{
         stopSpin();
         if(e && e.preventDefault) e.preventDefault();
-        const features = (e && e.features && e.features.length) ? e.features : map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+        const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
         if(!features.length) return;
         const feature = features[0];
-        const clusterProps = feature.properties || {};
-        const clusterId = clusterProps.cluster_id;
-        if(typeof clusterId !== 'number' && typeof clusterId !== 'string') return;
-        const pointCount = Number(clusterProps.point_count) || 0;
-        const src = map.getSource && map.getSource('posts');
-        let bounds = null;
-        if(pointCount > 0 && pointCount <= MAX_CLUSTER_BOUNDS_LEAVES){
-          const { leaves, complete } = await getClusterLeavesAll('posts', clusterId, pointCount, pointCount);
-          if(complete && leaves.length){
-            bounds = leaves.reduce((b,f)=> b.extend(f.geometry.coordinates), new mapboxgl.LngLatBounds(leaves[0].geometry.coordinates, leaves[0].geometry.coordinates));
+        const props = feature.properties || {};
+        const clusterId = props.cluster_id;
+        const clusterLayer = map.getLayer('clusters');
+        const sourceId = clusterLayer ? clusterLayer.source : null;
+        if(clusterId === undefined || clusterId === null || !sourceId) return;
+        const src = map.getSource && map.getSource(sourceId);
+        if(!src || typeof src.getClusterExpansionZoom !== 'function') return;
+
+        suppressNextRefresh = true;
+        const clearSuppress = () => { suppressNextRefresh = false; };
+        src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
+          if(err){ clearSuppress(); return; }
+          try{
+            const coords = feature.geometry && feature.geometry.coordinates;
+            if(!coords) { clearSuppress(); return; }
+            const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
+            const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
+            map.easeTo({ center: coords, zoom: nextZoom });
+          }catch(ex){
+            console.error(ex);
+            clearSuppress();
           }
-        }
-        if(bounds){
-          const ne = bounds.getNorthEast();
-          const sw = bounds.getSouthWest();
-          const lngSpan = Math.abs(ne.lng - sw.lng);
-          const latSpan = Math.abs(ne.lat - sw.lat);
-          if((lngSpan > 0.00001 || latSpan > 0.00001) && typeof map.fitBounds === 'function'){
-            map.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 100, right: 100 } });
-            return;
-          }
-        }
-        if(src && typeof src.getClusterExpansionZoom === 'function'){
-          src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-            if(err) return;
-            try{
-              const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
-              map.easeTo({ center: feature.geometry.coordinates, zoom: nextZoom });
-            }catch(ex){ console.error(ex); }
-          });
-        }
+        });
+        setTimeout(clearSuppress, 400);
       });
       
       map.on('click','unclustered', (e)=>{
         stopSpin();
         const f = e.features && e.features[0]; if(!f) return;
+        const props = f.properties || {};
+        const id = props.id;
+        if(id !== undefined && id !== null){
+          activePostId = id;
+          selectedVenueKey = props.venueKey || null;
+          try{ map.setFilter(SELECTED_RING_LAYER, ['==', ['get','id'], id]); }catch(err){}
+          updateSelectedMarkerRing();
+        }
         const coords = f.geometry && f.geometry.coordinates;
         if(coords && coords.length>=2){
           const items = postsAtVenue(coords[0], coords[1]);
@@ -8525,7 +8537,6 @@ function makePosts(){
             return;
           }
         }
-        const id = f.properties.id;
         const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
         if(touchClick){
           if(touchMarker === id){
@@ -8583,16 +8594,26 @@ function makePosts(){
         }
       });
 
-      if(!map.getLayer(SELECTED_RING_LAYER)){
-        map.addLayer({ id:SELECTED_RING_LAYER, type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
-          'circle-color': 'rgba(255,255,255,0)',
-          'circle-opacity': 0,
-          'circle-stroke-color':'#ffffff',
-          'circle-stroke-opacity': 0,
-          'circle-stroke-width': 5,
-          'circle-radius': 17.5
-        }});
-      }
+      (function ensureSelectedRing(){
+        const pointLayer = 'unclustered';
+        const pointLayerRef = map.getLayer(pointLayer);
+        const src = pointLayerRef ? pointLayerRef.source : null;
+        if(!src || map.getLayer(SELECTED_RING_LAYER)) return;
+
+        map.addLayer({
+          id: SELECTED_RING_LAYER,
+          type: 'circle',
+          source: src,
+          filter: ['==', ['get', 'id'], '__none__'],
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 10, 16, 18],
+            'circle-color': 'transparent',
+            'circle-stroke-color': '#00BFFF',
+            'circle-stroke-width': 4,
+            'circle-stroke-opacity': 0.9
+          }
+        }, pointLayer);
+      })();
       updateSelectedMarkerRing();
 
       // Hover ring layer for individual points
@@ -8699,7 +8720,10 @@ function makePosts(){
 }
       });
     
-      map.on('mousemove','unclustered', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
+      const onUnclusteredMove = window.rafThrottle((e)=>{
+        if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
+      });
+      map.on('mousemove','unclustered', onUnclusteredMove);
       
       map.on('mouseleave','unclustered', ()=>{
         map.getCanvas().style.cursor = '';
@@ -8722,7 +8746,10 @@ function makePosts(){
         if(_el){ _el.style.pointerEvents = 'none'; }
         registerPopup(hoverPopup);
       });
-      map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
+      const onClusterMove = window.rafThrottle((e)=>{
+        if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
+      });
+      map.on('mousemove','clusters', onClusterMove);
         map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
       } catch (err) {
         console.error('addPostSource failed', err);
