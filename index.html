@@ -6,6 +6,18 @@
     window.MAPBOX_VERSION = "v3.15.0";
   </script>
 
+  <script>
+    // Ensure slugify is defined before any usage
+    window.slugify ||= function (str) {
+      return String(str || '')
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    };
+  </script>
+
   <link id="mapbox-gl-css" rel="stylesheet"
         href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
 
@@ -8035,7 +8047,7 @@ function makePosts(){
       addingPostSource = true;
 
       const finish = ()=>{ addingPostSource = false; };
-      const task = (async ()=>{
+      const task = async ()=>{
         const geojson = postsToGeoJSON(posts);
         const shouldCluster = posts.length > 1 && clusterRadius > 0;
         const existing = map.getSource('posts');
@@ -8599,9 +8611,11 @@ function makePosts(){
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
       map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
-      })();
+      };
 
-      return task.then((value)=>{
+      const taskPromise = task();
+
+      return taskPromise.then((value)=>{
         finish();
         return value;
       }, (err)=>{
@@ -10808,7 +10822,7 @@ document.addEventListener('pointerdown', (e) => {
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
       const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
-      const icon40 = `assets/icons-40/${iconPrefix}-${color}.webp-40.webp`;
+      const icon40 = `assets/icons-40/${iconPrefix}-${color}-40.webp`;
       subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
       subcategoryMarkers[slug] = icon40;
