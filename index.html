@@ -1484,7 +1484,8 @@ button[aria-expanded="true"] .results-arrow{
   border-color:#2e3a72;
 }
 #filterPanel .filter-basics-container,
-#filterPanel .filter-category-container{
+#filterPanel .filter-category-container,
+#tab-forms .formbuilder-container{
   width:100%;
   max-width:420px;
   margin:0 auto;
@@ -1492,7 +1493,8 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
   padding:10px;
 }
-#filterPanel .filter-category-container{
+#filterPanel .filter-category-container,
+#tab-forms .formbuilder-container{
   margin-top:10px;
 }
 #filterPanel .keyword-row,
@@ -1504,7 +1506,9 @@ button[aria-expanded="true"] .results-arrow{
   margin:0 auto;
 }
 #filterPanel .filter-category-container .cats,
-#filterPanel .filter-category-container .filter-category-menu{
+#filterPanel .filter-category-container .filter-category-menu,
+#tab-forms .formbuilder-container .cats,
+#tab-forms .formbuilder-container .filter-category-menu{
   width:100%;
 }
 .switch{
@@ -5979,6 +5983,16 @@ function makePosts(){
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
+    const formbuilderCats = document.getElementById('formbuilderCats');
+    const syncFormbuilderCats = ()=>{
+      if(!formbuilderCats || !catsEl) return;
+      const frag = document.createDocumentFragment();
+      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
+        frag.appendChild(menu.cloneNode(true));
+      });
+      formbuilderCats.innerHTML = '';
+      formbuilderCats.appendChild(frag);
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -6177,7 +6191,16 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      document.addEventListener('subcategory-icons-ready', refreshSubcategoryLogos);
+      syncFormbuilderCats();
+      if(formbuilderCats){
+        const observer = new MutationObserver(()=> syncFormbuilderCats());
+        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
+      }
+      const handleIconsReady = ()=>{
+        refreshSubcategoryLogos();
+        syncFormbuilderCats();
+      };
+      document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
       updateResetBtn();
     }
