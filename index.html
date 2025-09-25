@@ -5852,7 +5852,7 @@ function buildClusterListHTML(items){
     }
 
     const MULTI_VENUE_MARKER_ID = 'multi-venue-marker';
-    const MULTI_VENUE_MARKER_URL = 'assets/icons-40/multi-post-icon-40.webp';
+    const MULTI_VENUE_MARKER_URL = 'assets/icons-30/multi-post-icon-30.webp';
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
     subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
@@ -6383,6 +6383,10 @@ function makePosts(){
             trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
             optionsMenu.hidden = !next;
           });
+        }
+        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
+        if(optionsMenu){
+          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
         }
         const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
         const syncCatState = checked =>{
@@ -8316,7 +8320,7 @@ function makePosts(){
             'symbol-z-order': 'viewport-y',
             'symbol-sort-key': 1100,
             'text-field': multiLabelExpression,
-            'text-font': ['Open Sans Bold','Arial Unicode MS Bold'],
+            'text-font': ['Open Sans Regular','Arial Unicode MS Regular'],
             'text-size': 14,
             'text-anchor': 'center',
             'text-offset': [0, 0],
@@ -8337,7 +8341,7 @@ function makePosts(){
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key',1100); }catch(e){}
       try{ map.setLayoutProperty('unclustered','text-field', multiLabelExpression); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','text-font',['Open Sans Bold','Arial Unicode MS Bold']); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
       try{ map.setLayoutProperty('unclustered','text-size',14); }catch(e){}
       try{ map.setLayoutProperty('unclustered','text-anchor','center'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','text-offset',[0,0]); }catch(e){}
@@ -8585,7 +8589,7 @@ function makePosts(){
           'circle-stroke-color':'#ffffff',
           'circle-stroke-opacity': 0,
           'circle-stroke-width': 5,
-          'circle-radius': 24
+          'circle-radius': 17.5
         }});
       }
       updateSelectedMarkerRing();
@@ -9895,9 +9899,9 @@ function openPostModal(id){
                   `assets/icons/subcategories/${e.id}.png`,
                   `assets/icons/${e.id}.png`,
                   `assets/images/icons/${e.id}.png`,
-                  `assets/icons-40/${e.id}-40.webp`,
+                  `assets/icons-30/${e.id}-30.webp`,
                   // Final fallback to your existing file only:
-                  `assets/icons-40/multi-post-icon-40.webp`,
+                  `assets/icons-30/multi-post-icon-30.webp`,
                   `assets/icons/multi-category-icon-blue.png`,
                   `assets/images/icons/multi-category-icon-blue.png`
                 ].map(p => new URL(p, base).href);
@@ -10950,10 +10954,10 @@ document.addEventListener('pointerdown', (e) => {
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
       const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
-      const icon40 = `assets/icons-40/${iconPrefix}-${color}-40.webp`;
+      const icon30 = `assets/icons-30/${iconPrefix}-${color}-30.webp`;
       subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
-      subcategoryMarkers[slug] = icon40;
+      subcategoryMarkers[slug] = icon30;
     });
   });
   const specialSubIconPaths = {
@@ -10963,8 +10967,8 @@ document.addEventListener('pointerdown', (e) => {
   };
   Object.entries(specialSubIconPaths).forEach(([name, path20]) => {
     const markerPath = path20
-      .replace('icons-20', 'icons-40')
-      .replace('-20.webp', '-40.webp');
+      .replace('icons-20', 'icons-30')
+      .replace('-20.webp', '-30.webp');
     subcategoryIcons[name] = `<img src="${path20}" width="20" height="20" alt="">`;
     const slug = subcategoryMarkerIds[name] || slugify(name);
     subcategoryMarkers[slug] = markerPath;
