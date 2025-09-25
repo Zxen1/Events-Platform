@@ -1025,6 +1025,17 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .calendar .day{
   border-radius:0;
 }
+#filterPanel .calendar .day.range-start{
+  border-top-left-radius:8px;
+  border-bottom-left-radius:8px;
+}
+#filterPanel .calendar .day.range-end{
+  border-top-right-radius:8px;
+  border-bottom-right-radius:8px;
+}
+#filterPanel .calendar .day.range-start.range-end{
+  border-radius:8px;
+}
 .calendar .weekday{font-weight:bold;}
 .calendar .day{cursor:pointer;}
 .calendar .day.empty{cursor:default;background:var(--calendar-future-bg);}
@@ -9345,6 +9356,28 @@ function openPostModal(id){
           }
         }
 
+        function scrollCalendarToMonth(dt, {smooth=false}={}){
+          if(!dt || !calendarEl || !calScroll) return null;
+          const cell = calendarEl.querySelector(`.day[data-iso="${dt.full}"]`);
+          if(!cell) return null;
+          const monthEl = cell.closest('.month');
+          if(!monthEl) return null;
+          const targetLeft = monthEl.offsetLeft;
+          if(typeof calScroll.scrollTo === 'function'){
+            if(smooth){
+              const currentLeft = calScroll.scrollLeft;
+              if(Math.abs(currentLeft - targetLeft) > 1){
+                calScroll.scrollTo({left: targetLeft, behavior: 'smooth'});
+                return {targetLeft, waitForScroll: true};
+              }
+            }
+            calScroll.scrollTo({left: targetLeft});
+          } else {
+            calScroll.scrollLeft = targetLeft;
+          }
+          return {targetLeft, waitForScroll: false};
+        }
+
         function selectSession(i){
           if(!sessMenu || !sessionOptions) return;
           selectedIndex = Number.isInteger(i) ? i : null;
@@ -9362,23 +9395,10 @@ function openPostModal(id){
               sessBtn.innerHTML = `<span class="session-date">${formatDate(dt)}</span><span class="session-time">${dt.time}</span>${sessionHasMultiple?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
             }
             markSelected();
-            const cell = calendarEl ? calendarEl.querySelector(`.day[data-iso="${dt.full}"]`) : null;
-            if(cell && calScroll){
-              const monthEl = cell.closest('.month');
-              if(monthEl){
-                targetScrollLeft = monthEl.offsetLeft;
-                if(typeof calScroll.scrollTo === 'function'){
-                  const currentLeft = calScroll.scrollLeft;
-                  if(Math.abs(currentLeft - targetScrollLeft) > 1){
-                    waitForScroll = true;
-                    calScroll.scrollTo({left:targetScrollLeft, behavior:'smooth'});
-                  } else {
-                    calScroll.scrollLeft = targetScrollLeft;
-                  }
-                } else {
-                  calScroll.scrollLeft = targetScrollLeft;
-                }
-              }
+            const scrollResult = scrollCalendarToMonth(dt, {smooth: true});
+            if(scrollResult){
+              targetScrollLeft = scrollResult.targetLeft;
+              waitForScroll = scrollResult.waitForScroll;
             }
           } else {
             if(sessionInfo){
@@ -9711,14 +9731,20 @@ function openPostModal(id){
               if(sessBtn && sessMenu){
                 sessBtn.addEventListener('click', ()=>{
                   const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-                  const opening = !expanded;
-                  sessBtn.setAttribute('aria-expanded', String(opening));
-                  if(opening){
-                    showMenu(sessMenu);
-                  } else {
-                    hideMenu(sessMenu);
+              const opening = !expanded;
+              sessBtn.setAttribute('aria-expanded', String(opening));
+              if(opening){
+                showMenu(sessMenu);
+                if(selectedIndex !== null){
+                  const dt = loc.dates[selectedIndex];
+                  if(dt){
+                    requestAnimationFrame(()=> scrollCalendarToMonth(dt));
                   }
-                });
+                }
+              } else {
+                hideMenu(sessMenu);
+              }
+            });
                 document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ hideMenu(sessMenu); sessBtn.setAttribute('aria-expanded','false'); } });
               }
               if(map && typeof map.resize === 'function') map.resize();
