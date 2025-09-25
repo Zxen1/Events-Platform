@@ -8034,32 +8034,32 @@ function makePosts(){
       if(!map || addingPostSource) return;
       addingPostSource = true;
       try{
-      const geojson = postsToGeoJSON(posts);
-      const shouldCluster = posts.length > 1 && clusterRadius > 0;
-      const existing = map.getSource('posts');
-      const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
-      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
-      if(sourceNeedsRebuild){
-        ['cluster-count','clusters','multi-venue-count','multi-venues','unclustered','posts-heat','hover-ring','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-        if(existing) map.removeSource('posts');
-        map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
-      } else if(existing){
-        existing.setData(geojson);
-      }
-      if(typeof ensureMapIcon === 'function'){
-        const iconIds = Object.keys(subcategoryMarkers);
-        await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
-      }
-      if(!map.getLayer('posts-heat')){
-        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
-          'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
-          'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
-        } });
-      }
-      const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
-      const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
-      const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
-      const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
+        const geojson = postsToGeoJSON(posts);
+        const shouldCluster = posts.length > 1 && clusterRadius > 0;
+        const existing = map.getSource('posts');
+        const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
+        const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
+        if(sourceNeedsRebuild){
+          ['cluster-count','clusters','multi-venue-count','multi-venues','unclustered','posts-heat','hover-ring','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+          if(existing) map.removeSource('posts');
+          map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
+        } else if(existing){
+          existing.setData(geojson);
+        }
+        if(typeof ensureMapIcon === 'function'){
+          const iconIds = Object.keys(subcategoryMarkers);
+          await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+        }
+        if(!map.getLayer('posts-heat')){
+          map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
+            'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
+            'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
+          } });
+        }
+        const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
+        const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
+        const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
+        const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
 
       if(shouldCluster){
         if(usingSvgClusters){
@@ -8596,14 +8596,14 @@ function makePosts(){
         registerPopup(hoverPopup);
       });
       map.on('mousemove','clusters', (e)=>{ if(hoverPopup) hoverPopup.setLngLat(e.lngLat); });
-        map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
+      map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
       } catch (err) {
         console.error('addPostSource failed', err);
       } finally {
         addingPostSource = false;
       }
-      }
-      window.addPostSource = addPostSource;
+    }
+    window.addPostSource = addPostSource;
     function renderLists(list){
       if(spinning || !postsLoaded) return;
       const sort = currentSort;
