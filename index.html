@@ -9748,6 +9748,31 @@ function openPostModal(id){
           },0);
         }
 
+        function attachSessionButtonHandler(){
+          if(!sessBtn || !sessMenu) return;
+          const handler = ()=>{
+            const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
+            const opening = !expanded;
+            sessBtn.setAttribute('aria-expanded', String(opening));
+            if(opening){
+              showMenu(sessMenu);
+              if(selectedIndex !== null){
+                const dt = loc.dates[selectedIndex];
+                if(dt){
+                  requestAnimationFrame(()=> scrollCalendarToMonth(dt));
+                }
+              }
+            } else {
+              hideMenu(sessMenu);
+            }
+          };
+          if(sessBtn._sessionToggle){
+            sessBtn.removeEventListener('click', sessBtn._sessionToggle);
+          }
+          sessBtn._sessionToggle = handler;
+          sessBtn.addEventListener('click', handler);
+        }
+
         ensureMapForVenue = async function(){
           if(!mapEl) return;
 
@@ -9896,6 +9921,7 @@ function openPostModal(id){
           tasks.push(()=> finalizeCalendar());
         }
         tasks.push(()=> updateSessionOptionsList());
+        tasks.push(()=> attachSessionButtonHandler());
 
         function runNext(){
           const task = tasks.shift();
@@ -9955,23 +9981,16 @@ function openPostModal(id){
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
               }
               if(sessBtn && sessMenu){
-                sessBtn.addEventListener('click', ()=>{
-                  const expanded = sessBtn.getAttribute('aria-expanded') === 'true';
-              const opening = !expanded;
-              sessBtn.setAttribute('aria-expanded', String(opening));
-              if(opening){
-                showMenu(sessMenu);
-                if(selectedIndex !== null){
-                  const dt = loc.dates[selectedIndex];
-                  if(dt){
-                    requestAnimationFrame(()=> scrollCalendarToMonth(dt));
-                  }
+                if(!sessDropdown._sessionOutsideHandler){
+                  const outsideHandler = e=>{
+                    if(sessDropdown && !sessDropdown.contains(e.target)){
+                      hideMenu(sessMenu);
+                      sessBtn.setAttribute('aria-expanded','false');
+                    }
+                  };
+                  sessDropdown._sessionOutsideHandler = outsideHandler;
+                  document.addEventListener('click', outsideHandler);
                 }
-              } else {
-                hideMenu(sessMenu);
-              }
-            });
-                document.addEventListener('click', e=>{ if(sessDropdown && !sessDropdown.contains(e.target)){ hideMenu(sessMenu); sessBtn.setAttribute('aria-expanded','false'); } });
               }
               if(map && typeof map.resize === 'function') map.resize();
             });
