@@ -164,6 +164,37 @@
           };
         }
       }
+
+      const loaderApi = (()=>{
+        const api = {
+          begin(){ begin(); },
+          end(){ end(); },
+          track(promise){
+            if(!promise || typeof promise.then !== 'function'){
+              return promise;
+            }
+            let settled = false;
+            begin();
+            const finalize = () => {
+              if(settled) return;
+              settled = true;
+              end();
+            };
+            Promise.resolve(promise).then(finalize, finalize);
+            return promise;
+          }
+        };
+        return api;
+      })();
+
+      const existingLoader = window.__logoLoading && typeof window.__logoLoading === 'object'
+        ? window.__logoLoading
+        : {};
+      existingLoader.begin = loaderApi.begin;
+      existingLoader.end = loaderApi.end;
+      existingLoader.track = loaderApi.track;
+      existingLoader.trackPromise = loaderApi.track;
+      window.__logoLoading = existingLoader;
     })();
   </script>
 
@@ -7580,20 +7611,114 @@ function makePosts(){
         await ensureMapboxCssFor(document.body);
       }catch(err){}
           mapboxgl.accessToken = MAPBOX_TOKEN;
-          map = new mapboxgl.Map({
-            container:'map',
-            style:'mapbox://styles/mapbox/streets-v12',
-            projection:'globe',
-            center: startCenter,
-            zoom: startZoom,
-            pitch: startPitch,
-            bearing: startBearing,
-            attributionControl:true
-          });
+        map = new mapboxgl.Map({
+          container:'map',
+          style:'mapbox://styles/mapbox/streets-v12',
+          projection:'globe',
+          center: startCenter,
+          zoom: startZoom,
+          pitch: startPitch,
+          bearing: startBearing,
+          attributionControl:true
+        });
         map.on('style.load', () => {
           applyNightSky(map);
         });
         ensureMapIcon = attachIconLoader(map);
+        const mapLoading = (() => {
+          const loader = window.__logoLoading;
+          if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
+            return null;
+          }
+          const motionTokens = new Set();
+          let tilesPending = false;
+          let active = false;
+
+          const isMapMovingNow = () => {
+            if(!map) return false;
+            try{
+              if(typeof map.isMoving === 'function' && map.isMoving()) return true;
+              if(typeof map.isZooming === 'function' && map.isZooming()) return true;
+              if(typeof map.isRotating === 'function' && map.isRotating()) return true;
+              if(typeof map.isEasing === 'function' && map.isEasing()) return true;
+            }catch(err){}
+            return false;
+          };
+
+          const apply = (forceStop = false) => {
+            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
+            if(busy){
+              if(!active){
+                active = true;
+                try{ loader.begin('map'); }catch(err){}
+              }
+            } else if(active){
+              active = false;
+              try{ loader.end('map'); }catch(err){}
+            }
+          };
+
+          return {
+            apply,
+            setTiles(pending){
+              if(tilesPending === pending) return;
+              tilesPending = pending;
+              apply();
+            },
+            addMotion(token){
+              if(motionTokens.has(token)) return;
+              motionTokens.add(token);
+              apply();
+            },
+            removeMotion(token){
+              if(!motionTokens.has(token)) return;
+              motionTokens.delete(token);
+              apply();
+            },
+            clearAll(){
+              motionTokens.clear();
+              tilesPending = false;
+              apply(true);
+            }
+          };
+        })();
+
+        if(mapLoading){
+          const updateRenderState = () => {
+            let tileBusy = false;
+            if(map){
+              try{
+                if(typeof map.isStyleLoaded === 'function' && !map.isStyleLoaded()){
+                  tileBusy = true;
+                } else if(typeof map.areTilesLoaded === 'function'){
+                  tileBusy = !map.areTilesLoaded();
+                }
+              }catch(err){
+                tileBusy = true;
+              }
+            }
+            mapLoading.setTiles(tileBusy);
+            mapLoading.apply();
+          };
+
+          map.on('sourcedataloading', () => mapLoading.setTiles(true));
+          map.on('render', updateRenderState);
+          map.on('idle', () => {
+            mapLoading.setTiles(false);
+            mapLoading.apply();
+          });
+
+          ['move','zoom','rotate','pitch','drag'].forEach(evt => {
+            const startEv = `${evt}start`;
+            const endEv = `${evt}end`;
+            map.on(startEv, () => mapLoading.addMotion(evt));
+            map.on(endEv, () => mapLoading.removeMotion(evt));
+          });
+          ['moveend','zoomend','rotateend','pitchend','dragend'].forEach(evt => {
+            map.on(evt, () => mapLoading.apply());
+          });
+          map.on('remove', () => mapLoading.clearAll());
+        }
       map.on('zoomstart', ()=>{
         if(waitForInitialZoom){
           initialZoomStarted = true;
