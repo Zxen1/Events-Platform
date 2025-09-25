@@ -5487,6 +5487,50 @@ img.thumb{
     }
     const MAX_CLUSTER_BOUNDS_LEAVES = 500;
 
+    const SELECTED_RING_LAYER = 'selected-ring';
+    window.__overCard = window.__overCard || false;
+
+    function getPopupElement(popup){
+      return popup && typeof popup.getElement === 'function' ? popup.getElement() : null;
+    }
+
+    function popupIsHovered(popup){
+      const el = getPopupElement(popup);
+      if(!el) return false;
+      if(el.matches(':hover')) return true;
+      try {
+        return !!el.querySelector(':hover');
+      } catch(err){
+        return false;
+      }
+    }
+
+    function schedulePopupRemoval(popup, delay=180){
+      const target = popup || hoverPopup;
+      if(!target) return;
+      setTimeout(()=>{
+        if(hoverPopup !== target) return;
+        if(popupIsHovered(target)){
+          window.__overCard = true;
+          return;
+        }
+        window.__overCard = false;
+        try{ target.remove(); }catch(e){}
+        if(hoverPopup === target){
+          hoverPopup = null;
+        }
+      }, delay);
+    }
+
+    function updateSelectedMarkerRing(){
+      if(!map || typeof map.getLayer !== 'function') return;
+      if(!map.getLayer(SELECTED_RING_LAYER)) return;
+      const hasSelection = !!activePostId;
+      const filter = hasSelection ? ['==',['get','id'], activePostId] : ['==',['get','id'],'__none__'];
+      try{ map.setFilter(SELECTED_RING_LAYER, filter); }catch(e){}
+      try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 0.95 : 0); }catch(e){}
+    }
+
     function hashString(str){
       let hash = 0;
       for(let i=0;i<str.length;i++){
@@ -7106,6 +7150,7 @@ function makePosts(){
         stopSpin();
         const p = posts.find(x=>x.id===id); if(!p) return;
         activePostId = id;
+        updateSelectedMarkerRing();
 
         if(!fromHistory){
           if(document.body.classList.contains('show-history')){
@@ -7299,6 +7344,7 @@ function makePosts(){
           openEl.remove();
         }
         activePostId = null;
+        updateSelectedMarkerRing();
         if(typeof initPostLayout === 'function') initPostLayout(postsWideEl);
         if(typeof updateStickyImages === 'function') updateStickyImages();
         if(typeof window.adjustBoards === 'function') window.adjustBoards();
@@ -8141,7 +8187,7 @@ function makePosts(){
       } else {
         try{ map.setFilter('unclustered', null); }catch(e){}
       }
-      ['hover-fill','hover-ring','clusters','cluster-count','unclustered'].forEach(id=>{
+      ['hover-fill',SELECTED_RING_LAYER,'hover-ring','clusters','cluster-count','unclustered'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
@@ -8369,6 +8415,18 @@ function makePosts(){
         }
       });
 
+      if(!map.getLayer(SELECTED_RING_LAYER)){
+        map.addLayer({ id:SELECTED_RING_LAYER, type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
+          'circle-color': 'rgba(255,255,255,0)',
+          'circle-opacity': 0,
+          'circle-stroke-color':'#ffffff',
+          'circle-stroke-opacity': 0,
+          'circle-stroke-width': 5,
+          'circle-radius': 24
+        }});
+      }
+      updateSelectedMarkerRing();
+
       // Hover ring layer for individual points
       if(!map.getLayer('hover-ring')){
         map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
@@ -8428,7 +8486,12 @@ function makePosts(){
           const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_el){
             _el.addEventListener('mouseenter', ()=>{ window.__overCard = true; });
-            _el.addEventListener('mouseleave', ()=>{ window.__overCard = false; if(!listLocked && hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
+            _el.addEventListener('mouseleave', ()=>{
+              window.__overCard = false;
+              if(listLocked) return;
+              const currentPopup = hoverPopup;
+              schedulePopupRemoval(currentPopup, 160);
+            });
           }
         } else {
           // single preview as usual
@@ -8473,9 +8536,8 @@ function makePosts(){
       map.on('mouseleave','unclustered', ()=>{
         map.getCanvas().style.cursor = '';
         if(listLocked) return;
-        setTimeout(()=>{
-          if(!window.__overCard && hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-        }, 180);
+        const currentPopup = hoverPopup;
+        schedulePopupRemoval(currentPopup, 200);
         hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
       });
 
@@ -8848,6 +8910,7 @@ function openPostModal(id){
       const p = posts.find(x=>x.id===id);
       if(!p) return;
       activePostId = id;
+      updateSelectedMarkerRing();
       const container = document.getElementById('post-modal-container');
       if(!container) return;
       const modal = container.querySelector('.post-modal');
