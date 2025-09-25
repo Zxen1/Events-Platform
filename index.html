@@ -8624,9 +8624,7 @@ function makePosts(){
         }});
       }
 
-      // Cursor + popup for unclustered points
-      
-      map.on('mouseenter','unclustered', (e)=>{
+      const handleVenueMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
         const id = f.properties.id; hoverId = id;
@@ -8636,42 +8634,42 @@ function makePosts(){
         if(multi && multi.length>1){
           openListPopupAtPoint(e.point, buildClusterListHTML(multi));
 
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-          
-        (function(){
-          const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__root){
-            __root.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
-              if(row){
-                var pid = row.getAttribute('data-id');
-                if(pid){
-                  callWhenDefined('openPost', (fn)=>{
-                    requestAnimationFrame(() => {
-                      try{
-                        touchMarker = null;
-                        if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-                        stopSpin();
-                        fn(pid, false, true);
-                      }catch(err){ console.error(err); }
+          (function(){
+            function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+            const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(_root){
+              ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            }
+          })();
+
+
+          (function(){
+            const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(__root){
+              __root.addEventListener('click', function(ev){
+                ev.stopPropagation();
+                ev.preventDefault();
+                var row = (ev.target && ev.target.closest) ? ev.target.closest('.multi-item.map-card') : null;
+                if(row){
+                  var pid = row.getAttribute('data-id');
+                  if(pid){
+                    callWhenDefined('openPost', (fn)=>{
+                      requestAnimationFrame(() => {
+                        try{
+                          touchMarker = null;
+                          if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+                          stopSpin();
+                          fn(pid, false, true);
+                        }catch(err){ console.error(err); }
+                      });
                     });
-                  });
-                  return;
+                    return;
+                  }
                 }
-              }
-            }, {capture:true});
-          }
-        })();
-// keep the hover popup alive when the pointer enters it
+              }, {capture:true});
+            }
+          })();
+          // keep the hover popup alive when the pointer enters it
           const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
           if(_el){
             _el.addEventListener('mouseenter', ()=>{ window.__overCard = true; });
@@ -8690,67 +8688,91 @@ function makePosts(){
             .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
           registerPopup(hoverPopup);
 
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-        
-        (function(){
-          const __el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__el){
-            __el.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    fn(id, false, true);
-                  }catch(e){ console.warn('openPost id missing', e); }
+          (function(){
+            function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+            const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(_root){
+              ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            }
+          })();
+
+
+          (function(){
+            const __el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(__el){
+              __el.addEventListener('click', function(ev){
+                ev.stopPropagation();
+                ev.preventDefault();
+                callWhenDefined('openPost', (fn)=>{
+                  requestAnimationFrame(() => {
+                    try{
+                      touchMarker = null;
+                      stopSpin();
+                      fn(id, false, true);
+                    }catch(e){ console.warn('openPost id missing', e); }
+                  });
                 });
-              });
-            }, {capture:true});
-          }
-        })();
-}
-      });
-    
-      const onUnclusteredMove = window.rafThrottle((e)=>{
-        if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
-      });
-      map.on('mousemove','unclustered', onUnclusteredMove);
-      
-      map.on('mouseleave','unclustered', ()=>{
+              }, {capture:true});
+            }
+          })();
+        }
+      };
+
+      const handleVenueMouseLeave = ()=>{
         map.getCanvas().style.cursor = '';
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
         hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
-      });
+      };
 
-
-      // Popups for clusters (shows count)
-      map.on('mouseenter','clusters', (e)=>{
-        map.getCanvas().style.cursor='pointer';
-        const f = e.features && e.features[0]; if(!f) return;
-        const count = f.properties.point_count_abbreviated;
-        if(hoverPopup) hoverPopup.remove();
-        hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card', offset:15})
-          .setLngLat(e.lngLat).setHTML(`<div class='hover-card'><div class='t'>${count} nearby posts</div></div>`).addTo(map);
-        const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-        if(_el){ _el.style.pointerEvents = 'none'; }
-        registerPopup(hoverPopup);
-      });
-      const onClusterMove = window.rafThrottle((e)=>{
+      const handleVenueMouseMove = (e)=>{
         if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
-      });
-      map.on('mousemove','clusters', onClusterMove);
-        map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
+      };
+
+      /* Cursor + popup for unclustered points — ONE TIME, DEDUPED */
+      if (!map.__pointerHandlersBound) {
+        // your existing handlers are already defined above:
+        // - handleVenueMouseEnter(e)
+        // - handleVenueMouseMove(e)  (keeps hover popup following)
+        // - handleVenueMouseLeave()
+
+        // bind for point layers only once
+        ['unclustered','multi-venues','multi-venue-count'].forEach((layer) => {
+          if (!map.getLayer(layer)) return;
+          map.on('mouseenter', layer, handleVenueMouseEnter);
+
+          // throttle the mousemove to ~1 per frame to avoid long tasks
+          const throttledMove = window.rafThrottle((e)=>{ if (hoverPopup) hoverPopup.setLngLat(e.lngLat); });
+          map.on('mousemove', layer, throttledMove);
+
+          map.on('mouseleave', layer, handleVenueMouseLeave);
+        });
+
+        // clusters: tiny popup showing the count, also throttled, bound once
+        map.on('mouseenter','clusters',(e)=>{
+          map.getCanvas().style.cursor='pointer';
+          const f = e.features && e.features[0]; if (!f) return;
+          const count = f.properties.point_count_abbreviated;
+          if (hoverPopup) hoverPopup.remove();
+          hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, className:'hover-pop map-card', offset:15 })
+            .setLngLat(e.lngLat)
+            .setHTML(`<div class='hover-card'><div class='t'>${count} nearby posts</div></div>`)
+            .addTo(map);
+          const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+          if (_el) _el.style.pointerEvents = 'none';
+          registerPopup(hoverPopup);
+        });
+
+        map.on('mousemove','clusters', window.rafThrottle((e)=>{ if (hoverPopup) hoverPopup.setLngLat(e.lngLat); }));
+
+        map.on('mouseleave','clusters', ()=>{
+          map.getCanvas().style.cursor='';
+          if (hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+        });
+
+        map.__pointerHandlersBound = true;
+      }
       } catch (err) {
         console.error('addPostSource failed', err);
       } finally {
