@@ -5404,7 +5404,8 @@ function buildClusterListHTML(items){
       if(!mapInstance) return () => Promise.resolve(false);
       const KNOWN = [
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
-        'live-gigs','for-sale','education-centres','tutors'
+        'live-gigs','for-sale','education-centres','tutors',
+        'multi-venue-marker'
       ];
       const BASES = [
         'assets/icons/subcategories/',
@@ -5415,12 +5416,16 @@ function buildClusterListHTML(items){
 
       const urlsFor = (name) => {
         const urls = [];
-        const manual = (window.subcategoryMarkers && window.subcategoryMarkers[name]) || null;
+        const markers = window.subcategoryMarkers || {};
+        const manual = markers[name] || null;
+        const shouldLookupLocal = manual || KNOWN.includes(name);
         if(manual) urls.push(manual);
-        const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
-        BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`));
-        BASES.forEach(base => urls.push(`${base}${name}.png`));
-        return urls;
+        if(shouldLookupLocal){
+          const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
+          BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`));
+          BASES.forEach(base => urls.push(`${base}${name}.png`));
+        }
+        return { urls, shouldLookupLocal };
       };
 
       function loadImageCompat(url){
@@ -5460,7 +5465,12 @@ function buildClusterListHTML(items){
         if(pending.has(name)) return pending.get(name);
         const pixelRatio = (window.devicePixelRatio || 1) >= 2 ? 2 : 1;
         const task = (async () => {
-          for(const url of urlsFor(name)){
+          const { urls, shouldLookupLocal } = urlsFor(name);
+          if(!urls.length && !shouldLookupLocal){
+            try{ mapInstance.addImage(name, placeholder(name)); }catch(err){}
+            return false;
+          }
+          for(const url of urls){
             try{
               const img = await loadImageCompat(url);
               if(mapInstance.hasImage?.(name)) return true;
