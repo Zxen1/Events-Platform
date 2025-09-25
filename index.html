@@ -8178,7 +8178,7 @@ function makePosts(){
           const lngSpan = Math.abs(ne.lng - sw.lng);
           const latSpan = Math.abs(ne.lat - sw.lat);
           if((lngSpan > 0.00001 || latSpan > 0.00001) && typeof map.fitBounds === 'function'){
-            map.fitBounds(bounds, {padding:10});
+            map.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 100, right: 100 } });
             return;
           }
         }
