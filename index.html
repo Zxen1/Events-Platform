@@ -2439,6 +2439,12 @@ body.hide-ads .ad-board{
   width:100%;
   height:100%;
 }
+.mode-toggle .mode-label{
+  display:none;
+  font-size:14px;
+  line-height:1;
+  white-space:nowrap;
+}
 .mode-toggle button svg{
   width:20px;
   height:20px;
@@ -2449,6 +2455,21 @@ body.hide-ads .ad-board{
 .mode-toggle button[aria-pressed="true"]{
   background:var(--btn-selected);
   color:var(--button-active-text);
+}
+@media (min-width: 601px){
+  .mode-toggle{
+    grid-template-columns:repeat(3, auto);
+  }
+  .mode-toggle button{
+    width:auto;
+    padding:0 16px;
+  }
+  .mode-toggle .mode-icon{
+    display:none;
+  }
+  .mode-toggle .mode-label{
+    display:block;
+  }
 }
 body.filters-active #filterBtn{
   background: var(--filter-active-color);
@@ -4654,6 +4675,7 @@ img.thumb{
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </span>
+          <span class="mode-label">Recents</span>
         </button>
         <button id="posts-button" aria-pressed="false" aria-label="Posts">
           <span class="mode-icon" aria-hidden="true">
@@ -4663,6 +4685,7 @@ img.thumb{
               <line x1="5" y1="18" x2="13" y2="18"></line>
             </svg>
           </span>
+          <span class="mode-label">Posts</span>
         </button>
         <button id="map-button" aria-pressed="true" aria-label="Map">
           <span class="mode-icon" aria-hidden="true">
@@ -4671,6 +4694,7 @@ img.thumb{
               <circle cx="12" cy="11" r="2.5"></circle>
             </svg>
           </span>
+          <span class="mode-label">Map</span>
         </button>
       </div>
     </nav>
@@ -6084,7 +6108,7 @@ function makePosts(){
 
     let postsLoaded = window.postsLoaded || false;
     window.postsLoaded = postsLoaded;
-    let waitForInitialZoom = window.waitForInitialZoom ?? true;
+    let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
     let initialZoomStarted = false;
     let postLoadRequested = false;
     window.waitForInitialZoom = waitForInitialZoom;
