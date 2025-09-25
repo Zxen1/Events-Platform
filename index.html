@@ -5844,7 +5844,7 @@ function buildClusterListHTML(items){
     }
 
     const MULTI_VENUE_MARKER_ID = 'multi-venue-marker';
-    const MULTI_VENUE_MARKER_URL = 'assets/icons-40/multi-category-icon-blue-40.png';
+    const MULTI_VENUE_MARKER_URL = 'assets/icons-40/multi-post-icon-40.webp';
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
     subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
@@ -8143,7 +8143,8 @@ function makePosts(){
           .map(p => {
             const baseSub = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
             const key = venueKey(p.lng, p.lat);
-            const isMultiVenue = (coordCounts.get(key) || 0) > 1;
+            const count = coordCounts.get(key) || 1;
+            const isMultiVenue = count > 1;
             return {
               type:'Feature',
               properties:{
@@ -8153,7 +8154,9 @@ function makePosts(){
                 cat:p.category,
                 sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
                 baseSub,
-                multi:isMultiVenue ? 1 : 0
+                multi:isMultiVenue ? 1 : 0,
+                multiCount: count,
+                multiLabel: String(count)
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             };
@@ -8189,6 +8192,7 @@ function makePosts(){
         } });
       }
       const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
+      const multiLabelExpression = ['case', ['==', ['get', 'multi'], 1], ['coalesce', ['get', 'multiLabel'], ''], ''];
       const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
       const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
@@ -8286,9 +8290,19 @@ function makePosts(){
             'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1100
+            'symbol-sort-key': 1100,
+            'text-field': multiLabelExpression,
+            'text-font': ['Open Sans Bold','Arial Unicode MS Bold'],
+            'text-size': 14,
+            'text-anchor': 'center',
+            'text-offset': [0, 0],
+            'text-allow-overlap': true,
+            'text-ignore-placement': true,
+            'text-pitch-alignment': 'viewport'
           },
-          paint:{},
+          paint:{
+            'text-color': '#fff'
+          },
         });
       }
       try{ map.setLayoutProperty('unclustered','icon-image',['get','sub']); }catch(e){}
@@ -8298,6 +8312,15 @@ function makePosts(){
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key',1100); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-field', multiLabelExpression); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-font',['Open Sans Bold','Arial Unicode MS Bold']); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-size',14); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-anchor','center'); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-offset',[0,0]); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-allow-overlap', true); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-ignore-placement', true); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','text-pitch-alignment','viewport'); }catch(e){}
+      try{ map.setPaintProperty('unclustered','text-color','#fff'); }catch(e){}
       if(shouldCluster){
         try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
       } else {
@@ -9843,9 +9866,11 @@ function openPostModal(id){
                   `assets/icons/subcategories/${e.id}.png`,
                   `assets/icons/${e.id}.png`,
                   `assets/images/icons/${e.id}.png`,
+                  `assets/icons-40/${e.id}-40.webp`,
                   // Final fallback to your existing file only:
-                  `assets/icons/multi-category-icon-blue-40.png`,
-                  `assets/images/icons/multi-category-icon-blue-40.png`
+                  `assets/icons-40/multi-post-icon-40.webp`,
+                  `assets/icons/multi-category-icon-blue.png`,
+                  `assets/images/icons/multi-category-icon-blue.png`
                 ].map(p => new URL(p, base).href);
 
                 (function tryNext(i){
@@ -10896,7 +10921,7 @@ document.addEventListener('pointerdown', (e) => {
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
       const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
-      const icon40 = `assets/icons-40/${iconPrefix}-${color}.webp-40.webp`;
+      const icon40 = `assets/icons-40/${iconPrefix}-${color}-40.webp`;
       subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
       subcategoryMarkers[slug] = icon40;
@@ -10910,7 +10935,7 @@ document.addEventListener('pointerdown', (e) => {
   Object.entries(specialSubIconPaths).forEach(([name, path20]) => {
     const markerPath = path20
       .replace('icons-20', 'icons-40')
-      .replace('-20.webp', '.webp-40.webp');
+      .replace('-20.webp', '-40.webp');
     subcategoryIcons[name] = `<img src="${path20}" width="20" height="20" alt="">`;
     const slug = subcategoryMarkerIds[name] || slugify(name);
     subcategoryMarkers[slug] = markerPath;
