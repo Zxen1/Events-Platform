@@ -8597,9 +8597,10 @@ function makePosts(){
         }
       });
 
+      const pointLayer = 'unclustered';
+      const pointLayerRef = map.getLayer(pointLayer);
+
       (function ensureSelectedRing(){
-        const pointLayer = 'unclustered';
-        const pointLayerRef = map.getLayer(pointLayer);
         const src = pointLayerRef ? pointLayerRef.source : null;
         if(!src || map.getLayer(SELECTED_RING_LAYER)) return;
 
@@ -8619,13 +8620,32 @@ function makePosts(){
       })();
       updateSelectedMarkerRing();
 
-      // Hover ring layer for individual points
-      if(!map.getLayer('hover-ring')){
-        map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
-          'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
-          'circle-stroke-width': 2, 'circle-radius': 20
-        }});
+      // Hover ring – use the same source as the point layer so it always matches
+      if (!map.getLayer('hover-ring')) {
+        const srcId =
+          (pointLayerRef && pointLayerRef.source) ||
+          (map.getLayer(pointLayer) && map.getLayer(pointLayer).source) ||
+          'posts';
+
+        map.addLayer({
+          id: 'hover-ring',
+          type: 'circle',
+          source: srcId,
+          filter: ['==', ['get', 'id'], '__none__'],
+          paint: {
+            'circle-radius': 18,
+            'circle-color': '#fff',
+            'circle-opacity': 0,
+            'circle-stroke-color': '#00D1FF',
+            'circle-stroke-width': 4
+          }
+        }, pointLayer);
       }
+
+      // Ensure the rings render ABOVE symbols so they remain visible when hover ends
+      try { if (map.getLayer(SELECTED_RING_LAYER)) map.moveLayer(SELECTED_RING_LAYER); } catch(e){}
+      try { if (map.getLayer('hover-ring'))          map.moveLayer('hover-ring'); }          catch(e){}
+      try { if (map.getLayer('hover-fill'))          map.moveLayer('hover-fill'); }          catch(e){}
 
       const handleVenueMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
