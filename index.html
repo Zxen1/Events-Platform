@@ -4925,6 +4925,20 @@ img.thumb{
       return;
     }
     let skyLayerId = null;
+    const skyPaint = {
+      'sky-type': 'gradient',
+      'sky-gradient-center': [0, 0],
+      'sky-gradient-radius': 80,
+      'sky-gradient': [
+        'interpolate',
+        ['linear'],
+        ['sky-radial-progress'],
+        0.0, 'rgba(6,10,20,1)',
+        0.6, '#0b1d51',
+        1.0, '#1a2a6c'
+      ],
+      'sky-opacity': 1
+    };
     try {
       if(mapInstance.getLayer('sky')){
         skyLayerId = 'sky';
@@ -4934,12 +4948,7 @@ img.thumb{
         mapInstance.addLayer({
           id:'night-sky',
           type:'sky',
-          paint:{
-            'sky-type':'atmosphere',
-            'sky-atmosphere-color':'#0b1d51',
-            'sky-atmosphere-halo-color':'#1a2a6c',
-            'sky-atmosphere-sun-intensity':0.1
-          }
+          paint: skyPaint
         });
         skyLayerId = 'night-sky';
       }
@@ -4951,13 +4960,7 @@ img.thumb{
     if(!skyLayerId || typeof mapInstance.setPaintProperty !== 'function'){
       return;
     }
-    const paintUpdates = [
-      ['sky-type', 'atmosphere'],
-      ['sky-atmosphere-color', '#0b1d51'],
-      ['sky-atmosphere-halo-color', '#1a2a6c'],
-      ['sky-atmosphere-sun-intensity', 0.1]
-    ];
-    paintUpdates.forEach(([prop, value]) => {
+    Object.entries(skyPaint).forEach(([prop, value]) => {
       try { mapInstance.setPaintProperty(skyLayerId, prop, value); } catch(err){}
     });
   }
