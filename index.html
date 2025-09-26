@@ -5292,11 +5292,12 @@ if (typeof slugify !== 'function') {
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
-  const markerLabelTextPaddingPx = 8;
   const markerLabelTextGapPx = 5;
+  const markerLabelMarkerInsetPx = 5;
+  const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
   const markerLabelTextAreaWidthPx = 105;
   const markerLabelTextSize = 12;
-  const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 + markerLabelTextGapPx - markerLabelTextPaddingPx;
+  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
   const markerLabelTextMaxWidth = Math.max(3, markerLabelTextAreaWidthPx / markerLabelTextSize);
 
@@ -8582,7 +8583,7 @@ if (!map.__pillHooksInstalled) {
           paint:{
             'icon-translate': [markerLabelBgTranslatePx, 0],
             'icon-translate-anchor': 'viewport',
-            'icon-opacity': 1
+            'icon-opacity': 0.8
           }
         }, 'unclustered');
       }
@@ -8622,7 +8623,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key',1099); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
+      try{ map.setPaintProperty('marker-label-bg','icon-opacity',0.8); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
