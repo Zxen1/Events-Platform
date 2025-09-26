@@ -5297,7 +5297,7 @@ img.thumb{
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/streets-v12',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
@@ -7826,7 +7826,7 @@ function makePosts(){
           mapboxgl.accessToken = MAPBOX_TOKEN;
         map = new mapboxgl.Map({
           container:'map',
-          style:'mapbox://styles/mapbox/streets-v12',
+          style:'mapbox://styles/mapbox/standard',
           projection:'globe',
           center: startCenter,
           zoom: startZoom,
