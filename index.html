@@ -8040,17 +8040,6 @@ function makePosts(){
           mapboxgl.setLogLevel('error');
         }
         map = new mapboxgl.Map({
-
-// Pre-register a placeholder so the layer never references a missing image
-try {
-  if (!map.hasImage || !map.hasImage('marker-label-bg')) {
-    const c = document.createElement('canvas');
-    c.width = 2; c.height = 2;
-    const ctx = c.getContext('2d'); ctx && ctx.clearRect(0,0,2,2);
-    map.addImage('marker-label-bg', c, { pixelRatio: 1 });
-  }
-} catch (e) {}
-
           container:'map',
           style:'mapbox://styles/mapbox/standard',
           projection:'globe',
@@ -8060,6 +8049,18 @@ try {
           bearing: startBearing,
           attributionControl:true
         });
+        // Pre-register a placeholder so the layer never references a missing image
+        try {
+          if (!map.hasImage || !map.hasImage('marker-label-bg')) {
+            const c = document.createElement('canvas');
+            c.width = 2; c.height = 2;
+            const ctx = c.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, 2, 2);
+            }
+            map.addImage('marker-label-bg', c, { pixelRatio: 1 });
+          }
+        } catch (e) {}
         const applyStyleAdjustments = () => {
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
@@ -11202,6 +11203,7 @@ document.addEventListener('pointerdown', (e) => {
   const subcategoryMarkerIds = window.subcategoryMarkerIds || (window.subcategoryMarkerIds = {});
   const categoryShapes = window.categoryShapes || (window.categoryShapes = {});
   const shapeList = Object.keys(window.SHAPES || {});
+  const slugifyFn = window.slugify || (str => String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
   let colorIdx = 0;
   const cats = window.categories || [];
   cats.forEach((cat, idx) => {
@@ -11210,7 +11212,7 @@ document.addEventListener('pointerdown', (e) => {
     cat.subs.forEach(sub => {
       const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
       colorIdx++;
-      const slug = slugify(sub);
+      const slug = slugifyFn(sub);
       const iconPrefix = ICON_BASE[cat.name];
       const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
       const icon30 = `assets/icons-30/${iconPrefix}-${color}-30.webp`;
@@ -11229,7 +11231,7 @@ document.addEventListener('pointerdown', (e) => {
       .replace('icons-20', 'icons-30')
       .replace('-20.webp', '-30.webp');
     subcategoryIcons[name] = `<img src="${path20}" width="20" height="20" alt="">`;
-    const slug = subcategoryMarkerIds[name] || slugify(name);
+    const slug = subcategoryMarkerIds[name] || slugifyFn(name);
     subcategoryMarkers[slug] = markerPath;
     subcategoryMarkers[name] = markerPath;
   });
