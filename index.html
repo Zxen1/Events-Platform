@@ -5386,6 +5386,7 @@ img.thumb{
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
     let hoverPopup = null, hoverId = null;
+    let postSourceEventsBound = false;
     let touchMarker = null;
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     let activePostId = null;
@@ -8331,93 +8332,94 @@ function makePosts(){
         }
       });
       currentClusterVisualKey = clusterVisualKey;
-      // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
-      // Close list on outside click or ESC
-      map.on('click', (e)=>{
-        if(!listLocked) return; if(Date.now() - lastListOpenAt < 200) return;
-        // ignore the click that just opened it
-        if(Date.now() - lastListOpenAt < 200) return;
-        const el = hoverPopup && hoverPopup.getElement();
-        if(!el) { lockMap(false); return; }
-        const within = el.contains(e.originalEvent.target);
-        if(!within){ hoverPopup.remove(); hoverPopup=null; lockMap(false); }
-      });
-      window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
-      // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
-      map.on('contextmenu','unclustered', (e)=>{
-        const f = e.features && e.features[0]; if(!f) return;
-        if(e.preventDefault) e.preventDefault();
-        const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
-        const items = postsAtVenue(coords[0], coords[1]);
-        if(!items || !items.length){ return; }
-        openListPopupAtPoint(e.point, buildClusterListHTML(items));
-
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-        // Wire interactions
-        const root = hoverPopup.getElement();
-        const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
-        root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-        root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (evt)=>{
-          const id = n.getAttribute('data-id');
-          if(!id) return;
-          evt.preventDefault();
-          callWhenDefined('openPost', (fn)=>{
-            requestAnimationFrame(() => {
-              try{
-                touchMarker = null;
-                close();
-                stopSpin();
-                fn(id, false, true);
-              }catch(err){ console.error(err); }
-            });
-          });
-        }, { capture: true }));
-        const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
-        lockMap(true); lastListOpenAt = Date.now();
-      });
-
-      map.on('click','clusters', (e)=>{
-        stopSpin();
-        if(e && e.preventDefault) e.preventDefault();
-        const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
-        if(!features.length) return;
-        const feature = features[0];
-        const props = feature.properties || {};
-        const clusterId = props.cluster_id;
-        const clusterLayer = map.getLayer('clusters');
-        const sourceId = clusterLayer ? clusterLayer.source : null;
-        if(clusterId === undefined || clusterId === null || !sourceId) return;
-        const src = map.getSource && map.getSource(sourceId);
-        if(!src || typeof src.getClusterExpansionZoom !== 'function') return;
-
-        suppressNextRefresh = true;
-        const clearSuppress = () => { suppressNextRefresh = false; };
-        src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-          if(err){ clearSuppress(); return; }
-          try{
-            const coords = feature.geometry && feature.geometry.coordinates;
-            if(!coords) { clearSuppress(); return; }
-            const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-            const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
-            map.easeTo({ center: coords, zoom: nextZoom });
-          }catch(ex){
-            console.error(ex);
-            clearSuppress();
-          }
+      if(!postSourceEventsBound){
+        // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
+        // Close list on outside click or ESC
+        map.on('click', (e)=>{
+          if(!listLocked) return; if(Date.now() - lastListOpenAt < 200) return;
+          // ignore the click that just opened it
+          if(Date.now() - lastListOpenAt < 200) return;
+          const el = hoverPopup && hoverPopup.getElement();
+          if(!el) { lockMap(false); return; }
+          const within = el.contains(e.originalEvent.target);
+          if(!within){ hoverPopup.remove(); hoverPopup=null; lockMap(false); }
         });
-        setTimeout(clearSuppress, 400);
-      });
-      
-      map.on('click','unclustered', (e)=>{
-        stopSpin();
-        const f = e.features && e.features[0]; if(!f) return;
+        window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
+        // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
+        map.on('contextmenu','unclustered', (e)=>{
+          const f = e.features && e.features[0]; if(!f) return;
+          if(e.preventDefault) e.preventDefault();
+          const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
+          const items = postsAtVenue(coords[0], coords[1]);
+          if(!items || !items.length){ return; }
+          openListPopupAtPoint(e.point, buildClusterListHTML(items));
+
+          (function(){
+            function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
+            const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+            if(_root){
+              ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
+            }
+          })();
+
+          // Wire interactions
+          const root = hoverPopup.getElement();
+          const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
+          root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
+          root.querySelectorAll('.multi-item.map-card').forEach(n => n.addEventListener('click', (evt)=>{
+            const id = n.getAttribute('data-id');
+            if(!id) return;
+            evt.preventDefault();
+            callWhenDefined('openPost', (fn)=>{
+              requestAnimationFrame(() => {
+                try{
+                  touchMarker = null;
+                  close();
+                  stopSpin();
+                  fn(id, false, true);
+                }catch(err){ console.error(err); }
+              });
+            });
+          }, { capture: true }));
+            const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
+            lockMap(true); lastListOpenAt = Date.now();
+        });
+
+        map.on('click','clusters', (e)=>{
+          stopSpin();
+          if(e && e.preventDefault) e.preventDefault();
+          const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
+          if(!features.length) return;
+          const feature = features[0];
+          const props = feature.properties || {};
+          const clusterId = props.cluster_id;
+          const clusterLayer = map.getLayer('clusters');
+          const sourceId = clusterLayer ? clusterLayer.source : null;
+          if(clusterId === undefined || clusterId === null || !sourceId) return;
+          const src = map.getSource && map.getSource(sourceId);
+          if(!src || typeof src.getClusterExpansionZoom !== 'function') return;
+
+          suppressNextRefresh = true;
+          const clearSuppress = () => { suppressNextRefresh = false; };
+          src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
+            if(err){ clearSuppress(); return; }
+            try{
+              const coords = feature.geometry && feature.geometry.coordinates;
+              if(!coords) { clearSuppress(); return; }
+              const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
+              const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
+              map.easeTo({ center: coords, zoom: nextZoom });
+            }catch(ex){
+              console.error(ex);
+              clearSuppress();
+            }
+          });
+          setTimeout(clearSuppress, 400);
+        });
+
+        map.on('click','unclustered', (e)=>{
+          stopSpin();
+          const f = e.features && e.features[0]; if(!f) return;
         const props = f.properties || {};
         const id = props.id;
         if(id !== undefined && id !== null){
@@ -8481,7 +8483,7 @@ function makePosts(){
                 }, {capture:true});
               }
             })();
- lastListOpenAt = Date.now();
+              lastListOpenAt = Date.now();
             return;
           }
         }
@@ -8696,8 +8698,10 @@ function makePosts(){
       const onClusterMove = window.rafThrottle((e)=>{
         if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
       });
-      map.on('mousemove','clusters', onClusterMove);
+        map.on('mousemove','clusters', onClusterMove);
         map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
+        postSourceEventsBound = true;
+      }
       } catch (err) {
         console.error('addPostSource failed', err);
       } finally {
