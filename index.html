@@ -4695,38 +4695,69 @@ if (typeof slugify !== 'function') {
 </script>
 
 <script>
-// === 150x40 black pill provider (sprite id: marker-label-bg) ===
+// === 150x40 pill provider (sprite id: marker-label-bg) ===
 (function(){
   const PILL_ID = 'marker-label-bg';
-  const PILL_W = 150, PILL_H = 40, PILL_R = 20;
+  const PILL_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
+  let cachedImage = null;
+  let loadingImage = null;
+  const pendingMaps = new Set();
 
-  function rounded(ctx, x, y, w, h, r){
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
+  function applyImageToMap(map){
+    if(!map || typeof map.hasImage !== 'function' || !cachedImage){
+      return;
+    }
+    try{
+      if(map.hasImage(PILL_ID)){
+        try{ map.removeImage(PILL_ID); }catch(e){}
+      }
+      map.addImage(PILL_ID, cachedImage, { pixelRatio: 1 });
+    }catch(e){ /* silent */ }
+  }
+
+  function handleImageLoad(){
+    if(!loadingImage){
+      return;
+    }
+    if(loadingImage.complete && loadingImage.naturalWidth > 0){
+      cachedImage = loadingImage;
+      pendingMaps.forEach((map)=>applyImageToMap(map));
+    }
+    pendingMaps.clear();
+    loadingImage = null;
+  }
+
+  function ensureImage(){
+    if(cachedImage || loadingImage){
+      return;
+    }
+    loadingImage = new Image();
+    try{ loadingImage.crossOrigin = 'anonymous'; }catch(e){}
+    loadingImage.decoding = 'async';
+    loadingImage.onload = handleImageLoad;
+    loadingImage.onerror = handleImageLoad;
+    loadingImage.src = PILL_IMAGE_URL;
+    if(loadingImage.complete){
+      handleImageLoad();
+    }
   }
 
   function addOrReplacePill(map){
     try{
-      if(!map || typeof map.hasImage !== 'function') return;
-      if(map.hasImage(PILL_ID)) { try{ map.removeImage(PILL_ID); }catch(e){} }
-      const c = document.createElement('canvas');
-      c.width = PILL_W; c.height = PILL_H;
-      const ctx = c.getContext('2d');
-      ctx.clearRect(0,0,PILL_W,PILL_H);
-      ctx.fillStyle = '#000';
-      rounded(ctx, 0, 0, PILL_W, PILL_H, PILL_R);
-      ctx.fill();
-      map.addImage(PILL_ID, c, { pixelRatio: 1 });
+      if(!map || typeof map.hasImage !== 'function'){
+        return;
+      }
+      if(cachedImage){
+        applyImageToMap(map);
+        return;
+      }
+      pendingMaps.add(map);
+      ensureImage();
     }catch(e){ /* silent */ }
   }
 
   window.__addOrReplacePill150x40 = addOrReplacePill;
+  ensureImage();
 })();
 </script>
 </head>
@@ -5261,8 +5292,7 @@ if (typeof slugify !== 'function') {
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
-  const markerLabelBorderRadiusPx = 20;
-  const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 - 2;
+  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + 5);
   const markerLabelTextPaddingPx = 8;
   const markerLabelTextSize = 12;
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
@@ -5307,42 +5337,26 @@ if (typeof slugify !== 'function') {
       scheduleMarkerLabelBackgroundRetry(mapInstance);
       return;
     }
-    const ratio = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
-    const width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
-    const height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
-    const canvas = document.createElement('canvas');
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-    const ctx = canvas.getContext('2d');
-    if(ctx){
-      ctx.scale(ratio, ratio);
-      const radius = Math.min(markerLabelBorderRadiusPx, height / 2, width / 2);
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.moveTo(radius, 0);
-      ctx.lineTo(width - radius, 0);
-      ctx.quadraticCurveTo(width, 0, width, radius);
-      ctx.lineTo(width, height - radius);
-      ctx.quadraticCurveTo(width, height, width - radius, height);
-      ctx.lineTo(radius, height);
-      ctx.quadraticCurveTo(0, height, 0, height - radius);
-      ctx.lineTo(0, radius);
-      ctx.quadraticCurveTo(0, 0, radius, 0);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      const fallbackCtx = canvas.getContext('2d');
-      if(fallbackCtx){
-        fallbackCtx.fillStyle = '#000';
-        fallbackCtx.fillRect(0, 0, canvas.width, canvas.height);
+    const placeholder = document.createElement('canvas');
+    try{
+      placeholder.width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
+      placeholder.height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
+      const phCtx = placeholder.getContext('2d');
+      if(phCtx){
+        phCtx.clearRect(0, 0, placeholder.width, placeholder.height);
       }
+    }catch(err){
+      placeholder.width = 1;
+      placeholder.height = 1;
     }
     try{
-      mapInstance.addImage(MARKER_LABEL_BG_ID, canvas, { pixelRatio: ratio });
+      mapInstance.addImage(MARKER_LABEL_BG_ID, placeholder, { pixelRatio: 1 });
       mapInstance.__markerLabelBgRetryScheduled = false;
     }catch(err){
       scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
     }
+    try{ window.__addOrReplacePill150x40?.(mapInstance); }catch(err){}
   }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
