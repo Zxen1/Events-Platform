@@ -918,12 +918,21 @@ button[aria-expanded="true"] .results-arrow{
   box-sizing:border-box;
 }
 
+.panel-content[data-side='left']{
+  transform:translateX(-100%);
+}
+
+.panel-content[data-side='right']{
+  transform:translateX(100%);
+}
+
 .panel-content[data-side]:not(.panel-visible){
   pointer-events:none;
 }
 
 .panel-content[data-side].panel-visible{
   pointer-events:auto;
+  transform:translateX(0);
 }
 
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
@@ -4728,7 +4737,6 @@ img.thumb{
     top:calc(var(--header-h) + var(--safe-top));
     left:0;
     right:0;
-    transform:none;
   }
   .open-post .post-header{
     padding:10px;
@@ -4951,7 +4959,7 @@ if (typeof slugify !== 'function') {
   </div>
 
   <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;">
       <div class="panel-header">
         <div id="filterSummary" class="filter-summary"></div>
       </div>
@@ -5016,7 +5024,7 @@ if (typeof slugify !== 'function') {
   </div>
 
   <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="right:0;transform:none;">
+    <div class="panel-content" style="right:0;">
       <div class="panel-header">
         <div class="header-top">
           <h2>Create Post</h2>
@@ -5054,7 +5062,7 @@ if (typeof slugify !== 'function') {
   </div>
 
   <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;transform:none;">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
       <div class="panel-header">
         <div class="header-top">
           <h2 class="title">Admin</h2>
@@ -7430,74 +7438,9 @@ function makePosts(){
         return value;
       }
 
-      function stopBoardTransition(board){
-        if(board && board.__boardTransitionCancel){
-          try{ board.__boardTransitionCancel(); }catch(err){}
-          board.__boardTransitionCancel = null;
-        }
-      }
-
-      function parseTransitionTimes(value){
-        return value.split(',').map(part => {
-          const trimmed = part.trim();
-          if(!trimmed) return 0;
-          if(trimmed.endsWith('ms')) return parseFloat(trimmed) || 0;
-          if(trimmed.endsWith('s')) return (parseFloat(trimmed) || 0) * 1000;
-          const numeric = parseFloat(trimmed);
-          return Number.isFinite(numeric) ? numeric * 1000 : 0;
-        });
-      }
-
-      function getBoardTransitionDuration(board){
-        if(!board || typeof getComputedStyle !== 'function') return 0;
-        let style;
-        try{ style = getComputedStyle(board); }
-        catch(err){ return 0; }
-        if(!style) return 0;
-        const durations = parseTransitionTimes(style.transitionDuration || '0s');
-        const delays = parseTransitionTimes(style.transitionDelay || '0s');
-        const count = Math.max(durations.length, delays.length);
-        let maxTotal = 0;
-        for(let i=0;i<count;i++){
-          const duration = durations[i] ?? durations[durations.length-1] ?? 0;
-          const delay = delays[i] ?? delays[delays.length-1] ?? 0;
-          const total = duration + delay;
-          if(total > maxTotal) maxTotal = total;
-        }
-        return maxTotal;
-      }
-
-      function watchBoardTransition(board){
-        const duration = getBoardTransitionDuration(board);
-        if(duration <= 0){
-          board?.classList?.remove('board-transitioning');
-          return { promise: Promise.resolve(), cancel: ()=>{} };
-        }
-        let finish = ()=>{};
-        const promise = new Promise(resolve => {
-          let done = false;
-          finish = () => {
-            if(done) return;
-            done = true;
-            board.classList.remove('board-transitioning');
-            board.removeEventListener('transitionend', handler);
-            resolve();
-          };
-          const handler = (event) => {
-            if(event.target !== board) return;
-            finish();
-          };
-          board.classList.add('board-transitioning');
-          board.addEventListener('transitionend', handler);
-          setTimeout(finish, duration + 50);
-        });
-        return { promise, cancel: finish };
-      }
-
       function animateBoard(board, shouldShow, immediate=false){
         if(!board) return;
         board.classList.add('board-animate');
-        stopBoardTransition(board);
         const defaultDisplay = getDefaultBoardDisplay(board);
         const currentState = boardStates.get(board) || (board.style.display === 'none' ? 'hidden' : 'visible');
         if(immediate){
@@ -7512,8 +7455,6 @@ function makePosts(){
             board.setAttribute('aria-hidden','true');
             boardStates.set(board, 'hidden');
           }
-          board.classList.remove('board-transitioning');
-          board.__boardTransitionCancel = null;
           return;
         }
 
@@ -7522,17 +7463,15 @@ function makePosts(){
             board.style.display = defaultDisplay;
             board.classList.remove('board-hidden');
             board.setAttribute('aria-hidden','false');
+            boardStates.set(board, 'visible');
             return;
           }
           board.style.display = defaultDisplay;
           board.setAttribute('aria-hidden','false');
           board.classList.add('board-hidden');
-          void board.offsetWidth;
-          const { promise, cancel } = watchBoardTransition(board);
-          board.__boardTransitionCancel = cancel;
-          board.classList.remove('board-hidden');
-          promise.then(() => {
-            if(board.__boardTransitionCancel === cancel) board.__boardTransitionCancel = null;
+          requestAnimationFrame(()=>{
+            if(!board.isConnected) return;
+            board.classList.remove('board-hidden');
             boardStates.set(board, 'visible');
           });
         } else {
@@ -7540,19 +7479,28 @@ function makePosts(){
             board.classList.add('board-hidden');
             board.style.display = 'none';
             board.setAttribute('aria-hidden','true');
+            boardStates.set(board, 'hidden');
             return;
           }
+          board.setAttribute('aria-hidden','true');
           board.classList.remove('board-hidden');
           void board.offsetWidth;
-          const { promise, cancel } = watchBoardTransition(board);
-          board.__boardTransitionCancel = cancel;
           board.classList.add('board-hidden');
-          board.setAttribute('aria-hidden','true');
-          promise.then(() => {
-            if(board.__boardTransitionCancel === cancel) board.__boardTransitionCancel = null;
+          let finished = false;
+          let onTransitionEnd;
+          const finish = ()=>{
+            if(finished) return;
+            finished = true;
+            if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
             board.style.display = 'none';
             boardStates.set(board, 'hidden');
-          });
+          };
+          onTransitionEnd = event => {
+            if(event && event.target !== board) return;
+            finish();
+          };
+          board.addEventListener('transitionend', onTransitionEnd);
+          setTimeout(finish, 350);
         }
       }
 
@@ -10928,20 +10876,18 @@ const panelButtons = {
   memberPanel: 'memberBtn',
   adminPanel: 'adminBtn'
 };
-function triggerPanelSlide(content, translateValue){
+function schedulePanelEntrance(content, force=false){
   if(!content) return;
-  const previousTransition = content.style.transition;
-  content.style.transition = 'none';
-  content.classList.remove('panel-visible');
-  content.style.transform = translateValue;
-  requestAnimationFrame(()=>{
-    if(!content.isConnected) return;
-    void content.offsetWidth;
-    const restoreTransition = previousTransition && previousTransition !== 'none' ? previousTransition : '';
-    content.style.transition = restoreTransition;
-    content.classList.add('panel-visible');
-    content.style.transform = '';
-  });
+  if(force){
+    content.classList.remove('panel-visible');
+  }
+  content.style.transform = '';
+  if(force || !content.classList.contains('panel-visible')){
+    requestAnimationFrame(()=>{
+      if(!content.isConnected) return;
+      content.classList.add('panel-visible');
+    });
+  }
 }
 function openPanel(m){
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
@@ -10985,10 +10931,9 @@ function openPanel(m){
           content.style.bottom=`${footerH}px`;
           content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
           content.dataset.side='right';
-          triggerPanelSlide(content, 'translateX(100%)');
+          schedulePanelEntrance(content);
         } else if(m.id==='filterPanel'){
           const topPos = headerH + subH + safeTop;
-          let translate;
           if(innerWidth < 450){
             content.style.left='0';
             content.style.right='0';
@@ -10996,7 +10941,6 @@ function openPanel(m){
             content.style.bottom=`${footerH}px`;
             content.style.maxHeight='';
             content.dataset.side='left';
-            translate = 'translateX(-100%)';
           } else {
             const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
             content.style.left='0';
@@ -11005,9 +10949,8 @@ function openPanel(m){
             content.style.bottom='';
             content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
             content.dataset.side='left';
-            translate = 'translateX(-100%)';
           }
-          triggerPanelSlide(content, translate);
+          schedulePanelEntrance(content);
         } else if(m.id==='welcome-modal'){
           const topPos = headerH + safeTop + 10;
           content.style.left='50%';
@@ -11046,7 +10989,6 @@ function closePanel(m){
   m.setAttribute('inert','');
   if(content && content.dataset.side){
     content.classList.remove('panel-visible');
-    content.style.transform = content.dataset.side === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
     content.addEventListener('transitionend', function handler(){
       content.removeEventListener('transitionend', handler);
       m.classList.remove('show');
@@ -11103,12 +11045,12 @@ function movePanelToEdge(panel, side){
     content.dataset.side='left';
     content.style.left = '0';
     content.style.right = 'auto';
-    triggerPanelSlide(content, 'translateX(-100%)');
+    schedulePanelEntrance(content, true);
   } else {
     content.dataset.side='right';
     content.style.left = 'auto';
     content.style.right = '0';
-    triggerPanelSlide(content, 'translateX(100%)');
+    schedulePanelEntrance(content, true);
   }
 }
 function repositionPanels(){
