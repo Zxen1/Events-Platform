@@ -5175,6 +5175,113 @@ img.thumb{
     });
   }
 
+  function createTransparentPlaceholder(size){
+    const canvas = document.createElement('canvas');
+    const s = Math.max(1, size || 2);
+    canvas.width = s;
+    canvas.height = s;
+    const ctx = canvas.getContext('2d');
+    if(ctx){
+      ctx.clearRect(0, 0, s, s);
+    }
+    return canvas;
+  }
+
+  function ensurePlaceholderSprites(mapInstance){
+    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
+    const required = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
+    required.forEach(name => {
+      try{
+        if(mapInstance.hasImage?.(name)) return;
+        mapInstance.addImage(name, createTransparentPlaceholder(4), { pixelRatio: 1 });
+      }catch(err){}
+    });
+  }
+
+  function patchLayerFiltersForMissingLayer(mapInstance, style){
+    if(!mapInstance || typeof mapInstance.setFilter !== 'function') return;
+    const layers = style && Array.isArray(style.layers) ? style.layers : [];
+    if(!layers.length) return;
+
+    function patchExpression(expr){
+      if(!Array.isArray(expr)){
+        return { expr, changed:false };
+      }
+      const op = expr[0];
+      let changed = false;
+      const result = expr.map((item, idx) => {
+        if(idx === 0) return item;
+        const patched = patchExpression(item);
+        if(patched.changed) changed = true;
+        return patched.expr;
+      });
+
+      if((op === 'number' || op === 'to-number') && result.length > 1){
+        const target = result[1];
+        if(Array.isArray(target)){
+          const already = target[0] === 'coalesce'
+            && Array.isArray(target[1])
+            && target[1][0] === 'get'
+            && target[1][1] === 'layer';
+          if(!already && target[0] === 'get' && target[1] === 'layer'){
+            result[1] = ['coalesce', target, 0];
+            changed = true;
+          }
+        }
+      }
+
+      return { expr: result, changed };
+    }
+
+    layers.forEach(layer => {
+      if(!layer || !layer.id || !layer.filter) return;
+      try{
+        const patched = patchExpression(layer.filter);
+        if(!patched.changed) return;
+        mapInstance.setFilter(layer.id, patched.expr);
+      }catch(err){}
+    });
+  }
+
+  function patchTerrainSource(mapInstance, style){
+    if(!mapInstance || typeof mapInstance.setTerrain !== 'function') return;
+    const terrain = style && style.terrain;
+    if(!terrain || !terrain.source) return;
+    const sources = style.sources || {};
+    const originalSource = sources[terrain.source];
+    if(!originalSource) return;
+
+    const dedicatedId = 'terrain-dem-dedicated';
+    if(!mapInstance.getSource?.(dedicatedId)){
+      try {
+        const clone = JSON.parse(JSON.stringify(originalSource));
+        mapInstance.addSource(dedicatedId, clone);
+      } catch(err){}
+    }
+
+    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
+    const nextTerrain = Object.assign({}, terrain, { source: targetSource });
+    if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
+      nextTerrain.cutoff = 0.01;
+    }
+    try { mapInstance.setTerrain(nextTerrain); } catch(err){}
+  }
+
+  function patchMapboxStyleArtifacts(mapInstance){
+    if(!mapInstance || typeof mapInstance.getStyle !== 'function') return;
+    if(mapInstance.isStyleLoaded && !mapInstance.isStyleLoaded()) return;
+    let style;
+    try{
+      style = mapInstance.getStyle();
+    }catch(err){
+      return;
+    }
+    if(!style) return;
+    try{ ensurePlaceholderSprites(mapInstance); }catch(err){}
+    try{ patchLayerFiltersForMissingLayer(mapInstance, style); }catch(err){}
+    try{ patchTerrainSource(mapInstance, style); }catch(err){}
+  }
+
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
     function attach(){
@@ -7834,8 +7941,16 @@ function makePosts(){
           bearing: startBearing,
           attributionControl:true
         });
-        map.on('style.load', () => {
+        const applyStyleAdjustments = () => {
           applyNightSky(map);
+          patchMapboxStyleArtifacts(map);
+        };
+        whenStyleReady(map, applyStyleAdjustments);
+        map.on('style.load', applyStyleAdjustments);
+        map.on('styledata', () => {
+          if(map.isStyleLoaded && map.isStyleLoaded()){
+            patchMapboxStyleArtifacts(map);
+          }
         });
         ensureMapIcon = attachIconLoader(map);
         const mapLoading = (() => {
@@ -9838,7 +9953,17 @@ function openPostModal(id){
               // Arm pointer on symbol layers *without* touching getStyle until loaded
               armPointerOnSymbolLayers(map);
 
-              whenStyleReady(map, () => applyNightSky(map));
+              const applyDetailStyleAdjustments = () => {
+                applyNightSky(map);
+                patchMapboxStyleArtifacts(map);
+              };
+              whenStyleReady(map, applyDetailStyleAdjustments);
+              map.on('style.load', applyDetailStyleAdjustments);
+              map.on('styledata', () => {
+                if(map.isStyleLoaded && map.isStyleLoaded()){
+                  patchMapboxStyleArtifacts(map);
+                }
+              });
 
               // Keep 404 icon spam away while reusing existing assets
               map.on('styleimagemissing', (e) => {
