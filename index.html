@@ -5209,8 +5209,9 @@ img.thumb{
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const markerIconSize = isTouchDevice ? 1.35 : 1;
   const markerIconBaseSizePx = 30;
-  const markerLabelBackgroundWidthPx = 102;
-  const markerLabelBackgroundHeightPx = 26;
+  const markerLabelBackgroundWidthPx = 150;
+  const markerLabelBackgroundHeightPx = 40;
+  const markerLabelBorderRadiusPx = 20;
   const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 - 2;
   const markerLabelTextPaddingPx = 8;
   const markerLabelTextSize = 12;
@@ -5265,7 +5266,7 @@ img.thumb{
     const ctx = canvas.getContext('2d');
     if(ctx){
       ctx.scale(ratio, ratio);
-      const radius = height / 2;
+      const radius = Math.min(markerLabelBorderRadiusPx, height / 2, width / 2);
       ctx.fillStyle = '#000';
       ctx.beginPath();
       ctx.moveTo(radius, 0);
