@@ -5935,6 +5935,7 @@ function buildClusterListHTML(items){
       }
 
       mapInstance.on('style.load', async () => {
+        try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
         const preload = new Set([...KNOWN, ...Object.keys(markers)]);
         for(const iconName of preload){
@@ -5944,6 +5945,10 @@ function buildClusterListHTML(items){
 
       mapInstance.on('styleimagemissing', e => {
         if(!e || !e.id) return;
+        if(e.id === 'marker-label-bg'){
+          try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+          return;
+        }
         addIcon(e.id);
       });
 
