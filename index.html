@@ -8309,13 +8309,39 @@ function makePosts(){
       get spinEnabled(){ return spinEnabled; },
       set spinEnabled(v){ spinEnabled = v; },
       get spinSpeed(){ return spinSpeed; },
-      set spinSpeed(v){ spinSpeed = v; },
+      set spinSpeed(v){
+        const next = Number(v);
+        if(Number.isFinite(next)){
+          spinSpeed = next;
+          try{ localStorage.setItem('spinSpeed', String(spinSpeed)); }catch(err){}
+        }
+      },
       get spinLoadStart(){ return spinLoadStart; },
-      set spinLoadStart(v){ spinLoadStart = v; },
+      set spinLoadStart(v){
+        const next = !!v;
+        if(next !== spinLoadStart){
+          spinLoadStart = next;
+          try{ localStorage.setItem('spinLoadStart', JSON.stringify(spinLoadStart)); }catch(err){}
+          updateSpinState();
+        }
+      },
       get spinLoadType(){ return spinLoadType; },
-      set spinLoadType(v){ spinLoadType = v; },
+      set spinLoadType(v){
+        if(typeof v === 'string' && (v === 'all' || v === 'new') && v !== spinLoadType){
+          spinLoadType = v;
+          try{ localStorage.setItem('spinLoadType', spinLoadType); }catch(err){}
+          updateSpinState();
+        }
+      },
       get spinLogoClick(){ return spinLogoClick; },
-      set spinLogoClick(v){ spinLogoClick = v; updateLogoClickState(); },
+      set spinLogoClick(v){
+        const next = !!v;
+        if(next !== spinLogoClick){
+          spinLogoClick = next;
+          try{ localStorage.setItem('spinLogoClick', spinLogoClick ? 'true' : 'false'); }catch(err){}
+          updateLogoClickState();
+        }
+      },
       startSpin,
       stopSpin,
       updateSpinState,
