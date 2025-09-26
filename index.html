@@ -913,19 +913,16 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
-  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
-  will-change:transform, opacity;
-  opacity:1;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform;
   box-sizing:border-box;
 }
 
 .panel-content[data-side]:not(.panel-visible){
-  opacity:0;
   pointer-events:none;
 }
 
 .panel-content[data-side].panel-visible{
-  opacity:1;
   pointer-events:auto;
 }
 
@@ -2190,9 +2187,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
-  will-change:transform, opacity;
-  opacity:1;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform;
 }
 
 .recents-board{
@@ -2206,8 +2202,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:overlay;
   overflow-x:hidden;
   background:rgba(0,0,0,0.7);
-  transition:margin var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
-  will-change:margin, opacity, transform;
+  transition:margin var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:margin, transform;
   display:flex;
   flex-direction:column;
   gap:0;
@@ -2215,7 +2211,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  opacity:1;
   transform:translateX(0);
 }
 
@@ -2225,15 +2220,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   flex-shrink:0;
   position:relative;
   left:0;
-  opacity:1;
   display:flex;
   flex-direction:column;
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  transition:left var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
-  will-change:left, opacity, transform;
-  transform:translateY(0);
+  transition:left var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:left, transform;
+  transform:translateX(0);
 }
 
 .recents-board{
@@ -2246,25 +2240,23 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 }
 
 .board-animate{
-  will-change:transform, opacity;
+  will-change:transform;
 }
 
 .board-animate.board-hidden{
-  opacity:0;
-  visibility:hidden;
   pointer-events:none;
 }
 
 .quick-list-board.board-animate.board-hidden{
-  transform:translateX(-24px);
+  transform:translateX(-110%);
 }
 
 .post-board.board-animate.board-hidden{
-  transform:translateY(16px);
+  transform:translateX(110%);
 }
 
 .ad-board.board-animate.board-hidden{
-  transform:translateX(24px);
+  transform:translateX(110%);
 }
 
 .board-transitioning{
@@ -2301,7 +2293,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
-  transition:left 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+  transition:left 0.3s ease, margin 0.3s ease;
 }
 .post-board .post-card{
   width:100%;
@@ -2478,9 +2470,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
-  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
-  will-change:transform, opacity;
-  opacity:1;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform;
   display:none;
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -3121,14 +3112,12 @@ body.filters-active #filterBtn{
 
 .mode-posts .post-board{
   left:0;
-  opacity:1;
   z-index:1;
   pointer-events:auto;
 }
 
 .mode-map .post-board{
   left:calc(-100vw - var(--filter-panel-offset));
-  opacity:0;
   pointer-events:none;
 }
 .map-area{
@@ -10939,6 +10928,21 @@ const panelButtons = {
   memberPanel: 'memberBtn',
   adminPanel: 'adminBtn'
 };
+function triggerPanelSlide(content, translateValue){
+  if(!content) return;
+  const previousTransition = content.style.transition;
+  content.style.transition = 'none';
+  content.classList.remove('panel-visible');
+  content.style.transform = translateValue;
+  requestAnimationFrame(()=>{
+    if(!content.isConnected) return;
+    void content.offsetWidth;
+    const restoreTransition = previousTransition && previousTransition !== 'none' ? previousTransition : '';
+    content.style.transition = restoreTransition;
+    content.classList.add('panel-visible');
+    content.style.transform = '';
+  });
+}
 function openPanel(m){
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   if(content && m.id !== 'welcome-modal'){
@@ -10981,15 +10985,7 @@ function openPanel(m){
           content.style.bottom=`${footerH}px`;
           content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
           content.dataset.side='right';
-          content.classList.remove('panel-visible');
-          content.style.transform='translateX(100%)';
-          requestAnimationFrame(()=>{
-            if(content.isConnected){
-              void content.offsetWidth;
-              content.classList.add('panel-visible');
-              content.style.transform='';
-            }
-          });
+          triggerPanelSlide(content, 'translateX(100%)');
         } else if(m.id==='filterPanel'){
           const topPos = headerH + subH + safeTop;
           let translate;
@@ -11000,7 +10996,7 @@ function openPanel(m){
             content.style.bottom=`${footerH}px`;
             content.style.maxHeight='';
             content.dataset.side='left';
-            translate = '-100%';
+            translate = 'translateX(-100%)';
           } else {
             const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
             content.style.left='0';
@@ -11009,17 +11005,9 @@ function openPanel(m){
             content.style.bottom='';
             content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
             content.dataset.side='left';
-            translate = '-100%';
+            translate = 'translateX(-100%)';
           }
-          content.classList.remove('panel-visible');
-          content.style.transform=`translateX(${translate})`;
-          requestAnimationFrame(()=>{
-            if(content.isConnected){
-              void content.offsetWidth;
-              content.classList.add('panel-visible');
-              content.style.transform='';
-            }
-          });
+          triggerPanelSlide(content, translate);
         } else if(m.id==='welcome-modal'){
           const topPos = headerH + safeTop + 10;
           content.style.left='50%';
@@ -11111,23 +11099,17 @@ function movePanelToEdge(panel, side){
   const header = document.querySelector('.header');
   const topPos = header ? header.getBoundingClientRect().bottom : 0;
   content.style.top = `${topPos}px`;
-  content.classList.remove('panel-visible');
   if(side === 'left'){
     content.dataset.side='left';
     content.style.left = '0';
     content.style.right = 'auto';
-    content.style.transform='translateX(-100%)';
+    triggerPanelSlide(content, 'translateX(-100%)');
   } else {
     content.dataset.side='right';
     content.style.left = 'auto';
     content.style.right = '0';
-    content.style.transform='translateX(100%)';
+    triggerPanelSlide(content, 'translateX(100%)');
   }
-  requestAnimationFrame(()=>{
-    void content.offsetWidth;
-    content.classList.add('panel-visible');
-    content.style.transform='';
-  });
 }
 function repositionPanels(){
   ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
