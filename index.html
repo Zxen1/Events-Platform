@@ -5217,9 +5217,45 @@ img.thumb{
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
   const markerLabelTextMaxWidth = Math.max(3, (markerLabelBackgroundWidthPx - markerLabelTextPaddingPx * 2) / markerLabelTextSize);
 
+  const MARKER_LABEL_BG_ID = 'marker-label-bg';
+
+  function scheduleMarkerLabelBackgroundRetry(mapInstance){
+    if(!mapInstance || typeof mapInstance === 'undefined') return;
+    const mark = '__markerLabelBgRetryScheduled';
+    if(mapInstance[mark]) return;
+    mapInstance[mark] = true;
+    const retry = () => {
+      mapInstance[mark] = false;
+      try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+    };
+    if(typeof mapInstance.once === 'function'){
+      mapInstance.once('style.load', retry);
+    } else if(typeof mapInstance.on === 'function'){
+      const handler = () => {
+        try{ mapInstance.off?.('style.load', handler); }catch(err){}
+        retry();
+      };
+      mapInstance.on('style.load', handler);
+    } else {
+      setTimeout(retry, 0);
+    }
+  }
+
   function ensureMarkerLabelBackground(mapInstance){
     if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
-    if(mapInstance.hasImage && mapInstance.hasImage('marker-label-bg')) return;
+    try{
+      if(mapInstance.hasImage && mapInstance.hasImage(MARKER_LABEL_BG_ID)){
+        mapInstance.__markerLabelBgRetryScheduled = false;
+        return;
+      }
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
     const ratio = Math.max(2, Math.ceil(window.devicePixelRatio || 1));
     const width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
     const height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
@@ -5250,7 +5286,12 @@ img.thumb{
         fallbackCtx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
-    try{ mapInstance.addImage('marker-label-bg', canvas, { pixelRatio: ratio }); }catch(err){}
+    try{
+      mapInstance.addImage(MARKER_LABEL_BG_ID, canvas, { pixelRatio: ratio });
+      mapInstance.__markerLabelBgRetryScheduled = false;
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+    }
   }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
