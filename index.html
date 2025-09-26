@@ -5292,11 +5292,13 @@ if (typeof slugify !== 'function') {
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
-  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + 5);
   const markerLabelTextPaddingPx = 8;
+  const markerLabelTextGapPx = 5;
+  const markerLabelTextAreaWidthPx = 105;
   const markerLabelTextSize = 12;
+  const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 + markerLabelTextGapPx - markerLabelTextPaddingPx;
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
-  const markerLabelTextMaxWidth = Math.max(3, (markerLabelBackgroundWidthPx - markerLabelTextPaddingPx * 2) / markerLabelTextSize);
+  const markerLabelTextMaxWidth = Math.max(3, markerLabelTextAreaWidthPx / markerLabelTextSize);
 
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
 
