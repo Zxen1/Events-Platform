@@ -7931,6 +7931,9 @@ function makePosts(){
         await ensureMapboxCssFor(document.body);
       }catch(err){}
           mapboxgl.accessToken = MAPBOX_TOKEN;
+        if(typeof mapboxgl.setLogLevel === 'function'){
+          mapboxgl.setLogLevel('error');
+        }
         map = new mapboxgl.Map({
           container:'map',
           style:'mapbox://styles/mapbox/standard',
