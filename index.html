@@ -278,6 +278,8 @@
   --gap: 10px;
   --logo-size: 40px;
     --filter-panel-offset: 0px;
+    --panel-transition-duration: 0.3s;
+    --panel-area-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
     --media-h: 200px;
     --calendar-scale: 1;
     --ink: #ffffff;
@@ -848,18 +850,18 @@ button[aria-expanded="true"] .results-arrow{
   position:absolute;
   left:50%;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   width:440px;
   max-width:440px;
-  height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
-  max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
-  min-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   border-radius:0;
   display:flex;
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
-  transition:transform 0.3s ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
   box-sizing:border-box;
 }
 
@@ -927,8 +929,9 @@ button[aria-expanded="true"] .results-arrow{
   #memberPanel .panel-content{
     width:min(440px, 100%);
     max-width:100%;
-    height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
-    max-height:calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
+    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
     display:flex;
     flex-direction:column;
     overflow-y:auto;
@@ -2084,18 +2087,21 @@ button[aria-expanded="true"] .results-arrow{
 .post-mode-boards{
   position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   left:0;
   right:0;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   padding-left:var(--filter-panel-offset);
   padding-right:0;
   display:flex;
   justify-content:center;
-  align-items:flex-start;
+  align-items:stretch;
   gap:var(--gap);
   z-index:2;
   pointer-events:none;
-  transition:padding 0.3s ease;
+  transition:padding var(--panel-transition-duration, 0.3s) ease;
 }
 
 body.filter-anchored .post-mode-boards{
@@ -2107,7 +2113,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .quick-list-board{
   position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   left:0;
   width:440px;
   padding:10px;
@@ -2117,7 +2123,10 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
-  transition:transform 0.3s ease;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
 }
 
 .recents-board{
@@ -2131,11 +2140,14 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:overlay;
   overflow-x:hidden;
   background:rgba(0,0,0,0.7);
-  transition:margin 0.3s ease;
+  transition:margin var(--panel-transition-duration, 0.3s) ease;
   display:flex;
   flex-direction:column;
   gap:0;
   pointer-events:auto;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
 }
 
 .post-board{
@@ -2147,19 +2159,19 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   opacity:1;
   display:flex;
   flex-direction:column;
-  height:auto;
-  min-height:0;
-  max-height:100%;
-  transition:left 0.3s ease, opacity 0.3s ease;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  transition:left var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
 }
 
 .recents-board{
   width:var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   flex-shrink:0;
-  height:auto;
-  min-height:0;
-  max-height:100%;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
 }
 @media (max-width:440px){
   .post-board,
@@ -2361,7 +2373,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .ad-board{
   position:fixed;
   top:calc(var(--header-h) + var(--safe-top));
-  bottom:var(--footer-h);
+  bottom:auto;
   right:0;
   width:440px;
   padding:10px;
@@ -2369,8 +2381,11 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
-  transition:transform 0.3s ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
   display:none;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
 }
 
 body.mode-map .ad-board{
@@ -5673,14 +5688,20 @@ if (typeof slugify !== 'function') {
         if(Number.isFinite(fullHeight) && fullHeight > 0){
           root.style.setProperty('--vh', `${(fullHeight / 100)}px`);
         }
-        root.style.setProperty('--boards-area-height', `${availableHeight}px`);
+        if(availableHeight > 0){
+          root.style.setProperty('--panel-area-height', `${availableHeight}px`);
+          root.style.setProperty('--boards-area-height', `${availableHeight}px`);
+        } else {
+          root.style.removeProperty('--panel-area-height');
+          root.style.removeProperty('--boards-area-height');
+        }
       }
-      document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .posts').forEach(list=>{
+      document.querySelectorAll('.recents-board, .quick-list-board, .post-board, .ad-board').forEach(list=>{
         if(availableHeight > 0){
           const value = `${availableHeight}px`;
+          list.style.height = value;
           list.style.maxHeight = value;
-          list.style.removeProperty('height');
-          list.style.removeProperty('min-height');
+          list.style.minHeight = value;
         } else {
           list.style.removeProperty('height');
           list.style.removeProperty('max-height');
