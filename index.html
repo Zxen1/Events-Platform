@@ -861,8 +861,20 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   overflow:hidden;
   pointer-events:auto;
-  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform, opacity;
+  opacity:1;
   box-sizing:border-box;
+}
+
+.panel-content[data-side]:not(.panel-visible){
+  opacity:0;
+  pointer-events:none;
+}
+
+.panel-content[data-side].panel-visible{
+  opacity:1;
+  pointer-events:auto;
 }
 
 .panel-content .resizer{position:absolute;z-index:10;background:transparent;display:none;}
@@ -2126,7 +2138,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform, opacity;
+  opacity:1;
 }
 
 .recents-board{
@@ -2140,7 +2154,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   overflow:overlay;
   overflow-x:hidden;
   background:rgba(0,0,0,0.7);
-  transition:margin var(--panel-transition-duration, 0.3s) ease;
+  transition:margin var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:margin, opacity, transform;
   display:flex;
   flex-direction:column;
   gap:0;
@@ -2148,6 +2163,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  opacity:1;
+  transform:translateX(0);
 }
 
 .post-board{
@@ -2162,7 +2179,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  transition:left var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
+  transition:left var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:left, opacity, transform;
+  transform:translateY(0);
 }
 
 .recents-board{
@@ -2172,6 +2191,32 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+}
+
+.board-animate{
+  will-change:transform, opacity;
+}
+
+.board-animate.board-hidden{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.quick-list-board.board-animate.board-hidden{
+  transform:translateX(-24px);
+}
+
+.post-board.board-animate.board-hidden{
+  transform:translateY(16px);
+}
+
+.ad-board.board-animate.board-hidden{
+  transform:translateX(24px);
+}
+
+.board-transitioning{
+  pointer-events:none !important;
 }
 @media (max-width:440px){
   .post-board,
@@ -2381,7 +2426,9 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
-  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease, opacity var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform, opacity;
+  opacity:1;
   display:none;
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -7268,6 +7315,151 @@ function makePosts(){
       const recentsButton = $('#recents-button');
       const postsButton = $('#posts-button');
       const mapButton = $('#map-button');
+      const boardStates = new WeakMap();
+      const boardDisplayCache = new WeakMap();
+      let boardsInitialized = false;
+
+      function getDefaultBoardDisplay(board){
+        if(!board) return 'block';
+        if(boardDisplayCache.has(board)) return boardDisplayCache.get(board);
+        let value = '';
+        try{
+          value = getComputedStyle(board).display;
+        }catch(err){ value = ''; }
+        if(!value || value === 'none'){
+          if(board.classList.contains('post-board')) value = 'flex';
+          else if(board.classList.contains('ad-board')) value = 'block';
+          else value = 'block';
+        }
+        boardDisplayCache.set(board, value);
+        return value;
+      }
+
+      function stopBoardTransition(board){
+        if(board && board.__boardTransitionCancel){
+          try{ board.__boardTransitionCancel(); }catch(err){}
+          board.__boardTransitionCancel = null;
+        }
+      }
+
+      function parseTransitionTimes(value){
+        return value.split(',').map(part => {
+          const trimmed = part.trim();
+          if(!trimmed) return 0;
+          if(trimmed.endsWith('ms')) return parseFloat(trimmed) || 0;
+          if(trimmed.endsWith('s')) return (parseFloat(trimmed) || 0) * 1000;
+          const numeric = parseFloat(trimmed);
+          return Number.isFinite(numeric) ? numeric * 1000 : 0;
+        });
+      }
+
+      function getBoardTransitionDuration(board){
+        if(!board || typeof getComputedStyle !== 'function') return 0;
+        let style;
+        try{ style = getComputedStyle(board); }
+        catch(err){ return 0; }
+        if(!style) return 0;
+        const durations = parseTransitionTimes(style.transitionDuration || '0s');
+        const delays = parseTransitionTimes(style.transitionDelay || '0s');
+        const count = Math.max(durations.length, delays.length);
+        let maxTotal = 0;
+        for(let i=0;i<count;i++){
+          const duration = durations[i] ?? durations[durations.length-1] ?? 0;
+          const delay = delays[i] ?? delays[delays.length-1] ?? 0;
+          const total = duration + delay;
+          if(total > maxTotal) maxTotal = total;
+        }
+        return maxTotal;
+      }
+
+      function watchBoardTransition(board){
+        const duration = getBoardTransitionDuration(board);
+        if(duration <= 0){
+          board?.classList?.remove('board-transitioning');
+          return { promise: Promise.resolve(), cancel: ()=>{} };
+        }
+        let finish = ()=>{};
+        const promise = new Promise(resolve => {
+          let done = false;
+          finish = () => {
+            if(done) return;
+            done = true;
+            board.classList.remove('board-transitioning');
+            board.removeEventListener('transitionend', handler);
+            resolve();
+          };
+          const handler = (event) => {
+            if(event.target !== board) return;
+            finish();
+          };
+          board.classList.add('board-transitioning');
+          board.addEventListener('transitionend', handler);
+          setTimeout(finish, duration + 50);
+        });
+        return { promise, cancel: finish };
+      }
+
+      function animateBoard(board, shouldShow, immediate=false){
+        if(!board) return;
+        board.classList.add('board-animate');
+        stopBoardTransition(board);
+        const defaultDisplay = getDefaultBoardDisplay(board);
+        const currentState = boardStates.get(board) || (board.style.display === 'none' ? 'hidden' : 'visible');
+        if(immediate){
+          if(shouldShow){
+            board.style.display = defaultDisplay;
+            board.classList.remove('board-hidden');
+            board.setAttribute('aria-hidden','false');
+            boardStates.set(board, 'visible');
+          } else {
+            board.classList.add('board-hidden');
+            board.style.display = 'none';
+            board.setAttribute('aria-hidden','true');
+            boardStates.set(board, 'hidden');
+          }
+          board.classList.remove('board-transitioning');
+          board.__boardTransitionCancel = null;
+          return;
+        }
+
+        if(shouldShow){
+          if(currentState === 'visible'){
+            board.style.display = defaultDisplay;
+            board.classList.remove('board-hidden');
+            board.setAttribute('aria-hidden','false');
+            return;
+          }
+          board.style.display = defaultDisplay;
+          board.setAttribute('aria-hidden','false');
+          board.classList.add('board-hidden');
+          void board.offsetWidth;
+          const { promise, cancel } = watchBoardTransition(board);
+          board.__boardTransitionCancel = cancel;
+          board.classList.remove('board-hidden');
+          promise.then(() => {
+            if(board.__boardTransitionCancel === cancel) board.__boardTransitionCancel = null;
+            boardStates.set(board, 'visible');
+          });
+        } else {
+          if(currentState === 'hidden'){
+            board.classList.add('board-hidden');
+            board.style.display = 'none';
+            board.setAttribute('aria-hidden','true');
+            return;
+          }
+          board.classList.remove('board-hidden');
+          void board.offsetWidth;
+          const { promise, cancel } = watchBoardTransition(board);
+          board.__boardTransitionCancel = cancel;
+          board.classList.add('board-hidden');
+          board.setAttribute('aria-hidden','true');
+          promise.then(() => {
+            if(board.__boardTransitionCancel === cancel) board.__boardTransitionCancel = null;
+            board.style.display = 'none';
+            boardStates.set(board, 'hidden');
+          });
+        }
+      }
 
       function updateModeToggle(){
         const historyActive = document.body.classList.contains('show-history');
@@ -7324,20 +7516,16 @@ function makePosts(){
         document.body.classList.toggle('filter-anchored', canAnchor);
         document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
-        if(recentsBoard){
-          recentsBoard.style.display = historyActive ? '' : 'none';
-          recentsBoard.setAttribute('aria-hidden', historyActive ? 'false' : 'true');
-        }
-        if(postBoard){
-          postBoard.style.display = historyActive ? 'none' : '';
-          postBoard.setAttribute('aria-hidden', historyActive ? 'true' : 'false');
-        }
+        const skipAnimation = !boardsInitialized;
+        animateBoard(recentsBoard, historyActive, skipAnimation);
+        animateBoard(postBoard, !historyActive, skipAnimation);
         document.body.classList.toggle('detail-open', !!anyOpenPost);
         if(adBoard){
-          document.body.classList.toggle('hide-ads', hideAds);
-          adBoard.setAttribute('aria-hidden', hideAds ? 'true' : 'false');
+          animateBoard(adBoard, !hideAds && shouldShowAds, skipAnimation);
         }
+        document.body.classList.toggle('hide-ads', hideAds);
         updateModeToggle();
+        boardsInitialized = true;
       }
       window.adjustBoards = adjustBoards;
       adjustBoards();
@@ -7390,6 +7578,7 @@ function makePosts(){
           setMode('map');
         } else if(document.body.classList.contains('show-history')){
           document.body.classList.remove('show-history');
+          adjustBoards();
           updateModeToggle();
         }
       });
@@ -7735,7 +7924,6 @@ function makePosts(){
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
           setMode('map');
-          document.body.classList.remove('show-history');
         }
       });
 
@@ -7745,11 +7933,6 @@ function makePosts(){
         document.body.classList.add('mode-'+m);
         if(m==='map'){
           document.body.classList.remove('show-history');
-          const recentsBoardEl = document.getElementById('recentsBoard');
-          if(recentsBoardEl){
-            recentsBoardEl.style.display = 'none';
-            recentsBoardEl.setAttribute('aria-hidden','true');
-          }
         }
         adjustBoards();
         updateModeToggle();
@@ -8324,8 +8507,7 @@ if (!map.__pillHooksInstalled) {
       historyWasActive = document.body.classList.contains('show-history');
       if(historyWasActive){
         document.body.classList.remove('show-history');
-        const recentsBoardEl = document.getElementById('recentsBoard');
-        if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','true');
+        adjustBoards();
         updateModeToggle();
       }
       function step(){
@@ -8352,8 +8534,7 @@ if (!map.__pillHooksInstalled) {
       historyWasActive = false;
       if(wasHistory){
         document.body.classList.add('show-history');
-        const recentsBoardEl = document.getElementById('recentsBoard');
-        if(recentsBoardEl) recentsBoardEl.setAttribute('aria-hidden','false');
+        adjustBoards();
         updateModeToggle();
       }
       const shouldLoadPosts = pendingPostLoad;
@@ -10688,7 +10869,13 @@ function openPanel(m){
           content.dataset.side='right';
           content.classList.remove('panel-visible');
           content.style.transform='translateX(100%)';
-          requestAnimationFrame(()=>{ if(content.isConnected){ content.classList.add('panel-visible'); content.style.transform=''; } });
+          requestAnimationFrame(()=>{
+            if(content.isConnected){
+              void content.offsetWidth;
+              content.classList.add('panel-visible');
+              content.style.transform='';
+            }
+          });
         } else if(m.id==='filterPanel'){
           const topPos = headerH + subH + safeTop;
           let translate;
@@ -10712,7 +10899,13 @@ function openPanel(m){
           }
           content.classList.remove('panel-visible');
           content.style.transform=`translateX(${translate})`;
-          requestAnimationFrame(()=>{ if(content.isConnected){ content.classList.add('panel-visible'); content.style.transform=''; } });
+          requestAnimationFrame(()=>{
+            if(content.isConnected){
+              void content.offsetWidth;
+              content.classList.add('panel-visible');
+              content.style.transform='';
+            }
+          });
         } else if(m.id==='welcome-modal'){
           const topPos = headerH + safeTop + 10;
           content.style.left='50%';
@@ -10816,7 +11009,11 @@ function movePanelToEdge(panel, side){
     content.style.right = '0';
     content.style.transform='translateX(100%)';
   }
-  requestAnimationFrame(()=>{content.classList.add('panel-visible');content.style.transform='';});
+  requestAnimationFrame(()=>{
+    void content.offsetWidth;
+    content.classList.add('panel-visible');
+    content.style.transform='';
+  });
 }
 function repositionPanels(){
   ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
