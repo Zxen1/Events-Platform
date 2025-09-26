@@ -5206,6 +5206,17 @@ img.thumb{
     });
   }
 
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const markerIconSize = isTouchDevice ? 1.35 : 1;
+  const markerIconBaseSizePx = 30;
+  const markerLabelBackgroundWidthPx = 102;
+  const markerLabelBackgroundHeightPx = 26;
+  const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 - 2;
+  const markerLabelTextPaddingPx = 8;
+  const markerLabelTextSize = 12;
+  const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
+  const markerLabelTextMaxWidth = Math.max(3, (markerLabelBackgroundWidthPx - markerLabelTextPaddingPx * 2) / markerLabelTextSize);
+
   function ensureMarkerLabelBackground(mapInstance){
     if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
     if(mapInstance.hasImage && mapInstance.hasImage('marker-label-bg')) return;
@@ -5510,16 +5521,6 @@ img.thumb{
     let hoverPopup = null, hoverId = null;
     let postSourceEventsBound = false;
     let touchMarker = null;
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-    const markerIconSize = isTouchDevice ? 1.35 : 1;
-    const markerIconBaseSizePx = 30;
-    const markerLabelBackgroundWidthPx = 102;
-    const markerLabelBackgroundHeightPx = 26;
-    const markerLabelBgTranslatePx = markerIconBaseSizePx * markerIconSize / 2 - 2;
-    const markerLabelTextPaddingPx = 8;
-    const markerLabelTextSize = 12;
-    const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
-    const markerLabelTextMaxWidth = Math.max(3, (markerLabelBackgroundWidthPx - markerLabelTextPaddingPx * 2) / markerLabelTextSize);
     let activePostId = null;
     let selectedVenueKey = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
