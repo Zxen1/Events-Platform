@@ -41,6 +41,58 @@
     }
   </style>
 
+  <style>
+    .marker-hover-overlay{
+      position: relative;
+      width: 50px;
+      height: 50px;
+      pointer-events: none;
+      transform: translateZ(0);
+    }
+    .marker-hover-overlay img{ display:block; }
+    .marker-hover-pill{
+      position: absolute;
+      inset: auto;
+      left: -5px;
+      top: -5px;
+      width: 225px;
+      height: 60px;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .marker-hover-thumb{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      z-index: 1;
+    }
+    .marker-hover-text{
+      position: absolute;
+      left: 55px;
+      top: 0;
+      width: 165px;
+      height: 50px;
+      padding: 5px 5px 5px 0;
+      display: flex;
+      align-items: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      z-index: 2;
+    }
+  </style>
+
   <script>
     (function(){
       const LOADING_CLASS = 'is-loading';
@@ -5309,12 +5361,66 @@ if (typeof slugify !== 'function') {
   const markerLabelBackgroundHeightPx = 40;
   const markerLabelTextGapPx = 5;
   const markerLabelMarkerInsetPx = 5;
+  const markerLabelTextRightPaddingPx = 5;
   const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
-  const markerLabelTextAreaWidthPx = 105;
+  const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
   const markerLabelTextMaxWidth = Math.max(3, markerLabelTextAreaWidthPx / markerLabelTextSize);
+  const markerLabelEllipsisChar = '\u2026';
+  let markerLabelMeasureContext = null;
+
+  function ensureMarkerLabelMeasureContext(){
+    if(markerLabelMeasureContext){
+      return markerLabelMeasureContext;
+    }
+    const canvas = document.createElement('canvas');
+    markerLabelMeasureContext = canvas.getContext('2d');
+    return markerLabelMeasureContext;
+  }
+
+  function markerLabelMeasureFont(){
+    return `${markerLabelTextSize}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+  }
+
+  function shortenMarkerLabelText(text){
+    const raw = (text ?? '').toString().trim();
+    if(!raw){
+      return '';
+    }
+    const ctx = ensureMarkerLabelMeasureContext();
+    if(!ctx){
+      return raw;
+    }
+    ctx.font = markerLabelMeasureFont();
+    const maxWidth = markerLabelTextAreaWidthPx;
+    if(maxWidth <= 0){
+      return raw;
+    }
+    if(ctx.measureText(raw).width <= maxWidth){
+      return raw;
+    }
+    const ellipsis = markerLabelEllipsisChar;
+    let low = 0;
+    let high = raw.length;
+    let best = ellipsis;
+    while(low <= high){
+      const mid = Math.floor((low + high) / 2);
+      if(mid <= 0){
+        high = mid - 1;
+        continue;
+      }
+      const candidate = raw.slice(0, mid) + ellipsis;
+      if(ctx.measureText(candidate).width <= maxWidth){
+        best = candidate;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return best;
+  }
 
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
 
@@ -8428,6 +8534,7 @@ if (!map.__pillHooksInstalled) {
               properties:{
                 id:p.id,
                 title:p.title,
+                label: shortenMarkerLabelText(p.title),
                 city:p.city,
                 cat:p.category,
                 sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
@@ -8476,7 +8583,7 @@ if (!map.__pillHooksInstalled) {
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
-      const markerLabelTextField = ['coalesce', ['get','title'], ''];
+      const markerLabelTextField = ['coalesce', ['get','label'], ['get','title'], ''];
 
       if(shouldCluster){
         if(usingSvgClusters){
@@ -8985,41 +9092,48 @@ if (!map.__pillHooksInstalled) {
             });
           }
         } else {
-          // single preview as usual
-          const p = posts.find(x=>x.id===id); if(!p) return;
-          if(hoverPopup) hoverPopup.remove();
-          hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card'})
-            .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
-          registerPopup(hoverPopup);
+          const p = posts.find(x=>x.id===id);
+          const rawLabel = (f.properties && f.properties.label) || (p && p.title) || '';
+          const labelText = shortenMarkerLabelText(rawLabel);
+          if(!p){
+            return;
+          }
+          if(hoverPopup){
+            try{ hoverPopup.remove(); }catch(e){}
+            hoverPopup = null;
+          }
+          const overlayRoot = document.createElement('div');
+          overlayRoot.className = 'marker-hover-overlay';
+          overlayRoot.dataset.id = String(p.id);
+          overlayRoot.setAttribute('aria-hidden', 'true');
+          overlayRoot.style.pointerEvents = 'none';
+          overlayRoot.style.userSelect = 'none';
 
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-        
-        (function(){
-          const __el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__el){
-            __el.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    fn(id, false, true);
-                  }catch(e){ console.warn('openPost id missing', e); }
-                });
-              });
-            }, {capture:true});
-          }
-        })();
-}
+          const pillImg = new Image();
+          try{ pillImg.decoding = 'async'; }catch(e){}
+          pillImg.alt = '';
+          pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+          pillImg.className = 'marker-hover-pill';
+          pillImg.draggable = false;
+
+          const thumbImg = new Image();
+          try{ thumbImg.decoding = 'async'; }catch(e){}
+          thumbImg.alt = '';
+          thumbImg.src = imgThumb(p);
+          thumbImg.className = 'marker-hover-thumb';
+          thumbImg.referrerPolicy = 'no-referrer';
+          thumbImg.draggable = false;
+
+          const labelEl = document.createElement('div');
+          labelEl.className = 'marker-hover-text';
+          labelEl.textContent = labelText;
+
+          overlayRoot.append(pillImg, thumbImg, labelEl);
+          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' }).setLngLat(e.lngLat).addTo(map);
+          hoverPopup = marker;
+          window.__overCard = false;
+          registerPopup(marker);
+        }
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
