@@ -9220,6 +9220,10 @@ if (!map.__pillHooksInstalled) {
           updateSelectedMarkerRing();
         }
         const coords = f.geometry && f.geometry.coordinates;
+        const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+        const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const targetLngLat = baseLngLat || (e ? e.lngLat : null);
         if(coords && coords.length>=2){
           const items = postsAtVenue(coords[0], coords[1]);
           if(items && items.length>1){
@@ -9280,24 +9284,17 @@ if (!map.__pillHooksInstalled) {
         }
         const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
         if(touchClick){
-          if(touchMarker === id){
-            callWhenDefined('openPost', (fn)=>{
-              requestAnimationFrame(() => {
-                try{
-                  touchMarker = null;
-                  if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-                  fn(id, false, true);
-                }catch(err){ console.error(err); }
-              });
-            });
-            return;
-          } else {
+          if(touchMarker !== id || !hoverPopup){
             touchMarker = id;
-            if(hoverPopup) hoverPopup.remove();
+            if(hoverPopup){
+              try{ hoverPopup.remove(); }catch(err){}
+              hoverPopup = null;
+            }
             const p = posts.find(x=>x.id===id);
             if(p){
               const popup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card'});
               if(targetLngLat){ popup.setLngLat(targetLngLat); }
+              else if(fixedLngLat){ popup.setLngLat(fixedLngLat); }
               hoverPopup = popup.setHTML(hoverHTML(p)).addTo(map);
               hoverPopup.__fixedLngLat = fixedLngLat;
               registerPopup(hoverPopup);
@@ -9318,14 +9315,7 @@ if (!map.__pillHooksInstalled) {
               }
             }
           }
-        } else {
-          callWhenDefined('openPost', (fn)=>{
-            requestAnimationFrame(() => {
-              try{
-                fn(id, false, true);
-              }catch(err){ console.error(err); }
-            });
-          });
+          return;
         }
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
