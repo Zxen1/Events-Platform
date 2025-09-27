@@ -5768,7 +5768,11 @@ if (typeof slugify !== 'function') {
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
-          clusterMaxZoom = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10),
+          clusterMaxZoom = (()=>{
+            let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '14', 10);
+            if(Number.isNaN(storedValue)) storedValue = 14;
+            return Math.min(storedValue, 10);
+          })(),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '',
           currentClusterVisualKey = '',
