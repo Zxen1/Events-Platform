@@ -8879,7 +8879,7 @@ if (!map.__pillHooksInstalled) {
       addingPostSource = true;
       try{
       const geojson = postsToGeoJSON(posts);
-      const shouldCluster = posts.length > 1 && clusterRadius > 0;
+      const shouldCluster = posts.length >= 10 && clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
