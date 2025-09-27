@@ -9447,24 +9447,13 @@ if (!map.__pillHooksInstalled) {
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
-      // Popups for clusters (shows count)
-      map.on('mouseenter','clusters', (e)=>{
+      map.on('mouseenter','clusters', ()=>{
         map.getCanvas().style.cursor='pointer';
-        const f = e.features && e.features[0]; if(!f) return;
-        const count = f.properties.point_count_abbreviated;
-        if(hoverPopup) hoverPopup.remove();
-        hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card', offset:15})
-          .setLngLat(e.lngLat).setHTML(`<div class='map-card map-card--popup map-card--count'><img class='map-card-pill' src='assets/icons-30/225x60-pill-99.webp' alt=''/><div class='map-card-text'><div class='map-card-title'>${count} nearby posts</div></div></div>`).addTo(map);
-        const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-        if(_el){ _el.style.pointerEvents = 'none'; }
-        registerPopup(hoverPopup);
       });
-      const onClusterMove = window.rafThrottle((e)=>{
-        if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
+      map.on('mouseleave','clusters', ()=>{
+        map.getCanvas().style.cursor='';
       });
-        map.on('mousemove','clusters', onClusterMove);
-        map.on('mouseleave','clusters', ()=>{ map.getCanvas().style.cursor=''; if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } });
-        postSourceEventsBound = true;
+      postSourceEventsBound = true;
       }
       } catch (err) {
         console.error('addPostSource failed', err);
