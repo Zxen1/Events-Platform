@@ -78,18 +78,42 @@
       top: 0;
       width: 165px;
       height: 50px;
-      padding: 5px 5px 5px 0;
+      padding: 6px 5px 6px 0;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2px;
       color: #fff;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 400;
       line-height: 1.2;
-      white-space: nowrap;
+      white-space: normal;
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
       z-index: 2;
+    }
+
+    .marker-hover-title{
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .marker-hover-venue{
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1.2;
+      opacity: 0.9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
     }
   </style>
 
@@ -2492,9 +2516,7 @@ body.mode-map .ad-board{
 }
 
 body.hide-ads .ad-board{
-  transform:translateX(100%);
   pointer-events:none;
-  display:none;
 }
 
 @media (min-width:1900px){
@@ -2502,7 +2524,7 @@ body.hide-ads .ad-board{
     display:block;
   }
   body.hide-ads .ad-board{
-    display:none;
+    display:block;
   }
 }
 
@@ -4421,22 +4443,23 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .hover-card .t{
-  font-weight: bold;
-  font-size: 16px;
-  line-height: 1.25;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.3;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
   display: -webkit-box;
-  line-clamp: 3;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 1;
   overflow: hidden;
 }
 
 .hover-card .s{
-  font-size: 14px;
-  opacity: .8;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: .85;
   margin-top: 2px;
   white-space: normal;
   word-break: break-word;
@@ -4499,8 +4522,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .multi-item.map-card .s{
-  font-size: 14px;
-  opacity: .8;
+  font-size: 13px;
+  font-weight: 400;
+  opacity: .85;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -5409,6 +5433,7 @@ if (typeof slugify !== 'function') {
   const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
+  const markerLabelTextLineHeight = 1.2;
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
   const markerLabelTextMaxWidth = Math.max(3, markerLabelTextAreaWidthPx / markerLabelTextSize);
@@ -5464,6 +5489,35 @@ if (typeof slugify !== 'function') {
       }
     }
     return best;
+  }
+
+  function getPrimaryVenueName(p){
+    if(!p) return '';
+    const loc = Array.isArray(p.locations) && p.locations.length ? p.locations[0] : null;
+    if(loc && loc.venue){
+      return loc.venue;
+    }
+    if(p.venue){
+      return p.venue;
+    }
+    return p.city || '';
+  }
+
+  function getMarkerLabelLines(p){
+    const line1 = shortenMarkerLabelText(p && p.title ? p.title : '');
+    const venueLine = shortenMarkerLabelText(getPrimaryVenueName(p));
+    return {
+      line1,
+      line2: venueLine
+    };
+  }
+
+  function buildMarkerLabelText(p){
+    const lines = getMarkerLabelLines(p);
+    if(lines.line2){
+      return `${lines.line1}\n${lines.line2}`;
+    }
+    return lines.line1;
   }
 
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
@@ -6048,7 +6102,7 @@ function buildClusterListHTML(items){
           <img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/>
           <div>
             <div class="t">${p.title}</div>
-            <div class="s">${p.city}</div>
+            <div class="s">${getPrimaryVenueName(p) || p.city}</div>
           </div>
         </div>
       </div>`;
@@ -6726,7 +6780,8 @@ function makePosts(){
     }
 
     function hoverHTML(p){
-      return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${p.city}</div></div></div>`;
+      const venueName = getPrimaryVenueName(p) || p.city;
+      return `<div class="hover-card" data-id="${p.id}"><img src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer"/><div><div class="t">${p.title}</div><div class="s">${venueName}</div></div></div>`;
     }
 
     // Categories UI
@@ -8647,12 +8702,18 @@ if (!map.__pillHooksInstalled) {
             const key = venueKey(p.lng, p.lat);
             const count = coordCounts.get(key) || 1;
             const isMultiVenue = count > 1;
+            const labelLines = getMarkerLabelLines(p);
+            const primaryVenue = getPrimaryVenueName(p);
+            const combinedLabel = buildMarkerLabelText(p);
             return {
               type:'Feature',
               properties:{
                 id:p.id,
                 title:p.title,
-                label: shortenMarkerLabelText(p.title),
+                label: combinedLabel,
+                labelLine1: labelLines.line1,
+                labelLine2: labelLines.line2,
+                venueName: primaryVenue,
                 city:p.city,
                 cat:p.category,
                 sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
@@ -8701,7 +8762,15 @@ if (!map.__pillHooksInstalled) {
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
-      const markerLabelTextField = ['coalesce', ['get','label'], ['get','title'], ''];
+  const markerLabelTextField = ['case',
+    ['all', ['has','labelLine2'], ['!=', ['get','labelLine2'], '']],
+    ['concat',
+      ['coalesce', ['get','labelLine1'], ['get','title'], ''],
+      '\n',
+      ['coalesce', ['get','labelLine2'], ['coalesce', ['get','venueName'], ['get','city'], ''], '']
+    ],
+    ['coalesce', ['get','labelLine1'], ['get','title'], '']
+  ];
 
       if(shouldCluster){
         if(usingSvgClusters){
@@ -8843,6 +8912,7 @@ if (!map.__pillHooksInstalled) {
             'text-field': markerLabelTextField,
             'text-font': ['Open Sans Regular','Arial Unicode MS Regular'],
             'text-size': markerLabelTextSize,
+            'text-line-height': markerLabelTextLineHeight,
             'text-anchor': 'left',
             'text-allow-overlap': true,
             'text-ignore-placement': true,
@@ -8874,6 +8944,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-size', markerLabelTextSize); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-text','text-line-height', markerLabelTextLineHeight); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-anchor','left'); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-allow-overlap', true); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-ignore-placement', true); }catch(e){}
@@ -9081,8 +9152,10 @@ if (!map.__pillHooksInstalled) {
             if(hoverPopup) hoverPopup.remove();
             const p = posts.find(x=>x.id===id);
             if(p){
-              hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card'})
-                .setLngLat(e.lngLat).setHTML(hoverHTML(p)).addTo(map);
+              const popup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:'hover-pop map-card'});
+              if(targetLngLat){ popup.setLngLat(targetLngLat); }
+              hoverPopup = popup.setHTML(hoverHTML(p)).addTo(map);
+              hoverPopup.__fixedLngLat = fixedLngLat;
               registerPopup(hoverPopup);
               const cardEl = hoverPopup.getElement().querySelector('.hover-card');
               if(cardEl){
@@ -9159,7 +9232,11 @@ if (!map.__pillHooksInstalled) {
         const id = f.properties.id; hoverId = id;
         map.setFilter('hover-ring', ['==',['get','id'], id]);
         const coords = f.geometry && f.geometry.coordinates;
-        const multi = (coords && coords.length>=2) ? postsAtVenue(coords[0], coords[1]) : null;
+        const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+        const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+        const targetLngLat = baseLngLat || (e ? e.lngLat : null);
+        const multi = hasCoords ? postsAtVenue(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
           openListPopupAtPoint(e.point, buildClusterListHTML(multi));
 
@@ -9211,8 +9288,13 @@ if (!map.__pillHooksInstalled) {
           }
         } else {
           const p = posts.find(x=>x.id===id);
-          const rawLabel = (f.properties && f.properties.label) || (p && p.title) || '';
-          const labelText = shortenMarkerLabelText(rawLabel);
+          const labelLines = p ? getMarkerLabelLines(p) : {
+            line1: shortenMarkerLabelText((f.properties && (f.properties.labelLine1 || f.properties.title || ''))),
+            line2: shortenMarkerLabelText((f.properties && (f.properties.labelLine2 || f.properties.venueName || f.properties.city || '')))
+          };
+          if(!labelLines.line1){
+            labelLines.line1 = shortenMarkerLabelText((f.properties && f.properties.title) || '');
+          }
           if(!p){
             return;
           }
@@ -9244,10 +9326,24 @@ if (!map.__pillHooksInstalled) {
 
           const labelEl = document.createElement('div');
           labelEl.className = 'marker-hover-text';
-          labelEl.textContent = labelText;
+          const titleEl = document.createElement('div');
+          titleEl.className = 'marker-hover-title';
+          titleEl.textContent = labelLines.line1;
+          labelEl.appendChild(titleEl);
+          const venueLine = labelLines.line2 || shortenMarkerLabelText(getPrimaryVenueName(p));
+          if(venueLine){
+            const venueEl = document.createElement('div');
+            venueEl.className = 'marker-hover-venue';
+            venueEl.textContent = venueLine;
+            labelEl.appendChild(venueEl);
+          }
 
           overlayRoot.append(pillImg, thumbImg, labelEl);
-          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' }).setLngLat(e.lngLat).addTo(map);
+          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
+          if(targetLngLat){ marker.setLngLat(targetLngLat); }
+          else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
+          else { marker.setLngLat(e.lngLat); }
+          marker.__fixedLngLat = fixedLngLat;
           hoverPopup = marker;
           window.__overCard = false;
           registerPopup(marker);
@@ -9255,8 +9351,13 @@ if (!map.__pillHooksInstalled) {
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
-      const onMarkerMove = window.rafThrottle((e)=>{
-        if(hoverPopup) hoverPopup.setLngLat(e.lngLat);
+      const onMarkerMove = window.rafThrottle(()=>{
+        if(hoverPopup && typeof hoverPopup.setLngLat === 'function'){
+          const fixed = hoverPopup.__fixedLngLat;
+          if(fixed && Number.isFinite(fixed.lng) && Number.isFinite(fixed.lat)){
+            hoverPopup.setLngLat(fixed);
+          }
+        }
       });
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mousemove', layer, onMarkerMove));
 
