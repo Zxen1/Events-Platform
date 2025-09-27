@@ -2304,30 +2304,45 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
 }
 
-.board-animate{
+.recents-board,
+.post-board{
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
   will-change:transform;
 }
 
-.board-animate.board-hidden{
-  pointer-events:none;
-}
-
-.quick-list-board.board-animate.board-hidden{
+.recents-board[data-side='left']:not(.panel-visible),
+.post-board[data-side='left']:not(.panel-visible),
+.ad-board[data-side='left']:not(.panel-visible){
   transform:translateX(-110%);
 }
 
-.post-board.board-animate.board-hidden{
+.recents-board[data-side='right']:not(.panel-visible),
+.post-board[data-side='right']:not(.panel-visible),
+.ad-board[data-side='right']:not(.panel-visible){
   transform:translateX(110%);
 }
 
-.ad-board.board-animate.board-hidden{
-  transform:translateX(32px);
-  opacity:0;
+.recents-board.panel-visible,
+.post-board.panel-visible,
+.ad-board.panel-visible{
+  transform:translateX(0);
+}
+
+.recents-board:not(.panel-visible),
+.post-board:not(.panel-visible){
   pointer-events:none;
 }
 
-.board-transitioning{
-  pointer-events:none !important;
+.ad-board{
+  opacity:0;
+}
+
+.ad-board.panel-visible{
+  opacity:1;
+}
+
+.ad-board:not(.panel-visible){
+  pointer-events:none;
 }
 @media (max-width:440px){
   .post-board,
@@ -4995,11 +5010,11 @@ if (typeof slugify !== 'function') {
   <div class="post-mode-background"></div>
   <div class="post-mode-boards">
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
-    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board">
+    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board" data-side="left" aria-hidden="true" style="display:none;">
     </section>
-    <section class="post-board" aria-label="Post Board">
+    <section class="post-board" aria-label="Post Board" data-side="right" aria-hidden="true" style="display:none;">
     </section>
-    <section class="ad-board" aria-label="Ad Board">
+    <section class="ad-board" aria-label="Ad Board" data-side="right" aria-hidden="true" style="display:none;">
       <div class="ad-panel">
       </div>
     </section>
@@ -7504,7 +7519,6 @@ function makePosts(){
       const recentsButton = $('#recents-button');
       const postsButton = $('#posts-button');
       const mapButton = $('#map-button');
-      const boardStates = new WeakMap();
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
 
@@ -7524,37 +7538,71 @@ function makePosts(){
         return value;
       }
 
-      function animateBoard(board, shouldShow, immediate=false){
+      function clearBoardHide(board){
         if(!board) return;
-        board.classList.add('board-animate');
-        const defaultDisplay = getDefaultBoardDisplay(board);
-        const targetState = shouldShow ? 'visible' : 'hidden';
-        const currentState = boardStates.get(board) || (board.style.display === 'none' ? 'hidden' : 'visible');
+        if(board._boardHideHandler){
+          board.removeEventListener('transitionend', board._boardHideHandler);
+          board._boardHideHandler = null;
+        }
+        if(board._boardHideTimer){
+          clearTimeout(board._boardHideTimer);
+          board._boardHideTimer = null;
+        }
+      }
 
-        if(!immediate && currentState === targetState){
-          if(shouldShow){
-            board.style.display = defaultDisplay;
-            board.classList.remove('board-hidden');
-            board.setAttribute('aria-hidden','false');
-          } else {
-            board.classList.add('board-hidden');
-            board.style.display = 'none';
-            board.setAttribute('aria-hidden','true');
-          }
+      function showBoard(board, immediate=false){
+        if(!board) return;
+        clearBoardHide(board);
+        const defaultDisplay = getDefaultBoardDisplay(board);
+        board.style.display = defaultDisplay;
+        board.setAttribute('aria-hidden','false');
+        if(immediate){
+          board.classList.add('panel-visible');
+          board.style.transform = '';
+        } else {
+          schedulePanelEntrance(board, true);
+        }
+      }
+
+      function hideBoard(board, immediate=false){
+        if(!board) return;
+        clearBoardHide(board);
+        board.setAttribute('aria-hidden','true');
+        const finalize = ()=>{
+          board.style.display = 'none';
+          board._boardHideHandler = null;
+          board._boardHideTimer = null;
+        };
+        if(immediate){
+          board.classList.remove('panel-visible');
+          finalize();
           return;
         }
-
-        if(shouldShow){
-          board.style.display = defaultDisplay;
-          board.classList.remove('board-hidden');
-          board.setAttribute('aria-hidden','false');
-        } else {
-          board.classList.add('board-hidden');
-          board.style.display = 'none';
-          board.setAttribute('aria-hidden','true');
+        if(!board.classList.contains('panel-visible')){
+          finalize();
+          return;
         }
+        const handler = event=>{
+          if(event && event.target !== board) return;
+          board.removeEventListener('transitionend', handler);
+          finalize();
+        };
+        board._boardHideHandler = handler;
+        board.addEventListener('transitionend', handler);
+        board.classList.remove('panel-visible');
+        board._boardHideTimer = setTimeout(()=>{
+          if(board._boardHideHandler){
+            board._boardHideHandler();
+          }
+        }, 400);
+      }
 
-        boardStates.set(board, targetState);
+      function toggleBoard(board, shouldShow, immediate=false){
+        if(shouldShow){
+          showBoard(board, immediate);
+        } else {
+          hideBoard(board, immediate);
+        }
       }
 
       function updateModeToggle(){
@@ -7575,6 +7623,7 @@ function makePosts(){
       function adjustBoards(){
         const small = window.innerWidth < 1200;
         const historyActive = document.body.classList.contains('show-history');
+        const isPostsMode = document.body.classList.contains('mode-posts');
         const filterPanel = document.getElementById('filterPanel');
         const filterContent = filterPanel ? filterPanel.querySelector('.panel-content') : null;
         const pinBtn = filterPanel ? filterPanel.querySelector('.pin-panel') : null;
@@ -7598,7 +7647,7 @@ function makePosts(){
         }
         const adWidth = adBoard ? (adBoard.offsetWidth || 440) : 0;
         const shouldShowAds = adBoard && window.innerWidth >= 1900;
-        let hideAds = !shouldShowAds;
+        let hideAds = !shouldShowAds || !isPostsMode;
         let requiredWidth = totalBoardsWidth;
         if(filterPinned && filterWidth){
           requiredWidth += filterWidth;
@@ -7613,11 +7662,11 @@ function makePosts(){
         document.documentElement.style.setProperty('--filter-panel-offset', canAnchor ? `${filterWidth}px` : '0px');
         boardsContainer.style.justifyContent = 'flex-start';
         const skipAnimation = !boardsInitialized;
-        animateBoard(recentsBoard, historyActive, skipAnimation);
-        animateBoard(postBoard, !historyActive, skipAnimation);
+        toggleBoard(recentsBoard, isPostsMode && historyActive, skipAnimation);
+        toggleBoard(postBoard, isPostsMode && !historyActive, skipAnimation);
         document.body.classList.toggle('detail-open', !!anyOpenPost);
         if(adBoard){
-          animateBoard(adBoard, !hideAds && shouldShowAds, skipAnimation);
+          toggleBoard(adBoard, isPostsMode && !hideAds && shouldShowAds, skipAnimation);
         }
         document.body.classList.toggle('hide-ads', hideAds);
         updateModeToggle();
