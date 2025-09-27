@@ -7685,8 +7685,6 @@ function makePosts(){
         setMode('posts');
         document.body.classList.add('show-history');
         renderHistoryBoard();
-        adjustBoards();
-        window.adjustListHeight();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
@@ -7702,7 +7700,6 @@ function makePosts(){
         document.body.classList.remove('show-history');
         if(!isPostsMode || historyActive){
           setMode('posts');
-          window.adjustListHeight();
           setTimeout(()=>{
             if(map && typeof map.resize === 'function'){
               map.resize();
@@ -8086,6 +8083,9 @@ function makePosts(){
           document.body.classList.remove('show-history');
         }
         adjustBoards();
+        if(m === 'posts' && typeof window.adjustListHeight === 'function'){
+          window.adjustListHeight();
+        }
         updateModeToggle();
         if(m === 'posts'){
           const boardEl = document.querySelector('.post-board');
