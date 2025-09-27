@@ -6495,6 +6495,80 @@ function uniqueTitle(seed, cityName, idx){
     "Elm Rd","Birch Ave","Spruce St","Willow Ln","Ash Blvd"
   ];
 
+  const CITY_BOUNDS = {
+    "Federation Square, Melbourne": { lng:[144.9660, 144.9730], lat:[-37.8200, -37.8100] },
+    "Hobart, Tasmania": { lng:[147.2900, 147.3600], lat:[-42.9100, -42.8600] },
+    "New York, USA": { lng:[-74.1000, -73.8500], lat:[40.6000, 40.8500] },
+    "Los Angeles, USA": { lng:[-118.5500, -118.1500], lat:[33.8500, 34.1500] },
+    "London, UK": { lng:[-0.2500, 0.1000], lat:[51.4500, 51.6000] },
+    "Paris, France": { lng:[2.2500, 2.4200], lat:[48.8200, 48.9000] },
+    "Berlin, Germany": { lng:[13.2000, 13.5000], lat:[52.4500, 52.5700] },
+    "Madrid, Spain": { lng:[-3.7500, -3.6000], lat:[40.3700, 40.4800] },
+    "Rome, Italy": { lng:[12.4400, 12.5600], lat:[41.8500, 41.9500] },
+    "Amsterdam, NL": { lng:[4.8000, 5.0200], lat:[52.3300, 52.4000] },
+    "Dublin, Ireland": { lng:[-6.3500, -6.2000], lat:[53.3000, 53.3600] },
+    "Stockholm, Sweden": { lng:[18.0000, 18.1400], lat:[59.3000, 59.3600] },
+    "Copenhagen, Denmark": { lng:[12.4500, 12.6500], lat:[55.6300, 55.7100] },
+    "Helsinki, Finland": { lng:[24.8800, 25.0200], lat:[60.1500, 60.2000] },
+    "Oslo, Norway": { lng:[10.6500, 10.8500], lat:[59.9000, 59.9700] },
+    "Reykjavík, Iceland": { lng:[-21.9900, -21.7500], lat:[64.1000, 64.1600] },
+    "Moscow, Russia": { lng:[37.5500, 37.7500], lat:[55.7000, 55.8200] },
+    "Istanbul, Türkiye": { lng:[28.9000, 29.1500], lat:[40.9500, 41.1000] },
+    "Athens, Greece": { lng:[23.7000, 23.7800], lat:[37.9400, 38.0200] },
+    "Cairo, Egypt": { lng:[31.1900, 31.2700], lat:[30.0000, 30.0800] },
+    "Nairobi, Kenya": { lng:[36.7800, 36.8600], lat:[-1.3200, -1.2600] },
+    "Lagos, Nigeria": { lng:[3.3300, 3.4500], lat:[6.4300, 6.5500] },
+    "Johannesburg, SA": { lng:[27.9800, 28.1000], lat:[-26.2500, -26.1700] },
+    "Cape Town, SA": { lng:[18.3800, 18.5000], lat:[-33.9800, -33.8500] },
+    "Dubai, UAE": { lng:[55.2400, 55.3400], lat:[25.1800, 25.2500] },
+    "Mumbai, India": { lng:[72.8200, 72.9000], lat:[18.9200, 19.0900] },
+    "Delhi, India": { lng:[77.0500, 77.2000], lat:[28.5800, 28.7200] },
+    "Bangkok, Thailand": { lng:[100.4500, 100.5500], lat:[13.7000, 13.8200] },
+    "Singapore": { lng:[103.8000, 103.8700], lat:[1.2700, 1.3600] },
+    "Hong Kong, China": { lng:[114.1300, 114.2100], lat:[22.2800, 22.3700] },
+    "Tokyo, Japan": { lng:[139.6800, 139.7800], lat:[35.6300, 35.7300] },
+    "Seoul, South Korea": { lng:[126.9500, 127.0500], lat:[37.5300, 37.6000] },
+    "Sydney, Australia": { lng:[151.1800, 151.2400], lat:[-33.9300, -33.8400] },
+    "Brisbane, Australia": { lng:[152.9900, 153.0600], lat:[-27.5200, -27.4400] },
+    "Auckland, New Zealand": { lng:[174.7400, 174.7800], lat:[-36.8700, -36.8300] },
+    "Toronto, Canada": { lng:[-79.4200, -79.3500], lat:[43.6400, 43.7000] },
+    "Vancouver, Canada": { lng:[-123.1500, -123.0800], lat:[49.2600, 49.2900] },
+    "Mexico City, Mexico": { lng:[-99.1700, -99.0900], lat:[19.3800, 19.4500] },
+    "São Paulo, Brazil": { lng:[-46.6800, -46.6100], lat:[-23.5900, -23.5200] },
+    "Rio de Janeiro, Brazil": { lng:[-43.2500, -43.1500], lat:[-22.9800, -22.9000] },
+    "Buenos Aires, Argentina": { lng:[-58.4500, -58.3600], lat:[-34.6400, -34.5600] },
+    "Santiago, Chile": { lng:[-70.7100, -70.6000], lat:[-33.4900, -33.4000] }
+  };
+
+  function safeCoordinate(city, baseLng=0, baseLat=0, radius=0.1){
+    const bounds = CITY_BOUNDS[city];
+    const range = Math.max(radius || 0, 0);
+    if(range <= 0){
+      if(bounds){
+        return {
+          lng: clamp(baseLng, bounds.lng[0], bounds.lng[1]),
+          lat: clamp(baseLat, bounds.lat[0], bounds.lat[1])
+        };
+      }
+      return { lng: baseLng, lat: baseLat };
+    }
+    const attempts = 24;
+    for(let i=0;i<attempts;i++){
+      const lng = baseLng + (rnd()-0.5) * 2 * range;
+      const lat = baseLat + (rnd()-0.5) * 2 * range;
+      if(!bounds || (lng >= bounds.lng[0] && lng <= bounds.lng[1] && lat >= bounds.lat[0] && lat <= bounds.lat[1])){
+        return { lng, lat };
+      }
+    }
+    if(bounds){
+      return {
+        lng: clamp(baseLng, bounds.lng[0], bounds.lng[1]),
+        lat: clamp(baseLat, bounds.lat[0], bounds.lat[1])
+      };
+    }
+    return { lng: baseLng, lat: baseLat };
+  }
+
   function randomSchedule(){
     const count = 1 + Math.floor(rnd()*20);
     const now = new Date();
@@ -6510,9 +6584,7 @@ function uniqueTitle(seed, cityName, idx){
   function randomLocation(city, baseLng=0, baseLat=0){
     const venue = pick(VENUES);
     const address = `${Math.floor(rnd()*999)+1} ${pick(STREETS)}, ${city}`;
-    const jitter = ()=> (rnd()-0.5) * 0.02;
-    const lng = baseLng + jitter();
-    const lat = baseLat + jitter();
+    const { lng, lat } = safeCoordinate(city, baseLng, baseLat, 0.01);
     return { venue, address, lng, lat, dates: randomSchedule(), price: randomPriceRange() };
   }
 
@@ -6625,14 +6697,15 @@ function makePosts(){
     const offset = 1 + i%30;
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
+    const tasCoord = safeCoordinate(tasCity, tasLng, tasLat, 0.1);
     out.push({
       id,
       title,
       slug: slugify(title),
       created,
       city: tasCity,
-      lng: tasLng + (rnd()-0.5)*0.2,
-      lat: tasLat + (rnd()-0.5)*0.2,
+      lng: tasCoord.lng,
+      lat: tasCoord.lat,
       category: cat.name,
       subcategory: sub,
       dates: [toISODate(date)],
@@ -6640,7 +6713,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(tasCity, tasLng, tasLat),
+      locations: randomLocations(tasCity, tasCoord.lng, tasCoord.lat),
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -6694,7 +6767,7 @@ function makePosts(){
   const TOTAL_WORLD = 900;
   for(let i=0;i<TOTAL_WORLD;i++){
     const hub = hubs[Math.floor(rnd()*hubs.length)];
-    const jitter = ()=> (rnd()-0.5) * 0.2; // ~0.2 degrees spread (~20km)
+    const coord = safeCoordinate(hub.c, hub.lng, hub.lat, 0.1);
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'WW'+i;
@@ -6706,8 +6779,8 @@ function makePosts(){
       slug: slugify(title),
       created,
       city: hub.c,
-      lng: hub.lng + jitter(),
-      lat: hub.lat + jitter(),
+      lng: coord.lng,
+      lat: coord.lat,
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
@@ -6715,7 +6788,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(hub.c, hub.lng, hub.lat),
+      locations: randomLocations(hub.c, coord.lng, coord.lat),
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
