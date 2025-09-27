@@ -5424,7 +5424,7 @@ if (typeof slugify !== 'function') {
   }
 
   function markerLabelMeasureFont(){
-    return `${markerLabelTextSize}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+    return `${markerLabelTextSize}px system-ui, sans-serif`;
   }
 
   function shortenMarkerLabelText(text){
@@ -9060,7 +9060,7 @@ if (!map.__pillHooksInstalled) {
           filter: markerLabelFilter,
           layout:{
             'text-field': markerLabelTextField,
-            'text-font': ['Open Sans Regular','Arial Unicode MS Regular'],
+            'text-font': ['literal', ['system-ui','sans-serif']],
             'text-size': markerLabelTextSize,
             'text-line-height': markerLabelTextLineHeight,
             'text-anchor': 'left',
@@ -9092,7 +9092,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setPaintProperty('marker-label-bg','icon-opacity',0.8); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-text','text-font',['literal', ['system-ui','sans-serif']]); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-size', markerLabelTextSize); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-line-height', markerLabelTextLineHeight); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-anchor','left'); }catch(e){}
