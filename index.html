@@ -8758,8 +8758,9 @@ if (!map.__pillHooksInstalled) {
             const labelLines = getMarkerLabelLines(p);
             const primaryVenue = getPrimaryVenueName(p);
             const venueLabel = primaryVenue || p.city || '';
+            const multiTitle = `${count} posts at this venue`;
             const labelTitle = isMultiVenue
-              ? shortenMarkerLabelText(`${count} posts`)
+              ? shortenMarkerLabelText(multiTitle)
               : labelLines.line1;
             const labelVenue = isMultiVenue
               ? shortenMarkerLabelText(venueLabel)
