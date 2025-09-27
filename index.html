@@ -4471,49 +4471,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   box-sizing: border-box;
 }
 
-.multi-item.map-card{
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  min-width: 0;
-  box-sizing: border-box;
-  width: 600px;
-}
-
-.multi-item.map-card img{
-  width: 64px;
-  height: 64px;
-  aspect-ratio: 1 / 1;
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
-  background: var(--panel-bg);
-  flex: 0 0 64px;
-  min-width: 64px;
-  min-height: 64px;
-}
-
-.multi-item.map-card .t{
-  white-space: normal;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.multi-item.map-card .s{
-  font-size: 14px;
-  opacity: .8;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .map-card--popup,
 .map-card--list{
   pointer-events: auto;
@@ -4521,11 +4478,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 .map-card--popup{
   display: block;
-}
-
-.map-card--count .map-card-text{
-  left: 20px;
-  width: 205px;
 }
 
 .map-card-list{
@@ -4589,26 +4541,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   cursor: pointer;
 }
 
-.multi-item.map-card > div{
-  min-width: 0;
-}
-
-.multi-item.map-card .hover-card{
-  width: 100%;
-}
-
-.hover-card > div{
-  min-width: 0;
-  flex: 1;
-}
-
-.multi-item.map-card .hover-card .t{
-  max-width: none;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
 .nowrap{
   white-space: nowrap;
 }
@@ -4625,12 +4557,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     width: 90vw;
     max-width: 90vw;
   }
-  .mapboxgl-popup.map-card .multi-item.map-card{
+  .mapboxgl-popup.map-card .map-card--list{
     width: 90vw;
     max-width: 90vw;
-  }
-  .mapboxgl-popup.map-card .multi-item.map-card .hover-card{
-    max-width: 100%;
   }
 }
 
@@ -6879,7 +6808,7 @@ function makePosts(){
       const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
       const variant = opts.variant || 'popup';
       if(variant === 'popup') classes.push('map-card--popup');
-      if(variant === 'list') classes.push('map-card--list', 'multi-item');
+      if(variant === 'list') classes.push('map-card--list');
       extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
       if(variant === 'list'){
         return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
