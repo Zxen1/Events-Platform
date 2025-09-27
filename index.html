@@ -5519,8 +5519,8 @@ if (typeof slugify !== 'function') {
     };
   }
 
-  function buildMarkerLabelText(p){
-    const lines = getMarkerLabelLines(p);
+  function buildMarkerLabelText(p, overrideLines){
+    const lines = overrideLines || getMarkerLabelLines(p);
     if(lines.line2){
       return `${lines.line1}\n${lines.line2}`;
     }
@@ -8847,7 +8847,10 @@ if (!map.__pillHooksInstalled) {
             const isMultiVenue = count > 1;
             const labelLines = getMarkerLabelLines(p);
             const primaryVenue = getPrimaryVenueName(p);
-            const combinedLabel = buildMarkerLabelText(p);
+            if(isMultiVenue){
+              labelLines.line1 = shortenMarkerLabelText(`${count} posts`);
+            }
+            const combinedLabel = buildMarkerLabelText(p, labelLines);
             return {
               type:'Feature',
               properties:{
