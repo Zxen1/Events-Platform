@@ -4606,6 +4606,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
 }
 
+.mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content,
+.mapboxgl-popup.multi-post-map-card .multi-hover,
+.mapboxgl-popup.multi-post-map-card .map-card-list{
+  width: 600px;
+  max-width: 600px;
+}
+
 .hero img.lqip{
   filter: blur(10px);
   transform: scale(1.02);
@@ -6100,7 +6107,7 @@ function buildClusterListHTML(items){
       touchMarker = null;
       // Place popup at the pointer, then adjust to keep fully in view by moving the lngLat
       const lngLat = map.unproject(point);
-      hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop hover-multi-list map-card', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
+      hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop multi-post-map-card map-card', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
       registerPopup(hoverPopup);
       // Prevent the browser contextmenu while locked
       map.getCanvas().addEventListener('contextmenu', ev => ev.preventDefault(), {once:true});
