@@ -52,6 +52,11 @@
       isolation: isolate;
       touch-action: none;
     }
+    .mapmarker-container{
+      background: var(--popup-bg, rgba(0,0,0,0.95));
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
     .map-card img,
     .mapmarker-container img{ display:block; }
     .map-card-pill,
@@ -132,6 +137,9 @@
       align-items: center;
       gap: 12px;
       transform: none;
+      background: none;
+      border-radius: 0;
+      box-shadow: none;
     }
     .map-card--list .map-card-thumb{
       position: static;
@@ -9189,8 +9197,12 @@ if (!map.__pillHooksInstalled) {
           overlayRoot.addEventListener('click', handleOverlayClick, { capture: true });
           ['pointerdown','mousedown','touchstart'].forEach(type => {
             overlayRoot.addEventListener(type, (ev)=>{
-              ev.preventDefault();
-              ev.stopPropagation();
+              const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+              const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+              if(!isTouchLike){
+                try{ ev.preventDefault(); }catch(err){}
+              }
+              try{ ev.stopPropagation(); }catch(err){}
             }, { capture: true });
           });
           overlayRoot.addEventListener('mouseenter', ()=>{
