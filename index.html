@@ -69,7 +69,7 @@
       height: 60px;
       object-fit: contain;
       pointer-events: auto;
-      opacity: 1;
+      opacity: 1 !important;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -4588,8 +4588,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content,
 .mapboxgl-popup.multi-post-map-card .multi-hover,
 .mapboxgl-popup.multi-post-map-card .map-card-list{
-  width: 600px;
-  max-width: 600px;
+  width: 400px;
+  max-width: min(400px, calc(100vw - 32px));
+}
+
+.mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content{
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hero img.lqip{
