@@ -9439,7 +9439,7 @@ if (!map.__pillHooksInstalled) {
           overlayRoot.className = 'marker-hover-overlay';
           overlayRoot.dataset.id = String(p.id);
           overlayRoot.setAttribute('aria-hidden', 'true');
-          overlayRoot.style.pointerEvents = 'none';
+          overlayRoot.style.pointerEvents = 'auto';
           overlayRoot.style.userSelect = 'none';
 
           const pillImg = new Image();
@@ -9472,6 +9472,38 @@ if (!map.__pillHooksInstalled) {
           }
 
           overlayRoot.append(pillImg, thumbImg, labelEl);
+
+          const handleOverlayClick = (ev)=>{
+            ev.preventDefault();
+            ev.stopPropagation();
+            const pid = overlayRoot.dataset.id;
+            if(!pid) return;
+            callWhenDefined('openPost', (fn)=>{
+              requestAnimationFrame(() => {
+                try{
+                  touchMarker = null;
+                  stopSpin();
+                  fn(pid, false, true);
+                }catch(err){ console.error(err); }
+              });
+            });
+          };
+          overlayRoot.addEventListener('click', handleOverlayClick, { capture: true });
+          ['pointerdown','mousedown','touchstart'].forEach(type => {
+            overlayRoot.addEventListener(type, (ev)=>{
+              ev.preventDefault();
+              ev.stopPropagation();
+            }, { capture: true });
+          });
+          overlayRoot.addEventListener('mouseenter', ()=>{
+            window.__overCard = true;
+          });
+          overlayRoot.addEventListener('mouseleave', ()=>{
+            window.__overCard = false;
+            if(listLocked) return;
+            const currentPopup = hoverPopup;
+            schedulePopupRemoval(currentPopup, 160);
+          });
           const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
           if(targetLngLat){ marker.setLngLat(targetLngLat); }
           else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
