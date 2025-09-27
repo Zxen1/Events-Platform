@@ -42,14 +42,20 @@
   </style>
 
   <style>
-    .map-card{
+    .map-card,
+    .mapmarker-container{
       position: relative;
       width: 225px;
       height: 60px;
       transform: translateZ(0);
+      pointer-events: auto;
+      isolation: isolate;
+      touch-action: none;
     }
-    .map-card img{ display:block; }
-    .map-card-pill{
+    .map-card img,
+    .mapmarker-container img{ display:block; }
+    .map-card-pill,
+    .mapmarker-container-pill{
       position: absolute;
       inset: auto;
       left: -5px;
@@ -57,7 +63,9 @@
       width: 225px;
       height: 60px;
       object-fit: contain;
-      pointer-events: none;
+      pointer-events: auto;
+      opacity: 1;
+      mix-blend-mode: normal;
       z-index: 0;
     }
     .map-card-thumb{
@@ -71,7 +79,8 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 1;
     }
-    .map-card-text{
+    .map-card-text,
+    .mapmarker-container-label{
       position: absolute;
       left: 55px;
       top: 0;
@@ -92,6 +101,7 @@
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
       z-index: 2;
+      pointer-events: auto;
     }
 
     .map-card-title{
@@ -5800,7 +5810,7 @@ if (typeof slugify !== 'function') {
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
-    let hoverPopup = null, hoverId = null;
+    let hoverPopup = null;
     let postSourceEventsBound = false;
     let touchMarker = null;
     let activePostId = null;
@@ -5945,7 +5955,6 @@ if (typeof slugify !== 'function') {
     }
     const MAX_CLUSTER_BOUNDS_LEAVES = 500;
 
-    const SELECTED_RING_LAYER = 'selected-ring';
     const MARKER_INTERACTIVE_LAYERS = ['unclustered','marker-label-bg','marker-label-text'];
     window.__overCard = window.__overCard || false;
 
@@ -5981,22 +5990,7 @@ if (typeof slugify !== 'function') {
       }, delay);
     }
 
-    function updateSelectedMarkerRing(){
-      if(!map || typeof map.getLayer !== 'function') return;
-      if(!map.getLayer(SELECTED_RING_LAYER)) return;
-      const hasSelection = activePostId !== null && activePostId !== undefined && activePostId !== '';
-      let filter;
-      if(hasSelection){
-        const idFilter = ['==', ['to-string', ['get','id']], String(activePostId)];
-        filter = selectedVenueKey
-          ? ['all', idFilter, ['==',['get','venueKey'], selectedVenueKey]]
-          : idFilter;
-      } else {
-        filter = ['==',['to-string',['get','id']],'__none__'];
-      }
-      try{ map.setFilter(SELECTED_RING_LAYER, filter); }catch(e){}
-      try{ map.setPaintProperty(SELECTED_RING_LAYER, 'circle-stroke-opacity', hasSelection ? 0.95 : 0); }catch(e){}
-    }
+    function updateSelectedMarkerRing(){}
 
     function hashString(str){
       let hash = 0;
@@ -8809,7 +8803,7 @@ if (!map.__pillHooksInstalled) {
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
       if(sourceNeedsRebuild){
-        ['cluster-count','clusters','marker-label-text','marker-label-bg','unclustered','posts-heat','hover-ring','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+        ['cluster-count','clusters','marker-label-text','marker-label-bg','unclustered','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       } else if(existing){
@@ -9029,7 +9023,7 @@ if (!map.__pillHooksInstalled) {
       } else {
         try{ map.setFilter('unclustered', null); }catch(e){}
       }
-      ['hover-fill',SELECTED_RING_LAYER,'hover-ring','clusters','cluster-count','marker-label-bg','marker-label-text','unclustered'].forEach(id=>{
+      ['hover-fill','clusters','cluster-count','marker-label-bg','marker-label-text','unclustered'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
@@ -9136,7 +9130,7 @@ if (!map.__pillHooksInstalled) {
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat } = opts;
           const overlayRoot = document.createElement('div');
-          overlayRoot.className = 'map-card map-card--popup';
+          overlayRoot.className = 'map-card map-card--popup mapmarker-container';
           const pillWidth = 225;
           const pillHeight = 60;
           const thumbSize = 50;
@@ -9149,7 +9143,7 @@ if (!map.__pillHooksInstalled) {
           try{ pillImg.decoding = 'async'; }catch(e){}
           pillImg.alt = '';
           pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-          pillImg.className = 'map-card-pill';
+          pillImg.className = 'map-card-pill mapmarker-container-pill';
           pillImg.draggable = false;
 
           const thumbImg = new Image();
@@ -9162,7 +9156,7 @@ if (!map.__pillHooksInstalled) {
 
           const labelLines = getMarkerLabelLines(post);
           const labelEl = document.createElement('div');
-          labelEl.className = 'map-card-text';
+          labelEl.className = 'map-card-text mapmarker-container-label';
           const titleEl = document.createElement('div');
           titleEl.className = 'map-card-title';
           titleEl.textContent = labelLines.line1;
@@ -9232,7 +9226,6 @@ if (!map.__pillHooksInstalled) {
         if(id !== undefined && id !== null){
           activePostId = id;
           selectedVenueKey = props.venueKey || null;
-          try{ map.setFilter(SELECTED_RING_LAYER, ['==', ['get','id'], id]); }catch(err){}
           updateSelectedMarkerRing();
         }
         const coords = f.geometry && f.geometry.coordinates;
@@ -9317,6 +9310,13 @@ if (!map.__pillHooksInstalled) {
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
 
       map.on('click', e=>{
+        const originalTarget = e.originalEvent && e.originalEvent.target;
+        const targetEl = originalTarget && typeof originalTarget.closest === 'function'
+          ? originalTarget.closest('.mapmarker-container')
+          : null;
+        if(targetEl){
+          return;
+        }
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
           if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
@@ -9324,43 +9324,14 @@ if (!map.__pillHooksInstalled) {
         }
       });
 
-      (function ensureSelectedRing(){
-        const pointLayer = 'unclustered';
-        const pointLayerRef = map.getLayer(pointLayer);
-        const src = pointLayerRef ? pointLayerRef.source : null;
-        if(!src || map.getLayer(SELECTED_RING_LAYER)) return;
-
-        map.addLayer({
-          id: SELECTED_RING_LAYER,
-          type: 'circle',
-          source: src,
-          filter: ['==', ['get', 'id'], '__none__'],
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 10, 16, 18],
-            'circle-color': 'transparent',
-            'circle-stroke-color': '#00BFFF',
-            'circle-stroke-width': 4,
-            'circle-stroke-opacity': 0.9
-          }
-        }, pointLayer);
-      })();
       updateSelectedMarkerRing();
-
-      // Hover ring layer for individual points
-      if(!map.getLayer('hover-ring')){
-        map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
-          'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
-          'circle-stroke-width': 2, 'circle-radius': 20
-        }});
-      }
 
       // Cursor + popup for unclustered points
       
       const handleMarkerMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
-        const id = f.properties.id; hoverId = id;
-        map.setFilter('hover-ring', ['==',['get','id'], id]);
+        const id = f.properties.id;
         const coords = f.geometry && f.geometry.coordinates;
         const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
@@ -9445,7 +9416,6 @@ if (!map.__pillHooksInstalled) {
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
-        hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
