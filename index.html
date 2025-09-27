@@ -8764,8 +8764,8 @@ if (!map.__pillHooksInstalled) {
             const isMultiVenue = count > 1;
             const labelLines = getMarkerLabelLines(p);
             const primaryVenue = getPrimaryVenueName(p);
-            const venueLabel = primaryVenue || p.city || '';
-            const multiTitle = `${count} posts at this venue`;
+            const venueLabel = primaryVenue || '';
+            const multiTitle = `${count} posts here`;
             const labelTitle = isMultiVenue
               ? shortenMarkerLabelText(multiTitle)
               : labelLines.line1;
@@ -8834,15 +8834,21 @@ if (!map.__pillHooksInstalled) {
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
-  const markerLabelTextField = ['case',
-    ['all', ['has','labelLine2'], ['!=', ['get','labelLine2'], '']],
-    ['concat',
-      ['coalesce', ['get','labelLine1'], ['get','title'], ''],
-      '\n',
-      ['coalesce', ['get','labelLine2'], ['coalesce', ['get','venueName'], ['get','city'], ''], '']
-    ],
-    ['coalesce', ['get','labelLine1'], ['get','title'], '']
-  ];
+      const markerLabelTextField = ['case',
+        ['==', ['get','multi'], 1],
+        ['concat',
+          ['coalesce', ['get','labelLine1'], ['get','title'], ''],
+          '\n',
+          ['coalesce', ['get','labelLine2'], ['coalesce', ['get','venueName'], ''], '']
+        ],
+        ['all', ['has','labelLine2'], ['!=', ['get','labelLine2'], '']],
+        ['concat',
+          ['coalesce', ['get','labelLine1'], ['get','title'], ''],
+          '\n',
+          ['coalesce', ['get','labelLine2'], ['coalesce', ['get','venueName'], ['get','city'], ''], '']
+        ],
+        ['coalesce', ['get','labelLine1'], ['get','title'], '']
+      ];
 
       if(shouldCluster){
         if(usingSvgClusters){
