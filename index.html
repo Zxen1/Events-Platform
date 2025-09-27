@@ -94,6 +94,24 @@
       z-index: 2;
     }
 
+    .mapmarker-container{
+      pointer-events: auto;
+      touch-action: pan-y;
+      isolation: isolate;
+    }
+
+    .mapmarker-container *{
+      pointer-events: auto;
+    }
+
+    .mapmarker-container-pill{
+      opacity: 1;
+    }
+
+    .mapmarker-container-label{
+      pointer-events: auto;
+    }
+
     .map-card-title{
       font-weight: 600;
       font-size: 12px;
@@ -5961,6 +5979,22 @@ if (typeof slugify !== 'function') {
       }
     }
 
+    function shieldMapInteractions(root){
+      if(!root || root.__mapInteractionShielded) return;
+      const bubbleEvents = ['pointerdown','pointerup','pointermove','mousedown','mouseup','mousemove','click','dblclick','contextmenu'];
+      const stop = (ev)=>{
+        if(!ev) return;
+        try{ ev.stopPropagation(); }catch(e){}
+      };
+      bubbleEvents.forEach(type => {
+        try{ root.addEventListener(type, stop, { passive: false }); }catch(e){}
+      });
+      ['wheel','touchstart','touchmove','touchend','touchcancel'].forEach(type => {
+        try{ root.addEventListener(type, stop, { passive: false }); }catch(e){}
+      });
+      root.__mapInteractionShielded = true;
+    }
+
     function schedulePopupRemoval(popup, delay=180){
       const target = popup || hoverPopup;
       if(!target) return;
@@ -6078,6 +6112,9 @@ function buildClusterListHTML(items){
       map.getCanvas().addEventListener('contextmenu', ev => ev.preventDefault(), {once:true});
       // Stop events inside from bubbling to map
       const el = hoverPopup.getElement();
+      shieldMapInteractions(el);
+      const primaryCard = el.querySelector('.map-card');
+      if(primaryCard) shieldMapInteractions(primaryCard);
       el.addEventListener('click', e => e.stopPropagation(), {capture:true});
       // After layout, ensure fully on-screen
       requestAnimationFrame(()=>{
@@ -6811,16 +6848,16 @@ function makePosts(){
 
     function mapCardHTML(p, opts={}){
       const venueName = getPrimaryVenueName(p) || p.city;
-      const classes = ['map-card'];
+      const classes = ['map-card','mapmarker-container'];
       const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
       const variant = opts.variant || 'popup';
       if(variant === 'popup') classes.push('map-card--popup');
       if(variant === 'list') classes.push('map-card--list');
       extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
       if(variant === 'list'){
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text mapmarker-container-label"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
       }
-      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill mapmarker-container-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text mapmarker-container-label"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
     }
 
     function hoverHTML(p){
@@ -8964,7 +9001,7 @@ if (!map.__pillHooksInstalled) {
           paint:{
             'icon-translate': [markerLabelBgTranslatePx, 0],
             'icon-translate-anchor': 'viewport',
-            'icon-opacity': 0.8
+            'icon-opacity': 1
           }
         }, 'unclustered');
       }
@@ -9005,7 +9042,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key',1099); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-opacity',0.8); }catch(e){}
+      try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
@@ -9220,8 +9257,11 @@ if (!map.__pillHooksInstalled) {
               hoverPopup = popup.setHTML(hoverHTML(p)).addTo(map);
               hoverPopup.__fixedLngLat = fixedLngLat;
               registerPopup(hoverPopup);
-              const cardEl = hoverPopup.getElement().querySelector('.map-card');
+              const popupRoot = hoverPopup.getElement();
+              shieldMapInteractions(popupRoot);
+              const cardEl = popupRoot.querySelector('.map-card');
               if(cardEl){
+                shieldMapInteractions(cardEl);
                 cardEl.addEventListener('click', (e)=>{
                   e.stopPropagation();
                   e.preventDefault();
@@ -9250,43 +9290,12 @@ if (!map.__pillHooksInstalled) {
         }
       });
 
-      (function ensureSelectedRing(){
-        const pointLayer = 'unclustered';
-        const pointLayerRef = map.getLayer(pointLayer);
-        const src = pointLayerRef ? pointLayerRef.source : null;
-        if(!src || map.getLayer(SELECTED_RING_LAYER)) return;
-
-        map.addLayer({
-          id: SELECTED_RING_LAYER,
-          type: 'circle',
-          source: src,
-          filter: ['==', ['get', 'id'], '__none__'],
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 10, 16, 18],
-            'circle-color': 'transparent',
-            'circle-stroke-color': '#00BFFF',
-            'circle-stroke-width': 4,
-            'circle-stroke-opacity': 0.9
-          }
-        }, pointLayer);
-      })();
-      updateSelectedMarkerRing();
-
-      // Hover ring layer for individual points
-      if(!map.getLayer('hover-ring')){
-        map.addLayer({ id:'hover-ring', type:'circle', source:'posts', filter:['==',['get','id'],'__none__'], paint:{
-          'circle-color': '#ffffff', 'circle-opacity': 0, 'circle-stroke-color':'#fff', 'circle-stroke-opacity':0.95,
-          'circle-stroke-width': 2, 'circle-radius': 20
-        }});
-      }
-
       // Cursor + popup for unclustered points
-      
+
       const handleMarkerMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
         const f = e.features && e.features[0]; if(!f) return;
         const id = f.properties.id; hoverId = id;
-        map.setFilter('hover-ring', ['==',['get','id'], id]);
         const coords = f.geometry && f.geometry.coordinates;
         const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
@@ -9359,7 +9368,7 @@ if (!map.__pillHooksInstalled) {
             hoverPopup = null;
           }
           const overlayRoot = document.createElement('div');
-          overlayRoot.className = 'map-card map-card--popup';
+          overlayRoot.className = 'map-card map-card--popup mapmarker-container';
           const pillWidth = 225;
           const pillHeight = 60;
           const thumbSize = 50;
@@ -9372,7 +9381,7 @@ if (!map.__pillHooksInstalled) {
           try{ pillImg.decoding = 'async'; }catch(e){}
           pillImg.alt = '';
           pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-          pillImg.className = 'map-card-pill';
+          pillImg.className = 'map-card-pill mapmarker-container-pill';
           pillImg.draggable = false;
 
           const thumbImg = new Image();
@@ -9384,7 +9393,7 @@ if (!map.__pillHooksInstalled) {
           thumbImg.draggable = false;
 
           const labelEl = document.createElement('div');
-          labelEl.className = 'map-card-text';
+          labelEl.className = 'map-card-text mapmarker-container-label';
           const titleEl = document.createElement('div');
           titleEl.className = 'map-card-title';
           titleEl.textContent = labelLines.line1;
@@ -9398,6 +9407,7 @@ if (!map.__pillHooksInstalled) {
           }
 
           overlayRoot.append(pillImg, thumbImg, labelEl);
+          shieldMapInteractions(overlayRoot);
 
           const handleOverlayClick = (ev)=>{
             ev.preventDefault();
@@ -9462,7 +9472,7 @@ if (!map.__pillHooksInstalled) {
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
-        hoverId = null; map.setFilter('hover-ring',['==',['get','id'],'__none__']);
+        hoverId = null;
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
