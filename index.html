@@ -9961,6 +9961,17 @@ function openPostModal(id){
       const imageTrack = imageBox ? imageBox.querySelector('.image-track') : null;
       const baseImg = imageTrack ? imageTrack.querySelector('img') : null;
       const slides = [];
+      if(imageBox){
+        imageBox._modalImages = imgs.slice();
+        try {
+          imageBox.dataset.modalImages = JSON.stringify(imgs);
+        } catch(err) {
+          imageBox.dataset.modalImages = '';
+        }
+        if(typeof imageBox.dataset.index === 'undefined'){
+          imageBox.dataset.index = '0';
+        }
+      }
       if(baseImg){
         baseImg.dataset.index = '0';
         baseImg.dataset.full = imgs[0];
@@ -10095,7 +10106,7 @@ function openPostModal(id){
           const idx = clampIdx(parseInt(t.dataset.index,10));
           if(currentIdx === idx && t.classList.contains('selected')){
             const fullSrc = t.dataset.full || t.src;
-            openImageModal(fullSrc);
+            openImageModal(fullSrc, {images: imgs, startIndex: idx, origin: t});
           } else {
             show(idx);
           }
@@ -10139,7 +10150,7 @@ function openPostModal(id){
           e.stopPropagation();
           const currentSlide = ensureSlide(currentIdx) || slides[currentIdx] || imgTarget;
           const fullSrc = currentSlide ? (currentSlide.dataset.full || currentSlide.src) : imgs[currentIdx];
-          openImageModal(fullSrc);
+          openImageModal(fullSrc, {images: imgs, startIndex: currentIdx, origin: imgTarget});
         });
         imageBox.addEventListener('touchstart', e=>{
           if(e.touches.length !== 1) return;
@@ -11922,12 +11933,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   posts.querySelectorAll('img').forEach(img => {
-    img.addEventListener('click', e => { e.stopPropagation(); openImageModal(img.src); });
+    img.addEventListener('click', e => { e.stopPropagation(); openImageModal(img.src, {origin: img}); });
     img.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
         e.preventDefault();
         e.stopPropagation();
-        openImageModal(img.src);
+        openImageModal(img.src, {origin: img});
       }
     }, { passive: false });
   });
@@ -11967,6 +11978,7 @@ let boardAdjustCleanup = null;
 function ensureImageModalReady(){
   const container = document.querySelector('.image-modal-container');
   if(!container) return {container:null, modal:null};
+  const modal = container.querySelector('.image-modal');
   if(!container._listenerAdded){
     container.addEventListener('click', e => {
       if(e.target === container){
@@ -11975,7 +11987,14 @@ function ensureImageModalReady(){
     });
     container._listenerAdded = true;
   }
-  const modal = container.querySelector('.image-modal');
+  if(modal && !modal._closeListenerAdded){
+    modal.addEventListener('click', e => {
+      if(!e.target.closest('img')){
+        closeImageModal(container);
+      }
+    });
+    modal._closeListenerAdded = true;
+  }
   return {container, modal};
 }
 
@@ -11985,10 +12004,144 @@ function closeImageModal(container){
   const modal = target.querySelector('.image-modal');
   if(modal) modal.innerHTML = '';
   target.classList.add('hidden');
-  if(target.dataset) delete target.dataset.activeSrc;
+  if(target.dataset){
+    delete target.dataset.activeSrc;
+    delete target.dataset.activeIndex;
+  }
+  target._imageModalState = null;
+  target._imageModalImg = null;
 }
 
-function openImageModal(src){
+function advanceImageModal(container, modal, step=1){
+  if(!container || !modal) return;
+  const state = container._imageModalState;
+  if(!state || !Array.isArray(state.images) || state.images.length <= 1) return;
+  const len = state.images.length;
+  state.index = ((state.index + step) % len + len) % len;
+  renderImageModalImage(container, modal);
+}
+
+function renderImageModalImage(container, modal){
+  if(!container || !modal) return;
+  const state = container._imageModalState;
+  if(!state || !Array.isArray(state.images) || !state.images.length) return;
+  let img = container._imageModalImg;
+  if(!img || img.parentNode !== modal){
+    modal.innerHTML = '';
+    img = document.createElement('img');
+    img.addEventListener('click', e => {
+      e.stopPropagation();
+      advanceImageModal(container, modal, 1);
+    });
+    container._imageModalImg = img;
+    modal.appendChild(img);
+  }
+  const src = state.images[state.index];
+  if(img.getAttribute('src') !== src){
+    img.src = src;
+  }
+  if(container.dataset){
+    container.dataset.activeSrc = src;
+    container.dataset.activeIndex = String(state.index);
+  }
+}
+
+function resolveImageModalContext(config){
+  const result = {images: [], index: 0, gallery: null};
+  if(!config) return result;
+  const src = typeof config.src === 'string' ? config.src : '';
+  const providedImages = Array.isArray(config.images) ? config.images.filter(Boolean) : null;
+  const originEl = config.origin instanceof Element ? config.origin : null;
+  let galleryRoot = config.gallery instanceof Element ? config.gallery : null;
+  const findGalleryFrom = el => {
+    if(!el) return null;
+    const fromImageBox = el.closest && el.closest('.image-box');
+    if(fromImageBox) return fromImageBox;
+    const postImages = el.closest && el.closest('.post-images');
+    if(postImages){
+      const box = postImages.querySelector('.image-box');
+      if(box) return box;
+    }
+    const openPost = el.closest && el.closest('.open-post');
+    if(openPost){
+      const box = openPost.querySelector('.image-box');
+      if(box) return box;
+    }
+    return null;
+  };
+  if(!galleryRoot && originEl){
+    galleryRoot = findGalleryFrom(originEl);
+  }
+  let images = providedImages && providedImages.length ? providedImages.slice() : null;
+  if((!images || !images.length) && galleryRoot){
+    if(Array.isArray(galleryRoot._modalImages) && galleryRoot._modalImages.length){
+      images = galleryRoot._modalImages.slice();
+    } else if(galleryRoot.dataset && galleryRoot.dataset.modalImages){
+      try {
+        const parsed = JSON.parse(galleryRoot.dataset.modalImages);
+        if(Array.isArray(parsed) && parsed.length){
+          images = parsed.slice();
+        }
+      } catch(err){}
+    }
+  }
+  if((!images || !images.length) && galleryRoot){
+    const trackImgs = Array.from(galleryRoot.querySelectorAll('.image-track img'));
+    if(trackImgs.length){
+      images = trackImgs.map(im => (im.dataset && im.dataset.full) ? im.dataset.full : im.src);
+    }
+  }
+  if(!images || !images.length){
+    images = src ? [src] : [];
+  }
+  let index = null;
+  if(typeof config.startIndex === 'number' && Number.isFinite(config.startIndex)){
+    index = config.startIndex;
+  } else if(typeof config.startIndex === 'string'){
+    const parsedStart = parseInt(config.startIndex, 10);
+    if(Number.isFinite(parsedStart)){
+      index = parsedStart;
+    }
+  }
+  const originImg = originEl && originEl.tagName === 'IMG' ? originEl : (originEl && originEl.querySelector ? originEl.querySelector('img') : null);
+  if(index === null && originImg && originImg.dataset && originImg.dataset.index){
+    const parsed = parseInt(originImg.dataset.index, 10);
+    if(Number.isFinite(parsed)){
+      index = parsed;
+    }
+  }
+  if(index === null && galleryRoot && galleryRoot.dataset && galleryRoot.dataset.index){
+    const parsed = parseInt(galleryRoot.dataset.index, 10);
+    if(Number.isFinite(parsed)){
+      index = parsed;
+    }
+  }
+  if(index === null && src){
+    const found = images.indexOf(src);
+    if(found !== -1){
+      index = found;
+    }
+  }
+  if(index === null){
+    index = 0;
+  }
+  index = Math.max(0, Math.min(index, images.length ? images.length - 1 : 0));
+  result.images = images;
+  result.index = index;
+  result.gallery = galleryRoot;
+  return result;
+}
+
+function openImageModal(srcOrConfig, options){
+  const base = (typeof srcOrConfig === 'object' && srcOrConfig !== null && !Array.isArray(srcOrConfig))
+    ? Object.assign({}, srcOrConfig)
+    : {src: srcOrConfig};
+  if(options && typeof options === 'object'){
+    Object.assign(base, options);
+  }
+  if(typeof base.src !== 'string' || !base.src){
+    return;
+  }
   const {container, modal} = ensureImageModalReady();
   if(!container || !modal) return;
   document.querySelectorAll('.image-modal-container').forEach(other => {
@@ -11996,14 +12149,14 @@ function openImageModal(src){
       closeImageModal(other);
     }
   });
-  if(!container.classList.contains('hidden') && container.dataset.activeSrc === src){
-    return;
-  }
-  modal.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = src;
-  modal.appendChild(img);
-  container.dataset.activeSrc = src;
+  const context = resolveImageModalContext(base);
+  if(!context.images.length) return;
+  container._imageModalState = {
+    images: context.images.slice(),
+    index: context.index,
+    gallery: context.gallery || null
+  };
+  renderImageModalImage(container, modal);
   container.classList.remove('hidden');
 }
 
@@ -12064,7 +12217,7 @@ function initPostLayout(board){
       if(img){
         e.preventDefault();
         e.stopPropagation();
-        openImageModal(img.src);
+        openImageModal(img.src, {origin: img});
       }
     });
     thumbRow._imageModalListener = true;
@@ -12075,7 +12228,7 @@ function initPostLayout(board){
       if(img){
         if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
         if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
-        openImageModal(img.src);
+        openImageModal(img.src, {origin: img});
       }
     });
     selectedImageBox._imageModalListener = true;
