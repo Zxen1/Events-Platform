@@ -2257,8 +2257,10 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  transition:left var(--panel-transition-duration, 0.3s) ease, transform var(--panel-transition-duration, 0.3s) ease;
-  will-change:left, transform;
+  transition:left var(--panel-transition-duration, 0.3s) ease,
+             margin var(--panel-transition-duration, 0.3s) ease,
+             transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:left, margin, transform;
   transform:translateX(0);
 }
 
@@ -2327,7 +2329,6 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:0;
   background:rgba(0,0,0,0.7);
   pointer-events:auto;
-  transition:left 0.3s ease, margin 0.3s ease;
 }
 .post-board .post-card{
   width:100%;
@@ -2504,7 +2505,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   pointer-events:auto;
   z-index:2;
   transform:translateX(0);
-  transition:transform 0.45s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.45s ease;
+  transition:transform var(--panel-transition-duration, 0.3s) ease,
+             opacity var(--panel-transition-duration, 0.3s) ease;
   will-change:transform, opacity;
   display:none;
   height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
