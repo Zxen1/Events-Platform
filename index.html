@@ -3086,12 +3086,15 @@ body.filters-active #filterBtn{
   left:50%;
   top:calc(var(--header-h) + 10px);
   transform:translateX(-50%);
-  width:min(600px, 90vw);
+  width:auto;
   max-width:90vw;
+  min-width:0;
   z-index:1;
 }
 
 .map-controls-map .geocoder{
+  flex:0 1 360px;
+  width:auto;
   max-width:360px;
 }
 
