@@ -6175,6 +6175,13 @@ function buildClusterListHTML(items){
         });
       }
 
+      function pickPixelRatio(url, img){
+        if(typeof url === 'string' && /@2x\.[^./]+$/i.test(url)){
+          return 2;
+        }
+        return 1;
+      }
+
       function placeholder(name){
         const canvas = document.createElement('canvas');
         canvas.width = 48;
@@ -6196,7 +6203,6 @@ function buildClusterListHTML(items){
         if(!name) return false;
         if(mapInstance.hasImage?.(name)) return true;
         if(pending.has(name)) return pending.get(name);
-        const pixelRatio = (window.devicePixelRatio || 1) >= 2 ? 2 : 1;
         const task = (async () => {
           const { urls, shouldLookupLocal } = urlsFor(name);
           if(!urls.length && !shouldLookupLocal){
@@ -6207,6 +6213,7 @@ function buildClusterListHTML(items){
             try{
               const img = await loadImageCompat(url);
               if(mapInstance.hasImage?.(name)) return true;
+              const pixelRatio = pickPixelRatio(url, img);
               mapInstance.addImage(name, img, { sdf:false, pixelRatio });
               return true;
             }catch(err){}
