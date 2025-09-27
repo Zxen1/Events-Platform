@@ -44,8 +44,8 @@
   <style>
     .marker-hover-overlay{
       position: relative;
-      width: 50px;
-      height: 50px;
+      width: 225px;
+      height: 60px;
       pointer-events: none;
       transform: translateZ(0);
     }
@@ -9437,6 +9437,9 @@ if (!map.__pillHooksInstalled) {
           }
           const overlayRoot = document.createElement('div');
           overlayRoot.className = 'marker-hover-overlay';
+          const pillWidth = 225;
+          const pillHeight = 60;
+          const thumbSize = 50;
           overlayRoot.dataset.id = String(p.id);
           overlayRoot.setAttribute('aria-hidden', 'true');
           overlayRoot.style.pointerEvents = 'auto';
@@ -9504,7 +9507,11 @@ if (!map.__pillHooksInstalled) {
             const currentPopup = hoverPopup;
             schedulePopupRemoval(currentPopup, 160);
           });
-          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
+          const markerOffset = [
+            (pillWidth - thumbSize) / 2,
+            (pillHeight - thumbSize) / 2
+          ];
+          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center', offset: markerOffset });
           if(targetLngLat){ marker.setLngLat(targetLngLat); }
           else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
           else { marker.setLngLat(e.lngLat); }
