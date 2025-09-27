@@ -10996,6 +10996,63 @@ function openPanel(m){
     content.style.width = '';
     content.style.height = '';
   }
+  let shouldScheduleEntrance = false;
+  if(content){
+    const rootStyles = getComputedStyle(document.documentElement);
+    const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+    const subH = parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0;
+    const footerH = parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0;
+    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+    const viewportHeight = getViewportHeight();
+    const innerWidth = window.innerWidth;
+    if(m.id==='adminPanel' || m.id==='memberPanel'){
+      const topPos = headerH + safeTop;
+      const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+      content.style.left='auto';
+      content.style.right='0';
+      content.style.top=`${topPos}px`;
+      content.style.bottom=`${footerH}px`;
+      content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+      content.dataset.side='right';
+      if(!content.classList.contains('panel-visible')){
+        content.classList.remove('panel-visible');
+        shouldScheduleEntrance = true;
+      }
+    } else if(m.id==='filterPanel'){
+      const topPos = headerH + subH + safeTop;
+      if(innerWidth < 450){
+        content.style.left='0';
+        content.style.right='0';
+        content.style.top=`${topPos}px`;
+        content.style.bottom=`${footerH}px`;
+        content.style.maxHeight='';
+      } else {
+        const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
+        content.style.left='0';
+        content.style.right='';
+        content.style.top=`${topPos}px`;
+        content.style.bottom='';
+        content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
+      }
+      content.dataset.side='left';
+      if(!content.classList.contains('panel-visible')){
+        content.classList.remove('panel-visible');
+        shouldScheduleEntrance = true;
+      }
+    } else if(m.id==='welcome-modal'){
+      const topPos = headerH + safeTop + 10;
+      content.style.left='50%';
+      content.style.top=`${topPos}px`;
+      content.style.transform='translateX(-50%)';
+    } else {
+      content.style.left='50%';
+      content.style.top='50%';
+      content.style.transform='translate(-50%, -50%)';
+      if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)){
+        loadPanelState(m);
+      }
+    }
+  }
   m.classList.add('show');
   m.removeAttribute('aria-hidden');
   m.removeAttribute('inert');
@@ -11009,62 +11066,8 @@ function openPanel(m){
     btn && btn.setAttribute('aria-pressed','true');
   }
   localStorage.setItem(`panel-open-${m.id}`,'true');
-  if(content){
-    requestAnimationFrame(() => {
-      const rootStyles = getComputedStyle(document.documentElement);
-      const metrics = {
-        headerH: parseFloat(rootStyles.getPropertyValue('--header-h')) || 0,
-        subH: parseFloat(rootStyles.getPropertyValue('--subheader-h')) || 0,
-        footerH: parseFloat(rootStyles.getPropertyValue('--footer-h')) || 0,
-        safeTop: parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0,
-        viewportHeight: getViewportHeight(),
-        innerWidth: window.innerWidth
-      };
-      requestAnimationFrame(() => {
-        const {headerH, subH, footerH, safeTop, viewportHeight, innerWidth} = metrics;
-        if(!content.isConnected) return;
-        if(m.id==='adminPanel' || m.id==='memberPanel'){
-          const topPos = headerH + safeTop;
-          const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
-          content.style.left='auto';
-          content.style.right='0';
-          content.style.top=`${topPos}px`;
-          content.style.bottom=`${footerH}px`;
-          content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
-          content.dataset.side='right';
-          schedulePanelEntrance(content);
-        } else if(m.id==='filterPanel'){
-          const topPos = headerH + subH + safeTop;
-          if(innerWidth < 450){
-            content.style.left='0';
-            content.style.right='0';
-            content.style.top=`${topPos}px`;
-            content.style.bottom=`${footerH}px`;
-            content.style.maxHeight='';
-            content.dataset.side='left';
-          } else {
-            const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
-            content.style.left='0';
-            content.style.right='';
-            content.style.top=`${topPos}px`;
-            content.style.bottom='';
-            content.style.maxHeight = availableHeight ? `${availableHeight}px` : '';
-            content.dataset.side='left';
-          }
-          schedulePanelEntrance(content);
-        } else if(m.id==='welcome-modal'){
-          const topPos = headerH + safeTop + 10;
-          content.style.left='50%';
-          content.style.top=`${topPos}px`;
-          content.style.transform='translateX(-50%)';
-        } else {
-          content.style.left='50%';
-          content.style.top='50%';
-          content.style.transform='translate(-50%, -50%)';
-        }
-        if(m.id !== 'welcome-modal' && !['adminPanel','memberPanel','filterPanel'].includes(m.id)) loadPanelState(m);
-      });
-    });
+  if(content && shouldScheduleEntrance){
+    schedulePanelEntrance(content);
   }
   if(!m.__bringToTopAdded){
     m.addEventListener('mousedown', ()=> bringToTop(m));
