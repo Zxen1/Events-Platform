@@ -7459,7 +7459,6 @@ function makePosts(){
       const mapButton = $('#map-button');
       const boardStates = new WeakMap();
       const boardDisplayCache = new WeakMap();
-      const boardMetrics = new WeakMap();
       let boardsInitialized = false;
 
       function getDefaultBoardDisplay(board){
@@ -7478,196 +7477,37 @@ function makePosts(){
         return value;
       }
 
-      function captureBoardMetrics(board){
-        if(!board || board.style.display === 'none') return null;
-        const parent = board.parentElement;
-        if(!parent) return null;
-        const parentRect = parent.getBoundingClientRect();
-        const rect = board.getBoundingClientRect();
-        return {
-          width: rect.width,
-          height: rect.height,
-          left: rect.left - parentRect.left,
-          top: rect.top - parentRect.top
-        };
-      }
-
-      function applyDetachedStyle(board, metrics){
-        if(!board) return;
-        const parent = board.parentElement;
-        let parentRect = null;
-        try{
-          parentRect = parent ? parent.getBoundingClientRect() : null;
-        }catch(err){ parentRect = null; }
-        let width = metrics && isFinite(metrics.width) ? metrics.width : null;
-        let height = metrics && isFinite(metrics.height) ? metrics.height : null;
-        let left = metrics && isFinite(metrics.left) ? metrics.left : null;
-        let top = metrics && isFinite(metrics.top) ? metrics.top : null;
-        if((!width || width <= 0) && parentRect){
-          try{
-            const style = getComputedStyle(board);
-            width = parseFloat(style.width) || parseFloat(style.maxWidth) || parentRect.width;
-            height = height || parseFloat(style.height) || parseFloat(style.maxHeight) || parentRect.height;
-          }catch(err){ width = parentRect ? parentRect.width : width; }
-        }
-        if(parentRect){
-          if(!width || width <= 1){
-            width = parentRect.width;
-          }
-          if(width > parentRect.width){
-            width = parentRect.width;
-          }
-          if((!height || height <= 1) && parentRect.height){
-            height = parentRect.height;
-          }
-          if(left === null || left === undefined){
-            left = Math.max((parentRect.width - width) / 2, 0);
-          }
-          if(top === null || top === undefined){
-            top = Math.max((parentRect.height - (height || parentRect.height)) / 2, 0);
-          }
-        } else {
-          if(left === null || left === undefined) left = 0;
-          if(top === null || top === undefined) top = 0;
-        }
-        board.classList.add('board-transitioning');
-        board.style.position = 'absolute';
-        board.style.top = `${top}px`;
-        board.style.left = `${left}px`;
-        board.style.right = '';
-        board.style.bottom = '';
-        board.style.width = width ? `${width}px` : '';
-        if(height && height > 0){
-          board.style.height = `${height}px`;
-        }
-        board.style.margin = '0';
-        board.style.pointerEvents = 'none';
-      }
-
-      function cleanupDetached(board){
-        if(!board) return;
-        board.classList.remove('board-transitioning');
-        board.style.position = '';
-        board.style.top = '';
-        board.style.left = '';
-        board.style.right = '';
-        board.style.bottom = '';
-        board.style.width = '';
-        board.style.height = '';
-        board.style.margin = '';
-        board.style.pointerEvents = '';
-      }
-
       function animateBoard(board, shouldShow, immediate=false){
         if(!board) return;
         board.classList.add('board-animate');
         const defaultDisplay = getDefaultBoardDisplay(board);
+        const targetState = shouldShow ? 'visible' : 'hidden';
         const currentState = boardStates.get(board) || (board.style.display === 'none' ? 'hidden' : 'visible');
-        if(immediate){
+
+        if(!immediate && currentState === targetState){
           if(shouldShow){
             board.style.display = defaultDisplay;
             board.classList.remove('board-hidden');
             board.setAttribute('aria-hidden','false');
-            boardStates.set(board, 'visible');
-            const metrics = captureBoardMetrics(board);
-            if(metrics) boardMetrics.set(board, metrics);
-            cleanupDetached(board);
           } else {
             board.classList.add('board-hidden');
             board.style.display = 'none';
             board.setAttribute('aria-hidden','true');
-            boardStates.set(board, 'hidden');
-            const metrics = captureBoardMetrics(board);
-            if(metrics) boardMetrics.set(board, metrics);
-            cleanupDetached(board);
           }
           return;
         }
 
         if(shouldShow){
-          if(currentState === 'visible'){
-            board.style.display = defaultDisplay;
-            board.classList.remove('board-hidden');
-            board.setAttribute('aria-hidden','false');
-            boardStates.set(board, 'visible');
-            const metrics = captureBoardMetrics(board);
-            if(metrics) boardMetrics.set(board, metrics);
-            cleanupDetached(board);
-            return;
-          }
+          board.style.display = defaultDisplay;
+          board.classList.remove('board-hidden');
           board.setAttribute('aria-hidden','false');
-          board.style.display = 'none';
-          board.classList.add('board-hidden');
-          requestAnimationFrame(()=>{
-            if(!board.isConnected) return;
-            applyDetachedStyle(board, boardMetrics.get(board));
-            requestAnimationFrame(()=>{
-              if(!board.isConnected) return;
-              board.style.display = defaultDisplay;
-              void board.offsetWidth;
-              requestAnimationFrame(()=>{
-                if(!board.isConnected) return;
-                board.classList.remove('board-hidden');
-                let finished = false;
-                let onTransitionEnd;
-                const finalize = ()=>{
-                  if(finished) return;
-                  finished = true;
-                  if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
-                  cleanupDetached(board);
-                  boardStates.set(board, 'visible');
-                  requestAnimationFrame(()=>{
-                    const metrics = captureBoardMetrics(board);
-                    if(metrics) boardMetrics.set(board, metrics);
-                  });
-                };
-                onTransitionEnd = event => {
-                  if(event && event.target !== board) return;
-                  finalize();
-                };
-                board.addEventListener('transitionend', onTransitionEnd);
-                setTimeout(finalize, 400);
-              });
-            });
-          });
         } else {
-          if(currentState === 'hidden'){
-            board.classList.add('board-hidden');
-            board.style.display = 'none';
-            board.setAttribute('aria-hidden','true');
-            boardStates.set(board, 'hidden');
-            const metrics = captureBoardMetrics(board);
-            if(metrics) boardMetrics.set(board, metrics);
-            cleanupDetached(board);
-            return;
-          }
-          const metrics = captureBoardMetrics(board);
-          if(metrics) boardMetrics.set(board, metrics);
-          applyDetachedStyle(board, metrics);
+          board.classList.add('board-hidden');
+          board.style.display = 'none';
           board.setAttribute('aria-hidden','true');
-          requestAnimationFrame(()=>{
-            if(!board.isConnected) return;
-            board.classList.remove('board-hidden');
-            void board.offsetWidth;
-            board.classList.add('board-hidden');
-            let finished = false;
-            let onTransitionEnd;
-            const finish = ()=>{
-              if(finished) return;
-              finished = true;
-              if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
-              board.style.display = 'none';
-              boardStates.set(board, 'hidden');
-              cleanupDetached(board);
-            };
-            onTransitionEnd = event => {
-              if(event && event.target !== board) return;
-              finish();
-            };
-            board.addEventListener('transitionend', onTransitionEnd);
-            setTimeout(finish, 350);
-          });
         }
+
+        boardStates.set(board, targetState);
       }
 
       function updateModeToggle(){
