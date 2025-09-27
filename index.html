@@ -6123,10 +6123,18 @@ function buildClusterListHTML(items){
   return `<div class=\"multi-hover\">${head}<div class=\"multi-list map-card-list\">${list}</div></div>`;
 }
     // 0530: group posts at the same venue (by coordinate)
+    function lngDeltaWithWrap(a, b){
+      if(!Number.isFinite(a) || !Number.isFinite(b)){
+        return Number.POSITIVE_INFINITY;
+      }
+      const delta = ((a - b + 540) % 360) - 180;
+      return Math.abs(delta);
+    }
+
     function postsAtVenue(lng, lat){
       const list = (filtered.length ? filtered : posts);
       const eps = 1e-6; // ~0.1m at equator
-      return list.filter(p => Math.abs(p.lng - lng) < eps && Math.abs(p.lat - lat) < eps);
+      return list.filter(p => lngDeltaWithWrap(p.lng, lng) < eps && Math.abs(p.lat - lat) < eps);
     }
 
     function openListPopupAtPoint(point, htmlStr){
