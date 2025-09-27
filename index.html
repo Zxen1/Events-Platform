@@ -8752,11 +8752,77 @@ if (!map.__pillHooksInstalled) {
     // Map layers
     function postsToGeoJSON(list){
       const coordCounts = new Map();
+      const coordMeta = new Map();
+      function increment(map, key){
+        if(!key) return;
+        const trimmed = key.trim();
+        if(!trimmed) return;
+        map.set(trimmed, (map.get(trimmed) || 0) + 1);
+      }
+      function deriveVenueFromCity(city){
+        const raw = (city ?? '').trim();
+        if(!raw) return '';
+        const parts = raw.split(',');
+        return (parts[0] || '').trim();
+      }
       list.forEach(p => {
         if(Number.isFinite(p.lng) && Number.isFinite(p.lat)){
           const key = venueKey(p.lng, p.lat);
           coordCounts.set(key, (coordCounts.get(key) || 0) + 1);
+          let meta = coordMeta.get(key);
+          if(!meta){
+            meta = {
+              locVenueCounts: new Map(),
+              cityVenueCounts: new Map(),
+              fallbackCounts: new Map(),
+              count: 0
+            };
+            coordMeta.set(key, meta);
+          }
+          meta.count++;
+          const loc = Array.isArray(p.locations) && p.locations.length ? p.locations[0] : null;
+          if(loc && typeof loc.venue === 'string'){
+            increment(meta.locVenueCounts, loc.venue);
+          }
+          increment(meta.cityVenueCounts, deriveVenueFromCity(p.city));
+          increment(meta.fallbackCounts, getPrimaryVenueName(p));
         }
+      });
+      const coordLabels = new Map();
+      function findCommonLabel(countMap, total){
+        for(const [value, count] of countMap.entries()){
+          if(count === total){
+            return value;
+          }
+        }
+        return '';
+      }
+      function findTopLabel(countMap){
+        let best = '';
+        let bestCount = 0;
+        for(const [value, count] of countMap.entries()){
+          if(count > bestCount || (count === bestCount && value.localeCompare(best) < 0)){
+            best = value;
+            bestCount = count;
+          }
+        }
+        return best;
+      }
+      coordMeta.forEach((meta, key) => {
+        let label = findCommonLabel(meta.locVenueCounts, meta.count);
+        if(!label){
+          label = findCommonLabel(meta.cityVenueCounts, meta.count);
+        }
+        if(!label){
+          label = findTopLabel(meta.cityVenueCounts);
+        }
+        if(!label){
+          label = findTopLabel(meta.locVenueCounts);
+        }
+        if(!label){
+          label = findTopLabel(meta.fallbackCounts);
+        }
+        coordLabels.set(key, label || '');
       });
       return {
         type:'FeatureCollection',
@@ -8769,7 +8835,8 @@ if (!map.__pillHooksInstalled) {
             const isMultiVenue = count > 1;
             const labelLines = getMarkerLabelLines(p);
             const primaryVenue = getPrimaryVenueName(p);
-            const venueLabel = primaryVenue || '';
+            const canonicalVenue = coordLabels.get(key) || primaryVenue || '';
+            const venueLabel = isMultiVenue ? canonicalVenue : (primaryVenue || '');
             const multiTitle = `${count} posts here`;
             const labelTitle = isMultiVenue
               ? shortenMarkerLabelText(multiTitle)
@@ -8790,7 +8857,7 @@ if (!map.__pillHooksInstalled) {
                 label: combinedLabel,
                 labelLine1: labelTitle,
                 labelLine2: labelVenue,
-                venueName: primaryVenue,
+                venueName: isMultiVenue ? canonicalVenue : primaryVenue,
                 city:p.city,
                 cat:p.category,
                 sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
