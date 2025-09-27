@@ -4519,17 +4519,19 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .mapboxgl-popup,
-.mapboxgl-popup-content{
+.multi-post-map-card{
   border-radius:8px !important;
 }
 
-.mapboxgl-popup-content{
+.multi-post-map-card{
   background: var(--popup-bg) !important;
   color: var(--popup-text) !important;
   overflow:hidden;
+  width: 600px;
+  max-width: 600px;
 }
 
-.mapboxgl-popup.map-card .mapboxgl-popup-content{
+.mapboxgl-popup.map-card .multi-post-map-card{
   overflow: visible;
 }
 
@@ -10929,6 +10931,11 @@ function registerPopup(p){
   const el = p.getElement && p.getElement();
   if(el){
     el.addEventListener('mousedown', ()=> bringToTop(p));
+    const content = el.querySelector('.mapboxgl-popup-content, .multi-post-map-card');
+    if(content){
+      content.classList.add('multi-post-map-card');
+      content.classList.remove('mapboxgl-popup-content');
+    }
   }
 }
 function savePanelState(m){
@@ -11341,7 +11348,7 @@ document.addEventListener('pointerdown', (e) => {
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
     {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
-    {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], popupText:['.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .map-card-venue','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], title:['.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title']}},
+    {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .multi-post-map-card','.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], popupText:['.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .map-card-venue','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], title:['.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
