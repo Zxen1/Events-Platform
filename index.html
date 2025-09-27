@@ -12007,19 +12007,35 @@ function initPostLayout(board){
   if(thumbRow){
     thumbRow.scrollLeft = 0;
   }
+  function closeImageModal(container){
+    if(!container) return;
+    container.classList.add('hidden');
+    const inner = container.querySelector ? container.querySelector('.image-modal') : null;
+    if(inner) inner.innerHTML = '';
+    if(container.dataset) delete container.dataset.activeSrc;
+  }
+
   function openImageModal(src){
     if(!imageModalContainer || !imageModal) return;
+    document.querySelectorAll('.image-modal-container').forEach(container => {
+      if(container !== imageModalContainer && !container.classList.contains('hidden')){
+        closeImageModal(container);
+      }
+    });
+    if(!imageModalContainer.classList.contains('hidden') && imageModalContainer.dataset.activeSrc === src){
+      return;
+    }
     imageModal.innerHTML='';
     const img = document.createElement('img');
     img.src = src;
     imageModal.appendChild(img);
+    imageModalContainer.dataset.activeSrc = src;
     imageModalContainer.classList.remove('hidden');
   }
   if(imageModalContainer && !imageModalContainer._listenerAdded){
     imageModalContainer.addEventListener('click', e => {
       if(e.target === imageModalContainer){
-        imageModalContainer.classList.add('hidden');
-        if(imageModal) imageModal.innerHTML='';
+        closeImageModal(imageModalContainer);
       }
     });
     imageModalContainer._listenerAdded = true;
