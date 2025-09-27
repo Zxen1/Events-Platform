@@ -7527,8 +7527,14 @@ function makePosts(){
           }catch(err){ width = parentRect ? parentRect.width : width; }
         }
         if(parentRect){
-          if(!width || width > parentRect.width){
+          if(!width || width <= 1){
             width = parentRect.width;
+          }
+          if(width > parentRect.width){
+            width = parentRect.width;
+          }
+          if((!height || height <= 1) && parentRect.height){
+            height = parentRect.height;
           }
           if(left === null || left === undefined){
             left = Math.max((parentRect.width - width) / 2, 0);
@@ -8012,6 +8018,15 @@ function makePosts(){
         }
 
         await nextFrame();
+
+        if(fromMap){
+          if(typeof window.adjustBoards === 'function'){
+            window.adjustBoards();
+          }
+          if(typeof window.adjustListHeight === 'function'){
+            window.adjustListHeight();
+          }
+        }
 
         const header = detail.querySelector('.post-header');
         if(header){
@@ -9458,6 +9473,7 @@ if (!map.__pillHooksInstalled) {
           if(targetLngLat){ marker.setLngLat(targetLngLat); }
           else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
           else { marker.setLngLat(e.lngLat); }
+          marker.addTo(map);
           marker.__fixedLngLat = fixedLngLat;
           hoverPopup = marker;
           window.__overCard = false;
