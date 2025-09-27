@@ -8082,8 +8082,9 @@ function makePosts(){
         if(m==='map'){
           document.body.classList.remove('show-history');
         }
+        const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
-        if(m === 'posts' && typeof window.adjustListHeight === 'function'){
+        if(shouldAdjustListHeight){
           window.adjustListHeight();
         }
         updateModeToggle();
