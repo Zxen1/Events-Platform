@@ -7617,30 +7617,33 @@ function makePosts(){
           requestAnimationFrame(()=>{
             if(!board.isConnected) return;
             applyDetachedStyle(board, boardMetrics.get(board));
-            board.style.display = defaultDisplay;
-            void board.offsetWidth;
             requestAnimationFrame(()=>{
               if(!board.isConnected) return;
-              board.classList.remove('board-hidden');
-              let finished = false;
-              let onTransitionEnd;
-              const finalize = ()=>{
-                if(finished) return;
-                finished = true;
-                if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
-                cleanupDetached(board);
-                boardStates.set(board, 'visible');
-                requestAnimationFrame(()=>{
-                  const metrics = captureBoardMetrics(board);
-                  if(metrics) boardMetrics.set(board, metrics);
-                });
-              };
-              onTransitionEnd = event => {
-                if(event && event.target !== board) return;
-                finalize();
-              };
-              board.addEventListener('transitionend', onTransitionEnd);
-              setTimeout(finalize, 400);
+              board.style.display = defaultDisplay;
+              void board.offsetWidth;
+              requestAnimationFrame(()=>{
+                if(!board.isConnected) return;
+                board.classList.remove('board-hidden');
+                let finished = false;
+                let onTransitionEnd;
+                const finalize = ()=>{
+                  if(finished) return;
+                  finished = true;
+                  if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
+                  cleanupDetached(board);
+                  boardStates.set(board, 'visible');
+                  requestAnimationFrame(()=>{
+                    const metrics = captureBoardMetrics(board);
+                    if(metrics) boardMetrics.set(board, metrics);
+                  });
+                };
+                onTransitionEnd = event => {
+                  if(event && event.target !== board) return;
+                  finalize();
+                };
+                board.addEventListener('transitionend', onTransitionEnd);
+                setTimeout(finalize, 400);
+              });
             });
           });
         } else {
@@ -7658,25 +7661,28 @@ function makePosts(){
           if(metrics) boardMetrics.set(board, metrics);
           applyDetachedStyle(board, metrics);
           board.setAttribute('aria-hidden','true');
-          board.classList.remove('board-hidden');
-          void board.offsetWidth;
-          board.classList.add('board-hidden');
-          let finished = false;
-          let onTransitionEnd;
-          const finish = ()=>{
-            if(finished) return;
-            finished = true;
-            if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
-            board.style.display = 'none';
-            boardStates.set(board, 'hidden');
-            cleanupDetached(board);
-          };
-          onTransitionEnd = event => {
-            if(event && event.target !== board) return;
-            finish();
-          };
-          board.addEventListener('transitionend', onTransitionEnd);
-          setTimeout(finish, 350);
+          requestAnimationFrame(()=>{
+            if(!board.isConnected) return;
+            board.classList.remove('board-hidden');
+            void board.offsetWidth;
+            board.classList.add('board-hidden');
+            let finished = false;
+            let onTransitionEnd;
+            const finish = ()=>{
+              if(finished) return;
+              finished = true;
+              if(onTransitionEnd) board.removeEventListener('transitionend', onTransitionEnd);
+              board.style.display = 'none';
+              boardStates.set(board, 'hidden');
+              cleanupDetached(board);
+            };
+            onTransitionEnd = event => {
+              if(event && event.target !== board) return;
+              finish();
+            };
+            board.addEventListener('transitionend', onTransitionEnd);
+            setTimeout(finish, 350);
+          });
         }
       }
 
