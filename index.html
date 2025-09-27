@@ -114,6 +114,37 @@
       text-overflow: ellipsis;
       width: 100%;
     }
+    .map-card--list{
+      position: relative;
+      width: 100%;
+      height: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: none;
+    }
+    .map-card--list .map-card-thumb{
+      position: static;
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      box-shadow: none;
+      flex: 0 0 64px;
+    }
+    .map-card--list .map-card-text{
+      position: static;
+      width: auto;
+      height: auto;
+      padding: 0;
+      gap: 4px;
+      text-shadow: none;
+    }
+    .map-card--list .map-card-title{
+      white-space: normal;
+    }
+    .map-card--list .map-card-venue{
+      white-space: nowrap;
+    }
   </style>
 
   <script>
@@ -4492,6 +4523,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .map-card--list{
   pointer-events: auto;
   cursor: pointer;
+}
+.map-card--popup{
   display: block;
 }
 
@@ -6770,8 +6803,11 @@ function makePosts(){
       const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
       const variant = opts.variant || 'popup';
       if(variant === 'popup') classes.push('map-card--popup');
-      if(variant === 'list') classes.push('map-card--list');
+      if(variant === 'list') classes.push('map-card--list', 'multi-item');
       extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
+      if(variant === 'list'){
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+      }
       return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
     }
 
