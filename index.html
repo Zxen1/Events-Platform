@@ -8665,18 +8665,26 @@ if (!map.__pillHooksInstalled) {
             const isMultiVenue = count > 1;
             const labelLines = getMarkerLabelLines(p);
             const primaryVenue = getPrimaryVenueName(p);
-            if(isMultiVenue){
-              labelLines.line1 = shortenMarkerLabelText(`${count} posts`);
-            }
-            const combinedLabel = buildMarkerLabelText(p, labelLines);
+            const venueLabel = primaryVenue || p.city || '';
+            const labelTitle = isMultiVenue
+              ? shortenMarkerLabelText(`${count} posts`)
+              : labelLines.line1;
+            const labelVenue = isMultiVenue
+              ? shortenMarkerLabelText(venueLabel)
+              : labelLines.line2;
+            const combinedLabel = buildMarkerLabelText(p, {
+              line1: labelTitle,
+              line2: labelVenue
+            });
+            const featureTitle = isMultiVenue ? labelTitle : p.title;
             return {
               type:'Feature',
               properties:{
                 id:p.id,
-                title:p.title,
+                title: featureTitle,
                 label: combinedLabel,
-                labelLine1: labelLines.line1,
-                labelLine2: labelLines.line2,
+                labelLine1: labelTitle,
+                labelLine2: labelVenue,
                 venueName: primaryVenue,
                 city:p.city,
                 cat:p.category,
