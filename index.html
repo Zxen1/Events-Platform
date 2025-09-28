@@ -53,9 +53,9 @@
       touch-action: none;
     }
     .mapmarker-container{
-      background: var(--popup-bg, rgba(0,0,0,0.95));
+      background: transparent;
       border-radius: 999px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+      box-shadow: none;
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
@@ -4948,7 +4948,7 @@ if (typeof slugify !== 'function') {
     <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
     <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board" data-side="left" aria-hidden="true" style="display:none;">
     </section>
-    <section class="post-board" aria-label="Post Board" data-side="right" aria-hidden="true" style="display:none;">
+    <section class="post-board" aria-label="Post Board" data-side="left" aria-hidden="true" style="display:none;">
     </section>
     <section class="ad-board" aria-label="Ad Board" data-side="right" aria-hidden="true" style="display:none;">
       <div class="ad-panel">
@@ -7705,6 +7705,7 @@ function makePosts(){
         setMode('posts');
         document.body.classList.add('show-history');
         renderHistoryBoard();
+        adjustBoards();
         setTimeout(()=>{
           if(map && typeof map.resize === 'function'){
             map.resize();
@@ -7821,7 +7822,22 @@ function makePosts(){
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
         touchMarker = null;
-        if(hoverPopup){ hoverPopup.remove(); hoverPopup = null; }
+        if(hoverPopup){
+          let shouldRemovePopup = true;
+          if(fromMap && typeof popupIsHovered === 'function'){
+            try{
+              if(popupIsHovered(hoverPopup)){
+                shouldRemovePopup = false;
+              }
+            }catch(err){
+              shouldRemovePopup = true;
+            }
+          }
+          if(shouldRemovePopup){
+            try{ hoverPopup.remove(); }catch(err){}
+            hoverPopup = null;
+          }
+        }
         spinEnabled = false;
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
