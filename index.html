@@ -7590,6 +7590,9 @@ function makePosts(){
           board.style.display = 'none';
           board._boardHideHandler = null;
           board._boardHideTimer = null;
+          try{
+            board.style.removeProperty('transform');
+          }catch(err){}
         };
         if(immediate){
           board.classList.remove('panel-visible');
@@ -7607,7 +7610,19 @@ function makePosts(){
         };
         board._boardHideHandler = handler;
         board.addEventListener('transitionend', handler);
-        board.classList.remove('panel-visible');
+        const removeVisible = ()=>{
+          if(!board.isConnected){
+            board.removeEventListener('transitionend', handler);
+            finalize();
+            return;
+          }
+          board.classList.remove('panel-visible');
+        };
+        if('requestAnimationFrame' in window){
+          requestAnimationFrame(removeVisible);
+        } else {
+          removeVisible();
+        }
         board._boardHideTimer = setTimeout(()=>{
           if(board._boardHideHandler){
             board._boardHideHandler();
@@ -7681,6 +7696,12 @@ function makePosts(){
         boardsContainer.style.justifyContent = 'flex-start';
         const skipAnimation = !boardsInitialized;
         toggleBoard(recentsBoard, isPostsMode && historyActive, skipAnimation);
+        if(postBoard){
+          const desiredSide = historyActive ? 'right' : 'left';
+          if(postBoard.dataset.side !== desiredSide){
+            postBoard.dataset.side = desiredSide;
+          }
+        }
         toggleBoard(postBoard, isPostsMode && !historyActive, skipAnimation);
         document.body.classList.toggle('detail-open', !!anyOpenPost);
         if(adBoard){
