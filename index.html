@@ -5555,6 +5555,19 @@ if (typeof slugify !== 'function') {
     try{ window.__addOrReplacePill150x40?.(mapInstance); }catch(err){}
   }
 
+  function layerHasFeatureMetadata(layer){
+    if(!layer || typeof layer !== 'object') return false;
+    const meta = layer.metadata;
+    if(!meta || typeof meta !== 'object') return false;
+    const keys = [
+      'mapbox:featureComponent',
+      'mapbox:featureset',
+      'mapbox:layerGroup',
+      'mapbox:styleGroup'
+    ];
+    return keys.some(key => Object.prototype.hasOwnProperty.call(meta, key));
+  }
+
   function patchLayerFiltersForMissingLayer(mapInstance, style){
     if(!mapInstance || typeof mapInstance.setFilter !== 'function') return;
     const layers = style && Array.isArray(style.layers) ? style.layers : [];
@@ -5592,6 +5605,7 @@ if (typeof slugify !== 'function') {
 
     layers.forEach(layer => {
       if(!layer || !layer.id || !layer.filter) return;
+      if(layerHasFeatureMetadata(layer)) return;
       try{
         const patched = patchExpression(layer.filter);
         if(!patched.changed) return;
@@ -5622,6 +5636,72 @@ if (typeof slugify !== 'function') {
       nextTerrain.cutoff = 0.01;
     }
     try { mapInstance.setTerrain(nextTerrain); } catch(err){}
+
+    if(typeof mapInstance.getTerrain === 'function'){
+      const applied = mapInstance.getTerrain();
+      if(applied){
+        const needsSourceUpdate = applied.source && applied.source !== targetSource && mapInstance.getSource?.(dedicatedId);
+        const needsCutoffUpdate = typeof applied.cutoff !== 'number' || applied.cutoff <= 0;
+        if(needsSourceUpdate || needsCutoffUpdate){
+          const updated = Object.assign({}, applied);
+          if(needsSourceUpdate){
+            updated.source = targetSource;
+          }
+          if(needsCutoffUpdate){
+            updated.cutoff = 0.01;
+          }
+          try{ mapInstance.setTerrain(updated); }catch(err){}
+        }
+      }
+    }
+  }
+
+  function patchSymbolFonts(mapInstance, style){
+    if(!mapInstance || typeof mapInstance.setLayoutProperty !== 'function') return;
+    const layers = style && Array.isArray(style.layers) ? style.layers : [];
+    if(!layers.length) return;
+
+    const replacementFonts = ['DIN Pro Medium','Arial Unicode MS Regular'];
+
+    const expressionHasSystemFont = (expr) => {
+      if(Array.isArray(expr)){
+        return expr.some(expressionHasSystemFont);
+      }
+      if(typeof expr === 'string'){
+        return /system-ui|sans-serif/i.test(expr);
+      }
+      return false;
+    };
+
+    layers.forEach(layer => {
+      if(!layer || layer.type !== 'symbol') return;
+      const layout = layer.layout || {};
+      if(!Object.prototype.hasOwnProperty.call(layout, 'text-font')) return;
+      const value = layout['text-font'];
+      let needsReplacement = false;
+
+      if(Array.isArray(value)){
+        needsReplacement = value.some(v => typeof v === 'string' && /system-ui|sans-serif/i.test(v));
+      } else if(typeof value === 'string'){
+        needsReplacement = /system-ui|sans-serif/i.test(value);
+      } else if(value){
+        needsReplacement = expressionHasSystemFont(value);
+      }
+
+      if(!needsReplacement) return;
+
+      try {
+        const current = typeof mapInstance.getLayoutProperty === 'function'
+          ? mapInstance.getLayoutProperty(layer.id, 'text-font')
+          : null;
+        const alreadySet = Array.isArray(current)
+          && current.length === replacementFonts.length
+          && current.every((font, idx) => font === replacementFonts[idx]);
+        if(alreadySet) return;
+      } catch(err){}
+
+      try{ mapInstance.setLayoutProperty(layer.id, 'text-font', replacementFonts); }catch(err){}
+    });
   }
 
   function patchMapboxStyleArtifacts(mapInstance){
@@ -5637,6 +5717,7 @@ if (typeof slugify !== 'function') {
     try{ ensurePlaceholderSprites(mapInstance); }catch(err){}
     try{ patchLayerFiltersForMissingLayer(mapInstance, style); }catch(err){}
     try{ patchTerrainSource(mapInstance, style); }catch(err){}
+    try{ patchSymbolFonts(mapInstance, style); }catch(err){}
   }
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
