@@ -5641,6 +5641,16 @@ if (typeof slugify !== 'function') {
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
+    const POINTER_READY_IDS = new Set(['unclustered','marker-label-bg','marker-label-text','clusters','cluster-count']);
+
+    function shouldAttachPointer(layer){
+      if (!layer || layer.type !== 'symbol') return false;
+      if (POINTER_READY_IDS.has(layer.id)) return true;
+      if (typeof layer.source === 'string' && layer.source === 'posts') return true;
+      if (layer.metadata && layer.metadata.cursor === 'pointer') return true;
+      return false;
+    }
+
     function attach(){
       if (!map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
       const st = map.getStyle();
@@ -5648,11 +5658,10 @@ if (typeof slugify !== 'function') {
 
       map.__cursorArmed = map.__cursorArmed || new Set();
       st.layers.forEach(l => {
-        if (l.type === 'symbol' && !map.__cursorArmed.has(l.id)) {
-          map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
-          map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
-          map.__cursorArmed.add(l.id);
-        }
+        if (!shouldAttachPointer(l) || map.__cursorArmed.has(l.id)) return;
+        map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
+        map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
+        map.__cursorArmed.add(l.id);
       });
     }
 
