@@ -9214,7 +9214,7 @@ if (!map.__pillHooksInstalled) {
               if(!coords) { clearSuppress(); return; }
               const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
               const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
-              map.easeTo({ center: coords, zoom: nextZoom });
+              map.easeTo({ center: coords, zoom: nextZoom, essential: true });
             }catch(ex){
               console.error(ex);
               clearSuppress();
