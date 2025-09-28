@@ -12375,9 +12375,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const factories = new Map([
-    ['openPost', (orig) => rafThrottle(function(...args){
-      scheduleIdle(() => orig.apply(this, args));
-    })],
     ['hookDetailActions', (orig) => {
       const wrapped = rafThrottle(function(...args){
         scheduleIdle(() => orig.apply(this, args));
@@ -12410,7 +12407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  ['openPost','hookDetailActions','ensureMapForVenue'].forEach(applyWrapper);
+  ['hookDetailActions','ensureMapForVenue'].forEach(applyWrapper);
 
   window.__wrapForInputYield = function(name){
     applyWrapper(name);
