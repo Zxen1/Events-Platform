@@ -5790,6 +5790,7 @@ if (typeof slugify !== 'function') {
     if(!layers.length) return;
 
     const replacementFonts = ['DIN Pro Medium','Arial Unicode MS Regular'];
+    const systemFontPattern = /system-ui|sans-serif/i;
 
     const normalizeFontValue = (value) => {
       if(!value) return null;
@@ -5808,47 +5809,130 @@ if (typeof slugify !== 'function') {
     const expressionHasSystemFont = (expr) => {
       const normalized = normalizeFontValue(expr);
       if(normalized){
-        return normalized.some(font => /system-ui|sans-serif/i.test(font));
+        return normalized.some(font => systemFontPattern.test(font));
       }
       if(Array.isArray(expr)){
         return expr.some(expressionHasSystemFont);
       }
+      if(expr && typeof expr === 'object'){
+        return Object.keys(expr).some(key => expressionHasSystemFont(expr[key]));
+      }
       if(typeof expr === 'string'){
-        return /system-ui|sans-serif/i.test(expr);
+        return systemFontPattern.test(expr);
       }
       return false;
     };
 
-    const fontsMatchReplacement = (fonts) => {
-      const normalized = normalizeFontValue(fonts);
-      return Array.isArray(normalized)
-        && normalized.length === replacementFonts.length
-        && normalized.every((font, idx) => font === replacementFonts[idx]);
+    const sanitizeFontArray = (fonts) => {
+      const preserved = (fonts || []).filter(font => !systemFontPattern.test(font));
+      replacementFonts.forEach(font => {
+        if(!preserved.includes(font)) preserved.push(font);
+      });
+      return preserved.length ? preserved : replacementFonts.slice();
     };
 
-    const attemptApplyFonts = (layerId) => {
+    const replaceFontLiterals = (expr) => {
+      if(expr == null) return { expr, changed: false };
+
+      if(typeof expr === 'string'){
+        if(systemFontPattern.test(expr)){
+          const sanitized = sanitizeFontArray([expr]);
+          return { expr: sanitized.length === 1 ? sanitized[0] : sanitized, changed: true };
+        }
+        return { expr, changed: false };
+      }
+
+      if(Array.isArray(expr)){
+        if(!expr.length) return { expr: expr.slice(), changed: false };
+
+        if(expr[0] === 'literal' && expr.length > 1){
+          const normalized = normalizeFontValue(expr[1]);
+          if(normalized && normalized.some(font => systemFontPattern.test(font))){
+            const literalExpr = expr.slice();
+            literalExpr[1] = sanitizeFontArray(normalized);
+            return { expr: literalExpr, changed: true };
+          }
+          const inner = replaceFontLiterals(expr[1]);
+          if(inner.changed){
+            const literalExpr = expr.slice();
+            literalExpr[1] = inner.expr;
+            return { expr: literalExpr, changed: true };
+          }
+          return { expr: expr.slice(), changed: false };
+        }
+
+        if(expr.every(item => typeof item === 'string')){
+          const normalized = normalizeFontValue(expr);
+          if(normalized && normalized.some(font => systemFontPattern.test(font))){
+            return { expr: sanitizeFontArray(normalized), changed: true };
+          }
+          return { expr: expr.slice(), changed: false };
+        }
+
+        let mutated = false;
+        const nextArray = expr.map(item => {
+          if(item && (Array.isArray(item) || typeof item === 'object')){
+            const processed = replaceFontLiterals(item);
+            if(processed.changed) mutated = true;
+            return processed.expr;
+          }
+          return item;
+        });
+        return { expr: mutated ? nextArray : expr, changed: mutated };
+      }
+
+      if(typeof expr === 'object'){
+        let mutated = false;
+        const clone = {};
+        Object.keys(expr).forEach(key => {
+          const value = expr[key];
+          if(value && (Array.isArray(value) || typeof value === 'object')){
+            const processed = replaceFontLiterals(value);
+            if(processed.changed) mutated = true;
+            clone[key] = processed.expr;
+          } else {
+            clone[key] = value;
+          }
+        });
+        return { expr: mutated ? clone : expr, changed: mutated };
+      }
+
+      return { expr, changed: false };
+    };
+
+    const applyPatchedFonts = (layerId, targetExpr) => {
       const maxAttempts = 2;
+      let pendingExpr = targetExpr;
       for(let attempt = 0; attempt < maxAttempts; attempt++){
         try {
-          mapInstance.setLayoutProperty(layerId, 'text-font', replacementFonts);
+          mapInstance.setLayoutProperty(layerId, 'text-font', pendingExpr);
         } catch(err){
           console.warn('[fonts] Failed to set text-font on layer:', layerId, err);
           return;
         }
 
         if(typeof mapInstance.getLayoutProperty !== 'function') return;
+
+        let reported;
         try {
-          const reported = mapInstance.getLayoutProperty(layerId, 'text-font');
-          if(fontsMatchReplacement(reported)){
-            return;
-          }
-          if(!expressionHasSystemFont(reported)){
-            return;
-          }
+          reported = mapInstance.getLayoutProperty(layerId, 'text-font');
         } catch(err){
           return;
         }
+
+        if(!expressionHasSystemFont(reported)){
+          return;
+        }
+
+        const reparsed = replaceFontLiterals(reported);
+        if(!reparsed.changed){
+          console.warn('[fonts] Unable to purge system fonts on layer after update:', layerId, { reported });
+          return;
+        }
+        pendingExpr = reparsed.expr;
       }
+
+      console.warn('[fonts] System font stack persisted after retries on layer:', layerId);
     };
 
     layers.forEach(layer => {
@@ -5863,10 +5947,12 @@ if (typeof slugify !== 'function') {
         const current = typeof mapInstance.getLayoutProperty === 'function'
           ? mapInstance.getLayoutProperty(layer.id, 'text-font')
           : null;
-        if(fontsMatchReplacement(current)) return;
+        if(current && !expressionHasSystemFont(current)) return;
       } catch(err){}
 
-      attemptApplyFonts(layer.id);
+      const patched = replaceFontLiterals(value);
+      if(!patched.changed) return;
+      applyPatchedFonts(layer.id, patched.expr);
     });
   }
 
