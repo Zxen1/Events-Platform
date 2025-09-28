@@ -5782,6 +5782,7 @@ if (typeof slugify !== 'function') {
           clusterSvg = localStorage.getItem('clusterSvg') || '',
           currentClusterVisualKey = '',
           lastClusterSvgHash = '';
+        const CLUSTER_RADIUS_LIMIT_METERS = 100000;
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
@@ -8695,6 +8696,7 @@ if (!map.__pillHooksInstalled) {
           if(suppressNextRefresh) return;
           updatePostPanel();
           updateFilterCounts();
+          addPostSource();
           refreshMarkers();
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
@@ -8798,6 +8800,43 @@ if (!map.__pillHooksInstalled) {
     };
 
     // Map layers
+    function estimateClusterRadiusMeters(mapInstance, radiusPx){
+      if(!Number.isFinite(radiusPx) || radiusPx <= 0) return 0;
+      if(!mapInstance) return Infinity;
+      try{
+        if(typeof mapInstance.getCenter === 'function' && typeof mapInstance.project === 'function' && typeof mapInstance.unproject === 'function'){
+          const center = mapInstance.getCenter();
+          if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+            const centerPoint = mapInstance.project(center);
+            if(centerPoint && Number.isFinite(centerPoint.x) && Number.isFinite(centerPoint.y)){
+              const offsetPoint = { x: centerPoint.x + radiusPx, y: centerPoint.y };
+              const offsetLngLat = mapInstance.unproject(offsetPoint);
+              if(offsetLngLat && Number.isFinite(offsetLngLat.lng) && Number.isFinite(offsetLngLat.lat)){
+                const km = distKm({ lng: center.lng, lat: center.lat }, { lng: offsetLngLat.lng, lat: offsetLngLat.lat });
+                if(Number.isFinite(km)){
+                  return km * 1000;
+                }
+              }
+            }
+          }
+        }
+      }catch(err){}
+      let zoom = 0;
+      try{
+        const z = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : NaN;
+        if(Number.isFinite(z)) zoom = z;
+      }catch(err){}
+      let lat = 0;
+      try{
+        const c = typeof mapInstance.getCenter === 'function' ? mapInstance.getCenter() : null;
+        if(c && Number.isFinite(c.lat)) lat = c.lat;
+      }catch(err){}
+      const cosLat = Math.max(Math.cos(lat * Math.PI / 180), 1e-6);
+      const metersPerPixel = 156543.03392 * cosLat / Math.pow(2, zoom);
+      if(!Number.isFinite(metersPerPixel)) return Infinity;
+      return radiusPx * metersPerPixel;
+    }
+
     function postsToGeoJSON(list){
       const coordCounts = new Map();
       const coordMeta = new Map();
@@ -8927,7 +8966,9 @@ if (!map.__pillHooksInstalled) {
       addingPostSource = true;
       try{
       const geojson = postsToGeoJSON(posts);
-      const shouldCluster = posts.length >= 10 && clusterRadius > 0;
+      const clusterRadiusMeters = estimateClusterRadiusMeters(map, clusterRadius);
+      const allowClusterByDistance = Number.isFinite(clusterRadiusMeters) && clusterRadiusMeters <= CLUSTER_RADIUS_LIMIT_METERS;
+      const shouldCluster = posts.length >= 10 && clusterRadius > 0 && allowClusterByDistance;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
