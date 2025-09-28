@@ -4749,7 +4749,7 @@ img.thumb{
   <style id="cursor-fixes">
     html, body { cursor: auto !important; }
     a, button, [role="button"], .clickable { cursor: pointer !important; }
-    .mapboxgl-canvas { cursor: default; }
+    .mapboxgl-canvas { cursor: pointer; }
     .mapboxgl-canvas:active { cursor: grabbing; }
     * { -webkit-tap-highlight-color: transparent; }
   </style>
@@ -5661,7 +5661,7 @@ if (typeof slugify !== 'function') {
       st.layers.forEach(l => {
         if (!shouldAttachPointer(l) || map.__cursorArmed.has(l.id)) return;
         map.on('mouseenter', l.id, () => map.getCanvas().style.cursor = 'pointer');
-        map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = '');
+        map.on('mouseleave', l.id, () => map.getCanvas().style.cursor = 'pointer');
         map.__cursorArmed.add(l.id);
       });
     }
@@ -9572,7 +9572,7 @@ if (!map.__pillHooksInstalled) {
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mousemove', layer, onMarkerMove));
 
       const handleMarkerMouseLeave = ()=>{
-        map.getCanvas().style.cursor = '';
+        map.getCanvas().style.cursor = 'pointer';
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
@@ -9584,7 +9584,7 @@ if (!map.__pillHooksInstalled) {
         map.getCanvas().style.cursor='pointer';
       });
       map.on('mouseleave','clusters', ()=>{
-        map.getCanvas().style.cursor='';
+        map.getCanvas().style.cursor='pointer';
       });
         postSourceEventsBound = true;
       }
