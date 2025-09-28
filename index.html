@@ -4776,16 +4776,22 @@ img.thumb{
 
   // Make common high-frequency listeners passive by default (no visual change).
   (function enablePassiveListeners(){
-    const PASSIVE = new Set(['wheel','mousewheel','touchstart','touchmove','touchend','touchcancel','scroll']);
+    const PASSIVE_DEFAULT = new Set(['scroll', 'mousewheel']);
+    const CRITICAL = new Set(['touchstart','touchmove','touchend','touchcancel','wheel']);
     const orig = EventTarget.prototype.addEventListener;
     EventTarget.prototype.addEventListener = function(type, listener, options){
-      // Respect explicit options from your code.
-      if (options === undefined && PASSIVE.has(type)) {
-        options = { passive: true };
-      } else if (options && typeof options === 'object' && PASSIVE.has(type) && options.passive === undefined) {
-        options = Object.assign({}, options);
+      if(!type || CRITICAL.has(type) || !PASSIVE_DEFAULT.has(type)){
+        return orig.call(this, type, listener, options);
       }
-      return orig.call(this, type, listener, options);
+      let opts = options;
+      if(opts === undefined){
+        opts = { passive: true };
+      } else if(typeof opts === 'boolean'){
+        opts = { capture: opts, passive: true };
+      } else if(typeof opts === 'object' && opts !== null && opts.passive === undefined){
+        opts = Object.assign({}, opts, { passive: true });
+      }
+      return orig.call(this, type, listener, opts);
     };
   })();
   </script>
@@ -8482,28 +8488,6 @@ function makePosts(){
           }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
-        if (nav._onDown && nav._onMove) {
-          const origOnDown = nav._onDown.bind(nav);
-          nav._onDown = function(e){
-            const origAdd = document.addEventListener.bind(document);
-            document.addEventListener = function(type, listener, options){
-              if(type === 'touchmove'){
-                let opts = options;
-                if(opts === undefined){
-                  opts = {passive:true};
-                } else if(typeof opts === 'boolean'){
-                  opts = {capture:opts, passive:true};
-                } else if(typeof opts === 'object' && opts){
-                  opts = Object.assign({}, opts);
-                }
-                return origAdd(type, listener, opts);
-              }
-              return origAdd(type, listener, options);
-            };
-            origOnDown(e);
-            document.addEventListener = origAdd;
-          };
-        }
         const compassHolder = document.querySelector(sel.compass);
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
