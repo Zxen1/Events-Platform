@@ -5656,35 +5656,121 @@ if (typeof slugify !== 'function') {
     if(!originalSource) return;
 
     const dedicatedId = 'terrain-dem-dedicated';
-    if(!mapInstance.getSource?.(dedicatedId)){
+    const mapHasSource = (id) => typeof mapInstance.getSource === 'function' && !!mapInstance.getSource(id);
+
+    let cloneAttempted = false;
+    let cloneVerified = false;
+
+    if(!mapHasSource(dedicatedId) && typeof mapInstance.addSource === 'function'){
       try {
         const clone = JSON.parse(JSON.stringify(originalSource));
         mapInstance.addSource(dedicatedId, clone);
-      } catch(err){}
+        cloneAttempted = true;
+        cloneVerified = mapHasSource(dedicatedId);
+      } catch(err){
+        console.warn('[terrain] Failed to add dedicated DEM source.', err);
+      }
+    } else {
+      cloneVerified = mapHasSource(dedicatedId);
     }
 
-    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
-    const nextTerrain = Object.assign({}, terrain, { source: targetSource });
-    if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
-      nextTerrain.cutoff = 0.01;
+    if(cloneAttempted){
+      if(cloneVerified){
+        console.info('[terrain] Dedicated DEM source registered:', dedicatedId);
+      } else {
+        console.warn('[terrain] Dedicated DEM source missing after addSource:', dedicatedId);
+      }
     }
-    try { mapInstance.setTerrain(nextTerrain); } catch(err){}
 
-    if(typeof mapInstance.getTerrain === 'function'){
-      const applied = mapInstance.getTerrain();
-      if(applied){
-        const needsSourceUpdate = applied.source && applied.source !== targetSource && mapInstance.getSource?.(dedicatedId);
-        const needsCutoffUpdate = typeof applied.cutoff !== 'number' || applied.cutoff <= 0;
-        if(needsSourceUpdate || needsCutoffUpdate){
-          const updated = Object.assign({}, applied);
-          if(needsSourceUpdate){
-            updated.source = targetSource;
-          }
-          if(needsCutoffUpdate){
-            updated.cutoff = 0.01;
-          }
-          try{ mapInstance.setTerrain(updated); }catch(err){}
+    const normalizedTerrain = Object.assign({}, terrain);
+    if(typeof normalizedTerrain.cutoff !== 'number' || normalizedTerrain.cutoff <= 0){
+      normalizedTerrain.cutoff = 0.01;
+    }
+
+    let retryArmed = false;
+
+    function verifyTerrain(expectedSource, expectDedicated){
+      if(typeof mapInstance.getTerrain !== 'function') return;
+      let applied;
+      try {
+        applied = mapInstance.getTerrain();
+      } catch(err){
+        return;
+      }
+      if(!applied) return;
+
+      const needsCutoffUpdate = typeof applied.cutoff !== 'number' || applied.cutoff <= 0;
+      if(expectDedicated && applied.source !== expectedSource && mapHasSource(expectedSource)){
+        console.warn('[terrain] Terrain source mismatch; expected dedicated source.', {
+          expected: expectedSource,
+          received: applied.source
+        });
+        scheduleTerrainRetry();
+      } else if(expectDedicated && applied.source === expectedSource){
+        console.info('[terrain] Dedicated terrain source active:', expectedSource);
+      }
+
+      if(needsCutoffUpdate){
+        const updated = Object.assign({}, applied, { cutoff: normalizedTerrain.cutoff });
+        try { mapInstance.setTerrain(updated); } catch(err){}
+      }
+    }
+
+    function scheduleTerrainRetry(){
+      if(retryArmed) return;
+      if(typeof mapInstance.on !== 'function') return;
+      retryArmed = true;
+
+      const retryHandler = () => {
+        if(!mapHasSource(dedicatedId)){
+          return;
         }
+        if(typeof mapInstance.off === 'function'){
+          mapInstance.off('style.load', retryHandler);
+        }
+        retryArmed = false;
+        applyTerrain(true);
+      };
+
+      if(typeof mapInstance.once === 'function'){
+        mapInstance.once('style.load', () => {
+          retryArmed = false;
+          if(mapHasSource(dedicatedId)){
+            applyTerrain(true);
+          } else {
+            console.warn('[terrain] Dedicated DEM source still missing on style.load.');
+          }
+        });
+      } else {
+        mapInstance.on('style.load', retryHandler);
+      }
+    }
+
+    function applyTerrain(forceDedicated){
+      const hasDedicated = mapHasSource(dedicatedId);
+      const useDedicated = forceDedicated && hasDedicated;
+      const targetSource = useDedicated ? dedicatedId : terrain.source;
+      const nextTerrain = Object.assign({}, normalizedTerrain, { source: targetSource });
+
+      try {
+        mapInstance.setTerrain(nextTerrain);
+      } catch(err){
+        if(useDedicated){
+          console.warn('[terrain] setTerrain with dedicated source failed; deferring to style.load.', err);
+          scheduleTerrainRetry();
+        }
+        return;
+      }
+
+      verifyTerrain(targetSource, useDedicated);
+    }
+
+    if(mapHasSource(dedicatedId)){
+      applyTerrain(true);
+    } else {
+      applyTerrain(false);
+      if(cloneAttempted && !cloneVerified){
+        scheduleTerrainRetry();
       }
     }
   }
