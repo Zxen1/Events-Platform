@@ -42,8 +42,7 @@
   </style>
 
   <style>
-    .map-card,
-    .mapmarker-container{
+    .map-card{
       position: relative;
       width: 225px;
       height: 60px;
@@ -53,10 +52,23 @@
       touch-action: none;
     }
     .mapmarker-container{
+      position: relative;
+      width: 0;
+      height: 0;
+      transform: translateZ(0);
+      pointer-events: none;
+      isolation: isolate;
+      touch-action: none;
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
       z-index: 0;
+    }
+    .mapmarker-container > .map-card{
+      position: absolute;
+      left: -25px;
+      top: -25px;
+      pointer-events: auto;
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
@@ -9320,14 +9332,18 @@ if (!map.__pillHooksInstalled) {
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat } = opts;
           const overlayRoot = document.createElement('div');
-          overlayRoot.className = 'map-card map-card--popup mapmarker-container';
-          const pillWidth = 225;
-          const pillHeight = 60;
-          const thumbSize = 50;
+          overlayRoot.className = 'mapmarker-container';
           overlayRoot.dataset.id = String(post.id);
           overlayRoot.setAttribute('aria-hidden', 'true');
-          overlayRoot.style.pointerEvents = 'auto';
+          overlayRoot.style.pointerEvents = 'none';
           overlayRoot.style.userSelect = 'none';
+
+          const cardRoot = document.createElement('div');
+          cardRoot.className = 'map-card map-card--popup';
+          cardRoot.dataset.id = overlayRoot.dataset.id;
+          cardRoot.setAttribute('aria-hidden', 'true');
+          cardRoot.style.pointerEvents = 'auto';
+          cardRoot.style.userSelect = 'none';
 
           const pillImg = new Image();
           try{ pillImg.decoding = 'async'; }catch(e){}
@@ -9360,7 +9376,8 @@ if (!map.__pillHooksInstalled) {
             labelEl.appendChild(venueEl);
           }
 
-          overlayRoot.append(pillImg, thumbImg, labelEl);
+          cardRoot.append(pillImg, thumbImg, labelEl);
+          overlayRoot.append(cardRoot);
 
           const handleOverlayClick = (ev)=>{
             ev.preventDefault();
@@ -9377,9 +9394,9 @@ if (!map.__pillHooksInstalled) {
               });
             });
           };
-          overlayRoot.addEventListener('click', handleOverlayClick, { capture: true });
+          cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
           ['pointerdown','mousedown','touchstart'].forEach(type => {
-            overlayRoot.addEventListener(type, (ev)=>{
+            cardRoot.addEventListener(type, (ev)=>{
               const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
               const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
               if(!isTouchLike){
@@ -9388,21 +9405,17 @@ if (!map.__pillHooksInstalled) {
               try{ ev.stopPropagation(); }catch(err){}
             }, { capture: true });
           });
-          overlayRoot.addEventListener('mouseenter', ()=>{
+          cardRoot.addEventListener('mouseenter', ()=>{
             window.__overCard = true;
           });
-          overlayRoot.addEventListener('mouseleave', ()=>{
+          cardRoot.addEventListener('mouseleave', ()=>{
             window.__overCard = false;
             if(listLocked) return;
             const currentPopup = hoverPopup;
             schedulePopupRemoval(currentPopup, 160);
           });
 
-          const markerOffset = [
-            (pillWidth - thumbSize) / 2,
-            (pillHeight - thumbSize) / 2
-          ];
-          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center', offset: markerOffset });
+          const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
           if(targetLngLat){ marker.setLngLat(targetLngLat); }
           else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
           else if(eventLngLat){ marker.setLngLat(eventLngLat); }
