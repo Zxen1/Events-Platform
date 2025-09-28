@@ -5782,7 +5782,25 @@ if (typeof slugify !== 'function') {
 
     const replacementFonts = ['DIN Pro Medium','Arial Unicode MS Regular'];
 
+    const normalizeFontValue = (value) => {
+      if(!value) return null;
+      if(typeof value === 'string') return [value];
+      if(Array.isArray(value)){
+        if(value.length && value[0] === 'literal'){
+          return normalizeFontValue(value[1]);
+        }
+        if(value.every(item => typeof item === 'string')){
+          return value;
+        }
+      }
+      return null;
+    };
+
     const expressionHasSystemFont = (expr) => {
+      const normalized = normalizeFontValue(expr);
+      if(normalized){
+        return normalized.some(font => /system-ui|sans-serif/i.test(font));
+      }
       if(Array.isArray(expr)){
         return expr.some(expressionHasSystemFont);
       }
@@ -5792,34 +5810,54 @@ if (typeof slugify !== 'function') {
       return false;
     };
 
+    const fontsMatchReplacement = (fonts) => {
+      const normalized = normalizeFontValue(fonts);
+      return Array.isArray(normalized)
+        && normalized.length === replacementFonts.length
+        && normalized.every((font, idx) => font === replacementFonts[idx]);
+    };
+
+    const attemptApplyFonts = (layerId) => {
+      const maxAttempts = 2;
+      for(let attempt = 0; attempt < maxAttempts; attempt++){
+        try {
+          mapInstance.setLayoutProperty(layerId, 'text-font', replacementFonts);
+        } catch(err){
+          console.warn('[fonts] Failed to set text-font on layer:', layerId, err);
+          return;
+        }
+
+        if(typeof mapInstance.getLayoutProperty !== 'function') return;
+        try {
+          const reported = mapInstance.getLayoutProperty(layerId, 'text-font');
+          if(fontsMatchReplacement(reported)){
+            return;
+          }
+          if(!expressionHasSystemFont(reported)){
+            return;
+          }
+        } catch(err){
+          return;
+        }
+      }
+    };
+
     layers.forEach(layer => {
       if(!layer || layer.type !== 'symbol') return;
       const layout = layer.layout || {};
       if(!Object.prototype.hasOwnProperty.call(layout, 'text-font')) return;
       const value = layout['text-font'];
-      let needsReplacement = false;
-
-      if(Array.isArray(value)){
-        needsReplacement = value.some(v => typeof v === 'string' && /system-ui|sans-serif/i.test(v));
-      } else if(typeof value === 'string'){
-        needsReplacement = /system-ui|sans-serif/i.test(value);
-      } else if(value){
-        needsReplacement = expressionHasSystemFont(value);
-      }
-
-      if(!needsReplacement) return;
+      const hasSystemFont = expressionHasSystemFont(value);
+      if(!hasSystemFont) return;
 
       try {
         const current = typeof mapInstance.getLayoutProperty === 'function'
           ? mapInstance.getLayoutProperty(layer.id, 'text-font')
           : null;
-        const alreadySet = Array.isArray(current)
-          && current.length === replacementFonts.length
-          && current.every((font, idx) => font === replacementFonts[idx]);
-        if(alreadySet) return;
+        if(fontsMatchReplacement(current)) return;
       } catch(err){}
 
-      try{ mapInstance.setLayoutProperty(layer.id, 'text-font', replacementFonts); }catch(err){}
+      attemptApplyFonts(layer.id);
     });
   }
 
