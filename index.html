@@ -4795,26 +4795,36 @@ img.thumb{
     }
   }
 
-  // Make common high-frequency listeners passive by default (no visual change).
-  (function enablePassiveListeners(){
-    const PASSIVE_DEFAULT = new Set(['scroll', 'mousewheel']);
-    const CRITICAL = new Set(['touchstart','touchmove','touchend','touchcancel','wheel']);
-    const orig = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function(type, listener, options){
-      if(!type || CRITICAL.has(type) || !PASSIVE_DEFAULT.has(type)){
-        return orig.call(this, type, listener, options);
-      }
-      let opts = options;
-      if(opts === undefined){
-        opts = { passive: true };
-      } else if(typeof opts === 'boolean'){
-        opts = { capture: opts, passive: true };
-      } else if(typeof opts === 'object' && opts !== null && opts.passive === undefined){
-        opts = Object.assign({}, opts, { passive: true });
-      }
-      return orig.call(this, type, listener, opts);
-    };
-  })();
+  function withPassiveDefault(options){
+    if(options === undefined){
+      return { passive: true };
+    }
+    if(typeof options === 'boolean'){
+      return { capture: options, passive: true };
+    }
+    if(typeof options === 'object' && options !== null && options.passive === undefined){
+      return Object.assign({}, options, { passive: true });
+    }
+    return options;
+  }
+
+  function addPassiveScrollListener(target, listener, options){
+    if(!target || typeof target.addEventListener !== 'function') return null;
+    const opts = withPassiveDefault(options);
+    target.addEventListener('scroll', listener, opts);
+    return opts;
+  }
+
+  function removeScrollListener(target, listener, options){
+    if(!target || typeof target.removeEventListener !== 'function') return;
+    let capture = false;
+    if(typeof options === 'boolean'){
+      capture = options;
+    } else if(typeof options === 'object' && options !== null){
+      capture = !!options.capture;
+    }
+    target.removeEventListener('scroll', listener, capture);
+  }
   </script>
 
 <script>
@@ -5932,7 +5942,7 @@ if (typeof slugify !== 'function') {
     window.adjustListHeight = adjustListHeight;
     if(window.visualViewport){
       window.visualViewport.addEventListener('resize', adjustListHeight);
-      window.visualViewport.addEventListener('scroll', adjustListHeight);
+      addPassiveScrollListener(window.visualViewport, adjustListHeight);
     }
     window.addEventListener('resize', adjustListHeight);
     window.addEventListener('orientationchange', adjustListHeight);
@@ -6818,6 +6828,7 @@ function makePosts(){
     let renderedPostCount = 0;
     let postBatchObserver = null;
     let postSentinel = null;
+    let postBoardScrollOptions = null;
     const INITIAL_RENDER_COUNT = 50;
     const POST_BATCH_SIZE = 25;
 
@@ -6835,7 +6846,8 @@ function makePosts(){
       renderedPostCount += slice.length;
       if(renderedPostCount >= sortedPostList.length){
         if(postBatchObserver) postBatchObserver.disconnect();
-        postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+        removeScrollListener(postsWideEl, onPostBoardScroll, postBoardScrollOptions);
+        postBoardScrollOptions = null;
       }
       prioritizeVisibleImages();
     }
@@ -7311,7 +7323,7 @@ function makePosts(){
           e.preventDefault();
         }
       });
-        scroller.addEventListener('scroll', ()=>{
+        addPassiveScrollListener(scroller, ()=>{
           const marker = scroller.querySelector('.today-marker');
           if(marker){
             const base = parseFloat(marker.dataset.pos || '0');
@@ -9633,7 +9645,8 @@ if (!map.__pillHooksInstalled) {
       renderedPostCount = 0;
 
       if(postBatchObserver) postBatchObserver.disconnect();
-      postsWideEl.removeEventListener('scroll', onPostBoardScroll);
+      removeScrollListener(postsWideEl, onPostBoardScroll, postBoardScrollOptions);
+      postBoardScrollOptions = null;
       if(postSentinel) postSentinel.remove();
       postSentinel = null;
 
@@ -9693,7 +9706,7 @@ if (!map.__pillHooksInstalled) {
         }, {root: postsWideEl, rootMargin:'0px 0px 200px 0px'});
         postBatchObserver.observe(postSentinel);
       } else {
-        postsWideEl.addEventListener('scroll', onPostBoardScroll);
+        postBoardScrollOptions = addPassiveScrollListener(postsWideEl, onPostBoardScroll);
       }
     }
     function updateResultCount(n){
