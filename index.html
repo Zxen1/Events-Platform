@@ -3134,12 +3134,32 @@ body.filters-active #filterBtn{
 }
 
 .map-controls-map .geocoder{
-  flex:0 1 360px;
-  width:auto;
+  flex:1 1 360px;
+  min-width:0;
+  width:min(100%, 360px);
   max-width:360px;
 }
 
 .map-control-row .geocoder{margin:0;}
+
+@media (max-width:600px){
+  .map-controls-map{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+  }
+  .map-controls-map .geocoder,
+  .map-controls-map .mapboxgl-ctrl-geocoder{
+    flex:1 1 100%;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  #welcomeBody .map-control-row > .geocoder,
+  #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
+    width:100% !important;
+    max-width:100% !important;
+  }
+}
 
 .post-board .posts{
   flex:1 1 auto;
@@ -5436,7 +5456,9 @@ if (typeof slugify !== 'function') {
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  const markerIconSize = isTouchDevice ? 1.35 : 1;
+  const narrowScreenQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
+  const isNarrowScreen = narrowScreenQuery ? narrowScreenQuery.matches : window.innerWidth <= 600;
+  const markerIconSize = (isTouchDevice || isNarrowScreen) ? 1.35 : 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
