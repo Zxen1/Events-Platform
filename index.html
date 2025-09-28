@@ -7578,7 +7578,8 @@ function makePosts(){
           board.classList.add('panel-visible');
           board.style.transform = '';
         } else {
-          schedulePanelEntrance(board, true);
+          const wasHidden = !board.classList.contains('panel-visible');
+          schedulePanelEntrance(board, wasHidden);
         }
       }
 
