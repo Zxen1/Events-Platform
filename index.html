@@ -56,6 +56,7 @@
       background: transparent;
       border-radius: 999px;
       box-shadow: none;
+      z-index: 0;
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
@@ -71,7 +72,7 @@
       pointer-events: auto;
       opacity: 1 !important;
       mix-blend-mode: normal;
-      z-index: 0;
+      z-index: inherit;
     }
     .map-card-thumb{
       position: absolute;
@@ -105,7 +106,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      z-index: 2;
+      z-index: inherit;
       pointer-events: auto;
     }
 
