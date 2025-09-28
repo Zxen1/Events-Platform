@@ -5557,15 +5557,48 @@ if (typeof slugify !== 'function') {
 
   function layerHasFeatureMetadata(layer){
     if(!layer || typeof layer !== 'object') return false;
-    const meta = layer.metadata;
-    if(!meta || typeof meta !== 'object') return false;
     const keys = [
       'mapbox:featureComponent',
       'mapbox:featureset',
       'mapbox:layerGroup',
       'mapbox:styleGroup'
     ];
-    return keys.some(key => Object.prototype.hasOwnProperty.call(meta, key));
+
+    const meta = layer.metadata;
+    if(meta && typeof meta === 'object'){
+      const hasMetaKey = keys.some(key => Object.prototype.hasOwnProperty.call(meta, key));
+      if(hasMetaKey) return true;
+    }
+
+    const filter = layer.filter;
+    if(!filter) return false;
+
+    function scanExpression(expr){
+      if(Array.isArray(expr)){
+        for(let i = 0; i < expr.length; i++){
+          if(scanExpression(expr[i])) return true;
+        }
+        return false;
+      }
+      if(expr && typeof expr === 'object'){
+        for(const key in expr){
+          if(Object.prototype.hasOwnProperty.call(expr, key)){
+            if(scanExpression(expr[key])) return true;
+          }
+        }
+        return false;
+      }
+      if(typeof expr === 'string'){
+        if(expr === 'featureNamespace' || keys.includes(expr)) return true;
+      }
+      return false;
+    }
+
+    try {
+      return scanExpression(filter);
+    } catch(err) {
+      return false;
+    }
   }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
