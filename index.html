@@ -10547,14 +10547,24 @@ function openPostModal(id){
           if(!cell) return null;
           const monthEl = cell.closest('.month');
           if(!monthEl) return null;
-          const targetLeft = monthEl.offsetLeft;
+          const currentLeft = calScroll.scrollLeft;
+          let targetLeft = monthEl.offsetLeft;
+          if(typeof monthEl.getBoundingClientRect === 'function' && typeof calScroll.getBoundingClientRect === 'function'){
+            const monthRect = monthEl.getBoundingClientRect();
+            const scrollRect = calScroll.getBoundingClientRect();
+            const delta = monthRect.left - scrollRect.left;
+            const adjusted = currentLeft + delta;
+            if(Number.isFinite(adjusted)){
+              targetLeft = adjusted;
+            }
+          }
+          const maxLeft = Math.max(0, calScroll.scrollWidth - calScroll.clientWidth);
+          targetLeft = Math.min(Math.max(targetLeft, 0), maxLeft);
+          const distance = Math.abs(currentLeft - targetLeft);
           if(typeof calScroll.scrollTo === 'function'){
-            if(smooth){
-              const currentLeft = calScroll.scrollLeft;
-              if(Math.abs(currentLeft - targetLeft) > 1){
-                calScroll.scrollTo({left: targetLeft, behavior: 'smooth'});
-                return {targetLeft, waitForScroll: true};
-              }
+            if(smooth && distance > 1){
+              calScroll.scrollTo({left: targetLeft, behavior: 'smooth'});
+              return {targetLeft, waitForScroll: true};
             }
             calScroll.scrollTo({left: targetLeft});
           } else {
