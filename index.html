@@ -5247,7 +5247,7 @@ if (typeof slugify !== 'function') {
               <button type="button" data-command="italic"><i>I</i></button>
               <button type="button" data-command="underline"><u>U</u></button>
             </div>
-            <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder="<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>"></div>
+            <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder='<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>'></div>
             <textarea id="welcomeMessage" hidden></textarea>
           </div>
         </div>
@@ -5818,7 +5818,7 @@ if (typeof slugify !== 'function') {
 
     let mode = localStorage.getItem('mode') || 'map';
     const DEFAULT_SPIN_SPEED = 0.3;
-    const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the Filters button to refine your search.</p>';
+    const DEFAULT_WELCOME = '<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>';
 
     const firstVisit = !localStorage.getItem('hasVisited');
     localStorage.setItem('hasVisited','1');
