@@ -8968,6 +8968,9 @@ function makePosts(){
           return;
         }
 
+        if(originEl && !container.contains(originEl)){
+          originEl = null;
+        }
         let target = originEl || container.querySelector(`[data-id="${id}"]`);
 
         (function(){
@@ -9006,6 +9009,9 @@ function makePosts(){
           }
         })();
 
+        if(originEl && !container.contains(originEl)){
+          originEl = null;
+        }
         target = originEl || container.querySelector(`[data-id="${id}"]`);
 
         const pointerEvt = window.__lastPointerDown;
