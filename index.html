@@ -6584,6 +6584,98 @@ function buildClusterListHTML(items){
       });
     }
 
+    function setupMultiPopupInteractions(root, options = {}){
+      if(!root) return { close: ()=>{} };
+      const { lockOnOpen = false } = options;
+      if(lockOnOpen){
+        lockMap(true);
+      }
+
+      const close = ()=>{
+        if(hoverPopup){
+          try{ hoverPopup.remove(); }catch(err){}
+          hoverPopup = null;
+        }
+        if(lockOnOpen){
+          lockMap(false);
+        }
+      };
+
+      const openPostFromPopup = (postId)=>{
+        if(!postId) return;
+        callWhenDefined('openPost', (fn)=>{
+          requestAnimationFrame(() => {
+            try{
+              touchMarker = null;
+              close();
+              stopSpin();
+              if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                try{ closePanel(filterPanel); }catch(err){}
+              }
+              fn(postId, false, true);
+            }catch(err){ console.error(err); }
+          });
+        });
+      };
+
+      root.addEventListener('click', (ev)=> ev.stopPropagation(), { capture: true });
+      root.querySelectorAll('.map-card-list-item').forEach(node => {
+        node.addEventListener('click', (evt)=>{
+          evt.stopPropagation();
+          evt.preventDefault();
+          openPostFromPopup(node.getAttribute('data-id'));
+        }, { capture: true });
+      });
+
+      const closeBtn = root.querySelector('[data-act="close"]');
+      if(closeBtn){
+        closeBtn.addEventListener('click', close);
+      }
+
+      root.addEventListener('click', (ev)=>{
+        const row = ev.target && ev.target.closest ? ev.target.closest('.map-card-list-item') : null;
+        if(!row) return;
+        ev.stopPropagation();
+        ev.preventDefault();
+        openPostFromPopup(row.getAttribute('data-id'));
+      }, { capture: true });
+
+      return { close };
+    }
+
+    function showMultiVenuePopup(point, lng, lat, options = {}){
+      if(!point || !Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+      const { items: providedItems = null, lockOnOpen = false } = options;
+      const list = Array.isArray(providedItems) ? providedItems : postsAtVenue(lng, lat);
+      if(!list || list.length <= 1){
+        return null;
+      }
+      openListPopupAtPoint(point, buildClusterListHTML(list));
+      const root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
+      if(!root){
+        return null;
+      }
+      const { close } = setupMultiPopupInteractions(root, { lockOnOpen });
+      return { root, close, items: list };
+    }
+
+    function bindPopupHoverGuards(el){
+      if(!el) return;
+      ['pointerdown','mousedown','mouseup','click'].forEach(type => {
+        el.addEventListener(type, (ev)=>{
+          try{ ev.preventDefault(); }catch(err){}
+          try{ ev.stopPropagation(); }catch(err){}
+        }, { capture: true });
+      });
+      el.addEventListener('mouseenter', ()=>{ window.__overCard = true; });
+      el.addEventListener('mouseleave', ()=>{
+        window.__overCard = false;
+        if(listLocked) return;
+        const currentPopup = hoverPopup;
+        schedulePopupRemoval(currentPopup, 160);
+      });
+    }
+
     function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
     const rnd = mulberry32(42);
 
@@ -10476,63 +10568,11 @@ if (!map.__pillHooksInstalled) {
           if(items && items.length>1){
             if(e.preventDefault) e.preventDefault();
             if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
-            openListPopupAtPoint(e.point, buildClusterListHTML(items));
-            const root = hoverPopup.getElement();
-            const close = ()=>{ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); };
-            root.addEventListener('click', (ev)=> ev.stopPropagation(), {capture:true});
-            root.querySelectorAll('.map-card-list-item').forEach(n => n.addEventListener('click', (e)=>{
-              e.stopPropagation();
-              const id = n.getAttribute('data-id');
-              if(!id) return;
-              e.preventDefault();
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    close();
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    fn(id, false, true);
-                  }catch(err){ console.error(err); }
-                });
-              });
-            }, { capture: true }));
-            const btn = root.querySelector('[data-act="close"]'); if(btn) btn.addEventListener('click', close);
-            lockMap(true);
-            (function(){
-              const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-              if(__root){
-                __root.addEventListener('click', function(ev){
-                  ev.stopPropagation();
-                  ev.preventDefault();
-                  var row = (ev.target && ev.target.closest) ? ev.target.closest('.map-card-list-item') : null;
-                  if(row){
-                    var pid = row.getAttribute('data-id');
-                    if(pid){
-                      callWhenDefined('openPost', (fn)=>{
-                        requestAnimationFrame(() => {
-                          try{
-                            touchMarker = null;
-                            if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-                            lockMap(false);
-                            stopSpin();
-                            if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                              try{ closePanel(filterPanel); }catch(err){}
-                            }
-                            fn(pid, false, true);
-                          }catch(err){ console.error(err); }
-                        });
-                      });
-                      return;
-                    }
-                  }
-                }, {capture:true});
-              }
-            })();
+            const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { lockOnOpen: true, items });
+            if(multiPopup){
               lastListOpenAt = Date.now();
-            return;
+              return;
+            }
           }
         }
         const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
@@ -10583,68 +10623,20 @@ if (!map.__pillHooksInstalled) {
         const targetLngLat = baseLngLat || (e ? e.lngLat : null);
         const multi = hasCoords ? postsAtVenue(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
-          openListPopupAtPoint(e.point, buildClusterListHTML(multi));
-
-        (function(){
-          function consume(ev){ try{ ev.preventDefault(); }catch(e){} try{ ev.stopPropagation(); }catch(e){} }
-          const _root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_root){
-            ['pointerdown','mousedown','mouseup','click'].forEach(t=> _root.addEventListener(t, consume, {capture:true}));
-          }
-        })();
-    
-          
-        (function(){
-          const __root = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(__root){
-            __root.addEventListener('click', function(ev){
-              ev.stopPropagation();
-              ev.preventDefault();
-              var row = (ev.target && ev.target.closest) ? ev.target.closest('.map-card-list-item') : null;
-              if(row){
-                var pid = row.getAttribute('data-id');
-                if(pid){
-                  callWhenDefined('openPost', (fn)=>{
-                    requestAnimationFrame(() => {
-                      try{
-                        touchMarker = null;
-                        if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
-                        stopSpin();
-                        if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                          try{ closePanel(filterPanel); }catch(err){}
-                        }
-                        fn(pid, false, true);
-                      }catch(err){ console.error(err); }
-                    });
-                  });
-                  return;
-                }
-              }
-            }, {capture:true});
-          }
-        })();
-// keep the hover popup alive when the pointer enters it
-          const _el = hoverPopup && hoverPopup.getElement ? hoverPopup.getElement() : null;
-          if(_el){
-            _el.addEventListener('mouseenter', ()=>{ window.__overCard = true; });
-            _el.addEventListener('mouseleave', ()=>{
-              window.__overCard = false;
-              if(listLocked) return;
-              const currentPopup = hoverPopup;
-              schedulePopupRemoval(currentPopup, 160);
-            });
-          }
-        } else {
-          const p = posts.find(x=>x.id===id);
-          if(!p){
-            return;
-          }
-          if(hoverPopup){
-            try{ hoverPopup.remove(); }catch(e){}
-            hoverPopup = null;
-          }
-          hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat });
+          const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { items: multi });
+          const popupEl = multiPopup && multiPopup.root ? multiPopup.root : getPopupElement(hoverPopup);
+          bindPopupHoverGuards(popupEl);
+          return;
         }
+        const p = posts.find(x=>x.id===id);
+        if(!p){
+          return;
+        }
+        if(hoverPopup){
+          try{ hoverPopup.remove(); }catch(e){}
+          hoverPopup = null;
+        }
+        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat });
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
@@ -10666,12 +10658,65 @@ if (!map.__pillHooksInstalled) {
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
-      // Maintain pointer cursor for clusters without showing popups
-      map.on('mouseenter','clusters', ()=>{
+      const handleClusterInteraction = (e, options = {})=>{
+        const lockOnOpen = !!options.lockOnOpen;
+        if(listLocked && !lockOnOpen) return;
+        const feature = e.features && e.features[0];
+        if(!feature || !feature.properties) return;
+        const props = feature.properties;
+        const clusterId = typeof props.cluster_id === 'number' ? props.cluster_id : null;
+        if(clusterId === null) return;
+        getClusterLeavesAll('posts', clusterId, MAX_CLUSTER_BOUNDS_LEAVES, props.point_count).then(({ leaves })=>{
+          if(!Array.isArray(leaves) || !leaves.length) return;
+          let venueKey = null;
+          let coords = null;
+          for(let i=0;i<leaves.length;i++){
+            const leaf = leaves[i];
+            if(!leaf || !leaf.properties) { venueKey = null; break; }
+            const leafVenue = leaf.properties.venueKey;
+            if(!leafVenue){ venueKey = null; break; }
+            if(venueKey === null){
+              venueKey = leafVenue;
+              const geom = leaf.geometry && leaf.geometry.coordinates;
+              if(Array.isArray(geom) && geom.length >= 2){
+                coords = geom;
+              }
+            } else if(leafVenue !== venueKey){
+              venueKey = null;
+              break;
+            }
+          }
+          if(!venueKey || !coords || coords.length < 2) return;
+          const items = postsAtVenue(coords[0], coords[1]);
+          if(!items || items.length <= 1) return;
+          if(typeof e.preventDefault === 'function') e.preventDefault();
+          if(e.originalEvent){
+            try{ e.originalEvent.preventDefault(); }catch(err){}
+            try{ e.originalEvent.stopPropagation(); }catch(err){}
+          }
+          const popup = showMultiVenuePopup(e.point, coords[0], coords[1], { lockOnOpen, items });
+          if(!popup) return;
+          if(lockOnOpen){
+            lastListOpenAt = Date.now();
+          } else {
+            bindPopupHoverGuards(popup.root || getPopupElement(hoverPopup));
+          }
+        }).catch(err => console.error(err));
+      };
+
+      // Maintain pointer cursor for clusters and surface multi-venue cards when applicable
+      map.on('mouseenter','clusters', (e)=>{
         map.getCanvas().style.cursor='pointer';
+        handleClusterInteraction(e);
+      });
+      map.on('click','clusters', (e)=>{
+        handleClusterInteraction(e, { lockOnOpen: true });
       });
       map.on('mouseleave','clusters', ()=>{
         map.getCanvas().style.cursor='grab';
+        if(listLocked) return;
+        const currentPopup = hoverPopup;
+        schedulePopupRemoval(currentPopup, 200);
       });
         postSourceEventsBound = true;
       }
