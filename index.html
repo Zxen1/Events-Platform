@@ -6081,6 +6081,7 @@ if (typeof slugify !== 'function') {
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
+    let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
@@ -9290,7 +9291,8 @@ if (!map.__pillHooksInstalled) {
       if(!map || addingPostSource) return;
       addingPostSource = true;
       try{
-      const geojson = postsToGeoJSON(posts);
+      const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
+      const geojson = postsToGeoJSON(markerList);
       const shouldCluster = posts.length >= 10 && clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
@@ -11468,6 +11470,7 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      filtersInitialized = true;
     }
 
     function applyFilters(render = true){
