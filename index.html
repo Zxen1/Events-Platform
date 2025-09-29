@@ -12840,7 +12840,32 @@ function initPostLayout(board){
       if(img){
         if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
         if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
-        openImageModal(img.src, {origin: img});
+        const parseIndex = value => {
+          if(typeof value === 'undefined') return null;
+          const parsed = parseInt(value, 10);
+          return Number.isFinite(parsed) ? parsed : null;
+        };
+        let startIndex = null;
+        if(img.dataset){
+          startIndex = parseIndex(img.dataset.index);
+        }
+        if(startIndex === null && selectedImageBox.dataset){
+          startIndex = parseIndex(selectedImageBox.dataset.index);
+        }
+        const galleryRoot = selectedImageBox.classList.contains('image-box')
+          ? selectedImageBox
+          : (selectedImageBox.closest('.post-images') || selectedImageBox.parentElement)?.querySelector('.image-box');
+        if(startIndex === null && galleryRoot && galleryRoot.dataset){
+          startIndex = parseIndex(galleryRoot.dataset.index);
+        }
+        const options = {origin: img};
+        if(galleryRoot){
+          options.gallery = galleryRoot;
+        }
+        if(startIndex !== null){
+          options.startIndex = startIndex;
+        }
+        openImageModal(img.src, options);
       }
     });
     selectedImageBox._imageModalListener = true;
