@@ -63,6 +63,7 @@
       border-radius: 999px;
       box-shadow: none;
       z-index: 5;
+      will-change: transform;
     }
     .mapmarker-overlay > .map-card{
       position: absolute;
@@ -77,6 +78,7 @@
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
+      z-index: 20000;
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
@@ -9553,6 +9555,13 @@ if (!map.__pillHooksInstalled) {
           });
 
           const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
+          if(typeof marker.setZIndexOffset === 'function'){
+            try{ marker.setZIndexOffset(20000); }catch(e){}
+          }
+          const markerElement = typeof marker.getElement === 'function' ? marker.getElement() : overlayRoot;
+          if(markerElement && markerElement.style){
+            markerElement.style.zIndex = '20000';
+          }
           if(targetLngLat){ marker.setLngLat(targetLngLat); }
           else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
           else if(eventLngLat){ marker.setLngLat(eventLngLat); }
