@@ -9514,6 +9514,7 @@ if (!map.__pillHooksInstalled) {
           cardRoot.append(pillImg, thumbImg, labelEl);
           overlayRoot.append(markerContainer, cardRoot);
           overlayRoot.classList.add('is-card-visible');
+          overlayRoot.style.pointerEvents = '';
 
           const handleOverlayClick = (ev)=>{
             ev.preventDefault();
