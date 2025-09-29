@@ -9092,24 +9092,6 @@ if (!map.__pillHooksInstalled) {
         }
         return best;
       }
-      function computeStackOrder(post){
-        const lat = Number(post.lat);
-        const latPart = Number.isFinite(lat) ? Math.round((lat + 90) * 1e6) : 0;
-        const rawId = post.id;
-        let idPart = 0;
-        if(Number.isFinite(rawId)){
-          idPart = Math.trunc(rawId);
-        } else if(rawId !== undefined && rawId !== null){
-          const str = String(rawId);
-          let hash = 0;
-          for(let i = 0; i < str.length; i++){
-            hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
-          }
-          idPart = hash;
-        }
-        const normalizedId = ((idPart % 1e6) + 1e6) % 1e6;
-        return latPart * 1e6 + normalizedId;
-      }
       coordMeta.forEach((meta, key) => {
         let label = findCommonLabel(meta.locVenueCounts, meta.count);
         if(!label){
@@ -9167,8 +9149,7 @@ if (!map.__pillHooksInstalled) {
                 multi:isMultiVenue ? 1 : 0,
                 multiCount: count,
                 multiLabel: String(count),
-                venueKey: venueKey(p.lng, p.lat),
-                stackOrder: computeStackOrder(p)
+                venueKey: venueKey(p.lng, p.lat)
               },
               geometry:{type:'Point', coordinates:[p.lng, p.lat]}
             };
@@ -9209,9 +9190,6 @@ if (!map.__pillHooksInstalled) {
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
-      const stackSortKey = (offset = 0) => offset === 0
-        ? ['coalesce', ['get','stackOrder'], 0]
-        : ['+', ['coalesce', ['get','stackOrder'], 0], offset];
       const markerLabelTextField = ['let', 'line1',
         ['coalesce', ['get','labelLine1'], ['get','title'], ''],
         ['let', 'line2', ['coalesce', ['get','labelLine2'], ''],
@@ -9320,7 +9298,7 @@ if (!map.__pillHooksInstalled) {
             'icon-anchor': 'center',
             'icon-pitch-alignment': 'viewport',
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': stackSortKey()
+            'symbol-sort-key': 1100
           },
           paint:{},
         });
@@ -9332,7 +9310,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('unclustered','icon-anchor', 'center'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','symbol-sort-key', stackSortKey()); }catch(e){}
+      try{ map.setLayoutProperty('unclustered','symbol-sort-key', 1100); }catch(e){}
       if(!map.getLayer('marker-label-bg')){
         map.addLayer({
           id:'marker-label-bg',
@@ -9347,7 +9325,7 @@ if (!map.__pillHooksInstalled) {
             'icon-anchor': 'left',
             'icon-pitch-alignment': 'viewport',
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': stackSortKey(-0.02)
+            'symbol-sort-key': 1099
           },
           paint:{
             'icon-translate': [markerLabelBgTranslatePx, 0],
@@ -9373,7 +9351,7 @@ if (!map.__pillHooksInstalled) {
             'text-pitch-alignment': 'viewport',
             'text-max-width': markerLabelTextMaxWidth,
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': stackSortKey(0.02)
+            'symbol-sort-key': 1101
           },
           paint:{
             'text-color': '#fff',
@@ -9390,7 +9368,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-bg','icon-anchor','left'); }catch(e){}
       try{ map.setLayoutProperty('marker-label-bg','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('marker-label-bg','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key', stackSortKey(-0.02)); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key', 1099); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
@@ -9405,7 +9383,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-text','text-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-max-width', markerLabelTextMaxWidth); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','symbol-sort-key', stackSortKey(0.02)); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-text','symbol-sort-key', 1101); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-color','#fff'); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate',[markerLabelTextTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate-anchor','viewport'); }catch(e){}
