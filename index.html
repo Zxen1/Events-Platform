@@ -51,7 +51,7 @@
       isolation: isolate;
       touch-action: none;
     }
-    .mapmarker-container{
+    .mapmarker-overlay{
       position: relative;
       width: 0;
       height: 0;
@@ -64,7 +64,7 @@
       box-shadow: none;
       z-index: 0;
     }
-    .mapmarker-container > .map-card{
+    .mapmarker-overlay > .map-card{
       position: absolute;
       left: -25px;
       top: -25px;
@@ -72,8 +72,7 @@
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
-    .map-card-pill,
-    .mapmarker-container-pill{
+    .map-card-pill{
       position: absolute;
       inset: auto;
       left: -5px;
@@ -82,6 +81,35 @@
       height: 60px;
       object-fit: contain;
       pointer-events: auto;
+      opacity: 1 !important;
+      mix-blend-mode: normal;
+      z-index: 0;
+    }
+    .mapmarker-container{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    .mapmarker{
+      position: absolute;
+      left: -15px;
+      top: -30px;
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .mapmarker-pill{
+      position: absolute;
+      left: -20px;
+      top: -35px;
+      width: 150px;
+      height: 40px;
+      object-fit: contain;
+      pointer-events: none;
       opacity: 1 !important;
       mix-blend-mode: normal;
       z-index: 0;
@@ -97,8 +125,8 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 1;
     }
-    .map-card-text,
-    .mapmarker-container-label{
+    .map-card-label,
+    .mapmarker-label{
       position: absolute;
       left: 55px;
       top: 0;
@@ -121,6 +149,26 @@
       z-index: 1;
       pointer-events: auto;
     }
+
+    .mapmarker-label{
+      left: 20px;
+      top: -33px;
+      width: 120px;
+      height: auto;
+      padding: 6px 8px 6px 40px;
+      pointer-events: none;
+      color: #fff;
+      gap: 0;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      white-space: normal;
+      z-index: 2;
+    }
+
+    .mapmarker-label-line{
+      width: 100%;
+      display: block;
+    }
+    .mapmarker-label-line:first-child{ font-weight: 600; }
 
     .map-card-title{
       font-weight: 600;
@@ -162,7 +210,7 @@
       box-shadow: none;
       flex: 0 0 64px;
     }
-    .map-card--list .map-card-text{
+    .map-card--list .map-card-label{
       position: static;
       width: auto;
       height: auto;
@@ -6913,9 +6961,9 @@ function makePosts(){
       if(variant === 'list') classes.push('map-card--list');
       extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
       if(variant === 'list'){
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-label"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
       }
-      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-label"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
     }
 
     function hoverHTML(p){
@@ -9354,11 +9402,62 @@ if (!map.__pillHooksInstalled) {
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat } = opts;
           const overlayRoot = document.createElement('div');
-          overlayRoot.className = 'mapmarker-container';
+          overlayRoot.className = 'mapmarker-overlay';
           overlayRoot.dataset.id = String(post.id);
           overlayRoot.setAttribute('aria-hidden', 'true');
           overlayRoot.style.pointerEvents = 'none';
           overlayRoot.style.userSelect = 'none';
+
+          const markerContainer = document.createElement('div');
+          markerContainer.className = 'mapmarker-container';
+          markerContainer.dataset.id = overlayRoot.dataset.id;
+          markerContainer.setAttribute('aria-hidden', 'true');
+          markerContainer.style.pointerEvents = 'none';
+          markerContainer.style.userSelect = 'none';
+
+          const markerIcon = new Image();
+          try{ markerIcon.decoding = 'async'; }catch(e){}
+          markerIcon.alt = '';
+          markerIcon.className = 'mapmarker';
+          markerIcon.draggable = false;
+          const markerSources = window.subcategoryMarkers || {};
+          const markerIds = window.subcategoryMarkerIds || {};
+          const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+          const markerIdCandidates = [];
+          if(post && post.subcategory){
+            const mappedId = markerIds[post.subcategory];
+            if(mappedId) markerIdCandidates.push(mappedId);
+            markerIdCandidates.push(slugifyFn(post.subcategory));
+          }
+          markerIdCandidates.push(MULTI_VENUE_MARKER_ID);
+          const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+          if(markerIconUrl){
+            markerIcon.src = markerIconUrl;
+          }
+
+          const markerPill = new Image();
+          try{ markerPill.decoding = 'async'; }catch(e){}
+          markerPill.alt = '';
+          markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
+          markerPill.className = 'mapmarker-pill';
+          markerPill.style.opacity = '1';
+          markerPill.draggable = false;
+
+          const labelLines = getMarkerLabelLines(post);
+          const markerLabel = document.createElement('div');
+          markerLabel.className = 'mapmarker-label';
+          const markerLine1 = document.createElement('div');
+          markerLine1.className = 'mapmarker-label-line';
+          markerLine1.textContent = labelLines.line1;
+          markerLabel.appendChild(markerLine1);
+          if(labelLines.line2){
+            const markerLine2 = document.createElement('div');
+            markerLine2.className = 'mapmarker-label-line';
+            markerLine2.textContent = labelLines.line2;
+            markerLabel.appendChild(markerLine2);
+          }
+
+          markerContainer.append(markerPill, markerIcon, markerLabel);
 
           const cardRoot = document.createElement('div');
           cardRoot.className = 'map-card map-card--popup';
@@ -9371,7 +9470,7 @@ if (!map.__pillHooksInstalled) {
           try{ pillImg.decoding = 'async'; }catch(e){}
           pillImg.alt = '';
           pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-          pillImg.className = 'map-card-pill mapmarker-container-pill';
+          pillImg.className = 'map-card-pill';
           pillImg.style.opacity = '1';
           pillImg.draggable = false;
 
@@ -9383,9 +9482,8 @@ if (!map.__pillHooksInstalled) {
           thumbImg.referrerPolicy = 'no-referrer';
           thumbImg.draggable = false;
 
-          const labelLines = getMarkerLabelLines(post);
           const labelEl = document.createElement('div');
-          labelEl.className = 'map-card-text mapmarker-container-label';
+          labelEl.className = 'map-card-label';
           const titleEl = document.createElement('div');
           titleEl.className = 'map-card-title';
           titleEl.textContent = labelLines.line1;
@@ -9399,7 +9497,7 @@ if (!map.__pillHooksInstalled) {
           }
 
           cardRoot.append(pillImg, thumbImg, labelEl);
-          overlayRoot.append(cardRoot);
+          overlayRoot.append(markerContainer, cardRoot);
 
           const handleOverlayClick = (ev)=>{
             ev.preventDefault();
@@ -9542,7 +9640,7 @@ if (!map.__pillHooksInstalled) {
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
         const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-container')
+          ? originalTarget.closest('.mapmarker-overlay')
           : null;
         if(targetEl){
           return;
