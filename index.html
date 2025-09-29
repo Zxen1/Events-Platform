@@ -9394,6 +9394,11 @@ if (!map.__pillHooksInstalled) {
                   const zoomMs = Math.min(600, zoomDelta * 120);
                   const base = 450;
                   computedDuration = Math.max(450, Math.min(2200, base + distanceMs + zoomMs));
+                  if(zoomDelta < 0.35){
+                    const blend = Math.max(0, Math.min(1, zoomDelta / 0.35));
+                    const speedMultiplier = 0.45 + (0.55 * blend);
+                    computedDuration = Math.max(220, Math.min(2200, computedDuration * speedMultiplier));
+                  }
                 }
               }catch(durationErr){
                 console.error(durationErr);
