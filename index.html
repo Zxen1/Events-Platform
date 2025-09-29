@@ -8776,12 +8776,6 @@ function makePosts(){
         boardsContainer.style.justifyContent = 'flex-start';
         const skipAnimation = !boardsInitialized;
         toggleBoard(recentsBoard, isPostsMode && historyActive, skipAnimation);
-        if(postBoard){
-          const desiredSide = historyActive ? 'right' : 'left';
-          if(postBoard.dataset.side !== desiredSide){
-            postBoard.dataset.side = desiredSide;
-          }
-        }
         toggleBoard(postBoard, isPostsMode && !historyActive, skipAnimation);
         document.body.classList.toggle('detail-open', !!anyOpenPost);
         if(adBoard){
@@ -9204,7 +9198,7 @@ function makePosts(){
                 requestAnimationFrame(() => {
                   try{
                     stopSpin();
-                    fn(id);
+                    fn(id, false, false, cardEl);
                   }catch(err){ console.error(err); }
                 });
               });
