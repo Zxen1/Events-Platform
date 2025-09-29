@@ -12381,6 +12381,15 @@ function renderImageModalImage(container, modal){
   }
 }
 
+function normalizeImageModalSrc(value){
+  if(!value) return '';
+  try {
+    return new URL(value, window.location.href).href;
+  } catch(err){
+    return String(value);
+  }
+}
+
 function resolveImageModalContext(config){
   const result = {images: [], index: 0, gallery: null};
   if(!config) return result;
@@ -12455,6 +12464,14 @@ function resolveImageModalContext(config){
     const found = images.indexOf(src);
     if(found !== -1){
       index = found;
+    } else {
+      const normalizedSrc = normalizeImageModalSrc(src);
+      for(let i=0;i<images.length;i++){
+        if(normalizeImageModalSrc(images[i]) === normalizedSrc){
+          index = i;
+          break;
+        }
+      }
     }
   }
   if(index === null){
