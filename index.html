@@ -1232,7 +1232,9 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
-  position:relative;
+  position:absolute;
+  top:0;
+  left:0;
   display:flex;
   align-items:stretch;
   overflow-x:auto;
@@ -1244,11 +1246,22 @@ button[aria-expanded="true"] .results-arrow{
   max-width:100%;
   border:1px solid var(--border);
   border-radius:8px;
-  margin-bottom:calc(-1 * var(--scrollbar-h));
-  scrollbar-gutter: stable both-edges;
+  box-shadow:0 12px 32px rgba(0,0,0,0.4);
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x pan-y;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(4px);
+  transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index:5000;
+}
+#filterPanel .calendar-container.is-visible{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
 }
 #filterPanel .calendar-container .today-marker{
   position:absolute;
@@ -1946,14 +1959,16 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
   padding:10px;
 }
+#filterPanel .filter-basics-container{
+  position:relative;
+}
 #filterPanel .filter-category-container,
 #tab-forms .formbuilder-container{
   margin-top:10px;
 }
 #filterPanel .keyword-row,
 #filterPanel .daterange-row,
-#filterPanel .expired-row,
-#filterPanel #datePickerContainer{
+#filterPanel .expired-row{
   width:100%;
   max-width:420px;
   margin:0 auto;
@@ -5155,7 +5170,7 @@ if (typeof slugify !== 'function') {
               </div>
             </div>
             <div class="field daterange-row">
-              <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly />
+              <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
                 <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
               </div>
             </div>
@@ -5166,7 +5181,7 @@ if (typeof slugify !== 'function') {
                 <span class="slider"></span>
               </label>
             </div>
-            <div id="datePickerContainer" class="calendar-container">
+            <div id="datePickerContainer" class="calendar-container" aria-hidden="true">
               <div id="datePicker"></div>
             </div>
           </div>
@@ -7420,6 +7435,7 @@ function makePosts(){
       buildFilterCalendar(today, maxPickerDate);
       updateRangeClasses();
       updateInput();
+      closeCalendarPopup();
       if(geocoder) geocoder.clear();
       applyFilters();
       updateClearButtons();
@@ -7457,12 +7473,34 @@ function makePosts(){
 
     $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     $('#daterange-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    if(dateRangeInput){
+      dateRangeInput.addEventListener('focus', ()=> openCalendarPopup());
+      dateRangeInput.addEventListener('click', ()=> openCalendarPopup());
+    }
     $('#daterange-textbox').addEventListener('keydown', e=>{
-      const scroll = $('#datePickerContainer');
+      if(e.key === 'Tab'){
+        closeCalendarPopup();
+        return;
+      }
+      if(e.key === 'Escape'){
+        e.preventDefault();
+        closeCalendarPopup();
+        return;
+      }
+      if(e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown'){
+        e.preventDefault();
+        openCalendarPopup(true);
+        return;
+      }
       if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
-        const month = scroll.querySelector('.month');
+        e.preventDefault();
+        openCalendarPopup();
+        const month = calendarScroll ? calendarScroll.querySelector('.month') : null;
         const w = month ? month.offsetWidth : 0;
-        scroll.scrollBy({left:e.key==='ArrowLeft'?-w:w, behavior:'smooth'});
+        if(calendarScroll && w){
+          calendarScroll.scrollBy({left:e.key==='ArrowLeft'?-w:w, behavior:'smooth'});
+        }
+        return;
       }
       e.preventDefault();
     });
@@ -7474,6 +7512,58 @@ function makePosts(){
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const expiredToggle = $('#expiredToggle');
     const calendarScroll = $('#datePickerContainer');
+    const dateRangeInput = $('#daterange-textbox');
+    const filterBasics = $('#filterPanel .filter-basics-container');
+    const filterPanelBody = $('#filterPanel .panel-body');
+    let calendarPopupOpen = false;
+
+    function positionCalendarPopup(){
+      if(!calendarScroll || !dateRangeInput || !filterBasics) return;
+      const inputRect = dateRangeInput.getBoundingClientRect();
+      const containerRect = filterBasics.getBoundingClientRect();
+      const left = inputRect.left - containerRect.left;
+      const top = inputRect.bottom - containerRect.top + 8;
+      const popupWidth = calendarScroll.offsetWidth || 0;
+      const maxLeft = Math.max(0, containerRect.width - popupWidth);
+      const clampedLeft = Math.min(Math.max(left, 0), maxLeft);
+      calendarScroll.style.left = `${Math.round(clampedLeft)}px`;
+      calendarScroll.style.top = `${Math.round(top)}px`;
+    }
+
+    function handleCalendarOutsideClick(e){
+      if(!calendarScroll) return;
+      if(calendarScroll.contains(e.target)) return;
+      if(dateRangeInput && dateRangeInput.contains(e.target)) return;
+      closeCalendarPopup();
+    }
+
+    function openCalendarPopup(focusCalendar = false){
+      if(!calendarScroll) return;
+      if(!calendarPopupOpen){
+        calendarPopupOpen = true;
+        calendarScroll.classList.add('is-visible');
+        calendarScroll.setAttribute('aria-hidden','false');
+        if(dateRangeInput) dateRangeInput.setAttribute('aria-expanded','true');
+        document.addEventListener('click', handleCalendarOutsideClick, true);
+        window.addEventListener('resize', positionCalendarPopup);
+        filterPanelBody?.addEventListener('scroll', positionCalendarPopup, { passive:true });
+      }
+      positionCalendarPopup();
+      if(focusCalendar){
+        calendarScroll.focus({ preventScroll:true });
+      }
+    }
+
+    function closeCalendarPopup(){
+      if(!calendarScroll || !calendarPopupOpen) return;
+      calendarPopupOpen = false;
+      calendarScroll.classList.remove('is-visible');
+      calendarScroll.setAttribute('aria-hidden','true');
+      if(dateRangeInput) dateRangeInput.setAttribute('aria-expanded','false');
+      document.removeEventListener('click', handleCalendarOutsideClick, true);
+      window.removeEventListener('resize', positionCalendarPopup);
+      filterPanelBody?.removeEventListener('scroll', positionCalendarPopup);
+    }
 
     function verticalCanScroll(el, delta){
       if(!el) return false;
@@ -7517,6 +7607,9 @@ function makePosts(){
         const available = container.parentElement ? container.parentElement.clientWidth : container.clientWidth;
         const scale = base ? Math.min(1, available / base) : 1;
         container.style.setProperty('--calendar-scale', scale);
+        if(calendarPopupOpen){
+          positionCalendarPopup();
+        }
       };
       if('ResizeObserver' in window && container){
         const ro = new ResizeObserver(adjustScale);
@@ -7524,6 +7617,12 @@ function makePosts(){
       }
       adjustScale();
       scroller.addEventListener('keydown', e=>{
+        if(e.key==='Escape'){
+          e.preventDefault();
+          closeCalendarPopup();
+          dateRangeInput?.focus({ preventScroll:true });
+          return;
+        }
         if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
           const m = scroller.querySelector('.month') || scroller.querySelector('.month-item');
           const w = m ? m.offsetWidth : 0;
@@ -7612,6 +7711,9 @@ function makePosts(){
       else { dateEnd = date; }
       updateRangeClasses();
       updateInput();
+      if(dateEnd){
+        closeCalendarPopup();
+      }
     }
 
     function buildFilterCalendar(minDate, maxDate){
@@ -7690,6 +7792,7 @@ function makePosts(){
     }
 
     buildFilterCalendar(today, maxPickerDate);
+    closeCalendarPopup();
 
     $$('#filterPanel .keyword-clear-button, #filterPanel .daterange-clear-button').forEach(btn=> btn.addEventListener('click',()=>{
       const input = btn.parentElement.querySelector('input');
@@ -7722,6 +7825,7 @@ function makePosts(){
         expiredWasOn = expiredToggle.checked;
         updateRangeClasses();
         updateInput();
+        closeCalendarPopup();
       });
       if(expiredToggle.checked){
         expiredToggle.dispatchEvent(new Event('change'));
