@@ -8903,6 +8903,17 @@ if (!map.__pillHooksInstalled) {
   try { map.on('styleimagemissing', (evt) => { if (evt && evt.id === 'marker-label-bg') __addOrReplacePill150x40(map); }); } catch(e){}
   map.__pillHooksInstalled = true;
 }
+        const ensureMissingStyleImage = (evt) => {
+          if(!evt || !evt.id) return;
+          const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
+          if(!placeholders.includes(evt.id)) return;
+          try{
+            if(map.hasImage?.(evt.id)) return;
+            map.addImage(evt.id, createTransparentPlaceholder(4), { pixelRatio: 1 });
+          }catch(err){}
+        };
+        try{ map.on('styleimagemissing', ensureMissingStyleImage); }catch(err){}
+
         const applyStyleAdjustments = () => {
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
