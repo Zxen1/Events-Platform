@@ -162,7 +162,7 @@
     }
 
     .mapmarker-label{
-      left: 48px;
+      left: calc(12px + 30px + 5px);
       top: 7px;
       width: 96px;
       height: auto;
@@ -173,6 +173,7 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
       z-index: 3;
+      text-align: left;
     }
 
     .mapmarker-label-line{
@@ -188,7 +189,7 @@
     .map-card-label{
       height: 60px;
       justify-content: flex-start;
-      gap: 3px;
+      gap: 0;
     }
 
     .map-card-title{
@@ -209,10 +210,6 @@
       font-weight: 400;
     }
 
-    .map-card-title-line:first-child{
-      font-weight: 600;
-    }
-
     .map-card-venue{
       font-weight: 400;
       font-size: 12px;
@@ -222,7 +219,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       width: 100%;
-      margin-top: 2px;
+      margin-top: 0;
+      color: #d0d0d0;
     }
     .map-card--list{
       position: relative;
@@ -6823,14 +6821,344 @@ function uniqueTitle(seed, cityName, idx){
     }).sort();
   }
 
-  const VENUES = [
-    "Grand Hall","City Theater","Riverside Arena","Skyline Lounge","Sunset Pavilion",
-    "Maple Center","Harbor Stage","Old Mill Gallery","Crystal Ballroom","Garden Amphitheater"
-  ];
-  const STREETS = [
-    "Main St","Oak Ave","Pine Rd","Maple Blvd","Cedar St",
-    "Elm Rd","Birch Ave","Spruce St","Willow Ln","Ash Blvd"
-  ];
+  const REAL_VENUES = {
+    "Federation Square, Melbourne": [
+      { venue: "Federation Square", address: "Swanston St & Flinders St, Melbourne VIC 3000, Australia", lng: 144.9695, lat: -37.8178 },
+      { venue: "ACMI", address: "Fed Square, Flinders St, Melbourne VIC 3000, Australia", lng: 144.9696, lat: -37.8177 },
+      { venue: "Deakin Edge", address: "Fed Square, Melbourne VIC 3000, Australia", lng: 144.9699, lat: -37.8182 },
+      { venue: "The Atrium at Fed Square", address: "Flinders St, Melbourne VIC 3000, Australia", lng: 144.9698, lat: -37.8173 },
+      { venue: "Ian Potter Centre: NGV Australia", address: "Federation Square, Melbourne VIC 3000, Australia", lng: 144.9692, lat: -37.8171 },
+      { venue: "Koorie Heritage Trust", address: "Yarra Building, Federation Square, Melbourne VIC 3000, Australia", lng: 144.9690, lat: -37.8175 }
+    ],
+    "Hobart, Tasmania": [
+      { venue: "Hobart Town Hall", address: "50 Macquarie St, Hobart TAS 7000, Australia", lng: 147.3291, lat: -42.8810 },
+      { venue: "Theatre Royal", address: "29 Campbell St, Hobart TAS 7000, Australia", lng: 147.3297, lat: -42.8798 },
+      { venue: "Salamanca Arts Centre", address: "77 Salamanca Pl, Hobart TAS 7004, Australia", lng: 147.3336, lat: -42.8874 },
+      { venue: "Princes Wharf No. 1", address: "Castray Esplanade, Hobart TAS 7000, Australia", lng: 147.3337, lat: -42.8892 },
+      { venue: "Federation Concert Hall", address: "1 Davey St, Hobart TAS 7000, Australia", lng: 147.3271, lat: -42.8799 },
+      { venue: "Mona", address: "655 Main Rd, Berriedale TAS 7011, Australia", lng: 147.2580, lat: -42.8262 }
+    ],
+    "New York, USA": [
+      { venue: "Madison Square Garden", address: "4 Pennsylvania Plaza, New York, NY 10001, USA", lng: -73.9934, lat: 40.7505 },
+      { venue: "Radio City Music Hall", address: "1260 6th Ave, New York, NY 10020, USA", lng: -73.9787, lat: 40.7599 },
+      { venue: "Carnegie Hall", address: "881 7th Ave, New York, NY 10019, USA", lng: -73.9799, lat: 40.7651 },
+      { venue: "Lincoln Center", address: "10 Lincoln Center Plaza, New York, NY 10023, USA", lng: -73.9850, lat: 40.7729 },
+      { venue: "Brooklyn Academy of Music", address: "30 Lafayette Ave, Brooklyn, NY 11217, USA", lng: -73.9772, lat: 40.6860 },
+      { venue: "Barclays Center", address: "620 Atlantic Ave, Brooklyn, NY 11217, USA", lng: -73.9757, lat: 40.6827 }
+    ],
+    "Los Angeles, USA": [
+      { venue: "Hollywood Bowl", address: "2301 N Highland Ave, Los Angeles, CA 90068, USA", lng: -118.3386, lat: 34.1122 },
+      { venue: "Dolby Theatre", address: "6801 Hollywood Blvd, Hollywood, CA 90028, USA", lng: -118.3400, lat: 34.1020 },
+      { venue: "Crypto.com Arena", address: "1111 S Figueroa St, Los Angeles, CA 90015, USA", lng: -118.2670, lat: 34.0430 },
+      { venue: "Greek Theatre", address: "2700 N Vermont Ave, Los Angeles, CA 90027, USA", lng: -118.2965, lat: 34.1192 },
+      { venue: "Microsoft Theater", address: "777 Chick Hearn Ct, Los Angeles, CA 90015, USA", lng: -118.2667, lat: 34.0443 },
+      { venue: "Walt Disney Concert Hall", address: "111 S Grand Ave, Los Angeles, CA 90012, USA", lng: -118.2498, lat: 34.0553 }
+    ],
+    "London, UK": [
+      { venue: "Royal Albert Hall", address: "Kensington Gore, South Kensington, London SW7 2AP, UK", lng: -0.1780, lat: 51.5009 },
+      { venue: "The O2", address: "Peninsula Square, London SE10 0DX, UK", lng: 0.0032, lat: 51.5030 },
+      { venue: "Barbican Centre", address: "Silk St, London EC2Y 8DS, UK", lng: -0.0910, lat: 51.5199 },
+      { venue: "Southbank Centre", address: "Belvedere Rd, London SE1 8XX, UK", lng: -0.1154, lat: 51.5051 },
+      { venue: "Roundhouse", address: "Chalk Farm Rd, London NW1 8EH, UK", lng: -0.1527, lat: 51.5430 },
+      { venue: "Alexandra Palace", address: "Alexandra Palace Way, London N22 7AY, UK", lng: -0.1280, lat: 51.5942 }
+    ],
+    "Paris, France": [
+      { venue: "Philharmonie de Paris", address: "221 Av. Jean Jaurès, 75019 Paris, France", lng: 2.3932, lat: 48.8899 },
+      { venue: "Accor Arena", address: "8 Bd de Bercy, 75012 Paris, France", lng: 2.3770, lat: 48.8389 },
+      { venue: "Le Grand Rex", address: "1 Bd Poissonnière, 75002 Paris, France", lng: 2.3488, lat: 48.8706 },
+      { venue: "L'Olympia", address: "28 Bd des Capucines, 75009 Paris, France", lng: 2.3282, lat: 48.8694 },
+      { venue: "Théâtre Mogador", address: "25 Rue de Mogador, 75009 Paris, France", lng: 2.3326, lat: 48.8760 },
+      { venue: "Palais des Congrès de Paris", address: "2 Pl. de la Prte Maillot, 75017 Paris, France", lng: 2.2835, lat: 48.8782 }
+    ],
+    "Berlin, Germany": [
+      { venue: "Mercedes-Benz Arena Berlin", address: "Mercedes-Platz 1, 10243 Berlin, Germany", lng: 13.4433, lat: 52.5051 },
+      { venue: "Tempodrom", address: "Möckernstrasse 10, 10963 Berlin, Germany", lng: 13.3837, lat: 52.5034 },
+      { venue: "Konzerthaus Berlin", address: "Gendarmenmarkt, 10117 Berlin, Germany", lng: 13.3933, lat: 52.5136 },
+      { venue: "Waldbühne", address: "Glockenturmstraße 1, 14053 Berlin, Germany", lng: 13.2414, lat: 52.5125 },
+      { venue: "Max-Schmeling-Halle", address: "Falkplatz 1, 10437 Berlin, Germany", lng: 13.4071, lat: 52.5483 },
+      { venue: "Admiralspalast", address: "Friedrichstraße 101, 10117 Berlin, Germany", lng: 13.3878, lat: 52.5219 }
+    ],
+    "Madrid, Spain": [
+      { venue: "WiZink Center", address: "Av. de Felipe II, s/n, 28009 Madrid, Spain", lng: -3.6711, lat: 40.4237 },
+      { venue: "Teatro Real", address: "Pl. de Isabel II, s/n, 28013 Madrid, Spain", lng: -3.7104, lat: 40.4170 },
+      { venue: "IFEMA Madrid", address: "Av. del Partenón, 5, 28042 Madrid, Spain", lng: -3.6156, lat: 40.4678 },
+      { venue: "Auditorio Nacional de Música", address: "C. del Príncipe de Vergara, 146, 28002 Madrid, Spain", lng: -3.6845, lat: 40.4383 },
+      { venue: "Teatro Lope de Vega", address: "C. Gran Vía, 57, 28013 Madrid, Spain", lng: -3.7070, lat: 40.4201 },
+      { venue: "Palacio Vistalegre", address: "C. de Matilde Hernández, 100, 28025 Madrid, Spain", lng: -3.7344, lat: 40.3820 }
+    ],
+    "Rome, Italy": [
+      { venue: "Auditorium Parco della Musica", address: "V.le Pietro de Coubertin, 30, 00196 Roma RM, Italy", lng: 12.4823, lat: 41.9287 },
+      { venue: "Stadio Olimpico", address: "V.le dei Gladiatori, 00135 Roma RM, Italy", lng: 12.4547, lat: 41.9341 },
+      { venue: "Palazzo dello Sport", address: "Piazzale Pier Luigi Nervi, 1, 00144 Roma RM, Italy", lng: 12.4709, lat: 41.8308 },
+      { venue: "Teatro dell'Opera di Roma", address: "Piazza Beniamino Gigli, 7, 00184 Roma RM, Italy", lng: 12.4946, lat: 41.9008 },
+      { venue: "Cinecittà Studios", address: "Via Tuscolana, 1055, 00173 Roma RM, Italy", lng: 12.5727, lat: 41.8545 },
+      { venue: "Casa del Jazz", address: "Viale di Porta Ardeatina, 55, 00154 Roma RM, Italy", lng: 12.4920, lat: 41.8729 }
+    ],
+    "Amsterdam, NL": [
+      { venue: "Paradiso Amsterdam", address: "Weteringschans 6-8, 1017 SG Amsterdam, Netherlands", lng: 4.8839, lat: 52.3620 },
+      { venue: "Melkweg", address: "Lijnbaansgracht 234A, 1017 PH Amsterdam, Netherlands", lng: 4.8830, lat: 52.3630 },
+      { venue: "Concertgebouw", address: "Concertgebouwplein 10, 1071 LN Amsterdam, Netherlands", lng: 4.8791, lat: 52.3569 },
+      { venue: "AFAS Live", address: "ArenA Boulevard 590, 1101 DS Amsterdam, Netherlands", lng: 4.9514, lat: 52.3122 },
+      { venue: "Ziggo Dome", address: "De Passage 100, 1101 AX Amsterdam, Netherlands", lng: 4.9442, lat: 52.3136 },
+      { venue: "Westergas", address: "Klönneplein 1, 1014 DD Amsterdam, Netherlands", lng: 4.8710, lat: 52.3876 }
+    ],
+    "Dublin, Ireland": [
+      { venue: "3Arena", address: "N Wall Quay, North Dock, Dublin 1, Ireland", lng: -6.2288, lat: 53.3479 },
+      { venue: "The Olympia Theatre", address: "73 Dame St, Temple Bar, Dublin 2, Ireland", lng: -6.2666, lat: 53.3448 },
+      { venue: "National Concert Hall", address: "Earlsfort Terrace, Saint Kevin's, Dublin, Ireland", lng: -6.2581, lat: 53.3347 },
+      { venue: "Vicar Street", address: "58 Thomas St, The Liberties, Dublin, Ireland", lng: -6.2823, lat: 53.3421 },
+      { venue: "Aviva Stadium", address: "Lansdowne Rd, Dublin 4, Ireland", lng: -6.2250, lat: 53.3351 },
+      { venue: "Croke Park", address: "Jones' Rd, Drumcondra, Dublin 3, Ireland", lng: -6.2525, lat: 53.3607 }
+    ],
+    "Stockholm, Sweden": [
+      { venue: "Avicii Arena", address: "Globentorget 2, 121 77 Johanneshov, Sweden", lng: 18.0837, lat: 59.2933 },
+      { venue: "Friends Arena", address: "Råsta strandväg 1, 169 56 Solna, Sweden", lng: 18.0009, lat: 59.3725 },
+      { venue: "Stockholm Concert Hall", address: "Hötorget 8, 103 87 Stockholm, Sweden", lng: 18.0686, lat: 59.3341 },
+      { venue: "Cirkus", address: "Djurgårdsslätten 43-45, 115 21 Stockholm, Sweden", lng: 18.1082, lat: 59.3232 },
+      { venue: "Annexet", address: "Arenatorget 1, 121 77 Johanneshov, Sweden", lng: 18.0831, lat: 59.2945 },
+      { venue: "Skansen Solliden Stage", address: "Djurgårdsslätten 49-51, 115 21 Stockholm, Sweden", lng: 18.1035, lat: 59.3253 }
+    ],
+    "Copenhagen, Denmark": [
+      { venue: "Royal Arena", address: "Hannemanns Allé 20, 2300 København, Denmark", lng: 12.5806, lat: 55.6287 },
+      { venue: "DR Koncerthuset", address: "Ørestads Blvd. 13, 2300 København, Denmark", lng: 12.5766, lat: 55.6611 },
+      { venue: "Tivoli Concert Hall", address: "Vesterbrogade 3, 1630 København, Denmark", lng: 12.5663, lat: 55.6725 },
+      { venue: "VEGA", address: "Enghavevej 40, 1674 København, Denmark", lng: 12.5553, lat: 55.6668 },
+      { venue: "Forum Copenhagen", address: "Julius Thomsens Pl. 1, 1925 Frederiksberg, Denmark", lng: 12.5516, lat: 55.6795 },
+      { venue: "KB Hallen", address: "Peter Bangs Vej 147, 2000 Frederiksberg, Denmark", lng: 12.5106, lat: 55.6820 }
+    ],
+    "Helsinki, Finland": [
+      { venue: "Helsinki Music Centre", address: "Mannerheimintie 13 A, 00100 Helsinki, Finland", lng: 24.9386, lat: 60.1722 },
+      { venue: "Hartwall Arena", address: "Areenankuja 1, 00240 Helsinki, Finland", lng: 24.9171, lat: 60.2056 },
+      { venue: "Savoy Theatre", address: "Kasarmikatu 46-48, 00130 Helsinki, Finland", lng: 24.9479, lat: 60.1696 },
+      { venue: "Finlandia Hall", address: "Mannerheimintie 13e, 00100 Helsinki, Finland", lng: 24.9330, lat: 60.1731 },
+      { venue: "Cable Factory", address: "Tallberginkatu 1 C, 00180 Helsinki, Finland", lng: 24.9056, lat: 60.1611 },
+      { venue: "Helsinki Ice Hall", address: "Nordenskiöldinkatu 11-13, 00250 Helsinki, Finland", lng: 24.9185, lat: 60.1997 }
+    ],
+    "Oslo, Norway": [
+      { venue: "Oslo Spektrum", address: "Sonja Henies plass 2, 0185 Oslo, Norway", lng: 10.7528, lat: 59.9131 },
+      { venue: "Rockefeller Music Hall", address: "Torggata 16, 0181 Oslo, Norway", lng: 10.7520, lat: 59.9175 },
+      { venue: "Norwegian National Opera & Ballet", address: "Kirsten Flagstads Plass 1, 0150 Oslo, Norway", lng: 10.7525, lat: 59.9076 },
+      { venue: "Sentrum Scene", address: "Arbeidersamfunnets plass 1, 0181 Oslo, Norway", lng: 10.7463, lat: 59.9145 },
+      { venue: "Det Norske Teatret", address: "Kristian IVs gate 8, 0164 Oslo, Norway", lng: 10.7407, lat: 59.9138 },
+      { venue: "Chateau Neuf", address: "Slemdalsveien 15, 0369 Oslo, Norway", lng: 10.7154, lat: 59.9292 }
+    ],
+    "Reykjavík, Iceland": [
+      { venue: "Harpa Concert Hall", address: "Austurbakki 2, 101 Reykjavík, Iceland", lng: -21.9336, lat: 64.1505 },
+      { venue: "Laugardalshöll", address: "Engjavegur 8, 104 Reykjavík, Iceland", lng: -21.8954, lat: 64.1415 },
+      { venue: "Gamla Bíó", address: "Ingólfsstræti 2A, 101 Reykjavík, Iceland", lng: -21.9385, lat: 64.1468 },
+      { venue: "Reykjavík City Theatre", address: "Listabraut 3, 103 Reykjavík, Iceland", lng: -21.9173, lat: 64.1377 },
+      { venue: "Háskólabíó", address: "Hagatorg, 107 Reykjavík, Iceland", lng: -21.9492, lat: 64.1426 },
+      { venue: "IÐNÓ", address: "Vonarstræti 3, 101 Reykjavík, Iceland", lng: -21.9393, lat: 64.1454 }
+    ],
+    "Moscow, Russia": [
+      { venue: "Bolshoi Theatre", address: "Teatralnaya Ploshchad, 1, Moskva, Russia, 125009", lng: 37.6208, lat: 55.7601 },
+      { venue: "Crocus City Hall", address: "Mezhdunarodnaya 20, Krasnogorsk, Moscow Oblast, Russia", lng: 37.3855, lat: 55.8220 },
+      { venue: "VTB Arena", address: "Leningradsky Ave, 36, Moskva, Russia, 125167", lng: 37.5599, lat: 55.7915 },
+      { venue: "Moscow International House of Music", address: "Kosmodamianskaya Naberezhnaya, 52, строение 8, Moskva, Russia, 115054", lng: 37.6551, lat: 55.7329 },
+      { venue: "Luzhniki Stadium", address: "Luzhniki St, 24, Moskva, Russia, 119048", lng: 37.5531, lat: 55.7158 },
+      { venue: "Izvestia Hall", address: "Tverskaya St, 3, Moskva, Russia, 125009", lng: 37.6082, lat: 55.7665 }
+    ],
+    "Istanbul, Türkiye": [
+      { venue: "Volkswagen Arena Istanbul", address: "Huzur, Maslak Mahallesi, Saryer/İstanbul, Türkiye", lng: 29.0217, lat: 41.1063 },
+      { venue: "Zorlu Performing Arts Center", address: "Levazım, Koru Sokağı, Beşiktaş/İstanbul, Türkiye", lng: 29.0127, lat: 41.0675 },
+      { venue: "Cemal Reşit Rey Concert Hall", address: "Harbiye Mahallesi, Darülbedayi Cd. No:3, Şişli/İstanbul, Türkiye", lng: 28.9947, lat: 41.0417 },
+      { venue: "Istanbul Congress Center", address: "Harbiye Mahallesi, Darülbedayi Cd. No:4, Şişli/İstanbul, Türkiye", lng: 28.9881, lat: 41.0410 },
+      { venue: "Sinan Erdem Dome", address: "Ataköy 2-5-6, Bakırköy/İstanbul, Türkiye", lng: 28.8468, lat: 40.9874 },
+      { venue: "Ülker Sports Arena", address: "Barbaros, Dereboyu Cd. No:9, Ataşehir/İstanbul, Türkiye", lng: 29.1034, lat: 40.9828 }
+    ],
+    "Athens, Greece": [
+      { venue: "Stavros Niarchos Hall", address: "364 Syggrou Ave, Kallithea 176 74, Greece", lng: 23.7021, lat: 37.9393 },
+      { venue: "Odeon of Herodes Atticus", address: "Dionysiou Areopagitou, Athens 105 55, Greece", lng: 23.7223, lat: 37.9715 },
+      { venue: "Megaron Athens Concert Hall", address: "Vas. Sofias 1, Athens 115 21, Greece", lng: 23.7529, lat: 37.9794 },
+      { venue: "Technopolis City of Athens", address: "100 Pireos St, Athens 118 54, Greece", lng: 23.7104, lat: 37.9775 },
+      { venue: "Panathenaic Stadium", address: "Leof. Vasileos Konstantinou, Athens 116 35, Greece", lng: 23.7415, lat: 37.9680 },
+      { venue: "Gazarte", address: "32-34 Voutadon St, Athens 118 54, Greece", lng: 23.7037, lat: 37.9788 }
+    ],
+    "Cairo, Egypt": [
+      { venue: "Cairo Opera House", address: "Opera Square, Zamalek, Cairo Governorate, Egypt", lng: 31.2242, lat: 30.0427 },
+      { venue: "Cairo International Convention Centre", address: "El Nasr Rd, Cairo Governorate, Egypt", lng: 31.3299, lat: 30.0723 },
+      { venue: "El Sawy Culturewheel", address: "26th of July Corridor, Zamalek, Cairo Governorate, Egypt", lng: 31.2255, lat: 30.0659 },
+      { venue: "Al Azhar Park", address: "El-Darb El-Ahmar, Cairo Governorate, Egypt", lng: 31.2696, lat: 30.0411 },
+      { venue: "Manara International Conference Center", address: "New Cairo 3, Cairo Governorate, Egypt", lng: 31.3777, lat: 30.0692 },
+      { venue: "Gomhouria Theatre", address: "Qasr Al Nile, Abdeen, Cairo Governorate, Egypt", lng: 31.2485, lat: 30.0472 }
+    ],
+    "Nairobi, Kenya": [
+      { venue: "Kenyatta International Convention Centre", address: "Harambee Ave, Nairobi, Kenya", lng: 36.8217, lat: -1.2886 },
+      { venue: "Sarit Expo Centre", address: "Karuna Rd, Nairobi, Kenya", lng: 36.8044, lat: -1.2658 },
+      { venue: "Kenya National Theatre", address: "Harry Thuku Rd, Nairobi, Kenya", lng: 36.8137, lat: -1.2807 },
+      { venue: "Bomas of Kenya", address: "Langata Rd, Nairobi, Kenya", lng: 36.7725, lat: -1.3318 },
+      { venue: "Carnivore Grounds", address: "Langata Rd, Nairobi, Kenya", lng: 36.8054, lat: -1.3224 },
+      { venue: "The Alchemist", address: "Parklands Rd, Nairobi, Kenya", lng: 36.8000, lat: -1.2689 }
+    ],
+    "Lagos, Nigeria": [
+      { venue: "Eko Convention Centre", address: "1415 Adetokunbo Ademola St, Victoria Island, Lagos, Nigeria", lng: 3.4216, lat: 6.4260 },
+      { venue: "Terra Kulture", address: "1376 Tiamiyu Savage St, Victoria Island, Lagos, Nigeria", lng: 3.4231, lat: 6.4304 },
+      { venue: "Muson Centre", address: "8/9 Marina, Onikan, Lagos, Nigeria", lng: 3.4218, lat: 6.4333 },
+      { venue: "Freedom Park Lagos", address: "1 Hospital Rd, Lagos Island, Lagos, Nigeria", lng: 3.3947, lat: 6.4474 },
+      { venue: "Landmark Event Centre", address: "Plot 2&3 Water Corporation Dr, Victoria Island, Lagos, Nigeria", lng: 3.4327, lat: 6.4268 },
+      { venue: "National Theatre Lagos", address: "Iganmu Rd, Lagos, Nigeria", lng: 3.3706, lat: 6.4760 }
+    ],
+    "Johannesburg, SA": [
+      { venue: "FNB Stadium", address: "Nasrec Rd, Johannesburg, 2147, South Africa", lng: 27.9826, lat: -26.2348 },
+      { venue: "Emperors Palace Convention Centre", address: "64 Jones Rd, Kempton Park, Johannesburg, South Africa", lng: 28.2217, lat: -26.1390 },
+      { venue: "Sandton Convention Centre", address: "Maude St, Sandown, Sandton, 2196, South Africa", lng: 28.0575, lat: -26.1076 },
+      { venue: "Lyric Theatre", address: "Gold Reef City, Northern Pkwy, Ormonde, Johannesburg, South Africa", lng: 28.0115, lat: -26.2351 },
+      { venue: "Market Theatre", address: "56 Margaret Mcingana St, Newtown, Johannesburg, South Africa", lng: 28.0112, lat: -26.2016 },
+      { venue: "Walter Sisulu Square", address: "Klipspruit Valley Rd, Kliptown, Soweto, South Africa", lng: 27.8538, lat: -26.2645 }
+    ],
+    "Cape Town, SA": [
+      { venue: "Cape Town International Convention Centre", address: "Convention Square, 1 Lower Long St, Cape Town, 8001, South Africa", lng: 18.4236, lat: -33.9180 },
+      { venue: "Artscape Theatre Centre", address: "D F Malan St, Foreshore, Cape Town, 8001, South Africa", lng: 18.4260, lat: -33.9188 },
+      { venue: "GrandWest Grand Arena", address: "1 Jakes Gerwel Dr, Goodwood, Cape Town, 7460, South Africa", lng: 18.5482, lat: -33.9130 },
+      { venue: "Kirstenbosch National Botanical Garden", address: "Rhodes Dr, Newlands, Cape Town, 7735, South Africa", lng: 18.4326, lat: -33.9886 },
+      { venue: "Cape Town Stadium", address: "Fritz Sonnenberg Rd, Green Point, Cape Town, 8051, South Africa", lng: 18.4110, lat: -33.9036 },
+      { venue: "Baxter Theatre Centre", address: "Main Rd, Rondebosch, Cape Town, 7701, South Africa", lng: 18.4671, lat: -33.9583 }
+    ],
+    "Dubai, UAE": [
+      { venue: "Dubai Opera", address: "Sheikh Mohammed bin Rashid Blvd, Dubai, United Arab Emirates", lng: 55.2744, lat: 25.1972 },
+      { venue: "Coca-Cola Arena", address: "City Walk, Dubai, United Arab Emirates", lng: 55.2645, lat: 25.2047 },
+      { venue: "Dubai World Trade Centre", address: "Sheikh Zayed Rd, Dubai, United Arab Emirates", lng: 55.2881, lat: 25.2233 },
+      { venue: "Madinat Theatre", address: "Jumeirah Rd, Dubai, United Arab Emirates", lng: 55.1852, lat: 25.1337 },
+      { venue: "Expo City Dubai", address: "Expo Rd, Dubai, United Arab Emirates", lng: 55.3500, lat: 24.9575 },
+      { venue: "Jumeirah Beach Hotel Events Arena", address: "Jumeirah Beach Rd, Dubai, United Arab Emirates", lng: 55.1886, lat: 25.1404 }
+    ],
+    "Mumbai, India": [
+      { venue: "NCPA Mumbai", address: "NCPA Marg, Nariman Point, Mumbai, Maharashtra 400021, India", lng: 72.8327, lat: 18.9243 },
+      { venue: "Jio World Convention Centre", address: "G Block, Bandra Kurla Complex, Mumbai, Maharashtra 400051, India", lng: 72.8428, lat: 19.0606 },
+      { venue: "Shanmukhananda Hall", address: "292, Comrade Harbanslal Marg, Sion East, Mumbai, Maharashtra 400022, India", lng: 72.8602, lat: 19.0446 },
+      { venue: "NSCI Dome", address: "Lala Lajpatrai Marg, Worli, Mumbai, Maharashtra 400018, India", lng: 72.8274, lat: 19.0170 },
+      { venue: "St. Andrew's Auditorium", address: "St. Dominic Rd, Bandra West, Mumbai, Maharashtra 400050, India", lng: 72.8317, lat: 19.0665 },
+      { venue: "Royal Opera House Mumbai", address: "Maulana Shaukat Ali Rd, Mumbai, Maharashtra 400007, India", lng: 72.8274, lat: 18.9557 }
+    ],
+    "Delhi, India": [
+      { venue: "Pragati Maidan", address: "Mathura Rd, New Delhi, Delhi 110001, India", lng: 77.2437, lat: 28.6189 },
+      { venue: "India Habitat Centre", address: "Lodhi Rd, Lodhi Gardens, New Delhi, Delhi 110003, India", lng: 77.2227, lat: 28.5889 },
+      { venue: "Siri Fort Auditorium", address: "August Kranti Marg, Siri Fort, New Delhi, Delhi 110049, India", lng: 77.2246, lat: 28.5495 },
+      { venue: "Jawaharlal Nehru Stadium", address: "Bhishma Pitamah Marg, Pragati Vihar, New Delhi, Delhi 110003, India", lng: 77.2430, lat: 28.5823 },
+      { venue: "Talkatora Stadium", address: "Talkatora Garden, President's Estate, New Delhi, Delhi 110004, India", lng: 77.1984, lat: 28.6262 },
+      { venue: "Kingdom of Dreams", address: "Auditorium Complex, Sector 29, Gurugram, Haryana 122001, India", lng: 77.0725, lat: 28.4707 }
+    ],
+    "Bangkok, Thailand": [
+      { venue: "Queen Sirikit National Convention Center", address: "60 Ratchadaphisek Rd, Khlong Toei, Bangkok 10110, Thailand", lng: 100.5604, lat: 13.7247 },
+      { venue: "Impact Arena", address: "Popular Rd, Ban Mai, Nonthaburi 11120, Thailand", lng: 100.5483, lat: 13.9210 },
+      { venue: "GMM Live House", address: "8th Floor, CentralWorld, Bangkok 10330, Thailand", lng: 100.5397, lat: 13.7464 },
+      { venue: "Royal Paragon Hall", address: "991 Rama I Rd, Pathum Wan, Bangkok 10330, Thailand", lng: 100.5346, lat: 13.7465 },
+      { venue: "True Icon Hall", address: "299 Charoen Nakhon Rd, Khlong San, Bangkok 10600, Thailand", lng: 100.5117, lat: 13.7213 },
+      { venue: "Moonstar Studio", address: "701 Ladprao Rd, Khwaeng Wang Thonglang, Bangkok 10310, Thailand", lng: 100.6080, lat: 13.7765 }
+    ],
+    "Singapore": [
+      { venue: "Marina Bay Sands Expo & Convention Centre", address: "10 Bayfront Ave, Singapore 018956", lng: 103.8607, lat: 1.2831 },
+      { venue: "Esplanade – Theatres on the Bay", address: "1 Esplanade Dr, Singapore 038981", lng: 103.8554, lat: 1.2893 },
+      { venue: "Singapore Indoor Stadium", address: "2 Stadium Walk, Singapore 397691", lng: 103.8716, lat: 1.3026 },
+      { venue: "Resorts World Convention Centre", address: "8 Sentosa Gateway, Singapore 098269", lng: 103.8211, lat: 1.2556 },
+      { venue: "Suntec Singapore Convention & Exhibition Centre", address: "1 Raffles Blvd, Singapore 039593", lng: 103.8571, lat: 1.2931 },
+      { venue: "Capitol Theatre", address: "17 Stamford Rd, Singapore 178907", lng: 103.8512, lat: 1.2940 }
+    ],
+    "Hong Kong, China": [
+      { venue: "Hong Kong Convention and Exhibition Centre", address: "1 Expo Dr, Wan Chai, Hong Kong", lng: 114.1734, lat: 22.2837 },
+      { venue: "AsiaWorld-Expo", address: "AsiaWorld-Expo, Chek Lap Kok, Hong Kong", lng: 113.9411, lat: 22.3157 },
+      { venue: "Hong Kong Coliseum", address: "9 Cheong Wan Rd, Hung Hom, Hong Kong", lng: 114.1882, lat: 22.3023 },
+      { venue: "Xiqu Centre", address: "88 Austin Rd W, Tsim Sha Tsui, Hong Kong", lng: 114.1610, lat: 22.3032 },
+      { venue: "Queen Elizabeth Stadium", address: "18 Oi Kwan Rd, Wan Chai, Hong Kong", lng: 114.1885, lat: 22.2802 },
+      { venue: "KITEC Star Hall", address: "1 Trademart Dr, Kowloon Bay, Hong Kong", lng: 114.2039, lat: 22.3224 }
+    ],
+    "Tokyo, Japan": [
+      { venue: "Tokyo International Forum", address: "3 Chome-5-1 Marunouchi, Chiyoda City, Tokyo 100-0005, Japan", lng: 139.7670, lat: 35.6767 },
+      { venue: "Nippon Budokan", address: "2 Chome-3-1 Kudankita, Chiyoda City, Tokyo 102-8321, Japan", lng: 139.7506, lat: 35.6938 },
+      { venue: "Tokyo Dome", address: "1 Chome-3-61 Koraku, Bunkyo City, Tokyo 112-8575, Japan", lng: 139.7516, lat: 35.7056 },
+      { venue: "Shibuya Stream Hall", address: "3 Chome-21-3 Shibuya, Shibuya City, Tokyo 150-0002, Japan", lng: 139.7024, lat: 35.6587 },
+      { venue: "NHK Hall", address: "2 Chome-2-1 Jinnan, Shibuya City, Tokyo 150-8001, Japan", lng: 139.6991, lat: 35.6697 },
+      { venue: "Sumida Triphony Hall", address: "1 Chome-2-3 Kinshi, Sumida City, Tokyo 130-0013, Japan", lng: 139.8132, lat: 35.7107 }
+    ],
+    "Seoul, South Korea": [
+      { venue: "Jamsil Arena", address: "20 Olympic-ro, Songpa-gu, Seoul, South Korea", lng: 127.0714, lat: 37.5112 },
+      { venue: "Olympic Hall", address: "424 Olympic-ro, Songpa-gu, Seoul, South Korea", lng: 127.1260, lat: 37.5242 },
+      { venue: "Seoul World Cup Stadium", address: "240 World Cup-ro, Mapo-gu, Seoul, South Korea", lng: 126.8960, lat: 37.5683 },
+      { venue: "COEX Convention Center", address: "513 Yeongdong-daero, Gangnam-gu, Seoul, South Korea", lng: 127.0592, lat: 37.5111 },
+      { venue: "Blue Square", address: "294 Itaewon-ro, Yongsan-gu, Seoul, South Korea", lng: 127.0033, lat: 37.5409 },
+      { venue: "Lotte Concert Hall", address: "300 Olympic-ro, Songpa-gu, Seoul, South Korea", lng: 127.1027, lat: 37.5131 }
+    ],
+    "Sydney, Australia": [
+      { venue: "Sydney Opera House", address: "Bennelong Point, Sydney NSW 2000, Australia", lng: 151.2153, lat: -33.8568 },
+      { venue: "International Convention Centre Sydney", address: "14 Darling Dr, Sydney NSW 2000, Australia", lng: 151.2019, lat: -33.8747 },
+      { venue: "Sydney Showground", address: "1 Showground Rd, Sydney Olympic Park NSW 2127, Australia", lng: 151.0653, lat: -33.8470 },
+      { venue: "Qudos Bank Arena", address: "19 Edwin Flack Ave, Sydney Olympic Park NSW 2127, Australia", lng: 151.0670, lat: -33.8479 },
+      { venue: "Hordern Pavilion", address: "1 Driver Ave, Moore Park NSW 2021, Australia", lng: 151.2236, lat: -33.8913 },
+      { venue: "Enmore Theatre", address: "118-132 Enmore Rd, Newtown NSW 2042, Australia", lng: 151.1742, lat: -33.8973 }
+    ],
+    "Brisbane, Australia": [
+      { venue: "Brisbane Convention & Exhibition Centre", address: "Glenelg St, South Brisbane QLD 4101, Australia", lng: 153.0183, lat: -27.4785 },
+      { venue: "Riverstage", address: "59 Gardens Point Rd, Brisbane City QLD 4000, Australia", lng: 153.0291, lat: -27.4743 },
+      { venue: "Suncorp Stadium", address: "40 Castlemaine St, Milton QLD 4064, Australia", lng: 153.0090, lat: -27.4646 },
+      { venue: "The Fortitude Music Hall", address: "312 Brunswick St, Fortitude Valley QLD 4006, Australia", lng: 153.0273, lat: -27.4587 },
+      { venue: "QPAC", address: "Cnr Grey and, Melbourne St, South Brisbane QLD 4101, Australia", lng: 153.0196, lat: -27.4812 },
+      { venue: "The Tivoli", address: "52 Costin St, Fortitude Valley QLD 4006, Australia", lng: 153.0318, lat: -27.4554 }
+    ],
+    "Auckland, New Zealand": [
+      { venue: "Spark Arena", address: "42 Mahuhu Crescent, Auckland 1010, New Zealand", lng: 174.7737, lat: -36.8444 },
+      { venue: "Aotea Centre", address: "50 Mayoral Drive, Auckland 1010, New Zealand", lng: 174.7633, lat: -36.8513 },
+      { venue: "The Civic", address: "Cnr Queen Street &, Wellesley St W, Auckland 1010, New Zealand", lng: 174.7639, lat: -36.8494 },
+      { venue: "ASB Showgrounds", address: "217 Green Lane W, Epsom, Auckland 1051, New Zealand", lng: 174.7781, lat: -36.8927 },
+      { venue: "Eden Park", address: "Reimers Ave, Kingsland, Auckland 1024, New Zealand", lng: 174.7361, lat: -36.8770 },
+      { venue: "Bruce Mason Centre", address: "Takapuna, Auckland 0622, New Zealand", lng: 174.7666, lat: -36.8286 }
+    ],
+    "Toronto, Canada": [
+      { venue: "Scotiabank Arena", address: "40 Bay St., Toronto, ON M5J 2X2, Canada", lng: -79.3791, lat: 43.6435 },
+      { venue: "Roy Thomson Hall", address: "60 Simcoe St, Toronto, ON M5J 2H5, Canada", lng: -79.3853, lat: 43.6467 },
+      { venue: "Toronto Congress Centre", address: "650 Dixon Rd, Etobicoke, ON M9W 1J1, Canada", lng: -79.6068, lat: 43.7012 },
+      { venue: "Meridian Hall", address: "1 Front St E, Toronto, ON M5E 1B2, Canada", lng: -79.3764, lat: 43.6466 },
+      { venue: "Enercare Centre", address: "100 Princes' Blvd, Toronto, ON M6K 3C3, Canada", lng: -79.4169, lat: 43.6327 },
+      { venue: "Danforth Music Hall", address: "147 Danforth Ave, Toronto, ON M4K 1N2, Canada", lng: -79.3528, lat: 43.6785 }
+    ],
+    "Vancouver, Canada": [
+      { venue: "Rogers Arena", address: "800 Griffiths Way, Vancouver, BC V6B 6G1, Canada", lng: -123.1080, lat: 49.2777 },
+      { venue: "Pacific Coliseum", address: "100 N Renfrew St, Vancouver, BC V5K 3N7, Canada", lng: -123.0327, lat: 49.2812 },
+      { venue: "Queen Elizabeth Theatre", address: "630 Hamilton St, Vancouver, BC V6B 5N6, Canada", lng: -123.1099, lat: 49.2804 },
+      { venue: "Vancouver Convention Centre", address: "1055 Canada Pl, Vancouver, BC V6C 0C3, Canada", lng: -123.1134, lat: 49.2897 },
+      { venue: "PNE Forum", address: "2901 E Hastings St, Vancouver, BC V5K 5J1, Canada", lng: -123.0495, lat: 49.2815 },
+      { venue: "Commodore Ballroom", address: "868 Granville St, Vancouver, BC V6Z 1K3, Canada", lng: -123.1233, lat: 49.2811 }
+    ],
+    "Mexico City, Mexico": [
+      { venue: "Auditorio Nacional", address: "Av. Paseo de la Reforma 50, Miguel Hidalgo, 11580 Ciudad de México, CDMX, Mexico", lng: -99.2114, lat: 19.4260 },
+      { venue: "Palacio de los Deportes", address: "Av. Río Churubusco s/n, Granjas México, 08400 Ciudad de México, CDMX, Mexico", lng: -99.0990, lat: 19.4020 },
+      { venue: "Arena Ciudad de México", address: "Av. de las Granjas 800, Santa Bárbara, 02230 Ciudad de México, CDMX, Mexico", lng: -99.1583, lat: 19.4893 },
+      { venue: "Centro Cultural Teatro 1", address: "Av. Cuauhtémoc 19, Colonia Roma, 06700 Ciudad de México, CDMX, Mexico", lng: -99.1578, lat: 19.4315 },
+      { venue: "Teatro Metropólitan", address: "Av. Independencia 90, Centro, 06050 Ciudad de México, CDMX, Mexico", lng: -99.1460, lat: 19.4336 },
+      { venue: "Auditorio BlackBerry", address: "Av. de los Insurgentes Sur 453, Hipódromo, 06100 Ciudad de México, CDMX, Mexico", lng: -99.1673, lat: 19.4055 }
+    ],
+    "São Paulo, Brazil": [
+      { venue: "Allianz Parque", address: "Av. Francisco Matarazzo, 1705, São Paulo - SP, 05001-200, Brazil", lng: -46.6795, lat: -23.5275 },
+      { venue: "Auditório Ibirapuera", address: "Av. Pedro Álvares Cabral, s/n, São Paulo - SP, 04094-050, Brazil", lng: -46.6578, lat: -23.5870 },
+      { venue: "Espaço das Américas", address: "Rua Tagipuru, 795, São Paulo - SP, 01156-000, Brazil", lng: -46.6677, lat: -23.5219 },
+      { venue: "Vibra São Paulo", address: "Av. das Nações Unidas, 17955, São Paulo - SP, 04795-100, Brazil", lng: -46.7303, lat: -23.6051 },
+      { venue: "Memorial da América Latina", address: "Av. Auro Soares de Moura Andrade, 664, São Paulo - SP, 01156-001, Brazil", lng: -46.6644, lat: -23.5250 },
+      { venue: "Ginásio do Ibirapuera", address: "Rua Manoel da Nóbrega, 1361, São Paulo - SP, 04001-084, Brazil", lng: -46.6543, lat: -23.5721 }
+    ],
+    "Rio de Janeiro, Brazil": [
+      { venue: "Jeunesse Arena", address: "Av. Embaixador Abelardo Bueno, 3401, Rio de Janeiro - RJ, 22775-040, Brazil", lng: -43.3650, lat: -22.9775 },
+      { venue: "Maracanã Stadium", address: "Av. Pres. Castelo Branco, Portão 3, Rio de Janeiro - RJ, 20271-130, Brazil", lng: -43.2302, lat: -22.9122 },
+      { venue: "Vivo Rio", address: "Av. Infante Dom Henrique, 85, Rio de Janeiro - RJ, 20021-140, Brazil", lng: -43.1702, lat: -22.9128 },
+      { venue: "Cidade das Artes", address: "Av. das Américas, 5300, Rio de Janeiro - RJ, 22793-080, Brazil", lng: -43.3713, lat: -22.9970 },
+      { venue: "Theatro Municipal do Rio de Janeiro", address: "Praça Floriano, S/N, Rio de Janeiro - RJ, 20031-050, Brazil", lng: -43.1767, lat: -22.9084 },
+      { venue: "Fundição Progresso", address: "Rua dos Arcos, 24, Rio de Janeiro - RJ, 20230-060, Brazil", lng: -43.1820, lat: -22.9127 }
+    ],
+    "Buenos Aires, Argentina": [
+      { venue: "Teatro Colón", address: "Cerrito 628, C1010 CABA, Argentina", lng: -58.3830, lat: -34.6033 },
+      { venue: "Luna Park", address: "Av. Eduardo Madero 470, C1106 CABA, Argentina", lng: -58.3703, lat: -34.6032 },
+      { venue: "Usina del Arte", address: "Caffarena 1, C1157 CABA, Argentina", lng: -58.3610, lat: -34.6327 },
+      { venue: "Centro Cultural Kirchner", address: "Sarmiento 151, C1041 CABA, Argentina", lng: -58.3700, lat: -34.6020 },
+      { venue: "Movistar Arena", address: "Humboldt 450, C1414 CABA, Argentina", lng: -58.4446, lat: -34.5874 },
+      { venue: "La Rural", address: "Av. Sarmiento 2704, C1425 CABA, Argentina", lng: -58.4166, lat: -34.5750 }
+    ],
+    "Santiago, Chile": [
+      { venue: "Movistar Arena", address: "Av. Beaucheff 1204, Santiago, Región Metropolitana, Chile", lng: -70.6189, lat: -33.4562 },
+      { venue: "Teatro Caupolicán", address: "San Diego 850, Santiago, Región Metropolitana, Chile", lng: -70.6424, lat: -33.4460 },
+      { venue: "Centro Cultural Gabriela Mistral", address: "Av. Libertador Bernardo O'Higgins 227, Santiago, Región Metropolitana, Chile", lng: -70.6455, lat: -33.4381 },
+      { venue: "Estadio Nacional Julio Martínez Prádanos", address: "Av. Grecia 2001, Ñuñoa, Región Metropolitana, Chile", lng: -70.6106, lat: -33.4648 },
+      { venue: "Teatro Municipal de Santiago", address: "Agustinas 794, Santiago, Región Metropolitana, Chile", lng: -70.6484, lat: -33.4389 },
+      { venue: "Espacio Riesco", address: "Av. El Salto 5000, Huechuraba, Región Metropolitana, Chile", lng: -70.6015, lat: -33.3830 }
+    ]
+  };
 
   const CITY_BOUNDS = {
     "Federation Square, Melbourne": { lng:[144.9660, 144.9730], lat:[-37.8200, -37.8100] },
@@ -6918,16 +7246,58 @@ function uniqueTitle(seed, cityName, idx){
     });
   }
 
-  function randomLocation(city, baseLng=0, baseLat=0){
-    const venue = pick(VENUES);
-    const address = `${Math.floor(rnd()*999)+1} ${pick(STREETS)}, ${city}`;
-    const { lng, lat } = safeCoordinate(city, baseLng, baseLat, 0.01);
-    return { venue, address, lng, lat, dates: randomSchedule(), price: randomPriceRange() };
+  function getVenuePool(city){
+    if(!city) return [];
+    const direct = REAL_VENUES[city];
+    if(Array.isArray(direct) && direct.length) return direct;
+    const normalized = city.split(',')[0].trim();
+    const alias = REAL_VENUES[normalized];
+    return Array.isArray(alias) ? alias : [];
   }
 
-  function randomLocations(city, baseLng=0, baseLat=0){
+  function pickRealVenue(city, baseLng=0, baseLat=0, options={}){
+    const pool = getVenuePool(city);
+    if(options && options.prefer){
+      const preferred = pool.find(v => v.venue === options.prefer);
+      if(preferred) return preferred;
+    }
+    if(pool.length){
+      return pool[Math.floor(rnd()*pool.length)];
+    }
+    return {
+      venue: options?.fallbackName || city,
+      address: options?.fallbackAddress || city,
+      lng: baseLng,
+      lat: baseLat
+    };
+  }
+
+  function toLocationDetails(entry){
+    return {
+      venue: entry.venue,
+      address: entry.address,
+      lng: entry.lng,
+      lat: entry.lat,
+      dates: randomSchedule(),
+      price: randomPriceRange()
+    };
+  }
+
+  function buildLocationList(city, baseLng=0, baseLat=0, primaryEntry){
     const count = 1 + Math.floor(rnd()*5);
-    return Array.from({length:count}, ()=> randomLocation(city, baseLng, baseLat));
+    const list = [];
+    if(primaryEntry){
+      list.push(toLocationDetails(primaryEntry));
+    }
+    const poolAvailable = getVenuePool(city).length > 0;
+    while(list.length < count){
+      const entry = pickRealVenue(city, baseLng, baseLat);
+      list.push(toLocationDetails(entry));
+      if(!poolAvailable){
+        break;
+      }
+    }
+    return list;
   }
 
   function randomImages(id){
@@ -7002,13 +7372,22 @@ function makePosts(){
     const id = 'FS'+i;
     const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
+    const primaryVenue = pickRealVenue(fsCity, fsLng, fsLat, {
+      prefer: 'Federation Square',
+      fallbackName: 'Federation Square',
+      fallbackAddress: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia'
+    });
+    const fsCoord = {
+      lng: Number.isFinite(primaryVenue.lng) ? primaryVenue.lng : fsLng,
+      lat: Number.isFinite(primaryVenue.lat) ? primaryVenue.lat : fsLat
+    };
     out.push({
       id,
       title,
       slug: slugify(title),
       created,
       city: fsCity,
-      lng: fsLng, lat: fsLat,
+      lng: fsCoord.lng, lat: fsCoord.lat,
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
@@ -7016,7 +7395,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(fsCity, fsLng, fsLat),
+      locations: buildLocationList(fsCity, fsCoord.lng, fsCoord.lat, primaryVenue),
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -7034,7 +7413,12 @@ function makePosts(){
     const offset = 1 + i%30;
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
-    const tasCoord = safeCoordinate(tasCity, tasLng, tasLat, 0.1);
+    const tasBase = safeCoordinate(tasCity, tasLng, tasLat, 0.1);
+    const tasPrimary = pickRealVenue(tasCity, tasBase.lng, tasBase.lat);
+    const tasCoord = {
+      lng: Number.isFinite(tasPrimary.lng) ? tasPrimary.lng : tasBase.lng,
+      lat: Number.isFinite(tasPrimary.lat) ? tasPrimary.lat : tasBase.lat
+    };
     out.push({
       id,
       title,
@@ -7050,7 +7434,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(tasCity, tasCoord.lng, tasCoord.lat),
+      locations: buildLocationList(tasCity, tasCoord.lng, tasCoord.lat, tasPrimary),
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -7104,7 +7488,12 @@ function makePosts(){
   const TOTAL_WORLD = 900;
   for(let i=0;i<TOTAL_WORLD;i++){
     const hub = hubs[Math.floor(rnd()*hubs.length)];
-    const coord = safeCoordinate(hub.c, hub.lng, hub.lat, 0.1);
+    const baseCoord = safeCoordinate(hub.c, hub.lng, hub.lat, 0.1);
+    const primaryVenue = pickRealVenue(hub.c, baseCoord.lng, baseCoord.lat);
+    const coord = {
+      lng: Number.isFinite(primaryVenue.lng) ? primaryVenue.lng : baseCoord.lng,
+      lat: Number.isFinite(primaryVenue.lat) ? primaryVenue.lat : baseCoord.lat
+    };
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'WW'+i;
@@ -7125,7 +7514,7 @@ function makePosts(){
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: randomLocations(hub.c, coord.lng, coord.lat),
+      locations: buildLocationList(hub.c, coord.lng, coord.lat, primaryVenue),
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
