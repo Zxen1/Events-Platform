@@ -9486,7 +9486,8 @@ if (!map.__pillHooksInstalled) {
               const coords = feature.geometry && feature.geometry.coordinates;
               if(!coords) { clearSuppress(); return; }
               const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const nextZoom = typeof maxZoom === 'number' ? Math.min(zoom, maxZoom) : zoom;
+              const desiredZoom = 10;
+              const nextZoom = typeof maxZoom === 'number' ? Math.min(desiredZoom, maxZoom) : desiredZoom;
               const animationOpts = { center: coords, zoom: nextZoom, essential: true };
               let computedDuration = 650;
               try{
