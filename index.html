@@ -8324,8 +8324,8 @@ function makePosts(){
         if(!target){
           target = card(p, fromHistory ? false : true);
           placeOpenPost(target);
-        } else if(shouldAlignToTop && container.contains(target)){
-          const firstCard = container.querySelector('.open-post, .post-card');
+        } else if(shouldAlignToTop && container.contains(target) && !pointerInsideCardContainer){
+          const firstCard = container.querySelector('.open-post, .post-card, .recents-card');
           if(firstCard && firstCard !== target){
             container.insertBefore(target, firstCard);
           } else if(!firstCard){
