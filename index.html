@@ -6024,9 +6024,9 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = (()=>{
-            let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '10', 10);
-            if(Number.isNaN(storedValue)) storedValue = 10;
-            return Math.min(storedValue, 10);
+            let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '9', 10);
+            if(Number.isNaN(storedValue)) storedValue = 9;
+            return Math.max(0, Math.min(storedValue, 9));
           })(),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '',
