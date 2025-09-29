@@ -5666,12 +5666,15 @@ if (typeof slugify !== 'function') {
         }
       }
       let line = remaining.slice(0, bestIndex).trimEnd();
-      let leftover = remaining.slice(bestIndex).trimStart();
+      const leftoverRaw = remaining.slice(bestIndex);
+      const leftoverHadLeadingWhitespace = /^\s/.test(leftoverRaw);
+      let leftover = leftoverRaw.trimStart();
       if(leftover){
         const lastSpace = line.lastIndexOf(' ');
         if(lastSpace > 0){
           const candidate = line.slice(0, lastSpace).trimEnd();
-          const moved = (line.slice(lastSpace + 1) + ' ' + leftover).trim();
+          const movedBase = line.slice(lastSpace + 1);
+          const moved = (leftoverHadLeadingWhitespace ? `${movedBase} ${leftover}` : `${movedBase}${leftover}`).trim();
           if(candidate && ctx.measureText(candidate).width <= widthPx){
             line = candidate;
             leftover = moved;
