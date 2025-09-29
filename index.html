@@ -7471,8 +7471,9 @@ function makePosts(){
       return parseISODate(iso).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
     }
 
+    const dateRangeInput = $('#daterange-textbox');
     $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
-    $('#daterange-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    dateRangeInput?.addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     if(dateRangeInput){
       dateRangeInput.addEventListener('focus', ()=> openCalendarPopup());
       dateRangeInput.addEventListener('click', ()=> openCalendarPopup());
@@ -7512,7 +7513,6 @@ function makePosts(){
     maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
     const expiredToggle = $('#expiredToggle');
     const calendarScroll = $('#datePickerContainer');
-    const dateRangeInput = $('#daterange-textbox');
     const filterBasics = $('#filterPanel .filter-basics-container');
     const filterPanelBody = $('#filterPanel .panel-body');
     let calendarPopupOpen = false;
