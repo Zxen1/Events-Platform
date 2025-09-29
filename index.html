@@ -2979,8 +2979,9 @@ body.filters-active #filterBtn{
 
 .map-zoom-indicator{
   position:absolute;
-  top:calc(var(--safe-top, 0px) + var(--header-h, 0px) + 12px);
-  right:12px;
+  bottom:calc(var(--safe-bottom, 0px) + 20px);
+  left:50%;
+  transform:translateX(-50%);
   display:inline-flex;
   align-items:center;
   justify-content:center;
