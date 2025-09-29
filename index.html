@@ -5847,9 +5847,18 @@ if (typeof slugify !== 'function') {
       }catch(err){
         console.error(err);
       }
+      let imageData = null;
       try{
-        mapInstance.addImage(compositeId, canvas, options);
-        markerLabelCompositeStore.set(compositeId, { image: canvas, options, iconId });
+        imageData = ctx.getImageData(0, 0, baseWidth, baseHeight);
+      }catch(err){
+        console.error(err);
+      }
+      if(!imageData){
+        return null;
+      }
+      try{
+        mapInstance.addImage(compositeId, imageData, options);
+        markerLabelCompositeStore.set(compositeId, { image: imageData, options, iconId });
         return compositeId;
       }catch(err){
         console.error(err);
