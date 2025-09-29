@@ -44,8 +44,8 @@
   <style>
     .map-card{
       position: relative;
-      width: 225px;
-      height: 60px;
+      width: 150px;
+      height: 40px;
       transform: translateZ(0);
       pointer-events: auto;
       isolation: isolate;
@@ -66,8 +66,8 @@
     }
     .mapmarker-container > .map-card{
       position: absolute;
-      left: -25px;
-      top: -25px;
+      left: -20px;
+      top: -20px;
       pointer-events: auto;
     }
     .map-card img,
@@ -76,10 +76,10 @@
     .mapmarker-container-pill{
       position: absolute;
       inset: auto;
-      left: -5px;
-      top: -5px;
-      width: 225px;
-      height: 60px;
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 40px;
       object-fit: contain;
       pointer-events: auto;
       opacity: 1 !important;
@@ -88,10 +88,10 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 50px;
-      height: 50px;
+      left: 2px;
+      top: 2px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
@@ -100,18 +100,18 @@
     .map-card-text,
     .mapmarker-container-label{
       position: absolute;
-      left: 55px;
-      top: 0;
-      width: 165px;
-      height: 50px;
-      padding: 6px 5px 6px 0;
+      left: 44px;
+      top: 4px;
+      width: 98px;
+      height: 32px;
+      padding: 4px 8px 4px 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: flex-start;
       gap: 2px;
       color: #fff;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 400;
       line-height: 1.2;
       white-space: normal;
@@ -124,7 +124,7 @@
 
     .map-card-title{
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
@@ -134,7 +134,7 @@
 
     .map-card-venue{
       font-weight: 400;
-      font-size: 12px;
+      font-size: 11px;
       line-height: 1.2;
       opacity: 0.9;
       white-space: nowrap;
@@ -6915,7 +6915,7 @@ function makePosts(){
       if(variant === 'list'){
         return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
       }
-      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
+      return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/150x40 pill 99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" /><div class="map-card-text"><div class="map-card-title">${p.title}</div><div class="map-card-venue">${venueName}</div></div></div>`;
     }
 
     function hoverHTML(p){
@@ -9353,6 +9353,9 @@ if (!map.__pillHooksInstalled) {
 
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat } = opts;
+          const pillWidth = 150;
+          const pillHeight = 40;
+          const thumbSize = pillHeight - 4;
           const overlayRoot = document.createElement('div');
           overlayRoot.className = 'mapmarker-container';
           overlayRoot.dataset.id = String(post.id);
@@ -9366,14 +9369,18 @@ if (!map.__pillHooksInstalled) {
           cardRoot.setAttribute('aria-hidden', 'true');
           cardRoot.style.pointerEvents = 'auto';
           cardRoot.style.userSelect = 'none';
+          cardRoot.style.width = `${pillWidth}px`;
+          cardRoot.style.height = `${pillHeight}px`;
 
           const pillImg = new Image();
           try{ pillImg.decoding = 'async'; }catch(e){}
           pillImg.alt = '';
-          pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+          pillImg.src = 'assets/icons-30/150x40 pill 99.webp';
           pillImg.className = 'map-card-pill mapmarker-container-pill';
           pillImg.style.opacity = '1';
           pillImg.draggable = false;
+          pillImg.width = pillWidth;
+          pillImg.height = pillHeight;
 
           const thumbImg = new Image();
           try{ thumbImg.decoding = 'async'; }catch(e){}
@@ -9382,6 +9389,8 @@ if (!map.__pillHooksInstalled) {
           thumbImg.className = 'map-card-thumb';
           thumbImg.referrerPolicy = 'no-referrer';
           thumbImg.draggable = false;
+          thumbImg.width = thumbSize;
+          thumbImg.height = thumbSize;
 
           const labelLines = getMarkerLabelLines(post);
           const labelEl = document.createElement('div');
