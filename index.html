@@ -4632,10 +4632,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .multi-head{
   margin: 0 0 8px 0;
   font-size: 13px;
-  color: var(--ink-d);
+  color: #fff !important;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: 0;
+  text-align: left;
 }
 .multi-head-line{
   display: block;
@@ -6432,7 +6433,7 @@ if (typeof slugify !== 'function') {
     }
     const MAX_CLUSTER_BOUNDS_LEAVES = 500;
 
-    const MARKER_INTERACTIVE_LAYERS = ['marker-label'];
+    const MARKER_INTERACTIVE_LAYERS = ['marker-label','multi-marker-label'];
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -6510,7 +6511,7 @@ function buildClusterListHTML(items){
   const first = allDates[0];
   const last = allDates[allDates.length-1] || first;
   const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
-  const head = `<div class="multi-head"><span class="multi-head-line">${items.length} events here</span><span class="multi-head-line soonest"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></span></div>`;
+  const head = `<div class="multi-head"><span class="multi-head-line">${items.length} posts here</span><span class="multi-head-line soonest"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></span></div>`;
   const sort = currentSort;
   const arr = items.slice();
   if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -9949,16 +9950,36 @@ if (!map.__pillHooksInstalled) {
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const geojson = postsToGeoJSON(markerList);
+      const multiFeatures = geojson.features.filter(f => f && f.properties && f.properties.multi === 1);
+      const singleFeatures = geojson.features.filter(f => f && (!f.properties || f.properties.multi !== 1));
+      const postsData = { type:'FeatureCollection', features: singleFeatures };
+      const multiData = { type:'FeatureCollection', features: multiFeatures };
       const shouldCluster = posts.length >= 10 && clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
-      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
+      const desiredClusterProperties = shouldCluster ? { total_posts: ['+', ['get','multiCount']] } : undefined;
+      const serializedClusterProps = opts && opts.clusterProperties;
+      const clusterPropsChanged = shouldCluster
+        ? JSON.stringify(serializedClusterProps || {}) !== JSON.stringify(desiredClusterProperties)
+        : !!(serializedClusterProps && Object.keys(serializedClusterProps).length);
+      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom || clusterPropsChanged;
       if(sourceNeedsRebuild){
-        ['cluster-count','clusters','marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+        ['cluster-count','clusters','marker-label','multi-marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
-        map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
+        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom };
+        if(shouldCluster){
+          sourceConfig.clusterProperties = desiredClusterProperties;
+        }
+        map.addSource('posts', sourceConfig);
       } else if(existing){
-        existing.setData(geojson);
+        existing.setData(postsData);
+      }
+      const multiSourceId = 'multi-posts';
+      const existingMulti = map.getSource(multiSourceId);
+      if(!existingMulti){
+        map.addSource(multiSourceId, { type:'geojson', data: multiData });
+      } else {
+        existingMulti.setData(multiData);
       }
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
@@ -10057,7 +10078,7 @@ if (!map.__pillHooksInstalled) {
             source:'posts',
             filter:['has','point_count'],
             layout:{
-              'text-field':['get','point_count_abbreviated'],
+              'text-field':['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]],
               'text-size':12,
               'text-allow-overlap': true,
               'text-ignore-placement': true,
@@ -10067,7 +10088,7 @@ if (!map.__pillHooksInstalled) {
             paint:{'text-color':'#fff'}
           });
         } else {
-          try{ map.setLayoutProperty('cluster-count','text-field',['get','point_count_abbreviated']); }catch(e){}
+          try{ map.setLayoutProperty('cluster-count','text-field',['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]]); }catch(e){}
           try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
         }
       } else {
@@ -10084,42 +10105,48 @@ if (!map.__pillHooksInstalled) {
         ]
       ];
 
-      if(!map.getLayer('marker-label')){
-        map.addLayer({
-          id:'marker-label',
-          type:'symbol',
-          source:'posts',
-          filter: markerLabelFilter,
-          layout:{
-            'icon-image': markerLabelIconImage,
-            'icon-size': 1,
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'icon-anchor': 'left',
-            'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1100
-          },
-          paint:{
-            'icon-translate': [markerLabelBgTranslatePx, 0],
-            'icon-translate-anchor': 'viewport',
-            'icon-opacity': 1
-          }
-        });
-      }
-      try{ map.setFilter('marker-label', markerLabelFilter); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-image', markerLabelIconImage); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-size', 1); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-allow-overlap', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-ignore-placement', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-anchor','left'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','icon-pitch-alignment','viewport'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label','symbol-sort-key', 1100); }catch(e){}
-      try{ map.setPaintProperty('marker-label','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
-      try{ map.setPaintProperty('marker-label','icon-translate-anchor','viewport'); }catch(e){}
-      try{ map.setPaintProperty('marker-label','icon-opacity',1); }catch(e){}
-      ['hover-fill','clusters','cluster-count','marker-label'].forEach(id=>{
+      const labelLayersConfig = [
+        { id:'marker-label', source:'posts', sortKey: 1100 },
+        { id:'multi-marker-label', source:'multi-posts', sortKey: 1101 }
+      ];
+      labelLayersConfig.forEach(({ id, source, sortKey }) => {
+        if(!map.getLayer(id)){
+          map.addLayer({
+            id,
+            type:'symbol',
+            source,
+            filter: markerLabelFilter,
+            layout:{
+              'icon-image': markerLabelIconImage,
+              'icon-size': 1,
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'left',
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': sortKey
+            },
+            paint:{
+              'icon-translate': [markerLabelBgTranslatePx, 0],
+              'icon-translate-anchor': 'viewport',
+              'icon-opacity': 1
+            }
+          });
+        }
+        try{ map.setFilter(id, markerLabelFilter); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-image', markerLabelIconImage); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
+      });
+      ['hover-fill','clusters','cluster-count','marker-label','multi-marker-label'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
@@ -10128,7 +10155,8 @@ if (!map.__pillHooksInstalled) {
         ['clusters','circle-opacity-transition'],
         ['clusters','icon-opacity-transition'],
         ['cluster-count','text-opacity-transition'],
-        ['marker-label','icon-opacity-transition']
+        ['marker-label','icon-opacity-transition'],
+        ['multi-marker-label','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
@@ -10179,6 +10207,9 @@ if (!map.__pillHooksInstalled) {
                   touchMarker = null;
                   close();
                   stopSpin();
+                  if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                    try{ closePanel(filterPanel); }catch(err){}
+                  }
                   fn(id, false, true);
                 }catch(err){ console.error(err); }
               });
@@ -10378,6 +10409,9 @@ if (!map.__pillHooksInstalled) {
                 try{
                   touchMarker = null;
                   stopSpin();
+                  if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                    try{ closePanel(filterPanel); }catch(err){}
+                  }
                   fn(pid, false, true);
                 }catch(err){ console.error(err); }
               });
@@ -10457,6 +10491,9 @@ if (!map.__pillHooksInstalled) {
                     touchMarker = null;
                     close();
                     stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
                     fn(id, false, true);
                   }catch(err){ console.error(err); }
                 });
@@ -10481,6 +10518,9 @@ if (!map.__pillHooksInstalled) {
                             if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
                             lockMap(false);
                             stopSpin();
+                            if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                              try{ closePanel(filterPanel); }catch(err){}
+                            }
                             fn(pid, false, true);
                           }catch(err){ console.error(err); }
                         });
@@ -10570,6 +10610,9 @@ if (!map.__pillHooksInstalled) {
                         touchMarker = null;
                         if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
                         stopSpin();
+                        if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                          try{ closePanel(filterPanel); }catch(err){}
+                        }
                         fn(pid, false, true);
                       }catch(err){ console.error(err); }
                     });
@@ -11082,6 +11125,9 @@ function openPostModal(id){
               try{
                 touchMarker = null;
                 stopSpin();
+                if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                  try{ closePanel(filterPanel); }catch(err){}
+                }
                 fn(pid, false, true);
               }catch(err){ console.error(err); }
             });
