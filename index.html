@@ -8212,10 +8212,10 @@ function makePosts(){
             pointerTarget = pointerEvt.target;
           }
         }
-        const pointerCard = pointerTarget ? pointerTarget.closest('.post-card') : null;
-        const pointerInsidePostBoard = pointerCard && container.contains(pointerCard);
+        const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
+        const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsidePostBoard);
+        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
 
         if(!target){
           target = card(p, fromHistory ? false : true);
