@@ -5746,6 +5746,142 @@ if (typeof slugify !== 'function') {
   }
 
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
+  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
+  const markerLabelCompositeStore = new Map();
+  const markerLabelCompositePending = new Map();
+  let markerLabelPillImagePromise = null;
+
+  function loadMarkerLabelImage(url){
+    return new Promise((resolve, reject) => {
+      if(!url){
+        reject(new Error('Missing URL'));
+        return;
+      }
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(err){}
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load ${url}`));
+      img.src = url;
+      if(img.complete){
+        setTimeout(() => {
+          if(img.naturalWidth > 0 && img.naturalHeight > 0){
+            resolve(img);
+          }
+        }, 0);
+      }
+    });
+  }
+
+  async function ensureMarkerLabelPillImage(){
+    if(markerLabelPillImagePromise){
+      return markerLabelPillImagePromise;
+    }
+    markerLabelPillImagePromise = loadMarkerLabelImage('assets/icons-30/150x40 pill 99.webp')
+      .catch(err => {
+        console.error(err);
+        markerLabelPillImagePromise = null;
+        return null;
+      });
+    return markerLabelPillImagePromise;
+  }
+
+  async function ensureMarkerLabelComposite(mapInstance, iconId){
+    if(!mapInstance || !iconId){
+      return null;
+    }
+    const compositeId = `${MARKER_LABEL_COMPOSITE_PREFIX}${iconId}`;
+    if(mapInstance.hasImage?.(compositeId)){
+      return compositeId;
+    }
+    const cached = markerLabelCompositeStore.get(compositeId);
+    if(cached && cached.image){
+      try{
+        mapInstance.addImage(compositeId, cached.image, cached.options || {});
+        return compositeId;
+      }catch(err){
+        console.error(err);
+      }
+    }
+    if(markerLabelCompositePending.has(compositeId)){
+      return markerLabelCompositePending.get(compositeId);
+    }
+    const task = (async () => {
+      const pillImg = await ensureMarkerLabelPillImage();
+      if(!pillImg){
+        return null;
+      }
+      const markerSources = window.subcategoryMarkers || {};
+      const iconUrl = markerSources[iconId];
+      let iconImg = null;
+      if(iconUrl){
+        try{
+          iconImg = await loadMarkerLabelImage(iconUrl);
+        }catch(err){
+          console.error(err);
+        }
+      }
+      const baseWidth = pillImg.naturalWidth || pillImg.width || markerLabelBackgroundWidthPx;
+      const baseHeight = pillImg.naturalHeight || pillImg.height || markerLabelBackgroundHeightPx;
+      const canvas = document.createElement('canvas');
+      canvas.width = baseWidth;
+      canvas.height = baseHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, baseWidth, baseHeight);
+      ctx.drawImage(pillImg, 0, 0, baseWidth, baseHeight);
+      if(iconImg){
+        const pixelRatio = baseWidth / markerLabelBackgroundWidthPx;
+        const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
+        const destX = markerLabelMarkerInsetPx * pixelRatio;
+        const destY = (baseHeight - iconSizePx) / 2;
+        try{
+          ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
+        }catch(err){
+          console.error(err);
+        }
+      }
+      const pixelRatio = baseWidth / markerLabelBackgroundWidthPx;
+      const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
+      try{
+        if(mapInstance.hasImage?.(compositeId)){
+          mapInstance.removeImage(compositeId);
+        }
+      }catch(err){
+        console.error(err);
+      }
+      try{
+        mapInstance.addImage(compositeId, canvas, options);
+        markerLabelCompositeStore.set(compositeId, { image: canvas, options, iconId });
+        return compositeId;
+      }catch(err){
+        console.error(err);
+        return null;
+      }
+    })().finally(() => {
+      markerLabelCompositePending.delete(compositeId);
+    });
+    markerLabelCompositePending.set(compositeId, task);
+    return task;
+  }
+
+  function reapplyMarkerLabelComposites(mapInstance){
+    if(!mapInstance){
+      return;
+    }
+    markerLabelCompositeStore.forEach((entry, id) => {
+      if(!entry || !entry.image){
+        return;
+      }
+      try{
+        if(mapInstance.hasImage?.(id)){
+          return;
+        }
+        mapInstance.addImage(id, entry.image, entry.options || {});
+      }catch(err){
+        console.error(err);
+      }
+    });
+  }
 
   function scheduleMarkerLabelBackgroundRetry(mapInstance){
     if(!mapInstance || typeof mapInstance === 'undefined') return;
@@ -5892,7 +6028,7 @@ if (typeof slugify !== 'function') {
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
-    const POINTER_READY_IDS = new Set(['unclustered','marker-label-bg','marker-label-text','clusters','cluster-count']);
+    const POINTER_READY_IDS = new Set(['marker-label','clusters','cluster-count']);
 
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
@@ -6230,7 +6366,7 @@ if (typeof slugify !== 'function') {
     }
     const MAX_CLUSTER_BOUNDS_LEAVES = 500;
 
-    const MARKER_INTERACTIVE_LAYERS = ['unclustered','marker-label-bg','marker-label-text'];
+    const MARKER_INTERACTIVE_LAYERS = ['marker-label'];
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -6499,6 +6635,7 @@ function buildClusterListHTML(items){
 
       mapInstance.on('style.load', async () => {
         try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+        try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
         const preload = new Set([...KNOWN, ...Object.keys(markers)]);
         for(const iconName of preload){
@@ -6508,8 +6645,12 @@ function buildClusterListHTML(items){
 
       mapInstance.on('styleimagemissing', e => {
         if(!e || !e.id) return;
-        if(e.id === 'marker-label-bg'){
+        if(e.id === MARKER_LABEL_BG_ID){
           try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+          return;
+        }
+        if(e.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+          ensureMarkerLabelComposite(mapInstance, e.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length));
           return;
         }
         addIcon(e.id);
@@ -9309,15 +9450,18 @@ if (!map.__pillHooksInstalled) {
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
       if(sourceNeedsRebuild){
-        ['cluster-count','clusters','marker-label-text','marker-label-bg','unclustered','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+        ['cluster-count','clusters','marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       } else if(existing){
         existing.setData(geojson);
       }
+      const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
-        const iconIds = Object.keys(subcategoryMarkers);
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
+      }
+      if(typeof ensureMarkerLabelComposite === 'function'){
+        await Promise.all(iconIds.map(id => ensureMarkerLabelComposite(map, id).catch(()=>{})));
       }
       if(!map.getLayer('posts-heat')){
         map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
@@ -9426,114 +9570,76 @@ if (!map.__pillHooksInstalled) {
         lastClusterSvgHash = '';
       }
 
-      if(!map.getLayer('unclustered')){
+      const markerLabelIconImage = ['let', 'subId', ['coalesce', ['get','sub'], ''],
+        ['case',
+          ['==', ['var','subId'], ''],
+          MARKER_LABEL_BG_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','subId']]
+        ]
+      ];
+
+      if(!map.getLayer('marker-label')){
         map.addLayer({
-          id:'unclustered',
-          type:'symbol',
-          source:'posts',
-          layout:{
-            'icon-image':['get','sub'],
-            'icon-size': markerIconSize,
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-            'icon-anchor': 'center',
-            'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1100
-          },
-          paint:{},
-        });
-      }
-      try{ map.setLayoutProperty('unclustered','icon-image',['get','sub']); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','icon-size', markerIconSize); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','icon-allow-overlap', true); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','icon-ignore-placement', true); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','icon-anchor', 'center'); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('unclustered','symbol-sort-key', 1100); }catch(e){}
-      if(!map.getLayer('marker-label-bg')){
-        map.addLayer({
-          id:'marker-label-bg',
+          id:'marker-label',
           type:'symbol',
           source:'posts',
           filter: markerLabelFilter,
           layout:{
-            'icon-image': 'marker-label-bg',
+            'icon-image': markerLabelIconImage,
             'icon-size': 1,
             'icon-allow-overlap': true,
             'icon-ignore-placement': true,
             'icon-anchor': 'left',
             'icon-pitch-alignment': 'viewport',
-            'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1099
-          },
-          paint:{
-            'icon-translate': [markerLabelBgTranslatePx, 0],
-            'icon-translate-anchor': 'viewport',
-            'icon-opacity': 1
-          }
-        }, 'unclustered');
-      }
-      if(!map.getLayer('marker-label-text')){
-        map.addLayer({
-          id:'marker-label-text',
-          type:'symbol',
-          source:'posts',
-          filter: markerLabelFilter,
-          layout:{
             'text-field': markerLabelTextField,
             'text-font': ['Open Sans Regular','Arial Unicode MS Regular'],
             'text-size': markerLabelTextSize,
             'text-line-height': markerLabelTextLineHeight,
             'text-anchor': 'left',
-            'text-allow-overlap': true, // keep marker text aligned with pill collision behaviour
+            'text-allow-overlap': true,
             'text-ignore-placement': true,
             'text-pitch-alignment': 'viewport',
             'text-max-width': markerLabelTextMaxWidth,
+            'text-optional': true,
             'symbol-z-order': 'viewport-y',
-            'symbol-sort-key': 1101
+            'symbol-sort-key': 1100
           },
           paint:{
+            'icon-translate': [markerLabelBgTranslatePx, 0],
+            'icon-translate-anchor': 'viewport',
+            'icon-opacity': 1,
             'text-color': '#fff',
             'text-translate': [markerLabelTextTranslatePx, 0],
             'text-translate-anchor': 'viewport'
           }
         });
       }
-      try{ map.setFilter('marker-label-bg', markerLabelFilter); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-image','marker-label-bg'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-size',1); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-allow-overlap', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-ignore-placement', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-anchor','left'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','icon-pitch-alignment','viewport'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key', 1099); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
-      try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-size', markerLabelTextSize); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-line-height', markerLabelTextLineHeight); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-anchor','left'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-allow-overlap', true); }catch(e){} // keep marker text aligned with pill collision behaviour
-      try{ map.setLayoutProperty('marker-label-text','text-ignore-placement', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-pitch-alignment','viewport'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-max-width', markerLabelTextMaxWidth); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','symbol-z-order','viewport-y'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','symbol-sort-key', 1101); }catch(e){}
-      try{ map.setPaintProperty('marker-label-text','text-color','#fff'); }catch(e){}
-      try{ map.setPaintProperty('marker-label-text','text-translate',[markerLabelTextTranslatePx,0]); }catch(e){}
-      try{ map.setPaintProperty('marker-label-text','text-translate-anchor','viewport'); }catch(e){}
-      if(shouldCluster){
-        try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
-      } else {
-        try{ map.setFilter('unclustered', null); }catch(e){}
-      }
-      ['hover-fill','clusters','cluster-count','marker-label-bg','marker-label-text','unclustered'].forEach(id=>{
+      try{ map.setFilter('marker-label', markerLabelFilter); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-image', markerLabelIconImage); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-size', 1); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-allow-overlap', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-ignore-placement', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-anchor','left'); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','icon-pitch-alignment','viewport'); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-field', markerLabelTextField); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-size', markerLabelTextSize); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-line-height', markerLabelTextLineHeight); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-anchor','left'); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-allow-overlap', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-ignore-placement', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-pitch-alignment','viewport'); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-max-width', markerLabelTextMaxWidth); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','text-optional', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','symbol-z-order','viewport-y'); }catch(e){}
+      try{ map.setLayoutProperty('marker-label','symbol-sort-key', 1100); }catch(e){}
+      try{ map.setPaintProperty('marker-label','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
+      try{ map.setPaintProperty('marker-label','icon-translate-anchor','viewport'); }catch(e){}
+      try{ map.setPaintProperty('marker-label','icon-opacity',1); }catch(e){}
+      try{ map.setPaintProperty('marker-label','text-color','#fff'); }catch(e){}
+      try{ map.setPaintProperty('marker-label','text-translate',[markerLabelTextTranslatePx,0]); }catch(e){}
+      try{ map.setPaintProperty('marker-label','text-translate-anchor','viewport'); }catch(e){}
+      ['hover-fill','clusters','cluster-count','marker-label'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
@@ -9542,9 +9648,8 @@ if (!map.__pillHooksInstalled) {
         ['clusters','circle-opacity-transition'],
         ['clusters','icon-opacity-transition'],
         ['cluster-count','text-opacity-transition'],
-        ['marker-label-bg','icon-opacity-transition'],
-        ['marker-label-text','text-opacity-transition'],
-        ['unclustered','icon-opacity-transition']
+        ['marker-label','icon-opacity-transition'],
+        ['marker-label','text-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
@@ -9564,7 +9669,7 @@ if (!map.__pillHooksInstalled) {
           if(!within){ hoverPopup.remove(); hoverPopup=null; lockMap(false); }
         });
         window.addEventListener('keydown', (ev)=>{ if(ev.key==='Escape' && listLocked){ if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; } lockMap(false); } });
-        // 0530: Right‑click a *venue marker* (unclustered point) -> show list of events at that venue
+        // 0530: Right‑click a *venue marker* -> show list of events at that venue
         const handleMarkerContextMenu = (e)=>{
           const f = e.features && e.features[0]; if(!f) return;
           if(e.preventDefault) e.preventDefault();
@@ -9946,7 +10051,7 @@ if (!map.__pillHooksInstalled) {
 
       updateSelectedMarkerRing();
 
-      // Cursor + popup for unclustered points
+      // Cursor + popup for marker points
       
       const handleMarkerMouseEnter = (e)=>{
         map.getCanvas().style.cursor = 'pointer';
