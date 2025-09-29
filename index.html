@@ -91,7 +91,7 @@
       height: 60px;
       object-fit: contain;
       pointer-events: auto;
-      opacity: 1 !important;
+      opacity: 0.9 !important;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -121,7 +121,7 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 1 !important;
+      opacity: 0.9 !important;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -4755,6 +4755,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .mapboxgl-popup.multi-post-map-card .map-card-list{
   width: 400px;
   max-width: min(400px, calc(100vw - 32px));
+  min-width: min(400px, calc(100vw - 32px));
+  box-sizing: border-box;
 }
 
 .mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content{
@@ -6572,6 +6574,17 @@ function buildClusterListHTML(items){
         const cont = map.getContainer().getBoundingClientRect();
         let x = point.x, y = point.y;
         const pad = 12;
+        let headerOffset = 0;
+        try{
+          const root = document.documentElement;
+          if(root){
+            const rootStyles = getComputedStyle(root);
+            const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+            const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+            headerOffset = Math.max(0, headerH + safeTop);
+          }
+        }catch(err){}
+        const topPad = pad + headerOffset;
         const maxX = cont.width - pad;
         const maxY = cont.height - pad;
         // If overflowing right/left, clamp
@@ -6579,7 +6592,7 @@ function buildClusterListHTML(items){
         if(rect.left  < cont.left + pad)  x += (cont.left + pad - rect.left);
         // If overflowing bottom/top, clamp
         if(rect.bottom > cont.bottom - pad) y -= (rect.bottom - (cont.bottom - pad));
-        if(rect.top    < cont.top + pad)    y += (cont.top + pad - rect.top);
+        if(rect.top    < cont.top + topPad)    y += (cont.top + topPad - rect.top);
         hoverPopup.setLngLat(map.unproject({x,y}));
       });
     }
@@ -9619,6 +9632,23 @@ if (!map.__pillHooksInstalled) {
         };
         try{ map.on('styleimagemissing', ensureMissingStyleImage); }catch(err){}
 
+        const ensureCompositeOnStyleMissing = (evt) => {
+          if(!evt || !evt.id) return;
+          if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+            const spriteId = evt.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            const meta = markerLabelCompositeStore.get(spriteId) || {};
+            try{
+              ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti);
+            }catch(err){}
+          }
+        };
+        if(!map.__compositeStyleHookInstalled){
+          try{ map.on('styleimagemissing', ensureCompositeOnStyleMissing); }catch(err){}
+          map.__compositeStyleHookInstalled = true;
+        }
+
+        try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
+
         const applyStyleAdjustments = () => {
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
@@ -10415,7 +10445,7 @@ if (!map.__pillHooksInstalled) {
           markerPill.alt = '';
           markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
           markerPill.className = 'mapmarker-pill';
-          markerPill.style.opacity = '1';
+          markerPill.style.opacity = '0.9';
           markerPill.draggable = false;
 
           const labelLines = getMarkerLabelLines(post);
@@ -10446,7 +10476,7 @@ if (!map.__pillHooksInstalled) {
           pillImg.alt = '';
           pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
           pillImg.className = 'map-card-pill';
-          pillImg.style.opacity = '1';
+          pillImg.style.opacity = '0.9';
           pillImg.draggable = false;
 
           const thumbImg = new Image();
