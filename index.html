@@ -8317,9 +8317,9 @@ function makePosts(){
           }
         }
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
-        const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
+        const pointerInsideActiveCard = !!(pointerCard && container.contains(pointerCard));
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsideActiveCard);
 
         if(!target){
           target = card(p, fromHistory ? false : true);
