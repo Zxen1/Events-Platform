@@ -9621,14 +9621,17 @@ if (!map.__pillHooksInstalled) {
 
           suppressNextRefresh = true;
           const clearSuppress = () => { suppressNextRefresh = false; };
-          src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
+          src.getClusterExpansionZoom(clusterId, (err, expansionZoom)=>{
             if(err){ clearSuppress(); return; }
             try{
               const coords = feature.geometry && feature.geometry.coordinates;
               if(!coords) { clearSuppress(); return; }
               const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const desiredZoom = 10;
-              const nextZoom = typeof maxZoom === 'number' ? Math.min(desiredZoom, maxZoom) : desiredZoom;
+              const hasExpansionZoom = typeof expansionZoom === 'number' && !Number.isNaN(expansionZoom);
+              const fallbackZoom = typeof map.getZoom === 'function' ? map.getZoom() : undefined;
+              const targetZoom = hasExpansionZoom ? expansionZoom : fallbackZoom;
+              if(typeof targetZoom !== 'number'){ clearSuppress(); return; }
+              const nextZoom = typeof maxZoom === 'number' ? Math.min(targetZoom, maxZoom) : targetZoom;
               const animationOpts = { center: coords, zoom: nextZoom, essential: true };
               let computedDuration = 650;
               try{
