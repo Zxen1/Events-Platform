@@ -7542,6 +7542,7 @@ function makePosts(){
       if(!calendarPopupOpen){
         calendarPopupOpen = true;
         calendarScroll.classList.add('is-visible');
+        calendarScroll.setAttribute('tabindex','0');
         calendarScroll.setAttribute('aria-hidden','false');
         if(dateRangeInput) dateRangeInput.setAttribute('aria-expanded','true');
         document.addEventListener('click', handleCalendarOutsideClick, true);
@@ -7557,6 +7558,13 @@ function makePosts(){
     function closeCalendarPopup(){
       if(!calendarScroll || !calendarPopupOpen) return;
       calendarPopupOpen = false;
+      if(calendarScroll.contains(document.activeElement)){
+        const activeEl = document.activeElement;
+        if(activeEl && typeof activeEl.blur === 'function'){
+          activeEl.blur();
+        }
+      }
+      calendarScroll.setAttribute('tabindex','-1');
       calendarScroll.classList.remove('is-visible');
       calendarScroll.setAttribute('aria-hidden','true');
       if(dateRangeInput) dateRangeInput.setAttribute('aria-expanded','false');
