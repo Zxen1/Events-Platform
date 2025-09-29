@@ -5569,13 +5569,23 @@ if (typeof slugify !== 'function') {
 
   function ensurePlaceholderSprites(mapInstance){
     if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
-    const required = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-    required.forEach(name => {
+    const addPlaceholder = (name) => {
+      if(!name) return;
       try{
         if(mapInstance.hasImage?.(name)) return;
         mapInstance.addImage(name, createTransparentPlaceholder(4), { pixelRatio: 1 });
       }catch(err){}
-    });
+    };
+    ['mx-federal-5','background','background-stroke','icon','icon-stroke'].forEach(addPlaceholder);
+    const compositePrefix = (typeof MARKER_LABEL_COMPOSITE_PREFIX === 'string' && MARKER_LABEL_COMPOSITE_PREFIX)
+      ? MARKER_LABEL_COMPOSITE_PREFIX
+      : 'marker-label-composite-';
+    if(typeof markerLabelCompositeStore !== 'undefined' && markerLabelCompositeStore instanceof Map){
+      markerLabelCompositeStore.forEach((_, spriteId) => addPlaceholder(`${compositePrefix}${spriteId}`));
+    }
+    if(typeof markerLabelCompositePending !== 'undefined' && markerLabelCompositePending instanceof Map){
+      markerLabelCompositePending.forEach((_, spriteId) => addPlaceholder(`${compositePrefix}${spriteId}`));
+    }
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -6224,7 +6234,7 @@ if (typeof slugify !== 'function') {
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
-          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
+          mapStyle = window.mapStyle = 'mapbox://styles/mapbox/streets-v12',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
           clusterMaxZoom = (()=>{
             let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '9', 10);
@@ -9485,7 +9495,7 @@ function makePosts(){
         }
         map = new mapboxgl.Map({
           container:'map',
-          style:'mapbox://styles/mapbox/standard',
+          style: mapStyle,
           projection:'globe',
           center: startCenter,
           zoom: startZoom,
@@ -9518,12 +9528,34 @@ if (!map.__pillHooksInstalled) {
 }
         const ensureMissingStyleImage = (evt) => {
           if(!evt || !evt.id) return;
+          const id = evt.id;
+          const addPlaceholder = (name) => {
+            if(!name) return;
+            try{
+              if(map.hasImage?.(name)) return;
+              map.addImage(name, createTransparentPlaceholder(4), { pixelRatio: 1 });
+            }catch(err){}
+          };
+          const compositePrefix = (typeof MARKER_LABEL_COMPOSITE_PREFIX === 'string' && MARKER_LABEL_COMPOSITE_PREFIX)
+            ? MARKER_LABEL_COMPOSITE_PREFIX
+            : 'marker-label-composite-';
+          if(id.startsWith(compositePrefix)){
+            addPlaceholder(id);
+            const spriteId = id.slice(compositePrefix.length);
+            if(spriteId && typeof ensureMarkerLabelComposite === 'function'){
+              try{
+                const maybe = ensureMarkerLabelComposite(map, spriteId);
+                if(maybe && typeof maybe.then === 'function'){
+                  maybe.catch?.(()=>{});
+                }
+              }catch(err){}
+            }
+            return;
+          }
           const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-          if(!placeholders.includes(evt.id)) return;
-          try{
-            if(map.hasImage?.(evt.id)) return;
-            map.addImage(evt.id, createTransparentPlaceholder(4), { pixelRatio: 1 });
-          }catch(err){}
+          if(placeholders.includes(id)){
+            addPlaceholder(id);
+          }
         };
         try{ map.on('styleimagemissing', ensureMissingStyleImage); }catch(err){}
 
