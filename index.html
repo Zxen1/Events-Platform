@@ -5796,8 +5796,6 @@ if (typeof slugify !== 'function') {
     const layers = style && Array.isArray(style.layers) ? style.layers : [];
     if(!layers.length) return;
 
-    const TARGET_SOURCE = 'posts';
-
     function patchExpression(expr){
       if(!Array.isArray(expr)){
         return { expr, changed:false };
@@ -5830,7 +5828,6 @@ if (typeof slugify !== 'function') {
 
     layers.forEach(layer => {
       if(!layer || !layer.id || !layer.filter) return;
-      if(typeof layer.source !== 'string' || layer.source !== TARGET_SOURCE) return;
       try{
         const patched = patchExpression(layer.filter);
         if(!patched.changed) return;
@@ -5839,9 +5836,28 @@ if (typeof slugify !== 'function') {
     });
   }
 
-  function patchTerrainSource(mapInstance){
+  function patchTerrainSource(mapInstance, style){
     if(!mapInstance || typeof mapInstance.setTerrain !== 'function') return;
-    try { mapInstance.setTerrain(null); } catch(err){}
+    const terrain = style && style.terrain;
+    if(!terrain || !terrain.source) return;
+    const sources = style.sources || {};
+    const originalSource = sources[terrain.source];
+    if(!originalSource) return;
+
+    const dedicatedId = 'terrain-dem-dedicated';
+    if(!mapInstance.getSource?.(dedicatedId)){
+      try {
+        const clone = JSON.parse(JSON.stringify(originalSource));
+        mapInstance.addSource(dedicatedId, clone);
+      } catch(err){}
+    }
+
+    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
+    const nextTerrain = Object.assign({}, terrain, { source: targetSource });
+    if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
+      nextTerrain.cutoff = 0.01;
+    }
+    try { mapInstance.setTerrain(nextTerrain); } catch(err){}
   }
 
   function patchMapboxStyleArtifacts(mapInstance){
