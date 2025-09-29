@@ -9900,7 +9900,16 @@ if (!map.__pillHooksInstalled) {
       if(sourceNeedsRebuild){
         ['cluster-count','clusters','marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
-        map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
+        map.addSource('posts', {
+          type:'geojson',
+          data: geojson,
+          cluster: shouldCluster,
+          clusterRadius: clusterRadius,
+          clusterMaxZoom: clusterMaxZoom,
+          clusterProperties:{
+            total_posts:['+', ['get','multiCount'], ['accumulated']]
+          }
+        });
       } else if(existing){
         existing.setData(geojson);
       }
@@ -9943,6 +9952,18 @@ if (!map.__pillHooksInstalled) {
           ]
         ]
       ];
+      const clusterCountValue = ['coalesce', ['get','total_posts'], ['get','point_count'], 0];
+      const clusterCountTextField = ['let', 'count', clusterCountValue,
+        ['case',
+          ['>=', ['var','count'], 1000000],
+          ['concat', ['to-string', ['/', ['round', ['*', ['/', ['var','count'], 1000000], 10]], 10]], 'M'],
+          ['>=', ['var','count'], 1000],
+          ['concat', ['to-string', ['/', ['round', ['*', ['/', ['var','count'], 1000], 10]], 10]], 'k'],
+          ['to-string', ['var','count']]
+        ]
+      ];
+      const clusterCircleColor = ['step', clusterCountValue, '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'];
+      const clusterCircleRadius = ['step', clusterCountValue, 16, 20, 22, 50, 28, 100, 34];
 
       if(shouldCluster){
         if(usingSvgClusters){
@@ -9983,15 +10004,15 @@ if (!map.__pillHooksInstalled) {
           if(visualsChanged || !map.getLayer('clusters')){
             if(map.getLayer('clusters')) map.removeLayer('clusters');
             map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
-              'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-              'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
+              'circle-color': clusterCircleColor,
+              'circle-radius': clusterCircleRadius,
               'circle-opacity': 0.85,
               'circle-stroke-color':'#0b1623',
               'circle-stroke-width':1
             } });
           } else {
-            try{ map.setPaintProperty('clusters','circle-color', ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786']); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-radius', ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34]); }catch(e){}
+            try{ map.setPaintProperty('clusters','circle-color', clusterCircleColor); }catch(e){}
+            try{ map.setPaintProperty('clusters','circle-radius', clusterCircleRadius); }catch(e){}
             try{ map.setPaintProperty('clusters','circle-opacity', 0.85); }catch(e){}
             try{ map.setPaintProperty('clusters','circle-stroke-color','#0b1623'); }catch(e){}
             try{ map.setPaintProperty('clusters','circle-stroke-width',1); }catch(e){}
@@ -10006,7 +10027,7 @@ if (!map.__pillHooksInstalled) {
             source:'posts',
             filter:['has','point_count'],
             layout:{
-              'text-field':['get','point_count_abbreviated'],
+              'text-field': clusterCountTextField,
               'text-size':12,
               'text-allow-overlap': true,
               'text-ignore-placement': true,
@@ -10016,7 +10037,7 @@ if (!map.__pillHooksInstalled) {
             paint:{'text-color':'#fff'}
           });
         } else {
-          try{ map.setLayoutProperty('cluster-count','text-field',['get','point_count_abbreviated']); }catch(e){}
+          try{ map.setLayoutProperty('cluster-count','text-field', clusterCountTextField); }catch(e){}
           try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
         }
       } else {
