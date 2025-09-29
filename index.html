@@ -9219,7 +9219,7 @@ if (!map.__pillHooksInstalled) {
           paint:{
             'icon-translate': [markerLabelBgTranslatePx, 0],
             'icon-translate-anchor': 'viewport',
-            'icon-opacity': 0.8
+            'icon-opacity': 1
           }
         }, 'unclustered');
       }
@@ -9235,8 +9235,8 @@ if (!map.__pillHooksInstalled) {
             'text-size': markerLabelTextSize,
             'text-line-height': markerLabelTextLineHeight,
             'text-anchor': 'left',
-            'text-allow-overlap': true,
-            'text-ignore-placement': true,
+            'text-allow-overlap': false,
+            'text-ignore-placement': false,
             'text-pitch-alignment': 'viewport',
             'text-max-width': markerLabelTextMaxWidth,
             'symbol-z-order': 'viewport-y',
@@ -9260,15 +9260,15 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('marker-label-bg','symbol-sort-key',1099); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
-      try{ map.setPaintProperty('marker-label-bg','icon-opacity',0.8); }catch(e){}
+      try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-size', markerLabelTextSize); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-line-height', markerLabelTextLineHeight); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-anchor','left'); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-allow-overlap', true); }catch(e){}
-      try{ map.setLayoutProperty('marker-label-text','text-ignore-placement', true); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-text','text-allow-overlap', false); }catch(e){}
+      try{ map.setLayoutProperty('marker-label-text','text-ignore-placement', false); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-max-width', markerLabelTextMaxWidth); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','symbol-z-order','viewport-y'); }catch(e){}
