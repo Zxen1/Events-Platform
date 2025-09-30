@@ -6281,7 +6281,7 @@ if (typeof slugify !== 'function') {
         const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
         const HEAT_MAX_ZOOM = 2.99;
         const CLUSTER_MIN_ZOOM = 3;
-        const CLUSTER_MAX_ZOOM = 7.99;
+        const CLUSTER_MAX_ZOOM = 7;
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
@@ -6327,7 +6327,11 @@ if (typeof slugify !== 'function') {
             if(mapInstance.getSource(CLUSTER_SOURCE_ID)) mapInstance.removeSource(CLUSTER_SOURCE_ID);
           }catch(err){ console.error(err); }
 
-          const effectiveClusterMaxZoom = Math.max(CLUSTER_MIN_ZOOM, Math.min(clusterMaxZoom, CLUSTER_MAX_ZOOM));
+          const normalizedClusterMaxZoom = Number.isFinite(clusterMaxZoom) ? Math.floor(clusterMaxZoom) : CLUSTER_MIN_ZOOM;
+          const effectiveClusterMaxZoom = Math.max(
+            CLUSTER_MIN_ZOOM,
+            Math.min(normalizedClusterMaxZoom, CLUSTER_MAX_ZOOM)
+          );
           const effectiveRadius = clusterRadius > 0 ? clusterRadius : 60;
           try{
             mapInstance.addSource(CLUSTER_SOURCE_ID, {
