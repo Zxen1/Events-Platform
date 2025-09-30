@@ -10677,8 +10677,7 @@ if (!map.__pillHooksInstalled) {
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const geojson = postsToGeoJSON(markerList);
       const multiFeatures = geojson.features.filter(f => f && f.properties && f.properties.multi === 1);
-      const singleFeatures = geojson.features.filter(f => f && (!f.properties || f.properties.multi !== 1));
-      const postsData = { type:'FeatureCollection', features: singleFeatures };
+      const postsData = { type:'FeatureCollection', features: geojson.features };
       const multiData = { type:'FeatureCollection', features: multiFeatures };
       const HEAT_MAX_ZOOM = 2.99;
       const CLUSTER_MIN_ZOOM = 3;
@@ -10755,7 +10754,14 @@ if (!map.__pillHooksInstalled) {
       const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
-      const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
+      const markerLabelBaseConditions = [
+        ['!',['has','point_count']],
+        ['has','title']
+      ];
+      const markerLabelFilters = {
+        single: ['all', ...markerLabelBaseConditions, ['!=', ['coalesce', ['get','multi'], 0], 1]],
+        multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
+      };
 
       if(shouldCluster){
         if(usingSvgClusters){
@@ -10854,16 +10860,16 @@ if (!map.__pillHooksInstalled) {
 
       const markerLabelMinZoom = shouldCluster ? MARKER_MIN_ZOOM : 0;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100 },
-        { id:'multi-marker-label', source:'multi-posts', sortKey: 1101 }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single },
+        { id:'multi-marker-label', source:'multi-posts', sortKey: 1101, filter: markerLabelFilters.multi }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter }) => {
         if(!map.getLayer(id)){
           map.addLayer({
             id,
             type:'symbol',
             source,
-            filter: markerLabelFilter,
+            filter: filter || markerLabelFilters.single,
             minzoom: markerLabelMinZoom,
             layout:{
               'icon-image': markerLabelIconImage,
@@ -10882,7 +10888,7 @@ if (!map.__pillHooksInstalled) {
             }
           });
         }
-        try{ map.setFilter(id, markerLabelFilter); }catch(e){}
+        try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', markerLabelIconImage); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
