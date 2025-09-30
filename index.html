@@ -7398,6 +7398,35 @@ function uniqueTitle(seed, cityName, idx){
 
   const REAL_VENUE_IDENTIFIERS = new Set(ALL_REAL_VENUES.map(realVenueIdentity));
 
+  const REAL_VENUE_NEIGHBORS = (() => {
+    const neighborMap = new Map();
+    const uniqueEntries = [];
+    for(const entry of ALL_REAL_VENUES){
+      if(!entry) continue;
+      const lng = Number(entry.lng);
+      const lat = Number(entry.lat);
+      if(!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+      const key = realVenueIdentity(entry);
+      if(!key || neighborMap.has(key)) continue;
+      neighborMap.set(key, []);
+      uniqueEntries.push({ key, entry, lng, lat });
+    }
+    for(let i = 0; i < uniqueEntries.length; i++){
+      const { key: keyA, entry: entryA, lng: lngA, lat: latA } = uniqueEntries[i];
+      for(let j = i + 1; j < uniqueEntries.length; j++){
+        const { key: keyB, entry: entryB, lng: lngB, lat: latB } = uniqueEntries[j];
+        const distance = haversineDistanceKm(lngA, latA, lngB, latB);
+        if(!Number.isFinite(distance)) continue;
+        if(distance < MIN_MULTI_VENUE_DISTANCE_KM || distance > MAX_MULTI_VENUE_DISTANCE_KM){
+          continue;
+        }
+        neighborMap.get(keyA).push(entryB);
+        neighborMap.get(keyB).push(entryA);
+      }
+    }
+    return neighborMap;
+  })();
+
   function isRealVenueEntry(entry){
     return REAL_VENUE_IDENTIFIERS.has(realVenueIdentity(entry));
   }
@@ -7578,32 +7607,44 @@ function uniqueTitle(seed, cityName, idx){
     if(desiredCount <= 1){
       return locations;
     }
-    const candidates = shuffleRealVenues(ALL_REAL_VENUES);
-    for(const entry of candidates){
-      if(locations.length >= desiredCount){
-        break;
+    const baseKey = realVenueIdentity(baseEntry);
+    const neighborPool = baseKey ? (REAL_VENUE_NEIGHBORS.get(baseKey) || []) : [];
+
+    const processCandidates = (candidateList=[]) => {
+      for(const entry of candidateList){
+        if(locations.length >= desiredCount){
+          break;
+        }
+        const key = realVenueIdentity(entry);
+        if(!key || usedKeys.has(key)){
+          continue;
+        }
+        if(!isRealVenueEntry(entry)){
+          continue;
+        }
+        const detail = toLocationDetails(entry);
+        if(!Number.isFinite(detail.lng) || !Number.isFinite(detail.lat)){
+          continue;
+        }
+        const withinRange = selectedLocations.every(existing => {
+          const dist = haversineDistanceKm(existing.lng, existing.lat, detail.lng, detail.lat);
+          return Number.isFinite(dist) && dist >= MIN_MULTI_VENUE_DISTANCE_KM && dist <= MAX_MULTI_VENUE_DISTANCE_KM;
+        });
+        if(!withinRange){
+          continue;
+        }
+        locations.push(detail);
+        selectedLocations.push(detail);
+        usedKeys.add(key);
       }
-      const key = realVenueIdentity(entry);
-      if(!key || usedKeys.has(key)){
-        continue;
-      }
-      if(!isRealVenueEntry(entry)){
-        continue;
-      }
-      const detail = toLocationDetails(entry);
-      if(!Number.isFinite(detail.lng) || !Number.isFinite(detail.lat)){
-        continue;
-      }
-      const withinRange = selectedLocations.every(existing => {
-        const dist = haversineDistanceKm(existing.lng, existing.lat, detail.lng, detail.lat);
-        return Number.isFinite(dist) && dist >= MIN_MULTI_VENUE_DISTANCE_KM && dist <= MAX_MULTI_VENUE_DISTANCE_KM;
-      });
-      if(!withinRange){
-        continue;
-      }
-      locations.push(detail);
-      selectedLocations.push(detail);
-      usedKeys.add(key);
+    };
+
+    if(neighborPool.length){
+      processCandidates(shuffleRealVenues(neighborPool));
+    }
+
+    if(locations.length < desiredCount){
+      processCandidates(shuffleRealVenues(ALL_REAL_VENUES));
     }
     return locations;
   }
