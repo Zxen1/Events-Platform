@@ -6153,6 +6153,30 @@ if (typeof slugify !== 'function') {
 
   let startPitch, startBearing, logoEls = [], geocoder;
   const geocoders = [];
+  let lastGeocoderProximity = null;
+
+  function setAllGeocoderProximity(lng, lat){
+    if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    const prox = { longitude: lng, latitude: lat };
+    const key = `${lng.toFixed(6)},${lat.toFixed(6)}`;
+    if(lastGeocoderProximity === key) return;
+    lastGeocoderProximity = key;
+    geocoders.forEach(gc => {
+      if(gc && typeof gc.setProximity === 'function'){
+        try{ gc.setProximity(prox); }catch(err){}
+      }
+    });
+  }
+
+  function syncGeocoderProximityToMap(){
+    if(!map || typeof map.getCenter !== 'function') return;
+    try{
+      const center = map.getCenter();
+      if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+        setAllGeocoderProximity(center.lng, center.lat);
+      }
+    }catch(err){}
+  }
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
   const MapRegistry = {
     list: [],
@@ -7596,6 +7620,129 @@ function uniqueTitle(seed, cityName, idx){
     return locations;
   }
 
+  const LOCAL_GEOCODER_MAX_RESULTS = 10;
+  const localVenueIndex = [];
+  const localVenueKeySet = new Set();
+
+  function localVenueKey(name='', address='', lng, lat){
+    const normName = (name || '').toLowerCase();
+    const normAddr = (address || '').toLowerCase();
+    const normLng = Number.isFinite(lng) ? lng.toFixed(6) : '';
+    const normLat = Number.isFinite(lat) ? lat.toFixed(6) : '';
+    return `${normName}|${normAddr}|${normLng}|${normLat}`;
+  }
+
+  function cloneGeocoderFeature(feature){
+    return {
+      ...feature,
+      geometry: {
+        ...feature.geometry,
+        coordinates: Array.isArray(feature.geometry?.coordinates)
+          ? feature.geometry.coordinates.slice()
+          : []
+      },
+      center: Array.isArray(feature.center) ? feature.center.slice() : [],
+      properties: {
+        ...(feature.properties || {})
+      }
+    };
+  }
+
+  function addVenueToLocalIndex({ name, address, lng, lat, city }){
+    if(!name || !Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    const key = localVenueKey(name, address, lng, lat);
+    if(localVenueKeySet.has(key)) return;
+    localVenueKeySet.add(key);
+    const contextParts = [address, city].filter(Boolean);
+    const placeName = contextParts.length ? `${name} — ${contextParts.join(', ')}` : name;
+    const searchText = [name, address, city].filter(Boolean).join(' ').toLowerCase();
+    localVenueIndex.push({
+      search: searchText,
+      feature: {
+        type:'Feature',
+        geometry:{ type:'Point', coordinates:[lng, lat] },
+        center:[lng, lat],
+        place_name: placeName,
+        text: name,
+        place_type:['venue'],
+        properties:{
+          name,
+          address: address || '',
+          city: city || '',
+          source:'local-venue'
+        }
+      }
+    });
+  }
+
+  function rebuildVenueIndex(){
+    localVenueIndex.length = 0;
+    localVenueKeySet.clear();
+    const postList = Array.isArray(posts) ? posts : [];
+    const addFromPost = (post) => {
+      if(!post) return;
+      const city = post.city || '';
+      const fallbackName = getPrimaryVenueName(post) || city;
+      const fallbackAddress = city || post.city || '';
+      if(Array.isArray(post.locations) && post.locations.length){
+        post.locations.forEach(loc => {
+          if(!loc || !Number.isFinite(loc.lng) || !Number.isFinite(loc.lat)) return;
+          const locName = loc.venue || fallbackName;
+          const locAddress = loc.address || fallbackAddress;
+          addVenueToLocalIndex({ name: locName, address: locAddress, lng: loc.lng, lat: loc.lat, city });
+        });
+        return;
+      }
+      if(Number.isFinite(post.lng) && Number.isFinite(post.lat)){
+        addVenueToLocalIndex({ name: fallbackName, address: fallbackAddress, lng: post.lng, lat: post.lat, city });
+      }
+    };
+    postList.forEach(addFromPost);
+    Object.entries(REAL_VENUES).forEach(([city, list]) => {
+      if(!Array.isArray(list)) return;
+      list.forEach(entry => {
+        if(!entry || !Number.isFinite(entry.lng) || !Number.isFinite(entry.lat)) return;
+        const venueName = entry.venue || '';
+        if(!venueName) return;
+        addVenueToLocalIndex({ name: venueName, address: entry.address || city, lng: entry.lng, lat: entry.lat, city });
+      });
+    });
+  }
+
+  function searchLocalVenues(query){
+    const normalized = (query || '').toLowerCase().trim();
+    if(!normalized) return [];
+    const terms = normalized.split(/\s+/).filter(Boolean);
+    if(!terms.length) return [];
+    const matches = [];
+    for(const entry of localVenueIndex){
+      const haystack = entry.search;
+      let score = 0;
+      let valid = true;
+      for(const term of terms){
+        const idx = haystack.indexOf(term);
+        if(idx === -1){
+          valid = false;
+          break;
+        }
+        score += 1 / (1 + idx);
+      }
+      if(valid){
+        matches.push({ entry, score });
+      }
+    }
+    matches.sort((a,b)=> b.score - a.score);
+    return matches.slice(0, LOCAL_GEOCODER_MAX_RESULTS).map(item => {
+      const feature = cloneGeocoderFeature(item.entry.feature);
+      feature.relevance = Math.min(1, item.score);
+      return feature;
+    });
+  }
+
+  const localVenueGeocoder = (query) => searchLocalVenues(query);
+
+  rebuildVenueIndex();
+
   function randomImages(id){
     const hero = imgHero(id);
     const others = Array.from({length:9},(_,i)=>{
@@ -7836,6 +7983,7 @@ function makePosts(){
       posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
+      rebuildVenueIndex();
       if(Object.keys(subcategoryMarkers).length) addPostSource();
       initAdBoard();
       applyFilters();
@@ -9573,19 +9721,34 @@ function makePosts(){
       const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
       const cityZoomLevel = 12;
       sets.forEach((sel, idx)=>{
-        const gc = new MapboxGeocoder({
+        const center = map && typeof map.getCenter === 'function' ? map.getCenter() : null;
+        const geocoderOptions = {
           accessToken: mapboxgl.accessToken,
           mapboxgl,
           marker:false,
           placeholder:'Location',
           reverseGeocode:true,
-          collapsed:false
-        });
+          collapsed:false,
+          localGeocoder: localVenueGeocoder,
+          localGeocoderOnly:false,
+          limit: 10
+        };
+        if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+          geocoderOptions.proximity = { longitude: center.lng, latitude: center.lat };
+        }
+        const gc = new MapboxGeocoder(geocoderOptions);
         gc.on('result', (e)=>{
           spinEnabled = false;
           localStorage.setItem('spinGlobe','false');
           stopSpin();
           if(mode!=='map') setMode('map');
+          if(e && e.result){
+            const coords = Array.isArray(e.result.center) ? e.result.center
+              : (e.result.geometry && Array.isArray(e.result.geometry.coordinates) ? e.result.geometry.coordinates : null);
+            if(Array.isArray(coords) && Number.isFinite(coords[0]) && Number.isFinite(coords[1])){
+              setAllGeocoderProximity(coords[0], coords[1]);
+            }
+          }
           gc.clear();
         });
         const gEl = document.querySelector(sel.geo);
@@ -9632,6 +9795,9 @@ function makePosts(){
           stopGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
+          if(event && event.coords){
+            setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
+          }
           if(map && typeof map.easeTo === 'function' && event && event.coords){
             let targetZoom = cityZoomLevel;
             if(typeof map.getMaxZoom === 'function'){
@@ -9682,6 +9848,7 @@ function makePosts(){
         const compassHolder = document.querySelector(sel.compass);
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
+      syncGeocoderProximityToMap();
     }
 
     async function initMap(){
@@ -9880,6 +10047,7 @@ if (!map.__pillHooksInstalled) {
         }
         checkLoadPosts();
       });
+      map.on('moveend', ()=>{ syncGeocoderProximityToMap(); });
       addControls();
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
