@@ -7814,6 +7814,237 @@ function makePosts(){
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
+
+  // ---- 400 single-venue posts across unique locations ----
+  const coordKey = (lng, lat)=>{
+    if(!Number.isFinite(lng) || !Number.isFinite(lat)) return '';
+    return `${lng.toFixed(6)},${lat.toFixed(6)}`;
+  };
+  const existingCoordKeys = new Set(out.map(p => coordKey(p.lng, p.lat)).filter(Boolean));
+  const singleVenueBases = [
+    { city: "Anchorage, USA", lng: -149.9003, lat: 61.2181 },
+    { city: "Honolulu, USA", lng: -157.8583, lat: 21.3069 },
+    { city: "San Francisco, USA", lng: -122.4194, lat: 37.7749 },
+    { city: "Seattle, USA", lng: -122.3321, lat: 47.6062 },
+    { city: "Vancouver, Canada", lng: -123.1207, lat: 49.2827 },
+    { city: "Calgary, Canada", lng: -114.0719, lat: 51.0447 },
+    { city: "Toronto, Canada", lng: -79.3832, lat: 43.6532 },
+    { city: "Montreal, Canada", lng: -73.5673, lat: 45.5017 },
+    { city: "Boston, USA", lng: -71.0589, lat: 42.3601 },
+    { city: "New Orleans, USA", lng: -90.0715, lat: 29.9511 },
+    { city: "Chicago, USA", lng: -87.6298, lat: 41.8781 },
+    { city: "Miami, USA", lng: -80.1918, lat: 25.7617 },
+    { city: "Dallas, USA", lng: -96.7969, lat: 32.7767 },
+    { city: "Denver, USA", lng: -104.9903, lat: 39.7392 },
+    { city: "Phoenix, USA", lng: -112.0740, lat: 33.4484 },
+    { city: "Los Angeles, USA", lng: -118.2437, lat: 34.0522 },
+    { city: "Mexico City, Mexico", lng: -99.1332, lat: 19.4326 },
+    { city: "Guadalajara, Mexico", lng: -103.3496, lat: 20.6597 },
+    { city: "Bogotá, Colombia", lng: -74.0721, lat: 4.7110 },
+    { city: "Lima, Peru", lng: -77.0428, lat: -12.0464 },
+    { city: "Quito, Ecuador", lng: -78.4678, lat: -0.1807 },
+    { city: "Santiago, Chile", lng: -70.6693, lat: -33.4489 },
+    { city: "Buenos Aires, Argentina", lng: -58.3816, lat: -34.6037 },
+    { city: "Montevideo, Uruguay", lng: -56.1645, lat: -34.9011 },
+    { city: "São Paulo, Brazil", lng: -46.6333, lat: -23.5505 },
+    { city: "Rio de Janeiro, Brazil", lng: -43.1729, lat: -22.9068 },
+    { city: "Brasília, Brazil", lng: -47.8825, lat: -15.7942 },
+    { city: "Recife, Brazil", lng: -34.8770, lat: -8.0476 },
+    { city: "Fortaleza, Brazil", lng: -38.5434, lat: -3.7319 },
+    { city: "Caracas, Venezuela", lng: -66.9036, lat: 10.4806 },
+    { city: "San Juan, Puerto Rico", lng: -66.1057, lat: 18.4655 },
+    { city: "Reykjavík, Iceland", lng: -21.8277, lat: 64.1265 },
+    { city: "Oslo, Norway", lng: 10.7522, lat: 59.9139 },
+    { city: "Stockholm, Sweden", lng: 18.0686, lat: 59.3293 },
+    { city: "Helsinki, Finland", lng: 24.9384, lat: 60.1699 },
+    { city: "Copenhagen, Denmark", lng: 12.5683, lat: 55.6761 },
+    { city: "Edinburgh, UK", lng: -3.1883, lat: 55.9533 },
+    { city: "Dublin, Ireland", lng: -6.2603, lat: 53.3498 },
+    { city: "Glasgow, UK", lng: -4.2518, lat: 55.8642 },
+    { city: "London, UK", lng: -0.1276, lat: 51.5074 },
+    { city: "Manchester, UK", lng: -2.2426, lat: 53.4808 },
+    { city: "Paris, France", lng: 2.3522, lat: 48.8566 },
+    { city: "Lyon, France", lng: 4.8357, lat: 45.7640 },
+    { city: "Marseille, France", lng: 5.3698, lat: 43.2965 },
+    { city: "Madrid, Spain", lng: -3.7038, lat: 40.4168 },
+    { city: "Barcelona, Spain", lng: 2.1734, lat: 41.3851 },
+    { city: "Valencia, Spain", lng: -0.3763, lat: 39.4699 },
+    { city: "Lisbon, Portugal", lng: -9.1393, lat: 38.7223 },
+    { city: "Porto, Portugal", lng: -8.6291, lat: 41.1579 },
+    { city: "Brussels, Belgium", lng: 4.3517, lat: 50.8503 },
+    { city: "Amsterdam, Netherlands", lng: 4.9041, lat: 52.3676 },
+    { city: "Rotterdam, Netherlands", lng: 4.4792, lat: 51.9244 },
+    { city: "Berlin, Germany", lng: 13.4050, lat: 52.5200 },
+    { city: "Hamburg, Germany", lng: 9.9937, lat: 53.5511 },
+    { city: "Munich, Germany", lng: 11.5820, lat: 48.1351 },
+    { city: "Frankfurt, Germany", lng: 8.6821, lat: 50.1109 },
+    { city: "Prague, Czechia", lng: 14.4378, lat: 50.0755 },
+    { city: "Vienna, Austria", lng: 16.3738, lat: 48.2082 },
+    { city: "Zurich, Switzerland", lng: 8.5417, lat: 47.3769 },
+    { city: "Warsaw, Poland", lng: 21.0122, lat: 52.2297 },
+    { city: "Kraków, Poland", lng: 19.9440, lat: 50.0647 },
+    { city: "Budapest, Hungary", lng: 19.0402, lat: 47.4979 },
+    { city: "Bucharest, Romania", lng: 26.1025, lat: 44.4268 },
+    { city: "Athens, Greece", lng: 23.7275, lat: 37.9838 },
+    { city: "Istanbul, Türkiye", lng: 28.9784, lat: 41.0082 },
+    { city: "Ankara, Türkiye", lng: 32.8597, lat: 39.9334 },
+    { city: "Cairo, Egypt", lng: 31.2357, lat: 30.0444 },
+    { city: "Casablanca, Morocco", lng: -7.5898, lat: 33.5731 },
+    { city: "Marrakesh, Morocco", lng: -7.9811, lat: 31.6295 },
+    { city: "Algiers, Algeria", lng: 3.0588, lat: 36.7538 },
+    { city: "Tunis, Tunisia", lng: 10.1815, lat: 36.8065 },
+    { city: "Tripoli, Libya", lng: 13.1913, lat: 32.8872 },
+    { city: "Khartoum, Sudan", lng: 32.5599, lat: 15.5007 },
+    { city: "Addis Ababa, Ethiopia", lng: 38.7578, lat: 8.9806 },
+    { city: "Nairobi, Kenya", lng: 36.8219, lat: -1.2921 },
+    { city: "Kampala, Uganda", lng: 32.5825, lat: 0.3476 },
+    { city: "Dar es Salaam, Tanzania", lng: 39.2083, lat: -6.7924 },
+    { city: "Kigali, Rwanda", lng: 30.0588, lat: -1.9499 },
+    { city: "Lagos, Nigeria", lng: 3.3792, lat: 6.5244 },
+    { city: "Accra, Ghana", lng: -0.1869, lat: 5.6037 },
+    { city: "Abidjan, Côte d'Ivoire", lng: -4.0083, lat: 5.3599 },
+    { city: "Dakar, Senegal", lng: -17.4731, lat: 14.7167 },
+    { city: "Kinshasa, DR Congo", lng: 15.2663, lat: -4.4419 },
+    { city: "Luanda, Angola", lng: 13.2344, lat: -8.8383 },
+    { city: "Johannesburg, South Africa", lng: 28.0473, lat: -26.2041 },
+    { city: "Cape Town, South Africa", lng: 18.4241, lat: -33.9249 },
+    { city: "Windhoek, Namibia", lng: 17.0832, lat: -22.5609 },
+    { city: "Gaborone, Botswana", lng: 25.9089, lat: -24.6282 },
+    { city: "Harare, Zimbabwe", lng: 31.0530, lat: -17.8249 },
+    { city: "Maputo, Mozambique", lng: 32.5732, lat: -25.9692 },
+    { city: "Riyadh, Saudi Arabia", lng: 46.6753, lat: 24.7136 },
+    { city: "Jeddah, Saudi Arabia", lng: 39.1979, lat: 21.4858 },
+    { city: "Doha, Qatar", lng: 51.5310, lat: 25.2854 },
+    { city: "Dubai, UAE", lng: 55.2708, lat: 25.2048 },
+    { city: "Muscat, Oman", lng: 58.4059, lat: 23.5859 },
+    { city: "Kuwait City, Kuwait", lng: 47.9783, lat: 29.3759 },
+    { city: "Manama, Bahrain", lng: 50.5861, lat: 26.2285 },
+    { city: "Tehran, Iran", lng: 51.3890, lat: 35.6892 },
+    { city: "Baghdad, Iraq", lng: 44.3661, lat: 33.3152 },
+    { city: "Amman, Jordan", lng: 35.9239, lat: 31.9522 },
+    { city: "Beirut, Lebanon", lng: 35.5018, lat: 33.8938 },
+    { city: "Jerusalem", lng: 35.2137, lat: 31.7683 },
+    { city: "Mumbai, India", lng: 72.8777, lat: 19.0760 },
+    { city: "Delhi, India", lng: 77.1025, lat: 28.7041 },
+    { city: "Bengaluru, India", lng: 77.5946, lat: 12.9716 },
+    { city: "Hyderabad, India", lng: 78.4867, lat: 17.3850 },
+    { city: "Chennai, India", lng: 80.2707, lat: 13.0827 },
+    { city: "Kolkata, India", lng: 88.3639, lat: 22.5726 },
+    { city: "Kathmandu, Nepal", lng: 85.3240, lat: 27.7172 },
+    { city: "Dhaka, Bangladesh", lng: 90.4125, lat: 23.8103 },
+    { city: "Colombo, Sri Lanka", lng: 79.8612, lat: 6.9271 },
+    { city: "Bangkok, Thailand", lng: 100.5018, lat: 13.7563 },
+    { city: "Chiang Mai, Thailand", lng: 98.9931, lat: 18.7883 },
+    { city: "Vientiane, Laos", lng: 102.6341, lat: 17.9757 },
+    { city: "Phnom Penh, Cambodia", lng: 104.9282, lat: 11.5564 },
+    { city: "Ho Chi Minh City, Vietnam", lng: 106.6297, lat: 10.8231 },
+    { city: "Hanoi, Vietnam", lng: 105.8342, lat: 21.0278 },
+    { city: "Yangon, Myanmar", lng: 96.1951, lat: 16.8409 },
+    { city: "Singapore", lng: 103.8198, lat: 1.3521 },
+    { city: "Kuala Lumpur, Malaysia", lng: 101.6869, lat: 3.1390 },
+    { city: "Jakarta, Indonesia", lng: 106.8456, lat: -6.2088 },
+    { city: "Surabaya, Indonesia", lng: 112.7521, lat: -7.2575 },
+    { city: "Manila, Philippines", lng: 120.9842, lat: 14.5995 },
+    { city: "Cebu, Philippines", lng: 123.8854, lat: 10.3157 },
+    { city: "Hong Kong", lng: 114.1694, lat: 22.3193 },
+    { city: "Macau", lng: 113.5439, lat: 22.1987 },
+    { city: "Taipei, Taiwan", lng: 121.5654, lat: 25.0330 },
+    { city: "Seoul, South Korea", lng: 126.9780, lat: 37.5665 },
+    { city: "Busan, South Korea", lng: 129.0756, lat: 35.1796 },
+    { city: "Tokyo, Japan", lng: 139.6917, lat: 35.6895 },
+    { city: "Osaka, Japan", lng: 135.5023, lat: 34.6937 },
+    { city: "Nagoya, Japan", lng: 136.9066, lat: 35.1815 },
+    { city: "Sapporo, Japan", lng: 141.3544, lat: 43.0618 },
+    { city: "Beijing, China", lng: 116.4074, lat: 39.9042 },
+    { city: "Shanghai, China", lng: 121.4737, lat: 31.2304 },
+    { city: "Guangzhou, China", lng: 113.2644, lat: 23.1291 },
+    { city: "Shenzhen, China", lng: 114.0579, lat: 22.5431 },
+    { city: "Chengdu, China", lng: 104.0665, lat: 30.5728 },
+    { city: "Xi'an, China", lng: 108.9398, lat: 34.3416 },
+    { city: "Ulaanbaatar, Mongolia", lng: 106.9057, lat: 47.8864 },
+    { city: "Almaty, Kazakhstan", lng: 76.8860, lat: 43.2389 },
+    { city: "Bishkek, Kyrgyzstan", lng: 74.5698, lat: 42.8746 },
+    { city: "Tashkent, Uzbekistan", lng: 69.2401, lat: 41.2995 },
+    { city: "Astana, Kazakhstan", lng: 71.4704, lat: 51.1605 },
+    { city: "Moscow, Russia", lng: 37.6173, lat: 55.7558 },
+    { city: "Saint Petersburg, Russia", lng: 30.3351, lat: 59.9343 },
+    { city: "Novosibirsk, Russia", lng: 82.9346, lat: 55.0084 },
+    { city: "Yekaterinburg, Russia", lng: 60.5975, lat: 56.8389 },
+    { city: "Perth, Australia", lng: 115.8575, lat: -31.9505 },
+    { city: "Adelaide, Australia", lng: 138.6007, lat: -34.9285 },
+    { city: "Melbourne, Australia", lng: 144.9631, lat: -37.8136 },
+    { city: "Sydney, Australia", lng: 151.2093, lat: -33.8688 },
+    { city: "Brisbane, Australia", lng: 153.0251, lat: -27.4698 },
+    { city: "Hobart, Australia", lng: 147.3272, lat: -42.8821 },
+    { city: "Auckland, New Zealand", lng: 174.7633, lat: -36.8485 },
+    { city: "Wellington, New Zealand", lng: 174.7762, lat: -41.2865 },
+    { city: "Christchurch, New Zealand", lng: 172.6362, lat: -43.5321 },
+    { city: "Suva, Fiji", lng: 178.4419, lat: -18.1248 }
+  ];
+  const SINGLE_VENUE_POSTS = 400;
+  for(let i=0;i<SINGLE_VENUE_POSTS;i++){
+    const base = singleVenueBases[i % singleVenueBases.length];
+    const seq = Math.floor(i / singleVenueBases.length) + 1;
+    const angle = ((i % singleVenueBases.length) / singleVenueBases.length) * Math.PI * 2;
+    const radius = 0.3 + seq * 0.02;
+    let lng = base.lng + Math.cos(angle) * radius;
+    let lat = clamp(base.lat + Math.sin(angle) * radius, -80, 80);
+    let key = coordKey(lng, lat);
+    let attempt = 0;
+    while(existingCoordKeys.has(key) && attempt < 120){
+      const adjust = 0.05 + attempt * 0.01;
+      lng = base.lng + Math.cos(angle + adjust) * (radius + adjust * 0.5);
+      lat = clamp(base.lat + Math.sin(angle + adjust) * (radius + adjust * 0.5), -80, 80);
+      key = coordKey(lng, lat);
+      attempt++;
+    }
+    if(existingCoordKeys.has(key)){
+      let fallback = 0;
+      let nextLng = lng;
+      let nextLat = lat;
+      let nextKey = key;
+      while(existingCoordKeys.has(nextKey) && fallback < 160){
+        nextLng += 0.005 * (1 + (fallback % 3));
+        nextLat = clamp(nextLat + (fallback % 2 === 0 ? 0.003 : -0.003), -80, 80);
+        nextKey = coordKey(nextLng, nextLat);
+        fallback++;
+      }
+      lng = nextLng;
+      lat = nextLat;
+      key = nextKey;
+    }
+    if(key){ existingCoordKeys.add(key); }
+    const cat = pick(categories);
+    const sub = pick(cat.subs);
+    const id = 'SV'+i;
+    const title = `${id} ${uniqueTitle(i*48271+131, base.city, i)}`;
+    const created = new Date().toISOString().replace(/[:.]/g,'-');
+    const venueName = `${base.city} Solo Venue ${seq}-${(i % singleVenueBases.length) + 1}`;
+    const locationDetail = toLocationDetails({
+      venue: venueName,
+      address: base.city,
+      lng,
+      lat
+    });
+    out.push({
+      id,
+      title,
+      slug: slugify(title),
+      created,
+      city: base.city,
+      lng,
+      lat,
+      category: cat.name,
+      subcategory: sub,
+      dates: randomDates(),
+      sponsored: true, // All posts are sponsored for development
+      fav:false,
+      desc: randomText(),
+      images: randomImages(id),
+      locations: [locationDetail],
+      member: { username: randomUsername(id), avatar: randomAvatar(id) },
+    });
+  }
   return out;
 }
 
