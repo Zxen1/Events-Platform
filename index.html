@@ -6013,6 +6013,18 @@ if (typeof slugify !== 'function') {
     const layers = style && Array.isArray(style.layers) ? style.layers : [];
     if(!layers.length) return;
 
+    const shouldSkipLayer = (layer) => {
+      if(!layer) return true;
+      const meta = layer.metadata || {};
+      if(meta && (meta['mapbox:featureset'] || meta['mapbox:featureComponent'])){
+        const component = meta['mapbox:featureComponent'];
+        if(typeof component === 'string' && component.includes('place-label')) return true;
+        if(meta['mapbox:featureset']) return true;
+      }
+      if(typeof layer.id === 'string' && layer.id.includes('place-label')) return true;
+      return false;
+    };
+
     function patchExpression(expr){
       if(!Array.isArray(expr)){
         return { expr, changed:false };
@@ -6045,6 +6057,7 @@ if (typeof slugify !== 'function') {
 
     layers.forEach(layer => {
       if(!layer || !layer.id || !layer.filter) return;
+      if(shouldSkipLayer(layer)) return;
       try{
         const patched = patchExpression(layer.filter);
         if(!patched.changed) return;
@@ -6248,7 +6261,12 @@ if (typeof slugify !== 'function') {
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
-          clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
+          clusterRadius = (()=>{
+            const DEFAULT_RADIUS = 52;
+            let stored = parseInt(localStorage.getItem('clusterRadius') || String(DEFAULT_RADIUS), 10);
+            if(!Number.isFinite(stored) || Number.isNaN(stored)) stored = DEFAULT_RADIUS;
+            return Math.max(0, Math.min(stored, 512));
+          })(),
           clusterMaxZoom = (()=>{
             let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '9', 10);
             if(Number.isNaN(storedValue)) storedValue = 9;
@@ -10657,12 +10675,18 @@ if (!map.__pillHooksInstalled) {
       const clusterPropsChanged = shouldCluster
         ? JSON.stringify(serializedClusterProps || {}) !== JSON.stringify(desiredClusterProperties)
         : !!(serializedClusterProps && Object.keys(serializedClusterProps).length);
-      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== effectiveClusterMaxZoom || clusterPropsChanged;
+      const existingRadius = opts && typeof opts.clusterRadius === 'number' ? opts.clusterRadius : undefined;
+      const radiusChanged = shouldCluster ? existingRadius !== clusterRadius : typeof existingRadius === 'number';
+      const existingMaxZoom = opts && typeof opts.clusterMaxZoom === 'number' ? opts.clusterMaxZoom : undefined;
+      const maxZoomChanged = shouldCluster ? existingMaxZoom !== effectiveClusterMaxZoom : typeof existingMaxZoom === 'number';
+      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || radiusChanged || maxZoomChanged || clusterPropsChanged;
       if(sourceNeedsRebuild){
         ['cluster-count','clusters','marker-label','multi-marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
-        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: effectiveClusterMaxZoom };
+        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster };
         if(shouldCluster){
+          sourceConfig.clusterRadius = clusterRadius;
+          sourceConfig.clusterMaxZoom = effectiveClusterMaxZoom;
           sourceConfig.clusterProperties = desiredClusterProperties;
         }
         map.addSource('posts', sourceConfig);
