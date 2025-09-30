@@ -186,6 +186,26 @@
     .mapmarker-label-line:first-child{ font-weight: 600; }
     .mapmarker-label-line:not(:first-child){ font-weight: 400; }
 
+    .post-location-marker{
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+      cursor: pointer;
+      display: block;
+    }
+    .post-location-marker.is-dimmed{
+      filter: grayscale(100%);
+      opacity: 0.5;
+      transform: scale(0.9);
+    }
+    .post-location-marker.is-selected{
+      filter: none;
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
     .map-card-label{
       height: 60px;
       justify-content: flex-start;
@@ -7337,6 +7357,68 @@ function uniqueTitle(seed, cityName, idx){
     ]
   };
 
+  const REAL_VENUE_ID_PRECISION = 6;
+  const MIN_MULTI_VENUE_DISTANCE_KM = 100;
+  const MAX_MULTI_VENUE_DISTANCE_KM = 4000;
+
+  const ALL_REAL_VENUES = Object.values(REAL_VENUES).reduce((acc, arr) => {
+    if(Array.isArray(arr)){
+      arr.forEach(entry => {
+        if(entry && Number.isFinite(entry.lng) && Number.isFinite(entry.lat)){
+          acc.push(entry);
+        }
+      });
+    }
+    return acc;
+  }, []);
+
+  function realVenueIdentity(entry){
+    if(!entry) return '';
+    const lng = Number(entry.lng);
+    const lat = Number(entry.lat);
+    const venue = (entry.venue || '').toLowerCase();
+    const address = (entry.address || '').toLowerCase();
+    if(!Number.isFinite(lng) || !Number.isFinite(lat)){
+      return `${venue}|${address}|invalid`;
+    }
+    return `${venue}|${address}|${lng.toFixed(REAL_VENUE_ID_PRECISION)}|${lat.toFixed(REAL_VENUE_ID_PRECISION)}`;
+  }
+
+  const REAL_VENUE_IDENTIFIERS = new Set(ALL_REAL_VENUES.map(realVenueIdentity));
+
+  function isRealVenueEntry(entry){
+    return REAL_VENUE_IDENTIFIERS.has(realVenueIdentity(entry));
+  }
+
+  function haversineDistanceKm(lng1, lat1, lng2, lat2){
+    if(![lng1, lat1, lng2, lat2].every(Number.isFinite)){
+      return NaN;
+    }
+    const toRad = deg => deg * Math.PI / 180;
+    const lat1Rad = toRad(lat1);
+    const lat2Rad = toRad(lat2);
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const sinLat = Math.sin(dLat / 2);
+    const sinLng = Math.sin(dLng / 2);
+    const a = sinLat * sinLat + Math.cos(lat1Rad) * Math.cos(lat2Rad) * sinLng * sinLng;
+    const clamped = Math.min(1, Math.max(0, a));
+    const c = 2 * Math.atan2(Math.sqrt(clamped), Math.sqrt(1 - clamped));
+    const EARTH_RADIUS_KM = 6371;
+    return EARTH_RADIUS_KM * c;
+  }
+
+  function shuffleRealVenues(list){
+    const arr = list.slice();
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(rnd() * (i + 1));
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
   const CITY_BOUNDS = {
     "Federation Square, Melbourne": { lng:[144.9660, 144.9730], lat:[-37.8200, -37.8100] },
     "Hobart, Tasmania": { lng:[147.2900, 147.3600], lat:[-42.9100, -42.8600] },
@@ -7462,19 +7544,56 @@ function uniqueTitle(seed, cityName, idx){
 
   function buildLocationList(city, baseLng=0, baseLat=0, primaryEntry){
     const count = 1 + Math.floor(rnd()*5);
-    const list = [];
-    if(primaryEntry){
-      list.push(toLocationDetails(primaryEntry));
+    const locations = [];
+    const selectedLocations = [];
+    const usedKeys = new Set();
+    const baseEntry = primaryEntry || pickRealVenue(city, baseLng, baseLat, { fallbackName: city, fallbackAddress: city });
+    if(baseEntry){
+      const detail = toLocationDetails(baseEntry);
+      locations.push(detail);
+      if(Number.isFinite(detail.lng) && Number.isFinite(detail.lat)){
+        selectedLocations.push(detail);
+      }
+      usedKeys.add(realVenueIdentity(baseEntry));
     }
-    const poolAvailable = getVenuePool(city).length > 0;
-    while(list.length < count){
-      const entry = pickRealVenue(city, baseLng, baseLat);
-      list.push(toLocationDetails(entry));
-      if(!poolAvailable){
+    if(locations.length >= count){
+      return locations;
+    }
+    if(!isRealVenueEntry(baseEntry)){
+      return locations;
+    }
+    const desiredCount = Math.min(Math.max(count, 1), 6);
+    if(desiredCount <= 1){
+      return locations;
+    }
+    const candidates = shuffleRealVenues(ALL_REAL_VENUES);
+    for(const entry of candidates){
+      if(locations.length >= desiredCount){
         break;
       }
+      const key = realVenueIdentity(entry);
+      if(!key || usedKeys.has(key)){
+        continue;
+      }
+      if(!isRealVenueEntry(entry)){
+        continue;
+      }
+      const detail = toLocationDetails(entry);
+      if(!Number.isFinite(detail.lng) || !Number.isFinite(detail.lat)){
+        continue;
+      }
+      const withinRange = selectedLocations.every(existing => {
+        const dist = haversineDistanceKm(existing.lng, existing.lat, detail.lng, detail.lat);
+        return Number.isFinite(dist) && dist >= MIN_MULTI_VENUE_DISTANCE_KM && dist <= MAX_MULTI_VENUE_DISTANCE_KM;
+      });
+      if(!withinRange){
+        continue;
+      }
+      locations.push(detail);
+      selectedLocations.push(detail);
+      usedKeys.add(key);
     }
-    return list;
+    return locations;
   }
 
   function randomImages(id){
@@ -11537,7 +11656,20 @@ function openPostModal(id){
       if(calScroll){
         setupCalendarScroll(calScroll);
       }
-      let map, marker, sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
+      let map, locationMarkers = [], sessionHasMultiple = false, lastClickedCell = null, resizeHandler = null, detailMapRef = null;
+      let currentVenueIndex = 0;
+
+      function updateDetailMarkerSelection(selectedIdx = currentVenueIndex){
+        if(!Number.isInteger(selectedIdx)){
+          selectedIdx = currentVenueIndex;
+        }
+        locationMarkers.forEach(({ element, index }) => {
+          const isSelected = index === selectedIdx;
+          element.classList.toggle('is-selected', isSelected);
+          element.classList.toggle('is-dimmed', !isSelected);
+          element.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        });
+      }
       let sessionCloseTimer = null;
       let ensureMapForVenue = async ()=>{};
         function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
@@ -11581,13 +11713,55 @@ function openPostModal(id){
           }
         }
       function updateVenue(idx){
-        const loc = Array.isArray(p.locations) ? p.locations[idx] : null;
+        const locations = Array.isArray(p.locations) ? p.locations : [];
+        const hasLocations = locations.length > 0;
+        let targetIndex = Number.isInteger(idx) ? idx : 0;
+        if(hasLocations){
+          targetIndex = Math.min(Math.max(targetIndex, 0), locations.length - 1);
+        } else {
+          targetIndex = 0;
+        }
+        currentVenueIndex = targetIndex;
+        const loc = hasLocations ? locations[targetIndex] : null;
+
+        if(venueOptions){
+          const buttons = venueOptions.querySelectorAll('button');
+          buttons.forEach((button, optionIndex) => {
+            button.classList.toggle('selected', optionIndex === targetIndex);
+          });
+        }
+
         if(loc){
           setSelectedVenueHighlight(loc.lng, loc.lat);
         } else {
           setSelectedVenueHighlight();
         }
-        if(!loc || !Array.isArray(loc.dates) || !loc.dates.length){
+
+        updateDetailMarkerSelection(targetIndex);
+
+        if(venueBtn){
+          if(loc){
+            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          } else {
+            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="venue-address">${p.city || ''}</span>`;
+          }
+        }
+
+        if(venueInfo){
+          if(loc){
+            venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
+          } else {
+            venueInfo.innerHTML = '';
+          }
+        }
+
+        const hasDates = loc && Array.isArray(loc.dates) && loc.dates.length;
+        if(!hasDates){
+          sessionHasMultiple = false;
+          if(sessionInfo){
+            sessionInfo.innerHTML = '';
+          }
+          ensureMapForVenue();
           return;
         }
 
@@ -11851,52 +12025,136 @@ function openPostModal(id){
         ensureMapForVenue = async function(){
           if(!mapEl) return;
 
-          const center = [loc.lng, loc.lat];
+          const allLocations = Array.isArray(p.locations) ? p.locations.filter(item => item && Number.isFinite(item.lng) && Number.isFinite(item.lat)) : [];
+          if(!allLocations.length){
+            locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
+            locationMarkers = [];
+            return;
+          }
+
+          const selectedIdx = Math.min(Math.max(currentVenueIndex, 0), allLocations.length - 1);
+          const selectedLoc = allLocations[selectedIdx];
+          const center = [selectedLoc.lng, selectedLoc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
+
           const assignDetailRef = ()=>{
             detailMapRef = detailMapRef || {};
             detailMapRef.map = map;
             detailMapRef.resizeHandler = resizeHandler;
             if(mapEl){
               mapEl._detailMap = detailMapRef;
+              mapEl.__map = map;
             }
             if(el){
               el._detailMap = detailMapRef;
             }
+            if(map){
+              MapRegistry.register(map);
+            }
+          };
+
+          const refreshMarkers = () => {
+            if(!map) return;
+            locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
+            locationMarkers = [];
+            allLocations.forEach((location, idx) => {
+              if(!Number.isFinite(location.lng) || !Number.isFinite(location.lat)){
+                return;
+              }
+              let element;
+              if(markerUrl){
+                element = new Image();
+                element.src = markerUrl;
+                element.alt = '';
+                element.decoding = 'async';
+              } else {
+                element = document.createElement('div');
+                element.style.background = '#0f172a';
+              }
+              element.classList.add('post-location-marker');
+              element.dataset.index = String(idx);
+              element.tabIndex = 0;
+              element.setAttribute('role', 'button');
+              element.setAttribute('aria-pressed', 'false');
+              element.setAttribute('aria-label', `${location.venue} (${location.address})`);
+              element.addEventListener('click', () => {
+                if(idx === currentVenueIndex) return;
+                updateVenue(idx);
+              });
+              element.addEventListener('keydown', evt => {
+                if(evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar'){
+                  evt.preventDefault();
+                  element.click();
+                }
+              });
+              const markerInstance = new mapboxgl.Marker({ element, anchor: 'center' }).setLngLat([location.lng, location.lat]).addTo(map);
+              locationMarkers.push({ marker: markerInstance, element, index: idx });
+            });
+            updateDetailMarkerSelection(selectedIdx);
+          };
+
+          const fitToLocations = () => {
+            if(!map || !allLocations.length){
+              return;
+            }
+            const validPoints = allLocations.filter(location => Number.isFinite(location.lng) && Number.isFinite(location.lat));
+            if(!validPoints.length){
+              return;
+            }
+            if(validPoints.length === 1){
+              try{
+                map.setCenter([validPoints[0].lng, validPoints[0].lat]);
+                map.setZoom(10);
+              }catch(e){}
+              return;
+            }
+            try{
+              const bounds = validPoints.reduce((acc, location) => {
+                if(acc){
+                  acc.extend([location.lng, location.lat]);
+                  return acc;
+                }
+                return new mapboxgl.LngLatBounds([location.lng, location.lat], [location.lng, location.lat]);
+              }, null);
+              if(bounds){
+                map.fitBounds(bounds, { padding: 40, duration: 0, maxZoom: 10 });
+              }
+            }catch(e){}
           };
 
           if(!map){
             setTimeout(async () => {
-              if(map) return;
+              if(map) {
+                refreshMarkers();
+                fitToLocations();
+                return;
+              }
 
               await ensureMapboxCssFor(mapEl);
 
-              // Remove previous map on this element to avoid WebGL churn
               if (mapEl && mapEl.__map && typeof mapEl.__map.remove === 'function') {
                 try { mapEl.__map.remove(); } catch {}
                 mapEl.__map = null;
               }
+              locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
+              locationMarkers = [];
 
               map = new mapboxgl.Map({
                 container: mapEl,
                 style: mapStyle,
                 center,
-                zoom: 10,
+                zoom: 3,
                 interactive: false
               });
-              mapEl.__map = map;
 
-              MapRegistry.register(map);
               attachIconLoader(map);
 
-              // Safe "hover pointer" for any rendered features (doesn't touch getStyle)
               map.on('mousemove', (e) => {
                 const has = !!(e.features && e.features.length);
                 map.getCanvas().style.cursor = has ? 'pointer' : '';
               });
 
-              // Arm pointer on symbol layers *without* touching getStyle until loaded
               armPointerOnSymbolLayers(map);
 
               const applyDetailStyleAdjustments = () => {
@@ -11911,7 +12169,6 @@ function openPostModal(id){
                 }
               });
 
-              // Keep 404 icon spam away while reusing existing assets
               map.on('styleimagemissing', (e) => {
                 if (map.hasImage(e.id)) return;
 
@@ -11921,7 +12178,6 @@ function openPostModal(id){
                   `assets/icons/${e.id}.png`,
                   `assets/images/icons/${e.id}.png`,
                   `assets/icons-30/${e.id}-30.webp`,
-                  // Final fallback to your existing file only:
                   `assets/icons-30/multi-post-icon-30.webp`,
                   `assets/icons/multi-category-icon-blue.png`,
                   `assets/images/icons/multi-category-icon-blue.png`
@@ -11936,53 +12192,31 @@ function openPostModal(id){
                 })(0);
               });
 
-              const placeMarker = () => {
-                try{
-                  if(marker){
-                    marker.setLngLat(center);
-                    return;
-                  }
-                  if(markerUrl){
-                    const img = new Image();
-                    img.src = markerUrl;
-                    marker = new mapboxgl.Marker({ element: img, anchor: 'center' }).setLngLat(center).addTo(map);
-                  } else {
-                    marker = new mapboxgl.Marker({ anchor: 'center' }).setLngLat(center).addTo(map);
-                  }
-                }catch(e){}
-              };
-
-              if(map.loaded()){
-                placeMarker();
-              } else {
-                map.once('load', placeMarker);
-              }
-
               if(resizeHandler){
                 window.removeEventListener('resize', resizeHandler);
               }
               resizeHandler = ()=>{ if(map) map.resize(); };
               window.addEventListener('resize', resizeHandler);
 
+              const ready = () => {
+                refreshMarkers();
+                fitToLocations();
+              };
+              if(map.loaded()){
+                ready();
+              } else {
+                map.once('load', ready);
+              }
+
               assignDetailRef();
 
               setTimeout(()=>{ if(map && typeof map.resize === 'function') map.resize(); },0);
             }, 0);
           } else {
-            map.setCenter(center);
-            if(marker) marker.setLngLat(center);
+            refreshMarkers();
+            fitToLocations();
             setTimeout(()=> map && map.resize(),0);
-            detailMapRef = mapEl && mapEl._detailMap ? mapEl._detailMap : detailMapRef || {};
-            detailMapRef.map = map;
-            detailMapRef.resizeHandler = resizeHandler;
-            if(mapEl){
-              mapEl._detailMap = detailMapRef;
-              MapRegistry.register(map);
-              mapEl.__map = map;
-            }
-            if(el){
-              el._detailMap = detailMapRef;
-            }
+            assignDetailRef();
           }
         };
         window.ensureMapForVenue = ensureMapForVenue;
