@@ -6274,52 +6274,94 @@ if (typeof slugify !== 'function') {
           })(),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
-        const HEAT_SOURCE_ID = 'post-heat-source';
-        const HEAT_LAYER_ID = 'post-heat-layer';
         const CLUSTER_SOURCE_ID = 'post-cluster-source';
         const CLUSTER_LAYER_ID = 'post-clusters';
         const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
-        const HEAT_MAX_ZOOM = 2.99;
         const CLUSTER_MIN_ZOOM = 3;
         const CLUSTER_MAX_ZOOM = 7.99;
+        const SEED_ICON_SOURCE_ID = 'post-seed-source';
+        const SEED_ICON_LAYER_ID = 'post-seed-icons';
+        const SEED_ICON_IMAGE_ID = 'post-seed-icon';
+        const SEED_ICON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
+        const SEED_ICON_MAX_ZOOM = Math.max(0, CLUSTER_MIN_ZOOM - 0.001);
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
-          try{
-            const heatSource = mapInstance.getSource && mapInstance.getSource(HEAT_SOURCE_ID);
-            if(!heatSource){
-              mapInstance.addSource(HEAT_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
-            } else if(typeof heatSource.setData === 'function'){
-              heatSource.setData(POST_SEED_GEOJSON);
+          const ensureSeedIconImage = () => {
+            if(!mapInstance || typeof mapInstance.addImage !== 'function') return Promise.resolve();
+            if(typeof mapInstance.hasImage === 'function' && mapInstance.hasImage(SEED_ICON_IMAGE_ID)){
+              return Promise.resolve();
             }
-          }catch(err){ console.error(err); }
+            return new Promise(resolve => {
+              const finish = () => resolve();
+              try{
+                if(typeof mapInstance.loadImage === 'function'){
+                  mapInstance.loadImage(SEED_ICON_IMAGE_URL, (err, img) => {
+                    if(err || !img){
+                      if(err) console.error(err);
+                      finish();
+                      return;
+                    }
+                    try{ mapInstance.addImage(SEED_ICON_IMAGE_ID, img, { pixelRatio: 1 }); }
+                    catch(addErr){ console.error(addErr); }
+                    finish();
+                  });
+                } else {
+                  const img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.onload = () => {
+                    try{ mapInstance.addImage(SEED_ICON_IMAGE_ID, img, { pixelRatio: 1 }); }
+                    catch(addErr){ console.error(addErr); }
+                    finish();
+                  };
+                  img.onerror = () => finish();
+                  img.src = SEED_ICON_IMAGE_URL;
+                }
+              }catch(err){
+                console.error(err);
+                finish();
+              }
+            });
+          };
 
-          if(!mapInstance.getLayer(HEAT_LAYER_ID)){
+          const ensureSeedIconLayer = () => {
+            if(mapInstance.getLayer(SEED_ICON_LAYER_ID)){
+              try{ mapInstance.setLayerZoomRange(SEED_ICON_LAYER_ID, 0, SEED_ICON_MAX_ZOOM); }
+              catch(err){ console.error(err); }
+              return;
+            }
             try{
               mapInstance.addLayer({
-                id: HEAT_LAYER_ID,
-                type:'heatmap',
-                source: HEAT_SOURCE_ID,
-                maxzoom: HEAT_MAX_ZOOM,
-                paint:{
-                  'heatmap-weight': 0.7,
-                  'heatmap-intensity': 2.0,
-                  'heatmap-radius': 40,
-                  'heatmap-color': [
-                    'interpolate',['linear'],['heatmap-density'],
-                    0,'rgba(33,102,172,0)',
-                    0.2,'rgba(103,169,207,0.6)',
-                    0.4,'rgba(209,229,240,0.9)',
-                    0.6,'rgba(253,219,146,0.95)',
-                    0.8,'rgba(239,138,98,0.95)',
-                    1,'rgba(178,24,43,0.95)'
-                  ]
+                id: SEED_ICON_LAYER_ID,
+                type: 'symbol',
+                source: SEED_ICON_SOURCE_ID,
+                minzoom: 0,
+                maxzoom: SEED_ICON_MAX_ZOOM,
+                layout: {
+                  'icon-image': SEED_ICON_IMAGE_ID,
+                  'icon-size': 0.75,
+                  'icon-allow-overlap': true,
+                  'icon-ignore-placement': true,
+                  'symbol-z-order': 'viewport-y',
+                  'symbol-sort-key': 500
                 }
               });
             }catch(err){ console.error(err); }
-          } else {
-            try{ mapInstance.setLayerZoomRange(HEAT_LAYER_ID, 0, HEAT_MAX_ZOOM); }catch(err){}
-          }
+          };
+
+          try{
+            const seedSource = mapInstance.getSource && mapInstance.getSource(SEED_ICON_SOURCE_ID);
+            if(!seedSource){
+              mapInstance.addSource(SEED_ICON_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
+            } else if(typeof seedSource.setData === 'function'){
+              seedSource.setData(POST_SEED_GEOJSON);
+            }
+          }catch(err){ console.error(err); }
+
+          ensureSeedIconImage().finally(() => {
+            try{ ensureSeedIconLayer(); }
+            catch(err){ console.error(err); }
+          });
 
           try{
             if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
