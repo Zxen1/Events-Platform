@@ -8267,13 +8267,34 @@ function makePosts(){
       applyFilters();
     }
 
-    function checkLoadPosts(){
+    const MARKER_ZOOM_THRESHOLD = 8;
+    function checkLoadPosts(event){
       if(waitForInitialZoom){
         postLoadRequested = true;
         hideResultIndicators();
         return;
       }
       if(!map) return;
+      let zoomLevel = null;
+      if(event){
+        if(typeof event.zoom === 'number'){ zoomLevel = event.zoom; }
+        if(!Number.isFinite(zoomLevel) && event.target && typeof event.target.getZoom === 'function'){
+          try{ zoomLevel = event.target.getZoom(); }catch(err){}
+        }
+      }
+      if(!Number.isFinite(zoomLevel) && typeof map.getZoom === 'function'){
+        try{ zoomLevel = map.getZoom(); }catch(err){}
+      }
+      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_ZOOM_THRESHOLD){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
+      if(!Number.isFinite(zoomLevel) && !postsLoaded){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
       if(spinning){
         if(!postsLoaded) pendingPostLoad = true;
         hideResultIndicators();
@@ -10348,11 +10369,11 @@ if (!map.__pillHooksInstalled) {
             waitForInitialZoom = false;
             window.waitForInitialZoom = waitForInitialZoom;
             initialZoomStarted = false;
-            requestAnimationFrame(checkLoadPosts);
+            requestAnimationFrame(()=>checkLoadPosts(e));
           }
           return;
         }
-        checkLoadPosts();
+        checkLoadPosts(e);
       });
       map.on('moveend', ()=>{ syncGeocoderProximityToMap(); });
       addControls();
