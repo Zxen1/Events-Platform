@@ -6262,6 +6262,8 @@ if (typeof slugify !== 'function') {
           spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
+      let markersLoaded = false;
+      window.__markersLoaded = false;
         const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
@@ -6270,6 +6272,17 @@ if (typeof slugify !== 'function') {
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = 8;
         let balloonLayersVisible = true;
+
+        function determineIfLeafBalloon(marker){
+          try{
+            const count = marker && marker.properties ? Number(marker.properties.count) : NaN;
+            if(Number.isFinite(count) && count <= 1){
+              return true;
+            }
+          }catch(err){}
+          const currentZoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : 0;
+          return currentZoom >= 7.5; // Simple fallback logic
+        }
 
         function ensureBalloonIconImage(mapInstance){
           return new Promise(resolve => {
@@ -6482,22 +6495,19 @@ if (typeof slugify !== 'function') {
               const maxAllowedZoom = Number.isFinite(maxZoom)
                 ? Math.min(maxZoom, BALLOON_MAX_ZOOM)
                 : BALLOON_MAX_ZOOM;
-              const jumpZoom = Number.isFinite(maxAllowedZoom) ? maxAllowedZoom : BALLOON_MAX_ZOOM;
-              if(currentZoom >= 7){
-                try{
-                  mapInstance.easeTo({ center: coords, zoom: jumpZoom, duration: 450, essential: true });
-                }catch(err){ console.error(err); }
-                return;
-              }
-              const nextZoom = Number.isFinite(currentZoom) ? currentZoom + 1 : jumpZoom;
-              const clampedZoom = Number.isFinite(nextZoom) ? Math.min(nextZoom, jumpZoom) : jumpZoom;
-              if(Number.isFinite(clampedZoom)){
-                try{
-                  mapInstance.setZoom(clampedZoom);
-                }catch(err){ console.error(err); }
-              }
+              const isLeafBalloon = determineIfLeafBalloon(feature);
+              const finalZoom = Number.isFinite(maxAllowedZoom) ? Math.min(8, maxAllowedZoom) : 8;
+              const targetZoom = isLeafBalloon
+                ? finalZoom
+                : Math.min((Number.isFinite(currentZoom) ? currentZoom + 1 : BALLOON_MIN_ZOOM + 1), maxAllowedZoom, 8);
               try{
-                mapInstance.easeTo({ center: coords, duration: 450, essential: true });
+                mapInstance.flyTo({
+                  center: coords,
+                  zoom: targetZoom,
+                  speed: 0.8,
+                  curve: 1.42,
+                  essential: true
+                });
               }catch(err){ console.error(err); }
             };
             mapInstance.on('click', BALLOON_LAYER_ID, handleBalloonClick);
@@ -8576,7 +8586,7 @@ function makePosts(){
       window.postsLoaded = postsLoaded;
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
-      if(map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
+      if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
       updateLayerVisibility(lastKnownZoom);
@@ -10799,6 +10809,18 @@ if (!map.__pillHooksInstalled) {
         updateZoomState(zoomValue);
         scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
       });
+      map.on('zoomend', ()=>{
+        if(markersLoaded) return;
+        if(!map || typeof map.getZoom !== 'function') return;
+        let currentZoom = NaN;
+        try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
+        if(!Number.isFinite(currentZoom) || currentZoom < 8){
+          return;
+        }
+        try{ loadPostMarkers(); }catch(err){ console.error(err); }
+        markersLoaded = true;
+        window.__markersLoaded = true;
+      });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
         scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
@@ -11106,6 +11128,15 @@ if (!map.__pillHooksInstalled) {
     }
 
     let addingPostSource = false;
+
+    function loadPostMarkers(){
+      try{
+        addPostSource();
+      }catch(err){
+        console.error('loadPostMarkers failed', err);
+      }
+    }
+
     async function addPostSource(){
       if(!map || addingPostSource) return;
       addingPostSource = true;
@@ -13956,7 +13987,7 @@ document.addEventListener('pointerdown', (e) => {
     subcategoryMarkers[name] = markerPath;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
-  if(window.postsLoaded) addPostSource();
+  if(window.postsLoaded && window.__markersLoaded){ addPostSource(); }
 })();
 </script>
 <script>
