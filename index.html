@@ -6279,46 +6279,87 @@ if (typeof slugify !== 'function') {
         const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
         const CLUSTER_MIN_ZOOM = 3;
         const CLUSTER_MAX_ZOOM = 7;
-        const ICON_SOURCE_ID = 'post-seed-icon-source';
-        const ICON_LAYER_ID = 'post-seed-icon-layer';
-        const ICON_IMAGE_ID = 'seed-balloon-icon';
-        const ICON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
-        const ICON_MIN_ZOOM = 0;
-        const ICON_MAX_ZOOM = CLUSTER_MIN_ZOOM;
+        const HEATMAP_SOURCE_ID = 'post-seed-heatmap-source';
+        const HEATMAP_LAYER_ID = 'post-seed-heatmap-layer';
+        const HEATMAP_IMAGE_ID = 'seed-balloon-icon';
+        const HEATMAP_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
+        const HEATMAP_MIN_ZOOM = 0;
+        const HEATMAP_MAX_ZOOM = CLUSTER_MIN_ZOOM;
+        const DEFAULT_HEATMAP_COLORS = [
+          'rgba(36, 198, 220, 0.55)',
+          'rgba(81, 74, 157, 0.65)',
+          'rgba(247, 121, 125, 0.75)',
+          'rgba(251, 215, 134, 0.85)'
+        ];
 
-        function ensureSeedIconImage(mapInstance){
+        function ensureHeatmapIconImage(mapInstance){
           return new Promise(resolve => {
             if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
-              resolve();
+              resolve({ heatmapColors: DEFAULT_HEATMAP_COLORS.slice() });
               return;
             }
-            if(mapInstance.hasImage(ICON_IMAGE_ID)){
-              resolve();
+            const cachedColors = mapInstance.__heatmapIconColors;
+            if(mapInstance.hasImage(HEATMAP_IMAGE_ID) && Array.isArray(cachedColors) && cachedColors.length){
+              resolve({ heatmapColors: cachedColors });
               return;
             }
-            const finalize = ()=>resolve();
+            const finalize = (colors)=>{
+              const gradient = Array.isArray(colors) && colors.length ? colors : DEFAULT_HEATMAP_COLORS.slice();
+              mapInstance.__heatmapIconColors = gradient;
+              resolve({ heatmapColors: gradient });
+            };
             const handleImage = (image)=>{
               if(!image){
                 finalize();
                 return;
               }
               try{
-                if(!mapInstance.hasImage(ICON_IMAGE_ID)){
+                if(!mapInstance.hasImage(HEATMAP_IMAGE_ID)){
                   const data = image && image.data ? image.data : image;
-                  mapInstance.addImage(ICON_IMAGE_ID, data);
+                  mapInstance.addImage(HEATMAP_IMAGE_ID, data);
                 }
               }catch(err){ console.error(err); }
+              try{
+                if(typeof document !== 'undefined'){
+                  const canvas = document.createElement('canvas');
+                  const size = Math.max(1, Math.min(128, image.width || image.height || 64));
+                  canvas.width = size;
+                  canvas.height = size;
+                  const ctx = canvas.getContext && canvas.getContext('2d');
+                  if(ctx){
+                    ctx.drawImage(image, 0, 0, size, size);
+                    const samplePoints = [
+                      [Math.floor(size * 0.25), Math.floor(size * 0.25)],
+                      [Math.floor(size * 0.55), Math.floor(size * 0.45)],
+                      [Math.floor(size * 0.7), Math.floor(size * 0.7)],
+                      [Math.floor(size * 0.4), Math.floor(size * 0.8)]
+                    ];
+                    const rgba = (data)=>`rgba(${data[0]}, ${data[1]}, ${data[2]}, ${Math.round((data[3] / 255) * 100) / 100})`;
+                    const colors = samplePoints.map(([x, y])=>{
+                      try{
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        return rgba(pixel);
+                      }catch(sampleErr){
+                        console.error(sampleErr);
+                        return null;
+                      }
+                    }).filter(Boolean);
+                    finalize(colors);
+                    return;
+                  }
+                }
+              }catch(colorErr){ console.error(colorErr); }
               finalize();
             };
             try{
               if(typeof mapInstance.loadImage === 'function'){
-                const result = mapInstance.loadImage(ICON_IMAGE_URL);
+                const result = mapInstance.loadImage(HEATMAP_IMAGE_URL);
                 if(result && typeof result.then === 'function'){
                   result.then(res => handleImage(res && (res.data || res)))
                     .catch(err => { console.error(err); finalize(); });
                   return;
                 }
-                mapInstance.loadImage(ICON_IMAGE_URL, (err, image)=>{
+                mapInstance.loadImage(HEATMAP_IMAGE_URL, (err, image)=>{
                   if(err){ console.error(err); finalize(); return; }
                   handleImage(image);
                 });
@@ -6330,7 +6371,7 @@ if (typeof slugify !== 'function') {
               img.crossOrigin = 'anonymous';
               img.onload = ()=>handleImage(img);
               img.onerror = ()=>finalize();
-              img.src = ICON_IMAGE_URL;
+              img.src = HEATMAP_IMAGE_URL;
               return;
             }
             finalize();
@@ -6339,41 +6380,48 @@ if (typeof slugify !== 'function') {
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
-          ensureSeedIconImage(mapInstance).then(()=>{
+          ensureHeatmapIconImage(mapInstance).then((iconMeta = {})=>{
+            const gradient = Array.isArray(iconMeta.heatmapColors) && iconMeta.heatmapColors.length >= 4
+              ? iconMeta.heatmapColors.slice(0, 4)
+              : DEFAULT_HEATMAP_COLORS.slice();
+            const [colorA, colorB, colorC, colorD] = gradient;
+
             try{
-              const iconSource = mapInstance.getSource && mapInstance.getSource(ICON_SOURCE_ID);
-              if(!iconSource){
-                mapInstance.addSource(ICON_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
-              } else if(typeof iconSource.setData === 'function'){
-                iconSource.setData(POST_SEED_GEOJSON);
+              if(mapInstance.getLayer(HEATMAP_LAYER_ID)) mapInstance.removeLayer(HEATMAP_LAYER_ID);
+            }catch(err){ console.error(err); }
+
+            let heatmapSource = null;
+            try{
+              heatmapSource = mapInstance.getSource && mapInstance.getSource(HEATMAP_SOURCE_ID);
+            }catch(err){ heatmapSource = null; }
+            try{
+              if(heatmapSource && typeof heatmapSource.setData === 'function'){
+                heatmapSource.setData(POST_SEED_GEOJSON);
+              } else {
+                if(heatmapSource){
+                  try{ mapInstance.removeSource(HEATMAP_SOURCE_ID); }catch(removeErr){ console.error(removeErr); }
+                }
+                mapInstance.addSource(HEATMAP_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
               }
             }catch(err){ console.error(err); }
 
-            if(!mapInstance.getLayer(ICON_LAYER_ID)){
-              try{
-                mapInstance.addLayer({
-                  id: ICON_LAYER_ID,
-                  type:'symbol',
-                  source: ICON_SOURCE_ID,
-                  minzoom: ICON_MIN_ZOOM,
-                  maxzoom: ICON_MAX_ZOOM,
-                  layout:{
-                    'icon-image': ICON_IMAGE_ID,
-                    'icon-size': 0.6,
-                    'icon-allow-overlap': true,
-                    'icon-ignore-placement': true,
-                    'icon-anchor': 'bottom',
-                    'symbol-z-order': 'viewport-y',
-                    'symbol-sort-key': 1000
-                  }
-                });
-              }catch(err){ console.error(err); }
-            } else {
-              try{ mapInstance.setLayerZoomRange(ICON_LAYER_ID, ICON_MIN_ZOOM, ICON_MAX_ZOOM); }catch(err){}
-              try{ mapInstance.setLayoutProperty(ICON_LAYER_ID, 'visibility', 'visible'); }catch(err){}
-            }
+            try{
+              mapInstance.addLayer({
+                id: HEATMAP_LAYER_ID,
+                type: 'heatmap',
+                source: HEATMAP_SOURCE_ID,
+                minzoom: HEATMAP_MIN_ZOOM,
+                maxzoom: HEATMAP_MAX_ZOOM,
+                paint: {
+                  'heatmap-weight': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 2.5, 1.1],
+                  'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 2.5, 1.2],
+                  'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 14, 1, 22, 2.5, 32],
+                  'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.3, colorA, 0.6, colorB, 0.8, colorC, 1, colorD],
+                  'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 0, 0.8, 2.8, 0.45, 3, 0]
+                }
+              });
+            }catch(err){ console.error(err); }
           });
-
           try{
             if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
             if(mapInstance.getLayer(CLUSTER_COUNT_LAYER_ID)) mapInstance.removeLayer(CLUSTER_COUNT_LAYER_ID);
