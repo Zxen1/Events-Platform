@@ -6251,6 +6251,7 @@ if (typeof slugify !== 'function') {
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
     const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
+    let lastKnownZoom = startZoom;
     startPitch = window.startPitch = savedView?.pitch || 0;
     startBearing = window.startBearing = savedView?.bearing || 0;
 
@@ -6535,6 +6536,9 @@ if (typeof slugify !== 'function') {
               mapInstance.on('mouseleave', id, ()=>{ mapInstance.getCanvas().style.cursor = 'grab'; });
             });
             mapInstance.__seedClusterEventsBound = true;
+          }
+          if(mapInstance === map){
+            updateLayerVisibility(lastKnownZoom);
           }
         }
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
@@ -8581,6 +8585,7 @@ function makePosts(){
           multiSource.setData(EMPTY_FEATURE_COLLECTION);
         }
       }
+      updateLayerVisibility(lastKnownZoom);
     }
 
     function loadPosts(bounds){
@@ -8608,37 +8613,111 @@ function makePosts(){
       if(map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
+      updateLayerVisibility(lastKnownZoom);
     }
 
     const MARKER_ZOOM_THRESHOLD = 8;
+    const MULTI_CARD_MIN_ZOOM = 8;
+    const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-marker-label'];
+    const CLUSTER_LAYER_IDS = [CLUSTER_LAYER_ID, CLUSTER_COUNT_LAYER_ID];
+    let markerLayersVisible = false;
+    let clusterLayersVisible = true;
+    let pendingZoomCheckToken = null;
+    let pendingZoomEvent = null;
+
+    function getZoomFromEvent(event){
+      if(event){
+        if(typeof event.zoom === 'number'){ return event.zoom; }
+        const target = event.target && typeof event.target.getZoom === 'function' ? event.target : null;
+        if(target){
+          try{ return target.getZoom(); }catch(err){ return NaN; }
+        }
+      }
+      if(map && typeof map.getZoom === 'function'){
+        try{ return map.getZoom(); }catch(err){ return NaN; }
+      }
+      return NaN;
+    }
+
+    function setLayerVisibility(id, visible){
+      if(!map || typeof map.getLayer !== 'function') return;
+      let layer = null;
+      try{ layer = map.getLayer(id); }catch(err){ layer = null; }
+      if(!layer) return;
+      const desired = visible ? 'visible' : 'none';
+      try{
+        const current = map.getLayoutProperty(id, 'visibility');
+        if(current !== desired){
+          map.setLayoutProperty(id, 'visibility', desired);
+        }
+      }catch(err){
+        try{ map.setLayoutProperty(id, 'visibility', desired); }catch(e){}
+      }
+    }
+
+    function updateLayerVisibility(zoom){
+      const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
+      const withinMarkerRange = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD;
+      const postsReady = postsLoaded && withinMarkerRange;
+      const shouldShowMarkers = withinMarkerRange;
+      const shouldShowClusters = !withinMarkerRange || !postsReady;
+      if(markerLayersVisible !== shouldShowMarkers){
+        MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
+        markerLayersVisible = shouldShowMarkers;
+      }
+      if(clusterLayersVisible !== shouldShowClusters){
+        CLUSTER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowClusters));
+        clusterLayersVisible = shouldShowClusters;
+      }
+    }
+
+    function updateZoomState(zoom){
+      if(Number.isFinite(zoom)){
+        lastKnownZoom = zoom;
+      } else {
+        const current = getZoomFromEvent();
+        if(Number.isFinite(current)){
+          lastKnownZoom = current;
+        }
+      }
+      updatePostsButtonState(lastKnownZoom);
+      updateLayerVisibility(lastKnownZoom);
+    }
+
+    function scheduleCheckLoadPosts(event){
+      pendingZoomEvent = event || { zoom: lastKnownZoom, target: map };
+      if(pendingZoomCheckToken !== null) return;
+      const scheduler = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb)=> setTimeout(cb, 0);
+      pendingZoomCheckToken = scheduler(()=>{
+        pendingZoomCheckToken = null;
+        const evt = pendingZoomEvent;
+        pendingZoomEvent = null;
+        checkLoadPosts(evt);
+      });
+    }
+
     function checkLoadPosts(event){
+      if(!map) return;
+      const zoomCandidate = getZoomFromEvent(event);
+      updateZoomState(zoomCandidate);
       if(waitForInitialZoom){
         postLoadRequested = true;
         hideResultIndicators();
         return;
       }
-      if(!map) return;
-      let zoomLevel = null;
-      if(event){
-        if(typeof event.zoom === 'number'){ zoomLevel = event.zoom; }
-        if(!Number.isFinite(zoomLevel) && event.target && typeof event.target.getZoom === 'function'){
-          try{ zoomLevel = event.target.getZoom(); }catch(err){}
-        }
+      let zoomLevel = Number.isFinite(zoomCandidate) ? zoomCandidate : lastKnownZoom;
+      if(!Number.isFinite(zoomLevel)){
+        zoomLevel = getZoomFromEvent();
       }
-      if(!Number.isFinite(zoomLevel) && typeof map.getZoom === 'function'){
-        try{ zoomLevel = map.getZoom(); }catch(err){}
-      }
-      const effectiveZoom = Number.isFinite(zoomLevel) ? zoomLevel : (typeof map.getZoom === 'function' ? map.getZoom() : NaN);
-      updatePostsButtonState(effectiveZoom);
-      zoomLevel = effectiveZoom;
-      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_ZOOM_THRESHOLD){
+      if(!Number.isFinite(zoomLevel)){
         postLoadRequested = true;
-        if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }
         hideResultIndicators();
         return;
       }
-      if(!Number.isFinite(zoomLevel) && !postsLoaded){
+      updatePostsButtonState(zoomLevel);
+      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_ZOOM_THRESHOLD){
         postLoadRequested = true;
+        if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }
         hideResultIndicators();
         return;
       }
@@ -10739,19 +10818,24 @@ if (!map.__pillHooksInstalled) {
           initialZoomStarted = true;
         }
       });
-      map.on('zoomend', (e)=>{
+      map.on('zoom', (e)=>{
+        const zoomValue = getZoomFromEvent(e);
         if(waitForInitialZoom){
-          if(initialZoomStarted){
-            waitForInitialZoom = false;
-            window.waitForInitialZoom = waitForInitialZoom;
-            initialZoomStarted = false;
-            requestAnimationFrame(()=>checkLoadPosts(e));
+          if(!initialZoomStarted){
+            updateZoomState(zoomValue);
+            return;
           }
-          return;
+          waitForInitialZoom = false;
+          window.waitForInitialZoom = waitForInitialZoom;
+          initialZoomStarted = false;
         }
-        checkLoadPosts(e);
+        updateZoomState(zoomValue);
+        scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
       });
-      map.on('moveend', ()=>{ syncGeocoderProximityToMap(); });
+      map.on('moveend', ()=>{
+        syncGeocoderProximityToMap();
+        scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+      });
       addControls();
       try{
         map.scrollZoom.setWheelZoomRate(1/240);
@@ -10766,11 +10850,13 @@ if (!map.__pillHooksInstalled) {
         }
         updatePostPanel();
         applyFilters();
+        updateZoomState(getZoomFromEvent());
         checkLoadPosts();
       });
 
       map.on('style.load', ()=>{
         setupSeedLayers(map);
+        updateLayerVisibility(lastKnownZoom);
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -10789,7 +10875,7 @@ if (!map.__pillHooksInstalled) {
         let suppressNextRefresh = false;
         const refreshMapView = () => {
           if(suppressNextRefresh) return;
-          checkLoadPosts();
+          scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
@@ -10848,7 +10934,7 @@ if (!map.__pillHooksInstalled) {
       const shouldLoadPosts = pendingPostLoad;
       pendingPostLoad = false;
       if(shouldLoadPosts){
-        checkLoadPosts();
+        scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
         return;
       }
       applyFilters();
@@ -11405,46 +11491,47 @@ if (!map.__pillHooksInstalled) {
         const handleMarkerClick = (e)=>{
           stopSpin();
           const f = e.features && e.features[0]; if(!f) return;
-        const props = f.properties || {};
-        const id = props.id;
-        if(id !== undefined && id !== null){
-          activePostId = id;
-          selectedVenueKey = props.venueKey || null;
-          updateSelectedMarkerRing();
-        }
-        const coords = f.geometry && f.geometry.coordinates;
-        const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
-        const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
-        const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
-        const targetLngLat = baseLngLat || (e ? e.lngLat : null);
-        if(coords && coords.length>=2){
-          const items = postsAtVenue(coords[0], coords[1]);
-          if(items && items.length>1){
-            if(e.preventDefault) e.preventDefault();
-            if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
-            const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { lockOnOpen: true, items });
-            if(multiPopup){
-              lastListOpenAt = Date.now();
-              return;
+          const props = f.properties || {};
+          const id = props.id;
+          if(id !== undefined && id !== null){
+            activePostId = id;
+            selectedVenueKey = props.venueKey || null;
+            updateSelectedMarkerRing();
+          }
+          const coords = f.geometry && f.geometry.coordinates;
+          const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+          const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const targetLngLat = baseLngLat || (e ? e.lngLat : null);
+          if(coords && coords.length>=2){
+            const items = postsAtVenue(coords[0], coords[1]);
+            const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
+            if(items && items.length>1 && Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
+              if(e.preventDefault) e.preventDefault();
+              if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
+              const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { lockOnOpen: true, items });
+              if(multiPopup){
+                lastListOpenAt = Date.now();
+                return;
+              }
             }
           }
-        }
-        const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
-        if(touchClick){
-          if(touchMarker !== id || !hoverPopup){
-            touchMarker = id;
-            if(hoverPopup){
-              try{ hoverPopup.remove(); }catch(err){}
-              hoverPopup = null;
+          const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
+          if(touchClick){
+            if(touchMarker !== id || !hoverPopup){
+              touchMarker = id;
+              if(hoverPopup){
+                try{ hoverPopup.remove(); }catch(err){}
+                hoverPopup = null;
+              }
+              const p = posts.find(x=>x.id===id);
+              if(p){
+                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat });
+              }
             }
-            const p = posts.find(x=>x.id===id);
-            if(p){
-              hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat });
-            }
+            return;
           }
-          return;
-        }
-      };
+        };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
 
       map.on('click', e=>{
@@ -11477,10 +11564,13 @@ if (!map.__pillHooksInstalled) {
         const targetLngLat = baseLngLat || (e ? e.lngLat : null);
         const multi = hasCoords ? postsAtVenue(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
-          const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { items: multi });
-          const popupEl = multiPopup && multiPopup.root ? multiPopup.root : getPopupElement(hoverPopup);
-          bindPopupHoverGuards(popupEl);
-          return;
+          const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
+          if(Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
+            const multiPopup = showMultiVenuePopup(e.point, coords[0], coords[1], { items: multi });
+            const popupEl = multiPopup && multiPopup.root ? multiPopup.root : getPopupElement(hoverPopup);
+            bindPopupHoverGuards(popupEl);
+            return;
+          }
         }
         const p = posts.find(x=>x.id===id);
         if(!p){
@@ -13077,6 +13167,7 @@ function openPostModal(id){
       }
       if(render) renderLists(filtered);
       if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
     }
 
