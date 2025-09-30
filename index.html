@@ -5403,19 +5403,6 @@ if (typeof slugify !== 'function') {
     document.addEventListener('pointerdown', (e) => {
       window.__lastPointerDown = e;
     }, { capture: true });
-
-    // Place the opened post right after the clicked .post-card
-    function placeOpenPost(el) {
-      const anchor = window.__lastPointerDown &&
-                     window.__lastPointerDown.target &&
-                     window.__lastPointerDown.target.closest('.post-card');
-      if (anchor && anchor.parentElement) {
-        anchor.after(el);
-      } else {
-        const board = document.querySelector('.post-board');
-        if (board) board.prepend(el);
-      }
-    }
   </script>
 
   <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
@@ -9415,6 +9402,28 @@ function makePosts(){
         return wrap;
     }
 
+      function ensurePostCardForId(id){
+        if(!postsWideEl) return null;
+        if(!postSentinel || !postsWideEl.contains(postSentinel)){
+          renderLists(filtered);
+        }
+        let cardEl = postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
+        if(cardEl) return cardEl;
+
+        const index = sortedPostList.findIndex(item => item && item.id === id);
+        if(index === -1) return null;
+
+        while(renderedPostCount <= index){
+          const before = renderedPostCount;
+          appendPostBatch();
+          cardEl = postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
+          if(cardEl) return cardEl;
+          if(renderedPostCount === before) break;
+        }
+
+        return postsWideEl.querySelector(`.post-card[data-id="${id}"]`);
+      }
+
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
         touchMarker = null;
@@ -9458,11 +9467,6 @@ function makePosts(){
 
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container) return;
-
-        if(!container.children.length && !fromHistory){
-          const initialCard = card(p, true);
-          placeOpenPost(initialCard);
-        }
 
         const alreadyOpen = container.querySelector(`.open-post[data-id="${id}"]`);
         if(alreadyOpen){
@@ -9538,9 +9542,21 @@ function makePosts(){
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
         const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
 
+        if(!target && !fromHistory){
+          target = ensurePostCardForId(id);
+        }
+
         if(!target){
           target = card(p, fromHistory ? false : true);
-          placeOpenPost(target);
+          if(!fromHistory && container === postsWideEl){
+            if(postSentinel && postSentinel.parentElement === container){
+              container.insertBefore(target, postSentinel);
+            } else {
+              container.appendChild(target);
+            }
+          } else {
+            container.prepend(target);
+          }
         } else if(shouldAlignToTop && container.contains(target) && !pointerInsideCardContainer){
           const firstCard = container.querySelector('.open-post, .post-card, .recents-card');
           if(firstCard && firstCard !== target){
