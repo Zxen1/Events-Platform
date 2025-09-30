@@ -13789,37 +13789,64 @@ function initPostLayout(board){
   }
   if(selectedImageBox && !selectedImageBox._imageModalListener){
     selectedImageBox.addEventListener('click', evt => {
-      const img = selectedImageBox.querySelector('img');
-      if(img){
-        if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
-        if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
-        const parseIndex = value => {
-          if(typeof value === 'undefined') return null;
-          const parsed = parseInt(value, 10);
-          return Number.isFinite(parsed) ? parsed : null;
-        };
-        let startIndex = null;
-        if(img.dataset){
-          startIndex = parseIndex(img.dataset.index);
-        }
-        if(startIndex === null && selectedImageBox.dataset){
-          startIndex = parseIndex(selectedImageBox.dataset.index);
-        }
-        const galleryRoot = selectedImageBox.classList.contains('image-box')
-          ? selectedImageBox
-          : (selectedImageBox.closest('.post-images') || selectedImageBox.parentElement)?.querySelector('.image-box');
-        if(startIndex === null && galleryRoot && galleryRoot.dataset){
-          startIndex = parseIndex(galleryRoot.dataset.index);
-        }
-        const options = {origin: img};
-        if(galleryRoot){
-          options.gallery = galleryRoot;
-        }
-        if(startIndex !== null){
-          options.startIndex = startIndex;
-        }
-        openImageModal(img.src, options);
+      const currentTarget = (evt && evt.currentTarget instanceof Element)
+        ? evt.currentTarget
+        : selectedImageBox;
+      const clickedImageBox = (evt && evt.target instanceof Element)
+        ? evt.target.closest('.image-box')
+        : null;
+      if(clickedImageBox){
+        return;
       }
+      const parseIndex = value => {
+        if(typeof value === 'undefined') return null;
+        const parsed = parseInt(value, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      let galleryRoot = null;
+      if(currentTarget instanceof Element){
+        if(currentTarget.classList.contains('image-box')){
+          galleryRoot = currentTarget;
+        } else {
+          const postImages = typeof currentTarget.closest === 'function'
+            ? currentTarget.closest('.post-images')
+            : null;
+          const parent = currentTarget.parentElement;
+          const host = postImages || parent;
+          if(host instanceof Element){
+            galleryRoot = host.querySelector('.image-box');
+          }
+        }
+      }
+      const activeImg = galleryRoot ? galleryRoot.querySelector('.image-track img.active') : null;
+      let img = activeImg || (currentTarget instanceof Element ? currentTarget.querySelector('img') : null);
+      if(!img && galleryRoot){
+        img = galleryRoot.querySelector('img');
+      }
+      if(!(img instanceof Element)){
+        return;
+      }
+      if(evt && typeof evt.preventDefault === 'function') evt.preventDefault();
+      if(evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+      let startIndex = null;
+      if(activeImg && activeImg.dataset){
+        startIndex = parseIndex(activeImg.dataset.index);
+      }
+      if(startIndex === null && galleryRoot && galleryRoot.dataset){
+        startIndex = parseIndex(galleryRoot.dataset.index);
+      }
+      if(startIndex === null && img.dataset){
+        startIndex = parseIndex(img.dataset.index);
+      }
+      const options = {origin: img};
+      if(galleryRoot){
+        options.gallery = galleryRoot;
+      }
+      if(startIndex !== null){
+        options.startIndex = startIndex;
+      }
+      const src = (img.dataset && img.dataset.full) ? img.dataset.full : img.src;
+      openImageModal(src, options);
     });
     selectedImageBox._imageModalListener = true;
   }
