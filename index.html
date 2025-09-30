@@ -4687,34 +4687,12 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   color: var(--popup-text) !important;
 }
 
-.multi-ctrls{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.multi-ctrls .hint{
-  font-size: 14px;
-  color: var(--ink-d);
-}
-
-.multi-ctrls .close{
-  border: 0;
-  background: #16283f;
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
 .nowrap{
   white-space: nowrap;
 }
 
 .multi-post-map-card-container {
-  background: rgba(0, 0, 0, 0.7);
+  background: #000;
   border-radius: 20px;
   padding: 10px;
   position: absolute;
@@ -4724,6 +4702,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  opacity: 0.7;
 }
 
 .multi-post-map-card-header {
@@ -6243,17 +6222,6 @@ if (typeof slugify !== 'function') {
         const BALLOON_MAX_ZOOM = 8;
         let balloonLayersVisible = true;
 
-        function determineIfLeafBalloon(marker){
-          try{
-            const count = marker && marker.properties ? Number(marker.properties.count) : NaN;
-            if(Number.isFinite(count) && count <= 1){
-              return true;
-            }
-          }catch(err){}
-          const currentZoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : 0;
-          return currentZoom >= 7.5; // Simple fallback logic
-        }
-
         function ensureBalloonIconImage(mapInstance){
           return new Promise(resolve => {
             if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
@@ -6324,30 +6292,40 @@ if (typeof slugify !== 'function') {
           return 10;
         }
 
-        function buildBalloonFeatureCollection(zoom){
-          const postsSource = Array.isArray(ALL_POSTS_CACHE) ? ALL_POSTS_CACHE : [];
+        const clampBalloonLat = (lat)=> Math.max(-85, Math.min(85, lat));
+
+        function groupPostsForBalloonZoom(postsSource, zoom){
           const gridSizeRaw = getBalloonGridSize(zoom);
           const gridSize = gridSizeRaw > 0 ? gridSizeRaw : 5;
           const groups = new Map();
           postsSource.forEach(post => {
             if(!post || !Number.isFinite(post.lng) || !Number.isFinite(post.lat)) return;
-            const lng = post.lng;
-            const lat = Math.max(-85, Math.min(85, post.lat));
+            const lng = Number(post.lng);
+            const lat = clampBalloonLat(Number(post.lat));
             const col = Math.floor((lng + 180) / gridSize);
             const row = Math.floor((lat + 90) / gridSize);
             const key = `${col}|${row}`;
             let bucket = groups.get(key);
             if(!bucket){
-              bucket = { count:0, sumLng:0, sumLat:0 };
+              bucket = { count:0, sumLng:0, sumLat:0, posts: [] };
               groups.set(key, bucket);
             }
             bucket.count += 1;
             bucket.sumLng += lng;
             bucket.sumLat += lat;
+            bucket.posts.push(post);
           });
+          return { groups };
+        }
+
+        let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
+
+        function buildBalloonFeatureCollection(zoom){
+          const postsSource = Array.isArray(ALL_POSTS_CACHE) ? ALL_POSTS_CACHE : [];
+          const { groups } = groupPostsForBalloonZoom(postsSource, zoom);
           const features = [];
           groups.forEach((bucket, key) => {
-            if(bucket.count <= 0) return;
+            if(!bucket || bucket.count <= 0) return;
             const avgLng = bucket.sumLng / bucket.count;
             const avgLat = bucket.sumLat / bucket.count;
             features.push({
@@ -6360,7 +6338,41 @@ if (typeof slugify !== 'function') {
               geometry:{ type:'Point', coordinates:[avgLng, avgLat] }
             });
           });
+          const groupingKey = getBalloonBucketKey(zoom);
+          lastBalloonGroupingDetails = { key: groupingKey, zoom, groups };
           return { type:'FeatureCollection', features };
+        }
+
+        function computeChildBalloonTarget(bucket, currentZoom, maxAllowedZoom){
+          if(!bucket || !Array.isArray(bucket.posts) || bucket.posts.length <= 1){
+            return null;
+          }
+          const nextZoom = Math.min(currentZoom + 1, maxAllowedZoom, 8);
+          if(!(nextZoom > currentZoom)){
+            return null;
+          }
+          const { groups } = groupPostsForBalloonZoom(bucket.posts, nextZoom);
+          const childBuckets = Array.from(groups.values()).filter(child => child && child.count > 0);
+          if(childBuckets.length <= 1){
+            return null;
+          }
+          let totalCount = 0;
+          let sumLng = 0;
+          let sumLat = 0;
+          childBuckets.forEach(child => {
+            const childCenterLng = child.sumLng / child.count;
+            const childCenterLat = child.sumLat / child.count;
+            totalCount += child.count;
+            sumLng += childCenterLng * child.count;
+            sumLat += childCenterLat * child.count;
+          });
+          if(totalCount <= 0){
+            return null;
+          }
+          return {
+            center: [sumLng / totalCount, sumLat / totalCount],
+            zoom: nextZoom
+          };
         }
 
         let lastBalloonBucketKey = null;
@@ -6386,10 +6398,31 @@ if (typeof slugify !== 'function') {
 
         function resetBalloonSourceState(){
           lastBalloonBucketKey = null;
+          lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
         }
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
+          const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+          if(!Number.isFinite(currentZoom) || currentZoom < 3){
+            if(!mapInstance.__seedLayerZoomGate){
+              const handleZoomGate = ()=>{
+                const readyZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
+                if(Number.isFinite(readyZoom) && readyZoom >= 3){
+                  mapInstance.off('zoomend', handleZoomGate);
+                  mapInstance.__seedLayerZoomGate = null;
+                  setupSeedLayers(mapInstance);
+                }
+              };
+              mapInstance.__seedLayerZoomGate = handleZoomGate;
+              mapInstance.on('zoomend', handleZoomGate);
+            }
+            return;
+          }
+          if(mapInstance.__seedLayerZoomGate){
+            mapInstance.off('zoomend', mapInstance.__seedLayerZoomGate);
+            mapInstance.__seedLayerZoomGate = null;
+          }
           ensureBalloonIconImage(mapInstance).then(()=>{
             try{
               if(mapInstance.getLayer(BALLOON_LAYER_ID)) mapInstance.removeLayer(BALLOON_LAYER_ID);
@@ -6465,17 +6498,28 @@ if (typeof slugify !== 'function') {
               const maxAllowedZoom = Number.isFinite(maxZoom)
                 ? Math.min(maxZoom, BALLOON_MAX_ZOOM)
                 : BALLOON_MAX_ZOOM;
-              const isLeafBalloon = determineIfLeafBalloon(feature);
-              const finalZoom = Number.isFinite(maxAllowedZoom) ? Math.min(8, maxAllowedZoom) : 8;
-              const targetZoom = isLeafBalloon
-                ? finalZoom
-                : Math.min((Number.isFinite(currentZoom) ? currentZoom + 1 : BALLOON_MIN_ZOOM + 1), maxAllowedZoom, 8);
+              const safeCurrentZoom = Number.isFinite(currentZoom) ? currentZoom : 0;
+              const bucketKey = feature.properties && feature.properties.bucket;
+              const grouping = lastBalloonGroupingDetails && lastBalloonGroupingDetails.groups instanceof Map
+                ? lastBalloonGroupingDetails.groups
+                : null;
+              const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
+              const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, maxAllowedZoom);
+              if(childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2 && Number.isFinite(childTarget.zoom)){
+                try{
+                  mapInstance.flyTo({
+                    center: [childTarget.center[0], childTarget.center[1]],
+                    zoom: childTarget.zoom,
+                    essential: true
+                  });
+                }catch(err){ console.error(err); }
+                return;
+              }
+              const finalZoom = Math.min(8, maxAllowedZoom);
               try{
                 mapInstance.flyTo({
-                  center: coords,
-                  zoom: targetZoom,
-                  speed: 0.8,
-                  curve: 1.42,
+                  center: [coords[0], coords[1]],
+                  zoom: finalZoom,
                   essential: true
                 });
               }catch(err){ console.error(err); }
@@ -6855,7 +6899,7 @@ function showMultiPostCardContainer(point, items, options = {}){
   const header = document.createElement('div');
   header.className = 'multi-post-map-card-header';
   const { startText, endText } = formatMultiPostDateRange(items);
-  header.innerHTML = `${items.length} posts here<br><span class="date-range">From ${startText} to ${endText}</span>`;
+  header.innerHTML = `${items.length} posts here<br><span class="date-range">${startText} – ${endText}</span>`;
   const cardsWrap = document.createElement('div');
   cardsWrap.className = 'multi-post-map-cards';
   const ordered = sortMultiPostItems(items);
@@ -7091,8 +7135,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const MULTI_POST_MAPMARKER_ID = 'multi-post-mapmarker';
     const MULTI_POST_MAPMARKER_URL = 'assets/icons-30/multi-post-icon-30.webp';
-    const MULTI_VENUE_COORD_PRECISION = 6;
-    const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
+    const venueKey = (lng, lat) => toVenueCoordKey(lng, lat);
     subcategoryMarkers[MULTI_POST_MAPMARKER_ID] = MULTI_POST_MAPMARKER_URL;
 
     function setSelectedVenueHighlight(lng, lat){
@@ -7875,6 +7918,34 @@ function uniqueTitle(seed, cityName, idx){
   const LOCAL_GEOCODER_MAX_RESULTS = 10;
   const localVenueIndex = [];
   const localVenueKeySet = new Set();
+  const MULTI_VENUE_COORD_PRECISION = 6;
+  const postsAtVenue = window.postsAtVenue = Object.create(null);
+
+  function toVenueCoordKey(lng, lat){
+    if(!Number.isFinite(lng) || !Number.isFinite(lat)) return '';
+    const normalizedLng = Number(lng).toFixed(MULTI_VENUE_COORD_PRECISION);
+    const normalizedLat = Number(lat).toFixed(MULTI_VENUE_COORD_PRECISION);
+    return `${normalizedLng},${normalizedLat}`;
+  }
+
+  function clearPostsAtVenueIndex(){
+    Object.keys(postsAtVenue).forEach(key => { delete postsAtVenue[key]; });
+  }
+
+  function registerPostAtVenue(post, key){
+    if(!key) return;
+    const bucket = postsAtVenue[key] || (postsAtVenue[key] = []);
+    bucket.push(post);
+  }
+
+  function getPostsAtVenueByCoords(lng, lat){
+    const key = toVenueCoordKey(lng, lat);
+    if(!key) return [];
+    const bucket = postsAtVenue[key];
+    return Array.isArray(bucket) ? bucket.slice() : [];
+  }
+
+  window.getPostsAtVenueByCoords = getPostsAtVenueByCoords;
 
   function localVenueKey(name='', address='', lng, lat){
     const normName = (name || '').toLowerCase();
@@ -7930,24 +8001,32 @@ function uniqueTitle(seed, cityName, idx){
   function rebuildVenueIndex(){
     localVenueIndex.length = 0;
     localVenueKeySet.clear();
+    clearPostsAtVenueIndex();
     const postList = Array.isArray(posts) ? posts : [];
     const addFromPost = (post) => {
       if(!post) return;
       const city = post.city || '';
       const fallbackName = getPrimaryVenueName(post) || city;
       const fallbackAddress = city || post.city || '';
+      const seenVenueKeys = new Set();
+      const addVenue = (lng, lat, locName, locAddress) => {
+        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+        const nameValue = locName || fallbackName;
+        const addressValue = locAddress || fallbackAddress;
+        addVenueToLocalIndex({ name: nameValue, address: addressValue, lng, lat, city });
+        const key = toVenueCoordKey(lng, lat);
+        if(!key || seenVenueKeys.has(key)) return;
+        seenVenueKeys.add(key);
+        registerPostAtVenue(post, key);
+      };
       if(Array.isArray(post.locations) && post.locations.length){
         post.locations.forEach(loc => {
-          if(!loc || !Number.isFinite(loc.lng) || !Number.isFinite(loc.lat)) return;
-          const locName = loc.venue || fallbackName;
-          const locAddress = loc.address || fallbackAddress;
-          addVenueToLocalIndex({ name: locName, address: locAddress, lng: loc.lng, lat: loc.lat, city });
+          if(!loc) return;
+          addVenue(loc.lng, loc.lat, loc.venue, loc.address);
         });
         return;
       }
-      if(Number.isFinite(post.lng) && Number.isFinite(post.lat)){
-        addVenueToLocalIndex({ name: fallbackName, address: fallbackAddress, lng: post.lng, lat: post.lat, city });
-      }
+      addVenue(post.lng, post.lat, fallbackName, fallbackAddress);
     };
     postList.forEach(addFromPost);
     Object.entries(REAL_VENUES).forEach(([city, list]) => {
@@ -8577,6 +8656,7 @@ function makePosts(){
       window.postsLoaded = postsLoaded;
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
+      resetBalloonSourceState();
       if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
@@ -11139,6 +11219,10 @@ if (!map.__pillHooksInstalled) {
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const geojson = postsToGeoJSON(markerList);
       const multiFeatures = geojson.features.filter(f => f && f.properties && f.properties.multi === 1);
+      const featureCount = Array.isArray(geojson.features) ? geojson.features.length : 0;
+      if(featureCount > 1000){
+        await new Promise(resolve => scheduleIdle(resolve, 120));
+      }
       const postsData = { type:'FeatureCollection', features: geojson.features };
       const multiData = { type:'FeatureCollection', features: multiFeatures };
       const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
@@ -11276,7 +11360,7 @@ if (!map.__pillHooksInstalled) {
           const f = e.features && e.features[0]; if(!f) return;
           if(e.preventDefault) e.preventDefault();
           const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
-          const items = postsAtVenue(coords[0], coords[1]);
+          const items = getPostsAtVenueByCoords(coords[0], coords[1]);
           if(!items || items.length <= 1){ return; }
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
           if(!Number.isFinite(zoomLevel) || zoomLevel < MULTI_CARD_MIN_ZOOM){
@@ -11484,7 +11568,7 @@ if (!map.__pillHooksInstalled) {
           const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const targetLngLat = baseLngLat || (e ? e.lngLat : null);
           if(coords && coords.length>=2){
-            const items = postsAtVenue(coords[0], coords[1]);
+            const items = getPostsAtVenueByCoords(coords[0], coords[1]);
             const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
             if(items && items.length>1 && Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
               if(e.preventDefault) e.preventDefault();
@@ -11544,7 +11628,7 @@ if (!map.__pillHooksInstalled) {
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
         const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
         const targetLngLat = baseLngLat || (e ? e.lngLat : null);
-        const multi = hasCoords ? postsAtVenue(coords[0], coords[1]) : null;
+        const multi = hasCoords ? getPostsAtVenueByCoords(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
           const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
           if(Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
