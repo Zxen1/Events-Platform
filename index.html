@@ -3764,8 +3764,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow-y:auto;
 }
 
-.open-post .venue-menu .map-container,
-.second-post-column .venue-menu .map-container{
+.open-post .post-venue-menu .map-container,
+.second-post-column .post-venue-menu .map-container{
   position:relative;
   width:100%;
   border-radius:8px;
@@ -3775,8 +3775,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex:0 0 auto;
 }
 
-.open-post .venue-menu .post-map,
-.second-post-column .venue-menu .post-map{
+.open-post .post-venue-menu .post-map,
+.second-post-column .post-venue-menu .post-map{
   width:100%;
   height:200px;
   min-height:200px;
@@ -3830,14 +3830,14 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:block;
 }
 
-.open-post .venue-menu button .venue-name,
-.second-post-column .venue-menu button .venue-name{
+.open-post .post-venue-menu .venue-options button .venue-name,
+.second-post-column .post-venue-menu .venue-options button .venue-name{
   font-weight:bold;
   display:block;
 }
 
-.open-post .venue-menu button .venue-address,
-.second-post-column .venue-menu button .venue-address{
+.open-post .post-venue-menu .venue-options button .venue-address,
+.second-post-column .post-venue-menu .venue-options button .venue-address{
   display:block;
 }
 
@@ -3845,16 +3845,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .second-post-column .venue-dropdown > button .venue-name,
 .open-post .venue-dropdown > button .venue-address,
 .second-post-column .venue-dropdown > button .venue-address,
-.open-post .venue-menu button .venue-name,
-.second-post-column .venue-menu button .venue-name,
-.open-post .venue-menu button .venue-address,
-.second-post-column .venue-menu button .venue-address{
+.open-post .post-venue-menu .venue-options button .venue-name,
+.second-post-column .post-venue-menu .venue-options button .venue-name,
+.open-post .post-venue-menu .venue-options button .venue-address,
+.second-post-column .post-venue-menu .venue-options button .venue-address{
   line-height:1.2;
 }
 
-.open-post .venue-menu,
+.open-post .post-venue-menu,
 .open-post .session-menu,
-.second-post-column .venue-menu,
+.second-post-column .post-venue-menu,
 .second-post-column .session-menu{
   position:absolute;
   top:calc(100% + 4px);
@@ -3874,22 +3874,22 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   gap:10px;
   z-index:30;
 }
-.open-post .venue-menu,
+.open-post .post-venue-menu,
 .open-post .session-menu{
   max-width:100%;
 }
-.second-post-column .venue-menu,
+.second-post-column .post-venue-menu,
 .second-post-column .session-menu{
   max-width:100%;
 }
 
-.open-post .venue-menu[hidden],
+.open-post .post-venue-menu[hidden],
 .open-post .session-menu[hidden],
-.second-post-column .venue-menu[hidden],
+.second-post-column .post-venue-menu[hidden],
 .second-post-column .session-menu[hidden]{display:none;}
 
-.open-post .venue-menu button,
-.second-post-column .venue-menu button{
+.open-post .post-venue-menu .venue-options button,
+.second-post-column .post-venue-menu .venue-options button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -3918,9 +3918,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   justify-content:flex-start;
 }
 
-.open-post .venue-menu,
+.open-post .post-venue-menu,
 .open-post .session-menu,
-.second-post-column .venue-menu,
+.second-post-column .post-venue-menu,
 .second-post-column .session-menu,
 .sort-options{
   --button-selected-bg: #2e3a72;
@@ -3934,9 +3934,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   --button-selected-active-text: var(--button-active-text);
 }
 
-.open-post .venue-menu button.selected,
+.open-post .post-venue-menu .venue-options button.selected,
 .open-post .session-menu button.selected,
-.second-post-column .venue-menu button.selected,
+.second-post-column .post-venue-menu .venue-options button.selected,
 .second-post-column .session-menu button.selected{
   background:#2e3a72;
   color:var(--button-active-text);
@@ -3954,8 +3954,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   padding-right:20px;
 }
 
-.open-post .location-section .options-menu,
-.second-post-column .location-section .options-menu{
+.open-post .location-section .post-venue-menu,
+.second-post-column .location-section .post-venue-menu{
   width:100%;
   box-sizing:border-box;
 }
@@ -8990,7 +8990,7 @@ function makePosts(){
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu options-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
                 <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
               </div>
               <div class="post-details-info-container">
