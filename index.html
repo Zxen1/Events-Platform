@@ -3245,8 +3245,6 @@ body.filters-active #filterBtn{
   width:100%;
 }
 
-.mode-posts .map-controls-map{display:none;}
-
 .map-controls-map{
   position:absolute;
   left:50%;
@@ -10586,7 +10584,14 @@ if (!map.__pillHooksInstalled) {
       const singleFeatures = geojson.features.filter(f => f && (!f.properties || f.properties.multi !== 1));
       const postsData = { type:'FeatureCollection', features: singleFeatures };
       const multiData = { type:'FeatureCollection', features: multiFeatures };
-      const shouldCluster = posts.length >= 10 && clusterRadius > 0;
+      const HEAT_MAX_ZOOM = 2.99;
+      const CLUSTER_MIN_ZOOM = 3;
+      const CLUSTER_MAX_ZOOM = 7.99;
+      const MARKER_MIN_ZOOM = 8;
+      const shouldCluster = clusterRadius > 0;
+      const effectiveClusterMaxZoom = shouldCluster
+        ? Math.max(CLUSTER_MIN_ZOOM, Math.min(clusterMaxZoom, CLUSTER_MAX_ZOOM))
+        : clusterMaxZoom;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const desiredClusterProperties = shouldCluster ? { total_posts: ['+', ['get','multiCount']] } : undefined;
@@ -10594,11 +10599,11 @@ if (!map.__pillHooksInstalled) {
       const clusterPropsChanged = shouldCluster
         ? JSON.stringify(serializedClusterProps || {}) !== JSON.stringify(desiredClusterProperties)
         : !!(serializedClusterProps && Object.keys(serializedClusterProps).length);
-      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom || clusterPropsChanged;
+      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== effectiveClusterMaxZoom || clusterPropsChanged;
       if(sourceNeedsRebuild){
         ['cluster-count','clusters','marker-label','multi-marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
-        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom };
+        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: effectiveClusterMaxZoom };
         if(shouldCluster){
           sourceConfig.clusterProperties = desiredClusterProperties;
         }
@@ -10636,11 +10641,12 @@ if (!map.__pillHooksInstalled) {
         ));
       }
       if(!map.getLayer('posts-heat')){
-        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
+        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:HEAT_MAX_ZOOM, paint:{
           'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
           'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
         } });
       }
+      try{ map.setLayerZoomRange('posts-heat', 0, HEAT_MAX_ZOOM); }catch(e){}
       const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
       const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
       const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
@@ -10670,6 +10676,8 @@ if (!map.__pillHooksInstalled) {
               type:'symbol',
               source:'posts',
               filter:['has','point_count'],
+              minzoom: CLUSTER_MIN_ZOOM,
+              maxzoom: CLUSTER_MAX_ZOOM,
               layout:{
                 'icon-image': 'cluster-svg',
                 'icon-allow-overlap': true,
@@ -10686,7 +10694,7 @@ if (!map.__pillHooksInstalled) {
         } else {
           if(visualsChanged || !map.getLayer('clusters')){
             if(map.getLayer('clusters')) map.removeLayer('clusters');
-            map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
+            map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom: CLUSTER_MIN_ZOOM, maxzoom: CLUSTER_MAX_ZOOM, paint:{
               'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
               'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
               'circle-opacity': 0.85,
@@ -10709,6 +10717,8 @@ if (!map.__pillHooksInstalled) {
             type:'symbol',
             source:'posts',
             filter:['has','point_count'],
+            minzoom: CLUSTER_MIN_ZOOM,
+            maxzoom: CLUSTER_MAX_ZOOM,
             layout:{
               'text-field':['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]],
               'text-size':12,
@@ -10723,6 +10733,8 @@ if (!map.__pillHooksInstalled) {
           try{ map.setLayoutProperty('cluster-count','text-field',['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]]); }catch(e){}
           try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
         }
+        try{ map.setLayerZoomRange('clusters', CLUSTER_MIN_ZOOM, CLUSTER_MAX_ZOOM); }catch(e){}
+        try{ map.setLayerZoomRange('cluster-count', CLUSTER_MIN_ZOOM, CLUSTER_MAX_ZOOM); }catch(e){}
       } else {
         if(map.getLayer('clusters')) map.removeLayer('clusters');
         if(map.getLayer('cluster-count')) map.removeLayer('cluster-count');
@@ -10748,6 +10760,7 @@ if (!map.__pillHooksInstalled) {
             type:'symbol',
             source,
             filter: markerLabelFilter,
+            minzoom: MARKER_MIN_ZOOM,
             layout:{
               'icon-image': markerLabelIconImage,
               'icon-size': 1,
@@ -10777,6 +10790,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
+        try{ map.setLayerZoomRange(id, MARKER_MIN_ZOOM, 24); }catch(e){}
       });
       ['hover-fill','clusters','cluster-count','marker-label','multi-marker-label'].forEach(id=>{
         if(map.getLayer(id)){
