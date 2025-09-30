@@ -6479,17 +6479,25 @@ if (typeof slugify !== 'function') {
               if(!Array.isArray(coords) || coords.length < 2) return;
               const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
               const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : 22;
-              let targetZoom = currentZoom + 1;
-              if(currentZoom >= 7.5){
-                targetZoom = Math.max(BALLOON_MAX_ZOOM, currentZoom);
-              } else {
-                targetZoom = Math.min(targetZoom, BALLOON_MAX_ZOOM);
+              const maxAllowedZoom = Number.isFinite(maxZoom)
+                ? Math.min(maxZoom, BALLOON_MAX_ZOOM)
+                : BALLOON_MAX_ZOOM;
+              const jumpZoom = Number.isFinite(maxAllowedZoom) ? maxAllowedZoom : BALLOON_MAX_ZOOM;
+              if(currentZoom >= 7){
+                try{
+                  mapInstance.easeTo({ center: coords, zoom: jumpZoom, duration: 450, essential: true });
+                }catch(err){ console.error(err); }
+                return;
               }
-              if(Number.isFinite(maxZoom)){
-                targetZoom = Math.min(targetZoom, maxZoom);
+              const nextZoom = Number.isFinite(currentZoom) ? currentZoom + 1 : jumpZoom;
+              const clampedZoom = Number.isFinite(nextZoom) ? Math.min(nextZoom, jumpZoom) : jumpZoom;
+              if(Number.isFinite(clampedZoom)){
+                try{
+                  mapInstance.setZoom(clampedZoom);
+                }catch(err){ console.error(err); }
               }
               try{
-                mapInstance.easeTo({ center: coords, zoom: targetZoom, duration: 450, essential: true });
+                mapInstance.easeTo({ center: coords, duration: 450, essential: true });
               }catch(err){ console.error(err); }
             };
             mapInstance.on('click', BALLOON_LAYER_ID, handleBalloonClick);
@@ -8575,7 +8583,7 @@ function makePosts(){
     }
 
     const MARKER_ZOOM_THRESHOLD = 8;
-    const MULTI_CARD_MIN_ZOOM = 8;
+    const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
     const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-marker-label'];
     let markerLayersVisible = false;
     let pendingZoomCheckToken = null;
