@@ -6107,7 +6107,7 @@ if (typeof slugify !== 'function') {
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
-    const POINTER_READY_IDS = new Set(['marker-label','clusters','cluster-count']);
+    const POINTER_READY_IDS = new Set(['marker-label','post-clusters','post-cluster-count']);
 
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
@@ -6273,9 +6273,165 @@ if (typeof slugify !== 'function') {
             return Math.max(0, Math.min(storedValue, 9));
           })(),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '',
-          currentClusterVisualKey = '',
-          lastClusterSvgHash = '';
+          clusterSvg = localStorage.getItem('clusterSvg') || '';
+        const HEAT_SOURCE_ID = 'post-heat-source';
+        const HEAT_LAYER_ID = 'post-heat-layer';
+        const CLUSTER_SOURCE_ID = 'post-cluster-source';
+        const CLUSTER_LAYER_ID = 'post-clusters';
+        const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
+        const HEAT_MAX_ZOOM = 2.99;
+        const CLUSTER_MIN_ZOOM = 3;
+        const CLUSTER_MAX_ZOOM = 7.99;
+
+        function setupSeedLayers(mapInstance){
+          if(!mapInstance) return;
+          try{
+            const heatSource = mapInstance.getSource && mapInstance.getSource(HEAT_SOURCE_ID);
+            if(!heatSource){
+              mapInstance.addSource(HEAT_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
+            } else if(typeof heatSource.setData === 'function'){
+              heatSource.setData(POST_SEED_GEOJSON);
+            }
+          }catch(err){ console.error(err); }
+
+          if(!mapInstance.getLayer(HEAT_LAYER_ID)){
+            try{
+              mapInstance.addLayer({
+                id: HEAT_LAYER_ID,
+                type:'heatmap',
+                source: HEAT_SOURCE_ID,
+                maxzoom: HEAT_MAX_ZOOM,
+                paint:{
+                  'heatmap-weight': 0.7,
+                  'heatmap-intensity': 2.0,
+                  'heatmap-radius': 40,
+                  'heatmap-color': [
+                    'interpolate',['linear'],['heatmap-density'],
+                    0,'rgba(33,102,172,0)',
+                    0.2,'rgba(103,169,207,0.6)',
+                    0.4,'rgba(209,229,240,0.9)',
+                    0.6,'rgba(253,219,146,0.95)',
+                    0.8,'rgba(239,138,98,0.95)',
+                    1,'rgba(178,24,43,0.95)'
+                  ]
+                }
+              });
+            }catch(err){ console.error(err); }
+          } else {
+            try{ mapInstance.setLayerZoomRange(HEAT_LAYER_ID, 0, HEAT_MAX_ZOOM); }catch(err){}
+          }
+
+          try{
+            if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
+            if(mapInstance.getLayer(CLUSTER_COUNT_LAYER_ID)) mapInstance.removeLayer(CLUSTER_COUNT_LAYER_ID);
+            if(mapInstance.getSource(CLUSTER_SOURCE_ID)) mapInstance.removeSource(CLUSTER_SOURCE_ID);
+          }catch(err){ console.error(err); }
+
+          const effectiveClusterMaxZoom = Math.max(CLUSTER_MIN_ZOOM, Math.min(clusterMaxZoom, CLUSTER_MAX_ZOOM));
+          const effectiveRadius = clusterRadius > 0 ? clusterRadius : 60;
+          try{
+            mapInstance.addSource(CLUSTER_SOURCE_ID, {
+              type:'geojson',
+              data: POST_SEED_GEOJSON,
+              cluster: true,
+              clusterRadius: effectiveRadius,
+              clusterMaxZoom: effectiveClusterMaxZoom
+            });
+          }catch(err){ console.error(err); }
+
+          try{
+            mapInstance.addLayer({
+              id: CLUSTER_LAYER_ID,
+              type:'circle',
+              source: CLUSTER_SOURCE_ID,
+              filter:['has','point_count'],
+              minzoom: CLUSTER_MIN_ZOOM,
+              maxzoom: effectiveClusterMaxZoom,
+              paint:{
+                'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
+                'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
+                'circle-opacity': 0.85,
+                'circle-stroke-color':'#0b1623',
+                'circle-stroke-width':1
+              }
+            });
+          }catch(err){ console.error(err); }
+
+          try{
+            mapInstance.addLayer({
+              id: CLUSTER_COUNT_LAYER_ID,
+              type:'symbol',
+              source: CLUSTER_SOURCE_ID,
+              filter:['has','point_count'],
+              minzoom: CLUSTER_MIN_ZOOM,
+              maxzoom: effectiveClusterMaxZoom,
+              layout:{
+                'text-field':['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]],
+                'text-size':12,
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': 1001
+              },
+              paint:{'text-color':'#fff'}
+            });
+          }catch(err){ console.error(err); }
+
+          if(!mapInstance.__seedClusterEventsBound){
+            const clusterLayers = [CLUSTER_LAYER_ID, CLUSTER_COUNT_LAYER_ID];
+            const handleClusterZoom = (e)=>{
+              if(e && typeof e.preventDefault === 'function') e.preventDefault();
+              const features = mapInstance.queryRenderedFeatures(e.point, { layers: clusterLayers.filter(id => mapInstance.getLayer(id)) });
+              if(!features.length) return;
+              const feature = features[0];
+              const props = feature && feature.properties;
+              const clusterId = props && typeof props.cluster_id === 'number' ? props.cluster_id : null;
+              if(clusterId === null) return;
+              const source = mapInstance.getSource(CLUSTER_SOURCE_ID);
+              if(!source || typeof source.getClusterExpansionZoom !== 'function') return;
+              source.getClusterExpansionZoom(clusterId, (err, expansionZoom)=>{
+                if(err) return;
+                const coords = feature.geometry && feature.geometry.coordinates;
+                if(!Array.isArray(coords) || coords.length < 2) return;
+                const maxZoom = typeof mapInstance.getMaxZoom === 'function' ? mapInstance.getMaxZoom() : undefined;
+                const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : undefined;
+                const targetZoom = typeof expansionZoom === 'number' ? expansionZoom : currentZoom;
+                if(typeof targetZoom !== 'number') return;
+                const nextZoom = typeof maxZoom === 'number' ? Math.min(targetZoom, maxZoom) : targetZoom;
+                const animationOpts = { center: coords, zoom: nextZoom, essential: true };
+                let computedDuration = 650;
+                try{
+                  const currentCenter = typeof mapInstance.getCenter === 'function' ? mapInstance.getCenter() : null;
+                  const targetLngLat = (typeof mapboxgl !== 'undefined' && mapboxgl && typeof mapboxgl.LngLat === 'function')
+                    ? new mapboxgl.LngLat(coords[0], coords[1])
+                    : null;
+                  const zoomNow = typeof currentZoom === 'number' ? currentZoom : (typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : null);
+                  if(currentCenter && targetLngLat && typeof currentCenter.distanceTo === 'function'){
+                    const distanceMeters = currentCenter.distanceTo(targetLngLat);
+                    const distanceMs = Math.min(1200, Math.log(distanceMeters / 1000 + 1) * 600);
+                    const zoomDelta = typeof zoomNow === 'number' ? Math.abs(nextZoom - zoomNow) : 0;
+                    const zoomMs = Math.min(600, zoomDelta * 120);
+                    const base = 450;
+                    computedDuration = Math.max(450, Math.min(2200, base + distanceMs + zoomMs));
+                    if(zoomDelta < 0.35){
+                      const blend = Math.max(0, Math.min(1, zoomDelta / 0.35));
+                      const speedMultiplier = 0.45 + (0.55 * blend);
+                      computedDuration = Math.max(220, Math.min(2200, computedDuration * speedMultiplier));
+                    }
+                  }
+                }catch(durationErr){ console.error(durationErr); }
+                animationOpts.duration = Math.round(computedDuration);
+                try{ mapInstance.easeTo(animationOpts); }catch(err){ console.error(err); }
+              });
+            };
+            clusterLayers.forEach(id => {
+              mapInstance.on('click', id, handleClusterZoom);
+              mapInstance.on('mouseenter', id, ()=>{ mapInstance.getCanvas().style.cursor = 'pointer'; });
+              mapInstance.on('mouseleave', id, ()=>{ mapInstance.getCanvas().style.cursor = 'grab'; });
+            });
+            mapInstance.__seedClusterEventsBound = true;
+          }
+        }
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
@@ -6520,33 +6676,6 @@ if (typeof slugify !== 'function') {
       return hash.toString(36);
     }
 
-    function getClusterLeavesAll(sourceId, clusterId, maxCount = Infinity, expectedCount){
-      return new Promise((resolve)=>{
-        const src = map.getSource(sourceId);
-        if(!src) return resolve({ leaves: [], complete: false });
-        const page = 50;
-        const limit = Number.isFinite(maxCount) && maxCount >= 0 ? maxCount : Infinity;
-        const totalExpected = Number.isFinite(expectedCount) && expectedCount >= 0 ? expectedCount : null;
-        const collected = [];
-        function step(offset){
-          src.getClusterLeaves(clusterId, page, offset, (err, leaves)=>{
-            if(err){ resolve({ leaves: [], complete: false }); return; }
-            collected.push(...leaves);
-            const haveAll = typeof totalExpected === 'number' ? collected.length >= totalExpected : leaves.length < page;
-            const reachedLimit = collected.length >= limit;
-            if(haveAll || reachedLimit || leaves.length === 0){
-              const finalLeaves = limit < Infinity ? collected.slice(0, limit) : collected.slice();
-              const complete = haveAll || (typeof totalExpected !== 'number' && !reachedLimit);
-              resolve({ leaves: finalLeaves, complete });
-              return;
-            }
-            step(offset + page);
-          });
-        }
-        step(0);
-      });
-    }
-    
 function buildClusterListHTML(items){
   const allDates = items.flatMap(p=>p.dates).sort();
   const first = allDates[0];
@@ -8242,27 +8371,136 @@ function makePosts(){
   return out;
 }
 
-    let postsLoaded = window.postsLoaded || false;
+    const ALL_POSTS_CACHE = makePosts();
+    const POST_POINT_FEATURES = ALL_POSTS_CACHE
+      .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
+      .map(p => ({
+        type:'Feature',
+        properties:{ id: p.id },
+        geometry:{ type:'Point', coordinates:[p.lng, p.lat] }
+      }));
+    const POST_SEED_GEOJSON = { type:'FeatureCollection', features: POST_POINT_FEATURES };
+    const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
+
+    let postsLoaded = false;
     window.postsLoaded = postsLoaded;
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
     let initialZoomStarted = false;
     let postLoadRequested = false;
+    let lastLoadedBoundsKey = null;
     window.waitForInitialZoom = waitForInitialZoom;
-    if(postsLoaded){
-      waitForInitialZoom = false;
-      window.waitForInitialZoom = waitForInitialZoom;
+    let updatePostsButtonState = () => {};
+
+    function boundsToKey(bounds, precision = 2){
+      if(!bounds) return '';
+      const west = typeof bounds.getWest === 'function' ? bounds.getWest() : bounds.west;
+      const east = typeof bounds.getEast === 'function' ? bounds.getEast() : bounds.east;
+      const south = typeof bounds.getSouth === 'function' ? bounds.getSouth() : bounds.south;
+      const north = typeof bounds.getNorth === 'function' ? bounds.getNorth() : bounds.north;
+      const fmt = (val) => Number.isFinite(val) ? val.toFixed(precision) : 'nan';
+      return [west, south, east, north].map(fmt).join('|');
     }
-    function loadPosts(){
-      if(postsLoaded) return;
+
+    function normalizeBounds(bounds){
+      if(!bounds) return null;
+      if(typeof bounds.getWest === 'function'){
+        return {
+          west: bounds.getWest(),
+          east: bounds.getEast(),
+          south: bounds.getSouth(),
+          north: bounds.getNorth()
+        };
+      }
+      const { west, east, south, north } = bounds;
+      if(!Number.isFinite(west) || !Number.isFinite(east) || !Number.isFinite(south) || !Number.isFinite(north)){
+        return null;
+      }
+      return { west, east, south, north };
+    }
+
+    function pointWithinBounds(lng, lat, bounds){
+      if(!Number.isFinite(lng) || !Number.isFinite(lat) || !bounds){
+        return false;
+      }
+      const { west, east, south, north } = bounds;
+      if(!Number.isFinite(west) || !Number.isFinite(east) || !Number.isFinite(south) || !Number.isFinite(north)){
+        return false;
+      }
+      const withinLat = lat >= Math.min(south, north) && lat <= Math.max(south, north);
+      if(!withinLat) return false;
+      if(west <= east){
+        return lng >= west && lng <= east;
+      }
+      return lng >= west || lng <= east;
+    }
+
+    function clearLoadedPosts(){
+      if(postsLoaded){
+        postsLoaded = false;
+        window.postsLoaded = postsLoaded;
+      }
+      lastLoadedBoundsKey = null;
+      posts = [];
+      filtered = [];
+      if(typeof sortedPostList !== 'undefined'){ sortedPostList = []; }
+      if(typeof renderedPostCount !== 'undefined'){ renderedPostCount = 0; }
+      if(typeof postBatchObserver !== 'undefined' && postBatchObserver){
+        try{ postBatchObserver.disconnect(); }catch(err){}
+        postBatchObserver = null;
+      }
+      if(typeof postSentinel !== 'undefined' && postSentinel && postSentinel.remove){
+        postSentinel.remove();
+        postSentinel = null;
+      }
+      if(typeof adTimer !== 'undefined' && adTimer){
+        clearInterval(adTimer);
+        adTimer = null;
+      }
+      if(typeof adPosts !== 'undefined'){ adPosts = []; }
+      if(typeof adIdsKey !== 'undefined'){ adIdsKey = ''; }
+      const adPanelEl = typeof document !== 'undefined' ? document.querySelector('.ad-panel') : null;
+      if(adPanelEl){ adPanelEl.innerHTML = ''; }
+      const resultsElLocal = $('#results');
+      if(resultsElLocal){ resultsElLocal.innerHTML = ''; }
+      const postsBoardEl = $('.post-board');
+      if(postsBoardEl){ postsBoardEl.innerHTML = ''; }
+      hideResultIndicators();
+      if(typeof updateResetBtn === 'function'){ updateResetBtn(); }
+      if(map){
+        const postsSource = map.getSource && map.getSource('posts');
+        if(postsSource && typeof postsSource.setData === 'function'){
+          postsSource.setData(EMPTY_FEATURE_COLLECTION);
+        }
+        const multiSource = map.getSource && map.getSource('multi-posts');
+        if(multiSource && typeof multiSource.setData === 'function'){
+          multiSource.setData(EMPTY_FEATURE_COLLECTION);
+        }
+      }
+    }
+
+    function loadPosts(bounds){
       if(spinning){
         pendingPostLoad = true;
         return;
       }
-      posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      const normalized = normalizeBounds(bounds);
+      if(!normalized){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
+      const key = boundsToKey(normalized);
+      if(postsLoaded && lastLoadedBoundsKey === key){
+        applyFilters();
+        return;
+      }
+      const nextPosts = ALL_POSTS_CACHE.filter(p => pointWithinBounds(p.lng, p.lat, normalized));
+      posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
+      lastLoadedBoundsKey = key;
       rebuildVenueIndex();
-      if(Object.keys(subcategoryMarkers).length) addPostSource();
+      if(map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
       applyFilters();
     }
@@ -8285,8 +8523,12 @@ function makePosts(){
       if(!Number.isFinite(zoomLevel) && typeof map.getZoom === 'function'){
         try{ zoomLevel = map.getZoom(); }catch(err){}
       }
+      const effectiveZoom = Number.isFinite(zoomLevel) ? zoomLevel : (typeof map.getZoom === 'function' ? map.getZoom() : NaN);
+      updatePostsButtonState(effectiveZoom);
+      zoomLevel = effectiveZoom;
       if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_ZOOM_THRESHOLD){
         postLoadRequested = true;
+        if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }
         hideResultIndicators();
         return;
       }
@@ -8296,14 +8538,18 @@ function makePosts(){
         return;
       }
       if(spinning){
-        if(!postsLoaded) pendingPostLoad = true;
+        pendingPostLoad = true;
         hideResultIndicators();
         return;
       }
       postLoadRequested = false;
-      if(!postsLoaded) loadPosts();
-      if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
-      applyFilters();
+      const bounds = typeof map.getBounds === 'function' ? map.getBounds() : null;
+      if(!bounds){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
+      loadPosts(bounds);
     }
 
     const resultsEl = $('#results');
@@ -9173,6 +9419,31 @@ function makePosts(){
       const mapButton = $('#map-button');
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
+
+      updatePostsButtonState = function(currentZoom){
+        const threshold = MARKER_ZOOM_THRESHOLD;
+        let zoomValue = Number.isFinite(currentZoom) ? currentZoom : null;
+        if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
+          try{ zoomValue = map.getZoom(); }catch(err){ zoomValue = null; }
+        }
+        const postsEnabled = Number.isFinite(zoomValue) ? zoomValue >= threshold : false;
+        if(postsButton){
+          postsButton.disabled = !postsEnabled;
+          postsButton.setAttribute('aria-disabled', postsEnabled ? 'false' : 'true');
+          postsButton.classList.toggle('is-disabled', !postsEnabled);
+        }
+        document.body.classList.toggle('hide-posts-ui', !postsEnabled);
+        if(!postsEnabled){
+          if(typeof setMode === 'function' && document.body.classList.contains('mode-posts')){
+            setMode('map', true);
+          }
+          document.body.classList.remove('show-history');
+          if(typeof adjustBoards === 'function'){ adjustBoards(); }
+          if(typeof updateModeToggle === 'function'){ updateModeToggle(); }
+        }
+      };
+
+      updatePostsButtonState(startZoom);
 
       function getDefaultBoardDisplay(board){
         if(!board) return 'block';
@@ -10382,6 +10653,7 @@ if (!map.__pillHooksInstalled) {
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
+        setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
         if(spinEnabled){
@@ -10390,6 +10662,10 @@ if (!map.__pillHooksInstalled) {
         updatePostPanel();
         applyFilters();
         checkLoadPosts();
+      });
+
+      map.on('style.load', ()=>{
+        setupSeedLayers(map);
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -10408,6 +10684,7 @@ if (!map.__pillHooksInstalled) {
         let suppressNextRefresh = false;
         const refreshMapView = () => {
           if(suppressNextRefresh) return;
+          checkLoadPosts();
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
@@ -10679,38 +10956,11 @@ if (!map.__pillHooksInstalled) {
       const multiFeatures = geojson.features.filter(f => f && f.properties && f.properties.multi === 1);
       const postsData = { type:'FeatureCollection', features: geojson.features };
       const multiData = { type:'FeatureCollection', features: multiFeatures };
-      const HEAT_MAX_ZOOM = 2.99;
-      const CLUSTER_MIN_ZOOM = 3;
-      const CLUSTER_MAX_ZOOM = 7.99;
-      const MARKER_MIN_ZOOM = 8;
-      const totalPostCount = geojson.features.length;
-      const shouldCluster = clusterRadius > 0 && totalPostCount >= 10;
-      const effectiveClusterMaxZoom = shouldCluster
-        ? Math.max(CLUSTER_MIN_ZOOM, Math.min(clusterMaxZoom, CLUSTER_MAX_ZOOM))
-        : CLUSTER_MIN_ZOOM;
+      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const existing = map.getSource('posts');
-      const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
-      const desiredClusterProperties = shouldCluster ? { total_posts: ['+', ['get','multiCount']] } : undefined;
-      const serializedClusterProps = opts && opts.clusterProperties;
-      const clusterPropsChanged = shouldCluster
-        ? JSON.stringify(serializedClusterProps || {}) !== JSON.stringify(desiredClusterProperties)
-        : !!(serializedClusterProps && Object.keys(serializedClusterProps).length);
-      const existingRadius = opts && typeof opts.clusterRadius === 'number' ? opts.clusterRadius : undefined;
-      const radiusChanged = shouldCluster ? existingRadius !== clusterRadius : typeof existingRadius === 'number';
-      const existingMaxZoom = opts && typeof opts.clusterMaxZoom === 'number' ? opts.clusterMaxZoom : undefined;
-      const maxZoomChanged = shouldCluster ? existingMaxZoom !== effectiveClusterMaxZoom : typeof existingMaxZoom === 'number';
-      const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || radiusChanged || maxZoomChanged || clusterPropsChanged;
-      if(sourceNeedsRebuild){
-        ['cluster-count','clusters','marker-label','multi-marker-label','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
-        if(existing) map.removeSource('posts');
-        const sourceConfig = { type:'geojson', data: postsData, cluster: shouldCluster };
-        if(shouldCluster){
-          sourceConfig.clusterRadius = clusterRadius;
-          sourceConfig.clusterMaxZoom = effectiveClusterMaxZoom;
-          sourceConfig.clusterProperties = desiredClusterProperties;
-        }
-        map.addSource('posts', sourceConfig);
-      } else if(existing){
+      if(!existing){
+        map.addSource('posts', { type:'geojson', data: postsData });
+      } else {
         existing.setData(postsData);
       }
       const multiSourceId = 'multi-posts';
@@ -10742,17 +10992,6 @@ if (!map.__pillHooksInstalled) {
           ensureMarkerLabelComposite(map, spriteId, meta.sub, meta.line1, meta.line2, meta.isMulti).catch(()=>{})
         ));
       }
-      if(!map.getLayer('posts-heat')){
-        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:HEAT_MAX_ZOOM, paint:{
-          'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
-          'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
-        } });
-      }
-      try{ map.setLayerZoomRange('posts-heat', 0, HEAT_MAX_ZOOM); }catch(e){}
-      const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
-      const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
-      const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
-      const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
@@ -10763,93 +11002,6 @@ if (!map.__pillHooksInstalled) {
         multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
       };
 
-      if(shouldCluster){
-        if(usingSvgClusters){
-          const imgId = 'cluster-svg';
-          if(visualsChanged || svgHash !== lastClusterSvgHash || !map.hasImage(imgId)){
-            if(map.hasImage(imgId)) map.removeImage(imgId);
-            await new Promise(res=>{
-              const {svg: svgData, width, height} = ensureSvgDimensions(clusterSvg);
-              const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
-              const img = new Image(width, height);
-              img.onload = () => { if(!map.hasImage(imgId)) map.addImage(imgId, img); res(); };
-              img.onerror = () => res();
-              img.src = url;
-            });
-            lastClusterSvgHash = svgHash;
-          }
-          if(visualsChanged || !map.getLayer('clusters')){
-            if(map.getLayer('clusters')) map.removeLayer('clusters');
-            map.addLayer({
-              id:'clusters',
-              type:'symbol',
-              source:'posts',
-              filter:['has','point_count'],
-              minzoom: CLUSTER_MIN_ZOOM,
-              maxzoom: CLUSTER_MAX_ZOOM,
-              layout:{
-                'icon-image': 'cluster-svg',
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': 1000
-              },
-              paint:{},
-            });
-          } else {
-            try{ map.setLayoutProperty('clusters','icon-image','cluster-svg'); }catch(e){}
-          }
-        } else {
-          if(visualsChanged || !map.getLayer('clusters')){
-            if(map.getLayer('clusters')) map.removeLayer('clusters');
-            map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], minzoom: CLUSTER_MIN_ZOOM, maxzoom: CLUSTER_MAX_ZOOM, paint:{
-              'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-              'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
-              'circle-opacity': 0.85,
-              'circle-stroke-color':'#0b1623',
-              'circle-stroke-width':1
-            } });
-          } else {
-            try{ map.setPaintProperty('clusters','circle-color', ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786']); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-radius', ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34]); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-opacity', 0.85); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-stroke-color','#0b1623'); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-stroke-width',1); }catch(e){}
-          }
-          lastClusterSvgHash = '';
-        }
-
-        if(!map.getLayer('cluster-count')){
-          map.addLayer({
-            id:'cluster-count',
-            type:'symbol',
-            source:'posts',
-            filter:['has','point_count'],
-            minzoom: CLUSTER_MIN_ZOOM,
-            maxzoom: CLUSTER_MAX_ZOOM,
-            layout:{
-              'text-field':['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]],
-              'text-size':12,
-              'text-allow-overlap': true,
-              'text-ignore-placement': true,
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': 1001
-            },
-            paint:{'text-color':'#fff'}
-          });
-        } else {
-          try{ map.setLayoutProperty('cluster-count','text-field',['to-string', ['coalesce', ['get','total_posts'], ['get','point_count_abbreviated']]]); }catch(e){}
-          try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
-        }
-        try{ map.setLayerZoomRange('clusters', CLUSTER_MIN_ZOOM, CLUSTER_MAX_ZOOM); }catch(e){}
-        try{ map.setLayerZoomRange('cluster-count', CLUSTER_MIN_ZOOM, CLUSTER_MAX_ZOOM); }catch(e){}
-      } else {
-        if(map.getLayer('clusters')) map.removeLayer('clusters');
-        if(map.getLayer('cluster-count')) map.removeLayer('cluster-count');
-        lastClusterSvgHash = '';
-      }
-
       const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
         ['case',
           ['==', ['var','spriteId'], ''],
@@ -10858,7 +11010,7 @@ if (!map.__pillHooksInstalled) {
         ]
       ];
 
-      const markerLabelMinZoom = shouldCluster ? MARKER_MIN_ZOOM : 0;
+      const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single },
         { id:'multi-marker-label', source:'multi-posts', sortKey: 1101, filter: markerLabelFilters.multi }
@@ -10902,15 +11054,12 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
         try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
       });
-      ['hover-fill','clusters','cluster-count','marker-label','multi-marker-label'].forEach(id=>{
+      ['hover-fill','marker-label','multi-marker-label'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
       [
-        ['clusters','circle-opacity-transition'],
-        ['clusters','icon-opacity-transition'],
-        ['cluster-count','text-opacity-transition'],
         ['marker-label','icon-opacity-transition'],
         ['multi-marker-label','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
@@ -10918,9 +11067,7 @@ if (!map.__pillHooksInstalled) {
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
       });
-      currentClusterVisualKey = clusterVisualKey;
       if(!postSourceEventsBound){
-        // === 0528: Right‑click cluster -> open scrollable list (locks map) ===
         // Close list on outside click or ESC
         map.on('click', (e)=>{
           if(!listLocked) return; if(Date.now() - lastListOpenAt < 200) return;
@@ -10975,68 +11122,6 @@ if (!map.__pillHooksInstalled) {
             lockMap(true); lastListOpenAt = Date.now();
         };
         MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('contextmenu', layer, handleMarkerContextMenu));
-
-        map.on('click','clusters', (e)=>{
-          stopSpin();
-          if(e && e.preventDefault) e.preventDefault();
-          const features = map.queryRenderedFeatures(e.point, { layers:['clusters'] });
-          if(!features.length) return;
-          const feature = features[0];
-          const props = feature.properties || {};
-          const clusterId = props.cluster_id;
-          const clusterLayer = map.getLayer('clusters');
-          const sourceId = clusterLayer ? clusterLayer.source : null;
-          if(clusterId === undefined || clusterId === null || !sourceId) return;
-          const src = map.getSource && map.getSource(sourceId);
-          if(!src || typeof src.getClusterExpansionZoom !== 'function') return;
-
-          suppressNextRefresh = true;
-          const clearSuppress = () => { suppressNextRefresh = false; };
-          src.getClusterExpansionZoom(clusterId, (err, expansionZoom)=>{
-            if(err){ clearSuppress(); return; }
-            try{
-              const coords = feature.geometry && feature.geometry.coordinates;
-              if(!coords) { clearSuppress(); return; }
-              const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const hasExpansionZoom = typeof expansionZoom === 'number' && !Number.isNaN(expansionZoom);
-              const fallbackZoom = typeof map.getZoom === 'function' ? map.getZoom() : undefined;
-              const targetZoom = hasExpansionZoom ? expansionZoom : fallbackZoom;
-              if(typeof targetZoom !== 'number'){ clearSuppress(); return; }
-              const nextZoom = typeof maxZoom === 'number' ? Math.min(targetZoom, maxZoom) : targetZoom;
-              const animationOpts = { center: coords, zoom: nextZoom, essential: true };
-              let computedDuration = 650;
-              try{
-                const getCenter = typeof map.getCenter === 'function' ? map.getCenter() : null;
-                const getZoom = typeof map.getZoom === 'function' ? map.getZoom() : null;
-                const targetLngLat = (typeof mapboxgl !== 'undefined' && mapboxgl && typeof mapboxgl.LngLat === 'function')
-                  ? new mapboxgl.LngLat(coords[0], coords[1])
-                  : null;
-                if(getCenter && targetLngLat && typeof getCenter.distanceTo === 'function'){
-                  const distanceMeters = getCenter.distanceTo(targetLngLat);
-                  const distanceMs = Math.min(1200, Math.log(distanceMeters / 1000 + 1) * 600);
-                  const zoomDelta = typeof getZoom === 'number' ? Math.abs(nextZoom - getZoom) : 0;
-                  const zoomMs = Math.min(600, zoomDelta * 120);
-                  const base = 450;
-                  computedDuration = Math.max(450, Math.min(2200, base + distanceMs + zoomMs));
-                  if(zoomDelta < 0.35){
-                    const blend = Math.max(0, Math.min(1, zoomDelta / 0.35));
-                    const speedMultiplier = 0.45 + (0.55 * blend);
-                    computedDuration = Math.max(220, Math.min(2200, computedDuration * speedMultiplier));
-                  }
-                }
-              }catch(durationErr){
-                console.error(durationErr);
-              }
-              animationOpts.duration = Math.round(computedDuration);
-              map.easeTo(animationOpts);
-              const settleDelay = Math.max(400, (animationOpts.duration || 500) + 120);
-              setTimeout(clearSuppress, settleDelay);
-            }catch(ex){
-              console.error(ex);
-              clearSuppress();
-            }
-          });
-        });
 
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat } = opts;
@@ -11322,66 +11407,7 @@ if (!map.__pillHooksInstalled) {
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
-      const handleClusterInteraction = (e, options = {})=>{
-        const lockOnOpen = !!options.lockOnOpen;
-        if(listLocked && !lockOnOpen) return;
-        const feature = e.features && e.features[0];
-        if(!feature || !feature.properties) return;
-        const props = feature.properties;
-        const clusterId = typeof props.cluster_id === 'number' ? props.cluster_id : null;
-        if(clusterId === null) return;
-        getClusterLeavesAll('posts', clusterId, MAX_CLUSTER_BOUNDS_LEAVES, props.point_count).then(({ leaves })=>{
-          if(!Array.isArray(leaves) || !leaves.length) return;
-          let venueKey = null;
-          let coords = null;
-          for(let i=0;i<leaves.length;i++){
-            const leaf = leaves[i];
-            if(!leaf || !leaf.properties) { venueKey = null; break; }
-            const leafVenue = leaf.properties.venueKey;
-            if(!leafVenue){ venueKey = null; break; }
-            if(venueKey === null){
-              venueKey = leafVenue;
-              const geom = leaf.geometry && leaf.geometry.coordinates;
-              if(Array.isArray(geom) && geom.length >= 2){
-                coords = geom;
-              }
-            } else if(leafVenue !== venueKey){
-              venueKey = null;
-              break;
-            }
-          }
-          if(!venueKey || !coords || coords.length < 2) return;
-          const items = postsAtVenue(coords[0], coords[1]);
-          if(!items || items.length <= 1) return;
-          if(typeof e.preventDefault === 'function') e.preventDefault();
-          if(e.originalEvent){
-            try{ e.originalEvent.preventDefault(); }catch(err){}
-            try{ e.originalEvent.stopPropagation(); }catch(err){}
-          }
-          const popup = showMultiVenuePopup(e.point, coords[0], coords[1], { lockOnOpen, items });
-          if(!popup) return;
-          if(lockOnOpen){
-            lastListOpenAt = Date.now();
-          } else {
-            bindPopupHoverGuards(popup.root || getPopupElement(hoverPopup));
-          }
-        }).catch(err => console.error(err));
-      };
-
       // Maintain pointer cursor for clusters and surface multi-venue cards when applicable
-      map.on('mouseenter','clusters', (e)=>{
-        map.getCanvas().style.cursor='pointer';
-        handleClusterInteraction(e);
-      });
-      map.on('click','clusters', (e)=>{
-        handleClusterInteraction(e, { lockOnOpen: true });
-      });
-      map.on('mouseleave','clusters', ()=>{
-        map.getCanvas().style.cursor='grab';
-        if(listLocked) return;
-        const currentPopup = hoverPopup;
-        schedulePopupRemoval(currentPopup, 200);
-      });
         postSourceEventsBound = true;
       }
       } catch (err) {
@@ -12986,35 +13012,40 @@ function openPostModal(id){
       });
     }
 
+    function handleAdPanelClick(e){
+      const slide = e.target.closest('.ad-slide');
+      if(!slide) return;
+      e.preventDefault();
+      const id = slide.dataset.id;
+      requestAnimationFrame(() => {
+        callWhenDefined('openPost', (fn)=>{
+          Promise.resolve(fn(id)).then(() => {
+            requestAnimationFrame(() => {
+              const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
+              if(openEl){
+                requestAnimationFrame(() => { openEl.scrollIntoView({behavior:'smooth', block:'start'}); });
+              }
+              document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+              const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
+              if(quickCard){
+                quickCard.setAttribute('aria-selected','true');
+                requestAnimationFrame(() => {
+                  quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+                });
+              }
+            });
+          }).catch(err => console.error(err));
+        });
+      });
+    }
+
     function initAdBoard(){
       adPanel = document.querySelector('.ad-panel');
       if(!adPanel) return;
-      adPanel.addEventListener('click', e => {
-        const slide = e.target.closest('.ad-slide');
-        if(!slide) return;
-        e.preventDefault();
-        const id = slide.dataset.id;
-        requestAnimationFrame(() => {
-          callWhenDefined('openPost', (fn)=>{
-            Promise.resolve(fn(id)).then(() => {
-              requestAnimationFrame(() => {
-                const openEl = document.querySelector(`.post-board .open-post[data-id="${id}"]`);
-                if(openEl){
-                  requestAnimationFrame(() => { openEl.scrollIntoView({behavior:'smooth', block:'start'}); });
-                }
-                document.querySelectorAll('.recents-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-                const quickCard = document.querySelector(`.recents-board .recents-card[data-id="${id}"]`);
-                if(quickCard){
-                  quickCard.setAttribute('aria-selected','true');
-                  requestAnimationFrame(() => {
-                    quickCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-                  });
-                }
-              });
-            }).catch(err => console.error(err));
-          });
-        });
-      }, { capture: true });
+      if(!adPanel.__adListenerBound){
+        adPanel.addEventListener('click', handleAdPanelClick, { capture: true });
+        adPanel.__adListenerBound = true;
+      }
     }
 
     // applyFilters();
