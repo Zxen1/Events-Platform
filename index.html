@@ -12697,7 +12697,15 @@ function openPostModal(id){
                     hideMenu(venueMenu);
                   }
                   if(opening){
-                    setTimeout(()=>{ if(map && typeof map.resize === 'function') map.resize(); },0);
+                    const adjustMap = ()=>{
+                      if(map && typeof map.resize === 'function') map.resize();
+                      if(typeof ensureMapForVenue === 'function') ensureMapForVenue();
+                    };
+                    if(typeof requestAnimationFrame === 'function'){
+                      requestAnimationFrame(adjustMap);
+                    } else {
+                      setTimeout(adjustMap, 0);
+                    }
                   }
                 });
                 document.addEventListener('click', e=>{ if(venueDropdown && !venueDropdown.contains(e.target)){ hideMenu(venueMenu); venueBtn.setAttribute('aria-expanded','false'); } });
