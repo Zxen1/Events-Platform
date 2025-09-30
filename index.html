@@ -4692,35 +4692,47 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .multi-post-map-card-container {
-  background: #000;
+  background-color: rgba(0, 0, 0, 0.7);
   border-radius: 20px;
   padding: 10px;
   position: absolute;
-  z-index: 1000;
+  z-index: 20050;
   max-height: 80vh;
   max-width: 400px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  opacity: 0.7;
+  box-sizing: border-box;
+  color: #fff;
 }
 
 .multi-post-map-card-header {
-  font-family: var(--global-font);
-  font-size: var(--global-font-size);
-  color: white;
+  font-family: var(--global-font, inherit);
+  font-size: var(--global-font-size, 1rem);
+  color: #fff;
   margin-bottom: 6px;
+  line-height: 1.25;
 }
 
 .multi-post-map-card-header .date-range {
-  color: grey;
-  font-size: var(--global-font-size);
+  display: block;
+  margin-top: 2px;
+  color: #b3b3b3;
+  font-size: var(--global-font-size, 1rem);
 }
 
 .multi-post-map-cards {
   overflow-y: auto;
   flex-grow: 1;
   max-height: calc(80vh - 60px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.multi-post-map-card {
+  width: 100%;
 }
 
 .hero img.lqip{
@@ -6505,21 +6517,15 @@ if (typeof slugify !== 'function') {
                 : null;
               const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
               const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, maxAllowedZoom);
-              if(childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2 && Number.isFinite(childTarget.zoom)){
-                try{
-                  mapInstance.flyTo({
-                    center: [childTarget.center[0], childTarget.center[1]],
-                    zoom: childTarget.zoom,
-                    essential: true
-                  });
-                }catch(err){ console.error(err); }
-                return;
-              }
+              const targetCenter = (childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2)
+                ? [childTarget.center[0], childTarget.center[1]]
+                : [coords[0], coords[1]];
               const finalZoom = Math.min(8, maxAllowedZoom);
               try{
-                mapInstance.flyTo({
-                  center: [coords[0], coords[1]],
+                mapInstance.easeTo({
+                  center: targetCenter,
                   zoom: finalZoom,
+                  duration: 0,
                   essential: true
                 });
               }catch(err){ console.error(err); }
@@ -6899,11 +6905,26 @@ function showMultiPostCardContainer(point, items, options = {}){
   const header = document.createElement('div');
   header.className = 'multi-post-map-card-header';
   const { startText, endText } = formatMultiPostDateRange(items);
-  header.innerHTML = `${items.length} posts here<br><span class="date-range">${startText} – ${endText}</span>`;
+  const headerLine1 = document.createElement('div');
+  headerLine1.textContent = `${items.length} posts here`;
+  const headerLine2 = document.createElement('span');
+  headerLine2.className = 'date-range';
+  headerLine2.textContent = `${startText} – ${endText}`;
+  header.append(headerLine1, headerLine2);
   const cardsWrap = document.createElement('div');
   cardsWrap.className = 'multi-post-map-cards';
   const ordered = sortMultiPostItems(items);
-  cardsWrap.innerHTML = ordered.map(p => mapCardHTML(p, { variant: 'list' })).join('');
+  const fragment = document.createDocumentFragment();
+  ordered.forEach(post => {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = mapCardHTML(post, { variant: 'list', extraClasses: ['multi-post-map-card'] });
+    const cardEl = wrapper.firstElementChild;
+    if(cardEl){
+      fragment.appendChild(cardEl);
+    }
+  });
+  cardsWrap.appendChild(fragment);
+  cardsWrap.scrollTop = 0;
   root.appendChild(header);
   root.appendChild(cardsWrap);
   containerEl.appendChild(root);
@@ -7919,7 +7940,16 @@ function uniqueTitle(seed, cityName, idx){
   const localVenueIndex = [];
   const localVenueKeySet = new Set();
   const MULTI_VENUE_COORD_PRECISION = 6;
-  const postsAtVenue = window.postsAtVenue = Object.create(null);
+  window.postsAtVenue = window.postsAtVenue && typeof window.postsAtVenue === 'object'
+    ? window.postsAtVenue
+    : Object.create(null);
+
+  function getPostsAtVenueStore(){
+    if(!window.postsAtVenue || typeof window.postsAtVenue !== 'object'){
+      window.postsAtVenue = Object.create(null);
+    }
+    return window.postsAtVenue;
+  }
 
   function toVenueCoordKey(lng, lat){
     if(!Number.isFinite(lng) || !Number.isFinite(lat)) return '';
@@ -7929,19 +7959,24 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function clearPostsAtVenueIndex(){
-    Object.keys(postsAtVenue).forEach(key => { delete postsAtVenue[key]; });
+    const store = getPostsAtVenueStore();
+    Object.keys(store).forEach(key => { delete store[key]; });
   }
 
   function registerPostAtVenue(post, key){
     if(!key) return;
-    const bucket = postsAtVenue[key] || (postsAtVenue[key] = []);
-    bucket.push(post);
+    const store = getPostsAtVenueStore();
+    const bucket = store[key] || (store[key] = []);
+    if(!bucket.some(item => item && item.id === post.id)){
+      bucket.push(post);
+    }
   }
 
   function getPostsAtVenueByCoords(lng, lat){
     const key = toVenueCoordKey(lng, lat);
     if(!key) return [];
-    const bucket = postsAtVenue[key];
+    const store = getPostsAtVenueStore();
+    const bucket = store[key];
     return Array.isArray(bucket) ? bucket.slice() : [];
   }
 
@@ -8537,6 +8572,103 @@ function makePosts(){
     const POST_SEED_GEOJSON = { type:'FeatureCollection', features: POST_POINT_FEATURES };
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
+    const markerDataCache = {
+      signature: null,
+      postsData: EMPTY_FEATURE_COLLECTION,
+      multiData: EMPTY_FEATURE_COLLECTION
+    };
+
+    function invalidateMarkerDataCache(){
+      markerDataCache.signature = null;
+      markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+      markerDataCache.multiData = EMPTY_FEATURE_COLLECTION;
+    }
+
+    function markerSignatureForList(list){
+      if(!Array.isArray(list) || !list.length){
+        return 'empty';
+      }
+      const parts = [];
+      list.forEach(post => {
+        if(!post) return;
+        const baseId = post.id || '';
+        let added = false;
+        if(Array.isArray(post.locations) && post.locations.length){
+          post.locations.forEach((loc, idx) => {
+            if(!loc) return;
+            const key = toVenueCoordKey(loc.lng, loc.lat);
+            if(!key) return;
+            parts.push(`${baseId}#${idx}:${key}`);
+            added = true;
+          });
+        }
+        if(!added){
+          const key = toVenueCoordKey(post.lng, post.lat);
+          if(key){
+            parts.push(`${baseId}:${key}`);
+          } else {
+            parts.push(String(baseId));
+          }
+        }
+      });
+      parts.sort();
+      return parts.join('|');
+    }
+
+    function getMarkerCollections(list){
+      const signature = markerSignatureForList(list);
+      if(markerDataCache.signature === signature && markerDataCache.postsData){
+        return {
+          postsData: markerDataCache.postsData,
+          multiData: markerDataCache.multiData,
+          signature,
+          changed: false
+        };
+      }
+      if(!Array.isArray(list) || !list.length){
+        markerDataCache.signature = signature;
+        markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
+        markerDataCache.multiData = EMPTY_FEATURE_COLLECTION;
+        return {
+          postsData: EMPTY_FEATURE_COLLECTION,
+          multiData: EMPTY_FEATURE_COLLECTION,
+          signature,
+          changed: true
+        };
+      }
+      const postsData = postsToGeoJSON(list);
+      const multiFeatures = Array.isArray(postsData.features)
+        ? postsData.features.filter(feature => feature && feature.properties && feature.properties.multi === 1)
+        : [];
+      const multiData = { type:'FeatureCollection', features: multiFeatures };
+      markerDataCache.signature = signature;
+      markerDataCache.postsData = postsData;
+      markerDataCache.multiData = multiData;
+      return { postsData, multiData, signature, changed: true };
+    }
+
+    function syncMarkerSources(list, options = {}){
+      const { force = false } = options;
+      const collections = getMarkerCollections(list);
+      const { postsData, multiData, signature } = collections;
+      let updated = false;
+      if(map && typeof map.getSource === 'function'){
+        const postsSource = map.getSource('posts');
+        if(postsSource && (force || postsSource.__markerSignature !== signature)){
+          try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
+          postsSource.__markerSignature = signature;
+          updated = true;
+        }
+        const multiSource = map.getSource('multi-posts');
+        if(multiSource && (force || multiSource.__markerSignature !== signature)){
+          try{ multiSource.setData(multiData); }catch(err){ console.error(err); }
+          multiSource.__markerSignature = signature;
+          updated = true;
+        }
+      }
+      return { updated, signature };
+    }
+
     let postsLoaded = false;
     window.postsLoaded = postsLoaded;
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
@@ -8590,6 +8722,7 @@ function makePosts(){
     }
 
     function clearLoadedPosts(){
+      invalidateMarkerDataCache();
       if(postsLoaded){
         postsLoaded = false;
         window.postsLoaded = postsLoaded;
@@ -8625,10 +8758,12 @@ function makePosts(){
         const postsSource = map.getSource && map.getSource('posts');
         if(postsSource && typeof postsSource.setData === 'function'){
           postsSource.setData(EMPTY_FEATURE_COLLECTION);
+          postsSource.__markerSignature = null;
         }
         const multiSource = map.getSource && map.getSource('multi-posts');
         if(multiSource && typeof multiSource.setData === 'function'){
           multiSource.setData(EMPTY_FEATURE_COLLECTION);
+          multiSource.__markerSignature = null;
         }
       }
       updateLayerVisibility(lastKnownZoom);
@@ -8656,6 +8791,7 @@ function makePosts(){
       window.postsLoaded = postsLoaded;
       lastLoadedBoundsKey = key;
       rebuildVenueIndex();
+      invalidateMarkerDataCache();
       resetBalloonSourceState();
       if(markersLoaded && map && Object.keys(subcategoryMarkers).length){ addPostSource(); }
       initAdBoard();
@@ -11146,10 +11282,13 @@ if (!map.__pillHooksInstalled) {
           });
           const spriteSource = [MULTI_POST_MAPMARKER_ID, labelTitle || '', venueLine || ''].join('|');
           const labelSpriteId = hashString(spriteSource);
+          const featureId = `multi:${key}`;
           features.push({
             type:'Feature',
+            id: featureId,
             properties:{
               id:`multi:${key}`,
+              featureId,
               title: labelTitle,
               label: combinedLabel,
               labelLine1: labelTitle,
@@ -11174,10 +11313,13 @@ if (!map.__pillHooksInstalled) {
         const combinedLabel = buildMarkerLabelText(p, labelLines);
         const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
         const labelSpriteId = hashString(spriteSource);
+        const featureId = `post:${p.id}::${key}`;
         features.push({
           type:'Feature',
+          id: featureId,
           properties:{
             id:p.id,
+            featureId,
             title: p.title,
             label: combinedLabel,
             labelLine1: labelLines.line1,
@@ -11217,27 +11359,31 @@ if (!map.__pillHooksInstalled) {
       addingPostSource = true;
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
-      const geojson = postsToGeoJSON(markerList);
-      const multiFeatures = geojson.features.filter(f => f && f.properties && f.properties.multi === 1);
-      const featureCount = Array.isArray(geojson.features) ? geojson.features.length : 0;
+      const collections = getMarkerCollections(markerList);
+      const { postsData, multiData, signature } = collections;
+      const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const postsData = { type:'FeatureCollection', features: geojson.features };
-      const multiData = { type:'FeatureCollection', features: multiFeatures };
       const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const existing = map.getSource('posts');
       if(!existing){
-        map.addSource('posts', { type:'geojson', data: postsData });
+        map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
+        const source = map.getSource('posts');
+        if(source){ source.__markerSignature = signature; }
       } else {
         existing.setData(postsData);
+        existing.__markerSignature = signature;
       }
       const multiSourceId = 'multi-posts';
       const existingMulti = map.getSource(multiSourceId);
       if(!existingMulti){
-        map.addSource(multiSourceId, { type:'geojson', data: multiData });
+        map.addSource(multiSourceId, { type:'geojson', data: multiData, promoteId: 'featureId' });
+        const source = map.getSource(multiSourceId);
+        if(source){ source.__markerSignature = signature; }
       } else {
         existingMulti.setData(multiData);
+        existingMulti.__markerSignature = signature;
       }
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
@@ -11245,7 +11391,7 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
-        geojson.features.forEach(feature => {
+        postsData.features.forEach(feature => {
           if(!feature || !feature.properties) return;
           const props = feature.properties;
           const spriteId = props.labelSpriteId;
@@ -13242,7 +13388,7 @@ function openPostModal(id){
         adPosts = newAdPosts;
       }
       if(render) renderLists(filtered);
-      if(map && map.getSource('posts')){ map.getSource('posts').setData(postsToGeoJSON(filtered)); }
+      syncMarkerSources(filtered);
       updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
     }
