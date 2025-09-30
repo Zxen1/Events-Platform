@@ -6274,52 +6274,105 @@ if (typeof slugify !== 'function') {
           })(),
           clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
           clusterSvg = localStorage.getItem('clusterSvg') || '';
-        const HEAT_SOURCE_ID = 'post-heat-source';
-        const HEAT_LAYER_ID = 'post-heat-layer';
         const CLUSTER_SOURCE_ID = 'post-cluster-source';
         const CLUSTER_LAYER_ID = 'post-clusters';
         const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
-        const HEAT_MAX_ZOOM = 2.99;
         const CLUSTER_MIN_ZOOM = 3;
         const CLUSTER_MAX_ZOOM = 7;
+        const ICON_SOURCE_ID = 'post-seed-icon-source';
+        const ICON_LAYER_ID = 'post-seed-icon-layer';
+        const ICON_IMAGE_ID = 'seed-balloon-icon';
+        const ICON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
+        const ICON_MIN_ZOOM = 0;
+        const ICON_MAX_ZOOM = CLUSTER_MIN_ZOOM;
+
+        function ensureSeedIconImage(mapInstance){
+          return new Promise(resolve => {
+            if(!mapInstance || typeof mapInstance.hasImage !== 'function'){
+              resolve();
+              return;
+            }
+            if(mapInstance.hasImage(ICON_IMAGE_ID)){
+              resolve();
+              return;
+            }
+            const finalize = ()=>resolve();
+            const handleImage = (image)=>{
+              if(!image){
+                finalize();
+                return;
+              }
+              try{
+                if(!mapInstance.hasImage(ICON_IMAGE_ID)){
+                  const data = image && image.data ? image.data : image;
+                  mapInstance.addImage(ICON_IMAGE_ID, data);
+                }
+              }catch(err){ console.error(err); }
+              finalize();
+            };
+            try{
+              if(typeof mapInstance.loadImage === 'function'){
+                const result = mapInstance.loadImage(ICON_IMAGE_URL);
+                if(result && typeof result.then === 'function'){
+                  result.then(res => handleImage(res && (res.data || res)))
+                    .catch(err => { console.error(err); finalize(); });
+                  return;
+                }
+                mapInstance.loadImage(ICON_IMAGE_URL, (err, image)=>{
+                  if(err){ console.error(err); finalize(); return; }
+                  handleImage(image);
+                });
+                return;
+              }
+            }catch(err){ console.error(err); finalize(); return; }
+            if(typeof Image !== 'undefined'){
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = ()=>handleImage(img);
+              img.onerror = ()=>finalize();
+              img.src = ICON_IMAGE_URL;
+              return;
+            }
+            finalize();
+          });
+        }
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
-          try{
-            const heatSource = mapInstance.getSource && mapInstance.getSource(HEAT_SOURCE_ID);
-            if(!heatSource){
-              mapInstance.addSource(HEAT_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
-            } else if(typeof heatSource.setData === 'function'){
-              heatSource.setData(POST_SEED_GEOJSON);
-            }
-          }catch(err){ console.error(err); }
-
-          if(!mapInstance.getLayer(HEAT_LAYER_ID)){
+          ensureSeedIconImage(mapInstance).then(()=>{
             try{
-              mapInstance.addLayer({
-                id: HEAT_LAYER_ID,
-                type:'heatmap',
-                source: HEAT_SOURCE_ID,
-                maxzoom: HEAT_MAX_ZOOM,
-                paint:{
-                  'heatmap-weight': 0.7,
-                  'heatmap-intensity': 2.0,
-                  'heatmap-radius': 40,
-                  'heatmap-color': [
-                    'interpolate',['linear'],['heatmap-density'],
-                    0,'rgba(33,102,172,0)',
-                    0.2,'rgba(103,169,207,0.6)',
-                    0.4,'rgba(209,229,240,0.9)',
-                    0.6,'rgba(253,219,146,0.95)',
-                    0.8,'rgba(239,138,98,0.95)',
-                    1,'rgba(178,24,43,0.95)'
-                  ]
-                }
-              });
+              const iconSource = mapInstance.getSource && mapInstance.getSource(ICON_SOURCE_ID);
+              if(!iconSource){
+                mapInstance.addSource(ICON_SOURCE_ID, { type:'geojson', data: POST_SEED_GEOJSON });
+              } else if(typeof iconSource.setData === 'function'){
+                iconSource.setData(POST_SEED_GEOJSON);
+              }
             }catch(err){ console.error(err); }
-          } else {
-            try{ mapInstance.setLayerZoomRange(HEAT_LAYER_ID, 0, HEAT_MAX_ZOOM); }catch(err){}
-          }
+
+            if(!mapInstance.getLayer(ICON_LAYER_ID)){
+              try{
+                mapInstance.addLayer({
+                  id: ICON_LAYER_ID,
+                  type:'symbol',
+                  source: ICON_SOURCE_ID,
+                  minzoom: ICON_MIN_ZOOM,
+                  maxzoom: ICON_MAX_ZOOM,
+                  layout:{
+                    'icon-image': ICON_IMAGE_ID,
+                    'icon-size': 0.6,
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'icon-anchor': 'bottom',
+                    'symbol-z-order': 'viewport-y',
+                    'symbol-sort-key': 1000
+                  }
+                });
+              }catch(err){ console.error(err); }
+            } else {
+              try{ mapInstance.setLayerZoomRange(ICON_LAYER_ID, ICON_MIN_ZOOM, ICON_MAX_ZOOM); }catch(err){}
+              try{ mapInstance.setLayoutProperty(ICON_LAYER_ID, 'visibility', 'visible'); }catch(err){}
+            }
+          });
 
           try{
             if(mapInstance.getLayer(CLUSTER_LAYER_ID)) mapInstance.removeLayer(CLUSTER_LAYER_ID);
