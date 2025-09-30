@@ -10604,10 +10604,11 @@ if (!map.__pillHooksInstalled) {
       const CLUSTER_MIN_ZOOM = 3;
       const CLUSTER_MAX_ZOOM = 7.99;
       const MARKER_MIN_ZOOM = 8;
-      const shouldCluster = clusterRadius > 0;
+      const totalPostCount = geojson.features.length;
+      const shouldCluster = clusterRadius > 0 && totalPostCount >= 10;
       const effectiveClusterMaxZoom = shouldCluster
         ? Math.max(CLUSTER_MIN_ZOOM, Math.min(clusterMaxZoom, CLUSTER_MAX_ZOOM))
-        : clusterMaxZoom;
+        : CLUSTER_MIN_ZOOM;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const desiredClusterProperties = shouldCluster ? { total_posts: ['+', ['get','multiCount']] } : undefined;
@@ -10765,6 +10766,7 @@ if (!map.__pillHooksInstalled) {
         ]
       ];
 
+      const markerLabelMinZoom = shouldCluster ? MARKER_MIN_ZOOM : 0;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100 },
         { id:'multi-marker-label', source:'multi-posts', sortKey: 1101 }
@@ -10776,7 +10778,7 @@ if (!map.__pillHooksInstalled) {
             type:'symbol',
             source,
             filter: markerLabelFilter,
-            minzoom: MARKER_MIN_ZOOM,
+            minzoom: markerLabelMinZoom,
             layout:{
               'icon-image': markerLabelIconImage,
               'icon-size': 1,
@@ -10806,7 +10808,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
-        try{ map.setLayerZoomRange(id, MARKER_MIN_ZOOM, 24); }catch(e){}
+        try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
       });
       ['hover-fill','clusters','cluster-count','marker-label','multi-marker-label'].forEach(id=>{
         if(map.getLayer(id)){
