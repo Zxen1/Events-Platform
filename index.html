@@ -6358,6 +6358,7 @@ if (typeof slugify !== 'function') {
     }
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = savedView?.bearing || 0;
+    autoPitchEnabled = false; // Disable automatic pitch adjustments during zoom interactions
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
@@ -6374,7 +6375,7 @@ if (typeof slugify !== 'function') {
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
         const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
         const BALLOON_MIN_ZOOM = 0;
-        const BALLOON_MAX_ZOOM = 7.99;
+        const BALLOON_MAX_ZOOM = 8;
         let balloonLayersVisible = true;
 
         function ensureBalloonIconImage(mapInstance){
@@ -6515,7 +6516,7 @@ if (typeof slugify !== 'function') {
           }
           const { groups } = groupPostsForBalloonZoom(bucket.posts, nextZoom);
           const childBuckets = Array.from(groups.values()).filter(child => child && child.count > 0);
-          if(childBuckets.length <= 1){
+          if(childBuckets.length === 0){
             return null;
           }
           let totalCount = 0;
@@ -6676,17 +6677,15 @@ if (typeof slugify !== 'function') {
                 ? Math.max(childTarget.zoom, safeCurrentZoom)
                 : null;
               const fallbackTargetZoom = Math.min(8, maxAllowedZoom);
-              let finalZoom;
+              let finalZoom = safeCurrentZoom;
               if(zoomFromChild !== null){
-                const cappedChildZoom = Math.min(zoomFromChild, maxAllowedZoom);
-                if(cappedChildZoom >= maxAllowedZoom && maxAllowedZoom >= 8){
-                  const almostMax = Math.max(maxAllowedZoom - 0.001, safeCurrentZoom);
-                  finalZoom = Math.min(almostMax, maxAllowedZoom);
-                } else {
-                  finalZoom = cappedChildZoom;
-                }
-              } else {
-                finalZoom = safeCurrentZoom < fallbackTargetZoom ? fallbackTargetZoom : safeCurrentZoom;
+                const cappedChildZoom = Math.min(Math.max(zoomFromChild, safeCurrentZoom), maxAllowedZoom);
+                finalZoom = cappedChildZoom;
+              } else if(safeCurrentZoom < fallbackTargetZoom){
+                finalZoom = fallbackTargetZoom;
+              }
+              if(Number.isFinite(finalZoom) && finalZoom >= 7.99 && maxAllowedZoom >= 8){
+                finalZoom = Math.min(8, maxAllowedZoom);
               }
               try{
                 const flight = { center: targetCenter, zoom: finalZoom, essential: true };
