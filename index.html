@@ -1245,7 +1245,7 @@ button[aria-expanded="true"] .results-arrow{
   border:1px solid var(--border);
   border-radius:8px;
   margin-bottom:calc(-1 * var(--scrollbar-h));
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x pan-y;
@@ -2567,7 +2567,7 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:5px;
   overflow-x:auto;
   overflow-y:hidden;
-  scrollbar-gutter:stable both-edges;
+  scrollbar-gutter: stable;
   justify-content:flex-start;
 }
 
@@ -3990,7 +3990,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex:1 1 auto;
   max-width:100%;
   margin-bottom:0;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
 }
 .open-post .post-calendar .calendar,
 .second-post-column .post-calendar .calendar,
@@ -4616,21 +4616,31 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   z-index:-1;
 }
 
-.multi-hover h4{
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  color: var(--ink-d);
-  font-weight: bold;
-  letter-spacing: .3px;
+
+.multi-post-map-card-header{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: 0.2px;
 }
 
-.multi-list{
+.multi-post-map-card-header .multi-post-map-card-dates{
+  color: rgba(255,255,255,0.65);
+}
+
+.multi-post-map-card-list{
   max-height: 360px;
   overflow-y: auto;
   overflow-y: overlay;
   overflow-x: hidden;
   padding: 2px 6px 2px 2px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .map-card--popup,
@@ -4681,40 +4691,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   color: var(--popup-text) !important;
 }
 
-.multi-ctrls{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.multi-ctrls .hint{
-  font-size: 14px;
-  color: var(--ink-d);
-}
-
-.multi-ctrls .close{
-  border: 0;
-  background: #16283f;
-  color: #fff;
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
 .nowrap{
   white-space: nowrap;
 }
 
-.multi-hover .soonest{
-  color: var(--ink-d);
-  font-weight: 600;
-}
-
 @media (max-width:600px){
-  .mapboxgl-popup.map-card .multi-hover,
-  .mapboxgl-popup.map-card .map-card-list,
+  .mapboxgl-popup.map-card .multi-post-map-card-container,
+  .mapboxgl-popup.map-card .multi-post-map-card-list,
   .mapboxgl-popup.map-card .map-card{
     width: 90vw;
     max-width: 90vw;
@@ -4725,16 +4708,19 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   }
 }
 
-.mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content,
-.mapboxgl-popup.multi-post-map-card .multi-hover,
-.mapboxgl-popup.multi-post-map-card .map-card-list{
+.mapboxgl-popup.multi-post-map-card-container .mapboxgl-popup-content,
+.mapboxgl-popup.multi-post-map-card-container .multi-post-map-card-container,
+.mapboxgl-popup.multi-post-map-card-container .multi-post-map-card-list{
   width: 400px;
   max-width: min(400px, calc(100vw - 32px));
 }
 
-.mapboxgl-popup.multi-post-map-card .mapboxgl-popup-content{
+.mapboxgl-popup.multi-post-map-card-container .mapboxgl-popup-content{
   margin-left: auto;
   margin-right: auto;
+  background: rgba(0,0,0,0.7) !important;
+  border-radius: 20px !important;
+  padding: 16px 18px;
 }
 
 .hero img.lqip{
@@ -5992,15 +5978,8 @@ if (typeof slugify !== 'function') {
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
-          clusterMaxZoom = (()=>{
-            let storedValue = parseInt(localStorage.getItem('clusterMaxZoom') || '10', 10);
-            if(Number.isNaN(storedValue)) storedValue = 10;
-            return Math.min(storedValue, 10);
-          })(),
-          clusterIconType = localStorage.getItem('clusterIconType') || 'circle',
-          clusterSvg = localStorage.getItem('clusterSvg') || '',
-          currentClusterVisualKey = '',
-          lastClusterSvgHash = '';
+          clusterMaxZoom = 7,
+          currentClusterVisualKey = '';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
         let ensureMapIcon = null;
@@ -6276,7 +6255,7 @@ function buildClusterListHTML(items){
   const first = allDates[0];
   const last = allDates[allDates.length-1] || first;
   const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
-  const head = `<h4>${items.length} events here<br><span class="soonest"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></span></h4>`;
+  const headerHtml = `<div class="multi-post-map-card-header"><div>${items.length} events here</div><div class="multi-post-map-card-dates"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></div></div>`;
   const sort = currentSort;
   const arr = items.slice();
   if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -6287,9 +6266,9 @@ function buildClusterListHTML(items){
   }
   if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
   const list = arr.map(p => {
-    return `<div class=\"map-card-list-item\" data-id=\"${p.id}\">${mapCardHTML(p, { variant: 'list' })}</div>`;
+    return `<div class=\"map-card-list-item\" data-id=\"${p.id}\">${mapCardHTML(p)}</div>`;
   }).join('');
-  return `<div class=\"multi-hover\">${head}<div class=\"multi-list map-card-list\">${list}</div></div>`;
+  return `<div class=\"multi-post-map-card-container\">${headerHtml}<div class=\"multi-post-map-card-list\">${list}</div></div>`;
 }
     // 0530: group posts at the same venue (by coordinate)
     function lngDeltaWithWrap(a, b){
@@ -6312,7 +6291,7 @@ function buildClusterListHTML(items){
       touchMarker = null;
       // Place popup at the pointer, then adjust to keep fully in view by moving the lngLat
       const lngLat = map.unproject(point);
-      hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop multi-post-map-card map-card', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
+      hoverPopup = new mapboxgl.Popup({maxWidth:'none', closeButton:false, closeOnClick:false, anchor:'top', className:'hover-pop map-card multi-post-map-card-container', offset:10}).setLngLat(lngLat).setHTML(htmlStr).addTo(map);
       registerPopup(hoverPopup);
       // Prevent the browser contextmenu while locked
       map.getCanvas().addEventListener('contextmenu', ev => ev.preventDefault(), {once:true});
@@ -6322,18 +6301,83 @@ function buildClusterListHTML(items){
       // After layout, ensure fully on-screen
       requestAnimationFrame(()=>{
         const rect = el.getBoundingClientRect();
-        const cont = map.getContainer().getBoundingClientRect();
-        let x = point.x, y = point.y;
+        const containerRect = map.getContainer().getBoundingClientRect();
         const pad = 12;
-        const maxX = cont.width - pad;
-        const maxY = cont.height - pad;
-        // If overflowing right/left, clamp
-        if(rect.right > cont.right - pad) x -= (rect.right - (cont.right - pad));
-        if(rect.left  < cont.left + pad)  x += (cont.left + pad - rect.left);
-        // If overflowing bottom/top, clamp
-        if(rect.bottom > cont.bottom - pad) y -= (rect.bottom - (cont.bottom - pad));
-        if(rect.top    < cont.top + pad)    y += (cont.top + pad - rect.top);
-        hoverPopup.setLngLat(map.unproject({x,y}));
+        const viewport = {
+          left: containerRect.left + pad,
+          right: containerRect.right - pad,
+          top: containerRect.top + pad,
+          bottom: containerRect.bottom - pad
+        };
+        let dx = 0;
+        let dy = 0;
+
+        const rectWithDelta = (offsetX = dx, offsetY = dy) => ({
+          left: rect.left + offsetX,
+          right: rect.right + offsetX,
+          top: rect.top + offsetY,
+          bottom: rect.bottom + offsetY,
+          width: rect.width,
+          height: rect.height
+        });
+
+        const clampToViewport = () => {
+          let r = rectWithDelta();
+          if(r.right > viewport.right){
+            dx -= (r.right - viewport.right);
+            r = rectWithDelta();
+          }
+          if(r.left < viewport.left){
+            dx += (viewport.left - r.left);
+            r = rectWithDelta();
+          }
+          if(r.bottom > viewport.bottom){
+            dy -= (r.bottom - viewport.bottom);
+            r = rectWithDelta();
+          }
+          if(r.top < viewport.top){
+            dy += (viewport.top - r.top);
+            r = rectWithDelta();
+          }
+          return r;
+        };
+
+        const obstacles = [];
+        const collectObstacle = (node) => {
+          if(!node || typeof node.getBoundingClientRect !== 'function') return;
+          const style = window.getComputedStyle(node);
+          if(style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') === 0) return;
+          const bounds = node.getBoundingClientRect();
+          if(bounds.width <= 0 || bounds.height <= 0) return;
+          obstacles.push(bounds);
+        };
+
+        collectObstacle(document.querySelector('.header'));
+        document.querySelectorAll('.post-mode-boards > .panel-visible').forEach(collectObstacle);
+        document.querySelectorAll('.panel .panel-content.panel-visible').forEach(collectObstacle);
+
+        let adjustedRect = clampToViewport();
+        obstacles.forEach(obs => {
+          adjustedRect = rectWithDelta();
+          if(adjustedRect.right <= obs.left - pad || adjustedRect.left >= obs.right + pad || adjustedRect.bottom <= obs.top - pad || adjustedRect.top >= obs.bottom + pad){
+            return;
+          }
+          const moveLeft = adjustedRect.right - (obs.left - pad);
+          const moveRight = (obs.right + pad) - adjustedRect.left;
+          const moveUp = adjustedRect.bottom - (obs.top - pad);
+          const moveDown = (obs.bottom + pad) - adjustedRect.top;
+          const horizontalShift = Math.abs(moveLeft) < Math.abs(moveRight) ? -moveLeft : moveRight;
+          const verticalShift = Math.abs(moveUp) < Math.abs(moveDown) ? -moveUp : moveDown;
+          if(Math.abs(horizontalShift) <= Math.abs(verticalShift)){
+            dx += horizontalShift;
+          } else {
+            dy += verticalShift;
+          }
+          adjustedRect = clampToViewport();
+        });
+
+        const finalPoint = { x: point.x + dx, y: point.y + dy };
+        hoverPopup.setLngLat(map.unproject(finalPoint));
       });
     }
 
@@ -6378,7 +6422,7 @@ function buildClusterListHTML(items){
       const KNOWN = [
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
         'live-gigs','for-sale','education-centres','tutors',
-        'multi-venue-marker'
+        'multi-post-mapmarker'
       ];
       const BASES = [
         'assets/icons/subcategories/',
@@ -6486,11 +6530,55 @@ function buildClusterListHTML(items){
       return addIcon;
     }
 
-    const MULTI_VENUE_MARKER_ID = 'multi-venue-marker';
+    const MULTI_VENUE_MARKER_ID = 'multi-post-mapmarker';
     const MULTI_VENUE_MARKER_URL = 'assets/icons-30/multi-post-icon-30.webp';
+    const BALLOON_IMAGE_ID = 'multi-post-balloons-icon';
+    const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
     const MULTI_VENUE_COORD_PRECISION = 6;
     const venueKey = (lng, lat) => `${lng.toFixed(MULTI_VENUE_COORD_PRECISION)},${lat.toFixed(MULTI_VENUE_COORD_PRECISION)}`;
     subcategoryMarkers[MULTI_VENUE_MARKER_ID] = MULTI_VENUE_MARKER_URL;
+
+    function ensureBalloonIcon(mapInstance){
+      if(!mapInstance || typeof mapInstance.hasImage !== 'function') return Promise.resolve();
+      if(mapInstance.hasImage(BALLOON_IMAGE_ID)) return Promise.resolve();
+      if(mapInstance.__balloonIconPromise){
+        return mapInstance.__balloonIconPromise;
+      }
+      mapInstance.__balloonIconPromise = new Promise(resolve => {
+        const finalize = () => {
+          mapInstance.__balloonIconPromise = null;
+          resolve();
+        };
+        const handleImage = (image) => {
+          if(!image){ finalize(); return; }
+          try{
+            if(!mapInstance.hasImage(BALLOON_IMAGE_ID)){
+              const pixelRatio = image.width >= 256 ? 2 : 1;
+              mapInstance.addImage(BALLOON_IMAGE_ID, image, { pixelRatio });
+            }
+          }catch(err){}
+          finalize();
+        };
+        try{
+          if(typeof mapInstance.loadImage === 'function'){
+            mapInstance.loadImage(BALLOON_IMAGE_URL, (err, image)=>{
+              if(err || !image){ finalize(); return; }
+              handleImage(image);
+            });
+          } else {
+            const img = new Image();
+            try{ img.decoding = 'async'; }catch(err){}
+            img.crossOrigin = 'anonymous';
+            img.onload = () => handleImage(img);
+            img.onerror = finalize;
+            img.src = BALLOON_IMAGE_URL;
+          }
+        }catch(err){
+          finalize();
+        }
+      });
+      return mapInstance.__balloonIconPromise;
+    }
 
     function setSelectedVenueHighlight(lng, lat){
       if(Number.isFinite(lng) && Number.isFinite(lat)){
@@ -6505,30 +6593,7 @@ function buildClusterListHTML(items){
       }
     }
 
-    function ensureSvgDimensions(svg){
-      try{
-        const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
-        const el = doc.documentElement;
-        let w = parseFloat(el.getAttribute('width'));
-        let h = parseFloat(el.getAttribute('height'));
-        const viewBox = el.getAttribute('viewBox');
-        if((!w || !h) && viewBox){
-          const parts = viewBox.split(/[ ,]/).map(Number);
-          if(parts.length === 4){
-            w = w || parts[2];
-            h = h || parts[3];
-          }
-        }
-        if(!w) w = 40;
-        if(!h) h = 40;
-        el.setAttribute('width', w);
-        el.setAttribute('height', h);
-        return {svg: new XMLSerializer().serializeToString(el), width: w, height: h};
-      }catch(e){
-        return {svg, width:40, height:40};
-      }
-    }
-// 0585: unique title generator (with location; no category prefix)
+    // 0585: unique title generator (with location; no category prefix)
 const __ADJ = ["Radiant","Indigo","Velvet","Silver","Crimson","Neon","Amber","Sapphire","Emerald","Electric","Roaring","Midnight","Sunlit","Ethereal","Urban","Astral","Analog","Digital","Windswept","Golden","Hidden","Avant","Cosmic","Garden","Quiet","Vivid","Obsidian","Scarlet","Cerulean","Lunar","Solar","Autumn","Verdant","Azure"];
 const __NOUN = ["Symphony","Market","Carnival","Showcase","Assembly","Parade","Salon","Summit","Expo","Soirée","Revue","Collective","Fair","Gathering","Series","Retrospective","Circuit","Sessions","Weekender","Festival","Bazaar","Program","Tableau","Odyssey","Forum","Mosaic","Canvas","Relay","Drift","Workshop","Lab"];
 const __HOOK = ["at Dusk","of Ideas","in Motion","for Everyone","Remix","Live","Reborn","MKII","Redux","Infinite","Prime","Pulse","Wave","Future","Now","Unlocked","Extended","Panorama","Unbound","Edition","Run","Sequence"];
@@ -7808,7 +7873,6 @@ function makePosts(){
         board.setAttribute('aria-hidden','false');
         if(immediate){
           board.classList.add('panel-visible');
-          board.style.transform = '';
         } else {
           const wasHidden = !board.classList.contains('panel-visible');
           schedulePanelEntrance(board, wasHidden);
@@ -7823,9 +7887,6 @@ function makePosts(){
           board.style.display = 'none';
           board._boardHideHandler = null;
           board._boardHideTimer = null;
-          try{
-            board.style.removeProperty('transform');
-          }catch(err){}
         };
         if(immediate){
           board.classList.remove('panel-visible');
@@ -9163,7 +9224,7 @@ if (!map.__pillHooksInstalled) {
       addingPostSource = true;
       try{
       const geojson = postsToGeoJSON(posts);
-      const shouldCluster = posts.length >= 10 && clusterRadius > 0;
+      const shouldCluster = clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
@@ -9184,9 +9245,7 @@ if (!map.__pillHooksInstalled) {
           'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
         } });
       }
-      const usingSvgClusters = shouldCluster && clusterIconType === 'svg' && clusterSvg;
-      const svgHash = usingSvgClusters ? hashString(clusterSvg) : '';
-      const clusterVisualKey = shouldCluster ? (usingSvgClusters ? `svg:${svgHash}` : 'circle') : 'none';
+      const clusterVisualKey = shouldCluster ? 'balloons' : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
       ensureMarkerLabelBackground(map);
       const markerLabelFilter = ['all', ['!',['has','point_count']], ['has','title']];
@@ -9203,60 +9262,33 @@ if (!map.__pillHooksInstalled) {
           ]
         ]
       ];
-
       if(shouldCluster){
-        if(usingSvgClusters){
-          const imgId = 'cluster-svg';
-          if(visualsChanged || svgHash !== lastClusterSvgHash || !map.hasImage(imgId)){
-            if(map.hasImage(imgId)) map.removeImage(imgId);
-            await new Promise(res=>{
-              const {svg: svgData, width, height} = ensureSvgDimensions(clusterSvg);
-              const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
-              const img = new Image(width, height);
-              img.onload = () => { if(!map.hasImage(imgId)) map.addImage(imgId, img); res(); };
-              img.onerror = () => res();
-              img.src = url;
-            });
-            lastClusterSvgHash = svgHash;
-          }
-          if(visualsChanged || !map.getLayer('clusters')){
-            if(map.getLayer('clusters')) map.removeLayer('clusters');
-            map.addLayer({
-              id:'clusters',
-              type:'symbol',
-              source:'posts',
-              filter:['has','point_count'],
-              layout:{
-                'icon-image': 'cluster-svg',
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-                'icon-pitch-alignment': 'viewport',
-                'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': 1000
-              },
-              paint:{},
-            });
-          } else {
-            try{ map.setLayoutProperty('clusters','icon-image','cluster-svg'); }catch(e){}
-          }
+        await ensureBalloonIcon(map);
+        const balloonSize = ['interpolate',['linear'],['zoom'],0,0.35,8,0.55];
+        if(visualsChanged || !map.getLayer('clusters')){
+          if(map.getLayer('clusters')) map.removeLayer('clusters');
+          map.addLayer({
+            id:'clusters',
+            type:'symbol',
+            source:'posts',
+            filter:['has','point_count'],
+            minzoom:0,
+            maxzoom:8,
+            layout:{
+              'icon-image': BALLOON_IMAGE_ID,
+              'icon-size': balloonSize,
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': true,
+              'icon-anchor': 'bottom',
+              'icon-pitch-alignment': 'viewport',
+              'symbol-z-order': 'viewport-y',
+              'symbol-sort-key': 1000
+            },
+            paint:{}
+          });
         } else {
-          if(visualsChanged || !map.getLayer('clusters')){
-            if(map.getLayer('clusters')) map.removeLayer('clusters');
-            map.addLayer({ id:'clusters', type:'circle', source:'posts', filter:['has','point_count'], paint:{
-              'circle-color': ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786'],
-              'circle-radius': ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34],
-              'circle-opacity': 0.85,
-              'circle-stroke-color':'#0b1623',
-              'circle-stroke-width':1
-            } });
-          } else {
-            try{ map.setPaintProperty('clusters','circle-color', ['step',['get','point_count'], '#24c6dc', 20, '#514a9d', 50, '#f7797d', 100, '#fbd786']); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-radius', ['step',['get','point_count'], 16, 20, 22, 50, 28, 100, 34]); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-opacity', 0.85); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-stroke-color','#0b1623'); }catch(e){}
-            try{ map.setPaintProperty('clusters','circle-stroke-width',1); }catch(e){}
-          }
-          lastClusterSvgHash = '';
+          try{ map.setLayoutProperty('clusters','icon-image', BALLOON_IMAGE_ID); }catch(e){}
+          try{ map.setLayoutProperty('clusters','icon-size', balloonSize); }catch(e){}
         }
 
         if(!map.getLayer('cluster-count')){
@@ -9265,11 +9297,15 @@ if (!map.__pillHooksInstalled) {
             type:'symbol',
             source:'posts',
             filter:['has','point_count'],
+            minzoom:0,
+            maxzoom:8,
             layout:{
               'text-field':['get','point_count_abbreviated'],
               'text-size':12,
               'text-allow-overlap': true,
               'text-ignore-placement': true,
+              'text-anchor':'center',
+              'text-offset':[0,-0.1],
               'symbol-z-order': 'viewport-y',
               'symbol-sort-key': 1001
             },
@@ -9277,12 +9313,14 @@ if (!map.__pillHooksInstalled) {
           });
         } else {
           try{ map.setLayoutProperty('cluster-count','text-field',['get','point_count_abbreviated']); }catch(e){}
+          try{ map.setLayoutProperty('cluster-count','text-offset',[0,-0.1]); }catch(e){}
           try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
         }
+        try{ map.setLayerZoomRange('clusters', 0, 8); }catch(e){}
+        try{ map.setLayerZoomRange('cluster-count', 0, 8); }catch(e){}
       } else {
         if(map.getLayer('clusters')) map.removeLayer('clusters');
         if(map.getLayer('cluster-count')) map.removeLayer('cluster-count');
-        lastClusterSvgHash = '';
       }
 
       if(!map.getLayer('unclustered')){
@@ -9311,6 +9349,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key', 1100); }catch(e){}
+      try{ map.setLayerZoomRange('unclustered', 8, 24); }catch(e){}
       if(!map.getLayer('marker-label-bg')){
         map.addLayer({
           id:'marker-label-bg',
@@ -9372,6 +9411,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
+      try{ map.setLayerZoomRange('marker-label-bg', 8, 24); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
@@ -9387,6 +9427,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setPaintProperty('marker-label-text','text-color','#fff'); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate',[markerLabelTextTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate-anchor','viewport'); }catch(e){}
+      try{ map.setLayerZoomRange('marker-label-text', 8, 24); }catch(e){}
       if(shouldCluster){
         try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
       } else {
