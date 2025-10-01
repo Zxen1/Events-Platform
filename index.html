@@ -8385,7 +8385,7 @@ function makePosts(){
 
     function getAutoPitchForZoom(zoom){
       if(!Number.isFinite(zoom) || zoom <= AUTO_PITCH_START_ZOOM){
-        return NaN;
+        return AUTO_PITCH_START_DEG;
       }
       if(zoom >= AUTO_PITCH_END_ZOOM){
         return AUTO_PITCH_END_DEG;
