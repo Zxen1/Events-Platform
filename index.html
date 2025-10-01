@@ -269,7 +269,7 @@
       width: auto;
       height: auto;
       padding: 0;
-      gap: 4px;
+      gap: 2px;
       text-shadow: none;
       transform: none;
     }
@@ -4638,7 +4638,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 
-.multi-post-map-card-container{
+.multi-post-map-card-content{
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -4650,7 +4650,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .multi-post-map-card-header{
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 0;
   margin: 0;
   font-size: 13px;
@@ -4660,6 +4661,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .multi-post-map-card-header .multi-post-map-card-dates{
   color: rgba(255,255,255,0.65);
+  margin-left: 12px;
+  white-space: nowrap;
+  text-align: right;
 }
 
 .multi-post-map-card-list{
@@ -4728,7 +4732,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 @media (max-width:600px){
-  .mapboxgl-popup.map-card .multi-post-map-card-container,
+  .mapboxgl-popup.map-card .multi-post-map-card-content,
   .mapboxgl-popup.map-card .multi-post-map-card-list,
   .mapboxgl-popup.map-card .map-card{
     width: auto;
@@ -4745,6 +4749,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   margin-right: auto;
   background: rgba(0,0,0,0.7) !important;
   border-radius: 20px !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero img.lqip{
@@ -5566,7 +5572,7 @@ if (typeof slugify !== 'function') {
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const narrowScreenQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
   const isNarrowScreen = narrowScreenQuery ? narrowScreenQuery.matches : window.innerWidth <= 600;
-  const markerIconSize = (isTouchDevice || isNarrowScreen) ? 1.35 : 1;
+  const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
@@ -5722,9 +5728,9 @@ if (typeof slugify !== 'function') {
     const venueRaw = getPrimaryVenueName(p);
     const markerTitleLine = shortenMarkerLabelText(title, markerLabelTextAreaWidthPx);
     const markerVenueLine = venueRaw ? shortenMarkerLabelText(venueRaw, markerLabelTextAreaWidthPx) : '';
-    const cardTitleLine = shortenMarkerLabelText(title, mapCardTitleWidthPx);
     const cardVenueLine = venueRaw ? shortenMarkerLabelText(venueRaw, mapCardTitleWidthPx) : '';
-    const cardTitleLines = [cardTitleLine || ''];
+    const cardTitleLinesRaw = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
+    const cardTitleLines = cardTitleLinesRaw.length ? cardTitleLinesRaw : [shortenMarkerLabelText(title, mapCardTitleWidthPx) || ''];
     return {
       line1: markerTitleLine || '',
       line2: markerVenueLine || '',
@@ -6281,7 +6287,8 @@ function buildClusterListHTML(items){
   const first = allDates[0];
   const last = allDates[allDates.length-1] || first;
   const fmt = iso => parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
-  const headerHtml = `<div class="multi-post-map-card-header"><div>${items.length} events here</div><div class="multi-post-map-card-dates"><span class="nowrap">${fmt(first)} - ${fmt(last)}</span></div></div>`;
+  const dateRange = first && last ? `${fmt(first)}${first===last ? '' : ` - ${fmt(last)}`}` : '';
+  const headerHtml = `<div class="multi-post-map-card-header"><div class="multi-post-map-card-count">${items.length} events here</div>${dateRange ? `<div class="multi-post-map-card-dates"><span class="nowrap">${dateRange}</span></div>` : ''}</div>`;
   const sort = currentSort;
   const arr = items.slice();
   if(sort==='az') arr.sort((a,b)=> a.title.localeCompare(b.title));
@@ -6292,9 +6299,9 @@ function buildClusterListHTML(items){
   }
   if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
   const list = arr.map(p => {
-    return `<div class=\"map-card-list-item\" data-id=\"${p.id}\">${mapCardHTML(p)}</div>`;
+    return `<div class=\"map-card-list-item\" data-id=\"${p.id}\">${mapCardHTML(p, { variant: 'list' })}</div>`;
   }).join('');
-  return `<div class=\"multi-post-map-card-container\">${headerHtml}<div class=\"multi-post-map-card-list\">${list}</div></div>`;
+  return `<div class=\"multi-post-map-card-content\">${headerHtml}<div class=\"multi-post-map-card-list\">${list}</div></div>`;
 }
     // 0530: group posts at the same venue (by coordinate)
     function lngDeltaWithWrap(a, b){
@@ -7199,11 +7206,10 @@ function makePosts(){
     function mapCardHTML(p, opts={}){
       const venueName = getPrimaryVenueName(p) || p.city;
       const labelLines = getMarkerLabelLines(p);
-      const cardTitleLine = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-        ? (labelLines.cardTitleLines[0] || '')
-        : (labelLines.line1 || '');
-      const safeTitleLine = cardTitleLine || '';
-      const titleHtml = `<div class="map-card-title-line">${safeTitleLine}</div>`;
+      const titleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+        ? labelLines.cardTitleLines
+        : [(labelLines.line1 || '')];
+      const titleHtml = titleLines.map(line => `<div class="map-card-title-line">${line || ''}</div>`).join('');
       const venueLine = labelLines.venueLine || labelLines.line2 || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
       const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
       const labelHtml = `<div class="map-card-label"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
@@ -9181,6 +9187,42 @@ if (!map.__pillHooksInstalled) {
     function postsToGeoJSON(list){
       const coordCounts = new Map();
       const coordMeta = new Map();
+      const primaryPostByVenue = new Map();
+      const compareIso = (a, b) => {
+        if(a && b){
+          return a.localeCompare(b);
+        }
+        if(a && !b) return -1;
+        if(!a && b) return 1;
+        return 0;
+      };
+      const firstEventDate = (post) => {
+        if(!post) return '';
+        const dates = Array.isArray(post.dates) ? post.dates : [];
+        return dates.length ? (dates[0] || '') : '';
+      };
+      function shouldReplacePrimary(current, candidate){
+        if(!candidate) return false;
+        if(!current) return true;
+        const currentDate = firstEventDate(current);
+        const candidateDate = firstEventDate(candidate);
+        const dateCmp = compareIso(candidateDate, currentDate);
+        if(dateCmp < 0) return true;
+        if(dateCmp > 0) return false;
+        const currentTitle = (current.title || '').trim();
+        const candidateTitle = (candidate.title || '').trim();
+        if(candidateTitle && currentTitle){
+          const titleCmp = candidateTitle.localeCompare(currentTitle);
+          if(titleCmp !== 0){
+            return titleCmp < 0;
+          }
+        } else if(candidateTitle && !currentTitle){
+          return true;
+        } else if(!candidateTitle && currentTitle){
+          return false;
+        }
+        return String(candidate.id || '').localeCompare(String(current.id || '')) < 0;
+      }
       function increment(map, key){
         if(!key) return;
         const trimmed = key.trim();
@@ -9214,6 +9256,10 @@ if (!map.__pillHooksInstalled) {
           }
           increment(meta.cityVenueCounts, deriveVenueFromCity(p.city));
           increment(meta.fallbackCounts, getPrimaryVenueName(p));
+          const currentPrimary = primaryPostByVenue.get(key);
+          if(shouldReplacePrimary(currentPrimary, p)){
+            primaryPostByVenue.set(key, p);
+          }
         }
       });
       const coordLabels = new Map();
@@ -9252,52 +9298,55 @@ if (!map.__pillHooksInstalled) {
         }
         coordLabels.set(key, label || '');
       });
+      const features = [];
+      list.forEach(p => {
+        if(!Number.isFinite(p.lng) || !Number.isFinite(p.lat)){
+          return;
+        }
+        const key = venueKey(p.lng, p.lat);
+        const count = coordCounts.get(key) || 1;
+        const isMultiVenue = count > 1;
+        const primary = primaryPostByVenue.get(key) || p;
+        if(isMultiVenue && primary !== p){
+          return;
+        }
+        const sourcePost = primary || p;
+        const baseSub = subcategoryMarkerIds[sourcePost.subcategory] || slugify(sourcePost.subcategory);
+        const labelLines = getMarkerLabelLines(sourcePost);
+        const primaryVenue = getPrimaryVenueName(sourcePost);
+        const canonicalVenue = coordLabels.get(key) || primaryVenue || '';
+        const titleLine = labelLines.line1 || shortenMarkerLabelText(sourcePost.title || '', markerLabelTextAreaWidthPx);
+        const canonicalVenueShort = canonicalVenue ? shortenMarkerLabelText(canonicalVenue) : '';
+        const labelSubtitle = canonicalVenueShort || labelLines.line2 || '';
+        const combinedLabel = buildMarkerLabelText(sourcePost, {
+          line1: titleLine,
+          line2: labelSubtitle
+        });
+        const featureTitle = sourcePost.title || titleLine;
+        features.push({
+          type:'Feature',
+          properties:{
+            id: sourcePost.id,
+            title: featureTitle,
+            label: combinedLabel,
+            labelLine1: titleLine,
+            labelLine2: labelSubtitle,
+            venueName: isMultiVenue ? canonicalVenue : primaryVenue,
+            city: sourcePost.city,
+            cat: sourcePost.category,
+            sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
+            baseSub,
+            multi: isMultiVenue ? 1 : 0,
+            multiCount: count,
+            multiLabel: String(count),
+            venueKey: venueKey(sourcePost.lng, sourcePost.lat)
+          },
+          geometry:{type:'Point', coordinates:[sourcePost.lng, sourcePost.lat]}
+        });
+      });
       return {
         type:'FeatureCollection',
-        features: list
-          .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
-          .map(p => {
-            const baseSub = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
-            const key = venueKey(p.lng, p.lat);
-            const count = coordCounts.get(key) || 1;
-            const isMultiVenue = count > 1;
-            const labelLines = getMarkerLabelLines(p);
-            const primaryVenue = getPrimaryVenueName(p);
-            const canonicalVenue = coordLabels.get(key) || primaryVenue || '';
-            const multiTitle = `${count} posts here`;
-            const labelTitle = isMultiVenue
-              ? shortenMarkerLabelText(multiTitle)
-              : labelLines.line1;
-            const canonicalVenueShort = canonicalVenue ? shortenMarkerLabelText(canonicalVenue) : '';
-            const labelSubtitle = isMultiVenue
-              ? canonicalVenueShort
-              : labelLines.line2;
-            const combinedLabel = buildMarkerLabelText(p, {
-              line1: labelTitle,
-              line2: labelSubtitle
-            });
-            const featureTitle = isMultiVenue ? labelTitle : p.title;
-            return {
-              type:'Feature',
-              properties:{
-                id:p.id,
-                title: featureTitle,
-                label: combinedLabel,
-                labelLine1: labelTitle,
-                labelLine2: labelSubtitle,
-                venueName: isMultiVenue ? canonicalVenue : primaryVenue,
-                city:p.city,
-                cat:p.category,
-                sub: isMultiVenue ? MULTI_VENUE_MARKER_ID : baseSub,
-                baseSub,
-                multi:isMultiVenue ? 1 : 0,
-                multiCount: count,
-                multiLabel: String(count),
-                venueKey: venueKey(p.lng, p.lat)
-              },
-              geometry:{type:'Point', coordinates:[p.lng, p.lat]}
-            };
-          })
+        features
       };
     }
 
@@ -9443,7 +9492,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setLayoutProperty('unclustered','icon-pitch-alignment','viewport'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-z-order','viewport-y'); }catch(e){}
       try{ map.setLayoutProperty('unclustered','symbol-sort-key', 1100); }catch(e){}
-      try{ map.setLayerZoomRange('unclustered', 8, 24); }catch(e){}
+      try{ map.setLayerZoomRange('unclustered', 0, 24); }catch(e){}
       if(!map.getLayer('marker-label-bg')){
         map.addLayer({
           id:'marker-label-bg',
@@ -9505,7 +9554,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setPaintProperty('marker-label-bg','icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-translate-anchor','viewport'); }catch(e){}
       try{ map.setPaintProperty('marker-label-bg','icon-opacity',1); }catch(e){}
-      try{ map.setLayerZoomRange('marker-label-bg', 8, 24); }catch(e){}
+      try{ map.setLayerZoomRange('marker-label-bg', 0, 24); }catch(e){}
       try{ map.setFilter('marker-label-text', markerLabelFilter); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-field', markerLabelTextField); }catch(e){}
       try{ map.setLayoutProperty('marker-label-text','text-font',['Open Sans Regular','Arial Unicode MS Regular']); }catch(e){}
@@ -9521,7 +9570,7 @@ if (!map.__pillHooksInstalled) {
       try{ map.setPaintProperty('marker-label-text','text-color','#fff'); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate',[markerLabelTextTranslatePx,0]); }catch(e){}
       try{ map.setPaintProperty('marker-label-text','text-translate-anchor','viewport'); }catch(e){}
-      try{ map.setLayerZoomRange('marker-label-text', 8, 24); }catch(e){}
+      try{ map.setLayerZoomRange('marker-label-text', 0, 24); }catch(e){}
       if(shouldCluster){
         try{ map.setFilter('unclustered', ['!', ['has','point_count']]); }catch(e){}
       } else {
@@ -9747,13 +9796,15 @@ if (!map.__pillHooksInstalled) {
           labelEl.className = 'map-card-label';
           const titleWrap = document.createElement('div');
           titleWrap.className = 'map-card-title';
-          const cardTitleLine = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-            ? (labelLines.cardTitleLines[0] || '')
-            : (labelLines.line1 || '');
-          const titleEl = document.createElement('div');
-          titleEl.className = 'map-card-title-line';
-          titleEl.textContent = cardTitleLine || '';
-          titleWrap.appendChild(titleEl);
+          const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+            ? labelLines.cardTitleLines
+            : [(labelLines.line1 || '')];
+          cardTitleLines.forEach(line => {
+            const titleEl = document.createElement('div');
+            titleEl.className = 'map-card-title-line';
+            titleEl.textContent = line || '';
+            titleWrap.appendChild(titleEl);
+          });
           labelEl.appendChild(titleWrap);
           const venueLine = labelLines.venueLine || labelLines.line2 || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
           if(venueLine){
