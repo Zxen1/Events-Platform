@@ -10765,6 +10765,14 @@ if (!map.__pillHooksInstalled) {
         updatePostPanel();
         applyFilters();
         updateZoomState(getZoomFromEvent());
+        if(!markersLoaded){
+          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_ZOOM_THRESHOLD){
+            try{ loadPostMarkers(); }catch(err){ console.error(err); }
+            markersLoaded = true;
+            window.__markersLoaded = true;
+          }
+        }
         checkLoadPosts();
       });
 
