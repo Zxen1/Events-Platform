@@ -112,6 +112,9 @@
       height: 30px;
       pointer-events: none;
       z-index: 2;
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
     }
     .mapmarker-pill{
       position: absolute;
@@ -139,39 +142,42 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: 55px;
-      top: 0;
-      width: 165px;
-      height: 50px;
-      padding: 6px 5px 6px 0;
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: flex-start;
-      gap: 2px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.2;
+      gap: 0;
+      text-align: left;
       white-space: normal;
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
       z-index: 1;
+    }
+
+    .map-card-label{
+      left: 55px;
+      width: 165px;
+      padding: 0 5px 0 0;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1;
       pointer-events: auto;
     }
 
     .mapmarker-label{
-      left: 48px;
-      top: 7px;
-      width: 96px;
-      height: auto;
-      padding: 4px 8px 4px 0;
-      pointer-events: none;
+      left: calc(12px + 30px + 5px);
+      width: calc(150px - (12px + 30px + 5px));
+      padding: 0;
       color: #fff;
-      gap: 1px;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1;
+      pointer-events: auto;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-      white-space: normal;
       z-index: 3;
     }
 
@@ -182,8 +188,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .mapmarker-label-line:first-child{ font-weight: 600; }
-    .mapmarker-label-line:not(:first-child){ font-weight: 400; }
+    .mapmarker-label-line:first-child{
+      font-weight: 600;
+      color: #fff;
+    }
+    .mapmarker-label-line:not(:first-child){
+      font-weight: 400;
+      color: #b5b5b5;
+    }
 
     #posts-button[aria-disabled="true"],
     #posts-button.is-disabled{
@@ -194,14 +206,14 @@
 
     .map-card-label{
       height: 60px;
-      justify-content: flex-start;
-      gap: 3px;
+      justify-content: center;
+      gap: 0;
     }
 
     .map-card-title{
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 0;
       width: 100%;
     }
 
@@ -212,8 +224,9 @@
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 12px;
-      line-height: 1.2;
+      line-height: 1;
       font-weight: 400;
+      color: #fff;
     }
 
     .map-card-title-line:first-child{
@@ -223,13 +236,13 @@
     .map-card-venue{
       font-weight: 400;
       font-size: 12px;
-      line-height: 1.2;
-      opacity: 0.9;
+      line-height: 1;
+      color: #b5b5b5;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       width: 100%;
-      margin-top: 2px;
+      margin-top: 0;
     }
     .map-card--list{
       position: relative;
@@ -258,6 +271,7 @@
       padding: 0;
       gap: 4px;
       text-shadow: none;
+      transform: none;
     }
     .map-card--list .map-card-title{
       white-space: normal;
@@ -4624,11 +4638,21 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 
+.multi-post-map-card-container{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  width: auto;
+  max-width: min(400px, calc(100vw - 32px));
+}
+
 .multi-post-map-card-header{
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 0 0 12px 0;
+  gap: 0;
+  margin: 0;
   font-size: 13px;
   color: #fff;
   letter-spacing: 0.2px;
@@ -4643,11 +4667,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow-y: auto;
   overflow-y: overlay;
   overflow-x: hidden;
-  padding: 2px 6px 2px 2px;
+  padding: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .map-card--popup,
@@ -4688,6 +4712,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   background: var(--popup-bg) !important;
   color: var(--popup-text) !important;
   overflow:hidden;
+  padding: 0 !important;
 }
 
 .mapboxgl-popup.map-card .mapboxgl-popup-content{
@@ -4706,20 +4731,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .mapboxgl-popup.map-card .multi-post-map-card-container,
   .mapboxgl-popup.map-card .multi-post-map-card-list,
   .mapboxgl-popup.map-card .map-card{
-    width: 90vw;
-    max-width: 90vw;
+    width: auto;
+    max-width: min(90vw, 400px);
   }
   .mapboxgl-popup.map-card .map-card--list{
-    width: 90vw;
-    max-width: 90vw;
+    width: auto;
+    max-width: min(90vw, 400px);
   }
-}
-
-.mapboxgl-popup.multi-post-map-card-container .mapboxgl-popup-content,
-.mapboxgl-popup.multi-post-map-card-container .multi-post-map-card-container,
-.mapboxgl-popup.multi-post-map-card-container .multi-post-map-card-list{
-  width: 400px;
-  max-width: min(400px, calc(100vw - 32px));
 }
 
 .mapboxgl-popup.multi-post-map-card-container .mapboxgl-popup-content{
@@ -4727,7 +4745,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   margin-right: auto;
   background: rgba(0,0,0,0.7) !important;
   border-radius: 20px !important;
-  padding: 16px 18px;
 }
 
 .hero img.lqip{
@@ -5554,12 +5571,12 @@ if (typeof slugify !== 'function') {
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
   const markerLabelTextGapPx = 5;
-  const markerLabelMarkerInsetPx = 5;
+  const markerLabelMarkerInsetPx = 0;
   const markerLabelTextRightPaddingPx = 5;
   const markerLabelTextPaddingPx = markerIconBaseSizePx * markerIconSize + markerLabelMarkerInsetPx + markerLabelTextGapPx;
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
-  const markerLabelTextSize = 12;
-  const markerLabelTextLineHeight = 1.2;
+  const markerLabelTextSize = 11;
+  const markerLabelTextLineHeight = 1;
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelTextTranslatePx = markerLabelBgTranslatePx + markerLabelTextPaddingPx;
   const markerLabelTextMaxWidth = Math.max(3, markerLabelTextAreaWidthPx / markerLabelTextSize);
@@ -5702,16 +5719,17 @@ if (typeof slugify !== 'function') {
 
   function getMarkerLabelLines(p){
     const title = p && p.title ? p.title : '';
-    const markerTitleLines = splitTextAcrossLines(title, markerLabelTextAreaWidthPx, 2);
-    while(markerTitleLines.length < 2){ markerTitleLines.push(''); }
-    const cardTitleLines = splitTextAcrossLines(title, mapCardTitleWidthPx, 2);
-    while(cardTitleLines.length < 2){ cardTitleLines.push(''); }
     const venueRaw = getPrimaryVenueName(p);
+    const markerTitleLine = shortenMarkerLabelText(title, markerLabelTextAreaWidthPx);
+    const markerVenueLine = venueRaw ? shortenMarkerLabelText(venueRaw, markerLabelTextAreaWidthPx) : '';
+    const cardTitleLine = shortenMarkerLabelText(title, mapCardTitleWidthPx);
+    const cardVenueLine = venueRaw ? shortenMarkerLabelText(venueRaw, mapCardTitleWidthPx) : '';
+    const cardTitleLines = [cardTitleLine || ''];
     return {
-      line1: markerTitleLines[0] || '',
-      line2: markerTitleLines[1] || '',
+      line1: markerTitleLine || '',
+      line2: markerVenueLine || '',
       cardTitleLines,
-      venueLine: venueRaw ? shortenMarkerLabelText(venueRaw, mapCardTitleWidthPx) : ''
+      venueLine: cardVenueLine || ''
     };
   }
 
@@ -7179,14 +7197,12 @@ function makePosts(){
     function mapCardHTML(p, opts={}){
       const venueName = getPrimaryVenueName(p) || p.city;
       const labelLines = getMarkerLabelLines(p);
-      const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-        ? labelLines.cardTitleLines.slice(0, 2)
-        : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-      const titleHtml = (cardTitleLines.length ? cardTitleLines : [''])
-        .filter((_, idx) => idx < 2)
-        .map(line => `<div class="map-card-title-line">${line}</div>`)
-        .join('');
-      const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
+      const cardTitleLine = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+        ? (labelLines.cardTitleLines[0] || '')
+        : (labelLines.line1 || '');
+      const safeTitleLine = cardTitleLine || '';
+      const titleHtml = `<div class="map-card-title-line">${safeTitleLine}</div>`;
+      const venueLine = labelLines.venueLine || labelLines.line2 || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
       const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
       const labelHtml = `<div class="map-card-label"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
       const classes = ['map-card'];
@@ -9247,12 +9263,12 @@ if (!map.__pillHooksInstalled) {
             const primaryVenue = getPrimaryVenueName(p);
             const canonicalVenue = coordLabels.get(key) || primaryVenue || '';
             const multiTitle = `${count} posts here`;
-            const multiSubtitle = 'Tap to view';
             const labelTitle = isMultiVenue
               ? shortenMarkerLabelText(multiTitle)
               : labelLines.line1;
+            const canonicalVenueShort = canonicalVenue ? shortenMarkerLabelText(canonicalVenue) : '';
             const labelSubtitle = isMultiVenue
-              ? shortenMarkerLabelText(multiSubtitle)
+              ? canonicalVenueShort
               : labelLines.line2;
             const combinedLabel = buildMarkerLabelText(p, {
               line1: labelTitle,
@@ -9322,13 +9338,14 @@ if (!map.__pillHooksInstalled) {
       const markerLabelTextField = ['let', 'line1',
         ['coalesce', ['get','labelLine1'], ['get','title'], ''],
         ['let', 'line2', ['coalesce', ['get','labelLine2'], ''],
-          ['concat',
-            ['var','line1'],
+          ['format',
+            ['var','line1'], { 'text-color': '#ffffff' },
             ['case',
               ['!=', ['var','line2'], ''],
               ['concat', '\n', ['var','line2']],
               ''
-            ]
+            ],
+            { 'text-color': '#b5b5b5' }
           ]
         ]
       ];
@@ -9728,24 +9745,15 @@ if (!map.__pillHooksInstalled) {
           labelEl.className = 'map-card-label';
           const titleWrap = document.createElement('div');
           titleWrap.className = 'map-card-title';
-          const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-            ? labelLines.cardTitleLines.slice(0, 2)
-            : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-          cardTitleLines.forEach(line => {
-            if(!line) return;
-            const lineEl = document.createElement('div');
-            lineEl.className = 'map-card-title-line';
-            lineEl.textContent = line;
-            titleWrap.appendChild(lineEl);
-          });
-          if(!titleWrap.childElementCount){
-            const lineEl = document.createElement('div');
-            lineEl.className = 'map-card-title-line';
-            lineEl.textContent = '';
-            titleWrap.appendChild(lineEl);
-          }
+          const cardTitleLine = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+            ? (labelLines.cardTitleLines[0] || '')
+            : (labelLines.line1 || '');
+          const titleEl = document.createElement('div');
+          titleEl.className = 'map-card-title-line';
+          titleEl.textContent = cardTitleLine || '';
+          titleWrap.appendChild(titleEl);
           labelEl.appendChild(titleWrap);
-          const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+          const venueLine = labelLines.venueLine || labelLines.line2 || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
           if(venueLine){
             const venueEl = document.createElement('div');
             venueEl.className = 'map-card-venue';
