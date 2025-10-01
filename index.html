@@ -3259,17 +3259,24 @@ body.filters-active #filterBtn{
   top:calc(var(--header-h) + 10px);
   transform:translateX(-50%);
   width:auto;
-  max-width:90vw;
+  max-width:600px;
   min-width:0;
   z-index:1;
   flex-wrap:nowrap;
+  justify-content:center;
 }
 
 .map-controls-map .geocoder{
-  flex:1 1 360px;
+  flex:1 1 auto;
   min-width:0;
-  width:min(100%, 360px);
-  max-width:360px;
+  width:100%;
+  max-width:100%;
+}
+
+.map-controls-map .mapboxgl-ctrl-geocoder{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
 }
 
 .map-control-row .geocoder{margin:0;}
