@@ -185,6 +185,13 @@
     .mapmarker-label-line:first-child{ font-weight: 600; }
     .mapmarker-label-line:not(:first-child){ font-weight: 400; }
 
+    #posts-button[aria-disabled="true"],
+    #posts-button.is-disabled{
+      opacity: 0.45;
+      pointer-events: none;
+      cursor: default;
+    }
+
     .map-card-label{
       height: 60px;
       justify-content: flex-start;
@@ -6028,6 +6035,7 @@ if (typeof slugify !== 'function') {
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
+    let allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
@@ -6858,6 +6866,19 @@ function uniqueTitle(seed, cityName, idx){
     return `https://picsum.photos/seed/${encodeURIComponent(seed)}-a/100/100`;
   }
 
+  function ensurePostDetails(p){
+    if(!p || typeof p !== 'object') return;
+    if(typeof p.desc !== 'string' || !p.desc){
+      p.desc = randomText();
+    }
+    if(!Array.isArray(p.images) || !p.images.length){
+      p.images = randomImages(p);
+    }
+    if(!p.member){
+      p.member = { username: randomUsername(p.id), avatar: randomAvatar(p.id) };
+    }
+  }
+
   function slugify(str){
     return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   }
@@ -6885,70 +6906,38 @@ function uniqueTitle(seed, cityName, idx){
 
 function makePosts(){
   const out = [];
-  // ---- 100 posts at Federation Square (as before) ----
-  const fsLng = 144.9695, fsLat = -37.8178;
-  const fsCity = "Federation Square, Melbourne";
-  for(let i=0;i<100;i++){
+  const TOTAL_POSTS = 600;
+  const SINGLE_SHARE = 0.8;
+  const SINGLE_COUNT = Math.floor(TOTAL_POSTS * SINGLE_SHARE);
+  const SINGLE_RADIUS = 0.04;
+  const singlesUsed = new Set();
+
+  function buildPost(idPrefix, index, city, lng, lat, titleSeed){
     const cat = pick(categories);
     const sub = pick(cat.subs);
-    const id = 'FS'+i;
-    const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
+    const id = `${idPrefix}${index}`;
+    const title = `${id} ${uniqueTitle(titleSeed, city, index)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
-    out.push({
+    return {
       id,
       title,
       slug: slugify(title),
       created,
-      city: fsCity,
-      lng: fsLng, lat: fsLat,
+      city,
+      lng,
+      lat,
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
       sponsored: true, // All posts are sponsored for development
       fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations: randomLocations(fsCity, fsLng, fsLat),
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
+      desc: '',
+      images: [],
+      locations: randomLocations(city, lng, lat),
+      member: null,
+    };
   }
 
-  // ---- 100 posts in Tasmania ----
-  const tasLng = 147.3272, tasLat = -42.8821;
-  const tasCity = "Hobart, Tasmania";
-  const todayTas = new Date(); todayTas.setHours(0,0,0,0);
-  for(let i=0;i<100;i++){
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
-    const id = 'TAS'+i;
-    const title = `${id} ${uniqueTitle(i*5311+23, tasCity, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const offset = 1 + i%30;
-    const date = new Date(todayTas);
-    date.setDate(date.getDate() + (i<50 ? -offset : offset));
-    const tasCoord = safeCoordinate(tasCity, tasLng, tasLat, 0.1);
-    out.push({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: tasCity,
-      lng: tasCoord.lng,
-      lat: tasCoord.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: [toISODate(date)],
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations: randomLocations(tasCity, tasCoord.lng, tasCoord.lat),
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
-  }
-
-  // ---- Restore world-wide posts ----
-  // A light list of hub cities for better realism
   const hubs = [
     {c:"New York, USA",      lng:-73.9857, lat:40.7484},
     {c:"Los Angeles, USA",   lng:-118.2437, lat:34.0522},
@@ -6989,42 +6978,59 @@ function makePosts(){
     {c:"São Paulo, Brazil",  lng:-46.6333, lat:-23.5505},
     {c:"Rio de Janeiro, Brazil", lng:-43.1729, lat:-22.9068},
     {c:"Buenos Aires, Argentina", lng:-58.3816, lat:-34.6037},
-    {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
+    {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489},
+    {c:"Chicago, USA",       lng:-87.6298, lat:41.8781},
+    {c:"Montreal, Canada",   lng:-73.5673, lat:45.5017},
+    {c:"Lisbon, Portugal",   lng:-9.1393, lat:38.7223},
+    {c:"Prague, Czechia",    lng:14.4378, lat:50.0755},
+    {c:"Vienna, Austria",    lng:16.3738, lat:48.2082},
+    {c:"Zurich, Switzerland",lng:8.5417, lat:47.3769},
+    {c:"Warsaw, Poland",     lng:21.0122, lat:52.2297},
+    {c:"Budapest, Hungary",  lng:19.0402, lat:47.4979},
+    {c:"Doha, Qatar",        lng:51.5310, lat:25.2854},
+    {c:"Kuala Lumpur, Malaysia", lng:101.6869, lat:3.1390},
+    {c:"Ho Chi Minh City, Vietnam", lng:106.6297, lat:10.8231},
+    {c:"Jakarta, Indonesia", lng:106.8456, lat:-6.2088},
+    {c:"Honolulu, USA",      lng:-157.8583, lat:21.3069},
+    {c:"San Francisco, USA", lng:-122.4194, lat:37.7749},
+    {c:"Seattle, USA",       lng:-122.3321, lat:47.6062}
   ];
 
-  // Generate ~900 posts across hubs with small jitter to spread within cities
-  const TOTAL_WORLD = 900;
-  for(let i=0;i<TOTAL_WORLD;i++){
-    const hub = hubs[Math.floor(rnd()*hubs.length)];
-    const coord = safeCoordinate(hub.c, hub.lng, hub.lat, 0.1);
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
-    const id = 'WW'+i;
-    const title = `${id} ${uniqueTitle(i*9343+19, hub.c, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    out.push({
-      id,
-      title,
-      slug: slugify(title),
-      created,
-      city: hub.c,
-      lng: coord.lng,
-      lat: coord.lat,
-      category: cat.name,
-      subcategory: sub,
-      dates: randomDates(),
-      sponsored: true, // All posts are sponsored for development
-      fav:false,
-      desc: randomText(),
-      images: randomImages(id),
-      locations: randomLocations(hub.c, coord.lng, coord.lat),
-      member: { username: randomUsername(id), avatar: randomAvatar(id) },
-    });
+  for(let i=0;i<SINGLE_COUNT;i++){
+    const hub = hubs[i % hubs.length];
+    let coord = safeCoordinate(hub.c, hub.lng, hub.lat, SINGLE_RADIUS);
+    let key = venueKey(coord.lng, coord.lat);
+    let attempts = 0;
+    while(singlesUsed.has(key) && attempts < 20){
+      const shrink = Math.max(SINGLE_RADIUS * (1 - attempts * 0.05), 0.005);
+      coord = safeCoordinate(hub.c, hub.lng, hub.lat, shrink);
+      key = venueKey(coord.lng, coord.lat);
+      attempts++;
+    }
+    singlesUsed.add(key);
+    out.push(buildPost('SG', i, hub.c, coord.lng, coord.lat, i*7919+17));
   }
+
+  const clusterVenues = [
+    { prefix:'MEL', city:'Federation Square, Melbourne', lng:144.9695, lat:-37.8178, count:30 },
+    { prefix:'HBT', city:'Hobart, Tasmania', lng:147.3272, lat:-42.8821, count:25 },
+    { prefix:'NYC', city:'New York, USA', lng:-73.9855, lat:40.7580, count:20 },
+    { prefix:'LON', city:'London, UK', lng:-0.1195, lat:51.5033, count:20 },
+    { prefix:'TOK', city:'Tokyo, Japan', lng:139.7006, lat:35.6890, count:25 }
+  ];
+
+  let multiIndex = 0;
+  clusterVenues.forEach(cluster => {
+    for(let i=0;i<cluster.count;i++){
+      out.push(buildPost(cluster.prefix, i, cluster.city, cluster.lng, cluster.lat, (multiIndex+1)*6823+29));
+      multiIndex++;
+    }
+  });
+
   return out;
 }
 
-    let postsLoaded = window.postsLoaded || false;
+    let postsLoaded = false;
     window.postsLoaded = postsLoaded;
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
     let initialZoomStarted = false;
@@ -7040,15 +7046,35 @@ function makePosts(){
         pendingPostLoad = true;
         return;
       }
-      posts = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      if(!allPostsCache){
+        allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      }
+      updatePostPanel();
+      posts = (allPostsCache || []).filter(p => inBounds(p));
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
-      if(Object.keys(subcategoryMarkers).length) addPostSource();
+      if(Object.keys(subcategoryMarkers).length) addPostSource(posts);
       initAdBoard();
       applyFilters();
     }
 
-    function checkLoadPosts(){
+    function mapZoomAllowsPosts(){
+      if(!map || typeof map.getZoom !== 'function') return false;
+      return map.getZoom() >= 8;
+    }
+
+    function setPostsButtonDisabled(disabled){
+      if(!postsButton) return;
+      postsButton.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+      postsButton.classList.toggle('is-disabled', !!disabled);
+    }
+
+    function updatePostsButtonState(){
+      setPostsButtonDisabled(!mapZoomAllowsPosts());
+    }
+
+    function checkLoadPosts(force=false){
+      updatePostsButtonState();
       if(waitForInitialZoom){
         postLoadRequested = true;
         hideResultIndicators();
@@ -7056,17 +7082,51 @@ function makePosts(){
       }
       if(!map) return;
       if(spinning){
-        if(!postsLoaded) pendingPostLoad = true;
+        if(!postsLoaded && mapZoomAllowsPosts()) pendingPostLoad = true;
         hideResultIndicators();
         return;
       }
       postLoadRequested = false;
-      if(!postsLoaded) loadPosts();
-      if(postsLoaded && Object.keys(subcategoryMarkers).length) addPostSource();
+      if(!mapZoomAllowsPosts()){
+        if(postsLoaded){
+          postsLoaded = false;
+          window.postsLoaded = postsLoaded;
+          posts = [];
+          filtered = [];
+          applyFilters();
+        }
+        if(Array.isArray(allPostsCache) && allPostsCache.length){
+          addPostSource(allPostsCache);
+        } else {
+          clearPostSource();
+        }
+        return;
+      }
+      if(!postsLoaded){
+        loadPosts();
+      } else {
+        updatePostsForBounds(force);
+      }
+    }
+
+    function updatePostsForBounds(force=false){
+      if(!postsLoaded || !Array.isArray(allPostsCache)) return;
+      updatePostPanel();
+      const next = allPostsCache.filter(p => inBounds(p));
+      const changed = force || next.length !== posts.length || next.some((p, idx) => posts[idx]?.id !== p.id);
+      if(!changed) return;
+      posts = next;
+      filtered = [];
+      if(Object.keys(subcategoryMarkers).length) addPostSource(posts);
       applyFilters();
     }
 
     const resultsEl = $('#results');
+    const postsButton = $('#posts-button');
+    if(postsButton){
+      postsButton.setAttribute('aria-disabled','true');
+      postsButton.classList.add('is-disabled');
+    }
     const postsWideEl = $('.post-board');
     const postsModeEl = $('.post-board');
 
@@ -7832,7 +7892,6 @@ function makePosts(){
       const boardsContainer = $('.post-mode-boards');
       const postBoard = $('.post-board');
       const recentsButton = $('#recents-button');
-      const postsButton = $('#posts-button');
       const mapButton = $('#map-button');
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
@@ -8038,6 +8097,7 @@ function makePosts(){
       });
 
       postsButton && postsButton.addEventListener('click', ()=>{
+        if(postsButton.getAttribute('aria-disabled') === 'true') return;
         const historyActive = document.body.classList.contains('show-history');
         const isPostsMode = document.body.classList.contains('mode-posts');
         if(isPostsMode && !historyActive){
@@ -8168,6 +8228,7 @@ function makePosts(){
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
         const p = posts.find(x=>x.id===id); if(!p) return;
+        ensurePostDetails(p);
         activePostId = id;
         selectedVenueKey = null;
         updateSelectedMarkerRing();
@@ -8956,7 +9017,7 @@ if (!map.__pillHooksInstalled) {
           }
           return;
         }
-        checkLoadPosts();
+        checkLoadPosts(true);
       });
       addControls();
       try{
@@ -8971,7 +9032,8 @@ if (!map.__pillHooksInstalled) {
         }
         updatePostPanel();
         applyFilters();
-        checkLoadPosts();
+        updatePostsButtonState();
+        checkLoadPosts(true);
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
@@ -8991,6 +9053,9 @@ if (!map.__pillHooksInstalled) {
         const refreshMapView = () => {
           if(suppressNextRefresh) return;
           updatePostPanel();
+          if(mapZoomAllowsPosts()){
+            updatePostsForBounds();
+          }
           updateFilterCounts();
           refreshMarkers();
           const center = map.getCenter().toArray();
@@ -9048,7 +9113,7 @@ if (!map.__pillHooksInstalled) {
       const shouldLoadPosts = pendingPostLoad;
       pendingPostLoad = false;
       if(shouldLoadPosts){
-        checkLoadPosts();
+        checkLoadPosts(true);
         return;
       }
       applyFilters();
@@ -9218,18 +9283,29 @@ if (!map.__pillHooksInstalled) {
       };
     }
 
+    function clearPostSource(){
+      if(!map) return;
+      ['hover-fill','marker-label-text','marker-label-bg','unclustered','cluster-count','clusters'].forEach(id=>{
+        if(map.getLayer(id)) map.removeLayer(id);
+      });
+      if(map.getSource('posts')){
+        map.removeSource('posts');
+      }
+    }
+
     let addingPostSource = false;
-    async function addPostSource(){
+    async function addPostSource(list = posts){
       if(!map || addingPostSource) return;
       addingPostSource = true;
       try{
-      const geojson = postsToGeoJSON(posts);
+      const dataList = Array.isArray(list) ? list : [];
+      const geojson = postsToGeoJSON(dataList);
       const shouldCluster = clusterRadius > 0;
       const existing = map.getSource('posts');
       const opts = existing && typeof existing.serialize === 'function' ? existing.serialize() : null;
       const sourceNeedsRebuild = !existing || !opts || opts.cluster !== shouldCluster || opts.clusterRadius !== clusterRadius || opts.clusterMaxZoom !== clusterMaxZoom;
       if(sourceNeedsRebuild){
-        ['cluster-count','clusters','marker-label-text','marker-label-bg','unclustered','posts-heat','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
+        ['cluster-count','clusters','marker-label-text','marker-label-bg','unclustered','hover-fill'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
         if(existing) map.removeSource('posts');
         map.addSource('posts', { type:'geojson', data: geojson, cluster: shouldCluster, clusterRadius: clusterRadius, clusterMaxZoom: clusterMaxZoom });
       } else if(existing){
@@ -9238,12 +9314,6 @@ if (!map.__pillHooksInstalled) {
       if(typeof ensureMapIcon === 'function'){
         const iconIds = Object.keys(subcategoryMarkers);
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
-      }
-      if(!map.getLayer('posts-heat')){
-        map.addLayer({ id:'posts-heat', type:'heatmap', source:'posts', maxzoom:4, paint:{
-          'heatmap-weight': 0.7, 'heatmap-intensity': 2.0, 'heatmap-radius': 40,
-          'heatmap-color':[ 'interpolate',['linear'],['heatmap-density'], 0,'rgba(33,102,172,0)', 0.2,'rgba(103,169,207,.6)', 0.4,'rgba(209,229,240,.9)', 0.6,'rgba(253,219,146,.95)', 0.8,'rgba(239,138,98,.95)', 1,'rgba(178,24,43,.95)']
-        } });
       }
       const clusterVisualKey = shouldCluster ? 'balloons' : 'none';
       const visualsChanged = clusterVisualKey !== currentClusterVisualKey || sourceNeedsRebuild;
@@ -9301,20 +9371,25 @@ if (!map.__pillHooksInstalled) {
             maxzoom:8,
             layout:{
               'text-field':['get','point_count_abbreviated'],
-              'text-size':12,
+              'text-size':14,
               'text-allow-overlap': true,
               'text-ignore-placement': true,
               'text-anchor':'center',
               'text-offset':[0,-0.1],
+              'text-font':['DIN Offc Pro Medium','Arial Unicode MS Bold'],
               'symbol-z-order': 'viewport-y',
               'symbol-sort-key': 1001
             },
-            paint:{'text-color':'#fff'}
+            paint:{'text-color':'#fff','text-halo-color':'#1a1a1a','text-halo-width':1.2}
           });
         } else {
           try{ map.setLayoutProperty('cluster-count','text-field',['get','point_count_abbreviated']); }catch(e){}
+          try{ map.setLayoutProperty('cluster-count','text-font',['DIN Offc Pro Medium','Arial Unicode MS Bold']); }catch(e){}
+          try{ map.setLayoutProperty('cluster-count','text-size',14); }catch(e){}
           try{ map.setLayoutProperty('cluster-count','text-offset',[0,-0.1]); }catch(e){}
           try{ map.setPaintProperty('cluster-count','text-color','#fff'); }catch(e){}
+          try{ map.setPaintProperty('cluster-count','text-halo-color','#1a1a1a'); }catch(e){}
+          try{ map.setPaintProperty('cluster-count','text-halo-width',1.2); }catch(e){}
         }
         try{ map.setLayerZoomRange('clusters', 0, 8); }catch(e){}
         try{ map.setLayerZoomRange('cluster-count', 0, 8); }catch(e){}
@@ -9527,7 +9602,9 @@ if (!map.__pillHooksInstalled) {
               const coords = feature.geometry && feature.geometry.coordinates;
               if(!coords) { clearSuppress(); return; }
               const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const desiredZoom = 10;
+              const clusterZoomLimit = typeof clusterMaxZoom === 'number' ? clusterMaxZoom : 7;
+              const rawZoom = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() + 1.5 : clusterZoomLimit);
+              const desiredZoom = Math.min(rawZoom, clusterZoomLimit, 7);
               const nextZoom = typeof maxZoom === 'number' ? Math.min(desiredZoom, maxZoom) : desiredZoom;
               const animationOpts = { center: coords, zoom: nextZoom, essential: true };
               let computedDuration = 650;
@@ -10300,6 +10377,7 @@ if (!map.__pillHooksInstalled) {
 function openPostModal(id){
       const p = posts.find(x=>x.id===id);
       if(!p) return;
+      ensurePostDetails(p);
       activePostId = id;
       updateSelectedMarkerRing();
       const container = document.getElementById('post-modal-container');
