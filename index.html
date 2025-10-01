@@ -6532,7 +6532,7 @@ if (typeof slugify !== 'function') {
               const zoomFromChild = hasChildTarget && Number.isFinite(childTarget.zoom)
                 ? Math.max(childTarget.zoom, safeCurrentZoom)
                 : null;
-              const fallbackZoom = Math.min(maxAllowedZoom, Math.max(safeCurrentZoom + 1, safeCurrentZoom));
+              const fallbackTargetZoom = Math.min(8, maxAllowedZoom);
               let finalZoom;
               if(zoomFromChild !== null){
                 const cappedChildZoom = Math.min(zoomFromChild, maxAllowedZoom);
@@ -6543,7 +6543,7 @@ if (typeof slugify !== 'function') {
                   finalZoom = cappedChildZoom;
                 }
               } else {
-                finalZoom = Math.min(8, maxAllowedZoom, Math.max(fallbackZoom, safeCurrentZoom));
+                finalZoom = safeCurrentZoom < fallbackTargetZoom ? fallbackTargetZoom : safeCurrentZoom;
               }
               try{
                 const flight = { center: targetCenter, zoom: finalZoom, essential: true };
