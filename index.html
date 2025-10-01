@@ -6333,7 +6333,14 @@ if (typeof slugify !== 'function') {
         let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildBalloonFeatureCollection(zoom){
-          const postsSource = Array.isArray(ALL_POSTS_CACHE) ? ALL_POSTS_CACHE : [];
+          const allowInitialize = Number.isFinite(zoom) && zoom >= MARKER_ZOOM_THRESHOLD;
+          const postsSource = getAllPostsCache({ allowInitialize });
+          if(!Array.isArray(postsSource) || postsSource.length === 0){
+            const emptyGroups = new Map();
+            const groupingKey = getBalloonBucketKey(zoom);
+            lastBalloonGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
+            return { type:'FeatureCollection', features: [] };
+          }
           const { groups } = groupPostsForBalloonZoom(postsSource, zoom);
           const features = [];
           groups.forEach((bucket, key) => {
@@ -8561,15 +8568,18 @@ function makePosts(){
   return out;
 }
 
-    const ALL_POSTS_CACHE = makePosts();
-    const POST_POINT_FEATURES = ALL_POSTS_CACHE
-      .filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
-      .map(p => ({
-        type:'Feature',
-        properties:{ id: p.id },
-        geometry:{ type:'Point', coordinates:[p.lng, p.lat] }
-      }));
-    const POST_SEED_GEOJSON = { type:'FeatureCollection', features: POST_POINT_FEATURES };
+    let ALL_POSTS_CACHE = null;
+    function getAllPostsCache(options = {}){
+      const { allowInitialize = true } = options;
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return ALL_POSTS_CACHE;
+      }
+      if(!allowInitialize){
+        return null;
+      }
+      ALL_POSTS_CACHE = makePosts();
+      return ALL_POSTS_CACHE;
+    }
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
     const markerDataCache = {
@@ -8785,7 +8795,10 @@ function makePosts(){
         applyFilters();
         return;
       }
-      const nextPosts = ALL_POSTS_CACHE.filter(p => pointWithinBounds(p.lng, p.lat, normalized));
+      const cache = getAllPostsCache();
+      const nextPosts = Array.isArray(cache)
+        ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
+        : [];
       posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
