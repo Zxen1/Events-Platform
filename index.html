@@ -7079,7 +7079,7 @@ function showMultiPostCardContainer(point, items, options = {}){
   headerLine2.textContent = `${startText} – ${endText}`;
   header.append(headerLine1, headerLine2);
   const cardsWrap = document.createElement('div');
-  cardsWrap.className = 'multi-post-map-cards';
+  cardsWrap.className = 'multi-post-map-cards map-card-list';
   const ordered = sortMultiPostItems(items);
   const fragment = document.createDocumentFragment();
   ordered.forEach(post => {
@@ -7087,6 +7087,8 @@ function showMultiPostCardContainer(point, items, options = {}){
     wrapper.innerHTML = mapCardHTML(post, { variant: 'list', extraClasses: ['multi-post-map-card'] });
     const cardEl = wrapper.firstElementChild;
     if(cardEl){
+      cardEl.setAttribute('role', 'button');
+      cardEl.setAttribute('tabindex', '0');
       fragment.appendChild(cardEl);
     }
   });
@@ -7110,7 +7112,7 @@ function showMultiPostCardContainer(point, items, options = {}){
     try{ ev.preventDefault(); }catch(err){}
     try{ ev.stopPropagation(); }catch(err){}
   };
-  ['pointerdown','mousedown','touchstart','click'].forEach(type => {
+  ['pointerdown','mousedown','touchstart'].forEach(type => {
     root.addEventListener(type, stop, { capture: true });
   });
   root.addEventListener('wheel', (ev)=>{ try{ ev.stopPropagation(); }catch(err){}; }, { capture: true });
@@ -7143,14 +7145,28 @@ function showMultiPostCardContainer(point, items, options = {}){
     });
   };
 
-  cardsWrap.querySelectorAll('.map-card').forEach(node => {
-    node.addEventListener('click', (evt)=>{
-      const id = node.getAttribute('data-id');
-      evt.preventDefault();
-      evt.stopPropagation();
-      openPostFromCard(id);
-    }, { capture: true });
-  });
+  const handleCardActivation = (target, originalEvent)=>{
+    if(!target) return;
+    const id = target.getAttribute('data-id');
+    if(!id) return;
+    if(originalEvent){
+      try{ originalEvent.preventDefault(); }catch(err){}
+      try{ originalEvent.stopPropagation(); }catch(err){}
+    }
+    openPostFromCard(id);
+  };
+
+  cardsWrap.addEventListener('click', (evt)=>{
+    const card = evt.target.closest('.map-card');
+    handleCardActivation(card, evt);
+  }, { capture: true });
+
+  cardsWrap.addEventListener('keydown', (evt)=>{
+    const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
+    if(!isActivationKey) return;
+    const card = evt.target.closest('.map-card');
+    handleCardActivation(card, evt);
+  }, { capture: true });
 
   requestAnimationFrame(()=>{
     positionMultiPostCardContainer(point);
