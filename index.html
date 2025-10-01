@@ -6003,7 +6003,7 @@ if (typeof slugify !== 'function') {
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard',
           clusterRadius = parseInt(localStorage.getItem('clusterRadius') || '52', 10),
-          clusterMaxZoom = 7,
+          clusterMaxZoom = 9,
           currentClusterVisualKey = '';
         localStorage.setItem('spinGlobe', JSON.stringify(spinEnabled));
         logoEls = [document.querySelector('.logo')].filter(Boolean);
@@ -7048,8 +7048,6 @@ function makePosts(){
   return out;
 }
 
-    allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
-
     let postsLoaded = false;
     window.postsLoaded = postsLoaded;
     let waitForInitialZoom = window.waitForInitialZoom ?? (firstVisit ? true : false);
@@ -7066,16 +7064,20 @@ function makePosts(){
         pendingPostLoad = true;
         return;
       }
-      if(!allPostsCache){
-        allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      if(!mapZoomAllowsPosts()){
+        pendingPostLoad = true;
+        return;
       }
-      updatePostPanel();
-      posts = (allPostsCache || []).filter(p => inBounds(p));
+      if(!Array.isArray(allPostsCache)){
+        const generatedPosts = makePosts();
+        allPostsCache = Array.isArray(generatedPosts)
+          ? generatedPosts.filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat))
+          : [];
+      }
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
-      if(Object.keys(subcategoryMarkers).length) addPostSource(posts);
       initAdBoard();
-      applyFilters();
+      updatePostsForBounds(true);
     }
 
     function mapZoomAllowsPosts(){
@@ -7108,12 +7110,16 @@ function makePosts(){
       }
       postLoadRequested = false;
       if(!mapZoomAllowsPosts()){
+        setPostsButtonDisabled(true);
         if(postsLoaded){
           postsLoaded = false;
           window.postsLoaded = postsLoaded;
           posts = [];
           filtered = [];
           applyFilters();
+        }
+        if(typeof mode !== 'undefined' && mode === 'posts' && typeof setMode === 'function'){
+          setMode('map');
         }
         if(Array.isArray(allPostsCache) && allPostsCache.length){
           addPostSource(allPostsCache);
@@ -9615,15 +9621,21 @@ if (!map.__pillHooksInstalled) {
 
           suppressNextRefresh = true;
           const clearSuppress = () => { suppressNextRefresh = false; };
-          src.getClusterExpansionZoom(clusterId, (err, zoom)=>{
-            if(err){ clearSuppress(); return; }
+          const coords = feature.geometry && feature.geometry.coordinates;
+          if(!coords) { clearSuppress(); return; }
+          const clusterZoomLimit = typeof clusterMaxZoom === 'number' ? clusterMaxZoom : 8;
+          const fallbackZoom = typeof map.getZoom === 'function' ? map.getZoom() + 1.5 : clusterZoomLimit;
+          const MIN_POST_ZOOM = 8;
+
+          function easeToCluster(expansionZoom, childCount){
             try{
-              const coords = feature.geometry && feature.geometry.coordinates;
-              if(!coords) { clearSuppress(); return; }
               const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : undefined;
-              const clusterZoomLimit = typeof clusterMaxZoom === 'number' ? clusterMaxZoom : 7;
-              const rawZoom = Number.isFinite(zoom) ? zoom : (typeof map.getZoom === 'function' ? map.getZoom() + 1.5 : clusterZoomLimit);
-              const desiredZoom = Math.min(rawZoom, clusterZoomLimit, 7);
+              const baseZoom = Number.isFinite(expansionZoom) ? expansionZoom : fallbackZoom;
+              const hasChildren = typeof childCount === 'number' ? childCount > 0 : true;
+              let desiredZoom = Math.min(baseZoom, clusterZoomLimit);
+              if(!hasChildren){
+                desiredZoom = Math.min(Math.max(desiredZoom, MIN_POST_ZOOM), clusterZoomLimit);
+              }
               const nextZoom = typeof maxZoom === 'number' ? Math.min(desiredZoom, maxZoom) : desiredZoom;
               const animationOpts = { center: coords, zoom: nextZoom, essential: true };
               let computedDuration = 650;
@@ -9656,6 +9668,20 @@ if (!map.__pillHooksInstalled) {
             }catch(ex){
               console.error(ex);
               clearSuppress();
+            }
+          }
+
+          src.getClusterExpansionZoom(clusterId, (err, expansionZoom)=>{
+            if(err){ clearSuppress(); return; }
+            const finalize = (childCount)=> easeToCluster(expansionZoom, childCount);
+            if(typeof src.getClusterChildren === 'function'){
+              src.getClusterChildren(clusterId, (childErr, children)=>{
+                if(childErr){ finalize(undefined); return; }
+                const childCount = Array.isArray(children) ? children.length : undefined;
+                finalize(childCount);
+              });
+            } else {
+              finalize(undefined);
             }
           });
         });
