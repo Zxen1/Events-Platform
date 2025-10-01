@@ -7324,6 +7324,19 @@ function uniqueTitle(seed, cityName, idx){
     }).sort();
   }
 
+  function randomSchedule(){
+    const count = 1 + Math.floor(rnd()*20);
+    const now = new Date();
+    return Array.from({length:count}, ()=>{
+      const offset = Math.floor(rnd()*730) - 365; // past and future
+      const d = new Date(+now + offset*86400000);
+      const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
+      const full = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return {date, time, full};
+    });
+  }
+
   function normalizeLongitude(value){
     if(!Number.isFinite(value)) value = 0;
     const normalized = ((value + 180) % 360 + 360) % 360 - 180;
