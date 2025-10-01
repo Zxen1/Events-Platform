@@ -7324,6 +7324,38 @@ function uniqueTitle(seed, cityName, idx){
     }).sort();
   }
 
+  function normalizeLongitude(value){
+    if(!Number.isFinite(value)) value = 0;
+    const normalized = ((value + 180) % 360 + 360) % 360 - 180;
+    return Number.isFinite(normalized) ? normalized : 0;
+  }
+
+  function clampLatitude(value){
+    if(!Number.isFinite(value)) return 0;
+    return Math.max(-85, Math.min(85, value));
+  }
+
+  function safeCoordinate(city, baseLng=0, baseLat=0, radius=0){
+    const centerLng = Number.isFinite(baseLng) ? baseLng : 0;
+    const centerLat = Number.isFinite(baseLat) ? baseLat : 0;
+    const spread = Math.max(Number.isFinite(radius) ? radius : 0, 0);
+
+    let lng = centerLng;
+    let lat = centerLat;
+
+    if(spread > 0){
+      const distance = Math.sqrt(rnd()) * spread;
+      const angle = rnd() * Math.PI * 2;
+      lng += Math.cos(angle) * distance;
+      lat += Math.sin(angle) * distance;
+    }
+
+    return {
+      lng: normalizeLongitude(lng),
+      lat: clampLatitude(lat)
+    };
+  }
+
   function createRandomLocation(city, baseLng=0, baseLat=0, options={}){
     const defaultRadius = 0.25;
     const radius = Number.isFinite(options.radius) ? Math.max(options.radius, 0) : defaultRadius;
