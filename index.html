@@ -6366,7 +6366,7 @@ if (typeof slugify !== 'function') {
           if(!bucket || !Array.isArray(bucket.posts) || bucket.posts.length <= 1){
             return null;
           }
-          const nextZoom = Math.min(currentZoom + 1, maxAllowedZoom, 8);
+          const nextZoom = Math.min(currentZoom + 1, maxAllowedZoom);
           if(!(nextZoom > currentZoom)){
             return null;
           }
@@ -6525,17 +6525,33 @@ if (typeof slugify !== 'function') {
                 : null;
               const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
               const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, maxAllowedZoom);
-              const targetCenter = (childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2)
+              const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
+              const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const finalZoom = Math.min(8, maxAllowedZoom);
+              const zoomFromChild = hasChildTarget && Number.isFinite(childTarget.zoom)
+                ? Math.max(childTarget.zoom, safeCurrentZoom)
+                : null;
+              const fallbackZoom = Math.min(maxAllowedZoom, Math.max(safeCurrentZoom + 1, safeCurrentZoom));
+              let finalZoom;
+              if(zoomFromChild !== null){
+                const cappedChildZoom = Math.min(zoomFromChild, maxAllowedZoom);
+                if(cappedChildZoom >= maxAllowedZoom && maxAllowedZoom >= 8){
+                  const almostMax = Math.max(maxAllowedZoom - 0.001, safeCurrentZoom);
+                  finalZoom = Math.min(almostMax, maxAllowedZoom);
+                } else {
+                  finalZoom = cappedChildZoom;
+                }
+              } else {
+                finalZoom = Math.min(8, maxAllowedZoom, Math.max(fallbackZoom, safeCurrentZoom));
+              }
               try{
-                mapInstance.easeTo({
-                  center: targetCenter,
-                  zoom: finalZoom,
-                  duration: 0,
-                  essential: true
-                });
+                const flight = { center: targetCenter, zoom: finalZoom, essential: true };
+                if(typeof mapInstance.flyTo === 'function'){
+                  mapInstance.flyTo(Object.assign({}, flight, { speed: 0.8, curve: 1.42, easing: t => t }));
+                } else {
+                  mapInstance.easeTo(Object.assign({}, flight, { duration: 800 }));
+                }
               }catch(err){ console.error(err); }
             };
             mapInstance.on('click', BALLOON_LAYER_ID, handleBalloonClick);
@@ -11031,9 +11047,14 @@ if (!map.__pillHooksInstalled) {
           }
           markerIdCandidates.push(MULTI_POST_MAPMARKER_ID);
           const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-          if(markerIconUrl){
-            markerIcon.src = markerIconUrl;
-          }
+          const markerFallback = MULTI_POST_MAPMARKER_URL;
+          markerIcon.referrerPolicy = 'no-referrer';
+          markerIcon.loading = 'lazy';
+          markerIcon.onerror = ()=>{
+            markerIcon.onerror = null;
+            markerIcon.src = markerFallback;
+          };
+          markerIcon.src = markerIconUrl || markerFallback;
 
           const markerPill = new Image();
           try{ markerPill.decoding = 'async'; }catch(e){}
@@ -11077,7 +11098,13 @@ if (!map.__pillHooksInstalled) {
           const thumbImg = new Image();
           try{ thumbImg.decoding = 'async'; }catch(e){}
           thumbImg.alt = '';
-          thumbImg.src = imgThumb(post);
+          const thumbFallback = 'assets/funmap-logo-small.png';
+          thumbImg.loading = 'lazy';
+          thumbImg.onerror = ()=>{
+            thumbImg.onerror = null;
+            thumbImg.src = thumbFallback;
+          };
+          thumbImg.src = imgThumb(post) || thumbFallback;
           thumbImg.className = 'map-card-thumb';
           thumbImg.referrerPolicy = 'no-referrer';
           thumbImg.draggable = false;
