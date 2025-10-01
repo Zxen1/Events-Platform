@@ -8378,14 +8378,20 @@ function makePosts(){
       if(!map) return;
       const zoomCandidate = getZoomFromEvent(event);
       updateZoomState(zoomCandidate);
-      if(waitForInitialZoom){
-        postLoadRequested = true;
-        hideResultIndicators();
-        return;
-      }
       let zoomLevel = Number.isFinite(zoomCandidate) ? zoomCandidate : lastKnownZoom;
       if(!Number.isFinite(zoomLevel)){
         zoomLevel = getZoomFromEvent();
+      }
+      if(waitForInitialZoom){
+        if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_ZOOM_THRESHOLD){
+          waitForInitialZoom = false;
+          window.waitForInitialZoom = waitForInitialZoom;
+          initialZoomStarted = false;
+        } else {
+          postLoadRequested = true;
+          hideResultIndicators();
+          return;
+        }
       }
       if(!Number.isFinite(zoomLevel)){
         postLoadRequested = true;
