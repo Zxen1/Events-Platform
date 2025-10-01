@@ -6333,7 +6333,7 @@ if (typeof slugify !== 'function') {
         let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildBalloonFeatureCollection(zoom){
-          const allowInitialize = Number.isFinite(zoom) && zoom >= MARKER_ZOOM_THRESHOLD;
+          const allowInitialize = true; // ensure balloons have data even before marker zoom threshold
           const postsSource = getAllPostsCache({ allowInitialize });
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
@@ -6422,12 +6422,13 @@ if (typeof slugify !== 'function') {
 
         function setupSeedLayers(mapInstance){
           if(!mapInstance) return;
+          // Ensure balloon layers are ready even at low zoom on initial load
           const currentZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
-          if(!Number.isFinite(currentZoom) || currentZoom < 3){
+          if(!Number.isFinite(currentZoom)){
             if(!mapInstance.__seedLayerZoomGate){
               const handleZoomGate = ()=>{
                 const readyZoom = typeof mapInstance.getZoom === 'function' ? mapInstance.getZoom() : 0;
-                if(Number.isFinite(readyZoom) && readyZoom >= 3){
+                if(Number.isFinite(readyZoom)){
                   mapInstance.off('zoomend', handleZoomGate);
                   mapInstance.__seedLayerZoomGate = null;
                   setupSeedLayers(mapInstance);
