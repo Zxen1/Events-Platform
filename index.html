@@ -8382,13 +8382,14 @@ function makePosts(){
     }
 
     function getAutoPitchForZoom(zoom){
-      if(!Number.isFinite(zoom) || zoom <= AUTO_PITCH_START_ZOOM){
+      const numericZoom = Number.isFinite(zoom) ? zoom : Number(zoom);
+      if(!Number.isFinite(numericZoom) || numericZoom <= AUTO_PITCH_START_ZOOM){
         return AUTO_PITCH_START_DEG;
       }
-      if(zoom >= AUTO_PITCH_END_ZOOM){
+      if(numericZoom >= AUTO_PITCH_END_ZOOM){
         return AUTO_PITCH_END_DEG;
       }
-      const progress = (zoom - AUTO_PITCH_START_ZOOM) / (AUTO_PITCH_END_ZOOM - AUTO_PITCH_START_ZOOM);
+      const progress = (numericZoom - AUTO_PITCH_START_ZOOM) / (AUTO_PITCH_END_ZOOM - AUTO_PITCH_START_ZOOM);
       return AUTO_PITCH_START_DEG + (AUTO_PITCH_END_DEG - AUTO_PITCH_START_DEG) * progress;
     }
 
