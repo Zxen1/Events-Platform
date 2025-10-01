@@ -13027,39 +13027,32 @@ function openPostModal(id){
             if(!map) return;
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
-            allLocations.forEach((location, idx) => {
-              if(!Number.isFinite(location.lng) || !Number.isFinite(location.lat)){
-                return;
-              }
-              let element;
-              if(markerUrl){
-                element = new Image();
-                element.src = markerUrl;
-                element.alt = '';
-                element.decoding = 'async';
-              } else {
-                element = document.createElement('div');
-                element.style.background = '#0f172a';
-              }
-              element.classList.add('post-location-marker');
-              element.dataset.index = String(idx);
-              element.tabIndex = 0;
-              element.setAttribute('role', 'button');
-              element.setAttribute('aria-pressed', 'false');
-              element.setAttribute('aria-label', `${location.venue} (${location.address})`);
-              element.addEventListener('click', () => {
-                if(idx === currentVenueIndex) return;
-                updateVenue(idx);
-              });
-              element.addEventListener('keydown', evt => {
-                if(evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar'){
-                  evt.preventDefault();
-                  element.click();
-                }
-              });
-              const markerInstance = new mapboxgl.Marker({ element, anchor: 'center' }).setLngLat([location.lng, location.lat]).addTo(map);
-              locationMarkers.push({ marker: markerInstance, element, index: idx });
-            });
+            if(!selectedLoc || !Number.isFinite(selectedLoc.lng) || !Number.isFinite(selectedLoc.lat)){
+              return;
+            }
+            let element;
+            if(markerUrl){
+              element = new Image();
+              element.src = markerUrl;
+              element.alt = '';
+              element.decoding = 'async';
+            } else {
+              element = document.createElement('div');
+              element.style.background = '#0f172a';
+            }
+            const labelVenue = selectedLoc.venue || '';
+            const labelAddress = selectedLoc.address || '';
+            const ariaLabel = labelVenue && labelAddress
+              ? `${labelVenue} (${labelAddress})`
+              : (labelVenue || labelAddress || 'Selected location');
+            element.classList.add('post-location-marker');
+            element.dataset.index = String(selectedIdx);
+            element.tabIndex = 0;
+            element.setAttribute('role', 'button');
+            element.setAttribute('aria-pressed', 'false');
+            element.setAttribute('aria-label', ariaLabel);
+            const markerInstance = new mapboxgl.Marker({ element, anchor: 'center' }).setLngLat([selectedLoc.lng, selectedLoc.lat]).addTo(map);
+            locationMarkers.push({ marker: markerInstance, element, index: selectedIdx });
             updateDetailMarkerSelection(selectedIdx);
           };
 
