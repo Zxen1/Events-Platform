@@ -50,6 +50,7 @@
       pointer-events: auto;
       isolation: isolate;
       touch-action: none;
+      border-radius: 999px;
     }
     .mapmarker-overlay{
       position: relative;
@@ -90,8 +91,9 @@
       width: 225px;
       height: 60px;
       object-fit: contain;
-      pointer-events: auto;
-      opacity: 0.9 !important;
+      pointer-events: none;
+      opacity: 0 !important;
+      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -103,6 +105,8 @@
       height: 40px;
       transform: translate(-50%, -50%);
       pointer-events: none;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.7);
     }
     .mapmarker{
       position: absolute;
@@ -121,9 +125,13 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 0.9 !important;
+      opacity: 0 !important;
+      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
+    }
+    .map-card--popup{
+      background-color: #2e3a72;
     }
     .map-card-thumb{
       position: absolute;
