@@ -70,7 +70,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(-25px, -25px);
+      transform: translate(-30px, -30px);
       pointer-events: auto;
       z-index: 30;
     }
@@ -86,10 +86,10 @@
     .map-card-pill{
       position: absolute;
       inset: auto;
-      left: -5px;
-      top: -5px;
-      width: 225px;
-      height: 60px;
+      left: 5px;
+      top: 5px;
+      right: 5px;
+      bottom: 5px;
       object-fit: contain;
       pointer-events: none;
       opacity: 0 !important;
@@ -135,8 +135,8 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: 0;
-      top: 0;
+      left: 5px;
+      top: 5px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -147,11 +147,11 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: 55px;
-      top: 0;
-      width: 165px;
+      left: 65px;
+      top: 5px;
+      width: calc(100% - 70px);
       height: 50px;
-      padding: 6px 5px 6px 0;
+      padding: 0 5px 0 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -215,9 +215,7 @@
     }
 
     .map-card-label{
-      height: 60px;
-      justify-content: flex-start;
-      gap: 0;
+      justify-content: center;
     }
 
     .map-card-title{
