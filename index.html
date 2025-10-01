@@ -10894,14 +10894,14 @@ if (!map.__pillHooksInstalled) {
           const spriteId = props.labelSpriteId;
           if(!spriteId || spriteMeta.has(spriteId)) return;
           spriteMeta.set(spriteId, {
-            sub: props.sub || props.baseSub || '',
-            line1: props.labelLine1 || '',
-            line2: props.labelLine2 || '',
+            iconId: props.sub || props.baseSub || '',
+            labelLine1: props.labelLine1 || '',
+            labelLine2: props.labelLine2 || '',
             isMulti: props.multi === 1
           });
         });
         await Promise.all(Array.from(spriteMeta.entries()).map(([spriteId, meta]) =>
-          ensureMarkerLabelComposite(map, spriteId, meta.sub, meta.line1, meta.line2, meta.isMulti).catch(()=>{})
+          ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti).catch(()=>{})
         ));
       }
       ensureMarkerLabelBackground(map);
