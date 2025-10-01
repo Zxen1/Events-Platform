@@ -147,9 +147,9 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: 65px;
+      left: 60px;
       top: 5px;
-      width: calc(100% - 70px);
+      width: calc(100% - 65px);
       height: 50px;
       padding: 0 5px 0 0;
       display: flex;
@@ -6239,7 +6239,8 @@ if (typeof slugify !== 'function') {
   const AUTO_PITCH_START_DEG = 90;
   const AUTO_PITCH_END_DEG = 0;
   const AUTO_PITCH_TOLERANCE = 7;
-  let autoPitchEnabled = true;
+  const AUTO_PITCH_ALLOWED = false;
+  let autoPitchEnabled = AUTO_PITCH_ALLOWED;
   let applyingAutoPitch = false;
   const geocoders = [];
   let lastGeocoderProximity = null;
@@ -6349,12 +6350,12 @@ if (typeof slugify !== 'function') {
         expectedPitch = AUTO_PITCH_START_DEG;
       }
       if(Number.isFinite(expectedPitch) && Number.isFinite(savedView.pitch)){
-        autoPitchEnabled = Math.abs(expectedPitch - savedView.pitch) <= AUTO_PITCH_TOLERANCE;
+        autoPitchEnabled = AUTO_PITCH_ALLOWED && Math.abs(expectedPitch - savedView.pitch) <= AUTO_PITCH_TOLERANCE;
       }else{
         autoPitchEnabled = false;
       }
     }else{
-      autoPitchEnabled = true;
+      autoPitchEnabled = AUTO_PITCH_ALLOWED;
     }
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = savedView?.bearing || 0;
@@ -8692,13 +8693,20 @@ function makePosts(){
       const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
         ? labelLines.cardTitleLines.slice(0, 2)
         : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-      const titleHtml = (cardTitleLines.length ? cardTitleLines : [''])
-        .filter((_, idx) => idx < 2)
+      const normalizedTitleLines = cardTitleLines.slice(0, 2);
+      const firstTitleLine = normalizedTitleLines[0] || '';
+      const hasSecondTitleLine = Boolean((normalizedTitleLines[1] || '').trim());
+      const displayTitleLines = hasSecondTitleLine ? normalizedTitleLines : [firstTitleLine];
+      const titleHtml = displayTitleLines
         .map(line => `<div class="map-card-title-line">${line}</div>`)
         .join('');
       const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
       const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
-      const labelHtml = `<div class="map-card-label"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
+      const labelClasses = ['map-card-label'];
+      if(!hasSecondTitleLine){
+        labelClasses.push('map-card-label--single-line');
+      }
+      const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
       const classes = ['map-card'];
       const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
       const variant = opts.variant || 'popup';
