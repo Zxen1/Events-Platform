@@ -6053,7 +6053,7 @@ if (typeof slugify !== 'function') {
       });
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
-    let allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+    let allPostsCache = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
@@ -7047,6 +7047,8 @@ function makePosts(){
 
   return out;
 }
+
+    allPostsCache = makePosts().filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
 
     let postsLoaded = false;
     window.postsLoaded = postsLoaded;
