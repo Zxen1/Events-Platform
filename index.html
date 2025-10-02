@@ -3067,6 +3067,7 @@ body.filters-active #filterBtn{
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  gap:8px;
   padding:6px 12px;
   border-radius:999px;
   background:rgba(0, 0, 0, 0.7);
@@ -3075,6 +3076,7 @@ body.filters-active #filterBtn{
   font-weight:600;
   letter-spacing:.3px;
   line-height:1;
+  white-space:nowrap;
   pointer-events:none;
   z-index:5;
   min-width:72px;
@@ -5129,7 +5131,7 @@ if (typeof slugify !== 'function') {
       <div id="geolocate-map" class="geolocate-btn"></div>
       <div id="compass-map" class="compass-btn"></div>
     </div>
-    <div class="map-zoom-indicator" id="mapZoomIndicator" aria-live="polite">Zoom --</div>
+    <div class="map-zoom-indicator" id="mapZoomIndicator" aria-live="polite">Zoom -- • Pitch --</div>
     <div id="map"></div>
   </section>
 
@@ -5269,27 +5271,6 @@ if (typeof slugify !== 'function') {
       <form id="adminForm" class="panel-body">
         <div id="tab-map" class="tab-panel active">
           <div class="map-spin-container">
-            <div class="panel-field">
-              <label for="spinSpeed">Spin speed</label>
-              <div class="range-wrap">
-                <input type="range" id="spinSpeed" min="0" max="1" step="0.01" />
-                <span id="spinSpeedVal"></span>
-              </div>
-            </div>
-            <div class="panel-field">
-              <label for="mapPitch">Pitch</label>
-              <div class="range-wrap">
-                <input type="range" id="mapPitch" min="0" max="85" step="1" />
-                <span id="pitchVal"></span>
-              </div>
-            </div>
-            <div class="panel-field">
-              <label for="mapBearing">Bearing</label>
-              <div class="range-wrap">
-                <input type="range" id="mapBearing" min="-180" max="180" step="1" />
-                <span id="bearingVal"></span>
-              </div>
-            </div>
             <div class="panel-field">
               <div class="option-label">
                 <span>Spin on Load</span>
@@ -6378,7 +6359,7 @@ if (typeof slugify !== 'function') {
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
           spinLogoClick = localStorage.getItem('spinLogoClick') === 'false' ? false : true,
-          spinSpeed = parseFloat(localStorage.getItem('spinSpeed') || String(DEFAULT_SPIN_SPEED)),
+          spinSpeed = DEFAULT_SPIN_SPEED,
           spinEnabled = spinLoadStart && (spinLoadType === 'all' || (spinLoadType === 'new' && firstVisit)),
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
@@ -10579,27 +10560,28 @@ function makePosts(){
           bearing: startBearing,
           attributionControl:true
         });
-    const pitchDisplay = document.getElementById('pitch-level-display');
-    map.on('move', () => {
-      if (pitchDisplay) {
-        const pitch = Math.round(map.getPitch());
-        pitchDisplay.textContent = `Pitch: ${pitch}°`;
-      }
-    });
-
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
           try{
             const zoomLevel = map.getZoom();
+            const pitchLevel = typeof map.getPitch === 'function' ? map.getPitch() : NaN;
             if(Number.isFinite(zoomLevel)){
-              zoomIndicatorEl.textContent = `Zoom ${zoomLevel.toFixed(2)}`;
+              const zoomText = `Zoom ${zoomLevel.toFixed(2)}`;
+              if(Number.isFinite(pitchLevel)){
+                zoomIndicatorEl.textContent = `${zoomText} • Pitch ${Math.round(pitchLevel)}°`;
+              } else {
+                zoomIndicatorEl.textContent = zoomText;
+              }
+            } else {
+              zoomIndicatorEl.textContent = 'Zoom -- • Pitch --';
             }
           }catch(err){}
         };
         if(zoomIndicatorEl){
-          map.on('zoom', updateZoomIndicator);
-          map.on('zoomend', updateZoomIndicator);
+          ['zoom','zoomend','pitch','pitchend'].forEach(evt => {
+            try{ map.on(evt, updateZoomIndicator); }catch(err){}
+          });
           map.once('load', updateZoomIndicator);
           updateZoomIndicator();
         }
@@ -10811,18 +10793,6 @@ if (!map.__pillHooksInstalled) {
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
-        map.on('pitch', () => {
-          const pIn = document.getElementById('mapPitch');
-          const pVal = document.getElementById('pitchVal');
-          if(pIn) pIn.value = map.getPitch();
-          if(pVal) pVal.textContent = map.getPitch().toFixed(0);
-        });
-        map.on('rotate', () => {
-          const bIn = document.getElementById('mapBearing');
-          const bVal = document.getElementById('bearingVal');
-          if(bIn) bIn.value = map.getBearing();
-          if(bVal) bVal.textContent = map.getBearing().toFixed(0);
-        });
         let suppressNextRefresh = false;
         const refreshMapView = () => {
           if(suppressNextRefresh) return;
@@ -10919,8 +10889,6 @@ if (!map.__pillHooksInstalled) {
     window.spinGlobals = {
       get spinEnabled(){ return spinEnabled; },
       set spinEnabled(v){ spinEnabled = v; },
-      get spinSpeed(){ return spinSpeed; },
-      set spinSpeed(v){ spinSpeed = v; },
       get spinLoadStart(){ return spinLoadStart; },
       set spinLoadStart(v){ spinLoadStart = v; },
       get spinLoadType(){ return spinLoadType; },
