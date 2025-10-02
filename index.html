@@ -107,15 +107,21 @@
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px 5px 5px;
+      box-sizing: border-box;
     }
     .mapmarker{
-      position: absolute;
-      left: 12px;
-      top: 5px;
+      position: relative;
+      left: auto;
+      top: auto;
       width: 30px;
       height: 30px;
       pointer-events: none;
       z-index: 2;
+      flex: 0 0 30px;
     }
     .mapmarker-pill{
       position: absolute;
@@ -170,11 +176,12 @@
     }
 
     .mapmarker-label{
-      left: calc(12px + 30px + 5px);
-      top: 7px;
-      width: 96px;
+      position: relative;
+      left: auto;
+      top: auto;
+      width: auto;
       height: auto;
-      padding: 4px 8px 4px 0;
+      padding: 0;
       pointer-events: none;
       color: #fff;
       gap: 1px;
@@ -182,6 +189,10 @@
       white-space: normal;
       z-index: 3;
       text-align: left;
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: center;
+      align-items: flex-start;
     }
 
     .mapmarker-label-line{
@@ -4269,6 +4280,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     height:auto;
     max-height:100%;
   }
+  .post-board{
+    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  }
   .quick-list-board{
     position:relative;
     top:0;
@@ -6339,6 +6355,10 @@ if (typeof slugify !== 'function') {
       });
     }
     const savedView = JSON.parse(localStorage.getItem('mapView') || 'null');
+    if(savedView && typeof savedView === 'object'){
+      savedView.bearing = 0;
+      try{ localStorage.setItem('mapView', JSON.stringify(savedView)); }catch(err){}
+    }
     const defaultCenter = [(Math.random()*360)-180,(Math.random()*140)-70];
     const startCenter = savedView?.center || defaultCenter;
     const startZoom = savedView?.zoom || 1.5;
@@ -6346,7 +6366,7 @@ if (typeof slugify !== 'function') {
     const hasSavedPitch = typeof savedView?.pitch === 'number';
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
     startPitch = window.startPitch = initialPitch;
-    startBearing = window.startBearing = savedView?.bearing || 0;
+    startBearing = window.startBearing = 0;
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
