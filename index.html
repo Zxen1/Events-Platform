@@ -11439,6 +11439,7 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
+        const activeSpriteIds = new Set();
         const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
         const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
         postsData.features.forEach(feature => {
@@ -11455,6 +11456,9 @@ if (!map.__pillHooksInstalled) {
             if(Number.isFinite(lng) && Number.isFinite(lat)){
               inView = pointWithinBounds(lng, lat, priorityBounds);
             }
+          }
+          if(inView){
+            activeSpriteIds.add(spriteId);
           }
           const existing = markerLabelCompositeStore.get(spriteId) || {};
           const stored = spriteMeta.get(spriteId);
@@ -11481,6 +11485,18 @@ if (!map.__pillHooksInstalled) {
             priority,
             lastUsed
           });
+        });
+        Array.from(markerLabelCompositeStore.keys()).forEach(spriteId => {
+          if(activeSpriteIds.has(spriteId)){
+            return;
+          }
+          markerLabelCompositeStore.delete(spriteId);
+          const compositeId = `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
+          try{
+            if(typeof map.hasImage === 'function' ? map.hasImage(compositeId) : true){
+              map.removeImage(compositeId);
+            }
+          }catch(e){}
         });
         const spriteEntries = Array.from(spriteMeta.entries());
         spriteEntries.sort((a, b) => {
