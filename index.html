@@ -14363,10 +14363,12 @@ document.addEventListener('DOMContentLoaded', () => {
     hidden.value = hidden.value || placeholder;
     editor.innerHTML = hidden.value;
     editor.addEventListener('input', () => hidden.value = editor.innerHTML);
-document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.execCommand(btn.dataset.command, false, null);
+    document.querySelectorAll('.wysiwyg-toolbar button').forEach(btn => {
+      btn.addEventListener('mousedown', (event) => {
+        event.preventDefault();
         editor.focus();
+        document.execCommand(btn.dataset.command, false, null);
+        hidden.value = editor.innerHTML;
       });
     });
   }
