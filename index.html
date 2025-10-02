@@ -6234,14 +6234,7 @@ if (typeof slugify !== 'function') {
   window.callWhenDefined = window.callWhenDefined || callWhenDefined;
 
   let startPitch, startBearing, logoEls = [], geocoder;
-  const AUTO_PITCH_START_ZOOM = 17;
-  const AUTO_PITCH_END_ZOOM = 22;
-  const AUTO_PITCH_START_DEG = 90;
-  const AUTO_PITCH_END_DEG = 0;
-  const AUTO_PITCH_TOLERANCE = 7;
-  const AUTO_PITCH_ALLOWED = false;
-  let autoPitchEnabled = AUTO_PITCH_ALLOWED;
-  let applyingAutoPitch = false;
+  const LEGACY_DEFAULT_PITCH = 90;
   const geocoders = [];
   let lastGeocoderProximity = null;
 
@@ -6342,24 +6335,9 @@ if (typeof slugify !== 'function') {
     const startZoom = savedView?.zoom || 1.5;
     let lastKnownZoom = startZoom;
     const hasSavedPitch = typeof savedView?.pitch === 'number';
-    let initialPitch = AUTO_PITCH_START_DEG;
-    if(hasSavedPitch){
-      initialPitch = savedView.pitch;
-      let expectedPitch = getAutoPitchForZoom(startZoom);
-      if(!Number.isFinite(expectedPitch) && Number.isFinite(startZoom) && startZoom <= AUTO_PITCH_START_ZOOM){
-        expectedPitch = AUTO_PITCH_START_DEG;
-      }
-      if(Number.isFinite(expectedPitch) && Number.isFinite(savedView.pitch)){
-        autoPitchEnabled = AUTO_PITCH_ALLOWED && Math.abs(expectedPitch - savedView.pitch) <= AUTO_PITCH_TOLERANCE;
-      }else{
-        autoPitchEnabled = false;
-      }
-    }else{
-      autoPitchEnabled = AUTO_PITCH_ALLOWED;
-    }
+    const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = savedView?.bearing || 0;
-    autoPitchEnabled = false; // Disable automatic pitch adjustments during zoom interactions
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
@@ -8528,55 +8506,6 @@ function makePosts(){
       }
     }
 
-    function getAutoPitchForZoom(zoom){
-      const numericZoom = Number.isFinite(zoom) ? zoom : Number(zoom);
-      if(!Number.isFinite(numericZoom) || numericZoom <= AUTO_PITCH_START_ZOOM){
-        return AUTO_PITCH_START_DEG;
-      }
-      if(numericZoom >= AUTO_PITCH_END_ZOOM){
-        return AUTO_PITCH_END_DEG;
-      }
-      const progress = (numericZoom - AUTO_PITCH_START_ZOOM) / (AUTO_PITCH_END_ZOOM - AUTO_PITCH_START_ZOOM);
-      return AUTO_PITCH_START_DEG + (AUTO_PITCH_END_DEG - AUTO_PITCH_START_DEG) * progress;
-    }
-
-    function applyAutoPitch(targetPitch){
-      if(!autoPitchEnabled || !map || typeof map.getPitch !== 'function' || typeof map.easeTo !== 'function') return;
-      let currentPitch;
-      try{ currentPitch = map.getPitch(); }catch(err){ currentPitch = NaN; }
-      if(!Number.isFinite(currentPitch) || !Number.isFinite(targetPitch)) return;
-      let minPitch = AUTO_PITCH_END_DEG;
-      let maxPitch = AUTO_PITCH_START_DEG;
-      if(typeof map.getMinPitch === 'function'){
-        try{ const candidate = map.getMinPitch(); if(Number.isFinite(candidate)) minPitch = Math.max(minPitch, candidate); }catch(err){}
-      }
-      if(typeof map.getMaxPitch === 'function'){
-        try{ const candidate = map.getMaxPitch(); if(Number.isFinite(candidate)) maxPitch = Math.min(maxPitch, candidate); }catch(err){}
-      }
-      const clampedTarget = Math.max(minPitch, Math.min(maxPitch, targetPitch));
-      if(Math.abs(currentPitch - clampedTarget) < 0.5) return;
-      applyingAutoPitch = true;
-      try{
-        map.easeTo({ pitch: clampedTarget, duration: 0, easing: t => t, essential: true });
-      }catch(err){
-        applyingAutoPitch = false;
-        return;
-      }
-      const release = () => { applyingAutoPitch = false; };
-      if(typeof requestAnimationFrame === 'function'){
-        requestAnimationFrame(release);
-      } else {
-        setTimeout(release, 0);
-      }
-    }
-
-    function updateAutoPitchForZoom(zoom){
-      if(!autoPitchEnabled) return;
-      const desiredPitch = getAutoPitchForZoom(zoom);
-      if(!Number.isFinite(desiredPitch)) return;
-      applyAutoPitch(desiredPitch);
-    }
-
     function updateZoomState(zoom){
       if(Number.isFinite(zoom)){
         lastKnownZoom = zoom;
@@ -8589,7 +8518,6 @@ function makePosts(){
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
-      updateAutoPitchForZoom(lastKnownZoom);
       if(!Number.isFinite(lastKnownZoom) || lastKnownZoom < MULTI_CARD_MIN_ZOOM){
         destroyMultiPostCardContainer();
       }
@@ -10805,10 +10733,6 @@ if (!map.__pillHooksInstalled) {
       });
 
         ['mousedown','wheel','touchstart','dragstart','pitchstart','rotatestart','zoomstart'].forEach(ev=> map.on(ev, haltSpin));
-        map.on('pitchstart', () => {
-          if(applyingAutoPitch) return;
-          autoPitchEnabled = false;
-        });
         map.on('pitch', () => {
           const pIn = document.getElementById('mapPitch');
           const pVal = document.getElementById('pitchVal');
