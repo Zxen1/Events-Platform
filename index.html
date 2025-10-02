@@ -6377,13 +6377,20 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
+      const MARKER_ZOOM_THRESHOLD = 8;
+      const ZOOM_VISIBILITY_PRECISION = 1000;
+      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
+      const MARKER_PRELOAD_OFFSET = 0.2;
+      const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-post-mapmarker-label'];
         const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
         const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
         const BALLOON_MIN_ZOOM = 0;
-        const BALLOON_MAX_ZOOM = 8;
+        const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
 
         function ensureBalloonIconImage(mapInstance){
@@ -8490,9 +8497,6 @@ function makePosts(){
       updateLayerVisibility(lastKnownZoom);
     }
 
-    const MARKER_ZOOM_THRESHOLD = 8;
-    const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
-    const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-post-mapmarker-label'];
     let markerLayersVisible = false;
     let pendingZoomCheckToken = null;
     let pendingZoomEvent = null;
@@ -8529,9 +8533,12 @@ function makePosts(){
 
     function updateLayerVisibility(zoom){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      const withinMarkerRange = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD;
-      const shouldShowMarkers = withinMarkerRange;
-      const shouldShowBalloons = !withinMarkerRange;
+      const zoomBucket = Number.isFinite(zoomValue)
+        ? Math.floor((zoomValue + 1e-6) * ZOOM_VISIBILITY_PRECISION)
+        : NaN;
+      const hasBucket = Number.isFinite(zoomBucket);
+      const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
+      const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
@@ -8540,7 +8547,7 @@ function makePosts(){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
       }
-      if(shouldShowBalloons){
+      if(shouldShowBalloons && Number.isFinite(zoomValue)){
         updateBalloonSourceForZoom(zoomValue);
       }
     }
@@ -8557,6 +8564,14 @@ function makePosts(){
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
+      if(!markersLoaded){
+        const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+        if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
+          try{ loadPostMarkers(); }catch(err){ console.error(err); }
+          markersLoaded = true;
+          window.__markersLoaded = true;
+        }
+      }
       if(!Number.isFinite(lastKnownZoom) || lastKnownZoom < MULTI_CARD_MIN_ZOOM){
         destroyMultiPostCardContainer();
       }
@@ -8583,7 +8598,7 @@ function makePosts(){
         zoomLevel = getZoomFromEvent();
       }
       if(waitForInitialZoom){
-        if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_ZOOM_THRESHOLD){
+        if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
           waitForInitialZoom = false;
           window.waitForInitialZoom = waitForInitialZoom;
           initialZoomStarted = false;
@@ -8599,7 +8614,7 @@ function makePosts(){
         return;
       }
       updatePostsButtonState(zoomLevel);
-      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_ZOOM_THRESHOLD){
+      if(Number.isFinite(zoomLevel) && zoomLevel < MARKER_PRELOAD_ZOOM){
         postLoadRequested = true;
         if(postsLoaded || (Array.isArray(posts) && posts.length)){ clearLoadedPosts(); }
         hideResultIndicators();
@@ -10739,7 +10754,7 @@ if (!map.__pillHooksInstalled) {
         if(!map || typeof map.getZoom !== 'function') return;
         let currentZoom = NaN;
         try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
-        if(!Number.isFinite(currentZoom) || currentZoom < 8){
+        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
           return;
         }
         try{ loadPostMarkers(); }catch(err){ console.error(err); }
@@ -10767,7 +10782,7 @@ if (!map.__pillHooksInstalled) {
         updateZoomState(getZoomFromEvent());
         if(!markersLoaded){
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_ZOOM_THRESHOLD){
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
             try{ loadPostMarkers(); }catch(err){ console.error(err); }
             markersLoaded = true;
             window.__markersLoaded = true;
