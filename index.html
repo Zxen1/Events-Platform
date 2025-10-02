@@ -139,6 +139,31 @@
     .map-card--popup{
       background-color: #2e3a72;
     }
+    .post-card.is-map-highlight,
+    .open-post .post-header.is-map-highlight{
+      background-color: #2e3a72;
+      color: #fff;
+    }
+    .post-card.is-map-highlight .meta,
+    .post-card.is-map-highlight .meta .title,
+    .post-card.is-map-highlight .meta .info,
+    .post-card.is-map-highlight .meta .info span,
+    .post-card.is-map-highlight .meta .badge,
+    .post-card.is-map-highlight .meta .cat-line,
+    .post-card.is-map-highlight .meta .loc-line,
+    .post-card.is-map-highlight .meta .date-line,
+    .open-post .post-header.is-map-highlight .title-block,
+    .open-post .post-header.is-map-highlight .title,
+    .open-post .post-header.is-map-highlight .cat-line,
+    .open-post .post-header.is-map-highlight .cat-line span{
+      color: inherit;
+    }
+    .post-card.is-map-highlight .sub-icon svg path,
+    .post-card.is-map-highlight .fav svg path,
+    .open-post .post-header.is-map-highlight .fav svg path,
+    .open-post .post-header.is-map-highlight .share svg path{
+      fill: currentColor;
+    }
     .map-card-thumb{
       position: absolute;
       left: 5px;
@@ -6947,11 +6972,56 @@ if (typeof slugify !== 'function') {
         try{ target.remove(); }catch(e){}
         if(hoverPopup === target){
           hoverPopup = null;
+          updateSelectedMarkerRing();
         }
       }, delay);
     }
 
-    function updateSelectedMarkerRing(){}
+    function updateSelectedMarkerRing(){
+      const highlightClass = 'is-map-highlight';
+      const restoreAttr = (el)=>{
+        if(!el || !el.dataset) return;
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
+          const prev = el.dataset.prevAriaSelected;
+          if(prev){
+            el.setAttribute('aria-selected', prev);
+          } else {
+            el.removeAttribute('aria-selected');
+          }
+          delete el.dataset.prevAriaSelected;
+        }
+      };
+      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}`).forEach(el => {
+        el.classList.remove(highlightClass);
+        restoreAttr(el);
+      });
+
+      const getOverlayElement = ()=>{
+        if(hoverPopup && typeof hoverPopup.getElement === 'function'){
+          return hoverPopup.getElement();
+        }
+        return null;
+      };
+      const overlayEl = getOverlayElement();
+      const activeId = overlayEl && overlayEl.dataset ? overlayEl.dataset.id : null;
+      if(!activeId){
+        return;
+      }
+      const escapeAttr = (value)=> String(value).replace(/"/g, '\\"');
+      const applyHighlight = (el)=>{
+        if(!el) return;
+        if(el.dataset && !Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
+          el.dataset.prevAriaSelected = el.hasAttribute('aria-selected') ? el.getAttribute('aria-selected') : '';
+        }
+        el.classList.add(highlightClass);
+        el.setAttribute('aria-selected', 'true');
+      };
+      const selectorId = escapeAttr(activeId);
+      const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
+      applyHighlight(listCard);
+      const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
+      applyHighlight(openHeader);
+    }
 
     function hashString(str){
       let hash = 0;
@@ -7839,6 +7909,59 @@ function uniqueTitle(seed, cityName, idx){
 
 function makePosts(){
   const out = [];
+  const cityCounts = Object.create(null);
+  const MAX_POSTS_PER_CITY = 200;
+  const neighborhoodCache = new Map();
+
+  function pushPost(post){
+    if(post && post.city){
+      const key = String(post.city);
+      cityCounts[key] = (cityCounts[key] || 0) + 1;
+    }
+    out.push(post);
+  }
+
+  function canAddCity(city){
+    if(!city) return true;
+    const key = String(city);
+    return (cityCounts[key] || 0) < MAX_POSTS_PER_CITY;
+  }
+
+  function inlandShiftFor(lng){
+    if(!Number.isFinite(lng)) return 0;
+    if(lng < -90) return 0.012;
+    if(lng < -30) return -0.012;
+    if(lng >= 120) return -0.012;
+    if(lng >= 60) return -0.009;
+    if(lng >= 20) return -0.008;
+    if(lng >= -10) return -0.006;
+    return -0.01;
+  }
+
+  function buildNeighborhoods(city, baseLng, baseLat){
+    const key = city || `${baseLng},${baseLat}`;
+    if(neighborhoodCache.has(key)){
+      return neighborhoodCache.get(key);
+    }
+    const latSign = Number.isFinite(baseLat) && baseLat < 0 ? -1 : 1;
+    const lngShift = inlandShiftFor(baseLng);
+    const neighborhoods = [
+      { lng: normalizeLongitude(baseLng), lat: clampLatitude(baseLat) },
+      { lng: normalizeLongitude(baseLng + lngShift), lat: clampLatitude(baseLat + 0.008 * latSign) },
+      { lng: normalizeLongitude(baseLng + lngShift * 0.6), lat: clampLatitude(baseLat - 0.007 * latSign) },
+      { lng: normalizeLongitude(baseLng + lngShift * -0.4), lat: clampLatitude(baseLat + 0.004 * latSign) }
+    ];
+    neighborhoodCache.set(key, neighborhoods);
+    return neighborhoods;
+  }
+
+  function jitterNeighborhoodPoint(point){
+    if(!point) return { lng: 0, lat: 0 };
+    const jitterRange = 0.004;
+    const lng = normalizeLongitude(point.lng + (rnd() - 0.5) * jitterRange * 2);
+    const lat = clampLatitude(point.lat + (rnd() - 0.5) * jitterRange * 2);
+    return { lng, lat };
+  }
   // ---- 100 posts at Federation Square (as before) ----
   const fsLng = 144.9695, fsLat = -37.8178;
   const fsCity = "Federation Square, Melbourne";
@@ -7853,7 +7976,7 @@ function makePosts(){
       address: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia',
       radius: 0.05
     });
-    out.push({
+    pushPost({
       id,
       title,
       slug: slugify(title),
@@ -7886,7 +8009,7 @@ function makePosts(){
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
     const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.1 });
-    out.push({
+    pushPost({
       id,
       title,
       slug: slugify(title),
@@ -7951,22 +8074,64 @@ function makePosts(){
     {c:"Santiago, Chile",    lng:-70.6693, lat:-33.4489}
   ];
 
-  // Generate ~900 posts across hubs with small jitter to spread within cities
+  // Generate ~900 posts across hubs with curated neighbourhood jitter
   const TOTAL_WORLD = 900;
-  for(let i=0;i<TOTAL_WORLD;i++){
-    const hub = hubs[Math.floor(rnd()*hubs.length)];
-    const location = createRandomLocation(hub.c, hub.lng, hub.lat, { radius: 0.1 });
+  const worldCitySpecs = hubs.map(hub => ({
+    city: hub.c,
+    baseLng: hub.lng,
+    baseLat: hub.lat,
+    neighborhoods: buildNeighborhoods(hub.c, hub.lng, hub.lat),
+    generated: 0
+  }));
+  const shufflePool = (pool)=>{
+    if(!pool.length) return pool;
+    const order = shuffledIndices(pool.length);
+    return order.map(idx => pool[idx]);
+  };
+  let worldPool = shufflePool(worldCitySpecs.map((_, idx) => idx));
+  let worldPoolIndex = 0;
+  let worldProduced = 0;
+  const WORLD_ATTEMPT_MAX = TOTAL_WORLD * 6;
+  let worldAttempts = 0;
+  while(worldProduced < TOTAL_WORLD && worldPool.length && worldAttempts < WORLD_ATTEMPT_MAX){
+    if(worldPoolIndex >= worldPool.length){
+      const available = worldPool.filter(idx => canAddCity(worldCitySpecs[idx].city));
+      worldPool = shufflePool(available);
+      worldPoolIndex = 0;
+      if(!worldPool.length){
+        break;
+      }
+    }
+    const specIndex = worldPool[worldPoolIndex++];
+    const spec = worldCitySpecs[specIndex];
+    worldAttempts++;
+    if(!spec || !canAddCity(spec.city)){
+      continue;
+    }
+    const neighborhoods = spec.neighborhoods && spec.neighborhoods.length
+      ? spec.neighborhoods
+      : buildNeighborhoods(spec.city, spec.baseLng, spec.baseLat);
+    const generation = spec.generated || 0;
+    const basePoint = neighborhoods[generation % neighborhoods.length] || neighborhoods[0];
+    spec.generated = generation + 1;
+    const coords = jitterNeighborhoodPoint(basePoint);
+    const cityLabel = typeof spec.city === 'string' ? spec.city.split(',')[0].trim() || spec.city : spec.city;
+    const location = createRandomLocation(spec.city, coords.lng, coords.lat, {
+      name: `${cityLabel} District ${((generation % neighborhoods.length) + 1)}`,
+      address: spec.city,
+      radius: 0
+    });
     const cat = pick(categories);
     const sub = pick(cat.subs);
-    const id = 'WW'+i;
-    const title = `${id} ${uniqueTitle(i*9343+19, hub.c, i)}`;
+    const id = `WW${worldProduced}`;
+    const title = `${id} ${uniqueTitle(worldProduced*9343+19, spec.city, worldProduced)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
-    out.push({
+    pushPost({
       id,
       title,
       slug: slugify(title),
       created,
-      city: hub.c,
+      city: spec.city,
       lng: location.lng,
       lat: location.lat,
       category: cat.name,
@@ -7979,6 +8144,7 @@ function makePosts(){
       locations: [location],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
+    worldProduced++;
   }
 
   // ---- Fixed Sydney Opera House posts to show multi-marker clustering ----
@@ -8001,7 +8167,7 @@ function makePosts(){
       dates: randomSchedule(),
       price: randomPriceRange()
     };
-    out.push({
+    pushPost({
       id,
       title,
       slug: slugify(title),
@@ -8188,59 +8354,75 @@ function makePosts(){
     { city: "Suva, Fiji", lng: 178.4419, lat: -18.1248 }
   ];
   const SINGLE_VENUE_POSTS = 400;
-  for(let i=0;i<SINGLE_VENUE_POSTS;i++){
-    const base = singleVenueBases[i % singleVenueBases.length];
-    const seq = Math.floor(i / singleVenueBases.length) + 1;
-    const angle = ((i % singleVenueBases.length) / singleVenueBases.length) * Math.PI * 2;
-    const radius = 0.3 + seq * 0.02;
-    let lng = base.lng + Math.cos(angle) * radius;
-    let lat = clamp(base.lat + Math.sin(angle) * radius, -80, 80);
-    let key = coordKey(lng, lat);
-    let attempt = 0;
-    while(existingCoordKeys.has(key) && attempt < 120){
-      const adjust = 0.05 + attempt * 0.01;
-      lng = base.lng + Math.cos(angle + adjust) * (radius + adjust * 0.5);
-      lat = clamp(base.lat + Math.sin(angle + adjust) * (radius + adjust * 0.5), -80, 80);
-      key = coordKey(lng, lat);
-      attempt++;
-    }
-    if(existingCoordKeys.has(key)){
-      let fallback = 0;
-      let nextLng = lng;
-      let nextLat = lat;
-      let nextKey = key;
-      while(existingCoordKeys.has(nextKey) && fallback < 160){
-        nextLng += 0.005 * (1 + (fallback % 3));
-        nextLat = clamp(nextLat + (fallback % 2 === 0 ? 0.003 : -0.003), -80, 80);
-        nextKey = coordKey(nextLng, nextLat);
-        fallback++;
+  const singleVenueSpecs = singleVenueBases.map(base => ({
+    city: base.city,
+    baseLng: base.lng,
+    baseLat: base.lat,
+    neighborhoods: buildNeighborhoods(base.city, base.lng, base.lat),
+    generated: 0
+  }));
+  let singlePool = shufflePool(singleVenueSpecs.map((_, idx) => idx));
+  let singlePoolIndex = 0;
+  let singleProduced = 0;
+  const SINGLE_ATTEMPT_MAX = SINGLE_VENUE_POSTS * 8;
+  let singleAttempts = 0;
+  while(singleProduced < SINGLE_VENUE_POSTS && singlePool.length && singleAttempts < SINGLE_ATTEMPT_MAX){
+    if(singlePoolIndex >= singlePool.length){
+      const available = singlePool.filter(idx => canAddCity(singleVenueSpecs[idx].city));
+      singlePool = shufflePool(available);
+      singlePoolIndex = 0;
+      if(!singlePool.length){
+        break;
       }
-      lng = nextLng;
-      lat = nextLat;
-      key = nextKey;
     }
-    if(key){ existingCoordKeys.add(key); }
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
-    const id = 'SV'+i;
-    const title = `${id} ${uniqueTitle(i*48271+131, base.city, i)}`;
-    const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const venueName = `${base.city} Solo Venue ${seq}-${(i % singleVenueBases.length) + 1}`;
-    const locationDetail = createRandomLocation(base.city, lng, lat, {
+    const specIndex = singlePool[singlePoolIndex++];
+    const spec = singleVenueSpecs[specIndex];
+    singleAttempts++;
+    if(!spec || !canAddCity(spec.city)){
+      continue;
+    }
+    const neighborhoods = spec.neighborhoods && spec.neighborhoods.length
+      ? spec.neighborhoods
+      : buildNeighborhoods(spec.city, spec.baseLng, spec.baseLat);
+    const generation = spec.generated || 0;
+    const venueIndex = generation % neighborhoods.length;
+    const cycle = Math.floor(generation / neighborhoods.length) + 1;
+    spec.generated = generation + 1;
+    const basePoint = neighborhoods[venueIndex] || neighborhoods[0];
+    let coords = jitterNeighborhoodPoint(basePoint);
+    let key = coordKey(coords.lng, coords.lat);
+    let coordAttempts = 0;
+    while((!key || existingCoordKeys.has(key)) && coordAttempts < 20){
+      coords = jitterNeighborhoodPoint(basePoint);
+      key = coordKey(coords.lng, coords.lat);
+      coordAttempts++;
+    }
+    if(!key || existingCoordKeys.has(key)){
+      continue;
+    }
+    const venueName = `${spec.city} Solo Venue ${cycle}-${venueIndex + 1}`;
+    const locationDetail = createRandomLocation(spec.city, coords.lng, coords.lat, {
       name: venueName,
-      address: base.city,
+      address: spec.city,
       radius: 0
     });
-    lng = locationDetail.lng;
-    lat = locationDetail.lat;
-    out.push({
+    const finalKey = coordKey(locationDetail.lng, locationDetail.lat);
+    if(finalKey){
+      existingCoordKeys.add(finalKey);
+    }
+    const cat = pick(categories);
+    const sub = pick(cat.subs);
+    const id = `SV${singleProduced}`;
+    const title = `${id} ${uniqueTitle(singleProduced*48271+131, spec.city, singleProduced)}`;
+    const created = new Date().toISOString().replace(/[:.]/g,'-');
+    pushPost({
       id,
       title,
       slug: slugify(title),
       created,
-      city: base.city,
-      lng,
-      lat,
+      city: spec.city,
+      lng: locationDetail.lng,
+      lat: locationDetail.lat,
       category: cat.name,
       subcategory: sub,
       dates: randomDates(),
@@ -8251,6 +8433,7 @@ function makePosts(){
       locations: [locationDetail],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
+    singleProduced++;
   }
 
   const MIN_MULTI_VENUE_DISTANCE_KM = 50;
@@ -11891,10 +12074,12 @@ if (!map.__pillHooksInstalled) {
               if(hoverPopup){
                 try{ hoverPopup.remove(); }catch(err){}
                 hoverPopup = null;
+                updateSelectedMarkerRing();
               }
               const p = posts.find(x=>x.id===id);
               if(p){
                 hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+                updateSelectedMarkerRing();
               }
             }
             return;
@@ -11912,7 +12097,11 @@ if (!map.__pillHooksInstalled) {
         }
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
-          if(hoverPopup){ hoverPopup.remove(); hoverPopup=null; }
+          if(hoverPopup){
+            try{ hoverPopup.remove(); }catch(err){}
+            hoverPopup = null;
+          }
+          updateSelectedMarkerRing();
           destroyMultiPostCardContainer();
           touchMarker = null;
         }
@@ -11940,6 +12129,7 @@ if (!map.__pillHooksInstalled) {
             if(hoverPopup){
               try{ hoverPopup.remove(); }catch(err){}
               hoverPopup = null;
+              updateSelectedMarkerRing();
             }
             const state = showMultiPostCardContainer(e.point, multi, { venueKey });
             if(state){
@@ -11955,8 +12145,10 @@ if (!map.__pillHooksInstalled) {
         if(hoverPopup){
           try{ hoverPopup.remove(); }catch(e){}
           hoverPopup = null;
+          updateSelectedMarkerRing();
         }
         hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+        updateSelectedMarkerRing();
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
@@ -12010,6 +12202,9 @@ if (!map.__pillHooksInstalled) {
       }
       if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
 
+      const { postsData } = getMarkerCollections(arr);
+      const markerTotal = postsData && Array.isArray(postsData.features) ? postsData.features.length : 0;
+
       sortedPostList = arr;
       renderedPostCount = 0;
 
@@ -12022,7 +12217,7 @@ if (!map.__pillHooksInstalled) {
       if(resultsEl) resultsEl.innerHTML = '';
       postsWideEl.innerHTML = '';
 
-      if(!arr.length){
+      if(markerTotal === 0){
         updateResultCount(0);
         const emptyWrap = document.createElement('div');
         emptyWrap.className = 'post-board-empty';
@@ -12063,7 +12258,6 @@ if (!map.__pillHooksInstalled) {
         appendPostBatch(INITIAL_RENDER_COUNT);
       }
 
-      const markerTotal = countMarkersForVenue(arr);
       updateResultCount(markerTotal);
 
       if('IntersectionObserver' in window){
