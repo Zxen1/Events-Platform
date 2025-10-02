@@ -8275,17 +8275,88 @@ function makePosts(){
   }
 
   function buildMultiVenuePool(){
+    const REGION_SPECS = [
+      {
+        name: 'North America',
+        count: 750,
+        bounds: [
+          { west: -168, east: -52, south: 18, north: 72 },
+          { west: -130, east: -60, south: 25, north: 52 },
+          { west: -115, east: -80, south: 30, north: 55 }
+        ]
+      },
+      {
+        name: 'South America',
+        count: 450,
+        bounds: [
+          { west: -82, east: -50, south: -40, north: 13 },
+          { west: -76, east: -60, south: -20, north: 5 }
+        ]
+      },
+      {
+        name: 'Europe',
+        count: 700,
+        bounds: [
+          { west: -11, east: 30, south: 36, north: 71 },
+          { west: 10, east: 35, south: 40, north: 60 }
+        ]
+      },
+      {
+        name: 'Africa',
+        count: 650,
+        bounds: [
+          { west: -18, east: 51, south: -35, north: 37 },
+          { west: 10, east: 40, south: -5, north: 20 }
+        ]
+      },
+      {
+        name: 'Asia',
+        count: 1100,
+        bounds: [
+          { west: 26, east: 90, south: 5, north: 55 },
+          { west: 70, east: 110, south: 8, north: 45 },
+          { west: 95, east: 140, south: -10, north: 50 }
+        ]
+      },
+      {
+        name: 'Oceania',
+        count: 350,
+        bounds: [
+          { west: 110, east: 155, south: -45, north: -10 },
+          { west: 140, east: 175, south: -25, north: 5 }
+        ]
+      }
+    ];
     const pool = [];
     const seen = new Set();
-    const addVenue = (city, lng, lat)=>{
-      if(!city || !Number.isFinite(lng) || !Number.isFinite(lat)) return;
-      const key = `${lng.toFixed(4)}|${lat.toFixed(4)}`;
-      if(seen.has(key)) return;
-      seen.add(key);
-      pool.push({ city, lng, lat });
-    };
-    hubs.forEach(h => addVenue(h.c, h.lng, h.lat));
-    singleVenueBases.forEach(base => addVenue(base.city, base.lng, base.lat));
+    const pickBound = (bounds)=> bounds[Math.floor(rnd() * bounds.length)] || null;
+    REGION_SPECS.forEach(spec => {
+      if(!spec || !spec.bounds || !spec.bounds.length || spec.count <= 0) return;
+      let produced = 0;
+      while(produced < spec.count){
+        const bound = pickBound(spec.bounds);
+        if(!bound){
+          break;
+        }
+        const rawLng = bound.west + rnd() * (bound.east - bound.west);
+        const rawLat = bound.south + rnd() * (bound.north - bound.south);
+        const lng = normalizeLongitude(rawLng);
+        const lat = clampLatitude(rawLat);
+        const key = toVenueCoordKey(lng, lat);
+        if(!key || seen.has(key)){
+          continue;
+        }
+        seen.add(key);
+        produced++;
+        const indexLabel = produced.toString().padStart(3, '0');
+        pool.push({
+          city: `${spec.name} ${indexLabel}`,
+          region: spec.name,
+          lng,
+          lat
+        });
+      }
+    });
     return pool;
   }
 
@@ -8300,36 +8371,6 @@ function makePosts(){
     return indices;
   }
 
-  function pickVenueSet(pool, desiredCount){
-    if(!Array.isArray(pool) || pool.length < desiredCount){
-      return null;
-    }
-    const maxAttempts = 800;
-    for(let attempt = 0; attempt < maxAttempts; attempt++){
-      const order = shuffledIndices(pool.length);
-      const selection = [];
-      for(let i = 0; i < order.length && selection.length < desiredCount; i++){
-        const candidate = pool[order[i]];
-        let ok = true;
-        for(let s = 0; s < selection.length; s++){
-          const existing = selection[s];
-          const distance = haversineDistanceKm(existing, candidate);
-          if(distance < MIN_MULTI_VENUE_DISTANCE_KM || distance > MAX_MULTI_VENUE_DISTANCE_KM){
-            ok = false;
-            break;
-          }
-        }
-        if(ok){
-          selection.push(candidate);
-        }
-      }
-      if(selection.length === desiredCount){
-        return selection;
-      }
-    }
-    return null;
-  }
-
   function assignMultiVenues(postList, targetCount){
     if(!Array.isArray(postList) || !postList.length || targetCount <= 0){
       return 0;
@@ -8338,6 +8379,52 @@ function makePosts(){
     if(pool.length < 2){
       return 0;
     }
+    const venuesByRegion = pool.reduce((acc, venue) => {
+      if(!venue) return acc;
+      const key = venue.region || 'Global';
+      if(!acc[key]) acc[key] = [];
+      acc[key].push(venue);
+      return acc;
+    }, Object.create(null));
+    const regionKeys = Object.keys(venuesByRegion).filter(key => Array.isArray(venuesByRegion[key]) && venuesByRegion[key].length >= 2);
+    if(!regionKeys.length){
+      return 0;
+    }
+    const sampleVenueSet = (regionKey, desiredCount)=>{
+      const candidates = venuesByRegion[regionKey];
+      if(!Array.isArray(candidates) || candidates.length < desiredCount){
+        return null;
+      }
+      const maxAttempts = Math.max(20, candidates.length);
+      for(let attempt = 0; attempt < maxAttempts; attempt++){
+        const order = shuffledIndices(candidates.length);
+        const selection = [];
+        const used = new Set();
+        for(let i = 0; i < order.length && selection.length < desiredCount; i++){
+          const candidate = candidates[order[i]];
+          if(!candidate) continue;
+          const key = toVenueCoordKey(candidate.lng, candidate.lat);
+          if(!key || used.has(key)) continue;
+          let ok = true;
+          for(let s = 0; s < selection.length; s++){
+            const existing = selection[s];
+            const distance = haversineDistanceKm(existing, candidate);
+            if(distance < MIN_MULTI_VENUE_DISTANCE_KM || distance > MAX_MULTI_VENUE_DISTANCE_KM){
+              ok = false;
+              break;
+            }
+          }
+          if(ok){
+            selection.push(candidate);
+            used.add(key);
+          }
+        }
+        if(selection.length === desiredCount){
+          return selection;
+        }
+      }
+      return null;
+    };
     const indices = shuffledIndices(postList.length);
     let assigned = 0;
     for(let idx = 0; idx < indices.length && assigned < targetCount; idx++){
@@ -8345,12 +8432,23 @@ function makePosts(){
       if(!post){
         continue;
       }
-      let desired = 2 + Math.floor(rnd() * 3);
+      const desiredBase = 2 + Math.floor(rnd() * 3);
+      let desired = desiredBase;
       let venues = null;
-      while(desired >= 2 && !venues){
-        venues = pickVenueSet(pool, desired);
+      let attempts = 0;
+      while(attempts < 60 && !venues){
+        const regionKey = regionKeys[Math.floor(rnd() * regionKeys.length)];
+        venues = sampleVenueSet(regionKey, desired);
         if(!venues){
-          desired--;
+          attempts++;
+          if(attempts % 10 === 0 && desired > 2){
+            desired--;
+          }
+        }
+      }
+      if(!venues || venues.length < 2){
+        for(let r = 0; r < regionKeys.length && (!venues || venues.length < 2); r++){
+          venues = sampleVenueSet(regionKeys[r], 2);
         }
       }
       if(!venues || venues.length < 2){
@@ -8358,7 +8456,7 @@ function makePosts(){
       }
       const nextLocations = venues.map((venue, venueIdx) => {
         const cityLabel = venue.city;
-        const venueLabel = `${cityLabel} — Venue ${venueIdx + 1}`;
+        const venueLabel = `${cityLabel} · Spot ${venueIdx + 1}`;
         return {
           venue: venueLabel,
           address: cityLabel,
@@ -13405,10 +13503,12 @@ function openPostModal(id){
       }
       if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      const filteredMarkers = countMarkersForVenue(filtered);
       const today = new Date(); today.setHours(0,0,0,0);
-      const total = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today)).length;
+      const totalPosts = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today));
+      const totalMarkers = countMarkersForVenue(totalPosts);
       const summary = $('#filterSummary');
-      if(summary){ summary.textContent = `${filtered.length} results showing out of ${total} results in the area.`; }
+      if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
       updateResetBtn();
     }
 
