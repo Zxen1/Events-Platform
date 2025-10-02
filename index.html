@@ -6652,22 +6652,28 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const zoomFromChild = hasChildTarget && Number.isFinite(childTarget.zoom)
-                ? Math.max(childTarget.zoom, safeCurrentZoom)
-                : null;
-              const fallbackTargetZoom = Math.min(8, maxAllowedZoom);
-              let finalZoom = safeCurrentZoom;
-              if(zoomFromChild !== null){
-                const cappedChildZoom = Math.min(Math.max(zoomFromChild, safeCurrentZoom), maxAllowedZoom);
-                finalZoom = cappedChildZoom;
-              } else if(safeCurrentZoom < fallbackTargetZoom){
-                finalZoom = fallbackTargetZoom;
+              const targetZoom = Math.min(8, maxAllowedZoom);
+              let finalZoom = targetZoom;
+              if(!Number.isFinite(finalZoom)){
+                finalZoom = safeCurrentZoom;
               }
-              if(Number.isFinite(finalZoom) && finalZoom >= 7.99 && maxAllowedZoom >= 8){
-                finalZoom = Math.min(8, maxAllowedZoom);
+              if(finalZoom < safeCurrentZoom){
+                finalZoom = safeCurrentZoom;
+              }
+              if(finalZoom > targetZoom){
+                finalZoom = targetZoom;
+              }
+              let currentPitch = null;
+              try{
+                currentPitch = typeof mapInstance.getPitch === 'function' ? mapInstance.getPitch() : null;
+              }catch(err){
+                currentPitch = null;
               }
               try{
                 const flight = { center: targetCenter, zoom: finalZoom, essential: true };
+                if(Number.isFinite(currentPitch)){
+                  flight.pitch = currentPitch;
+                }
                 if(typeof mapInstance.flyTo === 'function'){
                   mapInstance.flyTo(Object.assign({}, flight, { speed: 0.8, curve: 1.42, easing: t => t }));
                 } else {
@@ -10448,8 +10454,18 @@ function makePosts(){
             const needsZoomAdjust = typeof currentZoom !== 'number' || currentZoom > targetZoom + 0.05;
             const center = [event.coords.longitude, event.coords.latitude];
             if(needsZoomAdjust){
+              let currentPitch = null;
               try{
-                map.easeTo({ center, zoom: targetZoom, duration: 800, essential: true });
+                currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
+              }catch(err){
+                currentPitch = null;
+              }
+              const options = { center, zoom: targetZoom, duration: 800, essential: true };
+              if(Number.isFinite(currentPitch)){
+                options.pitch = currentPitch;
+              }
+              try{
+                map.easeTo(options);
               }catch(err){}
             }
           }
