@@ -10856,7 +10856,8 @@ if (!map.__pillHooksInstalled) {
       if(fromCurrent){
         requestAnimationFrame(step);
       }else{
-        map.easeTo({center:[0,0], zoom:startZoom, pitch:0, essential:true});
+        const targetPitch = Number.isFinite(startPitch) ? startPitch : LEGACY_DEFAULT_PITCH;
+        map.easeTo({center:[0,0], zoom:startZoom, pitch:targetPitch, essential:true});
         map.once('moveend', () => requestAnimationFrame(step));
       }
     }
