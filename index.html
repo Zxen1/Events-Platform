@@ -5733,7 +5733,7 @@ if (typeof slugify !== 'function') {
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
-  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
+  const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
