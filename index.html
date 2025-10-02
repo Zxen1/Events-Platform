@@ -8540,7 +8540,7 @@ function makePosts(){
     function updateLayerVisibility(zoom){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
       const zoomBucket = Number.isFinite(zoomValue)
-        ? Math.round(zoomValue * ZOOM_VISIBILITY_PRECISION)
+        ? Math.floor((zoomValue + 1e-6) * ZOOM_VISIBILITY_PRECISION)
         : NaN;
       const hasBucket = Number.isFinite(zoomBucket);
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
