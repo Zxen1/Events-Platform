@@ -5796,7 +5796,16 @@ if (typeof slugify !== 'function') {
     });
     entries.slice(effectiveLimit).forEach(entry => {
       if(keepSet.has(entry.spriteId)) return;
-      markerLabelCompositeStore.delete(entry.spriteId);
+      const meta = markerLabelCompositeStore.get(entry.spriteId);
+      if(meta){
+        if(meta.image){
+          try{ delete meta.image; }catch(err){ meta.image = null; }
+        }
+        if(meta.options){
+          try{ delete meta.options; }catch(err){ meta.options = undefined; }
+        }
+        markerLabelCompositeStore.set(entry.spriteId, meta);
+      }
       markerLabelCompositePending.delete(entry.spriteId);
       try{
         if(typeof mapInstance.hasImage === 'function' && mapInstance.hasImage(entry.compositeId)){
