@@ -3104,9 +3104,12 @@ body.filters-active #filterBtn{
 }
 #memberPanel .map-control-row .mapboxgl-ctrl-geolocate button,
 #memberPanel .map-control-row .mapboxgl-ctrl-compass button{
-  background-color:#ffffff !important;
   background-image:none !important;
-  box-shadow:none !important;
+  box-shadow:none;
+}
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading) button,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
 }
 #memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
 #memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
@@ -3117,19 +3120,26 @@ body.filters-active #filterBtn{
   width:35px;
   height:35px;
   border-radius:8px;
-  background-color:#ffffff;
   border:1px solid rgba(0,0,0,0.15);
   box-shadow:none;
+}
+
+.map-control-row .mapboxgl-ctrl-geolocate:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading) button,
+.map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
 }
 
 .mapboxgl-ctrl-geolocate button,
 .mapboxgl-ctrl-compass button{
   width:35px !important;
   height:35px !important;
-  background-color:#ffffff !important;
   border-radius:8px !important;
   border:1px solid rgba(0,0,0,0.15) !important;
   box-shadow:none !important;
+}
+
+.mapboxgl-ctrl-geolocate:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading) button{
+  background-color:#ffffff;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button:hover,
