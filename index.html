@@ -8809,9 +8809,9 @@ function makePosts(){
         const iconPrefix = (window.ICON_BASE || {})[c.name];
         if(iconPrefix){
           const img = document.createElement('img');
-          img.src = `assets/icons-30/${iconPrefix}-30.webp`;
-          img.width = 30;
-          img.height = 30;
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 20;
+          img.height = 20;
           img.alt = '';
           categoryLogo.appendChild(img);
         } else {
@@ -13942,22 +13942,32 @@ document.addEventListener('pointerdown', (e) => {
       colorIdx++;
       const slug = slugify(sub);
       const iconPrefix = ICON_BASE[cat.name];
+      const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
       const icon30 = `assets/icons-30/${iconPrefix}-${color}-30.webp`;
-      subcategoryIcons[sub] = `<img src="${icon30}" width="30" height="30" alt="">`;
+      subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
       subcategoryMarkerIds[sub] = slug;
       subcategoryMarkers[slug] = icon30;
     });
   });
   const specialSubIconPaths = {
-    'Other Events': 'assets/icons-30/whats-on-category-icon-red-30.webp',
-    'Other Opportunities': 'assets/icons-30/opportunities-category-icon-red-30.webp',
-    'Other Learning': 'assets/icons-30/learning-category-icon-red-30.webp'
+    'Other Events': {
+      icon20: 'assets/icons-20/whats-on-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/whats-on-category-icon-red-30.webp'
+    },
+    'Other Opportunities': {
+      icon20: 'assets/icons-20/opportunities-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/opportunities-category-icon-red-30.webp'
+    },
+    'Other Learning': {
+      icon20: 'assets/icons-20/learning-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/learning-category-icon-red-30.webp'
+    }
   };
-  Object.entries(specialSubIconPaths).forEach(([name, markerPath]) => {
-    subcategoryIcons[name] = `<img src="${markerPath}" width="30" height="30" alt="">`;
+  Object.entries(specialSubIconPaths).forEach(([name, paths]) => {
+    subcategoryIcons[name] = `<img src="${paths.icon20}" width="20" height="20" alt="">`;
     const slug = subcategoryMarkerIds[name] || slugify(name);
-    subcategoryMarkers[slug] = markerPath;
-    subcategoryMarkers[name] = markerPath;
+    subcategoryMarkers[slug] = paths.icon30;
+    subcategoryMarkers[name] = paths.icon30;
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded && window.__markersLoaded){ addPostSource(); }
