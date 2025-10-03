@@ -5679,9 +5679,7 @@ if (typeof slugify !== 'function') {
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  const narrowScreenQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
-  const isNarrowScreen = narrowScreenQuery ? narrowScreenQuery.matches : window.innerWidth <= 600;
-  const markerIconSize = (isTouchDevice || isNarrowScreen) ? 1.35 : 1;
+  const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
