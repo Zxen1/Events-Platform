@@ -9854,88 +9854,170 @@ function makePosts(){
 
     // Categories UI
     const categoryControllers = {};
+    const adminCategoryControllers = {};
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
-    const syncFormbuilderCats = ()=>{
-      if(!formbuilderCats || !catsEl) return;
-      const frag = document.createDocumentFragment();
-      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        const clone = menu.cloneNode(true);
-        const trigger = clone.querySelector('.filter-category-trigger');
-        const optionsMenu = clone.querySelector('.options-menu');
-        if(optionsMenu){
-          const originalId = optionsMenu.id || '';
-          const cloneId = originalId ? `${originalId}-formbuilder` : '';
-          if(cloneId){
-            optionsMenu.id = cloneId;
-            if(trigger){
-              trigger.setAttribute('aria-controls', cloneId);
-            }
+    const adminCategoryState = new Map();
+    function buildAdminFormCategories(){
+      if(!formbuilderCats){
+        return;
+      }
+      formbuilderCats.innerHTML = '';
+      adminCategoryState.clear();
+      Object.keys(adminCategoryControllers).forEach(key => delete adminCategoryControllers[key]);
+      categories.forEach(c => {
+        const el = document.createElement('div');
+        el.className = 'filter-category-menu';
+        el.dataset.category = c.name;
+        el.setAttribute('role', 'group');
+        el.setAttribute('aria-expanded', 'false');
+
+        const header = document.createElement('div');
+        header.className = 'filter-category-header';
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup', 'true');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        const menuId = `admin-category-menu-${slugify(c.name)}`;
+        menuBtn.setAttribute('aria-controls', menuId);
+
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
+        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 20;
+          img.height = 20;
+          img.alt = '';
+          categoryLogo.appendChild(img);
+        } else {
+          categoryLogo.textContent = c.name.charAt(0) || '';
+        }
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = c.name;
+
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+
+        menuBtn.append(categoryLogo, label, arrow);
+
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+
+        triggerWrap.append(menuBtn, optionsMenu);
+
+        const toggle = document.createElement('label');
+        toggle.className = 'cat-switch';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = true;
+        input.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggle.append(input, slider);
+
+        header.append(triggerWrap, toggle);
+        el.appendChild(header);
+        formbuilderCats.appendChild(el);
+
+        const state = {
+          active: true,
+          subs: new Set(c.subs)
+        };
+        adminCategoryState.set(c.name, state);
+
+        const subButtons = [];
+        c.subs.forEach(s => {
+          const subBtn = document.createElement('button');
+          subBtn.type = 'button';
+          subBtn.className = 'subcategory-option';
+          subBtn.dataset.category = c.name;
+          subBtn.dataset.subcategory = s;
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          const subLabel = subBtn.querySelector('.subcategory-label');
+          if(subLabel){
+            subLabel.textContent = s;
           }
-        }
-        if(trigger && optionsMenu){
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          optionsMenu.hidden = !isExpanded;
-          trigger.addEventListener('click', ()=>{
-            if(trigger.getAttribute('aria-disabled') === 'true') return;
-            const open = clone.getAttribute('aria-expanded') === 'true';
-            const next = !open;
-            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
-            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
-            optionsMenu.hidden = !next;
-          });
-        }
-        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
-        if(optionsMenu){
-          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
-        }
-        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
-        const syncCatState = checked =>{
-          clone.classList.toggle('cat-off', !checked);
-          if(trigger){
-            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          }
-          optionButtons.forEach(btn=>{
-            btn.disabled = !checked;
-            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          });
-          if(!checked && optionsMenu){
-            optionsMenu.hidden = true;
-            clone.setAttribute('aria-expanded', 'false');
-            if(trigger){
-              trigger.setAttribute('aria-expanded', 'false');
+          subBtn.setAttribute('aria-pressed', 'true');
+          subBtn.classList.add('on');
+          subBtn.addEventListener('click', () => {
+            if(!state.active) return;
+            const pressed = subBtn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            subBtn.classList.toggle('on', next);
+            if(next){
+              state.subs.add(s);
+            } else {
+              state.subs.delete(s);
             }
+          });
+          optionsMenu.appendChild(subBtn);
+          subButtons.push(subBtn);
+        });
+
+        let openState = false;
+        function syncExpanded(){
+          const expanded = state.active && openState;
+          el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          optionsMenu.hidden = !expanded;
+        }
+        function setOpenState(next){
+          openState = !!next;
+          syncExpanded();
+        }
+        function syncActive(){
+          el.classList.toggle('cat-off', !state.active);
+          menuBtn.disabled = !state.active;
+          menuBtn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
+          input.checked = state.active;
+          subButtons.forEach(btn => {
+            btn.disabled = !state.active;
+            btn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
+          });
+          if(!state.active){
+            setOpenState(false);
+          }
+          syncExpanded();
+        }
+
+        menuBtn.addEventListener('click', () => {
+          if(menuBtn.disabled) return;
+          setOpenState(!openState);
+        });
+        input.addEventListener('change', () => {
+          state.active = input.checked;
+          syncActive();
+        });
+
+        syncActive();
+
+        adminCategoryControllers[c.name] = {
+          refreshLogos: () => {
+            subButtons.forEach(btn => {
+              const logoSpan = btn.querySelector('.subcategory-logo');
+              if(!logoSpan) return;
+              const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
+              logoSpan.innerHTML = iconHtml;
+            });
           }
         };
-        const catSwitchInput = clone.querySelector('.cat-switch input');
-        if(catSwitchInput){
-          const initialActive = !clone.classList.contains('cat-off');
-          catSwitchInput.checked = initialActive;
-          syncCatState(initialActive);
-          catSwitchInput.addEventListener('change', ()=>{
-            syncCatState(catSwitchInput.checked);
-          });
-        } else {
-          syncCatState(!clone.classList.contains('cat-off'));
-        }
-        optionButtons.forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            if(btn.disabled) return;
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            btn.classList.toggle('on', next);
-          });
-        });
-        frag.appendChild(clone);
       });
-      formbuilderCats.innerHTML = '';
-      formbuilderCats.appendChild(frag);
-    };
+    }
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -9945,7 +10027,11 @@ function makePosts(){
       resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
     }
     function refreshSubcategoryLogos(){
-      Object.values(categoryControllers).forEach(ctrl=>{
+      const controllers = [
+        ...Object.values(categoryControllers),
+        ...Object.values(adminCategoryControllers)
+      ];
+      controllers.forEach(ctrl => {
         if(ctrl && typeof ctrl.refreshLogos === 'function'){
           ctrl.refreshLogos();
         }
@@ -10134,14 +10220,10 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      syncFormbuilderCats();
-      if(formbuilderCats){
-        const observer = new MutationObserver(()=> syncFormbuilderCats());
-        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
-      }
+      buildAdminFormCategories();
+      refreshSubcategoryLogos();
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
