@@ -7137,19 +7137,34 @@ function positionMultiPostCardContainer(point){
   root.style.top = `${Math.round(top)}px`;
 }
 
-function countMarkersForVenue(postsAtVenue, venueKey){
+function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   if(!Array.isArray(postsAtVenue) || !postsAtVenue.length){
     return 0;
   }
   const key = typeof venueKey === 'string' && venueKey ? venueKey : null;
+  const normalizedBounds = bounds ? normalizeBounds(bounds) : null;
+  const markerInBounds = (lng, lat)=>{
+    const lon = Number(lng);
+    const la = Number(lat);
+    if(!Number.isFinite(lon) || !Number.isFinite(la)) return false;
+    if(!normalizedBounds) return true;
+    return pointWithinBounds(lon, la, normalizedBounds);
+  };
   if(key){
     return postsAtVenue.reduce((total, post) => {
       if(!post) return total;
       let count = 0;
       if(Array.isArray(post.locations) && post.locations.length){
-        count = post.locations.filter(loc => loc && toVenueCoordKey(loc.lng, loc.lat) === key).length;
+        count = post.locations.reduce((sum, loc) => {
+          if(!loc) return sum;
+          const lng = Number(loc.lng);
+          const lat = Number(loc.lat);
+          if(!Number.isFinite(lng) || !Number.isFinite(lat)) return sum;
+          if(toVenueCoordKey(lng, lat) !== key) return sum;
+          return markerInBounds(lng, lat) ? sum + 1 : sum;
+        }, 0);
       }
-      if(!count && Number.isFinite(post.lng) && Number.isFinite(post.lat) && toVenueCoordKey(post.lng, post.lat) === key){
+      if(!count && Number.isFinite(post.lng) && Number.isFinite(post.lat) && toVenueCoordKey(post.lng, post.lat) === key && markerInBounds(post.lng, post.lat)){
         count = 1;
       }
       return total + (count || 0);
@@ -7157,13 +7172,20 @@ function countMarkersForVenue(postsAtVenue, venueKey){
   }
   return postsAtVenue.reduce((total, post) => {
     if(!post) return total;
+    let count = 0;
     if(Array.isArray(post.locations) && post.locations.length){
-      return total + post.locations.length;
+      count += post.locations.reduce((sum, loc) => {
+        if(!loc) return sum;
+        const lng = Number(loc.lng);
+        const lat = Number(loc.lat);
+        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return sum;
+        return markerInBounds(lng, lat) ? sum + 1 : sum;
+      }, 0);
     }
-    if(Number.isFinite(post.lng) && Number.isFinite(post.lat)){
-      return total + 1;
+    if((!Array.isArray(post.locations) || !post.locations.length) && Number.isFinite(post.lng) && Number.isFinite(post.lat) && markerInBounds(post.lng, post.lat)){
+      count += 1;
     }
-    return total;
+    return total + count;
   }, 0);
 }
 
@@ -12197,7 +12219,8 @@ if (!map.__pillHooksInstalled) {
       if(favToTop && !favSortDirty) arr.sort((a,b)=> (b.fav - a.fav));
 
       const { postsData } = getMarkerCollections(arr);
-      const markerTotal = postsData && Array.isArray(postsData.features) ? postsData.features.length : 0;
+      const boundsForCount = getVisibleMarkerBoundsForCount();
+      const markerTotal = boundsForCount ? countMarkersForVenue(arr, null, boundsForCount) : countMarkersForVenue(arr);
 
       sortedPostList = arr;
       renderedPostCount = 0;
@@ -13699,6 +13722,23 @@ function openPostModal(id){
       }
     }
 
+    function getVisibleMarkerBoundsForCount(){
+      let zoomCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : NaN;
+      if(!Number.isFinite(zoomCandidate) && map && typeof map.getZoom === 'function'){
+        try {
+          zoomCandidate = map.getZoom();
+        } catch(err){
+          zoomCandidate = NaN;
+        }
+      }
+      if(!Number.isFinite(zoomCandidate) || zoomCandidate < MARKER_ZOOM_THRESHOLD){
+        return null;
+      }
+      const boundsSource = postPanel || (map && typeof map.getBounds === 'function' ? map.getBounds() : null);
+      if(!boundsSource) return null;
+      return normalizeBounds(boundsSource);
+    }
+
     function updateFilterCounts(){
       if(spinning){
         hideResultIndicators();
@@ -13707,12 +13747,14 @@ function openPostModal(id){
       }
       if(!postsLoaded) return;
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
-      const filteredMarkers = countMarkersForVenue(filtered);
+      const boundsForCount = getVisibleMarkerBoundsForCount();
+      const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
       const today = new Date(); today.setHours(0,0,0,0);
       const totalPosts = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today));
-      const totalMarkers = countMarkersForVenue(totalPosts);
+      const totalMarkers = boundsForCount ? countMarkersForVenue(totalPosts, null, boundsForCount) : countMarkersForVenue(totalPosts);
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
+      updateResultCount(filteredMarkers);
       updateResetBtn();
     }
 
