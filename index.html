@@ -5012,9 +5012,10 @@ if (typeof slugify !== 'function') {
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
+  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
   let cachedImages = null;
-  let loadingImage = null;
+  let loadingTask = null;
   const pendingMaps = new Set();
 
   function applyImageToMap(map){
@@ -5039,57 +5040,95 @@ if (typeof slugify !== 'function') {
     }catch(e){ /* silent */ }
   }
 
-  function handleImageLoad(){
-    if(!loadingImage){
+  function tintImage(sourceImage, color, alpha = 1){
+    if(!sourceImage){
+      return null;
+    }
+    try{
+      const width = sourceImage.naturalWidth || sourceImage.width || 150;
+      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+      if(color){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      return canvas;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function prepareCachedImages(baseImage, accentImage){
+    if(!baseImage){
+      cachedImages = null;
       return;
     }
-    if(loadingImage.complete && loadingImage.naturalWidth > 0){
-      const width = loadingImage.naturalWidth || loadingImage.width || 150;
-      const height = loadingImage.naturalHeight || loadingImage.height || 40;
-      const tintImage = (color, alpha = 1)=>{
-        try{
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(width));
-          canvas.height = Math.max(1, Math.round(height));
-          const ctx = canvas.getContext('2d');
-          if(!ctx){
-            return null;
-          }
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(loadingImage, 0, 0, canvas.width, canvas.height);
-          ctx.globalCompositeOperation = 'source-atop';
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle = color;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.globalAlpha = 1;
-          ctx.globalCompositeOperation = 'source-over';
-          return canvas;
-        }catch(err){
-          return null;
+    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
+    let highlight = null;
+    if(accentImage){
+      highlight = tintImage(accentImage, null, 1) || accentImage;
+    }
+    if(!highlight){
+      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
+    }
+    cachedImages = { base: tintedBase, accent: highlight };
+  }
+
+  function loadImage(url){
+    if(!url){
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(e){}
+      try{ img.decoding = 'async'; }catch(e){}
+      img.onload = () => {
+        if(img.naturalWidth > 0 && img.naturalHeight > 0){
+          resolve(img);
+        }else{
+          resolve(null);
         }
       };
-      const base = tintImage('rgba(0,0,0,1)', 0.9) || loadingImage;
-      const accent = tintImage('#2e3a72', 1) || loadingImage;
-      cachedImages = { base, accent };
-      pendingMaps.forEach((map)=>applyImageToMap(map));
-    }
-    pendingMaps.clear();
-    loadingImage = null;
+      img.onerror = () => resolve(null);
+      img.src = url;
+      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
+        resolve(img);
+      }
+    });
   }
 
   function ensureImage(){
-    if(cachedImage || loadingImage){
+    if(cachedImages || loadingTask){
       return;
     }
-    loadingImage = new Image();
-    try{ loadingImage.crossOrigin = 'anonymous'; }catch(e){}
-    loadingImage.decoding = 'async';
-    loadingImage.onload = handleImageLoad;
-    loadingImage.onerror = handleImageLoad;
-    loadingImage.src = PILL_IMAGE_URL;
-    if(loadingImage.complete){
-      handleImageLoad();
-    }
+    loadingTask = Promise.all([
+      loadImage(PILL_BASE_IMAGE_URL),
+      loadImage(PILL_ACCENT_IMAGE_URL)
+    ]).then(([baseImage, accentImage]) => {
+      if(baseImage){
+        prepareCachedImages(baseImage, accentImage);
+        if(cachedImages){
+          pendingMaps.forEach((map) => applyImageToMap(map));
+        }
+      }
+    }).catch(() => {
+      cachedImages = null;
+    }).finally(() => {
+      pendingMaps.clear();
+      loadingTask = null;
+    });
   }
 
   function addOrReplacePill(map){
@@ -5915,12 +5954,28 @@ if (typeof slugify !== 'function') {
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    markerLabelPillImagePromise = loadMarkerLabelImage('assets/icons-30/150x40 pill 99.webp')
-      .catch(err => {
-        console.error(err);
-        markerLabelPillImagePromise = null;
+    const baseUrl = 'assets/icons-30/150x40 pill 99.webp';
+    const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+    const promise = Promise.all([
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl).catch(() => null)
+    ]).then(([baseImg, accentImg]) => {
+      if(!baseImg){
         return null;
-      });
+      }
+      return { base: baseImg, highlight: accentImg };
+    }).catch(err => {
+      console.error(err);
+      return null;
+    });
+    markerLabelPillImagePromise = promise;
+    promise.then(result => {
+      if(!result){
+        markerLabelPillImagePromise = null;
+      }
+    }).catch(() => {
+      markerLabelPillImagePromise = null;
+    });
     return markerLabelPillImagePromise;
   }
 
@@ -5966,10 +6021,12 @@ if (typeof slugify !== 'function') {
       return markerLabelCompositePending.get(labelSpriteId);
     }
     const task = (async () => {
-      const pillImg = await ensureMarkerLabelPillImage();
-      if(!pillImg){
+      const pillAssets = await ensureMarkerLabelPillImage();
+      if(!pillAssets || !pillAssets.base){
         return null;
       }
+      const pillImg = pillAssets.base;
+      const pillAccentImg = pillAssets.highlight;
       const markerSources = window.subcategoryMarkers || {};
       const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
       let iconImg = null;
@@ -6033,7 +6090,10 @@ if (typeof slugify !== 'function') {
           ctx.shadowColor = 'transparent';
         }
       };
-      const buildComposite = (tintColor, tintAlpha = 1)=>{
+      const buildComposite = (backgroundImage, tintColor, tintAlpha = 1)=>{
+        if(!backgroundImage){
+          return null;
+        }
         const canvas = document.createElement('canvas');
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
@@ -6042,7 +6102,11 @@ if (typeof slugify !== 'function') {
           return null;
         }
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        ctx.drawImage(pillImg, 0, 0, canvasWidth, canvasHeight);
+        try{
+          ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+        }catch(err){
+          console.error(err);
+        }
         if(tintColor){
           ctx.globalCompositeOperation = 'source-atop';
           ctx.globalAlpha = tintAlpha;
@@ -6065,8 +6129,14 @@ if (typeof slugify !== 'function') {
         const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
         return { image: imageData, options };
       };
-      const baseComposite = buildComposite('rgba(0,0,0,1)', 0.9);
-      const accentComposite = buildComposite('#2e3a72', 1);
+      const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+      let accentComposite = null;
+      if(pillAccentImg){
+        accentComposite = buildComposite(pillAccentImg, null, 1);
+      }
+      if(!accentComposite){
+        accentComposite = buildComposite(pillImg, '#2f3b73', 1);
+      }
       if(!baseComposite){
         return null;
       }
@@ -6495,7 +6565,7 @@ if (typeof slugify !== 'function') {
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
+        const BALLOON_IMAGE_URL = 'assets/balloons/Colourful-Balloons-80.png';
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
@@ -9494,7 +9564,7 @@ function makePosts(){
       if(p.member && p.member.avatar){
         return p.member.avatar;
       }
-      return 'assets/balloons/balloons-icon-16185.png';
+      return 'assets/balloons/Colourful-Balloons-80.png';
     }
 
     function mapCardHTML(p, opts={}){
