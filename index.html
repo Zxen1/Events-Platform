@@ -75,7 +75,8 @@
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      opacity: 1;
+      opacity: 0;
+      visibility: hidden;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -138,6 +139,11 @@
       z-index: 0;
     }
     .map-card--popup{
+      background-color: rgba(0, 0, 0, 0.88);
+      transition: background-color 0.2s ease;
+    }
+    .map-card--popup.is-map-highlight,
+    .mapmarker-overlay:hover .map-card--popup{
       background-color: #2e3a72;
     }
     .open-post .post-header.is-map-highlight{
@@ -4805,14 +4811,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   outline-offset: 2px;
 }
 
-.multi-post-mapmarker-icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .multi-post-mapmarker-item-label {
   display: flex;
   flex-direction: column;
@@ -7288,7 +7286,7 @@ if (typeof slugify !== 'function') {
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
       });
@@ -7331,6 +7329,9 @@ if (typeof slugify !== 'function') {
         applyHighlight(openHeader);
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .mapmarker-container`).forEach(el => {
           el.classList.add(markerHighlightClass);
+        });
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
+          el.classList.add(highlightClass);
         });
       });
       updateMapFeatureHighlights(idsToHighlight);
@@ -7560,7 +7561,7 @@ function showMultiPostCardContainer(point, items, options = {}){
     const icon = new Image();
     try{ icon.decoding = 'async'; }catch(err){}
     icon.alt = '';
-    icon.className = 'multi-post-mapmarker-icon';
+    icon.className = 'mapmarker';
     icon.draggable = false;
     const iconUrl = markerIconUrlFor(post);
     icon.onerror = ()=>{
