@@ -4752,76 +4752,83 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-.multi-post-map-card-container {
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 20px;
-  padding: 10px;
+.multi-post-map-container {
   position: absolute;
   z-index: 20050;
-  max-height: 80vh;
-  max-width: 400px;
-  overflow: hidden;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
   display: flex;
   flex-direction: column;
+  gap: 10px;
   box-sizing: border-box;
-  color: #fff;
-}
-
-.multi-post-map-card-header {
-  font-family: var(--global-font, inherit);
-  font-size: 13px;
-  color: #fff;
-  margin-bottom: 8px;
-  line-height: 1.3;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.multi-post-map-card-header .header-line {
-  font-size: 13px;
-  color: #fff;
-}
-
-.multi-post-map-card-header .date-range {
-  display: block;
-  color: #b3b3b3;
-  font-size: 13px;
-}
-
-.multi-post-mapmarker-list {
+  max-height: 80vh;
   overflow-y: auto;
-  max-height: calc(80vh - 60px);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-right: 2px;
+  pointer-events: auto;
 }
 
-.mapmarker-sprite {
+.multi-post-marker {
+  position: relative;
+  width: 150px;
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  padding: 6px 10px;
-  cursor: pointer;
+  gap: 6px;
+  padding: 0;
   border: none;
-  color: #fff;
+  background: none;
+  color: inherit;
+  font: inherit;
   text-align: left;
+  cursor: pointer;
 }
 
-.mapmarker-sprite:focus {
+.multi-post-marker:focus-visible {
   outline: 2px solid #2e3a72;
   outline-offset: 2px;
 }
 
-.multi-post-mapmarker-item-label {
+.multi-post-marker-pill {
+  position: absolute;
+  inset: 0;
+  width: 150px;
+  height: 40px;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.multi-post-marker-icon {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  margin-left: 5px;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.multi-post-marker-label {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
   font-size: 12px;
   line-height: 1.2;
+  color: inherit;
+  padding-right: 10px;
+}
+
+.multi-post-marker.multi-post-marker--summary .multi-post-marker-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.multi-post-marker:hover .multi-post-marker-pill,
+.multi-post-marker.is-locked .multi-post-marker-pill {
+  filter: brightness(1.15);
 }
 
 .hero img.lqip{
@@ -6650,7 +6657,6 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_SPRITE_ZOOM * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -7408,63 +7414,45 @@ function sortMultiPostItems(items){
   return arr;
 }
 
-let multiPostCardState = null;
-let multiPostCardRemovalTimer = null;
+let multiPostPanelState = null;
+let multiPostPanelHideTimer = null;
 
-function destroyMultiPostCardContainer(){
-  if(multiPostCardRemovalTimer){
-    clearTimeout(multiPostCardRemovalTimer);
-    multiPostCardRemovalTimer = null;
+function destroyMultiPostPanel(){
+  if(multiPostPanelHideTimer){
+    clearTimeout(multiPostPanelHideTimer);
+    multiPostPanelHideTimer = null;
   }
-  const state = multiPostCardState;
+  const state = multiPostPanelState;
   if(!state) return;
-  if(state.lockOnOpen){
+  if(state.locked){
     lockMap(false);
   }
   const root = state.element;
   if(root && root.parentNode){
     root.parentNode.removeChild(root);
   }
-  multiPostCardState = null;
+  multiPostPanelState = null;
   window.__overCard = false;
 }
 
-function scheduleMultiPostCardRemoval(delay=160){
-  if(multiPostCardState && multiPostCardState.lockOnOpen){
+function scheduleMultiPostPanelHide(delay = 160){
+  if(multiPostPanelState && multiPostPanelState.locked){
     return;
   }
-  if(multiPostCardRemovalTimer){
-    clearTimeout(multiPostCardRemovalTimer);
+  if(multiPostPanelHideTimer){
+    clearTimeout(multiPostPanelHideTimer);
   }
-  multiPostCardRemovalTimer = setTimeout(()=>{
+  multiPostPanelHideTimer = setTimeout(()=>{
     if(window.__overCard) return;
-    destroyMultiPostCardContainer();
+    destroyMultiPostPanel();
   }, delay);
 }
 
-function formatMultiPostDateRange(items){
-  const allDates = items.flatMap(p => Array.isArray(p.dates) ? p.dates : []).filter(Boolean).sort();
-  const first = allDates[0] || null;
-  const last = allDates[allDates.length - 1] || first;
-  const fmt = (iso)=>{
-    if(!iso) return 'Unknown date';
-    try{
-      return parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
-    }catch(err){
-      return iso;
-    }
-  };
-  return {
-    startText: fmt(first),
-    endText: fmt(last)
-  };
-}
-
-function positionMultiPostCardContainer(point){
-  if(!multiPostCardState || !multiPostCardState.element) return;
+function positionMultiPostPanel(point){
+  if(!multiPostPanelState || !multiPostPanelState.element) return;
   const containerEl = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
   if(!containerEl) return;
-  const root = multiPostCardState.element;
+  const root = multiPostPanelState.element;
   const pad = 12;
   let headerOffset = 0;
   try{
@@ -7480,14 +7468,11 @@ function positionMultiPostCardContainer(point){
   const mapRect = containerEl.getBoundingClientRect();
   const width = root.offsetWidth;
   const height = root.offsetHeight;
-  const anchor = point || multiPostCardState.anchorPoint || { x: mapRect.width / 2, y: mapRect.height / 2 };
-  let left = anchor.x + 16;
-  let top = anchor.y - height - 16;
-  if(top < topPad){
-    top = anchor.y + 16;
-  }
+  const anchor = point || multiPostPanelState.anchorPoint || { x: mapRect.width / 2, y: mapRect.height / 2 };
+  let left = anchor.x - (width / 2);
+  let top = anchor.y + 16;
   if(top + height > mapRect.height - pad){
-    top = mapRect.height - height - pad;
+    top = Math.max(topPad, mapRect.height - height - pad);
   }
   if(top < topPad){
     top = topPad;
@@ -7500,85 +7485,61 @@ function positionMultiPostCardContainer(point){
   }
   root.style.left = `${Math.round(left)}px`;
   root.style.top = `${Math.round(top)}px`;
+  multiPostPanelState.anchorPoint = { x: anchor.x, y: anchor.y };
 }
 
-function countMarkersForVenue(postsAtVenue, venueKey, bounds){
-  if(!Array.isArray(postsAtVenue) || !postsAtVenue.length){
-    return 0;
-  }
-  const key = typeof venueKey === 'string' && venueKey ? venueKey : null;
-  const normalizedBounds = bounds ? normalizeBounds(bounds) : null;
-  const markerInBounds = (lng, lat)=>{
-    const lon = Number(lng);
-    const la = Number(lat);
-    if(!Number.isFinite(lon) || !Number.isFinite(la)) return false;
-    if(!normalizedBounds) return true;
-    return pointWithinBounds(lon, la, normalizedBounds);
+function createMultiPostMarkerButton(labelLines, iconUrl, options = {}){
+  const { id = null, isSummary = false } = options;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = isSummary ? 'multi-post-marker multi-post-marker--summary' : 'multi-post-marker';
+  if(id) button.dataset.id = String(id);
+
+  const pill = new Image();
+  try{ pill.decoding = 'async'; }catch(err){}
+  pill.alt = '';
+  pill.className = 'multi-post-marker-pill';
+  pill.draggable = false;
+  pill.src = 'assets/icons-30/150x40 pill 99.webp';
+  button.appendChild(pill);
+
+  const icon = new Image();
+  try{ icon.decoding = 'async'; }catch(err){}
+  icon.alt = '';
+  icon.className = 'multi-post-marker-icon';
+  icon.draggable = false;
+  icon.onerror = ()=>{
+    icon.onerror = null;
+    icon.src = MULTI_POST_MAPMARKER_URL;
   };
-  if(key){
-    return postsAtVenue.reduce((total, post) => {
-      if(!post) return total;
-      let count = 0;
-      if(Array.isArray(post.locations) && post.locations.length){
-        count = post.locations.reduce((sum, loc) => {
-          if(!loc) return sum;
-          const lng = Number(loc.lng);
-          const lat = Number(loc.lat);
-          if(!Number.isFinite(lng) || !Number.isFinite(lat)) return sum;
-          if(toVenueCoordKey(lng, lat) !== key) return sum;
-          return markerInBounds(lng, lat) ? sum + 1 : sum;
-        }, 0);
-      }
-      if(!count && Number.isFinite(post.lng) && Number.isFinite(post.lat) && toVenueCoordKey(post.lng, post.lat) === key && markerInBounds(post.lng, post.lat)){
-        count = 1;
-      }
-      return total + (count || 0);
-    }, 0);
-  }
-  return postsAtVenue.reduce((total, post) => {
-    if(!post) return total;
-    let count = 0;
-    if(Array.isArray(post.locations) && post.locations.length){
-      count += post.locations.reduce((sum, loc) => {
-        if(!loc) return sum;
-        const lng = Number(loc.lng);
-        const lat = Number(loc.lat);
-        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return sum;
-        return markerInBounds(lng, lat) ? sum + 1 : sum;
-      }, 0);
-    }
-    if((!Array.isArray(post.locations) || !post.locations.length) && Number.isFinite(post.lng) && Number.isFinite(post.lat) && markerInBounds(post.lng, post.lat)){
-      count += 1;
-    }
-    return total + count;
-  }, 0);
+  icon.src = iconUrl || MULTI_POST_MAPMARKER_URL;
+  button.appendChild(icon);
+
+  const label = document.createElement('div');
+  label.className = 'multi-post-marker-label';
+  labelLines.forEach(line => {
+    if(!line && line !== 0) return;
+    const span = document.createElement('span');
+    span.textContent = String(line);
+    label.appendChild(span);
+  });
+  button.appendChild(label);
+
+  return button;
 }
 
-function showMultiPostCardContainer(point, items, options = {}){
+function showMultiPostPanel(point, items, options = {}){
   if(!map || typeof map.getContainer !== 'function') return null;
   if(!Array.isArray(items) || items.length <= 1) return null;
   const containerEl = map.getContainer();
   if(!containerEl) return null;
   const { lockOnOpen = false, venueKey = null } = options;
-  destroyMultiPostCardContainer();
+  destroyMultiPostPanel();
   const root = document.createElement('div');
-  root.className = 'multi-post-map-card-container';
+  root.className = 'multi-post-map-container';
   root.style.visibility = 'hidden';
-  const header = document.createElement('div');
-  header.className = 'multi-post-map-card-header';
-  const { startText, endText } = formatMultiPostDateRange(items);
-  const headerLine1 = document.createElement('div');
-  headerLine1.className = 'header-line';
-  const postCount = items.length;
-  headerLine1.textContent = `${postCount} posts here`;
-  const headerLine2 = document.createElement('span');
-  headerLine2.className = 'date-range';
-  headerLine2.textContent = `${startText} – ${endText}`;
-  header.append(headerLine1, headerLine2);
-  const markerList = document.createElement('div');
-  markerList.className = 'multi-post-mapmarker-list';
+
   const ordered = sortMultiPostItems(items);
-  const fragment = document.createDocumentFragment();
   const markerSources = window.subcategoryMarkers || {};
   const markerIds = window.subcategoryMarkerIds || {};
   const slugifyFn = typeof slugify === 'function'
@@ -7595,52 +7556,43 @@ function showMultiPostCardContainer(point, items, options = {}){
     const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
     return url || MULTI_POST_MAPMARKER_URL;
   };
+
+  const summaryButton = createMultiPostMarkerButton([`${ordered.length} posts here`], MULTI_POST_MAPMARKER_URL, { isSummary: true });
+  summaryButton.setAttribute('aria-pressed', lockOnOpen ? 'true' : 'false');
+  if(lockOnOpen){
+    summaryButton.classList.add('is-locked');
+  }
+  summaryButton.addEventListener('click', (evt)=>{
+    try{ evt.preventDefault(); }catch(err){}
+    try{ evt.stopPropagation(); }catch(err){}
+    if(!multiPostPanelState) return;
+    multiPostPanelState.locked = true;
+    summaryButton.classList.add('is-locked');
+    summaryButton.setAttribute('aria-pressed', 'true');
+    if(!listLocked){
+      lockMap(true);
+    }
+  }, { capture: true });
+  root.appendChild(summaryButton);
+
   ordered.forEach(post => {
     if(!post) return;
-    const item = document.createElement('div');
-    item.className = 'mapmarker-sprite';
-    item.setAttribute('role', 'button');
-    item.setAttribute('tabindex', '0');
-    if(post.id) item.dataset.id = String(post.id);
-
-    const icon = new Image();
-    try{ icon.decoding = 'async'; }catch(err){}
-    icon.alt = '';
-    icon.className = 'mapmarker';
-    icon.draggable = false;
-    const iconUrl = markerIconUrlFor(post);
-    icon.onerror = ()=>{
-      icon.onerror = null;
-      icon.src = MULTI_POST_MAPMARKER_URL;
-    };
-    icon.src = iconUrl;
-
-    const labelWrap = document.createElement('div');
-    labelWrap.className = 'multi-post-mapmarker-item-label';
     const labelLines = getMarkerLabelLines(post);
-    const labelLine1 = document.createElement('div');
-    labelLine1.textContent = labelLines.line1 || '';
-    labelWrap.appendChild(labelLine1);
-    if(labelLines.line2){
-      const labelLine2 = document.createElement('div');
-      labelLine2.textContent = labelLines.line2;
-      labelWrap.appendChild(labelLine2);
-    }
-
-    item.append(icon, labelWrap);
-    fragment.appendChild(item);
+    const lines = [];
+    if(labelLines.line1) lines.push(labelLines.line1);
+    if(labelLines.line2) lines.push(labelLines.line2);
+    const markerButton = createMultiPostMarkerButton(lines, markerIconUrlFor(post), { id: post.id });
+    root.appendChild(markerButton);
   });
-  markerList.appendChild(fragment);
-  markerList.scrollTop = 0;
-  root.appendChild(header);
-  root.appendChild(markerList);
+
   containerEl.appendChild(root);
-  multiPostCardState = {
+  multiPostPanelState = {
     element: root,
     items: ordered,
     anchorPoint: point ? { x: point.x, y: point.y } : null,
-    lockOnOpen,
-    venueKey: venueKey || null
+    locked: !!lockOnOpen,
+    venueKey: venueKey || null,
+    summaryButton
   };
   if(lockOnOpen){
     lockMap(true);
@@ -7657,23 +7609,23 @@ function showMultiPostCardContainer(point, items, options = {}){
   root.addEventListener('wheel', (ev)=>{ try{ ev.stopPropagation(); }catch(err){}; }, { capture: true });
   root.addEventListener('mouseenter', ()=>{
     window.__overCard = true;
-    if(multiPostCardRemovalTimer){
-      clearTimeout(multiPostCardRemovalTimer);
-      multiPostCardRemovalTimer = null;
+    if(multiPostPanelHideTimer){
+      clearTimeout(multiPostPanelHideTimer);
+      multiPostPanelHideTimer = null;
     }
   });
   root.addEventListener('mouseleave', ()=>{
     window.__overCard = false;
-    scheduleMultiPostCardRemoval(160);
+    scheduleMultiPostPanelHide(160);
   });
 
-  const openPostFromCard = (postId)=>{
+  const openPostFromPanel = (postId)=>{
     if(!postId) return;
     callWhenDefined('openPost', (fn)=>{
       requestAnimationFrame(()=>{
         try{
           touchMarker = null;
-          destroyMultiPostCardContainer();
+          destroyMultiPostPanel();
           stopSpin();
           if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
             try{ closePanel(filterPanel); }catch(err){}
@@ -7684,7 +7636,7 @@ function showMultiPostCardContainer(point, items, options = {}){
     });
   };
 
-  const handleCardActivation = (target, originalEvent)=>{
+  const handlePanelActivation = (target, originalEvent)=>{
     if(!target) return;
     const id = target.getAttribute('data-id');
     if(!id) return;
@@ -7692,33 +7644,34 @@ function showMultiPostCardContainer(point, items, options = {}){
       try{ originalEvent.preventDefault(); }catch(err){}
       try{ originalEvent.stopPropagation(); }catch(err){}
     }
-    openPostFromCard(id);
+    openPostFromPanel(id);
   };
 
-  markerList.addEventListener('click', (evt)=>{
-    const item = evt.target.closest('.mapmarker-sprite');
-    handleCardActivation(item, evt);
+  root.addEventListener('click', (evt)=>{
+    const item = evt.target.closest('.multi-post-marker[data-id]');
+    handlePanelActivation(item, evt);
   }, { capture: true });
 
-  markerList.addEventListener('keydown', (evt)=>{
+  root.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const item = evt.target.closest('.mapmarker-sprite');
-    handleCardActivation(item, evt);
+    const item = evt.target.closest('.multi-post-marker[data-id]');
+    handlePanelActivation(item, evt);
   }, { capture: true });
 
   requestAnimationFrame(()=>{
-    positionMultiPostCardContainer(point);
+    positionMultiPostPanel(point);
     root.style.visibility = '';
   });
 
-  return multiPostCardState;
+  return multiPostPanelState;
 }
 
-function repositionMultiPostCardContainer(){
-  if(!multiPostCardState) return;
-  positionMultiPostCardContainer(multiPostCardState.anchorPoint);
+function repositionMultiPostPanel(){
+  if(!multiPostPanelState) return;
+  positionMultiPostPanel(multiPostPanelState.anchorPoint);
 }
+
 
 function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
     const rnd = mulberry32(42);
@@ -9644,8 +9597,8 @@ function makePosts(){
           window.__markersLoaded = true;
         }
       }
-      if(!Number.isFinite(lastKnownZoom) || lastKnownZoom < MULTI_CARD_MIN_ZOOM){
-        destroyMultiPostCardContainer();
+      if(!Number.isFinite(lastKnownZoom)){
+        destroyMultiPostPanel();
       }
     }
 
@@ -10950,7 +10903,7 @@ function makePosts(){
 
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
-        destroyMultiPostCardContainer();
+        destroyMultiPostPanel();
         touchMarker = null;
         if(hoverPopup){
           let shouldRemovePopup = true;
@@ -12470,20 +12423,20 @@ if (!map.__pillHooksInstalled) {
       if(!postSourceEventsBound){
         // Close multi-post cards on outside click or ESC
         map.on('click', (e)=>{
-          if(!multiPostCardState) return;
+          if(!multiPostPanelState) return;
           if(Date.now() - lastListOpenAt < 200) return;
-          const root = multiPostCardState.element;
+          const root = multiPostPanelState.element;
           if(!root){
-            destroyMultiPostCardContainer();
+            destroyMultiPostPanel();
             return;
           }
           const target = e && e.originalEvent ? e.originalEvent.target : null;
           if(root.contains(target)) return;
-          destroyMultiPostCardContainer();
+          destroyMultiPostPanel();
         });
         window.addEventListener('keydown', (ev)=>{
           if(ev.key === 'Escape'){
-            destroyMultiPostCardContainer();
+            destroyMultiPostPanel();
           }
         });
         // Right-click a venue marker -> show multi-post cards
@@ -12496,20 +12449,20 @@ if (!map.__pillHooksInstalled) {
           const items = getPostsAtVenueByCoords(coords[0], coords[1]);
           if(!items || items.length <= 1){ return; }
           const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-          if(!Number.isFinite(zoomLevel) || zoomLevel < MULTI_CARD_MIN_ZOOM){
-            destroyMultiPostCardContainer();
+          if(!Number.isFinite(zoomLevel)){
+            destroyMultiPostPanel();
             return;
           }
-          const state = showMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey });
+          const state = showMultiPostPanel(e.point, items, { lockOnOpen: true, venueKey });
           if(state){
             lastListOpenAt = Date.now();
           }
         };
         MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('contextmenu', layer, handleMarkerContextMenu));
         ['movestart','zoomstart','pitchstart','rotatestart'].forEach(type => {
-          map.on(type, destroyMultiPostCardContainer);
+          map.on(type, destroyMultiPostPanel);
         });
-        window.addEventListener('resize', repositionMultiPostCardContainer);
+        window.addEventListener('resize', repositionMultiPostPanel);
 
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
@@ -12728,17 +12681,17 @@ if (!map.__pillHooksInstalled) {
           if(coords && coords.length>=2){
             const items = getPostsAtVenueByCoords(coords[0], coords[1]);
             const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-            if(items && items.length>1 && Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
+            if(items && items.length>1 && Number.isFinite(zoomForMulti)){
               if(e.preventDefault) e.preventDefault();
               if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
-              const state = showMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey });
+              const state = showMultiPostPanel(e.point, items, { lockOnOpen: true, venueKey });
               if(state){
                 lastListOpenAt = Date.now();
                 return;
               }
             }
           }
-          destroyMultiPostCardContainer();
+          destroyMultiPostPanel();
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           if(touchClick){
             if(touchMarker !== id || !hoverPopup){
@@ -12774,7 +12727,7 @@ if (!map.__pillHooksInstalled) {
             hoverPopup = null;
           }
           updateSelectedMarkerRing();
-          destroyMultiPostCardContainer();
+          destroyMultiPostPanel();
           touchMarker = null;
         }
       });
@@ -12797,19 +12750,19 @@ if (!map.__pillHooksInstalled) {
         const multi = hasCoords ? getPostsAtVenueByCoords(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
           const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-          if(Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
+          if(Number.isFinite(zoomForMulti)){
             if(hoverPopup){
               try{ hoverPopup.remove(); }catch(err){}
               hoverPopup = null;
               updateSelectedMarkerRing();
             }
-            const state = showMultiPostCardContainer(e.point, multi, { venueKey });
+            const state = showMultiPostPanel(e.point, multi, { venueKey });
             if(state){
               return;
             }
           }
         }
-        destroyMultiPostCardContainer();
+        destroyMultiPostPanel();
         const p = posts.find(x=>x.id===id);
         if(!p){
           return;
@@ -12825,9 +12778,9 @@ if (!map.__pillHooksInstalled) {
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
       const onMarkerMove = window.rafThrottle((evt)=>{
-        if(multiPostCardState && evt && evt.point){
-          multiPostCardState.anchorPoint = { x: evt.point.x, y: evt.point.y };
-          positionMultiPostCardContainer(multiPostCardState.anchorPoint);
+        if(multiPostPanelState && evt && evt.point){
+          multiPostPanelState.anchorPoint = { x: evt.point.x, y: evt.point.y };
+          positionMultiPostPanel(multiPostPanelState.anchorPoint);
         }
         if(hoverPopup && typeof hoverPopup.setLngLat === 'function'){
           const fixed = hoverPopup.__fixedLngLat;
@@ -12843,7 +12796,7 @@ if (!map.__pillHooksInstalled) {
         if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
-        scheduleMultiPostCardRemoval(200);
+        scheduleMultiPostPanelHide(200);
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
