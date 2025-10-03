@@ -12452,20 +12452,30 @@ if (!map.__pillHooksInstalled) {
       };
 
       const markerLabelSpriteId = ['coalesce', ['get','labelSpriteId'], ''];
-      const markerLabelIconImage = ['case',
-        ['==', markerLabelSpriteId, ''],
-        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID],
-        ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId]], false],
-        ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId],
-        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID]
+      const markerLabelIconImage = ['let', 'markerLabelFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID],
+        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
+          ['case',
+            ['==', ['var', 'markerLabelSpriteKey'], ''],
+            ['image', ['var', 'markerLabelFallbackId']],
+            ['coalesce',
+              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey']]],
+              ['image', ['var', 'markerLabelFallbackId']]
+            ]
+          ]
+        ]
       ];
 
-      const markerLabelHighlightIconImage = ['case',
-        ['==', markerLabelSpriteId, ''],
-        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID],
-        ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]], false],
-        ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
-        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID]
+      const markerLabelHighlightIconImage = ['let', 'markerLabelHighlightFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID],
+        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
+          ['case',
+            ['==', ['var', 'markerLabelSpriteKey'], ''],
+            ['image', ['var', 'markerLabelHighlightFallbackId']],
+            ['coalesce',
+              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]],
+              ['image', ['var', 'markerLabelHighlightFallbackId']]
+            ]
+          ]
+        ]
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
