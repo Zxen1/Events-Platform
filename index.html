@@ -6299,12 +6299,12 @@ if (typeof slugify !== 'function') {
     const shouldSkipLayer = (layer) => {
       if(!layer) return true;
       const meta = layer.metadata || {};
-      if(meta && (meta['mapbox:featureset'] || meta['mapbox:featureComponent'])){
-        const component = meta['mapbox:featureComponent'];
-        if(typeof component === 'string' && component.includes('place-label')) return true;
-        if(meta['mapbox:featureset']) return true;
-      }
+      const featureComponent = layer['mapbox:featureComponent'] || meta['mapbox:featureComponent'];
+      const featureSet = layer['mapbox:featureset'] || meta['mapbox:featureset'];
+      if(featureSet) return true;
+      if(typeof featureComponent === 'string' && featureComponent.includes('place-label')) return true;
       if(typeof layer.id === 'string' && layer.id.includes('place-label')) return true;
+      if(typeof layer.source === 'string' && layer.source.includes('place-label')) return true;
       return false;
     };
 
@@ -6358,14 +6358,23 @@ if (typeof slugify !== 'function') {
     if(!originalSource) return;
 
     const dedicatedId = 'terrain-dem-dedicated';
-    if(!mapInstance.getSource?.(dedicatedId)){
+    const ensureDedicatedSource = () => {
+      if(mapInstance.getSource?.(dedicatedId)) return true;
       try {
         const clone = JSON.parse(JSON.stringify(originalSource));
         mapInstance.addSource(dedicatedId, clone);
+        return !!mapInstance.getSource?.(dedicatedId);
       } catch(err){}
+      return false;
+    };
+
+    const currentTerrain = typeof mapInstance.getTerrain === 'function' ? mapInstance.getTerrain() : null;
+    if(currentTerrain && currentTerrain.source === dedicatedId && typeof currentTerrain.cutoff === 'number' && currentTerrain.cutoff > 0){
+      return;
     }
 
-    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
+    const hasDedicated = ensureDedicatedSource();
+    const targetSource = hasDedicated ? dedicatedId : terrain.source;
     const nextTerrain = Object.assign({}, terrain, { source: targetSource });
     if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
       nextTerrain.cutoff = 0.01;
