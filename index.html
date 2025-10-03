@@ -5868,6 +5868,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
+  const MARKER_SPRITE_RETAIN_ZOOM = 8;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -5903,6 +5904,17 @@ if (typeof slugify !== 'function') {
 
   function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
     if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
+      return;
+    }
+    let zoomForBudget = NaN;
+    if(typeof mapInstance.getZoom === 'function'){
+      try{ zoomForBudget = mapInstance.getZoom(); }
+      catch(err){ zoomForBudget = NaN; }
+    }
+    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
+      mapInstance.__retainAllMarkerSprites = true;
+    }
+    if(mapInstance.__retainAllMarkerSprites){
       return;
     }
     if(typeof mapInstance.removeImage !== 'function'){
@@ -9576,6 +9588,9 @@ function makePosts(){
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_ZOOM_THRESHOLD){
+        map.__retainAllMarkerSprites = true;
+      }
       if(!markersLoaded){
         const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
         if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
@@ -12178,6 +12193,9 @@ if (!map.__pillHooksInstalled) {
         return;
       }
       addingPostSource = true;
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_ZOOM_THRESHOLD){
+        map.__retainAllMarkerSprites = true;
+      }
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const collections = getMarkerCollections(markerList);
@@ -12213,7 +12231,6 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
-        const activeSpriteIds = new Set();
         const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
         const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
         postsData.features.forEach(feature => {
@@ -12230,9 +12247,6 @@ if (!map.__pillHooksInstalled) {
             if(Number.isFinite(lng) && Number.isFinite(lat)){
               inView = pointWithinBounds(lng, lat, priorityBounds);
             }
-          }
-          if(inView){
-            activeSpriteIds.add(spriteId);
           }
           const existing = markerLabelCompositeStore.get(spriteId) || {};
           const stored = spriteMeta.get(spriteId);
@@ -12259,24 +12273,6 @@ if (!map.__pillHooksInstalled) {
             priority,
             lastUsed
           });
-        });
-        Array.from(markerLabelCompositeStore.keys()).forEach(spriteId => {
-          if(activeSpriteIds.has(spriteId)){
-            return;
-          }
-          markerLabelCompositeStore.delete(spriteId);
-          const compositeId = `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
-          try{
-            if(typeof map.hasImage === 'function' ? map.hasImage(compositeId) : true){
-              map.removeImage(compositeId);
-            }
-            markerLabelCompositePlaceholderIds.delete(compositeId);
-            const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-            if(typeof map.hasImage === 'function' ? map.hasImage(highlightId) : true){
-              map.removeImage(highlightId);
-            }
-            markerLabelCompositePlaceholderIds.delete(highlightId);
-          }catch(e){}
         });
         const spriteEntries = Array.from(spriteMeta.entries());
         spriteEntries.sort((a, b) => {
