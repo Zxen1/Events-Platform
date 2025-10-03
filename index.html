@@ -1208,21 +1208,21 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
-#adminPanel .admin-fieldset,
-.admin-fieldset{
-  margin:0 auto;
-  border:0;
-  border-radius:8px;
-  padding:0;
-  width:100%;
-  max-width:420px;
-  box-sizing:border-box;
-}
-#adminPanel .admin-fieldset.collapsed{
-  padding:0;
-}
-  #adminPanel .panel-content,
-  #memberPanel .panel-content{
+  #adminPanel .admin-fieldset,
+  .admin-fieldset{
+    margin:0 auto;
+    border:0;
+    border-radius:8px;
+    padding:0;
+    width:100%;
+    max-width:420px;
+    box-sizing:border-box;
+  }
+  #adminPanel .admin-fieldset.collapsed{
+    padding:0;
+  }
+  .admin-panel-content,
+  .member-panel-content{
     width:min(440px, 100%);
     max-width:100%;
     height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -1235,15 +1235,22 @@ button[aria-expanded="true"] .results-arrow{
     left:auto;
     right:0;
   }
-
-  #adminPanel .panel-content{
+  .admin-panel-content{
     background:#222222;
     color:#fff;
   }
-
-  #memberPanel .panel-content{
+  .member-panel-content{
     background:#222222;
     color:#fff;
+  }
+  .admin-panel-body .panel-field input[type="color"]{
+    width:35px;
+    height:35px;
+  }
+  .admin-panel-body :where(.panel-field > button, .settings-style-container > button, .map-balloon-container button, .fieldset-actions .same-btn):not(.filter-category-menu button){
+    background:#333333;
+    color:var(--ink);
+    border:none;
   }
 #filterPanel .panel-content{
   width:100%;
@@ -1267,20 +1274,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .tiny{
   background:#333333;
   border: none;
-}
-#adminPanel button,
-#memberPanel button{
-  background:#333333;
-  color: var(--ink);
-  border: none;
-}
-#adminPanel button{
-  height:35px;
-  line-height:35px;
-}
-#adminPanel input[type="color"]{
-  width:35px;
-  height:35px;
 }
 #filterPanel input[type="text"]{
   background: var(--panel-bg);
@@ -5362,63 +5355,63 @@ if (typeof slugify !== 'function') {
     </div>
   </div>
 
-  <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="right:0;">
-      <div class="panel-header">
-        <div class="header-top">
-          <h2>Create Post</h2>
-          <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-            <button type="button" class="close-panel">Close</button>
+    <div id="memberPanel" class="panel member-panel" role="dialog" aria-panel="true" aria-hidden="true">
+      <div class="panel-content member-panel-content" style="right:0;">
+        <div class="panel-header">
+          <div class="header-top">
+            <h2>Create Post</h2>
+            <div class="panel-actions">
+              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+              <button type="button" class="close-panel">Close</button>
+            </div>
           </div>
         </div>
+        <form id="memberForm" class="panel-body">
+          <div class="map-control-row map-controls-member">
+            <div id="geocoder-member" class="geocoder"></div>
+            <div id="geolocate-member" class="geolocate-btn"></div>
+            <div id="compass-member" class="compass-btn"></div>
+          </div>
+          <div class="panel-field">
+            <label for="mTitle">Title</label>
+            <input type="text" id="mTitle" required />
+          </div>
+          <div class="panel-field">
+            <label for="mImage">Image</label>
+            <input type="file" id="mImage" accept="image/*" />
+          </div>
+          <div class="panel-field">
+            <label for="mDate">Date</label>
+            <input type="date" id="mDate" />
+          </div>
+          <div class="panel-field">
+            <label for="mColor">Color</label>
+            <input type="color" id="mColor" data-mode="hex" value="#000000" />
+          </div>
+        </form>
       </div>
-      <form id="memberForm" class="panel-body">
-        <div class="map-control-row map-controls-member">
-          <div id="geocoder-member" class="geocoder"></div>
-          <div id="geolocate-member" class="geolocate-btn"></div>
-          <div id="compass-member" class="compass-btn"></div>
-        </div>
-        <div class="panel-field">
-          <label for="mTitle">Title</label>
-          <input type="text" id="mTitle" required />
-        </div>
-        <div class="panel-field">
-          <label for="mImage">Image</label>
-          <input type="file" id="mImage" accept="image/*" />
-        </div>
-        <div class="panel-field">
-          <label for="mDate">Date</label>
-          <input type="date" id="mDate" />
-        </div>
-        <div class="panel-field">
-          <label for="mColor">Color</label>
-          <input type="color" id="mColor" data-mode="hex" value="#000000" />
-        </div>
-      </form>
     </div>
-  </div>
 
-  <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
-      <div class="panel-header">
-        <div class="header-top">
-          <h2 class="title">Admin</h2>
-          <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-            <button type="button" class="close-panel">Close</button>
+    <div id="adminPanel" class="panel admin-panel" role="dialog" aria-panel="true" aria-hidden="true">
+      <div class="panel-content admin-panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
+        <div class="panel-header">
+          <div class="header-top">
+            <h2 class="title">Admin</h2>
+            <div class="panel-actions">
+              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+              <button type="button" class="close-panel">Close</button>
+            </div>
+          </div>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
+            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+            <button type="button" class="tab-btn" data-tab="forms">Forms</button>
           </div>
         </div>
-        <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
-          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
-        </div>
-      </div>
-      <form id="adminForm" class="panel-body">
-        <div id="tab-map" class="tab-panel active">
+        <form id="adminForm" class="panel-body admin-panel-body">
+          <div id="tab-map" class="tab-panel active">
           <div class="map-spin-container">
             <div class="panel-field">
               <div class="option-label">
