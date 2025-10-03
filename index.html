@@ -1950,6 +1950,7 @@ button[aria-expanded="true"] .results-arrow{
 
 .price-range-row .price-inputs input{
   min-width: 0;
+  background-color: #fff;
 }
 
 .price-range-row .price-separator{
@@ -5331,9 +5332,9 @@ if (typeof slugify !== 'function') {
             </div>
             <div class="field price-range-row">
               <div class="input price-inputs">
-                <input id="min-price-input" type="text" inputmode="decimal" pattern="\\d*(\\.\\d{0,2})?" placeholder="Min price" aria-label="Minimum price" />
+                <input id="min-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Min price" aria-label="Minimum price" />
                 <span class="price-separator" aria-hidden="true">-</span>
-                <input id="max-price-input" type="text" inputmode="decimal" pattern="\\d*(\\.\\d{0,2})?" placeholder="Max price" aria-label="Maximum price" />
+                <input id="max-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Max price" aria-label="Maximum price" />
                 <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
               </div>
             </div>
@@ -10238,8 +10239,34 @@ function makePosts(){
     const minPriceInputEl = $('#min-price-input');
     const maxPriceInputEl = $('#max-price-input');
     const handlePriceInput = ()=>{ applyFilters(); updateClearButtons(); };
-    minPriceInputEl?.addEventListener('input', handlePriceInput);
-    maxPriceInputEl?.addEventListener('input', handlePriceInput);
+    const sanitizePriceInputValue = input => {
+      if(!input) return;
+      const sanitized = input.value.replace(/\D+/g, '');
+      if(sanitized !== input.value){
+        input.value = sanitized;
+      }
+    };
+    const restrictPriceKeyInput = event => {
+      if(event.defaultPrevented) return;
+      if(event.ctrlKey || event.metaKey || event.altKey) return;
+      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+      if(allowedKeys.includes(event.key)) return;
+      if(event.key.length === 1 && /\d/.test(event.key)) return;
+      if(event.key.length === 1){
+        event.preventDefault();
+      }
+    };
+    const attachPriceInputHandlers = input => {
+      if(!input) return;
+      sanitizePriceInputValue(input);
+      input.addEventListener('keydown', restrictPriceKeyInput);
+      input.addEventListener('input', event => {
+        sanitizePriceInputValue(event.target);
+        handlePriceInput();
+      });
+    };
+    attachPriceInputHandlers(minPriceInputEl);
+    attachPriceInputHandlers(maxPriceInputEl);
     const priceClearBtn = $('.price-clear-button');
     priceClearBtn?.addEventListener('click', ()=>{
       if(minPriceInputEl) minPriceInputEl.value='';
