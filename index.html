@@ -12591,7 +12591,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
-      const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom },
