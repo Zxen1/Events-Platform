@@ -5716,7 +5716,7 @@ if (typeof slugify !== 'function') {
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
+  const markerLabelBgTranslatePx = 0;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -5892,7 +5892,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
-  const MARKER_SPRITE_RETAIN_ZOOM = 10;
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -12531,7 +12531,7 @@ if (!map.__pillHooksInstalled) {
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'left',
+                'icon-anchor': 'center',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -12555,7 +12555,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
