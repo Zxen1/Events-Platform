@@ -6112,6 +6112,7 @@ if (typeof slugify !== 'function') {
       const markerSources = window.subcategoryMarkers || {};
       const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
       let iconImg = null;
+      let shouldSkipIcon = false;
       if(iconUrl){
         try{
           iconImg = await loadMarkerLabelImage(iconUrl);
@@ -6133,8 +6134,9 @@ if (typeof slugify !== 'function') {
       if(line2){
         labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
       }
-      const drawForeground = (ctx)=>{
-        if(iconImg){
+      const drawForeground = (ctx, { omitIcon = false } = {})=>{
+        const allowIcon = iconImg && !omitIcon && !shouldSkipIcon;
+        if(allowIcon){
           const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
           const destX = markerLabelMarkerInsetPx * pixelRatio;
           const destY = (canvasHeight - iconSizePx) / 2;
@@ -6197,13 +6199,39 @@ if (typeof slugify !== 'function') {
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = 'source-over';
         }
-        drawForeground(ctx);
+        drawForeground(ctx, { omitIcon });
         let imageData = null;
+        let getImageDataFailed = false;
         try{
           imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         }catch(err){
           console.error(err);
           imageData = null;
+          getImageDataFailed = true;
+        }
+        if((getImageDataFailed || !imageData) && !omitIcon && iconImg && !shouldSkipIcon){
+          shouldSkipIcon = true;
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+          try{
+            ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+          }catch(err){
+            console.error(err);
+          }
+          if(tintColor){
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.globalAlpha = tintAlpha;
+            ctx.fillStyle = tintColor;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+          }
+          drawForeground(ctx, { omitIcon: true });
+          try{
+            imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+          }catch(err){
+            console.error(err);
+            imageData = null;
+          }
         }
         if(!imageData){
           return null;
@@ -12430,7 +12458,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelIconImage = ['case',
         ['==', markerLabelSpriteId, ''],
         markerFallbackIcon,
-        ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId]],
+        ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId]], false],
         ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId],
         markerFallbackIcon
       ];
@@ -12438,7 +12466,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelHighlightIconImage = ['case',
         ['==', markerLabelSpriteId, ''],
         markerFallbackHighlightIcon,
-        ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]],
+        ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]], false],
         ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
         markerFallbackHighlightIcon
       ];
