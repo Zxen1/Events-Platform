@@ -106,12 +106,13 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
       gap: 6px;
       padding: 5px 10px 5px 5px;
       box-sizing: border-box;
+      transition: background-color 0.2s ease;
     }
     .mapmarker{
       position: relative;
@@ -142,27 +143,12 @@
     .post-card.is-map-highlight,
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
-      color: #fff;
     }
-    .post-card.is-map-highlight .meta,
-    .post-card.is-map-highlight .meta .title,
-    .post-card.is-map-highlight .meta .info,
-    .post-card.is-map-highlight .meta .info span,
-    .post-card.is-map-highlight .meta .badge,
-    .post-card.is-map-highlight .meta .cat-line,
-    .post-card.is-map-highlight .meta .loc-line,
-    .post-card.is-map-highlight .meta .date-line,
-    .open-post .post-header.is-map-highlight .title-block,
-    .open-post .post-header.is-map-highlight .title,
-    .open-post .post-header.is-map-highlight .cat-line,
-    .open-post .post-header.is-map-highlight .cat-line span{
-      color: inherit;
+    .mapmarker-container.is-pill-highlight{
+      background-color: #2e3a72;
     }
-    .post-card.is-map-highlight .sub-icon svg path,
-    .post-card.is-map-highlight .fav svg path,
-    .open-post .post-header.is-map-highlight .fav svg path,
-    .open-post .post-header.is-map-highlight .share svg path{
-      fill: currentColor;
+    .mapmarker-overlay:hover .mapmarker-container{
+      background-color: #2e3a72;
     }
     .map-card-thumb{
       position: absolute;
@@ -6979,6 +6965,7 @@ if (typeof slugify !== 'function') {
 
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
+      const markerHighlightClass = 'is-pill-highlight';
       const restoreAttr = (el)=>{
         if(!el || !el.dataset) return;
         if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -6995,6 +6982,9 @@ if (typeof slugify !== 'function') {
         el.classList.remove(highlightClass);
         restoreAttr(el);
       });
+      document.querySelectorAll(`.mapmarker-container.${markerHighlightClass}`).forEach(el => {
+        el.classList.remove(markerHighlightClass);
+      });
 
       const getOverlayElement = ()=>{
         if(hoverPopup && typeof hoverPopup.getElement === 'function'){
@@ -7006,6 +6996,10 @@ if (typeof slugify !== 'function') {
       const activeId = overlayEl && overlayEl.dataset ? overlayEl.dataset.id : null;
       if(!activeId){
         return;
+      }
+      const activeMarker = overlayEl.querySelector('.mapmarker-container');
+      if(activeMarker){
+        activeMarker.classList.add(markerHighlightClass);
       }
       const escapeAttr = (value)=> String(value).replace(/"/g, '\\"');
       const applyHighlight = (el)=>{
