@@ -5214,11 +5214,9 @@ if (typeof slugify !== 'function') {
       loadImage(PILL_BASE_IMAGE_URL),
       loadImage(PILL_ACCENT_IMAGE_URL)
     ]).then(([baseImage, accentImage]) => {
-      if(baseImage){
-        prepareCachedImages(baseImage, accentImage);
-        if(cachedImages){
-          pendingMaps.forEach((map) => applyImageToMap(map));
-        }
+      prepareCachedImages(baseImage, accentImage);
+      if(cachedImages){
+        pendingMaps.forEach((map) => applyImageToMap(map));
       }
     }).catch(() => {
       cachedImages = null;
