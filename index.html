@@ -6639,7 +6639,7 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const MULTI_CARD_MIN_ZOOM = 0;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -12359,19 +12359,30 @@ if (!map.__pillHooksInstalled) {
         multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
       };
 
+      const markerFallbackIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID];
+      const markerFallbackHighlightIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID];
+
       const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+        ['let', 'compositeId', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']],
+          ['case',
+            ['==', ['var','spriteId'], ''],
+            markerFallbackIcon,
+            ['has-image', ['var','compositeId']],
+            ['var','compositeId'],
+            markerFallbackIcon
+          ]
         ]
       ];
 
       const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ACCENT_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
+        ['let', 'highlightCompositeId', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
+          ['case',
+            ['==', ['var','spriteId'], ''],
+            markerFallbackHighlightIcon,
+            ['has-image', ['var','highlightCompositeId']],
+            ['var','highlightCompositeId'],
+            markerFallbackHighlightIcon
+          ]
         ]
       ];
 
