@@ -12221,26 +12221,17 @@ if (!map.__pillHooksInstalled) {
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      const highlightTrueFilter = ['==', highlightedStateExpression, true];
-      const highlightFalseFilter = ['==', highlightedStateExpression, false];
-      const withHighlightFilter = (baseFilter, highlightFilter) => {
-        if(Array.isArray(baseFilter) && baseFilter.length){
-          if(baseFilter[0] === 'all'){
-            return ['all', ...baseFilter.slice(1), highlightFilter];
-          }
-          return ['all', baseFilter, highlightFilter];
-        }
-        return ['all', highlightFilter];
-      };
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: withHighlightFilter(markerLabelFilters.single, highlightFalseFilter), iconImage: markerLabelIconImage },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: withHighlightFilter(markerLabelFilters.single, highlightTrueFilter), iconImage: markerLabelHighlightIconImage },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: withHighlightFilter(markerLabelFilters.multi, highlightFalseFilter), iconImage: markerLabelIconImage },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: withHighlightFilter(markerLabelFilters.multi, highlightTrueFilter), iconImage: markerLabelHighlightIconImage }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity },
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity }) => {
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12263,7 +12254,7 @@ if (!map.__pillHooksInstalled) {
               paint:{
                 'icon-translate': [markerLabelBgTranslatePx, 0],
                 'icon-translate-anchor': 'viewport',
-                'icon-opacity': 1
+                'icon-opacity': iconOpacity || 1
               }
             });
             layerExists = !!map.getLayer(id);
@@ -12285,7 +12276,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
       });
       [
