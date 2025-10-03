@@ -4793,7 +4793,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   padding-right: 2px;
 }
 
-.multi-post-mapmarker-item {
+.mapmarker-sprite {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4806,7 +4806,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   text-align: left;
 }
 
-.multi-post-mapmarker-item:focus {
+.mapmarker-sprite:focus {
   outline: 2px solid #2e3a72;
   outline-offset: 2px;
 }
@@ -7553,7 +7553,7 @@ function showMultiPostCardContainer(point, items, options = {}){
   ordered.forEach(post => {
     if(!post) return;
     const item = document.createElement('div');
-    item.className = 'multi-post-mapmarker-item';
+    item.className = 'mapmarker-sprite';
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');
     if(post.id) item.dataset.id = String(post.id);
@@ -7651,14 +7651,14 @@ function showMultiPostCardContainer(point, items, options = {}){
   };
 
   markerList.addEventListener('click', (evt)=>{
-    const item = evt.target.closest('.multi-post-mapmarker-item');
+    const item = evt.target.closest('.mapmarker-sprite');
     handleCardActivation(item, evt);
   }, { capture: true });
 
   markerList.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const item = evt.target.closest('.multi-post-mapmarker-item');
+    const item = evt.target.closest('.mapmarker-sprite');
     handleCardActivation(item, evt);
   }, { capture: true });
 
