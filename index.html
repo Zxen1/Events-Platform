@@ -125,6 +125,11 @@
       z-index: 2;
       flex: 0 0 30px;
     }
+    .map--midzoom-markers .mapmarker{
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px #000;
+      box-sizing: border-box;
+    }
     .mapmarker-pill{
       position: absolute;
       left: 0;
@@ -5866,7 +5871,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
-  const MARKER_SPRITE_RETAIN_ZOOM = 8;
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -6639,6 +6644,7 @@ if (typeof slugify !== 'function') {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
+      const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
@@ -6651,6 +6657,8 @@ if (typeof slugify !== 'function') {
         'multi-post-mapmarker-label',
         'multi-post-mapmarker-label-highlight'
       ];
+      const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
+      const SPRITE_MARKER_CLASS = 'map--sprite-markers';
         const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
@@ -9553,6 +9561,17 @@ function makePosts(){
       }
     }
 
+    function updateMarkerZoomClasses(zoom){
+      if(!map || typeof map.getContainer !== 'function') return;
+      const container = map.getContainer();
+      if(!container || !container.classList) return;
+      const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
+      const isMidZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
+      const isSpriteZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
+      container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
+      container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
+    }
+
     function updateLayerVisibility(zoom){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
       const zoomBucket = Number.isFinite(zoomValue)
@@ -9585,8 +9604,9 @@ function makePosts(){
       }
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
+      updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_ZOOM_THRESHOLD){
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
       if(!markersLoaded){
@@ -12191,7 +12211,7 @@ if (!map.__pillHooksInstalled) {
         return;
       }
       addingPostSource = true;
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_ZOOM_THRESHOLD){
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
       try{
