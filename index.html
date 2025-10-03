@@ -6552,6 +6552,7 @@ if (typeof slugify !== 'function') {
     }catch(err){}
   }
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+  const CARD_HIGHLIGHT = '#2e3a72';
   const MapRegistry = {
     list: [],
     limit: 4,
@@ -7292,6 +7293,30 @@ if (typeof slugify !== 'function') {
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
+      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && (el.classList.contains('post-card') || el.classList.contains('post-header')));
+      const restoreHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          const prev = el.dataset.prevHighlightBackground;
+          delete el.dataset.prevHighlightBackground;
+          if(prev){
+            el.style.background = prev;
+            return;
+          }
+        }
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'surfaceBg')){
+          el.style.background = el.dataset.surfaceBg;
+        } else {
+          el.style.removeProperty('background');
+        }
+      };
+      const applyHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(!Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          el.dataset.prevHighlightBackground = el.style.background || '';
+        }
+        el.style.background = CARD_HIGHLIGHT;
+      };
       const restoreAttr = (el)=>{
         if(!el || !el.dataset) return;
         if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -7307,6 +7332,7 @@ if (typeof slugify !== 'function') {
       document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
+        restoreHighlightBackground(el);
       });
       document.querySelectorAll(`.mapmarker-container.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
@@ -7338,6 +7364,7 @@ if (typeof slugify !== 'function') {
         }
         el.classList.add(highlightClass);
         el.setAttribute('aria-selected', 'true');
+        applyHighlightBackground(el);
       };
       idsToHighlight.forEach(id => {
         const selectorId = escapeAttr(id);
@@ -10875,8 +10902,10 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
+        head.dataset.surfaceBg = CARD_SURFACE;
         head.style.background = CARD_SURFACE;
       });
+      wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
         // progressive hero swap
         (function(){
@@ -13034,6 +13063,7 @@ if (!map.__pillHooksInstalled) {
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
+      el.dataset.surfaceBg = CARD_SURFACE;
       el.style.background = CARD_SURFACE;
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
