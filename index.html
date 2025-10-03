@@ -1914,7 +1914,8 @@ button[aria-expanded="true"] .results-arrow{
   vertical-align:middle;
 }
 #filterPanel .keyword-clear-button,
-#filterPanel .daterange-clear-button{
+#filterPanel .daterange-clear-button,
+#filterPanel .price-clear-button{
   position: static;
   width: 35px;
   height: 35px;
@@ -1929,10 +1930,32 @@ button[aria-expanded="true"] .results-arrow{
   opacity:1;
 }
 #filterPanel .keyword-clear-button.active,
-#filterPanel .daterange-clear-button.active{
+#filterPanel .daterange-clear-button.active,
+#filterPanel .price-clear-button.active{
   background: var(--filter-active-color);
   color: var(--button-text);
   opacity:1;
+}
+
+.price-range-row{
+  flex-wrap: wrap;
+}
+
+.price-range-row .price-inputs{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.price-range-row .price-inputs input{
+  min-width: 0;
+}
+
+.price-range-row .price-separator{
+  flex: 0 0 auto;
+  color: var(--dropdown-text);
+  font-size: 14px;
 }
 
 #filterPanel .field label.t{
@@ -5304,6 +5327,14 @@ if (typeof slugify !== 'function') {
             <div class="field keyword-row">
               <div class="input"><input id="keyword-textbox" type="text" placeholder="Keywords" aria-label="Keywords" />
                 <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
+              </div>
+            </div>
+            <div class="field price-range-row">
+              <div class="input price-inputs">
+                <input id="min-price-input" type="number" inputmode="decimal" min="0" placeholder="Min price" aria-label="Minimum price" />
+                <span class="price-separator" aria-hidden="true">-</span>
+                <input id="max-price-input" type="number" inputmode="decimal" min="0" placeholder="Max price" aria-label="Maximum price" />
+                <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
               </div>
             </div>
             <div class="field daterange-row">
@@ -10106,6 +10137,10 @@ function makePosts(){
     $('#resetBtn').addEventListener('click',()=>{
       $('#keyword-textbox').value='';
       $('#daterange-textbox').value='';
+      const minPrice = $('#min-price-input');
+      if(minPrice) minPrice.value='';
+      const maxPrice = $('#max-price-input');
+      if(maxPrice) maxPrice.value='';
       const expired = $('#expiredToggle');
       if(expired){
         expired.checked = false;
@@ -10124,21 +10159,38 @@ function makePosts(){
 
     function updateClearButtons(){
       const kw = $('#keyword-textbox');
-      const kwX = kw.parentElement.querySelector('.keyword-clear-button');
-      kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      if(kw){
+        const kwX = kw.parentElement?.querySelector('.keyword-clear-button');
+        kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      }
       const date = $('#daterange-textbox');
-      const dateX = date.parentElement.querySelector('.daterange-clear-button');
-      const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
-      dateX && dateX.classList.toggle('active', !!hasDate);
+      if(date){
+        const dateX = date.parentElement?.querySelector('.daterange-clear-button');
+        const hasDate = (dateStart || dateEnd) || $('#expiredToggle')?.checked;
+        dateX && dateX.classList.toggle('active', !!hasDate);
+      }
+      const priceBtn = $('.price-clear-button');
+      if(priceBtn){
+        const minInput = $('#min-price-input');
+        const maxInput = $('#max-price-input');
+        const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
+        priceBtn.classList.toggle('active', hasPrice);
+      }
       updateResetBtn();
     }
 
     function nonLocationFiltersActive(){
-      const kw = $('#keyword-textbox').value.trim() !== '';
-      const raw = $('#daterange-textbox').value.trim();
+      const kwInput = $('#keyword-textbox');
+      const kw = kwInput ? kwInput.value.trim() !== '' : false;
+      const dateInput = $('#daterange-textbox');
+      const raw = dateInput ? dateInput.value.trim() : '';
       const hasDate = !!(dateStart || dateEnd || raw);
-      const expired = $('#expiredToggle').checked;
-      return kw || hasDate || expired;
+      const expiredToggle = $('#expiredToggle');
+      const expired = !!(expiredToggle && expiredToggle.checked);
+      const minInput = $('#min-price-input');
+      const maxInput = $('#max-price-input');
+      const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
+      return kw || hasDate || expired || hasPrice;
     }
 
     function updateResetBtn(){
@@ -10155,6 +10207,18 @@ function makePosts(){
     const dateRangeInput = $('#daterange-textbox');
     $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     dateRangeInput?.addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    const minPriceInputEl = $('#min-price-input');
+    const maxPriceInputEl = $('#max-price-input');
+    const handlePriceInput = ()=>{ applyFilters(); updateClearButtons(); };
+    minPriceInputEl?.addEventListener('input', handlePriceInput);
+    maxPriceInputEl?.addEventListener('input', handlePriceInput);
+    const priceClearBtn = $('.price-clear-button');
+    priceClearBtn?.addEventListener('click', ()=>{
+      if(minPriceInputEl) minPriceInputEl.value='';
+      if(maxPriceInputEl) maxPriceInputEl.value='';
+      applyFilters();
+      updateClearButtons();
+    });
     if(dateRangeInput){
       dateRangeInput.addEventListener('focus', ()=> openCalendarPopup());
       dateRangeInput.addEventListener('click', ()=> openCalendarPopup());
@@ -13106,6 +13170,8 @@ if (!map.__pillHooksInstalled) {
     function captureState(){
       const {start,end} = orderedRange();
       const openCats = Object.values(categoryControllers).filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState()).map(ctrl=>ctrl.name);
+      const minPriceEl = $('#min-price-input');
+      const maxPriceEl = $('#max-price-input');
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#keyword-textbox').value,
@@ -13113,6 +13179,8 @@ if (!map.__pillHooksInstalled) {
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
+        priceMin: minPriceEl ? minPriceEl.value : '',
+        priceMax: maxPriceEl ? maxPriceEl.value : '',
         cats: [...selection.cats],
         subs: [...selection.subs],
         openCats
@@ -13122,6 +13190,10 @@ if (!map.__pillHooksInstalled) {
     function restoreState(st){
       if(!st) return;
       $('#keyword-textbox').value = st.kw || '';
+      const minPriceEl = $('#min-price-input');
+      if(minPriceEl) minPriceEl.value = st.priceMin || '';
+      const maxPriceEl = $('#max-price-input');
+      if(maxPriceEl) maxPriceEl.value = st.priceMax || '';
       dateStart = st.start ? parseISODate(st.start) : null;
       dateEnd = st.end ? parseISODate(st.end) : null;
       if(!st.start && st.range){
@@ -14333,6 +14405,10 @@ function openPostModal(id){
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
     function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
+    function parsePriceInputValue(value){ if(typeof value!=='string') return null; const trimmed=value.trim(); if(!trimmed) return null; const normalized=trimmed.replace(/[^0-9.,]/g,''); if(!normalized) return null; const num=parseFloat(normalized.replace(/,/g,'')); return Number.isFinite(num)?num:null; }
+    function parsePriceNumbers(str){ if(typeof str!=='string') return []; const matches=str.match(/[0-9]+(?:[.,][0-9]+)?/g); if(!matches) return []; return matches.map(s=>parseFloat(s.replace(/,/g,''))).filter(n=>Number.isFinite(n)); }
+    function getPostPriceBounds(p){ if(!p) return null; if(p.__priceMin!==undefined){ if(p.__priceMin===null) return null; return {min:p.__priceMin,max:p.__priceMax}; } const nums=[]; if(typeof p.price==='string'){ nums.push(...parsePriceNumbers(p.price)); } if(Array.isArray(p.locations)){ p.locations.forEach(loc=>{ if(loc && typeof loc.price==='string'){ nums.push(...parsePriceNumbers(loc.price)); } }); } if(!nums.length){ p.__priceMin=null; p.__priceMax=null; return null; } const min=Math.min(...nums); const max=Math.max(...nums); p.__priceMin=min; p.__priceMax=max; return {min,max}; }
+    function priceMatch(p){ const minEl=$('#min-price-input'); const maxEl=$('#max-price-input'); const minVal=minEl?parsePriceInputValue(minEl.value):null; const maxVal=maxEl?parsePriceInputValue(maxEl.value):null; if(minVal===null && maxVal===null) return true; const bounds=getPostPriceBounds(p); if(!bounds) return false; if(minVal!==null && bounds.max < minVal) return false; if(maxVal!==null && bounds.min > maxVal) return false; return true; }
     function dateMatch(p){
       const {start,end} = orderedRange();
       const expiredChk = $('#expiredToggle');
@@ -14402,7 +14478,7 @@ function openPostModal(id){
         return;
       }
       if(!postsLoaded) return;
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
       const today = new Date(); today.setHours(0,0,0,0);
