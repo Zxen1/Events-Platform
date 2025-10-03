@@ -6693,7 +6693,7 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
-      const MARKER_ZOOM_THRESHOLD = 7;
+      const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
@@ -7013,7 +7013,7 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const targetZoom = Math.min(8, maxAllowedZoom);
+              const targetZoom = Math.min(MARKER_ZOOM_THRESHOLD, maxAllowedZoom);
               let finalZoom = targetZoom;
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
