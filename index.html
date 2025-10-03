@@ -12226,7 +12226,7 @@ if (!map.__pillHooksInstalled) {
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const MARKER_MIN_ZOOM = MARKER_SPRITE_ZOOM;
+      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const existing = map.getSource('posts');
       if(!existing){
         map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
