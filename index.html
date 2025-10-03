@@ -5733,7 +5733,7 @@ if (typeof slugify !== 'function') {
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
-  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
+  const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -7812,7 +7812,7 @@ function makePosts(){
     const location = createRandomLocation(fsCity, fsLng, fsLat, {
       name: 'Federation Square',
       address: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia',
-      radius: 0.05
+      radius: 0.02
     });
     out.push({
       id,
@@ -7846,7 +7846,7 @@ function makePosts(){
     const offset = 1 + i%30;
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
-    const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.1 });
+    const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.02 });
     out.push({
       id,
       title,
@@ -7916,7 +7916,7 @@ function makePosts(){
   const TOTAL_WORLD = 900;
   for(let i=0;i<TOTAL_WORLD;i++){
     const hub = hubs[Math.floor(rnd()*hubs.length)];
-    const location = createRandomLocation(hub.c, hub.lng, hub.lat, { radius: 0.1 });
+    const location = createRandomLocation(hub.c, hub.lng, hub.lat, { radius: 0.02 });
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'WW'+i;
@@ -8149,51 +8149,55 @@ function makePosts(){
     { city: "Suva, Fiji", lng: 178.4419, lat: -18.1248 }
   ];
   const SINGLE_VENUE_POSTS = 400;
+  const SINGLE_VENUE_RADIUS = 0.02;
   for(let i=0;i<SINGLE_VENUE_POSTS;i++){
     const base = singleVenueBases[i % singleVenueBases.length];
     const seq = Math.floor(i / singleVenueBases.length) + 1;
-    const angle = ((i % singleVenueBases.length) / singleVenueBases.length) * Math.PI * 2;
-    const radius = 0.3 + seq * 0.02;
-    let lng = base.lng + Math.cos(angle) * radius;
-    let lat = clamp(base.lat + Math.sin(angle) * radius, -80, 80);
-    let key = coordKey(lng, lat);
+    const venueIndex = (i % singleVenueBases.length) + 1;
+    const venueName = `${base.city} Solo Venue ${seq}-${venueIndex}`;
+    let locationDetail;
+    let key = '';
     let attempt = 0;
-    while(existingCoordKeys.has(key) && attempt < 120){
-      const adjust = 0.05 + attempt * 0.01;
-      lng = base.lng + Math.cos(angle + adjust) * (radius + adjust * 0.5);
-      lat = clamp(base.lat + Math.sin(angle + adjust) * (radius + adjust * 0.5), -80, 80);
-      key = coordKey(lng, lat);
-      attempt++;
-    }
-    if(existingCoordKeys.has(key)){
-      let fallback = 0;
-      let nextLng = lng;
-      let nextLat = lat;
-      let nextKey = key;
-      while(existingCoordKeys.has(nextKey) && fallback < 160){
-        nextLng += 0.005 * (1 + (fallback % 3));
-        nextLat = clamp(nextLat + (fallback % 2 === 0 ? 0.003 : -0.003), -80, 80);
-        nextKey = coordKey(nextLng, nextLat);
-        fallback++;
+    for(; attempt < 200; attempt++){
+      locationDetail = createRandomLocation(base.city, base.lng, base.lat, {
+        name: venueName,
+        address: base.city,
+        radius: SINGLE_VENUE_RADIUS
+      });
+      key = coordKey(locationDetail.lng, locationDetail.lat);
+      if(key && !existingCoordKeys.has(key)){
+        break;
       }
-      lng = nextLng;
-      lat = nextLat;
-      key = nextKey;
     }
-    if(key){ existingCoordKeys.add(key); }
+    if(!key || existingCoordKeys.has(key)){
+      let fallbackAttempt = 0;
+      while(fallbackAttempt < 200){
+        const distance = Math.sqrt(rnd()) * SINGLE_VENUE_RADIUS * 0.5;
+        const angle = rnd() * Math.PI * 2;
+        const lngCandidate = normalizeLongitude(base.lng + Math.cos(angle) * distance);
+        const latCandidate = clampLatitude(base.lat + Math.sin(angle) * distance);
+        const candidateKey = coordKey(lngCandidate, latCandidate);
+        if(candidateKey && !existingCoordKeys.has(candidateKey)){
+          locationDetail.lng = lngCandidate;
+          locationDetail.lat = latCandidate;
+          key = candidateKey;
+          break;
+        }
+        fallbackAttempt++;
+      }
+      if(!key){
+        key = coordKey(locationDetail.lng, locationDetail.lat);
+      }
+    }
+    const finalKey = coordKey(locationDetail.lng, locationDetail.lat);
+    if(finalKey){ existingCoordKeys.add(finalKey); }
+    const lng = locationDetail.lng;
+    const lat = locationDetail.lat;
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = 'SV'+i;
     const title = `${id} ${uniqueTitle(i*48271+131, base.city, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
-    const venueName = `${base.city} Solo Venue ${seq}-${(i % singleVenueBases.length) + 1}`;
-    const locationDetail = createRandomLocation(base.city, lng, lat, {
-      name: venueName,
-      address: base.city,
-      radius: 0
-    });
-    lng = locationDetail.lng;
-    lat = locationDetail.lat;
     out.push({
       id,
       title,
