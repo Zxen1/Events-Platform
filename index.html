@@ -12426,28 +12426,21 @@ if (!map.__pillHooksInstalled) {
       const markerFallbackIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID];
       const markerFallbackHighlightIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID];
 
-      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['let', 'compositeId', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']],
-          ['case',
-            ['==', ['var','spriteId'], ''],
-            markerFallbackIcon,
-            ['has-image', ['var','compositeId']],
-            ['var','compositeId'],
-            markerFallbackIcon
-          ]
-        ]
+      const markerLabelSpriteId = ['coalesce', ['get','labelSpriteId'], ''];
+      const markerLabelIconImage = ['case',
+        ['==', markerLabelSpriteId, ''],
+        markerFallbackIcon,
+        ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId]],
+        ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId],
+        markerFallbackIcon
       ];
 
-      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['let', 'highlightCompositeId', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
-          ['case',
-            ['==', ['var','spriteId'], ''],
-            markerFallbackHighlightIcon,
-            ['has-image', ['var','highlightCompositeId']],
-            ['var','highlightCompositeId'],
-            markerFallbackHighlightIcon
-          ]
-        ]
+      const markerLabelHighlightIconImage = ['case',
+        ['==', markerLabelSpriteId, ''],
+        markerFallbackHighlightIcon,
+        ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]],
+        ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
+        markerFallbackHighlightIcon
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
