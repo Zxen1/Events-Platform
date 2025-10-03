@@ -7682,7 +7682,7 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   function createRandomLocation(city, baseLng=0, baseLat=0, options={}){
-    const defaultRadius = 0.25;
+    const defaultRadius = 0.05;
     const radius = Number.isFinite(options.radius) ? Math.max(options.radius, 0) : defaultRadius;
     const coord = safeCoordinate(city, baseLng, baseLat, radius);
     const venueName = options.name || city || 'Event Venue';
@@ -8024,7 +8024,7 @@ function makePosts(){
     const offset = 1 + i%30;
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
-    const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.1 });
+    const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.05 });
     pushPost({
       id,
       title,
