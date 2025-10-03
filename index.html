@@ -11962,29 +11962,38 @@ if (!map.__pillHooksInstalled) {
         { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1101, filter: markerLabelFilters.multi }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter }) => {
-        if(!map.getLayer(id)){
-          map.addLayer({
-            id,
-            type:'symbol',
-            source,
-            filter: filter || markerLabelFilters.single,
-            minzoom: markerLabelMinZoom,
-            layout:{
-              'icon-image': markerLabelIconImage,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'left',
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': sortKey
-            },
-            paint:{
-              'icon-translate': [markerLabelBgTranslatePx, 0],
-              'icon-translate-anchor': 'viewport',
-              'icon-opacity': 1
-            }
-          });
+        let layerExists = !!map.getLayer(id);
+        if(!layerExists){
+          try{
+            map.addLayer({
+              id,
+              type:'symbol',
+              source,
+              filter: filter || markerLabelFilters.single,
+              minzoom: markerLabelMinZoom,
+              layout:{
+                'icon-image': markerLabelIconImage,
+                'icon-size': 1,
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'left',
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': sortKey
+              },
+              paint:{
+                'icon-translate': [markerLabelBgTranslatePx, 0],
+                'icon-translate-anchor': 'viewport',
+                'icon-opacity': 1
+              }
+            });
+            layerExists = !!map.getLayer(id);
+          }catch(e){
+            layerExists = !!map.getLayer(id);
+          }
+        }
+        if(!layerExists){
+          return;
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', markerLabelIconImage); }catch(e){}
