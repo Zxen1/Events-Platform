@@ -14426,7 +14426,7 @@ function openPostModal(id){
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
     function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
-function parsePriceInputValue(value){ if(typeof value!=='string') return null; const trimmed=typeof value.trim==='function'?value.trim():String(value).trim(); if(!trimmed) return null; const normalized=trimmed.replace(/[^0-9.,]/g,''); if(!normalized) return null; const num=parseFloat(normalized.replace(/,/g,'')); return Number.isFinite(num)?num:null; }
+function parsePriceInputValue(value){ if(value==null) return null; const stringValue=typeof value==='string'?value:String(value); const trimmed=stringValue.trim(); if(!trimmed) return null; const normalized=trimmed.replace(/[^0-9.,]/g,''); if(!normalized) return null; const num=parseFloat(normalized.replace(/,/g,'')); return Number.isFinite(num)?num:null; }
     function parsePriceNumbers(str){ if(typeof str!=='string') return []; const matches=str.match(/[0-9]+(?:[.,][0-9]+)?/g); if(!matches) return []; return matches.map(s=>parseFloat(s.replace(/,/g,''))).filter(n=>Number.isFinite(n)); }
     function getPostPriceBounds(p){ if(!p) return null; if(p.__priceMin!==undefined){ if(p.__priceMin===null) return null; return {min:p.__priceMin,max:p.__priceMax}; } const nums=[]; if(typeof p.price==='string'){ nums.push(...parsePriceNumbers(p.price)); } if(Array.isArray(p.locations)){ p.locations.forEach(loc=>{ if(loc && typeof loc.price==='string'){ nums.push(...parsePriceNumbers(loc.price)); } }); } if(!nums.length){ p.__priceMin=null; p.__priceMax=null; return null; } const min=Math.min(...nums); const max=Math.max(...nums); p.__priceMin=min; p.__priceMax=max; return {min,max}; }
     function priceMatch(p){ const minEl=$('#min-price-input'); const maxEl=$('#max-price-input'); const minVal=minEl?parsePriceInputValue(minEl.value):null; const maxVal=maxEl?parsePriceInputValue(maxEl.value):null; if(minVal===null && maxVal===null) return true; const bounds=getPostPriceBounds(p); if(!bounds) return false; if(minVal!==null && bounds.max < minVal) return false; if(maxVal!==null && bounds.min > maxVal) return false; return true; }
@@ -14948,12 +14948,11 @@ document.addEventListener('pointerdown', (e) => {
     requestAnimationFrame(() => handleDocInteract({ target }));
   }
 });
+const resetPointerStartedInsideFilter = () => { pointerStartedInsideFilter = false; };
 document.addEventListener('pointerup', () => {
-  pointerStartedInsideFilter = false;
+  setTimeout(resetPointerStartedInsideFilter, 0);
 });
-document.addEventListener('pointercancel', () => {
-  pointerStartedInsideFilter = false;
-});
+document.addEventListener('pointercancel', resetPointerStartedInsideFilter);
 
 // Panels and admin/member interactions
 (function(){
