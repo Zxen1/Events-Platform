@@ -6646,7 +6646,7 @@ if (typeof slugify !== 'function') {
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
-      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
+      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_SPRITE_ZOOM * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
@@ -12223,7 +12223,7 @@ if (!map.__pillHooksInstalled) {
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const MARKER_MIN_ZOOM = MARKER_SPRITE_ZOOM;
       const existing = map.getSource('posts');
       if(!existing){
         map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
