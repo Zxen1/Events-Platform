@@ -5656,14 +5656,15 @@ if (typeof slugify !== 'function') {
     });
   }
 
-  function createTransparentPlaceholder(size){
+  function createTransparentPlaceholder(width, height){
     const canvas = document.createElement('canvas');
-    const s = Math.max(1, size || 2);
-    canvas.width = s;
-    canvas.height = s;
+    const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
+    const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
     if(ctx){
-      ctx.clearRect(0, 0, s, s);
+      ctx.clearRect(0, 0, w, h);
     }
     return canvas;
   }
@@ -5697,6 +5698,7 @@ if (typeof slugify !== 'function') {
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
+  const markerLabelCompositePlaceholderIds = new Set();
 
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
@@ -6025,6 +6027,7 @@ if (typeof slugify !== 'function') {
     }
     const { priority = false } = options || {};
     const compositeId = markerLabelCompositeId(labelSpriteId);
+    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
     const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
     meta.iconId = iconId || meta.iconId || '';
     meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
@@ -6034,18 +6037,28 @@ if (typeof slugify !== 'function') {
     meta.lastUsed = nowTimestamp();
     markerLabelCompositeStore.set(labelSpriteId, meta);
     if(mapInstance.hasImage?.(compositeId)){
-      return compositeId;
+      if(markerLabelCompositePlaceholderIds.has(compositeId)){
+        try{ mapInstance.removeImage(compositeId); }catch(err){}
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+      } else {
+        return compositeId;
+      }
+    }
+    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
+      try{ mapInstance.removeImage(highlightId); }catch(err){}
+      markerLabelCompositePlaceholderIds.delete(highlightId);
     }
     if(meta.image && meta.highlightImage){
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
         try{ if(mapInstance.hasImage?.(compositeId)) mapInstance.removeImage(compositeId); }catch(err){}
         mapInstance.addImage(compositeId, meta.image, meta.options || {});
-        const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+        markerLabelCompositePlaceholderIds.delete(compositeId);
         if(meta.highlightImage){
           try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
           try{ mapInstance.addImage(highlightId, meta.highlightImage, meta.highlightOptions || meta.options || {}); }
           catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
         return compositeId;
@@ -6181,19 +6194,23 @@ if (typeof slugify !== 'function') {
         if(mapInstance.hasImage?.(compositeId)){
           mapInstance.removeImage(compositeId);
         }
+        markerLabelCompositePlaceholderIds.delete(compositeId);
         const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
         if(mapInstance.hasImage?.(highlightId)){
           mapInstance.removeImage(highlightId);
         }
+        markerLabelCompositePlaceholderIds.delete(highlightId);
       }catch(err){
         console.error(err);
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
         mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
+        markerLabelCompositePlaceholderIds.delete(compositeId);
         if(highlightComposite && highlightComposite.image){
           const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
           mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
+          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, {
           image: baseComposite.image,
@@ -6250,16 +6267,24 @@ if (typeof slugify !== 'function') {
         catch(err){ already = false; }
       }
       if(already){
-        return;
+        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
+          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
+          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+          already = false;
+        } else {
+          return;
+        }
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
         mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
         if(entry.highlightImage){
           const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
           try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
           try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
           catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
       }catch(err){
@@ -11570,6 +11595,7 @@ function makePosts(){
           bearing: startBearing,
           attributionControl:true
         });
+        try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -11616,7 +11642,18 @@ if (!map.__pillHooksInstalled) {
         const ensureCompositeOnStyleMissing = (evt) => {
           if(!evt || !evt.id) return;
           if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-            const spriteId = evt.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            const isAccent = evt.id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
+            const baseId = isAccent ? evt.id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : evt.id;
+            const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            if(!spriteId){
+              return;
+            }
+            try{
+              if(!map.hasImage?.(evt.id)){
+                map.addImage(evt.id, createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx), { pixelRatio: 1 });
+                markerLabelCompositePlaceholderIds.add(evt.id);
+              }
+            }catch(err){}
             const meta = markerLabelCompositeStore.get(spriteId) || {};
             try{
               ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
@@ -11631,12 +11668,14 @@ if (!map.__pillHooksInstalled) {
         try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
 
         const applyStyleAdjustments = () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
         };
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
         map.on('styledata', () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
             patchMapboxStyleArtifacts(map);
           }
@@ -12230,6 +12269,12 @@ if (!map.__pillHooksInstalled) {
             if(typeof map.hasImage === 'function' ? map.hasImage(compositeId) : true){
               map.removeImage(compositeId);
             }
+            markerLabelCompositePlaceholderIds.delete(compositeId);
+            const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+            if(typeof map.hasImage === 'function' ? map.hasImage(highlightId) : true){
+              map.removeImage(highlightId);
+            }
+            markerLabelCompositePlaceholderIds.delete(highlightId);
           }catch(e){}
         });
         const spriteEntries = Array.from(spriteMeta.entries());
