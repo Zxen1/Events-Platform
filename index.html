@@ -4755,7 +4755,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .multi-post-map-container {
   position: absolute;
   z-index: 20050;
-  padding: 10px;
+  padding: 12px;
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
@@ -4768,59 +4768,49 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   pointer-events: auto;
 }
 
-.multi-post-marker-item {
+.multi-post-map-container .multi-post-map-summary {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
+  pointer-events: none;
+}
+
+.multi-post-map-container .multi-post-map-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  padding: 8px 12px;
+  justify-content: flex-start;
+  background: none;
   border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
 }
 
-.multi-post-marker-item:hover {
-  background: rgba(46, 58, 114, 0.8);
-}
-
-.multi-post-marker-item:focus-visible {
+.multi-post-map-container .multi-post-map-item:focus-visible {
   outline: 2px solid #2e3a72;
   outline-offset: 2px;
+  border-radius: 12px;
 }
 
-.multi-post-marker-item--summary {
-  background: transparent;
-  padding: 0;
-  cursor: default;
+.multi-post-map-container .multi-post-map-item:hover .mapmarker-container,
+.multi-post-map-container .multi-post-map-item:focus-visible .mapmarker-container {
+  background-color: #2e3a72;
 }
 
-.multi-post-marker-item--summary:hover,
-.multi-post-marker-item--summary:focus-visible {
-  background: transparent;
-  outline: none;
+.multi-post-map-container .mapmarker-container {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  pointer-events: none;
 }
 
-.multi-post-marker-icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  object-fit: contain;
-}
-
-.multi-post-marker-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.multi-post-marker-label--summary {
-  font-size: 13px;
-  font-weight: 600;
+.multi-post-map-container .mapmarker-pill {
+  opacity: 1 !important;
+  visibility: visible;
 }
 
 .hero img.lqip{
@@ -7559,13 +7549,14 @@ function showMultiPostCardContainer(point, items, options = {}){
     const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
     return url || MULTI_POST_MAPMARKER_URL;
   };
-
-  const createIcon = (url)=>{
+  const createMarkerIcon = (url)=>{
     const icon = new Image();
     try{ icon.decoding = 'async'; }catch(err){}
     icon.alt = '';
-    icon.className = 'multi-post-marker-icon';
+    icon.className = 'mapmarker';
     icon.draggable = false;
+    icon.referrerPolicy = 'no-referrer';
+    icon.loading = 'lazy';
     icon.onerror = ()=>{
       icon.onerror = null;
       icon.src = MULTI_POST_MAPMARKER_URL;
@@ -7574,39 +7565,62 @@ function showMultiPostCardContainer(point, items, options = {}){
     return icon;
   };
 
-  const summaryItem = document.createElement('div');
-  summaryItem.className = 'multi-post-marker-item multi-post-marker-item--summary';
-  summaryItem.setAttribute('aria-hidden', 'true');
-  const summaryIcon = createIcon(MULTI_POST_MAPMARKER_URL);
-  const summaryLabel = document.createElement('div');
-  summaryLabel.className = 'multi-post-marker-label multi-post-marker-label--summary';
-  const summaryLine = document.createElement('span');
-  summaryLine.textContent = `${ordered.length} posts here`;
-  summaryLabel.appendChild(summaryLine);
-  summaryItem.append(summaryIcon, summaryLabel);
-  root.appendChild(summaryItem);
+  const createMarkerPill = ()=>{
+    const pill = new Image();
+    try{ pill.decoding = 'async'; }catch(err){}
+    pill.alt = '';
+    pill.src = 'assets/icons-30/150x40 pill 99.webp';
+    pill.className = 'mapmarker-pill';
+    pill.draggable = false;
+    return pill;
+  };
+
+  const createMarkerLabel = (labelLines)=>{
+    const markerLabel = document.createElement('div');
+    markerLabel.className = 'mapmarker-label';
+    const markerLine1 = document.createElement('div');
+    markerLine1.className = 'mapmarker-label-line';
+    markerLine1.textContent = labelLines.line1 || '';
+    markerLabel.appendChild(markerLine1);
+    if(labelLines.line2){
+      const markerLine2 = document.createElement('div');
+      markerLine2.className = 'mapmarker-label-line';
+      markerLine2.textContent = labelLines.line2;
+      markerLabel.appendChild(markerLine2);
+    }
+    return markerLabel;
+  };
+
+  if(ordered.length){
+    const summaryItem = document.createElement('div');
+    summaryItem.className = 'multi-post-map-summary';
+    summaryItem.setAttribute('aria-hidden', 'true');
+    summaryItem.textContent = `${ordered.length} posts here`;
+    root.appendChild(summaryItem);
+  }
 
   ordered.forEach(post => {
     if(!post) return;
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'multi-post-marker-item';
-    if(post.id) item.dataset.id = String(post.id);
-    const iconUrl = markerIconUrlFor(post);
-    item.appendChild(createIcon(iconUrl));
-    const labelWrap = document.createElement('div');
-    labelWrap.className = 'multi-post-marker-label';
     const labelLines = getMarkerLabelLines(post);
-    const line1 = document.createElement('span');
-    line1.textContent = labelLines.line1 || '';
-    labelWrap.appendChild(line1);
-    if(labelLines.line2){
-      const line2 = document.createElement('span');
-      line2.textContent = labelLines.line2;
-      labelWrap.appendChild(line2);
+    const itemButton = document.createElement('button');
+    itemButton.type = 'button';
+    itemButton.className = 'multi-post-map-item';
+    const id = post.id ? String(post.id) : '';
+    if(id) itemButton.dataset.id = id;
+    const ariaLabel = [labelLines.line1, labelLines.line2].filter(Boolean).join(' • ');
+    if(ariaLabel){
+      itemButton.setAttribute('aria-label', ariaLabel);
     }
-    item.appendChild(labelWrap);
-    root.appendChild(item);
+    const markerContainer = document.createElement('div');
+    markerContainer.className = 'mapmarker-container';
+    if(id) markerContainer.dataset.id = id;
+    const iconUrl = markerIconUrlFor(post);
+    const markerIcon = createMarkerIcon(iconUrl);
+    const markerPill = createMarkerPill();
+    const markerLabel = createMarkerLabel(labelLines);
+    markerContainer.append(markerPill, markerIcon, markerLabel);
+    itemButton.appendChild(markerContainer);
+    root.appendChild(itemButton);
   });
   containerEl.appendChild(root);
   multiPostCardState = {
@@ -7670,14 +7684,14 @@ function showMultiPostCardContainer(point, items, options = {}){
   };
 
   root.addEventListener('click', (evt)=>{
-    const item = evt.target.closest('.multi-post-marker-item[data-id]');
+    const item = evt.target.closest('.multi-post-map-item[data-id]');
     handleCardActivation(item, evt);
   }, { capture: true });
 
   root.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const item = evt.target.closest('.multi-post-marker-item[data-id]');
+    const item = evt.target.closest('.multi-post-map-item[data-id]');
     handleCardActivation(item, evt);
   }, { capture: true });
 
