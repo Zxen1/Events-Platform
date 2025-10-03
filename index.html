@@ -12451,24 +12451,21 @@ if (!map.__pillHooksInstalled) {
         multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
       };
 
-      const markerFallbackIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID];
-      const markerFallbackHighlightIcon = ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID];
-
       const markerLabelSpriteId = ['coalesce', ['get','labelSpriteId'], ''];
       const markerLabelIconImage = ['case',
         ['==', markerLabelSpriteId, ''],
-        markerFallbackIcon,
+        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID],
         ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId]], false],
         ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId],
-        markerFallbackIcon
+        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID]
       ];
 
       const markerLabelHighlightIconImage = ['case',
         ['==', markerLabelSpriteId, ''],
-        markerFallbackHighlightIcon,
+        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID],
         ['boolean', ['has-image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]], false],
         ['concat', MARKER_LABEL_COMPOSITE_PREFIX, markerLabelSpriteId, MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
-        markerFallbackHighlightIcon
+        ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID]
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
