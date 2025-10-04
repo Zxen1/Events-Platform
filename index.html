@@ -138,7 +138,7 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 0 !important;
+      opacity: 0;
       visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
@@ -4824,7 +4824,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .multi-post-map-container .mapmarker-pill {
-  opacity: 0.9 !important;
   visibility: visible;
 }
 
@@ -7594,6 +7593,8 @@ function showMultiPostCardContainer(point, items, options = {}){
     pill.src = 'assets/icons-30/150x40 pill 90.webp';
     pill.className = 'mapmarker-pill';
     pill.draggable = false;
+    pill.style.opacity = '0.9';
+    pill.style.visibility = 'visible';
     return pill;
   };
 
@@ -12603,6 +12604,7 @@ if (!map.__pillHooksInstalled) {
             markerPill.src = 'assets/icons-30/150x40 pill 90.webp';
             markerPill.className = 'mapmarker-pill';
             markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
             markerPill.draggable = false;
 
             const labelLines = getMarkerLabelLines(post);
