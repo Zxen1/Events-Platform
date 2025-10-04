@@ -6662,7 +6662,7 @@ if (typeof slugify !== 'function') {
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       // Multi-post marker layers are managed separately so they remain visible at all zoom levels.
-      const THRESHOLD_MARKER_LAYER_IDS = [
+      const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
         'marker-label-highlight'
@@ -6671,7 +6671,7 @@ if (typeof slugify !== 'function') {
         'multi-post-mapmarker-label',
         'multi-post-mapmarker-label-highlight'
       ];
-      const ALL_MARKER_LAYER_IDS = [...THRESHOLD_MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS];
+      const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
         const BALLOON_SOURCE_ID = 'post-balloon-source';
@@ -9623,7 +9623,7 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        THRESHOLD_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
+        MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
       // Keep multi-post labels visible regardless of the marker bucket gating.
