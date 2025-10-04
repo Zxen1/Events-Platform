@@ -7618,7 +7618,7 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     anchorIcon.src = MULTI_POST_MAPMARKER_URL;
     anchorIcon.draggable = false;
     anchorIcon.loading = 'lazy';
-    anchorIcon.className = 'multi-post-marker-icon';
+    anchorIcon.className = 'mapmarker multi-post-marker-icon';
     const countEl = document.createElement('span');
     countEl.className = 'multi-post-marker-count';
     anchorBtn.append(anchorIcon, countEl);
@@ -7696,6 +7696,102 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
         if(type !== 'touchstart'){ try{ ev.preventDefault(); }catch(err){} }
         try{ ev.stopPropagation(); }catch(err){}
       }, { capture: true });
+    });
+    let pointerHoverActive = false;
+    const showChildHover = (pointerType='')=>{
+      const normalized = typeof pointerType === 'string' ? pointerType.toLowerCase() : '';
+      if(normalized === 'touch'){
+        return;
+      }
+      setMarkerHoverIds([id]);
+      const targetPost = posts.find(item => item && item.id === post.id) || post;
+      if(!targetPost){
+        return;
+      }
+      const existingPopupEl = hoverPopup && typeof hoverPopup.getElement === 'function'
+        ? hoverPopup.getElement()
+        : null;
+      if(existingPopupEl && existingPopupEl.dataset && existingPopupEl.dataset.id === id){
+        return;
+      }
+      if(hoverPopup){
+        try{ hoverPopup.remove(); }catch(err){}
+        hoverPopup = null;
+      }
+      const matchedLngLat = (()=>{
+        if(Array.isArray(targetPost.locations) && targetPost.locations.length){
+          const match = targetPost.locations.find(loc => {
+            if(!loc) return false;
+            const lng = Number(loc.lng);
+            const lat = Number(loc.lat);
+            if(!Number.isFinite(lng) || !Number.isFinite(lat)) return false;
+            const key = toVenueCoordKey(lng, lat);
+            return key && key === venueKey;
+          });
+          if(match){
+            return { lng: Number(match.lng), lat: Number(match.lat) };
+          }
+        }
+        if(Number.isFinite(targetPost.lng) && Number.isFinite(targetPost.lat)){
+          return { lng: Number(targetPost.lng), lat: Number(targetPost.lat) };
+        }
+        const hasCoords = Array.isArray(coords) && coords.length >= 2
+          && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+        if(hasCoords){
+          return { lng: Number(coords[0]), lat: Number(coords[1]) };
+        }
+        return null;
+      })();
+      const overlayOptions = { venueKey };
+      if(matchedLngLat){
+        overlayOptions.targetLngLat = matchedLngLat;
+        overlayOptions.fixedLngLat = matchedLngLat;
+        overlayOptions.eventLngLat = matchedLngLat;
+      }
+      const overlay = createMapCardOverlay(targetPost, overlayOptions);
+      if(overlay){
+        hoverPopup = overlay;
+        updateSelectedMarkerRing();
+      }
+    };
+    const handleChildEnter = (pointerType='')=>{
+      pointerHoverActive = true;
+      showChildHover(pointerType);
+    };
+    const handleChildLeave = (nextTarget=null)=>{
+      pointerHoverActive = false;
+      let movingToChild = false;
+      if(nextTarget && typeof nextTarget.closest === 'function'){
+        const childTarget = nextTarget.closest('.multi-post-marker-child');
+        movingToChild = !!(childTarget && entry.childrenRoot.contains(childTarget));
+      } else if(!nextTarget && typeof document !== 'undefined' && document.activeElement){
+        movingToChild = entry.childrenRoot.contains(document.activeElement);
+      }
+      if(movingToChild){
+        return;
+      }
+      schedulePopupRemoval(hoverPopup, 160);
+      restoreGroup();
+    };
+    button.addEventListener('pointerenter', ev => {
+      const pointerType = ev && typeof ev.pointerType === 'string' ? ev.pointerType : '';
+      handleChildEnter(pointerType);
+    });
+    button.addEventListener('mouseenter', () => {
+      if(pointerHoverActive) return;
+      handleChildEnter('');
+    });
+    button.addEventListener('focus', () => {
+      handleChildEnter('');
+    });
+    button.addEventListener('pointerleave', ev => {
+      handleChildLeave(ev ? ev.relatedTarget : null);
+    });
+    button.addEventListener('mouseleave', ev => {
+      handleChildLeave(ev ? ev.relatedTarget : null);
+    });
+    button.addEventListener('blur', ev => {
+      handleChildLeave(ev ? ev.relatedTarget : null);
     });
       button.addEventListener('click', (ev)=>{
         ev.preventDefault();
