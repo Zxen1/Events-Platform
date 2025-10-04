@@ -5055,7 +5055,7 @@ if (typeof slugify !== 'function') {
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 90.webp';
   const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
   let cachedImages = null;
   let loadingTask = null;
@@ -6017,7 +6017,7 @@ if (typeof slugify !== 'function') {
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    const baseUrl = 'assets/icons-30/150x40 pill 99.webp';
+    const baseUrl = 'assets/icons-30/150x40 pill 90.webp';
     const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
@@ -7592,7 +7592,7 @@ function showMultiPostCardContainer(point, items, options = {}){
     const pill = new Image();
     try{ pill.decoding = 'async'; }catch(err){}
     pill.alt = '';
-    pill.src = 'assets/icons-30/150x40 pill 99.webp';
+    pill.src = 'assets/icons-30/150x40 pill 90.webp';
     pill.className = 'mapmarker-pill';
     pill.draggable = false;
     return pill;
@@ -12606,7 +12606,7 @@ if (!map.__pillHooksInstalled) {
             const markerPill = new Image();
             try{ markerPill.decoding = 'async'; }catch(e){}
             markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
+            markerPill.src = 'assets/icons-30/150x40 pill 90.webp';
             markerPill.className = 'mapmarker-pill';
             markerPill.style.opacity = '0.9';
             markerPill.draggable = false;
