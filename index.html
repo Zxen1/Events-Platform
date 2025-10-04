@@ -75,8 +75,9 @@
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      opacity: 0;
-      visibility: hidden;
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, calc(-50% - 45px));
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -84,18 +85,6 @@
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
-    .map-card-pill{
-      position: absolute;
-      inset: auto;
-      left: 5px;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      object-fit: contain;
-      pointer-events: none;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .mapmarker-container{
       position: absolute;
       left: 0;
@@ -141,11 +130,15 @@
     }
     .map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
-      transition: background-color 0.2s ease;
+      background-image: url('assets/icons-30/225x60-pill-99.webp');
+      background-repeat: no-repeat;
+      background-size: cover;
+      transition: background-color 0.2s ease, background-image 0.2s ease;
     }
     .map-card--popup.is-map-highlight,
     .mapmarker-overlay:hover .map-card--popup{
       background-color: #2e3a72;
+      background-image: none;
     }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
@@ -9917,7 +9910,7 @@ function makePosts(){
         if(variant === 'list'){
           return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -12875,14 +12868,6 @@ if (!map.__pillHooksInstalled) {
             cardRoot.style.pointerEvents = 'auto';
             cardRoot.style.userSelect = 'none';
 
-            const pillImg = new Image();
-            try{ pillImg.decoding = 'async'; }catch(e){}
-            pillImg.alt = '';
-            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-            pillImg.className = 'map-card-pill';
-            pillImg.style.opacity = '0.9';
-            pillImg.draggable = false;
-
             const thumbImg = new Image();
             try{ thumbImg.decoding = 'async'; }catch(e){}
             thumbImg.alt = '';
@@ -12926,7 +12911,7 @@ if (!map.__pillHooksInstalled) {
               labelEl.appendChild(venueEl);
             }
 
-            cardRoot.append(pillImg, thumbImg, labelEl);
+            cardRoot.append(thumbImg, labelEl);
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
