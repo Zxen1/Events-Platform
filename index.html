@@ -6662,7 +6662,6 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -9655,7 +9654,7 @@ function makePosts(){
           window.__markersLoaded = true;
         }
       }
-      if(!Number.isFinite(lastKnownZoom) || lastKnownZoom < MULTI_CARD_MIN_ZOOM){
+      if(!Number.isFinite(lastKnownZoom)){
         destroyMultiPostCardContainer();
       }
     }
@@ -12538,11 +12537,6 @@ if (!map.__pillHooksInstalled) {
           const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
           const items = getPostsAtVenueByCoords(coords[0], coords[1]);
           if(!items || items.length <= 1){ return; }
-          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-          if(!Number.isFinite(zoomLevel) || zoomLevel < MULTI_CARD_MIN_ZOOM){
-            destroyMultiPostCardContainer();
-            return;
-          }
           const state = showMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey });
           if(state){
             lastListOpenAt = Date.now();
@@ -12770,8 +12764,7 @@ if (!map.__pillHooksInstalled) {
           const targetLngLat = baseLngLat || (e ? e.lngLat : null);
           if(coords && coords.length>=2){
             const items = getPostsAtVenueByCoords(coords[0], coords[1]);
-            const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-            if(items && items.length>1 && Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
+            if(items && items.length>1){
               if(e.preventDefault) e.preventDefault();
               if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
               const state = showMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey });
@@ -12839,17 +12832,14 @@ if (!map.__pillHooksInstalled) {
         const targetLngLat = baseLngLat || (e ? e.lngLat : null);
         const multi = hasCoords ? getPostsAtVenueByCoords(coords[0], coords[1]) : null;
         if(multi && multi.length>1){
-          const zoomForMulti = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent(e);
-          if(Number.isFinite(zoomForMulti) && zoomForMulti >= MULTI_CARD_MIN_ZOOM){
-            if(hoverPopup){
-              try{ hoverPopup.remove(); }catch(err){}
-              hoverPopup = null;
-              updateSelectedMarkerRing();
-            }
-            const state = showMultiPostCardContainer(e.point, multi, { venueKey });
-            if(state){
-              return;
-            }
+          if(hoverPopup){
+            try{ hoverPopup.remove(); }catch(err){}
+            hoverPopup = null;
+            updateSelectedMarkerRing();
+          }
+          const state = showMultiPostCardContainer(e.point, multi, { venueKey });
+          if(state){
+            return;
           }
         }
         destroyMultiPostCardContainer();
