@@ -70,12 +70,14 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(-30px, -30px);
+      transform: translate(-112px, calc(-100% - 12px));
       pointer-events: auto;
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      display: none;
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%);
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -83,20 +85,6 @@
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
-    .map-card-pill{
-      position: absolute;
-      inset: auto;
-      left: 5px;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .mapmarker-container{
       position: absolute;
       left: 0;
@@ -124,6 +112,11 @@
       z-index: 2;
       flex: 0 0 30px;
     }
+    .map--midzoom-markers .mapmarker{
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px #000;
+      box-sizing: border-box;
+    }
     .mapmarker-pill{
       position: absolute;
       left: 0;
@@ -132,15 +125,21 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
     .map-card--popup{
-      background-color: #2e3a72;
+      background-color: rgba(0, 0, 0, 0.88);
+      background-image: url('assets/icons-30/225x60-pill-99.webp');
+      background-repeat: no-repeat;
+      background-size: cover;
+      transition: background-color 0.2s ease, background-image 0.2s ease;
     }
-    .post-card.is-map-highlight,
+    .map-card--popup.is-map-highlight,
+    .mapmarker-overlay:hover .map-card--popup{
+      background-color: #2e3a72;
+      background-image: none;
+    }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
     }
@@ -571,8 +570,6 @@
       --btn-selected-hover: #3c4b8a;
       --btn-selected-active: #232e59;
       --btn-disabled: #bbbbbb;
-      --panel-bg: rgba(0,0,0,1);
-      --panel-text: #000000;
       --footer-h: 0px;
       --list-background: rgba(0,0,0,0.37);
       --closed-card-bg: rgba(0,0,0,0.37);
@@ -616,10 +613,8 @@
       --geocoder-h: var(--control-h);
       --panel-label-font: system-ui, sans-serif;
       --panel-label-size: 14px;
-      --panel-label-color: #ffffff;
       --panel-title-font: system-ui, sans-serif;
       --panel-title-size: 16px;
-      --panel-title-color: #ffffff;
       --post-mode-bg-color: 0,0,0;
       --post-mode-bg-opacity: 0;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -844,13 +839,13 @@ textarea::placeholder{
 }
 
 .field label{
-  color: var(--panel-label-color);
+  color:#fff;
   font-size: var(--panel-label-size);
 }
 
 .panel-content .title,
 .panel-content .t{
-  color: var(--panel-title-color);
+  color:#fff;
   font-size: var(--panel-title-size);
 }
 
@@ -1198,21 +1193,21 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
-#adminPanel .admin-fieldset,
-.admin-fieldset{
-  margin:0 auto;
-  border:0;
-  border-radius:8px;
-  padding:0;
-  width:100%;
-  max-width:420px;
-  box-sizing:border-box;
-}
-#adminPanel .admin-fieldset.collapsed{
-  padding:0;
-}
-  #adminPanel .panel-content,
-  #memberPanel .panel-content{
+  #adminPanel .admin-fieldset,
+  .admin-fieldset{
+    margin:0 auto;
+    border:0;
+    border-radius:8px;
+    padding:0;
+    width:100%;
+    max-width:420px;
+    box-sizing:border-box;
+  }
+  #adminPanel .admin-fieldset.collapsed{
+    padding:0;
+  }
+  .admin-panel-content,
+  .member-panel-content{
     width:min(440px, 100%);
     max-width:100%;
     height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -1225,15 +1220,22 @@ button[aria-expanded="true"] .results-arrow{
     left:auto;
     right:0;
   }
-
-  #adminPanel .panel-content{
+  .admin-panel-content{
     background:#222222;
     color:#fff;
   }
-
-  #memberPanel .panel-content{
+  .member-panel-content{
     background:#222222;
     color:#fff;
+  }
+  .admin-panel-body .panel-field input[type="color"]{
+    width:35px;
+    height:35px;
+  }
+  .admin-panel-body :where(.panel-field > button, .settings-style-container > button, .map-balloon-container button, .fieldset-actions .same-btn):not(.filter-category-menu button){
+    background:#333333;
+    color:var(--ink);
+    border:none;
   }
 #filterPanel .panel-content{
   width:100%;
@@ -1257,24 +1259,6 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .tiny{
   background:#333333;
   border: none;
-}
-#adminPanel button,
-#memberPanel button{
-  background:#333333;
-  color: var(--ink);
-  border: none;
-}
-#adminPanel button{
-  height:35px;
-  line-height:35px;
-}
-#adminPanel input[type="color"]{
-  width:35px;
-  height:35px;
-}
-#filterPanel input[type="text"]{
-  background: var(--panel-bg);
-  color: var(--panel-text);
 }
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
@@ -1882,7 +1866,8 @@ button[aria-expanded="true"] .results-arrow{
   border-radius: var(--dropdown-radius);
 }
 #filterPanel #keyword-textbox{
-  background: var(--keyword-bg);
+  background: #333333;
+  color: var(--date-range-text);
 }
 #filterPanel #daterange-textbox{
   background: #333333;
@@ -1904,7 +1889,8 @@ button[aria-expanded="true"] .results-arrow{
   vertical-align:middle;
 }
 #filterPanel .keyword-clear-button,
-#filterPanel .daterange-clear-button{
+#filterPanel .daterange-clear-button,
+#filterPanel .price-clear-button{
   position: static;
   width: 35px;
   height: 35px;
@@ -1919,10 +1905,34 @@ button[aria-expanded="true"] .results-arrow{
   opacity:1;
 }
 #filterPanel .keyword-clear-button.active,
-#filterPanel .daterange-clear-button.active{
+#filterPanel .daterange-clear-button.active,
+#filterPanel .price-clear-button.active{
   background: var(--filter-active-color);
   color: var(--button-text);
   opacity:1;
+}
+
+.price-range-row{
+  flex-wrap: wrap;
+}
+
+.price-range-row .price-inputs{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.price-range-row .price-inputs input{
+  min-width: 0;
+  background: #fff;
+  color: var(--dropdown-text);
+}
+
+.price-range-row .price-separator{
+  flex: 0 0 auto;
+  color: var(--dropdown-text);
+  font-size: 14px;
 }
 
 #filterPanel .field label.t{
@@ -2912,7 +2922,7 @@ body.filters-active #filterBtn{
   border-radius: 8px;
   object-fit: cover;
   display: block;
-  background: var(--panel-bg);
+  background: rgba(0,0,0,1);
   transition: filter .22s ease;
 }
 
@@ -3368,6 +3378,9 @@ body.filters-active #filterBtn{
   border:none;
   border-radius:0;
   border-bottom:1px solid rgba(255,255,255,0.12);
+}
+.post-board .post-card.is-map-highlight{
+  background-color:#2e3a72;
 }
 .post-board .post-card:last-child,
 .post-board .open-post:last-child{border-bottom:none;}
@@ -4739,48 +4752,65 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-.multi-post-map-card-container {
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 20px;
-  padding: 10px;
+.multi-post-map-container {
   position: absolute;
   z-index: 20050;
-  max-height: 80vh;
-  max-width: 400px;
-  overflow: hidden;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
   display: flex;
   flex-direction: column;
+  gap: 10px;
   box-sizing: border-box;
-  color: #fff;
-}
-
-.multi-post-map-card-header {
-  font-family: var(--global-font, inherit);
-  font-size: var(--global-font-size, 1rem);
-  color: #fff;
-  margin-bottom: 6px;
-  line-height: 1.25;
-}
-
-.multi-post-map-card-header .date-range {
-  display: block;
-  margin-top: 2px;
-  color: #b3b3b3;
-  font-size: var(--global-font-size, 1rem);
-}
-
-.multi-post-map-cards {
+  max-height: 80vh;
   overflow-y: auto;
-  flex-grow: 1;
-  max-height: calc(80vh - 60px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-right: 2px;
+  pointer-events: auto;
 }
 
-.multi-post-map-card {
-  width: 100%;
+.multi-post-map-container .multi-post-map-summary {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
+  pointer-events: none;
+}
+
+.multi-post-map-container .multi-post-map-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.multi-post-map-container .multi-post-map-item:focus-visible {
+  outline: 2px solid #2e3a72;
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.multi-post-map-container .multi-post-map-item:hover .mapmarker-container,
+.multi-post-map-container .multi-post-map-item:focus-visible .mapmarker-container {
+  background-color: #2e3a72;
+}
+
+.multi-post-map-container .mapmarker-container {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  pointer-events: none;
+}
+
+.multi-post-map-container .mapmarker-pill {
+  opacity: 1 !important;
+  visibility: visible;
 }
 
 .hero img.lqip{
@@ -5009,48 +5039,173 @@ if (typeof slugify !== 'function') {
 // === 150x40 pill provider (sprite id: marker-label-bg) ===
 (function(){
   const PILL_ID = 'marker-label-bg';
-  const PILL_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
-  let cachedImage = null;
-  let loadingImage = null;
+  const ACCENT_ID = `${PILL_ID}--accent`;
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 90.webp';
+  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+  let cachedImages = null;
+  let loadingTask = null;
   const pendingMaps = new Set();
 
+  const DEFAULT_PILL_WIDTH = 150;
+  const DEFAULT_PILL_HEIGHT = 40;
+
+  function drawRoundedRect(ctx, width, height, radius){
+    const r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(width - r, 0);
+    ctx.quadraticCurveTo(width, 0, width, r);
+    ctx.lineTo(width, height - r);
+    ctx.quadraticCurveTo(width, height, width - r, height);
+    ctx.lineTo(r, height);
+    ctx.quadraticCurveTo(0, height, 0, height - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+  }
+
+  function createFallbackPillCanvas({ width = DEFAULT_PILL_WIDTH, height = DEFAULT_PILL_HEIGHT, fill = 'rgba(0,0,0,0.9)', stroke = 'rgba(255,255,255,0.12)' } = {}){
+    const canvas = document.createElement('canvas');
+    const w = Math.max(1, Math.round(width));
+    const h = Math.max(1, Math.round(height));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if(!ctx){
+      return null;
+    }
+    drawRoundedRect(ctx, w, h, h / 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    if(stroke){
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = Math.max(1, Math.round(h * 0.05));
+      ctx.stroke();
+    }
+    return canvas;
+  }
+
+  if(typeof window !== 'undefined' && !window.__createPillFallbackCanvas){
+    window.__createPillFallbackCanvas = createFallbackPillCanvas;
+  }
+
   function applyImageToMap(map){
-    if(!map || typeof map.hasImage !== 'function' || !cachedImage){
+    if(!map || typeof map.hasImage !== 'function' || !cachedImages){
       return;
     }
     try{
       if(map.hasImage(PILL_ID)){
         try{ map.removeImage(PILL_ID); }catch(e){}
       }
-      map.addImage(PILL_ID, cachedImage, { pixelRatio: 1 });
+      if(map.hasImage(ACCENT_ID)){
+        try{ map.removeImage(ACCENT_ID); }catch(e){}
+      }
+      const baseImage = cachedImages.base || cachedImages.accent;
+      if(baseImage){
+        map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
+      }
+      const accentImage = cachedImages.accent || cachedImages.base;
+      if(accentImage){
+        map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
+      }
     }catch(e){ /* silent */ }
   }
 
-  function handleImageLoad(){
-    if(!loadingImage){
+  function tintImage(sourceImage, color, alpha = 1){
+    if(!sourceImage){
+      return null;
+    }
+    try{
+      const width = sourceImage.naturalWidth || sourceImage.width || 150;
+      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+      if(color){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      return canvas;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function prepareCachedImages(baseImage, accentImage){
+    if(!baseImage){
+      const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || createFallbackPillCanvas;
+      baseImage = factory({ fill: 'rgba(0,0,0,0.9)' });
+    }
+    if(!baseImage){
+      cachedImages = null;
       return;
     }
-    if(loadingImage.complete && loadingImage.naturalWidth > 0){
-      cachedImage = loadingImage;
-      pendingMaps.forEach((map)=>applyImageToMap(map));
+    if(!accentImage){
+      const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || createFallbackPillCanvas;
+      accentImage = factory({ fill: '#2f3b73', stroke: 'rgba(255,255,255,0.18)' });
     }
-    pendingMaps.clear();
-    loadingImage = null;
+    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
+    let highlight = null;
+    if(accentImage){
+      highlight = tintImage(accentImage, null, 1) || accentImage;
+    }
+    if(!highlight){
+      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
+    }
+    cachedImages = { base: tintedBase, accent: highlight };
+  }
+
+  function loadImage(url){
+    if(!url){
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(e){}
+      try{ img.decoding = 'async'; }catch(e){}
+      img.onload = () => {
+        if(img.naturalWidth > 0 && img.naturalHeight > 0){
+          resolve(img);
+        }else{
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
+        resolve(img);
+      }
+    });
   }
 
   function ensureImage(){
-    if(cachedImage || loadingImage){
+    if(cachedImages || loadingTask){
       return;
     }
-    loadingImage = new Image();
-    try{ loadingImage.crossOrigin = 'anonymous'; }catch(e){}
-    loadingImage.decoding = 'async';
-    loadingImage.onload = handleImageLoad;
-    loadingImage.onerror = handleImageLoad;
-    loadingImage.src = PILL_IMAGE_URL;
-    if(loadingImage.complete){
-      handleImageLoad();
-    }
+    loadingTask = Promise.all([
+      loadImage(PILL_BASE_IMAGE_URL),
+      loadImage(PILL_ACCENT_IMAGE_URL)
+    ]).then(([baseImage, accentImage]) => {
+      prepareCachedImages(baseImage, accentImage);
+      if(cachedImages){
+        pendingMaps.forEach((map) => applyImageToMap(map));
+      }
+    }).catch(() => {
+      cachedImages = null;
+    }).finally(() => {
+      pendingMaps.clear();
+      loadingTask = null;
+    });
   }
 
   function addOrReplacePill(map){
@@ -5058,7 +5213,7 @@ if (typeof slugify !== 'function') {
       if(!map || typeof map.hasImage !== 'function'){
         return;
       }
-      if(cachedImage){
+      if(cachedImages){
         applyImageToMap(map);
         return;
       }
@@ -5200,6 +5355,14 @@ if (typeof slugify !== 'function') {
                 <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
+            <div class="field price-range-row">
+              <div class="input price-inputs">
+                <input id="min-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Min price" aria-label="Minimum price" />
+                <span class="price-separator" aria-hidden="true">-</span>
+                <input id="max-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Max price" aria-label="Maximum price" />
+                <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
+              </div>
+            </div>
             <div class="field daterange-row">
               <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
                 <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
@@ -5224,63 +5387,63 @@ if (typeof slugify !== 'function') {
     </div>
   </div>
 
-  <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="right:0;">
-      <div class="panel-header">
-        <div class="header-top">
-          <h2>Create Post</h2>
-          <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-            <button type="button" class="close-panel">Close</button>
+    <div id="memberPanel" class="panel member-panel" role="dialog" aria-panel="true" aria-hidden="true">
+      <div class="panel-content member-panel-content" style="right:0;">
+        <div class="panel-header">
+          <div class="header-top">
+            <h2>Create Post</h2>
+            <div class="panel-actions">
+              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+              <button type="button" class="close-panel">Close</button>
+            </div>
           </div>
         </div>
+        <form id="memberForm" class="panel-body">
+          <div class="map-control-row map-controls-member">
+            <div id="geocoder-member" class="geocoder"></div>
+            <div id="geolocate-member" class="geolocate-btn"></div>
+            <div id="compass-member" class="compass-btn"></div>
+          </div>
+          <div class="panel-field">
+            <label for="mTitle">Title</label>
+            <input type="text" id="mTitle" required />
+          </div>
+          <div class="panel-field">
+            <label for="mImage">Image</label>
+            <input type="file" id="mImage" accept="image/*" />
+          </div>
+          <div class="panel-field">
+            <label for="mDate">Date</label>
+            <input type="date" id="mDate" />
+          </div>
+          <div class="panel-field">
+            <label for="mColor">Color</label>
+            <input type="color" id="mColor" data-mode="hex" value="#000000" />
+          </div>
+        </form>
       </div>
-      <form id="memberForm" class="panel-body">
-        <div class="map-control-row map-controls-member">
-          <div id="geocoder-member" class="geocoder"></div>
-          <div id="geolocate-member" class="geolocate-btn"></div>
-          <div id="compass-member" class="compass-btn"></div>
-        </div>
-        <div class="panel-field">
-          <label for="mTitle">Title</label>
-          <input type="text" id="mTitle" required />
-        </div>
-        <div class="panel-field">
-          <label for="mImage">Image</label>
-          <input type="file" id="mImage" accept="image/*" />
-        </div>
-        <div class="panel-field">
-          <label for="mDate">Date</label>
-          <input type="date" id="mDate" />
-        </div>
-        <div class="panel-field">
-          <label for="mColor">Color</label>
-          <input type="color" id="mColor" data-mode="hex" value="#000000" />
-        </div>
-      </form>
     </div>
-  </div>
 
-  <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
-      <div class="panel-header">
-        <div class="header-top">
-          <h2 class="title">Admin</h2>
-          <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-            <button type="button" class="close-panel">Close</button>
+    <div id="adminPanel" class="panel admin-panel" role="dialog" aria-panel="true" aria-hidden="true">
+      <div class="panel-content admin-panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
+        <div class="panel-header">
+          <div class="header-top">
+            <h2 class="title">Admin</h2>
+            <div class="panel-actions">
+              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+              <button type="button" class="close-panel">Close</button>
+            </div>
+          </div>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
+            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+            <button type="button" class="tab-btn" data-tab="forms">Forms</button>
           </div>
         </div>
-        <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
-          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
-        </div>
-      </div>
-      <form id="adminForm" class="panel-body">
-        <div id="tab-map" class="tab-panel active">
+        <form id="adminForm" class="panel-body admin-panel-body">
+          <div id="tab-map" class="tab-panel active">
           <div class="map-spin-container">
             <div class="panel-field">
               <div class="option-label">
@@ -5542,14 +5705,15 @@ if (typeof slugify !== 'function') {
     });
   }
 
-  function createTransparentPlaceholder(size){
+  function createTransparentPlaceholder(width, height){
     const canvas = document.createElement('canvas');
-    const s = Math.max(1, size || 2);
-    canvas.width = s;
-    canvas.height = s;
+    const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
+    const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext('2d');
     if(ctx){
-      ctx.clearRect(0, 0, s, s);
+      ctx.clearRect(0, 0, w, h);
     }
     return canvas;
   }
@@ -5566,9 +5730,7 @@ if (typeof slugify !== 'function') {
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  const narrowScreenQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
-  const isNarrowScreen = narrowScreenQuery ? narrowScreenQuery.matches : window.innerWidth <= 600;
-  const markerIconSize = (isTouchDevice || isNarrowScreen) ? 1.35 : 1;
+  const markerIconSize = 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
@@ -5579,10 +5741,11 @@ if (typeof slugify !== 'function') {
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
+  const markerLabelBgTranslatePx = 0;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
+  const markerLabelCompositePlaceholderIds = new Set();
 
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
@@ -5748,10 +5911,14 @@ if (typeof slugify !== 'function') {
   }
 
   const MARKER_LABEL_BG_ID = 'marker-label-bg';
+  const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
+  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
+  const MARKER_SPRITE_RETAIN_ZOOM = 8;
+  const MARKER_SPRITE_FULL_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -5787,6 +5954,17 @@ if (typeof slugify !== 'function') {
 
   function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
     if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
+      return;
+    }
+    let zoomForBudget = NaN;
+    if(typeof mapInstance.getZoom === 'function'){
+      try{ zoomForBudget = mapInstance.getZoom(); }
+      catch(err){ zoomForBudget = NaN; }
+    }
+    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
+      mapInstance.__retainAllMarkerSprites = true;
+    }
+    if(mapInstance.__retainAllMarkerSprites){
       return;
     }
     if(typeof mapInstance.removeImage !== 'function'){
@@ -5825,12 +6003,24 @@ if (typeof slugify !== 'function') {
         if(meta.options){
           try{ delete meta.options; }catch(err){ meta.options = undefined; }
         }
+        if(meta.highlightImage){
+          try{ delete meta.highlightImage; }catch(err){ meta.highlightImage = null; }
+        }
+        if(meta.highlightOptions){
+          try{ delete meta.highlightOptions; }catch(err){ meta.highlightOptions = undefined; }
+        }
         markerLabelCompositeStore.set(entry.spriteId, meta);
       }
       markerLabelCompositePending.delete(entry.spriteId);
       try{
-        if(typeof mapInstance.hasImage === 'function' && mapInstance.hasImage(entry.compositeId)){
-          mapInstance.removeImage(entry.compositeId);
+        if(typeof mapInstance.hasImage === 'function'){
+          if(mapInstance.hasImage(entry.compositeId)){
+            mapInstance.removeImage(entry.compositeId);
+          }
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          if(mapInstance.hasImage(highlightId)){
+            mapInstance.removeImage(highlightId);
+          }
         }
       }catch(err){}
     });
@@ -5858,16 +6048,73 @@ if (typeof slugify !== 'function') {
     });
   }
 
+  function createMarkerLabelFallback(fillColor = 'rgba(0,0,0,0.9)', strokeColor = 'rgba(255,255,255,0.12)'){
+    const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || null;
+    if(factory){
+      const canvas = factory({ fill: fillColor, stroke: strokeColor });
+      if(canvas){
+        return canvas;
+      }
+    }
+    const canvas = document.createElement('canvas');
+    const width = 150;
+    const height = 40;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if(!ctx){
+      return null;
+    }
+    const radius = height / 2;
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(width - radius, 0);
+    ctx.quadraticCurveTo(width, 0, width, radius);
+    ctx.lineTo(width, height - radius);
+    ctx.quadraticCurveTo(width, height, width - radius, height);
+    ctx.lineTo(radius, height);
+    ctx.quadraticCurveTo(0, height, 0, height - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    if(strokeColor){
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = Math.max(1, Math.round(height * 0.05));
+      ctx.stroke();
+    }
+    return canvas;
+  }
+
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    markerLabelPillImagePromise = loadMarkerLabelImage('assets/icons-30/150x40 pill 99.webp')
-      .catch(err => {
-        console.error(err);
-        markerLabelPillImagePromise = null;
+    const baseUrl = 'assets/icons-30/150x40 pill 90.webp';
+    const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+    const promise = Promise.all([
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl).catch(() => null)
+    ]).then(([baseImg, accentImg]) => {
+      let resolvedBase = baseImg || createMarkerLabelFallback('rgba(0,0,0,0.9)', 'rgba(255,255,255,0.12)');
+      if(!resolvedBase){
         return null;
-      });
+      }
+      const resolvedAccent = accentImg || createMarkerLabelFallback('#2f3b73', 'rgba(255,255,255,0.18)');
+      return { base: resolvedBase, highlight: resolvedAccent };
+    }).catch(err => {
+      console.error(err);
+      return null;
+    });
+    markerLabelPillImagePromise = promise;
+    promise.then(result => {
+      if(!result){
+        markerLabelPillImagePromise = null;
+      }
+    }).catch(() => {
+      markerLabelPillImagePromise = null;
+    });
     return markerLabelPillImagePromise;
   }
 
@@ -5881,6 +6128,7 @@ if (typeof slugify !== 'function') {
     }
     const { priority = false } = options || {};
     const compositeId = markerLabelCompositeId(labelSpriteId);
+    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
     const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
     meta.iconId = iconId || meta.iconId || '';
     meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
@@ -5890,12 +6138,29 @@ if (typeof slugify !== 'function') {
     meta.lastUsed = nowTimestamp();
     markerLabelCompositeStore.set(labelSpriteId, meta);
     if(mapInstance.hasImage?.(compositeId)){
-      return compositeId;
+      if(markerLabelCompositePlaceholderIds.has(compositeId)){
+        try{ mapInstance.removeImage(compositeId); }catch(err){}
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+      } else {
+        return compositeId;
+      }
     }
-    if(meta.image){
+    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
+      try{ mapInstance.removeImage(highlightId); }catch(err){}
+      markerLabelCompositePlaceholderIds.delete(highlightId);
+    }
+    if(meta.image && meta.highlightImage){
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
+        try{ if(mapInstance.hasImage?.(compositeId)) mapInstance.removeImage(compositeId); }catch(err){}
         mapInstance.addImage(compositeId, meta.image, meta.options || {});
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        if(meta.highlightImage){
+          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
+          try{ mapInstance.addImage(highlightId, meta.highlightImage, meta.highlightOptions || meta.options || {}); }
+          catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
         return compositeId;
       }catch(err){
@@ -5906,13 +6171,16 @@ if (typeof slugify !== 'function') {
       return markerLabelCompositePending.get(labelSpriteId);
     }
     const task = (async () => {
-      const pillImg = await ensureMarkerLabelPillImage();
-      if(!pillImg){
+      const pillAssets = await ensureMarkerLabelPillImage();
+      if(!pillAssets || !pillAssets.base){
         return null;
       }
+      const pillImg = pillAssets.base;
+      const pillAccentImg = pillAssets.highlight;
       const markerSources = window.subcategoryMarkers || {};
       const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
       let iconImg = null;
+      let shouldSkipIcon = false;
       if(iconUrl){
         try{
           iconImg = await loadMarkerLabelImage(iconUrl);
@@ -5922,28 +6190,9 @@ if (typeof slugify !== 'function') {
       }
       const rawWidth = pillImg.naturalWidth || pillImg.width || markerLabelBackgroundWidthPx;
       const rawHeight = pillImg.naturalHeight || pillImg.height || markerLabelBackgroundHeightPx;
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
-      canvas.height = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(pillImg, 0, 0, canvasWidth, canvasHeight);
+      const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
+      const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
       const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
-      if(iconImg){
-        const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
-        const destX = markerLabelMarkerInsetPx * pixelRatio;
-        const destY = (canvasHeight - iconSizePx) / 2;
-        try{
-          ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
-        }catch(err){
-          console.error(err);
-        }
-      }
       const labelLines = [];
       const line1 = (meta.labelLine1 || '').trim();
       const line2 = (meta.labelLine2 || '').trim();
@@ -5953,54 +6202,151 @@ if (typeof slugify !== 'function') {
       if(line2){
         labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
       }
-      if(labelLines.length){
-        const fontSizePx = markerLabelTextSize * pixelRatio;
-        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
-        const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-        let textY = (canvasHeight - totalHeight) / 2;
-        if(!Number.isFinite(textY) || textY < 0){
-          textY = 0;
-        }
-        const textX = markerLabelTextPaddingPx * pixelRatio;
-        ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
-        ctx.textBaseline = 'top';
-        ctx.textAlign = 'left';
-        ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 2 * pixelRatio;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 1 * pixelRatio;
-        labelLines.forEach(line => {
-          ctx.fillStyle = line.color;
+      const drawForeground = (ctx, { omitIcon = false } = {})=>{
+        const allowIcon = iconImg && !omitIcon && !shouldSkipIcon;
+        if(allowIcon){
+          const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
+          const destX = markerLabelMarkerInsetPx * pixelRatio;
+          const destY = (canvasHeight - iconSizePx) / 2;
           try{
-            ctx.fillText(line.text, textX, textY);
+            ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
           }catch(err){
             console.error(err);
           }
-          textY += fontSizePx + lineGapPx;
-        });
-        ctx.shadowColor = 'transparent';
+        }
+        if(labelLines.length){
+          const fontSizePx = markerLabelTextSize * pixelRatio;
+          const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
+          const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+          let textY = (canvasHeight - totalHeight) / 2;
+          if(!Number.isFinite(textY) || textY < 0){
+            textY = 0;
+          }
+          const textX = markerLabelTextPaddingPx * pixelRatio;
+          ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'left';
+          ctx.shadowColor = 'rgba(0,0,0,0.4)';
+          ctx.shadowBlur = 2 * pixelRatio;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 1 * pixelRatio;
+          labelLines.forEach(line => {
+            ctx.fillStyle = line.color;
+            try{
+              ctx.fillText(line.text, textX, textY);
+            }catch(err){
+              console.error(err);
+            }
+            textY += fontSizePx + lineGapPx;
+          });
+          ctx.shadowColor = 'transparent';
+        }
+      };
+      const buildComposite = (backgroundImage, tintColor, tintAlpha = 1)=>{
+        if(!backgroundImage){
+          return null;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        const ctx = canvas.getContext('2d');
+        if(!ctx){
+          return null;
+        }
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        try{
+          ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+        }catch(err){
+          console.error(err);
+        }
+        if(tintColor){
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.globalAlpha = tintAlpha;
+          ctx.fillStyle = tintColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        drawForeground(ctx, { omitIcon });
+        let imageData = null;
+        let getImageDataFailed = false;
+        try{
+          imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        }catch(err){
+          console.error(err);
+          imageData = null;
+          getImageDataFailed = true;
+        }
+        if((getImageDataFailed || !imageData) && !omitIcon && iconImg && !shouldSkipIcon){
+          shouldSkipIcon = true;
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+          try{
+            ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+          }catch(err){
+            console.error(err);
+          }
+          if(tintColor){
+            ctx.globalCompositeOperation = 'source-atop';
+            ctx.globalAlpha = tintAlpha;
+            ctx.fillStyle = tintColor;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+          }
+          drawForeground(ctx, { omitIcon: true });
+          try{
+            imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+          }catch(err){
+            console.error(err);
+            imageData = null;
+          }
+        }
+        if(!imageData){
+          return null;
+        }
+        const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
+        return { image: imageData, options };
+      };
+      const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+      let accentComposite = null;
+      if(pillAccentImg){
+        accentComposite = buildComposite(pillAccentImg, null, 1);
       }
-      const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
+      if(!accentComposite){
+        accentComposite = buildComposite(pillImg, '#2f3b73', 1);
+      }
+      if(!baseComposite){
+        return null;
+      }
+      const highlightComposite = accentComposite || baseComposite;
       try{
         if(mapInstance.hasImage?.(compositeId)){
           mapInstance.removeImage(compositeId);
         }
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+        if(mapInstance.hasImage?.(highlightId)){
+          mapInstance.removeImage(highlightId);
+        }
+        markerLabelCompositePlaceholderIds.delete(highlightId);
       }catch(err){
         console.error(err);
-      }
-      let imageData = null;
-      try{
-        imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-      }catch(err){
-        console.error(err);
-      }
-      if(!imageData){
-        return null;
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
-        mapInstance.addImage(compositeId, imageData, options);
-        markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, { image: imageData, options }));
+        mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        if(highlightComposite && highlightComposite.image){
+          const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
+        markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, {
+          image: baseComposite.image,
+          options: baseComposite.options,
+          highlightImage: highlightComposite.image,
+          highlightOptions: highlightComposite.options || baseComposite.options
+        }));
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
         return compositeId;
       }catch(err){
@@ -6028,6 +6374,8 @@ if (typeof slugify !== 'function') {
         compositeId: markerLabelCompositeId(spriteId),
         image: entry.image,
         options: entry.options || {},
+        highlightImage: entry.highlightImage,
+        highlightOptions: entry.highlightOptions || entry.options || {},
         priority: Boolean(entry.priority),
         lastUsed: Number.isFinite(entry.lastUsed) ? entry.lastUsed : 0
       });
@@ -6048,11 +6396,25 @@ if (typeof slugify !== 'function') {
         catch(err){ already = false; }
       }
       if(already){
-        return;
+        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
+          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
+          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+          already = false;
+        } else {
+          return;
+        }
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
         mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+        if(entry.highlightImage){
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
+          try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
+          catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
       }catch(err){
         console.error(err);
@@ -6127,12 +6489,12 @@ if (typeof slugify !== 'function') {
     const shouldSkipLayer = (layer) => {
       if(!layer) return true;
       const meta = layer.metadata || {};
-      if(meta && (meta['mapbox:featureset'] || meta['mapbox:featureComponent'])){
-        const component = meta['mapbox:featureComponent'];
-        if(typeof component === 'string' && component.includes('place-label')) return true;
-        if(meta['mapbox:featureset']) return true;
-      }
+      const featureComponent = layer['mapbox:featureComponent'] || meta['mapbox:featureComponent'];
+      const featureSet = layer['mapbox:featureset'] || meta['mapbox:featureset'];
+      if(featureSet) return true;
+      if(typeof featureComponent === 'string' && featureComponent.includes('place-label')) return true;
       if(typeof layer.id === 'string' && layer.id.includes('place-label')) return true;
+      if(typeof layer.source === 'string' && layer.source.includes('place-label')) return true;
       return false;
     };
 
@@ -6186,14 +6548,23 @@ if (typeof slugify !== 'function') {
     if(!originalSource) return;
 
     const dedicatedId = 'terrain-dem-dedicated';
-    if(!mapInstance.getSource?.(dedicatedId)){
+    const ensureDedicatedSource = () => {
+      if(mapInstance.getSource?.(dedicatedId)) return true;
       try {
         const clone = JSON.parse(JSON.stringify(originalSource));
         mapInstance.addSource(dedicatedId, clone);
+        return !!mapInstance.getSource?.(dedicatedId);
       } catch(err){}
+      return false;
+    };
+
+    const currentTerrain = typeof mapInstance.getTerrain === 'function' ? mapInstance.getTerrain() : null;
+    if(currentTerrain && currentTerrain.source === dedicatedId && typeof currentTerrain.cutoff === 'number' && currentTerrain.cutoff > 0){
+      return;
     }
 
-    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
+    const hasDedicated = ensureDedicatedSource();
+    const targetSource = hasDedicated ? dedicatedId : terrain.source;
     const nextTerrain = Object.assign({}, terrain, { source: targetSource });
     if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
       nextTerrain.cutoff = 0.01;
@@ -6218,7 +6589,13 @@ if (typeof slugify !== 'function') {
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
-    const POINTER_READY_IDS = new Set(['marker-label','multi-post-mapmarker-label','post-balloons']);
+    const POINTER_READY_IDS = new Set([
+      'marker-label',
+      'marker-label-highlight',
+      'multi-post-mapmarker-label',
+      'multi-post-mapmarker-label-highlight',
+      'post-balloons'
+    ]);
 
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
@@ -6291,6 +6668,7 @@ if (typeof slugify !== 'function') {
     }catch(err){}
   }
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
+  const CARD_HIGHLIGHT = '#2e3a72';
   const MapRegistry = {
     list: [],
     limit: 4,
@@ -6383,17 +6761,28 @@ if (typeof slugify !== 'function') {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
+      const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
-      const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-post-mapmarker-label'];
+      const MULTI_CARD_MIN_ZOOM = 0;
+      const MULTI_MARKER_LAYER_IDS = [
+        'multi-post-mapmarker-label',
+        'multi-post-mapmarker-label-highlight'
+      ];
+      const MARKER_LAYER_IDS = [
+        'hover-fill',
+        'marker-label',
+        'marker-label-highlight'
+      ];
+      const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
+      const SPRITE_MARKER_CLASS = 'map--sprite-markers';
         const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
+        const BALLOON_IMAGE_URL = 'assets/balloons/colourful-balloons-and-confetti-80.png';
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
@@ -6693,7 +7082,7 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const targetZoom = Math.min(8, maxAllowedZoom);
+              const targetZoom = Math.min(MARKER_ZOOM_THRESHOLD, maxAllowedZoom);
               let finalZoom = targetZoom;
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
@@ -6788,6 +7177,57 @@ if (typeof slugify !== 'function') {
     let postSourceEventsBound = false;
     let touchMarker = null;
     let activePostId = null;
+    let markerFeatureIndex = new Map();
+    let lastHighlightedPostIds = [];
+    let highlightedFeatureKeys = [];
+    function updateMapFeatureHighlights(postIds){
+      const normalized = Array.from(new Set((Array.isArray(postIds) ? postIds : [postIds])
+        .filter(id => id !== undefined && id !== null)
+        .map(id => String(id))
+        .filter(Boolean)));
+      lastHighlightedPostIds = normalized;
+      if(!map || typeof map.setFeatureState !== 'function'){
+        if(!normalized.length){
+          highlightedFeatureKeys = [];
+        }
+        return;
+      }
+      if(!normalized.length){
+        highlightedFeatureKeys.forEach(entry => {
+          try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: false }); }
+          catch(err){}
+        });
+        highlightedFeatureKeys = [];
+        return;
+      }
+      const nextEntries = [];
+      const nextKeys = new Set();
+      normalized.forEach(id => {
+        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(id) : null;
+        if(!entries || !entries.length) return;
+        entries.forEach(entry => {
+          if(!entry) return;
+          const source = entry.source || 'posts';
+          const featureId = entry.id;
+          if(featureId === undefined || featureId === null) return;
+          const compositeKey = `${source}::${featureId}`;
+          if(nextKeys.has(compositeKey)) return;
+          nextKeys.add(compositeKey);
+          nextEntries.push({ source, id: featureId });
+        });
+      });
+      highlightedFeatureKeys.forEach(entry => {
+        const compositeKey = `${entry.source}::${entry.id}`;
+        if(nextKeys.has(compositeKey)) return;
+        try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: false }); }
+        catch(err){}
+      });
+      nextEntries.forEach(entry => {
+        try{ map.setFeatureState({ source: entry.source, id: entry.id }, { isHighlighted: true }); }
+        catch(err){}
+      });
+      highlightedFeatureKeys = nextEntries;
+    }
     let selectedVenueKey = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
 
@@ -6927,7 +7367,12 @@ if (typeof slugify !== 'function') {
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    const MARKER_INTERACTIVE_LAYERS = ['marker-label','multi-post-mapmarker-label'];
+    const MARKER_INTERACTIVE_LAYERS = [
+      'marker-label',
+      'marker-label-highlight',
+      'multi-post-mapmarker-label',
+      'multi-post-mapmarker-label-highlight'
+    ];
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -6966,6 +7411,30 @@ if (typeof slugify !== 'function') {
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
+      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && (el.classList.contains('post-card') || el.classList.contains('post-header')));
+      const restoreHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          const prev = el.dataset.prevHighlightBackground;
+          delete el.dataset.prevHighlightBackground;
+          if(prev){
+            el.style.background = prev;
+            return;
+          }
+        }
+        if(Object.prototype.hasOwnProperty.call(el.dataset, 'surfaceBg')){
+          el.style.background = el.dataset.surfaceBg;
+        } else {
+          el.style.removeProperty('background');
+        }
+      };
+      const applyHighlightBackground = (el)=>{
+        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
+        if(!Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
+          el.dataset.prevHighlightBackground = el.style.background || '';
+        }
+        el.style.background = CARD_HIGHLIGHT;
+      };
       const restoreAttr = (el)=>{
         if(!el || !el.dataset) return;
         if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -6978,28 +7447,32 @@ if (typeof slugify !== 'function') {
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
+        restoreHighlightBackground(el);
       });
       document.querySelectorAll(`.mapmarker-container.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
       });
 
-      const getOverlayElement = ()=>{
-        if(hoverPopup && typeof hoverPopup.getElement === 'function'){
-          return hoverPopup.getElement();
+      const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
+        ? hoverPopup.getElement()
+        : null;
+      const overlayId = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.id || '') : '';
+      let fallbackId = '';
+      if(!overlayId){
+        if(activePostId !== undefined && activePostId !== null){
+          fallbackId = String(activePostId);
+        } else {
+          const openEl = document.querySelector('.post-board .open-post[data-id]');
+          fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
         }
-        return null;
-      };
-      const overlayEl = getOverlayElement();
-      const activeId = overlayEl && overlayEl.dataset ? overlayEl.dataset.id : null;
-      if(!activeId){
-        return;
       }
-      const activeMarker = overlayEl.querySelector('.mapmarker-container');
-      if(activeMarker){
-        activeMarker.classList.add(markerHighlightClass);
+      const idsToHighlight = Array.from(new Set([overlayId, fallbackId].filter(Boolean)));
+      if(!idsToHighlight.length){
+        updateMapFeatureHighlights([]);
+        return;
       }
       const escapeAttr = (value)=> String(value).replace(/"/g, '\\"');
       const applyHighlight = (el)=>{
@@ -7009,12 +7482,22 @@ if (typeof slugify !== 'function') {
         }
         el.classList.add(highlightClass);
         el.setAttribute('aria-selected', 'true');
+        applyHighlightBackground(el);
       };
-      const selectorId = escapeAttr(activeId);
-      const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
-      applyHighlight(listCard);
-      const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
-      applyHighlight(openHeader);
+      idsToHighlight.forEach(id => {
+        const selectorId = escapeAttr(id);
+        const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
+        applyHighlight(listCard);
+        const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
+        applyHighlight(openHeader);
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .mapmarker-container`).forEach(el => {
+          el.classList.add(markerHighlightClass);
+        });
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
+          el.classList.add(highlightClass);
+        });
+      });
+      updateMapFeatureHighlights(idsToHighlight);
     }
 
     function hashString(str){
@@ -7077,24 +7560,6 @@ function scheduleMultiPostCardRemoval(delay=160){
   }, delay);
 }
 
-function formatMultiPostDateRange(items){
-  const allDates = items.flatMap(p => Array.isArray(p.dates) ? p.dates : []).filter(Boolean).sort();
-  const first = allDates[0] || null;
-  const last = allDates[allDates.length - 1] || first;
-  const fmt = (iso)=>{
-    if(!iso) return 'Unknown date';
-    try{
-      return parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
-    }catch(err){
-      return iso;
-    }
-  };
-  return {
-    startText: fmt(first),
-    endText: fmt(last)
-  };
-}
-
 function positionMultiPostCardContainer(point){
   if(!multiPostCardState || !multiPostCardState.element) return;
   const containerEl = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
@@ -7117,12 +7582,9 @@ function positionMultiPostCardContainer(point){
   const height = root.offsetHeight;
   const anchor = point || multiPostCardState.anchorPoint || { x: mapRect.width / 2, y: mapRect.height / 2 };
   let left = anchor.x + 16;
-  let top = anchor.y - height - 16;
-  if(top < topPad){
-    top = anchor.y + 16;
-  }
+  let top = anchor.y + 16;
   if(top + height > mapRect.height - pad){
-    top = mapRect.height - height - pad;
+    top = Math.max(topPad, mapRect.height - height - pad);
   }
   if(top < topPad){
     top = topPad;
@@ -7189,6 +7651,101 @@ function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   }, 0);
 }
 
+function getMarkerIconUrlForPost(post){
+  const markerSources = window.subcategoryMarkers || {};
+  const markerIds = window.subcategoryMarkerIds || {};
+  const slugifyFn = typeof slugify === 'function'
+    ? slugify
+    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+  const candidates = [];
+  if(post && post.subcategory){
+    const mappedId = markerIds[post.subcategory];
+    if(mappedId) candidates.push(mappedId);
+    candidates.push(slugifyFn(post.subcategory));
+  }
+  candidates.push(MULTI_POST_MAPMARKER_ID);
+  const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
+  return url || MULTI_POST_MAPMARKER_URL;
+}
+
+function createMarkerIconElement(url){
+  const icon = new Image();
+  try{ icon.decoding = 'async'; }catch(err){}
+  icon.alt = '';
+  icon.className = 'mapmarker';
+  icon.draggable = false;
+  icon.referrerPolicy = 'no-referrer';
+  icon.loading = 'lazy';
+  icon.onerror = ()=>{
+    icon.onerror = null;
+    icon.src = MULTI_POST_MAPMARKER_URL;
+  };
+  icon.src = url || MULTI_POST_MAPMARKER_URL;
+  return icon;
+}
+
+function createMarkerPillElement(){
+  const pill = new Image();
+  try{ pill.decoding = 'async'; }catch(err){}
+  pill.alt = '';
+  pill.src = 'assets/icons-30/150x40 pill 90.webp';
+  pill.className = 'mapmarker-pill';
+  pill.draggable = false;
+  if(pill.style){
+    pill.style.opacity = '0.9';
+  }
+  return pill;
+}
+
+function createMarkerLabelElement(labelLines){
+  const markerLabel = document.createElement('div');
+  markerLabel.className = 'mapmarker-label';
+  const markerLine1 = document.createElement('div');
+  markerLine1.className = 'mapmarker-label-line';
+  markerLine1.textContent = labelLines.line1 || '';
+  markerLabel.appendChild(markerLine1);
+  if(labelLines.line2){
+    const markerLine2 = document.createElement('div');
+    markerLine2.className = 'mapmarker-label-line';
+    markerLine2.textContent = labelLines.line2;
+    markerLabel.appendChild(markerLine2);
+  }
+  return markerLabel;
+}
+
+function buildMapMarkerContainer(post, options = {}){
+  const { id: explicitId, ariaHidden = true } = options;
+  const markerContainer = document.createElement('div');
+  markerContainer.className = 'mapmarker-container';
+  const datasetId = explicitId !== undefined && explicitId !== null
+    ? String(explicitId)
+    : (post && post.id ? String(post.id) : '');
+  if(datasetId){
+    markerContainer.dataset.id = datasetId;
+  }
+  if(ariaHidden){
+    markerContainer.setAttribute('aria-hidden', 'true');
+  }
+  const pointerEvents = Object.prototype.hasOwnProperty.call(options, 'pointerEvents')
+    ? options.pointerEvents
+    : 'none';
+  if(pointerEvents !== undefined && pointerEvents !== null){
+    markerContainer.style.pointerEvents = pointerEvents;
+  }
+  const userSelect = Object.prototype.hasOwnProperty.call(options, 'userSelect')
+    ? options.userSelect
+    : 'none';
+  if(userSelect !== undefined && userSelect !== null){
+    markerContainer.style.userSelect = userSelect;
+  }
+  const labelLines = getMarkerLabelLines(post);
+  const markerIcon = createMarkerIconElement(getMarkerIconUrlForPost(post));
+  const markerPill = createMarkerPillElement();
+  const markerLabel = createMarkerLabelElement(labelLines);
+  markerContainer.append(markerPill, markerIcon, markerLabel);
+  return { element: markerContainer, labelLines };
+}
+
 function showMultiPostCardContainer(point, items, options = {}){
   if(!map || typeof map.getContainer !== 'function') return null;
   if(!Array.isArray(items) || items.length <= 1) return null;
@@ -7197,36 +7754,32 @@ function showMultiPostCardContainer(point, items, options = {}){
   const { lockOnOpen = false, venueKey = null } = options;
   destroyMultiPostCardContainer();
   const root = document.createElement('div');
-  root.className = 'multi-post-map-card-container';
+  root.className = 'multi-post-map-container';
   root.style.visibility = 'hidden';
-  const header = document.createElement('div');
-  header.className = 'multi-post-map-card-header';
-  const { startText, endText } = formatMultiPostDateRange(items);
-  const headerLine1 = document.createElement('div');
-  const markerCount = countMarkersForVenue(items, venueKey);
-  headerLine1.textContent = `${markerCount} map markers here`;
-  const headerLine2 = document.createElement('span');
-  headerLine2.className = 'date-range';
-  headerLine2.textContent = `${startText} – ${endText}`;
-  header.append(headerLine1, headerLine2);
-  const cardsWrap = document.createElement('div');
-  cardsWrap.className = 'multi-post-map-cards map-card-list';
   const ordered = sortMultiPostItems(items);
-  const fragment = document.createDocumentFragment();
+  if(ordered.length){
+    const summaryItem = document.createElement('div');
+    summaryItem.className = 'multi-post-map-summary';
+    summaryItem.setAttribute('aria-hidden', 'true');
+    summaryItem.textContent = `${ordered.length} posts here`;
+    root.appendChild(summaryItem);
+  }
+
   ordered.forEach(post => {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = mapCardHTML(post, { variant: 'list', extraClasses: ['multi-post-map-card'], venueKey });
-    const cardEl = wrapper.firstElementChild;
-    if(cardEl){
-      cardEl.setAttribute('role', 'button');
-      cardEl.setAttribute('tabindex', '0');
-      fragment.appendChild(cardEl);
+    if(!post) return;
+    const itemButton = document.createElement('button');
+    itemButton.type = 'button';
+    itemButton.className = 'multi-post-map-item';
+    const id = post.id ? String(post.id) : '';
+    if(id) itemButton.dataset.id = id;
+    const { element: markerContainer, labelLines } = buildMapMarkerContainer(post, { id, ariaHidden: true });
+    const ariaLabel = [labelLines.line1, labelLines.line2].filter(Boolean).join(' • ');
+    if(ariaLabel){
+      itemButton.setAttribute('aria-label', ariaLabel);
     }
+    itemButton.appendChild(markerContainer);
+    root.appendChild(itemButton);
   });
-  cardsWrap.appendChild(fragment);
-  cardsWrap.scrollTop = 0;
-  root.appendChild(header);
-  root.appendChild(cardsWrap);
   containerEl.appendChild(root);
   multiPostCardState = {
     element: root,
@@ -7288,16 +7841,16 @@ function showMultiPostCardContainer(point, items, options = {}){
     openPostFromCard(id);
   };
 
-  cardsWrap.addEventListener('click', (evt)=>{
-    const card = evt.target.closest('.map-card');
-    handleCardActivation(card, evt);
+  root.addEventListener('click', (evt)=>{
+    const item = evt.target.closest('.multi-post-map-item[data-id]');
+    handleCardActivation(item, evt);
   }, { capture: true });
 
-  cardsWrap.addEventListener('keydown', (evt)=>{
+  root.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const card = evt.target.closest('.map-card');
-    handleCardActivation(card, evt);
+    const item = evt.target.closest('.multi-post-map-item[data-id]');
+    handleCardActivation(item, evt);
   }, { capture: true });
 
   requestAnimationFrame(()=>{
@@ -8474,87 +9027,255 @@ function makePosts(){
   }
 
   function buildMultiVenuePool(){
-    const REGION_SPECS = [
+    const cityLookup = singleVenueBases.reduce((acc, base)=>{
+      if(!base || !base.city) return acc;
+      if(Number.isFinite(base.lng) && Number.isFinite(base.lat)){
+        acc[base.city] = { lng: base.lng, lat: base.lat };
+      }
+      return acc;
+    }, Object.create(null));
+
+    const MULTI_REGION_CITY_LISTS = [
       {
-        name: 'North America',
-        count: 750,
-        bounds: [
-          { west: -168, east: -52, south: 18, north: 72 },
-          { west: -130, east: -60, south: 25, north: 52 },
-          { west: -115, east: -80, south: 30, north: 55 }
+        region: 'North America',
+        cityNames: [
+          'Anchorage, USA',
+          'Honolulu, USA',
+          'San Francisco, USA',
+          'Seattle, USA',
+          'Vancouver, Canada',
+          'Calgary, Canada',
+          'Toronto, Canada',
+          'Montreal, Canada',
+          'Boston, USA',
+          'New Orleans, USA',
+          'Chicago, USA',
+          'Miami, USA',
+          'Dallas, USA',
+          'Denver, USA',
+          'Phoenix, USA',
+          'Los Angeles, USA'
         ]
       },
       {
-        name: 'South America',
-        count: 450,
-        bounds: [
-          { west: -82, east: -50, south: -40, north: 13 },
-          { west: -76, east: -60, south: -20, north: 5 }
+        region: 'Central & South America',
+        cityNames: [
+          'Mexico City, Mexico',
+          'Guadalajara, Mexico',
+          'Bogotá, Colombia',
+          'Lima, Peru',
+          'Quito, Ecuador',
+          'Santiago, Chile',
+          'Buenos Aires, Argentina',
+          'Montevideo, Uruguay',
+          'São Paulo, Brazil',
+          'Rio de Janeiro, Brazil',
+          'Brasília, Brazil',
+          'Recife, Brazil',
+          'Fortaleza, Brazil',
+          'Caracas, Venezuela',
+          'San Juan, Puerto Rico'
         ]
       },
       {
-        name: 'Europe',
-        count: 700,
-        bounds: [
-          { west: -11, east: 30, south: 36, north: 71 },
-          { west: 10, east: 35, south: 40, north: 60 }
+        region: 'Europe',
+        cityNames: [
+          'Reykjavík, Iceland',
+          'Oslo, Norway',
+          'Stockholm, Sweden',
+          'Helsinki, Finland',
+          'Copenhagen, Denmark',
+          'Edinburgh, UK',
+          'Dublin, Ireland',
+          'Glasgow, UK',
+          'London, UK',
+          'Manchester, UK',
+          'Paris, France',
+          'Lyon, France',
+          'Marseille, France',
+          'Madrid, Spain',
+          'Barcelona, Spain',
+          'Valencia, Spain',
+          'Lisbon, Portugal',
+          'Berlin, Germany',
+          'Hamburg, Germany',
+          'Munich, Germany',
+          'Frankfurt, Germany',
+          'Prague, Czechia',
+          'Vienna, Austria',
+          'Zurich, Switzerland',
+          'Warsaw, Poland',
+          'Kraków, Poland',
+          'Budapest, Hungary',
+          'Bucharest, Romania',
+          'Athens, Greece'
         ]
       },
       {
-        name: 'Africa',
-        count: 650,
-        bounds: [
-          { west: -18, east: 51, south: -35, north: 37 },
-          { west: 10, east: 40, south: -5, north: 20 }
+        region: 'Africa',
+        cityNames: [
+          'Cairo, Egypt',
+          'Casablanca, Morocco',
+          'Marrakesh, Morocco',
+          'Algiers, Algeria',
+          'Tunis, Tunisia',
+          'Tripoli, Libya',
+          'Khartoum, Sudan',
+          'Addis Ababa, Ethiopia',
+          'Nairobi, Kenya',
+          'Kampala, Uganda',
+          'Dar es Salaam, Tanzania',
+          'Kigali, Rwanda',
+          'Lagos, Nigeria',
+          'Accra, Ghana',
+          "Abidjan, Côte d'Ivoire",
+          'Dakar, Senegal',
+          'Kinshasa, DR Congo',
+          'Luanda, Angola',
+          'Johannesburg, South Africa',
+          'Cape Town, South Africa',
+          'Windhoek, Namibia',
+          'Gaborone, Botswana',
+          'Harare, Zimbabwe',
+          'Maputo, Mozambique'
         ]
       },
       {
-        name: 'Asia',
-        count: 1100,
-        bounds: [
-          { west: 26, east: 90, south: 5, north: 55 },
-          { west: 70, east: 110, south: 8, north: 45 },
-          { west: 95, east: 140, south: -10, north: 50 }
+        region: 'Middle East',
+        cityNames: [
+          'Riyadh, Saudi Arabia',
+          'Jeddah, Saudi Arabia',
+          'Doha, Qatar',
+          'Dubai, UAE',
+          'Muscat, Oman',
+          'Kuwait City, Kuwait',
+          'Manama, Bahrain',
+          'Tehran, Iran',
+          'Baghdad, Iraq',
+          'Amman, Jordan',
+          'Beirut, Lebanon',
+          'Jerusalem'
         ]
       },
       {
-        name: 'Oceania',
-        count: 350,
-        bounds: [
-          { west: 110, east: 155, south: -45, north: -10 },
-          { west: 140, east: 175, south: -25, north: 5 }
+        region: 'Asia',
+        cityNames: [
+          'Mumbai, India',
+          'Delhi, India',
+          'Bengaluru, India',
+          'Hyderabad, India',
+          'Chennai, India',
+          'Kolkata, India',
+          'Kathmandu, Nepal',
+          'Dhaka, Bangladesh',
+          'Colombo, Sri Lanka',
+          'Bangkok, Thailand',
+          'Chiang Mai, Thailand',
+          'Vientiane, Laos',
+          'Phnom Penh, Cambodia',
+          'Ho Chi Minh City, Vietnam',
+          'Hanoi, Vietnam',
+          'Yangon, Myanmar',
+          'Singapore',
+          'Kuala Lumpur, Malaysia',
+          'Jakarta, Indonesia',
+          'Surabaya, Indonesia',
+          'Manila, Philippines',
+          'Cebu, Philippines',
+          'Hong Kong',
+          'Macau',
+          'Taipei, Taiwan',
+          'Seoul, South Korea',
+          'Busan, South Korea',
+          'Tokyo, Japan',
+          'Osaka, Japan',
+          'Nagoya, Japan',
+          'Sapporo, Japan',
+          'Beijing, China',
+          'Shanghai, China',
+          'Guangzhou, China',
+          'Shenzhen, China',
+          'Chengdu, China',
+          "Xi'an, China",
+          'Ulaanbaatar, Mongolia',
+          'Almaty, Kazakhstan',
+          'Bishkek, Kyrgyzstan',
+          'Tashkent, Uzbekistan',
+          'Astana, Kazakhstan',
+          'Moscow, Russia',
+          'Saint Petersburg, Russia',
+          'Novosibirsk, Russia',
+          'Yekaterinburg, Russia'
+        ]
+      },
+      {
+        region: 'Oceania',
+        cityNames: [
+          'Perth, Australia',
+          'Adelaide, Australia',
+          'Melbourne, Australia',
+          'Sydney, Australia',
+          'Brisbane, Australia',
+          'Hobart, Australia',
+          'Auckland, New Zealand',
+          'Wellington, New Zealand',
+          'Christchurch, New Zealand',
+          'Suva, Fiji'
         ]
       }
     ];
+
+    const deterministicOffset = (label, axis)=>{
+      let hash = 0;
+      for(let i = 0; i < label.length; i++){
+        const charCode = label.charCodeAt(i);
+        hash = (hash * 33 + charCode + (axis + 1) * 131) & 0xffffffff;
+      }
+      const normalized = ((hash % 2001) / 2000) - 0.5;
+      return normalized * 0.002;
+    };
+
     const pool = [];
     const seen = new Set();
-    const pickBound = (bounds)=> bounds[Math.floor(rnd() * bounds.length)] || null;
-    REGION_SPECS.forEach(spec => {
-      if(!spec || !spec.bounds || !spec.bounds.length || spec.count <= 0) return;
-      let produced = 0;
-      while(produced < spec.count){
-        const bound = pickBound(spec.bounds);
-        if(!bound){
-          break;
-        }
-        const rawLng = bound.west + rnd() * (bound.east - bound.west);
-        const rawLat = bound.south + rnd() * (bound.north - bound.south);
-        const lng = normalizeLongitude(rawLng);
-        const lat = clampLatitude(rawLat);
-        const key = toVenueCoordKey(lng, lat);
+
+    MULTI_REGION_CITY_LISTS.forEach(spec => {
+      if(!spec || !spec.region || !Array.isArray(spec.cityNames)) return;
+      spec.cityNames.forEach(cityName => {
+        if(!cityName) return;
+        const base = cityLookup[cityName];
+        if(!base) return;
+        const label = `${spec.region}:${cityName}`;
+        let lng = normalizeLongitude(base.lng + deterministicOffset(label, 0));
+        let lat = clampLatitude(base.lat + deterministicOffset(label, 1));
+        let key = toVenueCoordKey(lng, lat);
         if(!key || seen.has(key)){
-          continue;
+          let attempts = 0;
+          let adjustment = 0.0003;
+          while(attempts < 5 && key && seen.has(key)){
+            const delta = adjustment * (attempts % 2 === 0 ? 1 : -1);
+            lng = normalizeLongitude(base.lng + delta);
+            lat = clampLatitude(base.lat + delta);
+            key = toVenueCoordKey(lng, lat);
+            attempts++;
+            adjustment += 0.0001;
+          }
+          if((!key || seen.has(key)) && toVenueCoordKey(base.lng, base.lat) && !seen.has(toVenueCoordKey(base.lng, base.lat))){
+            lng = normalizeLongitude(base.lng);
+            lat = clampLatitude(base.lat);
+            key = toVenueCoordKey(lng, lat);
+          }
+        }
+        if(!key || seen.has(key)){
+          return;
         }
         seen.add(key);
-        produced++;
-        const indexLabel = produced.toString().padStart(3, '0');
         pool.push({
-          city: `${spec.name} ${indexLabel}`,
-          region: spec.name,
+          city: cityName,
+          region: spec.region,
           lng,
           lat
         });
-      }
+      });
     });
     return pool;
   }
@@ -8698,13 +9419,15 @@ function makePosts(){
     const markerDataCache = {
       signature: null,
       postsData: EMPTY_FEATURE_COLLECTION,
-      multiData: EMPTY_FEATURE_COLLECTION
+      multiData: EMPTY_FEATURE_COLLECTION,
+      featureIndex: new Map()
     };
 
     function invalidateMarkerDataCache(){
       markerDataCache.signature = null;
       markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
       markerDataCache.multiData = EMPTY_FEATURE_COLLECTION;
+      markerDataCache.featureIndex = new Map();
     }
 
     function markerSignatureForList(list){
@@ -8738,6 +9461,26 @@ function makePosts(){
       return parts.join('|');
     }
 
+    function buildMarkerFeatureIndex(postsData){
+      const index = new Map();
+      const features = Array.isArray(postsData?.features) ? postsData.features : [];
+      features.forEach(feature => {
+        if(!feature || !feature.properties) return;
+        const props = feature.properties;
+        const baseId = props.id;
+        if(baseId === undefined || baseId === null) return;
+        const key = String(baseId);
+        const sourceId = props.multi === 1 ? 'multi-posts' : 'posts';
+        const fid = feature.id ?? props.featureId;
+        if(fid === undefined || fid === null) return;
+        if(!index.has(key)){
+          index.set(key, []);
+        }
+        index.get(key).push({ source: sourceId, id: fid });
+      });
+      return index;
+    }
+
     function getMarkerCollections(list){
       const signature = markerSignatureForList(list);
       if(markerDataCache.signature === signature && markerDataCache.postsData){
@@ -8745,18 +9488,21 @@ function makePosts(){
           postsData: markerDataCache.postsData,
           multiData: markerDataCache.multiData,
           signature,
-          changed: false
+          changed: false,
+          featureIndex: markerDataCache.featureIndex
         };
       }
       if(!Array.isArray(list) || !list.length){
         markerDataCache.signature = signature;
         markerDataCache.postsData = EMPTY_FEATURE_COLLECTION;
         markerDataCache.multiData = EMPTY_FEATURE_COLLECTION;
+        markerDataCache.featureIndex = new Map();
         return {
           postsData: EMPTY_FEATURE_COLLECTION,
           multiData: EMPTY_FEATURE_COLLECTION,
           signature,
-          changed: true
+          changed: true,
+          featureIndex: markerDataCache.featureIndex
         };
       }
       const postsData = postsToGeoJSON(list);
@@ -8767,13 +9513,15 @@ function makePosts(){
       markerDataCache.signature = signature;
       markerDataCache.postsData = postsData;
       markerDataCache.multiData = multiData;
-      return { postsData, multiData, signature, changed: true };
+      markerDataCache.featureIndex = buildMarkerFeatureIndex(postsData);
+      return { postsData, multiData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
     }
 
     function syncMarkerSources(list, options = {}){
       const { force = false } = options;
       const collections = getMarkerCollections(list);
-      const { postsData, multiData, signature } = collections;
+      const { postsData, multiData, signature, featureIndex } = collections;
+      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       let updated = false;
       if(map && typeof map.getSource === 'function'){
         const postsSource = map.getSource('posts');
@@ -8788,6 +9536,9 @@ function makePosts(){
           multiSource.__markerSignature = signature;
           updated = true;
         }
+      }
+      if(updated || force){
+        updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
     }
@@ -8983,6 +9734,17 @@ function makePosts(){
       }
     }
 
+    function updateMarkerZoomClasses(zoom){
+      if(!map || typeof map.getContainer !== 'function') return;
+      const container = map.getContainer();
+      if(!container || !container.classList) return;
+      const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
+      const isMidZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
+      const isSpriteZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
+      container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
+      container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
+    }
+
     function updateLayerVisibility(zoom){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
       const zoomBucket = Number.isFinite(zoomValue)
@@ -8995,6 +9757,7 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
+      MULTI_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -9015,7 +9778,11 @@ function makePosts(){
       }
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
+      updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
       if(!markersLoaded){
         const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
         if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
@@ -9134,7 +9901,7 @@ function makePosts(){
       if(p.member && p.member.avatar){
         return p.member.avatar;
       }
-      return 'assets/balloons/balloons-icon-16185.png';
+      return 'assets/balloons/colourful-balloons-and-confetti-80.png';
     }
 
     function mapCardHTML(p, opts={}){
@@ -9172,7 +9939,7 @@ function makePosts(){
         if(variant === 'list'){
           return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -9186,88 +9953,170 @@ function makePosts(){
 
     // Categories UI
     const categoryControllers = {};
+    const adminCategoryControllers = {};
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
-    const syncFormbuilderCats = ()=>{
-      if(!formbuilderCats || !catsEl) return;
-      const frag = document.createDocumentFragment();
-      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        const clone = menu.cloneNode(true);
-        const trigger = clone.querySelector('.filter-category-trigger');
-        const optionsMenu = clone.querySelector('.options-menu');
-        if(optionsMenu){
-          const originalId = optionsMenu.id || '';
-          const cloneId = originalId ? `${originalId}-formbuilder` : '';
-          if(cloneId){
-            optionsMenu.id = cloneId;
-            if(trigger){
-              trigger.setAttribute('aria-controls', cloneId);
-            }
+    const adminCategoryState = new Map();
+    function buildAdminFormCategories(){
+      if(!formbuilderCats){
+        return;
+      }
+      formbuilderCats.innerHTML = '';
+      adminCategoryState.clear();
+      Object.keys(adminCategoryControllers).forEach(key => delete adminCategoryControllers[key]);
+      categories.forEach(c => {
+        const el = document.createElement('div');
+        el.className = 'filter-category-menu';
+        el.dataset.category = c.name;
+        el.setAttribute('role', 'group');
+        el.setAttribute('aria-expanded', 'false');
+
+        const header = document.createElement('div');
+        header.className = 'filter-category-header';
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup', 'true');
+        menuBtn.setAttribute('aria-expanded', 'false');
+        const menuId = `admin-category-menu-${slugify(c.name)}`;
+        menuBtn.setAttribute('aria-controls', menuId);
+
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
+        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 20;
+          img.height = 20;
+          img.alt = '';
+          categoryLogo.appendChild(img);
+        } else {
+          categoryLogo.textContent = c.name.charAt(0) || '';
+        }
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = c.name;
+
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+
+        menuBtn.append(categoryLogo, label, arrow);
+
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+
+        triggerWrap.append(menuBtn, optionsMenu);
+
+        const toggle = document.createElement('label');
+        toggle.className = 'cat-switch';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = true;
+        input.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggle.append(input, slider);
+
+        header.append(triggerWrap, toggle);
+        el.appendChild(header);
+        formbuilderCats.appendChild(el);
+
+        const state = {
+          active: true,
+          subs: new Set(c.subs)
+        };
+        adminCategoryState.set(c.name, state);
+
+        const subButtons = [];
+        c.subs.forEach(s => {
+          const subBtn = document.createElement('button');
+          subBtn.type = 'button';
+          subBtn.className = 'subcategory-option';
+          subBtn.dataset.category = c.name;
+          subBtn.dataset.subcategory = s;
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          const subLabel = subBtn.querySelector('.subcategory-label');
+          if(subLabel){
+            subLabel.textContent = s;
           }
-        }
-        if(trigger && optionsMenu){
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          optionsMenu.hidden = !isExpanded;
-          trigger.addEventListener('click', ()=>{
-            if(trigger.getAttribute('aria-disabled') === 'true') return;
-            const open = clone.getAttribute('aria-expanded') === 'true';
-            const next = !open;
-            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
-            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
-            optionsMenu.hidden = !next;
-          });
-        }
-        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
-        if(optionsMenu){
-          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
-        }
-        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
-        const syncCatState = checked =>{
-          clone.classList.toggle('cat-off', !checked);
-          if(trigger){
-            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          }
-          optionButtons.forEach(btn=>{
-            btn.disabled = !checked;
-            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          });
-          if(!checked && optionsMenu){
-            optionsMenu.hidden = true;
-            clone.setAttribute('aria-expanded', 'false');
-            if(trigger){
-              trigger.setAttribute('aria-expanded', 'false');
+          subBtn.setAttribute('aria-pressed', 'true');
+          subBtn.classList.add('on');
+          subBtn.addEventListener('click', () => {
+            if(!state.active) return;
+            const pressed = subBtn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            subBtn.classList.toggle('on', next);
+            if(next){
+              state.subs.add(s);
+            } else {
+              state.subs.delete(s);
             }
+          });
+          optionsMenu.appendChild(subBtn);
+          subButtons.push(subBtn);
+        });
+
+        let openState = false;
+        function syncExpanded(){
+          const expanded = state.active && openState;
+          el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          optionsMenu.hidden = !expanded;
+        }
+        function setOpenState(next){
+          openState = !!next;
+          syncExpanded();
+        }
+        function syncActive(){
+          el.classList.toggle('cat-off', !state.active);
+          menuBtn.disabled = !state.active;
+          menuBtn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
+          input.checked = state.active;
+          subButtons.forEach(btn => {
+            btn.disabled = !state.active;
+            btn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
+          });
+          if(!state.active){
+            setOpenState(false);
+          }
+          syncExpanded();
+        }
+
+        menuBtn.addEventListener('click', () => {
+          if(menuBtn.disabled) return;
+          setOpenState(!openState);
+        });
+        input.addEventListener('change', () => {
+          state.active = input.checked;
+          syncActive();
+        });
+
+        syncActive();
+
+        adminCategoryControllers[c.name] = {
+          refreshLogos: () => {
+            subButtons.forEach(btn => {
+              const logoSpan = btn.querySelector('.subcategory-logo');
+              if(!logoSpan) return;
+              const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
+              logoSpan.innerHTML = iconHtml;
+            });
           }
         };
-        const catSwitchInput = clone.querySelector('.cat-switch input');
-        if(catSwitchInput){
-          const initialActive = !clone.classList.contains('cat-off');
-          catSwitchInput.checked = initialActive;
-          syncCatState(initialActive);
-          catSwitchInput.addEventListener('change', ()=>{
-            syncCatState(catSwitchInput.checked);
-          });
-        } else {
-          syncCatState(!clone.classList.contains('cat-off'));
-        }
-        optionButtons.forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            if(btn.disabled) return;
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            btn.classList.toggle('on', next);
-          });
-        });
-        frag.appendChild(clone);
       });
-      formbuilderCats.innerHTML = '';
-      formbuilderCats.appendChild(frag);
-    };
+    }
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -9277,7 +10126,11 @@ function makePosts(){
       resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
     }
     function refreshSubcategoryLogos(){
-      Object.values(categoryControllers).forEach(ctrl=>{
+      const controllers = [
+        ...Object.values(categoryControllers),
+        ...Object.values(adminCategoryControllers)
+      ];
+      controllers.forEach(ctrl => {
         if(ctrl && typeof ctrl.refreshLogos === 'function'){
           ctrl.refreshLogos();
         }
@@ -9466,14 +10319,10 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      syncFormbuilderCats();
-      if(formbuilderCats){
-        const observer = new MutationObserver(()=> syncFormbuilderCats());
-        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
-      }
+      buildAdminFormCategories();
+      refreshSubcategoryLogos();
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
@@ -9498,6 +10347,10 @@ function makePosts(){
     $('#resetBtn').addEventListener('click',()=>{
       $('#keyword-textbox').value='';
       $('#daterange-textbox').value='';
+      const minPrice = $('#min-price-input');
+      if(minPrice) minPrice.value='';
+      const maxPrice = $('#max-price-input');
+      if(maxPrice) maxPrice.value='';
       const expired = $('#expiredToggle');
       if(expired){
         expired.checked = false;
@@ -9516,21 +10369,38 @@ function makePosts(){
 
     function updateClearButtons(){
       const kw = $('#keyword-textbox');
-      const kwX = kw.parentElement.querySelector('.keyword-clear-button');
-      kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      if(kw){
+        const kwX = kw.parentElement?.querySelector('.keyword-clear-button');
+        kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
+      }
       const date = $('#daterange-textbox');
-      const dateX = date.parentElement.querySelector('.daterange-clear-button');
-      const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
-      dateX && dateX.classList.toggle('active', !!hasDate);
+      if(date){
+        const dateX = date.parentElement?.querySelector('.daterange-clear-button');
+        const hasDate = (dateStart || dateEnd) || $('#expiredToggle')?.checked;
+        dateX && dateX.classList.toggle('active', !!hasDate);
+      }
+      const priceBtn = $('.price-clear-button');
+      if(priceBtn){
+        const minInput = $('#min-price-input');
+        const maxInput = $('#max-price-input');
+        const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
+        priceBtn.classList.toggle('active', hasPrice);
+      }
       updateResetBtn();
     }
 
     function nonLocationFiltersActive(){
-      const kw = $('#keyword-textbox').value.trim() !== '';
-      const raw = $('#daterange-textbox').value.trim();
+      const kwInput = $('#keyword-textbox');
+      const kw = kwInput ? kwInput.value.trim() !== '' : false;
+      const dateInput = $('#daterange-textbox');
+      const raw = dateInput ? dateInput.value.trim() : '';
       const hasDate = !!(dateStart || dateEnd || raw);
-      const expired = $('#expiredToggle').checked;
-      return kw || hasDate || expired;
+      const expiredToggle = $('#expiredToggle');
+      const expired = !!(expiredToggle && expiredToggle.checked);
+      const minInput = $('#min-price-input');
+      const maxInput = $('#max-price-input');
+      const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
+      return kw || hasDate || expired || hasPrice;
     }
 
     function updateResetBtn(){
@@ -9547,6 +10417,44 @@ function makePosts(){
     const dateRangeInput = $('#daterange-textbox');
     $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     dateRangeInput?.addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
+    const minPriceInputEl = $('#min-price-input');
+    const maxPriceInputEl = $('#max-price-input');
+    const handlePriceInput = ()=>{ applyFilters(); updateClearButtons(); };
+    const sanitizePriceInputValue = input => {
+      if(!input) return;
+      const sanitized = input.value.replace(/\D+/g, '');
+      if(sanitized !== input.value){
+        input.value = sanitized;
+      }
+    };
+    const restrictPriceKeyInput = event => {
+      if(event.defaultPrevented) return;
+      if(event.ctrlKey || event.metaKey || event.altKey) return;
+      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+      if(allowedKeys.includes(event.key)) return;
+      if(event.key.length === 1 && /\d/.test(event.key)) return;
+      if(event.key.length === 1){
+        event.preventDefault();
+      }
+    };
+    const attachPriceInputHandlers = input => {
+      if(!input) return;
+      sanitizePriceInputValue(input);
+      input.addEventListener('keydown', restrictPriceKeyInput);
+      input.addEventListener('input', event => {
+        sanitizePriceInputValue(event.target);
+        handlePriceInput();
+      });
+    };
+    attachPriceInputHandlers(minPriceInputEl);
+    attachPriceInputHandlers(maxPriceInputEl);
+    const priceClearBtn = $('.price-clear-button');
+    priceClearBtn?.addEventListener('click', ()=>{
+      if(minPriceInputEl) minPriceInputEl.value='';
+      if(maxPriceInputEl) maxPriceInputEl.value='';
+      applyFilters();
+      updateClearButtons();
+    });
     if(dateRangeInput){
       dateRangeInput.addEventListener('focus', ()=> openCalendarPopup());
       dateRangeInput.addEventListener('click', ()=> openCalendarPopup());
@@ -10282,8 +11190,10 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
+        head.dataset.surfaceBg = CARD_SURFACE;
         head.style.background = CARD_SURFACE;
       });
+      wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
         // progressive hero swap
         (function(){
@@ -11036,6 +11946,7 @@ function makePosts(){
           bearing: startBearing,
           attributionControl:true
         });
+        try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -11082,7 +11993,18 @@ if (!map.__pillHooksInstalled) {
         const ensureCompositeOnStyleMissing = (evt) => {
           if(!evt || !evt.id) return;
           if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-            const spriteId = evt.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            const isAccent = evt.id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
+            const baseId = isAccent ? evt.id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : evt.id;
+            const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            if(!spriteId){
+              return;
+            }
+            try{
+              if(!map.hasImage?.(evt.id)){
+                map.addImage(evt.id, createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx), { pixelRatio: 1 });
+                markerLabelCompositePlaceholderIds.add(evt.id);
+              }
+            }catch(err){}
             const meta = markerLabelCompositeStore.get(spriteId) || {};
             try{
               ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
@@ -11097,12 +12019,14 @@ if (!map.__pillHooksInstalled) {
         try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
 
         const applyStyleAdjustments = () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
         };
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
         map.on('styledata', () => {
+          try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
             patchMapboxStyleArtifacts(map);
           }
@@ -11510,7 +12434,7 @@ if (!map.__pillHooksInstalled) {
         const sampleVenue = sampleEntry.loc && sampleEntry.loc.venue ? sampleEntry.loc.venue : getPrimaryVenueName(sample);
         const canonicalVenue = coordLabels.get(key) || sampleVenue || '';
         if(count > 1){
-          const multiTitle = `${count} map markers here`;
+          const multiTitle = `${count} posts here`;
           const labelTitle = shortenMarkerLabelText(multiTitle);
           const venueLine = canonicalVenue ? shortenMarkerLabelText(canonicalVenue) : '';
           const combinedLabel = buildMarkerLabelText(sample, {
@@ -11604,10 +12528,14 @@ if (!map.__pillHooksInstalled) {
         return;
       }
       addingPostSource = true;
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const collections = getMarkerCollections(markerList);
-      const { postsData, multiData, signature } = collections;
+      const { postsData, multiData, signature, featureIndex } = collections;
+      markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       const featureCount = Array.isArray(postsData.features) ? postsData.features.length : 0;
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
@@ -11638,7 +12566,6 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
-        const activeSpriteIds = new Set();
         const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
         const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
         postsData.features.forEach(feature => {
@@ -11655,9 +12582,6 @@ if (!map.__pillHooksInstalled) {
             if(Number.isFinite(lng) && Number.isFinite(lat)){
               inView = pointWithinBounds(lng, lat, priorityBounds);
             }
-          }
-          if(inView){
-            activeSpriteIds.add(spriteId);
           }
           const existing = markerLabelCompositeStore.get(spriteId) || {};
           const stored = spriteMeta.get(spriteId);
@@ -11684,18 +12608,6 @@ if (!map.__pillHooksInstalled) {
             priority,
             lastUsed
           });
-        });
-        Array.from(markerLabelCompositeStore.keys()).forEach(spriteId => {
-          if(activeSpriteIds.has(spriteId)){
-            return;
-          }
-          markerLabelCompositeStore.delete(spriteId);
-          const compositeId = `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
-          try{
-            if(typeof map.hasImage === 'function' ? map.hasImage(compositeId) : true){
-              map.removeImage(compositeId);
-            }
-          }catch(e){}
         });
         const spriteEntries = Array.from(spriteMeta.entries());
         spriteEntries.sort((a, b) => {
@@ -11737,6 +12649,7 @@ if (!map.__pillHooksInstalled) {
         enforceMarkerLabelCompositeBudget(map);
       }
       ensureMarkerLabelBackground(map);
+      updateMapFeatureHighlights(lastHighlightedPostIds);
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
         ['has','title']
@@ -11746,66 +12659,115 @@ if (!map.__pillHooksInstalled) {
         multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
       };
 
-      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+      const markerLabelSpriteId = ['coalesce', ['get','labelSpriteId'], ''];
+      const markerLabelIconImage = ['let', 'markerLabelFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID],
+        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
+          ['case',
+            ['==', ['var', 'markerLabelSpriteKey'], ''],
+            ['image', ['var', 'markerLabelFallbackId']],
+            ['coalesce',
+              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey']]],
+              ['image', ['var', 'markerLabelFallbackId']]
+            ]
+          ]
         ]
       ];
 
-      const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1101, filter: markerLabelFilters.multi }
+      const markerLabelHighlightIconImage = ['let', 'markerLabelHighlightFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID],
+        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
+          ['case',
+            ['==', ['var', 'markerLabelSpriteKey'], ''],
+            ['image', ['var', 'markerLabelHighlightFallbackId']],
+            ['coalesce',
+              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]],
+              ['image', ['var', 'markerLabelHighlightFallbackId']]
+            ]
+          ]
+        ]
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter }) => {
-        if(!map.getLayer(id)){
-          map.addLayer({
-            id,
-            type:'symbol',
-            source,
-            filter: filter || markerLabelFilters.single,
-            minzoom: markerLabelMinZoom,
-            layout:{
-              'icon-image': markerLabelIconImage,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'left',
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': sortKey
-            },
-            paint:{
-              'icon-translate': [markerLabelBgTranslatePx, 0],
-              'icon-translate-anchor': 'viewport',
-              'icon-opacity': 1
-            }
-          });
+
+      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
+      const createMarkerLabelIconSize = () => ['interpolate', ['linear'], ['zoom'],
+        0, 0.25,
+        MARKER_SPRITE_ZOOM, 0.25,
+        MARKER_SPRITE_FULL_ZOOM, 1,
+        22, 1
+      ];
+
+      const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
+      const multiMarkerLabelMinZoom = 0;
+      const labelLayersConfig = [
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom },
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: multiMarkerLabelMinZoom },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: multiMarkerLabelMinZoom }
+      ];
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minzoom }) => {
+        let layerExists = !!map.getLayer(id);
+        if(!layerExists){
+          try{
+            map.addLayer({
+              id,
+              type:'symbol',
+              source,
+              filter: filter || markerLabelFilters.single,
+              minzoom: Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom,
+              layout:{
+                'icon-image': iconImage || markerLabelIconImage,
+                'icon-size': createMarkerLabelIconSize(),
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'center',
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': sortKey
+              },
+              paint:{
+                'icon-translate': [markerLabelBgTranslatePx, 0],
+                'icon-translate-anchor': 'viewport',
+                'icon-opacity': iconOpacity || 1
+              }
+            });
+            layerExists = !!map.getLayer(id);
+          }catch(e){
+            layerExists = !!map.getLayer(id);
+          }
+        }
+        if(!layerExists){
+          return;
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-image', markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', createMarkerLabelIconSize()); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
-        try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setLayerZoomRange(id, Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom, 24); }catch(e){}
       });
-      ['hover-fill','marker-label','multi-post-mapmarker-label'].forEach(id=>{
+      [
+        'hover-fill',
+        'marker-label',
+        'marker-label-highlight',
+        'multi-post-mapmarker-label',
+        'multi-post-mapmarker-label-highlight'
+      ].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
       [
         ['marker-label','icon-opacity-transition'],
-        ['multi-post-mapmarker-label','icon-opacity-transition']
+        ['marker-label-highlight','icon-opacity-transition'],
+        ['multi-post-mapmarker-label','icon-opacity-transition'],
+        ['multi-post-mapmarker-label-highlight','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
@@ -11856,7 +12818,7 @@ if (!map.__pillHooksInstalled) {
         window.addEventListener('resize', repositionMultiPostCardContainer);
 
         function createMapCardOverlay(post, opts = {}){
-          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
+          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null, showCard = true } = opts;
           const previousKey = selectedVenueKey;
           if(overlayVenueKey){
             selectedVenueKey = overlayVenueKey;
@@ -11872,163 +12834,110 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
 
-            const markerContainer = document.createElement('div');
-            markerContainer.className = 'mapmarker-container';
-            markerContainer.dataset.id = overlayRoot.dataset.id;
-            markerContainer.setAttribute('aria-hidden', 'true');
-            markerContainer.style.pointerEvents = 'none';
-            markerContainer.style.userSelect = 'none';
-
-            const markerIcon = new Image();
-            try{ markerIcon.decoding = 'async'; }catch(e){}
-            markerIcon.alt = '';
-            markerIcon.className = 'mapmarker';
-            markerIcon.draggable = false;
-            const markerSources = window.subcategoryMarkers || {};
-            const markerIds = window.subcategoryMarkerIds || {};
-            const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-            const markerIdCandidates = [];
-            if(post && post.subcategory){
-              const mappedId = markerIds[post.subcategory];
-              if(mappedId) markerIdCandidates.push(mappedId);
-              markerIdCandidates.push(slugifyFn(post.subcategory));
-            }
-            markerIdCandidates.push(MULTI_POST_MAPMARKER_ID);
-            const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-            const markerFallback = MULTI_POST_MAPMARKER_URL;
-            markerIcon.referrerPolicy = 'no-referrer';
-            markerIcon.loading = 'lazy';
-            markerIcon.onerror = ()=>{
-              markerIcon.onerror = null;
-              markerIcon.src = markerFallback;
-            };
-            markerIcon.src = markerIconUrl || markerFallback;
-
-            const markerPill = new Image();
-            try{ markerPill.decoding = 'async'; }catch(e){}
-            markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
-            markerPill.className = 'mapmarker-pill';
-            markerPill.style.opacity = '0.9';
-            markerPill.draggable = false;
-
-            const labelLines = getMarkerLabelLines(post);
-            const markerLabel = document.createElement('div');
-            markerLabel.className = 'mapmarker-label';
-            const markerLine1 = document.createElement('div');
-            markerLine1.className = 'mapmarker-label-line';
-            markerLine1.textContent = labelLines.line1;
-            markerLabel.appendChild(markerLine1);
-            if(labelLines.line2){
-              const markerLine2 = document.createElement('div');
-              markerLine2.className = 'mapmarker-label-line';
-              markerLine2.textContent = labelLines.line2;
-              markerLabel.appendChild(markerLine2);
-            }
-
-            markerContainer.append(markerPill, markerIcon, markerLabel);
-
-            const cardRoot = document.createElement('div');
-            cardRoot.className = 'map-card map-card--popup';
-            cardRoot.dataset.id = overlayRoot.dataset.id;
-            cardRoot.setAttribute('aria-hidden', 'true');
-            cardRoot.style.pointerEvents = 'auto';
-            cardRoot.style.userSelect = 'none';
-
-            const pillImg = new Image();
-            try{ pillImg.decoding = 'async'; }catch(e){}
-            pillImg.alt = '';
-            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-            pillImg.className = 'map-card-pill';
-            pillImg.style.opacity = '0.9';
-            pillImg.draggable = false;
-
-            const thumbImg = new Image();
-            try{ thumbImg.decoding = 'async'; }catch(e){}
-            thumbImg.alt = '';
-            const thumbFallback = 'assets/funmap-logo-small.png';
-            thumbImg.loading = 'lazy';
-            thumbImg.onerror = ()=>{
-              thumbImg.onerror = null;
-              thumbImg.src = thumbFallback;
-            };
-            thumbImg.src = imgThumb(post) || thumbFallback;
-            thumbImg.className = 'map-card-thumb';
-            thumbImg.referrerPolicy = 'no-referrer';
-            thumbImg.draggable = false;
-
-            const labelEl = document.createElement('div');
-            labelEl.className = 'map-card-label';
-            const titleWrap = document.createElement('div');
-            titleWrap.className = 'map-card-title';
-            const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-              ? labelLines.cardTitleLines.slice(0, 2)
-              : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-            cardTitleLines.forEach(line => {
-              if(!line) return;
-              const lineEl = document.createElement('div');
-              lineEl.className = 'map-card-title-line';
-              lineEl.textContent = line;
-              titleWrap.appendChild(lineEl);
+            const { element: markerContainer, labelLines } = buildMapMarkerContainer(post, {
+              id: overlayRoot.dataset.id,
+              ariaHidden: true,
+              pointerEvents: 'none',
+              userSelect: 'none'
             });
-            if(!titleWrap.childElementCount){
-              const lineEl = document.createElement('div');
-              lineEl.className = 'map-card-title-line';
-              lineEl.textContent = '';
-              titleWrap.appendChild(lineEl);
-            }
-            labelEl.appendChild(titleWrap);
-            const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
-            if(venueLine){
-              const venueEl = document.createElement('div');
-              venueEl.className = 'map-card-venue';
-              venueEl.textContent = venueLine;
-              labelEl.appendChild(venueEl);
-            }
 
-            cardRoot.append(pillImg, thumbImg, labelEl);
-            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.appendChild(markerContainer);
             overlayRoot.classList.add('is-card-visible');
-            overlayRoot.style.pointerEvents = '';
+            if(showCard){
+              overlayRoot.style.pointerEvents = '';
 
-            const handleOverlayClick = (ev)=>{
-              ev.preventDefault();
-              ev.stopPropagation();
-              const pid = overlayRoot.dataset.id;
-              if(!pid) return;
-              callWhenDefined('openPost', (fn)=>{
-                requestAnimationFrame(() => {
-                  try{
-                    touchMarker = null;
-                    stopSpin();
-                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                      try{ closePanel(filterPanel); }catch(err){}
-                    }
-                    fn(pid, false, true);
-                  }catch(err){ console.error(err); }
-                });
+              const cardRoot = document.createElement('div');
+              cardRoot.className = 'map-card map-card--popup';
+              cardRoot.dataset.id = overlayRoot.dataset.id;
+              cardRoot.setAttribute('aria-hidden', 'true');
+              cardRoot.style.pointerEvents = 'auto';
+              cardRoot.style.userSelect = 'none';
+
+              const thumbImg = new Image();
+              try{ thumbImg.decoding = 'async'; }catch(e){}
+              thumbImg.alt = '';
+              const thumbFallback = 'assets/funmap-logo-small.png';
+              thumbImg.loading = 'lazy';
+              thumbImg.onerror = ()=>{
+                thumbImg.onerror = null;
+                thumbImg.src = thumbFallback;
+              };
+              thumbImg.src = imgThumb(post) || thumbFallback;
+              thumbImg.className = 'map-card-thumb';
+              thumbImg.referrerPolicy = 'no-referrer';
+              thumbImg.draggable = false;
+
+              const labelEl = document.createElement('div');
+              labelEl.className = 'map-card-label';
+              const titleWrap = document.createElement('div');
+              titleWrap.className = 'map-card-title';
+              const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+                ? labelLines.cardTitleLines.slice(0, 2)
+                : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+              cardTitleLines.forEach(line => {
+                if(!line) return;
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
               });
-            };
-            cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
-            ['pointerdown','mousedown','touchstart'].forEach(type => {
-              cardRoot.addEventListener(type, (ev)=>{
-                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
-                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
-                if(!isTouchLike){
-                  try{ ev.preventDefault(); }catch(err){}
-                }
-                try{ ev.stopPropagation(); }catch(err){}
-              }, { capture: true });
-            });
-            cardRoot.addEventListener('mouseenter', ()=>{
-              window.__overCard = true;
-            });
-            cardRoot.addEventListener('mouseleave', ()=>{
-              window.__overCard = false;
-              if(listLocked) return;
-              const currentPopup = hoverPopup;
-              schedulePopupRemoval(currentPopup, 160);
-            });
+              if(!titleWrap.childElementCount){
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = '';
+                titleWrap.appendChild(lineEl);
+              }
+              labelEl.appendChild(titleWrap);
+              const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+              if(venueLine){
+                const venueEl = document.createElement('div');
+                venueEl.className = 'map-card-venue';
+                venueEl.textContent = venueLine;
+                labelEl.appendChild(venueEl);
+              }
+
+              cardRoot.append(thumbImg, labelEl);
+              overlayRoot.appendChild(cardRoot);
+
+              const handleOverlayClick = (ev)=>{
+                ev.preventDefault();
+                ev.stopPropagation();
+                const pid = overlayRoot.dataset.id;
+                if(!pid) return;
+                callWhenDefined('openPost', (fn)=>{
+                  requestAnimationFrame(() => {
+                    try{
+                      touchMarker = null;
+                      stopSpin();
+                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                        try{ closePanel(filterPanel); }catch(err){}
+                      }
+                      fn(pid, false, true);
+                    }catch(err){ console.error(err); }
+                  });
+                });
+              };
+              cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
+              ['pointerdown','mousedown','touchstart'].forEach(type => {
+                cardRoot.addEventListener(type, (ev)=>{
+                  const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+                  const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+                  if(!isTouchLike){
+                    try{ ev.preventDefault(); }catch(err){}
+                  }
+                  try{ ev.stopPropagation(); }catch(err){}
+                }, { capture: true });
+              });
+              cardRoot.addEventListener('mouseenter', ()=>{
+                window.__overCard = true;
+              });
+              cardRoot.addEventListener('mouseleave', ()=>{
+                window.__overCard = false;
+                if(listLocked) return;
+                const currentPopup = hoverPopup;
+                schedulePopupRemoval(currentPopup, 160);
+              });
+            }
 
             const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
@@ -12149,6 +13058,20 @@ if (!map.__pillHooksInstalled) {
             }
             const state = showMultiPostCardContainer(e.point, multi, { venueKey });
             if(state){
+              const primaryPost = multi.find(Boolean);
+              if(primaryPost){
+                const marker = createMapCardOverlay(primaryPost, {
+                  targetLngLat,
+                  fixedLngLat,
+                  eventLngLat: e && e.lngLat,
+                  venueKey,
+                  showCard: false
+                });
+                if(marker){
+                  hoverPopup = marker;
+                  updateSelectedMarkerRing();
+                }
+              }
               return;
             }
           }
@@ -12407,6 +13330,7 @@ if (!map.__pillHooksInstalled) {
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
+      el.dataset.surfaceBg = CARD_SURFACE;
       el.style.background = CARD_SURFACE;
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -12450,6 +13374,8 @@ if (!map.__pillHooksInstalled) {
     function captureState(){
       const {start,end} = orderedRange();
       const openCats = Object.values(categoryControllers).filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState()).map(ctrl=>ctrl.name);
+      const minPriceEl = $('#min-price-input');
+      const maxPriceEl = $('#max-price-input');
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#keyword-textbox').value,
@@ -12457,6 +13383,8 @@ if (!map.__pillHooksInstalled) {
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
+        priceMin: minPriceEl ? minPriceEl.value : '',
+        priceMax: maxPriceEl ? maxPriceEl.value : '',
         cats: [...selection.cats],
         subs: [...selection.subs],
         openCats
@@ -12466,6 +13394,10 @@ if (!map.__pillHooksInstalled) {
     function restoreState(st){
       if(!st) return;
       $('#keyword-textbox').value = st.kw || '';
+      const minPriceEl = $('#min-price-input');
+      if(minPriceEl) minPriceEl.value = st.priceMin || '';
+      const maxPriceEl = $('#max-price-input');
+      if(maxPriceEl) maxPriceEl.value = st.priceMax || '';
       dateStart = st.start ? parseISODate(st.start) : null;
       dateEnd = st.end ? parseISODate(st.end) : null;
       if(!st.start && st.range){
@@ -13677,6 +14609,10 @@ function openPostModal(id){
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
     function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
+function parsePriceInputValue(value){ if(value==null) return null; const stringValue=typeof value==='string'?value:String(value); const trimmed=stringValue.trim(); if(!trimmed) return null; const normalized=trimmed.replace(/[^0-9.,]/g,''); if(!normalized) return null; const num=parseFloat(normalized.replace(/,/g,'')); return Number.isFinite(num)?num:null; }
+    function parsePriceNumbers(str){ if(typeof str!=='string') return []; const matches=str.match(/[0-9]+(?:[.,][0-9]+)?/g); if(!matches) return []; return matches.map(s=>parseFloat(s.replace(/,/g,''))).filter(n=>Number.isFinite(n)); }
+    function getPostPriceBounds(p){ if(!p) return null; if(p.__priceMin!==undefined){ if(p.__priceMin===null) return null; return {min:p.__priceMin,max:p.__priceMax}; } const nums=[]; if(typeof p.price==='string'){ nums.push(...parsePriceNumbers(p.price)); } if(Array.isArray(p.locations)){ p.locations.forEach(loc=>{ if(loc && typeof loc.price==='string'){ nums.push(...parsePriceNumbers(loc.price)); } }); } if(!nums.length){ p.__priceMin=null; p.__priceMax=null; return null; } const min=Math.min(...nums); const max=Math.max(...nums); p.__priceMin=min; p.__priceMax=max; return {min,max}; }
+    function priceMatch(p){ const minEl=$('#min-price-input'); const maxEl=$('#max-price-input'); const minVal=minEl?parsePriceInputValue(minEl.value):null; const maxVal=maxEl?parsePriceInputValue(maxEl.value):null; if(minVal===null && maxVal===null) return true; const bounds=getPostPriceBounds(p); if(!bounds) return false; if(minVal!==null && bounds.max < minVal) return false; if(maxVal!==null && bounds.min > maxVal) return false; return true; }
     function dateMatch(p){
       const {start,end} = orderedRange();
       const expiredChk = $('#expiredToggle');
@@ -13746,7 +14682,7 @@ function openPostModal(id){
         return;
       }
       if(!postsLoaded) return;
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
       const today = new Date(); today.setHours(0,0,0,0);
@@ -14162,6 +15098,8 @@ document.addEventListener('keydown', e=>{
   }
 });
 
+let pointerStartedInsideFilter = false;
+
 function handleDocInteract(e){
   if(e.target.closest('.image-modal-container')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
@@ -14179,6 +15117,7 @@ function handleDocInteract(e){
     const pinBtn = filterPanel.querySelector('.pin-panel');
     const pinned = pinBtn && pinBtn.getAttribute('aria-pressed')==='true';
     if(content && !content.contains(e.target) && !pinned){
+      if(pointerStartedInsideFilter) return;
       closePanel(filterPanel);
     }
   }
@@ -14187,8 +15126,16 @@ function handleDocInteract(e){
 document.addEventListener('click', handleDocInteract);
 document.addEventListener('pointerdown', (e) => {
   const target = e.target;
-  requestAnimationFrame(() => handleDocInteract({ target }));
+  pointerStartedInsideFilter = !!target.closest('#filterPanel .panel-content');
+  if(!pointerStartedInsideFilter){
+    requestAnimationFrame(() => handleDocInteract({ target }));
+  }
 });
+const resetPointerStartedInsideFilter = () => { pointerStartedInsideFilter = false; };
+document.addEventListener('pointerup', () => {
+  setTimeout(resetPointerStartedInsideFilter, 0);
+});
+document.addEventListener('pointercancel', resetPointerStartedInsideFilter);
 
 // Panels and admin/member interactions
 (function(){
