@@ -6661,6 +6661,7 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      // Multi-post marker layers are managed separately so they remain visible at all zoom levels.
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -6670,6 +6671,7 @@ if (typeof slugify !== 'function') {
         'multi-post-mapmarker-label',
         'multi-post-mapmarker-label-highlight'
       ];
+      const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
         const BALLOON_SOURCE_ID = 'post-balloon-source';
@@ -9624,6 +9626,7 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
+      // Keep multi-post labels visible regardless of the marker bucket gating.
       MULTI_POST_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
@@ -12438,15 +12441,17 @@ if (!map.__pillHooksInstalled) {
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      const multiPostLabelMinZoom = 0;
+      const MULTI_POST_LABEL_MIN_ZOOM = 0;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: multiPostLabelMinZoom },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: multiPostLabelMinZoom }
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: MULTI_POST_LABEL_MIN_ZOOM },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: MULTI_POST_LABEL_MIN_ZOOM }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
-        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+        const isMultiPostLayer = MULTI_POST_MARKER_LAYER_IDS.includes(id);
+        const fallbackMinZoom = isMultiPostLayer ? MULTI_POST_LABEL_MIN_ZOOM : markerLabelMinZoom;
+        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : fallbackMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12494,7 +12499,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
-      [...MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS].forEach(id=>{
+      ALL_MARKER_LAYER_IDS.forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
