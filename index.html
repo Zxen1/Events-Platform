@@ -93,8 +93,6 @@
       bottom: 5px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -138,8 +136,6 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
@@ -5929,6 +5925,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
   const MARKER_SPRITE_RETAIN_ZOOM = 8;
+  const MARKER_SPRITE_FULL_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -12670,6 +12667,12 @@ if (!map.__pillHooksInstalled) {
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
+      const createMarkerLabelIconSize = () => ['interpolate', ['linear'], ['zoom'],
+        0, 0.25,
+        MARKER_SPRITE_ZOOM, 0.25,
+        MARKER_SPRITE_FULL_ZOOM, 1,
+        22, 1
+      ];
 
       const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
       const multiMarkerLabelMinZoom = 0;
@@ -12691,7 +12694,7 @@ if (!map.__pillHooksInstalled) {
               minzoom: Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': 1,
+                'icon-size': createMarkerLabelIconSize(),
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -12715,7 +12718,7 @@ if (!map.__pillHooksInstalled) {
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', createMarkerLabelIconSize()); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
