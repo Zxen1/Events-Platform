@@ -70,14 +70,13 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(-112px, calc(-100% - 12px));
+      transform: translate(-30px, -30px);
       pointer-events: auto;
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      opacity: 1;
-      visibility: visible;
-      transform: translate(-50%, -50%);
+      opacity: 0;
+      visibility: hidden;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -85,6 +84,20 @@
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
+    .map-card-pill{
+      position: absolute;
+      inset: auto;
+      left: 5px;
+      top: 5px;
+      right: 5px;
+      bottom: 5px;
+      object-fit: contain;
+      pointer-events: none;
+      opacity: 0 !important;
+      visibility: hidden;
+      mix-blend-mode: normal;
+      z-index: 0;
+    }
     .mapmarker-container{
       position: absolute;
       left: 0;
@@ -125,20 +138,18 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
+      opacity: 0 !important;
+      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
     .map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
-      background-image: url('assets/icons-30/225x60-pill-99.webp');
-      background-repeat: no-repeat;
-      background-size: cover;
-      transition: background-color 0.2s ease, background-image 0.2s ease;
+      transition: background-color 0.2s ease;
     }
     .map-card--popup.is-map-highlight,
     .mapmarker-overlay:hover .map-card--popup{
       background-color: #2e3a72;
-      background-image: none;
     }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
@@ -570,6 +581,8 @@
       --btn-selected-hover: #3c4b8a;
       --btn-selected-active: #232e59;
       --btn-disabled: #bbbbbb;
+      --panel-bg: rgba(0,0,0,1);
+      --panel-text: #000000;
       --footer-h: 0px;
       --list-background: rgba(0,0,0,0.37);
       --closed-card-bg: rgba(0,0,0,0.37);
@@ -613,8 +626,10 @@
       --geocoder-h: var(--control-h);
       --panel-label-font: system-ui, sans-serif;
       --panel-label-size: 14px;
+      --panel-label-color: #ffffff;
       --panel-title-font: system-ui, sans-serif;
       --panel-title-size: 16px;
+      --panel-title-color: #ffffff;
       --post-mode-bg-color: 0,0,0;
       --post-mode-bg-opacity: 0;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -839,13 +854,13 @@ textarea::placeholder{
 }
 
 .field label{
-  color:#fff;
+  color: var(--panel-label-color);
   font-size: var(--panel-label-size);
 }
 
 .panel-content .title,
 .panel-content .t{
-  color:#fff;
+  color: var(--panel-title-color);
   font-size: var(--panel-title-size);
 }
 
@@ -1193,21 +1208,21 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:420px;
 }
-  #adminPanel .admin-fieldset,
-  .admin-fieldset{
-    margin:0 auto;
-    border:0;
-    border-radius:8px;
-    padding:0;
-    width:100%;
-    max-width:420px;
-    box-sizing:border-box;
-  }
-  #adminPanel .admin-fieldset.collapsed{
-    padding:0;
-  }
-  .admin-panel-content,
-  .member-panel-content{
+#adminPanel .admin-fieldset,
+.admin-fieldset{
+  margin:0 auto;
+  border:0;
+  border-radius:8px;
+  padding:0;
+  width:100%;
+  max-width:420px;
+  box-sizing:border-box;
+}
+#adminPanel .admin-fieldset.collapsed{
+  padding:0;
+}
+  #adminPanel .panel-content,
+  #memberPanel .panel-content{
     width:min(440px, 100%);
     max-width:100%;
     height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -1220,22 +1235,15 @@ button[aria-expanded="true"] .results-arrow{
     left:auto;
     right:0;
   }
-  .admin-panel-content{
+
+  #adminPanel .panel-content{
     background:#222222;
     color:#fff;
   }
-  .member-panel-content{
+
+  #memberPanel .panel-content{
     background:#222222;
     color:#fff;
-  }
-  .admin-panel-body .panel-field input[type="color"]{
-    width:35px;
-    height:35px;
-  }
-  .admin-panel-body :where(.panel-field > button, .settings-style-container > button, .map-balloon-container button, .fieldset-actions .same-btn):not(.filter-category-menu button){
-    background:#333333;
-    color:var(--ink);
-    border:none;
   }
 #filterPanel .panel-content{
   width:100%;
@@ -1259,6 +1267,24 @@ button[aria-expanded="true"] .results-arrow{
 #filterPanel .tiny{
   background:#333333;
   border: none;
+}
+#adminPanel button,
+#memberPanel button{
+  background:#333333;
+  color: var(--ink);
+  border: none;
+}
+#adminPanel button{
+  height:35px;
+  line-height:35px;
+}
+#adminPanel input[type="color"]{
+  width:35px;
+  height:35px;
+}
+#filterPanel input[type="text"]{
+  background: var(--panel-bg);
+  color: var(--panel-text);
 }
 #filterPanel .calendar-container{
   background: var(--dropdown-bg);
@@ -1866,8 +1892,7 @@ button[aria-expanded="true"] .results-arrow{
   border-radius: var(--dropdown-radius);
 }
 #filterPanel #keyword-textbox{
-  background: #333333;
-  color: var(--date-range-text);
+  background: var(--keyword-bg);
 }
 #filterPanel #daterange-textbox{
   background: #333333;
@@ -1889,8 +1914,7 @@ button[aria-expanded="true"] .results-arrow{
   vertical-align:middle;
 }
 #filterPanel .keyword-clear-button,
-#filterPanel .daterange-clear-button,
-#filterPanel .price-clear-button{
+#filterPanel .daterange-clear-button{
   position: static;
   width: 35px;
   height: 35px;
@@ -1905,34 +1929,10 @@ button[aria-expanded="true"] .results-arrow{
   opacity:1;
 }
 #filterPanel .keyword-clear-button.active,
-#filterPanel .daterange-clear-button.active,
-#filterPanel .price-clear-button.active{
+#filterPanel .daterange-clear-button.active{
   background: var(--filter-active-color);
   color: var(--button-text);
   opacity:1;
-}
-
-.price-range-row{
-  flex-wrap: wrap;
-}
-
-.price-range-row .price-inputs{
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.price-range-row .price-inputs input{
-  min-width: 0;
-  background: #fff;
-  color: var(--dropdown-text);
-}
-
-.price-range-row .price-separator{
-  flex: 0 0 auto;
-  color: var(--dropdown-text);
-  font-size: 14px;
 }
 
 #filterPanel .field label.t{
@@ -2922,7 +2922,7 @@ body.filters-active #filterBtn{
   border-radius: 8px;
   object-fit: cover;
   display: block;
-  background: rgba(0,0,0,1);
+  background: var(--panel-bg);
   transition: filter .22s ease;
 }
 
@@ -4755,7 +4755,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .multi-post-map-container {
   position: absolute;
   z-index: 20050;
-  padding: 12px;
+  padding: 10px;
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
@@ -4768,49 +4768,59 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   pointer-events: auto;
 }
 
-.multi-post-map-container .multi-post-map-summary {
-  font-size: 13px;
-  font-weight: 600;
-  padding: 0 4px;
-  pointer-events: none;
-}
-
-.multi-post-map-container .multi-post-map-item {
+.multi-post-marker-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  background: none;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 8px 12px;
   border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
   color: inherit;
   font: inherit;
   text-align: left;
+  cursor: pointer;
 }
 
-.multi-post-map-container .multi-post-map-item:focus-visible {
+.multi-post-marker-item:hover {
+  background: rgba(46, 58, 114, 0.8);
+}
+
+.multi-post-marker-item:focus-visible {
   outline: 2px solid #2e3a72;
   outline-offset: 2px;
-  border-radius: 12px;
 }
 
-.multi-post-map-container .multi-post-map-item:hover .mapmarker-container,
-.multi-post-map-container .multi-post-map-item:focus-visible .mapmarker-container {
-  background-color: #2e3a72;
+.multi-post-marker-item--summary {
+  background: transparent;
+  padding: 0;
+  cursor: default;
 }
 
-.multi-post-map-container .mapmarker-container {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
-  pointer-events: none;
+.multi-post-marker-item--summary:hover,
+.multi-post-marker-item--summary:focus-visible {
+  background: transparent;
+  outline: none;
 }
 
-.multi-post-map-container .mapmarker-pill {
-  opacity: 1 !important;
-  visibility: visible;
+.multi-post-marker-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  object-fit: contain;
+}
+
+.multi-post-marker-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.multi-post-marker-label--summary {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .hero img.lqip{
@@ -5040,54 +5050,11 @@ if (typeof slugify !== 'function') {
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 90.webp';
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
   const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
   let cachedImages = null;
   let loadingTask = null;
   const pendingMaps = new Set();
-
-  const DEFAULT_PILL_WIDTH = 150;
-  const DEFAULT_PILL_HEIGHT = 40;
-
-  function drawRoundedRect(ctx, width, height, radius){
-    const r = Math.min(radius, width / 2, height / 2);
-    ctx.beginPath();
-    ctx.moveTo(r, 0);
-    ctx.lineTo(width - r, 0);
-    ctx.quadraticCurveTo(width, 0, width, r);
-    ctx.lineTo(width, height - r);
-    ctx.quadraticCurveTo(width, height, width - r, height);
-    ctx.lineTo(r, height);
-    ctx.quadraticCurveTo(0, height, 0, height - r);
-    ctx.lineTo(0, r);
-    ctx.quadraticCurveTo(0, 0, r, 0);
-    ctx.closePath();
-  }
-
-  function createFallbackPillCanvas({ width = DEFAULT_PILL_WIDTH, height = DEFAULT_PILL_HEIGHT, fill = 'rgba(0,0,0,0.9)', stroke = 'rgba(255,255,255,0.12)' } = {}){
-    const canvas = document.createElement('canvas');
-    const w = Math.max(1, Math.round(width));
-    const h = Math.max(1, Math.round(height));
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if(!ctx){
-      return null;
-    }
-    drawRoundedRect(ctx, w, h, h / 2);
-    ctx.fillStyle = fill;
-    ctx.fill();
-    if(stroke){
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = Math.max(1, Math.round(h * 0.05));
-      ctx.stroke();
-    }
-    return canvas;
-  }
-
-  if(typeof window !== 'undefined' && !window.__createPillFallbackCanvas){
-    window.__createPillFallbackCanvas = createFallbackPillCanvas;
-  }
 
   function applyImageToMap(map){
     if(!map || typeof map.hasImage !== 'function' || !cachedImages){
@@ -5143,16 +5110,8 @@ if (typeof slugify !== 'function') {
 
   function prepareCachedImages(baseImage, accentImage){
     if(!baseImage){
-      const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || createFallbackPillCanvas;
-      baseImage = factory({ fill: 'rgba(0,0,0,0.9)' });
-    }
-    if(!baseImage){
       cachedImages = null;
       return;
-    }
-    if(!accentImage){
-      const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || createFallbackPillCanvas;
-      accentImage = factory({ fill: '#2f3b73', stroke: 'rgba(255,255,255,0.18)' });
     }
     const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
     let highlight = null;
@@ -5196,9 +5155,11 @@ if (typeof slugify !== 'function') {
       loadImage(PILL_BASE_IMAGE_URL),
       loadImage(PILL_ACCENT_IMAGE_URL)
     ]).then(([baseImage, accentImage]) => {
-      prepareCachedImages(baseImage, accentImage);
-      if(cachedImages){
-        pendingMaps.forEach((map) => applyImageToMap(map));
+      if(baseImage){
+        prepareCachedImages(baseImage, accentImage);
+        if(cachedImages){
+          pendingMaps.forEach((map) => applyImageToMap(map));
+        }
       }
     }).catch(() => {
       cachedImages = null;
@@ -5355,14 +5316,6 @@ if (typeof slugify !== 'function') {
                 <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
               </div>
             </div>
-            <div class="field price-range-row">
-              <div class="input price-inputs">
-                <input id="min-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Min price" aria-label="Minimum price" />
-                <span class="price-separator" aria-hidden="true">-</span>
-                <input id="max-price-input" type="text" inputmode="numeric" pattern="\\d*" placeholder="Max price" aria-label="Maximum price" />
-                <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
-              </div>
-            </div>
             <div class="field daterange-row">
               <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
                 <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
@@ -5387,63 +5340,63 @@ if (typeof slugify !== 'function') {
     </div>
   </div>
 
-    <div id="memberPanel" class="panel member-panel" role="dialog" aria-panel="true" aria-hidden="true">
-      <div class="panel-content member-panel-content" style="right:0;">
-        <div class="panel-header">
-          <div class="header-top">
-            <h2>Create Post</h2>
-            <div class="panel-actions">
-              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-              <button type="button" class="close-panel">Close</button>
-            </div>
+  <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="right:0;">
+      <div class="panel-header">
+        <div class="header-top">
+          <h2>Create Post</h2>
+          <div class="panel-actions">
+            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="close-panel">Close</button>
           </div>
         </div>
-        <form id="memberForm" class="panel-body">
-          <div class="map-control-row map-controls-member">
-            <div id="geocoder-member" class="geocoder"></div>
-            <div id="geolocate-member" class="geolocate-btn"></div>
-            <div id="compass-member" class="compass-btn"></div>
-          </div>
-          <div class="panel-field">
-            <label for="mTitle">Title</label>
-            <input type="text" id="mTitle" required />
-          </div>
-          <div class="panel-field">
-            <label for="mImage">Image</label>
-            <input type="file" id="mImage" accept="image/*" />
-          </div>
-          <div class="panel-field">
-            <label for="mDate">Date</label>
-            <input type="date" id="mDate" />
-          </div>
-          <div class="panel-field">
-            <label for="mColor">Color</label>
-            <input type="color" id="mColor" data-mode="hex" value="#000000" />
-          </div>
-        </form>
       </div>
+      <form id="memberForm" class="panel-body">
+        <div class="map-control-row map-controls-member">
+          <div id="geocoder-member" class="geocoder"></div>
+          <div id="geolocate-member" class="geolocate-btn"></div>
+          <div id="compass-member" class="compass-btn"></div>
+        </div>
+        <div class="panel-field">
+          <label for="mTitle">Title</label>
+          <input type="text" id="mTitle" required />
+        </div>
+        <div class="panel-field">
+          <label for="mImage">Image</label>
+          <input type="file" id="mImage" accept="image/*" />
+        </div>
+        <div class="panel-field">
+          <label for="mDate">Date</label>
+          <input type="date" id="mDate" />
+        </div>
+        <div class="panel-field">
+          <label for="mColor">Color</label>
+          <input type="color" id="mColor" data-mode="hex" value="#000000" />
+        </div>
+      </form>
     </div>
+  </div>
 
-    <div id="adminPanel" class="panel admin-panel" role="dialog" aria-panel="true" aria-hidden="true">
-      <div class="panel-content admin-panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
-        <div class="panel-header">
-          <div class="header-top">
-            <h2 class="title">Admin</h2>
-            <div class="panel-actions">
-              <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-              <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
-              <button type="button" class="close-panel">Close</button>
-            </div>
-          </div>
-          <div class="tab-bar">
-            <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
-            <button type="button" class="tab-btn" data-tab="settings">Settings</button>
-            <button type="button" class="tab-btn" data-tab="forms">Forms</button>
+  <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
+      <div class="panel-header">
+        <div class="header-top">
+          <h2 class="title">Admin</h2>
+          <div class="panel-actions">
+            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
+            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="close-panel">Close</button>
           </div>
         </div>
-        <form id="adminForm" class="panel-body admin-panel-body">
-          <div id="tab-map" class="tab-panel active">
+        <div class="tab-bar">
+          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
+          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
+          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
+        </div>
+      </div>
+      <form id="adminForm" class="panel-body">
+        <div id="tab-map" class="tab-panel active">
           <div class="map-spin-container">
             <div class="panel-field">
               <div class="option-label">
@@ -5741,7 +5694,7 @@ if (typeof slugify !== 'function') {
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = 0;
+  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -5917,8 +5870,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
-  const MARKER_SPRITE_RETAIN_ZOOM = 8;
-  const MARKER_SPRITE_FULL_ZOOM = 12;
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -6048,61 +6000,20 @@ if (typeof slugify !== 'function') {
     });
   }
 
-  function createMarkerLabelFallback(fillColor = 'rgba(0,0,0,0.9)', strokeColor = 'rgba(255,255,255,0.12)'){
-    const factory = (typeof window !== 'undefined' && window.__createPillFallbackCanvas) || null;
-    if(factory){
-      const canvas = factory({ fill: fillColor, stroke: strokeColor });
-      if(canvas){
-        return canvas;
-      }
-    }
-    const canvas = document.createElement('canvas');
-    const width = 150;
-    const height = 40;
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if(!ctx){
-      return null;
-    }
-    const radius = height / 2;
-    ctx.beginPath();
-    ctx.moveTo(radius, 0);
-    ctx.lineTo(width - radius, 0);
-    ctx.quadraticCurveTo(width, 0, width, radius);
-    ctx.lineTo(width, height - radius);
-    ctx.quadraticCurveTo(width, height, width - radius, height);
-    ctx.lineTo(radius, height);
-    ctx.quadraticCurveTo(0, height, 0, height - radius);
-    ctx.lineTo(0, radius);
-    ctx.quadraticCurveTo(0, 0, radius, 0);
-    ctx.closePath();
-    ctx.fillStyle = fillColor;
-    ctx.fill();
-    if(strokeColor){
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = Math.max(1, Math.round(height * 0.05));
-      ctx.stroke();
-    }
-    return canvas;
-  }
-
   async function ensureMarkerLabelPillImage(){
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    const baseUrl = 'assets/icons-30/150x40 pill 90.webp';
+    const baseUrl = 'assets/icons-30/150x40 pill 99.webp';
     const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
       loadMarkerLabelImage(accentUrl).catch(() => null)
     ]).then(([baseImg, accentImg]) => {
-      let resolvedBase = baseImg || createMarkerLabelFallback('rgba(0,0,0,0.9)', 'rgba(255,255,255,0.12)');
-      if(!resolvedBase){
+      if(!baseImg){
         return null;
       }
-      const resolvedAccent = accentImg || createMarkerLabelFallback('#2f3b73', 'rgba(255,255,255,0.18)');
-      return { base: resolvedBase, highlight: resolvedAccent };
+      return { base: baseImg, highlight: accentImg };
     }).catch(err => {
       console.error(err);
       return null;
@@ -6180,7 +6091,6 @@ if (typeof slugify !== 'function') {
       const markerSources = window.subcategoryMarkers || {};
       const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
       let iconImg = null;
-      let shouldSkipIcon = false;
       if(iconUrl){
         try{
           iconImg = await loadMarkerLabelImage(iconUrl);
@@ -6202,9 +6112,8 @@ if (typeof slugify !== 'function') {
       if(line2){
         labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
       }
-      const drawForeground = (ctx, { omitIcon = false } = {})=>{
-        const allowIcon = iconImg && !omitIcon && !shouldSkipIcon;
-        if(allowIcon){
+      const drawForeground = (ctx)=>{
+        if(iconImg){
           const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
           const destX = markerLabelMarkerInsetPx * pixelRatio;
           const destY = (canvasHeight - iconSizePx) / 2;
@@ -6267,39 +6176,13 @@ if (typeof slugify !== 'function') {
           ctx.globalAlpha = 1;
           ctx.globalCompositeOperation = 'source-over';
         }
-        drawForeground(ctx, { omitIcon });
+        drawForeground(ctx);
         let imageData = null;
-        let getImageDataFailed = false;
         try{
           imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         }catch(err){
           console.error(err);
           imageData = null;
-          getImageDataFailed = true;
-        }
-        if((getImageDataFailed || !imageData) && !omitIcon && iconImg && !shouldSkipIcon){
-          shouldSkipIcon = true;
-          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-          try{
-            ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
-          }catch(err){
-            console.error(err);
-          }
-          if(tintColor){
-            ctx.globalCompositeOperation = 'source-atop';
-            ctx.globalAlpha = tintAlpha;
-            ctx.fillStyle = tintColor;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
-          }
-          drawForeground(ctx, { omitIcon: true });
-          try{
-            imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-          }catch(err){
-            console.error(err);
-            imageData = null;
-          }
         }
         if(!imageData){
           return null;
@@ -6763,18 +6646,16 @@ if (typeof slugify !== 'function') {
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
-      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
+      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_SPRITE_ZOOM * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = 0;
-      const MULTI_MARKER_LAYER_IDS = [
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
-      ];
+      const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
-        'marker-label-highlight'
+        'marker-label-highlight',
+        'multi-post-mapmarker-label',
+        'multi-post-mapmarker-label-highlight'
       ];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
@@ -6782,7 +6663,7 @@ if (typeof slugify !== 'function') {
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        const BALLOON_IMAGE_URL = 'assets/balloons/colourful-balloons-and-confetti-80.png';
+        const BALLOON_IMAGE_URL = 'assets/balloons/Colourful-Balloons-80.png';
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
@@ -7082,7 +6963,7 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const targetZoom = Math.min(MARKER_ZOOM_THRESHOLD, maxAllowedZoom);
+              const targetZoom = Math.min(8, maxAllowedZoom);
               let finalZoom = targetZoom;
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
@@ -7651,101 +7532,6 @@ function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   }, 0);
 }
 
-function getMarkerIconUrlForPost(post){
-  const markerSources = window.subcategoryMarkers || {};
-  const markerIds = window.subcategoryMarkerIds || {};
-  const slugifyFn = typeof slugify === 'function'
-    ? slugify
-    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-  const candidates = [];
-  if(post && post.subcategory){
-    const mappedId = markerIds[post.subcategory];
-    if(mappedId) candidates.push(mappedId);
-    candidates.push(slugifyFn(post.subcategory));
-  }
-  candidates.push(MULTI_POST_MAPMARKER_ID);
-  const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
-  return url || MULTI_POST_MAPMARKER_URL;
-}
-
-function createMarkerIconElement(url){
-  const icon = new Image();
-  try{ icon.decoding = 'async'; }catch(err){}
-  icon.alt = '';
-  icon.className = 'mapmarker';
-  icon.draggable = false;
-  icon.referrerPolicy = 'no-referrer';
-  icon.loading = 'lazy';
-  icon.onerror = ()=>{
-    icon.onerror = null;
-    icon.src = MULTI_POST_MAPMARKER_URL;
-  };
-  icon.src = url || MULTI_POST_MAPMARKER_URL;
-  return icon;
-}
-
-function createMarkerPillElement(){
-  const pill = new Image();
-  try{ pill.decoding = 'async'; }catch(err){}
-  pill.alt = '';
-  pill.src = 'assets/icons-30/150x40 pill 90.webp';
-  pill.className = 'mapmarker-pill';
-  pill.draggable = false;
-  if(pill.style){
-    pill.style.opacity = '0.9';
-  }
-  return pill;
-}
-
-function createMarkerLabelElement(labelLines){
-  const markerLabel = document.createElement('div');
-  markerLabel.className = 'mapmarker-label';
-  const markerLine1 = document.createElement('div');
-  markerLine1.className = 'mapmarker-label-line';
-  markerLine1.textContent = labelLines.line1 || '';
-  markerLabel.appendChild(markerLine1);
-  if(labelLines.line2){
-    const markerLine2 = document.createElement('div');
-    markerLine2.className = 'mapmarker-label-line';
-    markerLine2.textContent = labelLines.line2;
-    markerLabel.appendChild(markerLine2);
-  }
-  return markerLabel;
-}
-
-function buildMapMarkerContainer(post, options = {}){
-  const { id: explicitId, ariaHidden = true } = options;
-  const markerContainer = document.createElement('div');
-  markerContainer.className = 'mapmarker-container';
-  const datasetId = explicitId !== undefined && explicitId !== null
-    ? String(explicitId)
-    : (post && post.id ? String(post.id) : '');
-  if(datasetId){
-    markerContainer.dataset.id = datasetId;
-  }
-  if(ariaHidden){
-    markerContainer.setAttribute('aria-hidden', 'true');
-  }
-  const pointerEvents = Object.prototype.hasOwnProperty.call(options, 'pointerEvents')
-    ? options.pointerEvents
-    : 'none';
-  if(pointerEvents !== undefined && pointerEvents !== null){
-    markerContainer.style.pointerEvents = pointerEvents;
-  }
-  const userSelect = Object.prototype.hasOwnProperty.call(options, 'userSelect')
-    ? options.userSelect
-    : 'none';
-  if(userSelect !== undefined && userSelect !== null){
-    markerContainer.style.userSelect = userSelect;
-  }
-  const labelLines = getMarkerLabelLines(post);
-  const markerIcon = createMarkerIconElement(getMarkerIconUrlForPost(post));
-  const markerPill = createMarkerPillElement();
-  const markerLabel = createMarkerLabelElement(labelLines);
-  markerContainer.append(markerPill, markerIcon, markerLabel);
-  return { element: markerContainer, labelLines };
-}
-
 function showMultiPostCardContainer(point, items, options = {}){
   if(!map || typeof map.getContainer !== 'function') return null;
   if(!Array.isArray(items) || items.length <= 1) return null;
@@ -7757,28 +7543,70 @@ function showMultiPostCardContainer(point, items, options = {}){
   root.className = 'multi-post-map-container';
   root.style.visibility = 'hidden';
   const ordered = sortMultiPostItems(items);
-  if(ordered.length){
-    const summaryItem = document.createElement('div');
-    summaryItem.className = 'multi-post-map-summary';
-    summaryItem.setAttribute('aria-hidden', 'true');
-    summaryItem.textContent = `${ordered.length} posts here`;
-    root.appendChild(summaryItem);
-  }
+  const markerSources = window.subcategoryMarkers || {};
+  const markerIds = window.subcategoryMarkerIds || {};
+  const slugifyFn = typeof slugify === 'function'
+    ? slugify
+    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+  const markerIconUrlFor = (post)=>{
+    const candidates = [];
+    if(post && post.subcategory){
+      const mappedId = markerIds[post.subcategory];
+      if(mappedId) candidates.push(mappedId);
+      candidates.push(slugifyFn(post.subcategory));
+    }
+    candidates.push(MULTI_POST_MAPMARKER_ID);
+    const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
+    return url || MULTI_POST_MAPMARKER_URL;
+  };
+
+  const createIcon = (url)=>{
+    const icon = new Image();
+    try{ icon.decoding = 'async'; }catch(err){}
+    icon.alt = '';
+    icon.className = 'multi-post-marker-icon';
+    icon.draggable = false;
+    icon.onerror = ()=>{
+      icon.onerror = null;
+      icon.src = MULTI_POST_MAPMARKER_URL;
+    };
+    icon.src = url || MULTI_POST_MAPMARKER_URL;
+    return icon;
+  };
+
+  const summaryItem = document.createElement('div');
+  summaryItem.className = 'multi-post-marker-item multi-post-marker-item--summary';
+  summaryItem.setAttribute('aria-hidden', 'true');
+  const summaryIcon = createIcon(MULTI_POST_MAPMARKER_URL);
+  const summaryLabel = document.createElement('div');
+  summaryLabel.className = 'multi-post-marker-label multi-post-marker-label--summary';
+  const summaryLine = document.createElement('span');
+  summaryLine.textContent = `${ordered.length} posts here`;
+  summaryLabel.appendChild(summaryLine);
+  summaryItem.append(summaryIcon, summaryLabel);
+  root.appendChild(summaryItem);
 
   ordered.forEach(post => {
     if(!post) return;
-    const itemButton = document.createElement('button');
-    itemButton.type = 'button';
-    itemButton.className = 'multi-post-map-item';
-    const id = post.id ? String(post.id) : '';
-    if(id) itemButton.dataset.id = id;
-    const { element: markerContainer, labelLines } = buildMapMarkerContainer(post, { id, ariaHidden: true });
-    const ariaLabel = [labelLines.line1, labelLines.line2].filter(Boolean).join(' • ');
-    if(ariaLabel){
-      itemButton.setAttribute('aria-label', ariaLabel);
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'multi-post-marker-item';
+    if(post.id) item.dataset.id = String(post.id);
+    const iconUrl = markerIconUrlFor(post);
+    item.appendChild(createIcon(iconUrl));
+    const labelWrap = document.createElement('div');
+    labelWrap.className = 'multi-post-marker-label';
+    const labelLines = getMarkerLabelLines(post);
+    const line1 = document.createElement('span');
+    line1.textContent = labelLines.line1 || '';
+    labelWrap.appendChild(line1);
+    if(labelLines.line2){
+      const line2 = document.createElement('span');
+      line2.textContent = labelLines.line2;
+      labelWrap.appendChild(line2);
     }
-    itemButton.appendChild(markerContainer);
-    root.appendChild(itemButton);
+    item.appendChild(labelWrap);
+    root.appendChild(item);
   });
   containerEl.appendChild(root);
   multiPostCardState = {
@@ -7842,14 +7670,14 @@ function showMultiPostCardContainer(point, items, options = {}){
   };
 
   root.addEventListener('click', (evt)=>{
-    const item = evt.target.closest('.multi-post-map-item[data-id]');
+    const item = evt.target.closest('.multi-post-marker-item[data-id]');
     handleCardActivation(item, evt);
   }, { capture: true });
 
   root.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const item = evt.target.closest('.multi-post-map-item[data-id]');
+    const item = evt.target.closest('.multi-post-marker-item[data-id]');
     handleCardActivation(item, evt);
   }, { capture: true });
 
@@ -9757,7 +9585,6 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
-      MULTI_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -9901,7 +9728,7 @@ function makePosts(){
       if(p.member && p.member.avatar){
         return p.member.avatar;
       }
-      return 'assets/balloons/colourful-balloons-and-confetti-80.png';
+      return 'assets/balloons/Colourful-Balloons-80.png';
     }
 
     function mapCardHTML(p, opts={}){
@@ -9939,7 +9766,7 @@ function makePosts(){
         if(variant === 'list'){
           return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -9953,170 +9780,88 @@ function makePosts(){
 
     // Categories UI
     const categoryControllers = {};
-    const adminCategoryControllers = {};
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
-    const adminCategoryState = new Map();
-    function buildAdminFormCategories(){
-      if(!formbuilderCats){
-        return;
-      }
-      formbuilderCats.innerHTML = '';
-      adminCategoryState.clear();
-      Object.keys(adminCategoryControllers).forEach(key => delete adminCategoryControllers[key]);
-      categories.forEach(c => {
-        const el = document.createElement('div');
-        el.className = 'filter-category-menu';
-        el.dataset.category = c.name;
-        el.setAttribute('role', 'group');
-        el.setAttribute('aria-expanded', 'false');
-
-        const header = document.createElement('div');
-        header.className = 'filter-category-header';
-
-        const triggerWrap = document.createElement('div');
-        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
-
-        const menuBtn = document.createElement('button');
-        menuBtn.type = 'button';
-        menuBtn.className = 'filter-category-trigger';
-        menuBtn.setAttribute('aria-haspopup', 'true');
-        menuBtn.setAttribute('aria-expanded', 'false');
-        const menuId = `admin-category-menu-${slugify(c.name)}`;
-        menuBtn.setAttribute('aria-controls', menuId);
-
-        const categoryLogo = document.createElement('span');
-        categoryLogo.className = 'category-logo';
-        const iconPrefix = (window.ICON_BASE || {})[c.name];
-        if(iconPrefix){
-          const img = document.createElement('img');
-          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
-          img.width = 20;
-          img.height = 20;
-          img.alt = '';
-          categoryLogo.appendChild(img);
-        } else {
-          categoryLogo.textContent = c.name.charAt(0) || '';
-        }
-
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.textContent = c.name;
-
-        const arrow = document.createElement('span');
-        arrow.className = 'dropdown-arrow';
-        arrow.setAttribute('aria-hidden', 'true');
-
-        menuBtn.append(categoryLogo, label, arrow);
-
-        const optionsMenu = document.createElement('div');
-        optionsMenu.className = 'options-menu';
-        optionsMenu.id = menuId;
-        optionsMenu.hidden = true;
-
-        triggerWrap.append(menuBtn, optionsMenu);
-
-        const toggle = document.createElement('label');
-        toggle.className = 'cat-switch';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = true;
-        input.setAttribute('aria-label', `Toggle ${c.name} category`);
-        const slider = document.createElement('span');
-        slider.className = 'slider';
-        toggle.append(input, slider);
-
-        header.append(triggerWrap, toggle);
-        el.appendChild(header);
-        formbuilderCats.appendChild(el);
-
-        const state = {
-          active: true,
-          subs: new Set(c.subs)
-        };
-        adminCategoryState.set(c.name, state);
-
-        const subButtons = [];
-        c.subs.forEach(s => {
-          const subBtn = document.createElement('button');
-          subBtn.type = 'button';
-          subBtn.className = 'subcategory-option';
-          subBtn.dataset.category = c.name;
-          subBtn.dataset.subcategory = s;
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
-          const subLabel = subBtn.querySelector('.subcategory-label');
-          if(subLabel){
-            subLabel.textContent = s;
-          }
-          subBtn.setAttribute('aria-pressed', 'true');
-          subBtn.classList.add('on');
-          subBtn.addEventListener('click', () => {
-            if(!state.active) return;
-            const pressed = subBtn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            subBtn.classList.toggle('on', next);
-            if(next){
-              state.subs.add(s);
-            } else {
-              state.subs.delete(s);
+    const syncFormbuilderCats = ()=>{
+      if(!formbuilderCats || !catsEl) return;
+      const frag = document.createDocumentFragment();
+      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
+        const clone = menu.cloneNode(true);
+        const trigger = clone.querySelector('.filter-category-trigger');
+        const optionsMenu = clone.querySelector('.options-menu');
+        if(optionsMenu){
+          const originalId = optionsMenu.id || '';
+          const cloneId = originalId ? `${originalId}-formbuilder` : '';
+          if(cloneId){
+            optionsMenu.id = cloneId;
+            if(trigger){
+              trigger.setAttribute('aria-controls', cloneId);
             }
-          });
-          optionsMenu.appendChild(subBtn);
-          subButtons.push(subBtn);
-        });
-
-        let openState = false;
-        function syncExpanded(){
-          const expanded = state.active && openState;
-          el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          optionsMenu.hidden = !expanded;
-        }
-        function setOpenState(next){
-          openState = !!next;
-          syncExpanded();
-        }
-        function syncActive(){
-          el.classList.toggle('cat-off', !state.active);
-          menuBtn.disabled = !state.active;
-          menuBtn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
-          input.checked = state.active;
-          subButtons.forEach(btn => {
-            btn.disabled = !state.active;
-            btn.setAttribute('aria-disabled', state.active ? 'false' : 'true');
-          });
-          if(!state.active){
-            setOpenState(false);
           }
-          syncExpanded();
         }
-
-        menuBtn.addEventListener('click', () => {
-          if(menuBtn.disabled) return;
-          setOpenState(!openState);
-        });
-        input.addEventListener('change', () => {
-          state.active = input.checked;
-          syncActive();
-        });
-
-        syncActive();
-
-        adminCategoryControllers[c.name] = {
-          refreshLogos: () => {
-            subButtons.forEach(btn => {
-              const logoSpan = btn.querySelector('.subcategory-logo');
-              if(!logoSpan) return;
-              const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
-              logoSpan.innerHTML = iconHtml;
-            });
+        if(trigger && optionsMenu){
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          optionsMenu.hidden = !isExpanded;
+          trigger.addEventListener('click', ()=>{
+            if(trigger.getAttribute('aria-disabled') === 'true') return;
+            const open = clone.getAttribute('aria-expanded') === 'true';
+            const next = !open;
+            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            optionsMenu.hidden = !next;
+          });
+        }
+        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
+        if(optionsMenu){
+          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
+        }
+        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
+        const syncCatState = checked =>{
+          clone.classList.toggle('cat-off', !checked);
+          if(trigger){
+            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          }
+          optionButtons.forEach(btn=>{
+            btn.disabled = !checked;
+            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          });
+          if(!checked && optionsMenu){
+            optionsMenu.hidden = true;
+            clone.setAttribute('aria-expanded', 'false');
+            if(trigger){
+              trigger.setAttribute('aria-expanded', 'false');
+            }
           }
         };
+        const catSwitchInput = clone.querySelector('.cat-switch input');
+        if(catSwitchInput){
+          const initialActive = !clone.classList.contains('cat-off');
+          catSwitchInput.checked = initialActive;
+          syncCatState(initialActive);
+          catSwitchInput.addEventListener('change', ()=>{
+            syncCatState(catSwitchInput.checked);
+          });
+        } else {
+          syncCatState(!clone.classList.contains('cat-off'));
+        }
+        optionButtons.forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            if(btn.disabled) return;
+            const pressed = btn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            btn.classList.toggle('on', next);
+          });
+        });
+        frag.appendChild(clone);
       });
-    }
+      formbuilderCats.innerHTML = '';
+      formbuilderCats.appendChild(frag);
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -10126,11 +9871,7 @@ function makePosts(){
       resetCategoriesBtn.classList.toggle('active', anyCategoryOff || anySubOff);
     }
     function refreshSubcategoryLogos(){
-      const controllers = [
-        ...Object.values(categoryControllers),
-        ...Object.values(adminCategoryControllers)
-      ];
-      controllers.forEach(ctrl => {
+      Object.values(categoryControllers).forEach(ctrl=>{
         if(ctrl && typeof ctrl.refreshLogos === 'function'){
           ctrl.refreshLogos();
         }
@@ -10319,10 +10060,14 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      buildAdminFormCategories();
-      refreshSubcategoryLogos();
+      syncFormbuilderCats();
+      if(formbuilderCats){
+        const observer = new MutationObserver(()=> syncFormbuilderCats());
+        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
+      }
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
+        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
@@ -10347,10 +10092,6 @@ function makePosts(){
     $('#resetBtn').addEventListener('click',()=>{
       $('#keyword-textbox').value='';
       $('#daterange-textbox').value='';
-      const minPrice = $('#min-price-input');
-      if(minPrice) minPrice.value='';
-      const maxPrice = $('#max-price-input');
-      if(maxPrice) maxPrice.value='';
       const expired = $('#expiredToggle');
       if(expired){
         expired.checked = false;
@@ -10369,38 +10110,21 @@ function makePosts(){
 
     function updateClearButtons(){
       const kw = $('#keyword-textbox');
-      if(kw){
-        const kwX = kw.parentElement?.querySelector('.keyword-clear-button');
-        kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
-      }
+      const kwX = kw.parentElement.querySelector('.keyword-clear-button');
+      kwX && kwX.classList.toggle('active', kw.value.trim() !== '');
       const date = $('#daterange-textbox');
-      if(date){
-        const dateX = date.parentElement?.querySelector('.daterange-clear-button');
-        const hasDate = (dateStart || dateEnd) || $('#expiredToggle')?.checked;
-        dateX && dateX.classList.toggle('active', !!hasDate);
-      }
-      const priceBtn = $('.price-clear-button');
-      if(priceBtn){
-        const minInput = $('#min-price-input');
-        const maxInput = $('#max-price-input');
-        const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
-        priceBtn.classList.toggle('active', hasPrice);
-      }
+      const dateX = date.parentElement.querySelector('.daterange-clear-button');
+      const hasDate = (dateStart || dateEnd) || $('#expiredToggle').checked;
+      dateX && dateX.classList.toggle('active', !!hasDate);
       updateResetBtn();
     }
 
     function nonLocationFiltersActive(){
-      const kwInput = $('#keyword-textbox');
-      const kw = kwInput ? kwInput.value.trim() !== '' : false;
-      const dateInput = $('#daterange-textbox');
-      const raw = dateInput ? dateInput.value.trim() : '';
+      const kw = $('#keyword-textbox').value.trim() !== '';
+      const raw = $('#daterange-textbox').value.trim();
       const hasDate = !!(dateStart || dateEnd || raw);
-      const expiredToggle = $('#expiredToggle');
-      const expired = !!(expiredToggle && expiredToggle.checked);
-      const minInput = $('#min-price-input');
-      const maxInput = $('#max-price-input');
-      const hasPrice = [minInput, maxInput].some(input => input && input.value.trim() !== '');
-      return kw || hasDate || expired || hasPrice;
+      const expired = $('#expiredToggle').checked;
+      return kw || hasDate || expired;
     }
 
     function updateResetBtn(){
@@ -10417,44 +10141,6 @@ function makePosts(){
     const dateRangeInput = $('#daterange-textbox');
     $('#keyword-textbox').addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
     dateRangeInput?.addEventListener('input', ()=>{ applyFilters(); updateClearButtons(); });
-    const minPriceInputEl = $('#min-price-input');
-    const maxPriceInputEl = $('#max-price-input');
-    const handlePriceInput = ()=>{ applyFilters(); updateClearButtons(); };
-    const sanitizePriceInputValue = input => {
-      if(!input) return;
-      const sanitized = input.value.replace(/\D+/g, '');
-      if(sanitized !== input.value){
-        input.value = sanitized;
-      }
-    };
-    const restrictPriceKeyInput = event => {
-      if(event.defaultPrevented) return;
-      if(event.ctrlKey || event.metaKey || event.altKey) return;
-      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
-      if(allowedKeys.includes(event.key)) return;
-      if(event.key.length === 1 && /\d/.test(event.key)) return;
-      if(event.key.length === 1){
-        event.preventDefault();
-      }
-    };
-    const attachPriceInputHandlers = input => {
-      if(!input) return;
-      sanitizePriceInputValue(input);
-      input.addEventListener('keydown', restrictPriceKeyInput);
-      input.addEventListener('input', event => {
-        sanitizePriceInputValue(event.target);
-        handlePriceInput();
-      });
-    };
-    attachPriceInputHandlers(minPriceInputEl);
-    attachPriceInputHandlers(maxPriceInputEl);
-    const priceClearBtn = $('.price-clear-button');
-    priceClearBtn?.addEventListener('click', ()=>{
-      if(minPriceInputEl) minPriceInputEl.value='';
-      if(maxPriceInputEl) maxPriceInputEl.value='';
-      applyFilters();
-      updateClearButtons();
-    });
     if(dateRangeInput){
       dateRangeInput.addEventListener('focus', ()=> openCalendarPopup());
       dateRangeInput.addEventListener('click', ()=> openCalendarPopup());
@@ -12540,7 +12226,7 @@ if (!map.__pillHooksInstalled) {
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
+      const MARKER_MIN_ZOOM = MARKER_SPRITE_ZOOM;
       const existing = map.getSource('posts');
       if(!existing){
         map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
@@ -12659,52 +12345,34 @@ if (!map.__pillHooksInstalled) {
         multi: ['all', ...markerLabelBaseConditions, ['==', ['coalesce', ['get','multi'], 0], 1]]
       };
 
-      const markerLabelSpriteId = ['coalesce', ['get','labelSpriteId'], ''];
-      const markerLabelIconImage = ['let', 'markerLabelFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ID],
-        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
-          ['case',
-            ['==', ['var', 'markerLabelSpriteKey'], ''],
-            ['image', ['var', 'markerLabelFallbackId']],
-            ['coalesce',
-              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey']]],
-              ['image', ['var', 'markerLabelFallbackId']]
-            ]
-          ]
+      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
         ]
       ];
 
-      const markerLabelHighlightIconImage = ['let', 'markerLabelHighlightFallbackId', ['coalesce', ['get','sub'], ['get','baseSub'], MARKER_LABEL_BG_ACCENT_ID],
-        ['let', 'markerLabelSpriteKey', markerLabelSpriteId,
-          ['case',
-            ['==', ['var', 'markerLabelSpriteKey'], ''],
-            ['image', ['var', 'markerLabelHighlightFallbackId']],
-            ['coalesce',
-              ['image', ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var', 'markerLabelSpriteKey'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]],
-              ['image', ['var', 'markerLabelHighlightFallbackId']]
-            ]
-          ]
+      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ACCENT_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
         ]
       ];
 
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
-      const createMarkerLabelIconSize = () => ['interpolate', ['linear'], ['zoom'],
-        0, 0.25,
-        MARKER_SPRITE_ZOOM, 0.25,
-        MARKER_SPRITE_FULL_ZOOM, 1,
-        22, 1
-      ];
 
-      const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
-      const multiMarkerLabelMinZoom = 0;
+      const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: multiMarkerLabelMinZoom },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: multiMarkerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity },
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minzoom }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity }) => {
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12713,13 +12381,13 @@ if (!map.__pillHooksInstalled) {
               type:'symbol',
               source,
               filter: filter || markerLabelFilters.single,
-              minzoom: Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom,
+              minzoom: markerLabelMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': createMarkerLabelIconSize(),
+                'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'center',
+                'icon-anchor': 'left',
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
@@ -12740,17 +12408,17 @@ if (!map.__pillHooksInstalled) {
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', createMarkerLabelIconSize()); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setLayerZoomRange(id, Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom, 24); }catch(e){}
+        try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
       });
       [
         'hover-fill',
@@ -12818,7 +12486,7 @@ if (!map.__pillHooksInstalled) {
         window.addEventListener('resize', repositionMultiPostCardContainer);
 
         function createMapCardOverlay(post, opts = {}){
-          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null, showCard = true } = opts;
+          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
           const previousKey = selectedVenueKey;
           if(overlayVenueKey){
             selectedVenueKey = overlayVenueKey;
@@ -12834,110 +12502,163 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
 
-            const { element: markerContainer, labelLines } = buildMapMarkerContainer(post, {
-              id: overlayRoot.dataset.id,
-              ariaHidden: true,
-              pointerEvents: 'none',
-              userSelect: 'none'
-            });
+            const markerContainer = document.createElement('div');
+            markerContainer.className = 'mapmarker-container';
+            markerContainer.dataset.id = overlayRoot.dataset.id;
+            markerContainer.setAttribute('aria-hidden', 'true');
+            markerContainer.style.pointerEvents = 'none';
+            markerContainer.style.userSelect = 'none';
 
-            overlayRoot.appendChild(markerContainer);
-            overlayRoot.classList.add('is-card-visible');
-            if(showCard){
-              overlayRoot.style.pointerEvents = '';
-
-              const cardRoot = document.createElement('div');
-              cardRoot.className = 'map-card map-card--popup';
-              cardRoot.dataset.id = overlayRoot.dataset.id;
-              cardRoot.setAttribute('aria-hidden', 'true');
-              cardRoot.style.pointerEvents = 'auto';
-              cardRoot.style.userSelect = 'none';
-
-              const thumbImg = new Image();
-              try{ thumbImg.decoding = 'async'; }catch(e){}
-              thumbImg.alt = '';
-              const thumbFallback = 'assets/funmap-logo-small.png';
-              thumbImg.loading = 'lazy';
-              thumbImg.onerror = ()=>{
-                thumbImg.onerror = null;
-                thumbImg.src = thumbFallback;
-              };
-              thumbImg.src = imgThumb(post) || thumbFallback;
-              thumbImg.className = 'map-card-thumb';
-              thumbImg.referrerPolicy = 'no-referrer';
-              thumbImg.draggable = false;
-
-              const labelEl = document.createElement('div');
-              labelEl.className = 'map-card-label';
-              const titleWrap = document.createElement('div');
-              titleWrap.className = 'map-card-title';
-              const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-                ? labelLines.cardTitleLines.slice(0, 2)
-                : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-              cardTitleLines.forEach(line => {
-                if(!line) return;
-                const lineEl = document.createElement('div');
-                lineEl.className = 'map-card-title-line';
-                lineEl.textContent = line;
-                titleWrap.appendChild(lineEl);
-              });
-              if(!titleWrap.childElementCount){
-                const lineEl = document.createElement('div');
-                lineEl.className = 'map-card-title-line';
-                lineEl.textContent = '';
-                titleWrap.appendChild(lineEl);
-              }
-              labelEl.appendChild(titleWrap);
-              const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
-              if(venueLine){
-                const venueEl = document.createElement('div');
-                venueEl.className = 'map-card-venue';
-                venueEl.textContent = venueLine;
-                labelEl.appendChild(venueEl);
-              }
-
-              cardRoot.append(thumbImg, labelEl);
-              overlayRoot.appendChild(cardRoot);
-
-              const handleOverlayClick = (ev)=>{
-                ev.preventDefault();
-                ev.stopPropagation();
-                const pid = overlayRoot.dataset.id;
-                if(!pid) return;
-                callWhenDefined('openPost', (fn)=>{
-                  requestAnimationFrame(() => {
-                    try{
-                      touchMarker = null;
-                      stopSpin();
-                      if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-                        try{ closePanel(filterPanel); }catch(err){}
-                      }
-                      fn(pid, false, true);
-                    }catch(err){ console.error(err); }
-                  });
-                });
-              };
-              cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
-              ['pointerdown','mousedown','touchstart'].forEach(type => {
-                cardRoot.addEventListener(type, (ev)=>{
-                  const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
-                  const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
-                  if(!isTouchLike){
-                    try{ ev.preventDefault(); }catch(err){}
-                  }
-                  try{ ev.stopPropagation(); }catch(err){}
-                }, { capture: true });
-              });
-              cardRoot.addEventListener('mouseenter', ()=>{
-                window.__overCard = true;
-              });
-              cardRoot.addEventListener('mouseleave', ()=>{
-                window.__overCard = false;
-                if(listLocked) return;
-                const currentPopup = hoverPopup;
-                schedulePopupRemoval(currentPopup, 160);
-              });
+            const markerIcon = new Image();
+            try{ markerIcon.decoding = 'async'; }catch(e){}
+            markerIcon.alt = '';
+            markerIcon.className = 'mapmarker';
+            markerIcon.draggable = false;
+            const markerSources = window.subcategoryMarkers || {};
+            const markerIds = window.subcategoryMarkerIds || {};
+            const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+            const markerIdCandidates = [];
+            if(post && post.subcategory){
+              const mappedId = markerIds[post.subcategory];
+              if(mappedId) markerIdCandidates.push(mappedId);
+              markerIdCandidates.push(slugifyFn(post.subcategory));
             }
+            markerIdCandidates.push(MULTI_POST_MAPMARKER_ID);
+            const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+            const markerFallback = MULTI_POST_MAPMARKER_URL;
+            markerIcon.referrerPolicy = 'no-referrer';
+            markerIcon.loading = 'lazy';
+            markerIcon.onerror = ()=>{
+              markerIcon.onerror = null;
+              markerIcon.src = markerFallback;
+            };
+            markerIcon.src = markerIconUrl || markerFallback;
+
+            const markerPill = new Image();
+            try{ markerPill.decoding = 'async'; }catch(e){}
+            markerPill.alt = '';
+            markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
+            markerPill.className = 'mapmarker-pill';
+            markerPill.style.opacity = '0.9';
+            markerPill.draggable = false;
+
+            const labelLines = getMarkerLabelLines(post);
+            const markerLabel = document.createElement('div');
+            markerLabel.className = 'mapmarker-label';
+            const markerLine1 = document.createElement('div');
+            markerLine1.className = 'mapmarker-label-line';
+            markerLine1.textContent = labelLines.line1;
+            markerLabel.appendChild(markerLine1);
+            if(labelLines.line2){
+              const markerLine2 = document.createElement('div');
+              markerLine2.className = 'mapmarker-label-line';
+              markerLine2.textContent = labelLines.line2;
+              markerLabel.appendChild(markerLine2);
+            }
+
+            markerContainer.append(markerPill, markerIcon, markerLabel);
+
+            const cardRoot = document.createElement('div');
+            cardRoot.className = 'map-card map-card--popup';
+            cardRoot.dataset.id = overlayRoot.dataset.id;
+            cardRoot.setAttribute('aria-hidden', 'true');
+            cardRoot.style.pointerEvents = 'auto';
+            cardRoot.style.userSelect = 'none';
+
+            const pillImg = new Image();
+            try{ pillImg.decoding = 'async'; }catch(e){}
+            pillImg.alt = '';
+            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+            pillImg.className = 'map-card-pill';
+            pillImg.style.opacity = '0.9';
+            pillImg.draggable = false;
+
+            const thumbImg = new Image();
+            try{ thumbImg.decoding = 'async'; }catch(e){}
+            thumbImg.alt = '';
+            const thumbFallback = 'assets/funmap-logo-small.png';
+            thumbImg.loading = 'lazy';
+            thumbImg.onerror = ()=>{
+              thumbImg.onerror = null;
+              thumbImg.src = thumbFallback;
+            };
+            thumbImg.src = imgThumb(post) || thumbFallback;
+            thumbImg.className = 'map-card-thumb';
+            thumbImg.referrerPolicy = 'no-referrer';
+            thumbImg.draggable = false;
+
+            const labelEl = document.createElement('div');
+            labelEl.className = 'map-card-label';
+            const titleWrap = document.createElement('div');
+            titleWrap.className = 'map-card-title';
+            const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+              ? labelLines.cardTitleLines.slice(0, 2)
+              : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+            cardTitleLines.forEach(line => {
+              if(!line) return;
+              const lineEl = document.createElement('div');
+              lineEl.className = 'map-card-title-line';
+              lineEl.textContent = line;
+              titleWrap.appendChild(lineEl);
+            });
+            if(!titleWrap.childElementCount){
+              const lineEl = document.createElement('div');
+              lineEl.className = 'map-card-title-line';
+              lineEl.textContent = '';
+              titleWrap.appendChild(lineEl);
+            }
+            labelEl.appendChild(titleWrap);
+            const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+            if(venueLine){
+              const venueEl = document.createElement('div');
+              venueEl.className = 'map-card-venue';
+              venueEl.textContent = venueLine;
+              labelEl.appendChild(venueEl);
+            }
+
+            cardRoot.append(pillImg, thumbImg, labelEl);
+            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.classList.add('is-card-visible');
+            overlayRoot.style.pointerEvents = '';
+
+            const handleOverlayClick = (ev)=>{
+              ev.preventDefault();
+              ev.stopPropagation();
+              const pid = overlayRoot.dataset.id;
+              if(!pid) return;
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    fn(pid, false, true);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            };
+            cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
+            ['pointerdown','mousedown','touchstart'].forEach(type => {
+              cardRoot.addEventListener(type, (ev)=>{
+                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+                if(!isTouchLike){
+                  try{ ev.preventDefault(); }catch(err){}
+                }
+                try{ ev.stopPropagation(); }catch(err){}
+              }, { capture: true });
+            });
+            cardRoot.addEventListener('mouseenter', ()=>{
+              window.__overCard = true;
+            });
+            cardRoot.addEventListener('mouseleave', ()=>{
+              window.__overCard = false;
+              if(listLocked) return;
+              const currentPopup = hoverPopup;
+              schedulePopupRemoval(currentPopup, 160);
+            });
 
             const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
@@ -13058,20 +12779,6 @@ if (!map.__pillHooksInstalled) {
             }
             const state = showMultiPostCardContainer(e.point, multi, { venueKey });
             if(state){
-              const primaryPost = multi.find(Boolean);
-              if(primaryPost){
-                const marker = createMapCardOverlay(primaryPost, {
-                  targetLngLat,
-                  fixedLngLat,
-                  eventLngLat: e && e.lngLat,
-                  venueKey,
-                  showCard: false
-                });
-                if(marker){
-                  hoverPopup = marker;
-                  updateSelectedMarkerRing();
-                }
-              }
               return;
             }
           }
@@ -13374,8 +13081,6 @@ if (!map.__pillHooksInstalled) {
     function captureState(){
       const {start,end} = orderedRange();
       const openCats = Object.values(categoryControllers).filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState()).map(ctrl=>ctrl.name);
-      const minPriceEl = $('#min-price-input');
-      const maxPriceEl = $('#max-price-input');
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#keyword-textbox').value,
@@ -13383,8 +13088,6 @@ if (!map.__pillHooksInstalled) {
         start: start ? toISODate(start) : null,
         end: end ? toISODate(end) : null,
         expired: $('#expiredToggle').checked,
-        priceMin: minPriceEl ? minPriceEl.value : '',
-        priceMax: maxPriceEl ? maxPriceEl.value : '',
         cats: [...selection.cats],
         subs: [...selection.subs],
         openCats
@@ -13394,10 +13097,6 @@ if (!map.__pillHooksInstalled) {
     function restoreState(st){
       if(!st) return;
       $('#keyword-textbox').value = st.kw || '';
-      const minPriceEl = $('#min-price-input');
-      if(minPriceEl) minPriceEl.value = st.priceMin || '';
-      const maxPriceEl = $('#max-price-input');
-      if(maxPriceEl) maxPriceEl.value = st.priceMax || '';
       dateStart = st.start ? parseISODate(st.start) : null;
       dateEnd = st.end ? parseISODate(st.end) : null;
       if(!st.start && st.range){
@@ -14609,10 +14308,6 @@ function openPostModal(id){
              p.lat >= postPanel.getSouth() && p.lat <= postPanel.getNorth();
     }
     function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
-function parsePriceInputValue(value){ if(value==null) return null; const stringValue=typeof value==='string'?value:String(value); const trimmed=stringValue.trim(); if(!trimmed) return null; const normalized=trimmed.replace(/[^0-9.,]/g,''); if(!normalized) return null; const num=parseFloat(normalized.replace(/,/g,'')); return Number.isFinite(num)?num:null; }
-    function parsePriceNumbers(str){ if(typeof str!=='string') return []; const matches=str.match(/[0-9]+(?:[.,][0-9]+)?/g); if(!matches) return []; return matches.map(s=>parseFloat(s.replace(/,/g,''))).filter(n=>Number.isFinite(n)); }
-    function getPostPriceBounds(p){ if(!p) return null; if(p.__priceMin!==undefined){ if(p.__priceMin===null) return null; return {min:p.__priceMin,max:p.__priceMax}; } const nums=[]; if(typeof p.price==='string'){ nums.push(...parsePriceNumbers(p.price)); } if(Array.isArray(p.locations)){ p.locations.forEach(loc=>{ if(loc && typeof loc.price==='string'){ nums.push(...parsePriceNumbers(loc.price)); } }); } if(!nums.length){ p.__priceMin=null; p.__priceMax=null; return null; } const min=Math.min(...nums); const max=Math.max(...nums); p.__priceMin=min; p.__priceMax=max; return {min,max}; }
-    function priceMatch(p){ const minEl=$('#min-price-input'); const maxEl=$('#max-price-input'); const minVal=minEl?parsePriceInputValue(minEl.value):null; const maxVal=maxEl?parsePriceInputValue(maxEl.value):null; if(minVal===null && maxVal===null) return true; const bounds=getPostPriceBounds(p); if(!bounds) return false; if(minVal!==null && bounds.max < minVal) return false; if(maxVal!==null && bounds.min > maxVal) return false; return true; }
     function dateMatch(p){
       const {start,end} = orderedRange();
       const expiredChk = $('#expiredToggle');
@@ -14682,7 +14377,7 @@ function parsePriceInputValue(value){ if(value==null) return null; const stringV
         return;
       }
       if(!postsLoaded) return;
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
       const today = new Date(); today.setHours(0,0,0,0);
@@ -15098,8 +14793,6 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-let pointerStartedInsideFilter = false;
-
 function handleDocInteract(e){
   if(e.target.closest('.image-modal-container')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
@@ -15117,7 +14810,6 @@ function handleDocInteract(e){
     const pinBtn = filterPanel.querySelector('.pin-panel');
     const pinned = pinBtn && pinBtn.getAttribute('aria-pressed')==='true';
     if(content && !content.contains(e.target) && !pinned){
-      if(pointerStartedInsideFilter) return;
       closePanel(filterPanel);
     }
   }
@@ -15126,16 +14818,8 @@ function handleDocInteract(e){
 document.addEventListener('click', handleDocInteract);
 document.addEventListener('pointerdown', (e) => {
   const target = e.target;
-  pointerStartedInsideFilter = !!target.closest('#filterPanel .panel-content');
-  if(!pointerStartedInsideFilter){
-    requestAnimationFrame(() => handleDocInteract({ target }));
-  }
+  requestAnimationFrame(() => handleDocInteract({ target }));
 });
-const resetPointerStartedInsideFilter = () => { pointerStartedInsideFilter = false; };
-document.addEventListener('pointerup', () => {
-  setTimeout(resetPointerStartedInsideFilter, 0);
-});
-document.addEventListener('pointercancel', resetPointerStartedInsideFilter);
 
 // Panels and admin/member interactions
 (function(){
