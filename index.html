@@ -2037,7 +2037,7 @@ button[aria-expanded="true"] .results-arrow{
 }
 #filterPanel .price-range-row input{
   background:#ffffff;
-  color:var(--ink);
+  color:var(--dropdown-text);
 }
 #filterPanel .price-range-row .price-separator{
   color:#ffffff;
@@ -14412,12 +14412,46 @@ function openPostModal(id){
     function priceMatch(p){
       const {min, max} = getPriceFilterValues();
       if(min === null && max === null) return true;
-      const {min: postMinRaw, max: postMaxRaw} = parsePriceRange(p && p.price);
-      const postMin = postMinRaw !== null ? postMinRaw : postMaxRaw;
-      const postMax = postMaxRaw !== null ? postMaxRaw : postMinRaw;
-      if(postMin === null && postMax === null) return false;
-      if(min !== null && postMax !== null && postMax < min) return false;
-      if(max !== null && postMin !== null && postMin > max) return false;
+      const ranges = [];
+      const addRange = value => {
+        const parsed = parsePriceRange(value);
+        if(!parsed) return;
+        const hasMin = parsed.min !== null;
+        const hasMax = parsed.max !== null;
+        if(!hasMin && !hasMax) return;
+        const normalizedMin = hasMin ? parsed.min : parsed.max;
+        const normalizedMax = hasMax ? parsed.max : parsed.min;
+        if(normalizedMin === null && normalizedMax === null) return;
+        ranges.push({
+          min: normalizedMin,
+          max: normalizedMax
+        });
+      };
+      addRange(p && p.price);
+      if(p && Array.isArray(p.locations)){
+        p.locations.forEach(loc => {
+          if(loc) addRange(loc.price);
+        });
+      }
+      if(!ranges.length) return false;
+      const aggregatedMin = ranges.reduce((acc, range) => {
+        const candidate = range.min !== null ? range.min : range.max;
+        if(candidate === null) return acc;
+        return acc === null ? candidate : Math.min(acc, candidate);
+      }, null);
+      const aggregatedMax = ranges.reduce((acc, range) => {
+        const candidate = range.max !== null ? range.max : range.min;
+        if(candidate === null) return acc;
+        return acc === null ? candidate : Math.max(acc, candidate);
+      }, null);
+      if(min !== null && aggregatedMax !== null && aggregatedMax < min) return false;
+      if(max !== null && aggregatedMin !== null && aggregatedMin > max) return false;
+      const satisfiesBounds = ranges.some(range => {
+        if(min !== null && range.max !== null && range.max < min) return false;
+        if(max !== null && range.min !== null && range.min > max) return false;
+        return true;
+      });
+      if(!satisfiesBounds) return false;
       return true;
     }
     function dateMatch(p){
@@ -14905,6 +14939,8 @@ document.addEventListener('keydown', e=>{
   }
 });
 
+let pointerStartedInFilterContent = false;
+
 function handleDocInteract(e){
   if(e.target.closest('.image-modal-container')) return;
   if(logoEls.some(el => el.contains(e.target))) return;
@@ -14917,20 +14953,36 @@ function handleDocInteract(e){
     }
   }
   const filterPanel = document.getElementById('filterPanel');
+  const fromPointerDown = !!e.__fromPointerDown;
   if(filterPanel && filterPanel.classList.contains('show')){
     const content = filterPanel.querySelector('.panel-content');
     const pinBtn = filterPanel.querySelector('.pin-panel');
     const pinned = pinBtn && pinBtn.getAttribute('aria-pressed')==='true';
+    const startedInside = pointerStartedInFilterContent;
     if(content && !content.contains(e.target) && !pinned){
+      if(startedInside && !fromPointerDown){
+        pointerStartedInFilterContent = false;
+        return;
+      }
       closePanel(filterPanel);
+      pointerStartedInFilterContent = false;
+      return;
     }
+    if(!fromPointerDown){
+      pointerStartedInFilterContent = false;
+    }
+  } else if(!fromPointerDown){
+    pointerStartedInFilterContent = false;
   }
 }
 
 document.addEventListener('click', handleDocInteract);
 document.addEventListener('pointerdown', (e) => {
   const target = e.target;
-  requestAnimationFrame(() => handleDocInteract({ target }));
+  const filterPanel = document.getElementById('filterPanel');
+  const content = filterPanel ? filterPanel.querySelector('.panel-content') : null;
+  pointerStartedInFilterContent = !!(filterPanel && filterPanel.classList.contains('show') && content && content.contains(target));
+  requestAnimationFrame(() => handleDocInteract({ target, __fromPointerDown: true }));
 });
 
 // Panels and admin/member interactions
