@@ -6664,7 +6664,9 @@ if (typeof slugify !== 'function') {
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
-        'marker-label-highlight',
+        'marker-label-highlight'
+      ];
+      const MULTI_POST_MARKER_LAYER_IDS = [
         'multi-post-mapmarker-label',
         'multi-post-mapmarker-label-highlight'
       ];
@@ -9622,6 +9624,7 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
+      MULTI_POST_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -12435,13 +12438,15 @@ if (!map.__pillHooksInstalled) {
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
+      const multiPostLabelMinZoom = 0;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom },
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: multiPostLabelMinZoom },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: multiPostLabelMinZoom }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
+        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12450,7 +12455,7 @@ if (!map.__pillHooksInstalled) {
               type:'symbol',
               source,
               filter: filter || markerLabelFilters.single,
-              minzoom: markerLabelMinZoom,
+              minzoom: layerMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
                 'icon-size': 1,
@@ -12487,15 +12492,9 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
+        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
-      [
-        'hover-fill',
-        'marker-label',
-        'marker-label-highlight',
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
-      ].forEach(id=>{
+      [...MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
