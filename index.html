@@ -6776,13 +6776,15 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = 8;
+      const MULTI_CARD_MIN_ZOOM = 0;
+      const MULTI_MARKER_LAYER_IDS = [
+        'multi-post-mapmarker-label',
+        'multi-post-mapmarker-label-highlight'
+      ];
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
-        'marker-label-highlight',
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
+        'marker-label-highlight'
       ];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
@@ -9736,6 +9738,7 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
+      MULTI_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -12669,11 +12672,12 @@ if (!map.__pillHooksInstalled) {
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
+      const multiMarkerLabelMinZoom = 0;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom }
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: multiMarkerLabelMinZoom },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: multiMarkerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minzoom }) => {
         let layerExists = !!map.getLayer(id);
