@@ -12452,6 +12452,7 @@ if (!map.__pillHooksInstalled) {
         const isMultiPostLayer = MULTI_POST_MARKER_LAYER_IDS.includes(id);
         const fallbackMinZoom = isMultiPostLayer ? MULTI_POST_LABEL_MIN_ZOOM : markerLabelMinZoom;
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : fallbackMinZoom;
+        const zoomRangeMin = isMultiPostLayer ? MULTI_POST_LABEL_MIN_ZOOM : layerMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12460,7 +12461,7 @@ if (!map.__pillHooksInstalled) {
               type:'symbol',
               source,
               filter: filter || markerLabelFilters.single,
-              minzoom: layerMinZoom,
+              minzoom: zoomRangeMin,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
                 'icon-size': 1,
@@ -12497,7 +12498,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
-        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
+        try{ map.setLayerZoomRange(id, zoomRangeMin, 24); }catch(e){}
       });
       ALL_MARKER_LAYER_IDS.forEach(id=>{
         if(map.getLayer(id)){
