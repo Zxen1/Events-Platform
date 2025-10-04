@@ -4771,20 +4771,23 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   pointer-events: auto;
   touch-action: pan-y;
 }
 
 .multi-post-marker-anchor {
   position: relative;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+.multi-post-marker-anchor:focus-visible {
+  outline: 2px solid #2e3a72;
+  outline-offset: 4px;
+  border-radius: 50%;
 }
 
 .multi-post-marker-anchor img {
@@ -4809,39 +4812,33 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
-.multi-post-marker-child {
-  background: none;
-  border: none;
-  padding: 0;
+.multi-post-marker-children .mapmarker-container {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  pointer-events: auto;
   cursor: pointer;
 }
 
-.multi-post-marker-child:focus-visible {
+.multi-post-marker-children .mapmarker-container:focus-visible {
   outline: 2px solid #2e3a72;
   outline-offset: 4px;
   border-radius: 16px;
 }
 
-.multi-post-marker-child .mapmarker-container {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
-  pointer-events: none;
-}
-
-.multi-post-marker-child .mapmarker-pill {
+.multi-post-marker-children .mapmarker-pill {
   visibility: visible;
   opacity: 0.9;
 }
 
-.multi-post-marker-stack.is-highlighted .multi-post-marker-child .mapmarker-container,
-.multi-post-marker-child.is-active .mapmarker-container,
-.multi-post-marker-child:hover .mapmarker-container,
-.multi-post-marker-child:focus-visible .mapmarker-container {
+.multi-post-marker-stack.is-highlighted .multi-post-marker-children .mapmarker-container,
+.multi-post-marker-children .mapmarker-container.is-active,
+.multi-post-marker-children .mapmarker-container:hover,
+.multi-post-marker-children .mapmarker-container:focus-visible {
   background-color: #2e3a72;
 }
 
@@ -7337,9 +7334,9 @@ if (typeof slugify !== 'function') {
         if(entry.element){
           entry.element.classList.toggle('is-highlighted', hasAny);
         }
-        entry.childButtons.forEach((btn, id) => {
+        entry.childMarkers.forEach((marker, id) => {
           const isHighlighted = idSet.has(id) && (highlightAllChildren || !activeIdStr || id === activeIdStr);
-          btn.classList.toggle('is-active', isHighlighted);
+          marker.classList.toggle('is-active', isHighlighted);
         });
       });
     }
@@ -7569,21 +7566,17 @@ function createMarkerLabel(labelLines){
 function buildMultiMarkerChild(post){
   const id = post && post.id ? String(post.id) : '';
   if(!id) return null;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'multi-post-marker-child';
-  button.dataset.id = id;
   const markerContainer = document.createElement('div');
   markerContainer.className = 'mapmarker-container';
   markerContainer.dataset.id = id;
+  markerContainer.tabIndex = 0;
   const labelLines = getMarkerLabelLines(post);
   const iconUrl = markerIconUrlForPost(post);
   const markerIcon = createMarkerIcon(iconUrl);
   const markerPill = createMarkerPill();
   const markerLabel = createMarkerLabel(labelLines);
   markerContainer.append(markerPill, markerIcon, markerLabel);
-  button.appendChild(markerContainer);
-  return { button, id };
+  return { markerContainer, id };
 }
 
 function removeMultiMarkerOverlay(key){
@@ -7609,9 +7602,10 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
-    const anchorBtn = document.createElement('button');
-    anchorBtn.type = 'button';
+    const anchorBtn = document.createElement('div');
     anchorBtn.className = 'multi-post-marker-anchor';
+    anchorBtn.tabIndex = 0;
+    anchorBtn.setAttribute('role', 'button');
     const anchorIcon = new Image();
     try{ anchorIcon.decoding = 'async'; }catch(err){}
     anchorIcon.alt = '';
@@ -7634,7 +7628,7 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       countEl,
       childrenRoot,
       postIds: [],
-      childButtons: new Map(),
+      childMarkers: new Map(),
       venueKey
     };
     multiMarkerOverlays.set(venueKey, entry);
@@ -7684,15 +7678,16 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
   const ordered = sortMultiPostItems(posts).filter(item => item && item.id !== undefined && item.id !== null);
   entry.postIds = ordered.map(post => String(post.id));
   entry.childrenRoot.innerHTML = '';
-  entry.childButtons.clear();
+  entry.childMarkers.clear();
   ordered.forEach(post => {
     const child = buildMultiMarkerChild(post);
     if(!child) return;
-    const { button, id } = child;
-    button.setAttribute('aria-label', [post.title, getPrimaryVenueName(post)].filter(Boolean).join(' • '));
-    entry.childButtons.set(id, button);
+    const { markerContainer, id } = child;
+    markerContainer.setAttribute('aria-label', [post.title, getPrimaryVenueName(post)].filter(Boolean).join(' • '));
+    markerContainer.setAttribute('role', 'button');
+    entry.childMarkers.set(id, markerContainer);
     ['pointerdown','mousedown','touchstart'].forEach(type => {
-      button.addEventListener(type, ev => {
+      markerContainer.addEventListener(type, ev => {
         if(type !== 'touchstart'){ try{ ev.preventDefault(); }catch(err){} }
         try{ ev.stopPropagation(); }catch(err){}
       }, { capture: true });
@@ -7762,7 +7757,7 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       pointerHoverActive = false;
       let movingToChild = false;
       if(nextTarget && typeof nextTarget.closest === 'function'){
-        const childTarget = nextTarget.closest('.multi-post-marker-child');
+        const childTarget = nextTarget.closest('.mapmarker-container');
         movingToChild = !!(childTarget && entry.childrenRoot.contains(childTarget));
       } else if(!nextTarget && typeof document !== 'undefined' && document.activeElement){
         movingToChild = entry.childrenRoot.contains(document.activeElement);
@@ -7773,27 +7768,33 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       schedulePopupRemoval(hoverPopup, 160);
       restoreGroup();
     };
-    button.addEventListener('pointerenter', ev => {
+    markerContainer.addEventListener('pointerenter', ev => {
       const pointerType = ev && typeof ev.pointerType === 'string' ? ev.pointerType : '';
       handleChildEnter(pointerType);
     });
-    button.addEventListener('mouseenter', () => {
+    markerContainer.addEventListener('mouseenter', () => {
       if(pointerHoverActive) return;
       handleChildEnter('');
     });
-    button.addEventListener('focus', () => {
+    markerContainer.addEventListener('focus', () => {
       handleChildEnter('');
     });
-    button.addEventListener('pointerleave', ev => {
+    markerContainer.addEventListener('pointerleave', ev => {
       handleChildLeave(ev ? ev.relatedTarget : null);
     });
-    button.addEventListener('mouseleave', ev => {
+    markerContainer.addEventListener('mouseleave', ev => {
       handleChildLeave(ev ? ev.relatedTarget : null);
     });
-    button.addEventListener('blur', ev => {
+    markerContainer.addEventListener('blur', ev => {
       handleChildLeave(ev ? ev.relatedTarget : null);
     });
-      button.addEventListener('click', (ev)=>{
+    markerContainer.addEventListener('keydown', ev => {
+      if(ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar'){
+        ev.preventDefault();
+        markerContainer.click();
+      }
+    });
+      markerContainer.addEventListener('click', (ev)=>{
         ev.preventDefault();
         ev.stopPropagation();
         if(typeof setMode === 'function'){ setMode('posts'); }
@@ -7814,7 +7815,7 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
         });
       });
     });
-    entry.childrenRoot.appendChild(button);
+    entry.childrenRoot.appendChild(markerContainer);
   });
   if(entry.countEl){
     entry.countEl.textContent = ordered.length ? String(ordered.length) : '';
