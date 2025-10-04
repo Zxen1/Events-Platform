@@ -75,9 +75,8 @@
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      opacity: 1;
-      visibility: visible;
-      transform: translate(-50%, calc(-50% - 45px));
+      opacity: 0;
+      visibility: hidden;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -85,6 +84,20 @@
     }
     .map-card img,
     .mapmarker-container img{ display:block; }
+    .map-card-pill{
+      position: absolute;
+      inset: auto;
+      left: 5px;
+      top: 5px;
+      right: 5px;
+      bottom: 5px;
+      object-fit: contain;
+      pointer-events: none;
+      opacity: 0 !important;
+      visibility: hidden;
+      mix-blend-mode: normal;
+      z-index: 0;
+    }
     .mapmarker-container{
       position: absolute;
       left: 0;
@@ -125,20 +138,18 @@
       height: 40px;
       object-fit: contain;
       pointer-events: none;
+      opacity: 0 !important;
+      visibility: hidden;
       mix-blend-mode: normal;
       z-index: 0;
     }
     .map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
-      background-image: url('assets/icons-30/225x60-pill-99.webp');
-      background-repeat: no-repeat;
-      background-size: cover;
-      transition: background-color 0.2s ease, background-image 0.2s ease;
+      transition: background-color 0.2s ease;
     }
     .map-card--popup.is-map-highlight,
     .mapmarker-overlay:hover .map-card--popup{
       background-color: #2e3a72;
-      background-image: none;
     }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
@@ -570,6 +581,8 @@
       --btn-selected-hover: #3c4b8a;
       --btn-selected-active: #232e59;
       --btn-disabled: #bbbbbb;
+      --panel-bg: rgba(0,0,0,1);
+      --panel-text: #000000;
       --footer-h: 0px;
       --list-background: rgba(0,0,0,0.37);
       --closed-card-bg: rgba(0,0,0,0.37);
@@ -613,8 +626,10 @@
       --geocoder-h: var(--control-h);
       --panel-label-font: system-ui, sans-serif;
       --panel-label-size: 14px;
+      --panel-label-color: #ffffff;
       --panel-title-font: system-ui, sans-serif;
       --panel-title-size: 16px;
+      --panel-title-color: #ffffff;
       --post-mode-bg-color: 0,0,0;
       --post-mode-bg-opacity: 0;
       --safe-top: env(safe-area-inset-top, 0px);
@@ -839,13 +854,13 @@ textarea::placeholder{
 }
 
 .field label{
-  color:#fff;
+  color: var(--panel-label-color);
   font-size: var(--panel-label-size);
 }
 
 .panel-content .title,
 .panel-content .t{
-  color:#fff;
+  color: var(--panel-title-color);
   font-size: var(--panel-title-size);
 }
 
@@ -2922,7 +2937,7 @@ body.filters-active #filterBtn{
   border-radius: 8px;
   object-fit: cover;
   display: block;
-  background: rgba(0,0,0,1);
+  background: var(--panel-bg);
   transition: filter .22s ease;
 }
 
@@ -5040,7 +5055,7 @@ if (typeof slugify !== 'function') {
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 90.webp';
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
   const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
   let cachedImages = null;
   let loadingTask = null;
@@ -5917,8 +5932,7 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
-  const MARKER_SPRITE_RETAIN_ZOOM = 8;
-  const MARKER_SPRITE_FULL_ZOOM = 12;
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -6091,7 +6105,7 @@ if (typeof slugify !== 'function') {
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    const baseUrl = 'assets/icons-30/150x40 pill 90.webp';
+    const baseUrl = 'assets/icons-30/150x40 pill 99.webp';
     const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
     const promise = Promise.all([
       loadMarkerLabelImage(baseUrl),
@@ -6766,15 +6780,13 @@ if (typeof slugify !== 'function') {
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MULTI_CARD_MIN_ZOOM = 0;
-      const MULTI_MARKER_LAYER_IDS = [
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
-      ];
+      const MULTI_CARD_MIN_ZOOM = 8;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
-        'marker-label-highlight'
+        'marker-label-highlight',
+        'multi-post-mapmarker-label',
+        'multi-post-mapmarker-label-highlight'
       ];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
@@ -7698,7 +7710,7 @@ function showMultiPostCardContainer(point, items, options = {}){
     const pill = new Image();
     try{ pill.decoding = 'async'; }catch(err){}
     pill.alt = '';
-    pill.src = 'assets/icons-30/150x40 pill 90.webp';
+    pill.src = 'assets/icons-30/150x40 pill 99.webp';
     pill.className = 'mapmarker-pill';
     pill.draggable = false;
     return pill;
@@ -9728,7 +9740,6 @@ function makePosts(){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
-      MULTI_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, true));
       if(balloonLayersVisible !== shouldShowBalloons){
         BALLOON_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowBalloons));
         balloonLayersVisible = shouldShowBalloons;
@@ -9910,7 +9921,7 @@ function makePosts(){
         if(variant === 'list'){
           return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -12660,20 +12671,13 @@ if (!map.__pillHooksInstalled) {
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
-      const createMarkerLabelIconSize = () => ['interpolate', ['linear'], ['zoom'],
-        0, 0.25,
-        MARKER_SPRITE_ZOOM, 0.25,
-        MARKER_SPRITE_FULL_ZOOM, 1,
-        22, 1
-      ];
 
       const markerLabelMinZoom = MARKER_SPRITE_ZOOM;
-      const multiMarkerLabelMinZoom = 0;
       const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: multiMarkerLabelMinZoom },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: multiMarkerLabelMinZoom }
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minzoom: markerLabelMinZoom },
+        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minzoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minzoom }) => {
         let layerExists = !!map.getLayer(id);
@@ -12687,7 +12691,7 @@ if (!map.__pillHooksInstalled) {
               minzoom: Number.isFinite(minzoom) ? minzoom : markerLabelMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': createMarkerLabelIconSize(),
+                'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'center',
@@ -12711,7 +12715,7 @@ if (!map.__pillHooksInstalled) {
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', createMarkerLabelIconSize()); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','center'); }catch(e){}
@@ -12840,7 +12844,7 @@ if (!map.__pillHooksInstalled) {
             const markerPill = new Image();
             try{ markerPill.decoding = 'async'; }catch(e){}
             markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40 pill 90.webp';
+            markerPill.src = 'assets/icons-30/150x40 pill 99.webp';
             markerPill.className = 'mapmarker-pill';
             markerPill.style.opacity = '0.9';
             markerPill.draggable = false;
@@ -12867,6 +12871,14 @@ if (!map.__pillHooksInstalled) {
             cardRoot.setAttribute('aria-hidden', 'true');
             cardRoot.style.pointerEvents = 'auto';
             cardRoot.style.userSelect = 'none';
+
+            const pillImg = new Image();
+            try{ pillImg.decoding = 'async'; }catch(e){}
+            pillImg.alt = '';
+            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+            pillImg.className = 'map-card-pill';
+            pillImg.style.opacity = '0.9';
+            pillImg.draggable = false;
 
             const thumbImg = new Image();
             try{ thumbImg.decoding = 'async'; }catch(e){}
@@ -12911,7 +12923,7 @@ if (!map.__pillHooksInstalled) {
               labelEl.appendChild(venueEl);
             }
 
-            cardRoot.append(thumbImg, labelEl);
+            cardRoot.append(pillImg, thumbImg, labelEl);
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
