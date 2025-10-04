@@ -75,8 +75,7 @@
       z-index: 30;
     }
     .mapmarker-overlay.is-card-visible > .mapmarker-container{
-      opacity: 0;
-      visibility: hidden;
+      opacity: 1;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -125,11 +124,6 @@
       z-index: 2;
       flex: 0 0 30px;
     }
-    .map--midzoom-markers .mapmarker{
-      border-radius: 50%;
-      box-shadow: 0 0 0 3px #000;
-      box-sizing: border-box;
-    }
     .mapmarker-pill{
       position: absolute;
       left: 0;
@@ -144,11 +138,6 @@
       z-index: 0;
     }
     .map-card--popup{
-      background-color: rgba(0, 0, 0, 0.88);
-      transition: background-color 0.2s ease;
-    }
-    .map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .map-card--popup{
       background-color: #2e3a72;
     }
     .open-post .post-header.is-map-highlight{
@@ -4752,75 +4741,48 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-.multi-post-map-container {
+.multi-post-map-card-container {
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
+  padding: 10px;
   position: absolute;
   z-index: 20050;
-  padding: 10px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-sizing: border-box;
   max-height: 80vh;
-  overflow-y: auto;
-  pointer-events: auto;
-}
-
-.multi-post-marker-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  padding: 8px 12px;
-  border: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.multi-post-marker-item:hover {
-  background: rgba(46, 58, 114, 0.8);
-}
-
-.multi-post-marker-item:focus-visible {
-  outline: 2px solid #2e3a72;
-  outline-offset: 2px;
-}
-
-.multi-post-marker-item--summary {
-  background: transparent;
-  padding: 0;
-  cursor: default;
-}
-
-.multi-post-marker-item--summary:hover,
-.multi-post-marker-item--summary:focus-visible {
-  background: transparent;
-  outline: none;
-}
-
-.multi-post-marker-icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  object-fit: contain;
-}
-
-.multi-post-marker-label {
+  max-width: 400px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-  line-height: 1.2;
+  box-sizing: border-box;
+  color: #fff;
 }
 
-.multi-post-marker-label--summary {
-  font-size: 13px;
-  font-weight: 600;
+.multi-post-map-card-header {
+  font-family: var(--global-font, inherit);
+  font-size: var(--global-font-size, 1rem);
+  color: #fff;
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+
+.multi-post-map-card-header .date-range {
+  display: block;
+  margin-top: 2px;
+  color: #b3b3b3;
+  font-size: var(--global-font-size, 1rem);
+}
+
+.multi-post-map-cards {
+  overflow-y: auto;
+  flex-grow: 1;
+  max-height: calc(80vh - 60px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.multi-post-map-card {
+  width: 100%;
 }
 
 .hero img.lqip{
@@ -5050,10 +5012,9 @@ if (typeof slugify !== 'function') {
 (function(){
   const PILL_ID = 'marker-label-bg';
   const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
-  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+  const PILL_IMAGE_URL = 'assets/icons-30/150x40 pill 99.webp';
   let cachedImages = null;
-  let loadingTask = null;
+  let loadingImage = null;
   const pendingMaps = new Set();
 
   function applyImageToMap(map){
@@ -5078,95 +5039,57 @@ if (typeof slugify !== 'function') {
     }catch(e){ /* silent */ }
   }
 
-  function tintImage(sourceImage, color, alpha = 1){
-    if(!sourceImage){
-      return null;
-    }
-    try{
-      const width = sourceImage.naturalWidth || sourceImage.width || 150;
-      const height = sourceImage.naturalHeight || sourceImage.height || 40;
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(width));
-      canvas.height = Math.max(1, Math.round(height));
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
-      if(color){
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-      }
-      return canvas;
-    }catch(err){
-      return null;
-    }
-  }
-
-  function prepareCachedImages(baseImage, accentImage){
-    if(!baseImage){
-      cachedImages = null;
+  function handleImageLoad(){
+    if(!loadingImage){
       return;
     }
-    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
-    let highlight = null;
-    if(accentImage){
-      highlight = tintImage(accentImage, null, 1) || accentImage;
-    }
-    if(!highlight){
-      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
-    }
-    cachedImages = { base: tintedBase, accent: highlight };
-  }
-
-  function loadImage(url){
-    if(!url){
-      return Promise.resolve(null);
-    }
-    return new Promise((resolve) => {
-      const img = new Image();
-      try{ img.crossOrigin = 'anonymous'; }catch(e){}
-      try{ img.decoding = 'async'; }catch(e){}
-      img.onload = () => {
-        if(img.naturalWidth > 0 && img.naturalHeight > 0){
-          resolve(img);
-        }else{
-          resolve(null);
+    if(loadingImage.complete && loadingImage.naturalWidth > 0){
+      const width = loadingImage.naturalWidth || loadingImage.width || 150;
+      const height = loadingImage.naturalHeight || loadingImage.height || 40;
+      const tintImage = (color, alpha = 1)=>{
+        try{
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(width));
+          canvas.height = Math.max(1, Math.round(height));
+          const ctx = canvas.getContext('2d');
+          if(!ctx){
+            return null;
+          }
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(loadingImage, 0, 0, canvas.width, canvas.height);
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = color;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+          return canvas;
+        }catch(err){
+          return null;
         }
       };
-      img.onerror = () => resolve(null);
-      img.src = url;
-      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
-        resolve(img);
-      }
-    });
+      const base = tintImage('rgba(0,0,0,1)', 0.9) || loadingImage;
+      const accent = tintImage('#2e3a72', 1) || loadingImage;
+      cachedImages = { base, accent };
+      pendingMaps.forEach((map)=>applyImageToMap(map));
+    }
+    pendingMaps.clear();
+    loadingImage = null;
   }
 
   function ensureImage(){
-    if(cachedImages || loadingTask){
+    if(cachedImage || loadingImage){
       return;
     }
-    loadingTask = Promise.all([
-      loadImage(PILL_BASE_IMAGE_URL),
-      loadImage(PILL_ACCENT_IMAGE_URL)
-    ]).then(([baseImage, accentImage]) => {
-      if(baseImage){
-        prepareCachedImages(baseImage, accentImage);
-        if(cachedImages){
-          pendingMaps.forEach((map) => applyImageToMap(map));
-        }
-      }
-    }).catch(() => {
-      cachedImages = null;
-    }).finally(() => {
-      pendingMaps.clear();
-      loadingTask = null;
-    });
+    loadingImage = new Image();
+    try{ loadingImage.crossOrigin = 'anonymous'; }catch(e){}
+    loadingImage.decoding = 'async';
+    loadingImage.onload = handleImageLoad;
+    loadingImage.onerror = handleImageLoad;
+    loadingImage.src = PILL_IMAGE_URL;
+    if(loadingImage.complete){
+      handleImageLoad();
+    }
   }
 
   function addOrReplacePill(map){
@@ -5658,15 +5581,14 @@ if (typeof slugify !== 'function') {
     });
   }
 
-  function createTransparentPlaceholder(width, height){
+  function createTransparentPlaceholder(size){
     const canvas = document.createElement('canvas');
-    const w = Math.max(1, Number.isFinite(width) ? width : (width || 2));
-    const h = Math.max(1, Number.isFinite(height) ? height : (Number.isFinite(width) ? width : (width || 2)));
-    canvas.width = w;
-    canvas.height = h;
+    const s = Math.max(1, size || 2);
+    canvas.width = s;
+    canvas.height = s;
     const ctx = canvas.getContext('2d');
     if(ctx){
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, s, s);
     }
     return canvas;
   }
@@ -5683,7 +5605,9 @@ if (typeof slugify !== 'function') {
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  const markerIconSize = 1;
+  const narrowScreenQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 600px)') : null;
+  const isNarrowScreen = narrowScreenQuery ? narrowScreenQuery.matches : window.innerWidth <= 600;
+  const markerIconSize = (isTouchDevice || isNarrowScreen) ? 1.35 : 1;
   const markerIconBaseSizePx = 30;
   const markerLabelBackgroundWidthPx = 150;
   const markerLabelBackgroundHeightPx = 40;
@@ -5698,7 +5622,6 @@ if (typeof slugify !== 'function') {
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
-  const markerLabelCompositePlaceholderIds = new Set();
 
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
@@ -5870,7 +5793,6 @@ if (typeof slugify !== 'function') {
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
   const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
-  const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -5906,17 +5828,6 @@ if (typeof slugify !== 'function') {
 
   function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
     if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
-      return;
-    }
-    let zoomForBudget = NaN;
-    if(typeof mapInstance.getZoom === 'function'){
-      try{ zoomForBudget = mapInstance.getZoom(); }
-      catch(err){ zoomForBudget = NaN; }
-    }
-    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
-      mapInstance.__retainAllMarkerSprites = true;
-    }
-    if(mapInstance.__retainAllMarkerSprites){
       return;
     }
     if(typeof mapInstance.removeImage !== 'function'){
@@ -6004,28 +5915,12 @@ if (typeof slugify !== 'function') {
     if(markerLabelPillImagePromise){
       return markerLabelPillImagePromise;
     }
-    const baseUrl = 'assets/icons-30/150x40 pill 99.webp';
-    const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
-    const promise = Promise.all([
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl).catch(() => null)
-    ]).then(([baseImg, accentImg]) => {
-      if(!baseImg){
-        return null;
-      }
-      return { base: baseImg, highlight: accentImg };
-    }).catch(err => {
-      console.error(err);
-      return null;
-    });
-    markerLabelPillImagePromise = promise;
-    promise.then(result => {
-      if(!result){
+    markerLabelPillImagePromise = loadMarkerLabelImage('assets/icons-30/150x40 pill 99.webp')
+      .catch(err => {
+        console.error(err);
         markerLabelPillImagePromise = null;
-      }
-    }).catch(() => {
-      markerLabelPillImagePromise = null;
-    });
+        return null;
+      });
     return markerLabelPillImagePromise;
   }
 
@@ -6039,7 +5934,6 @@ if (typeof slugify !== 'function') {
     }
     const { priority = false } = options || {};
     const compositeId = markerLabelCompositeId(labelSpriteId);
-    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
     const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
     meta.iconId = iconId || meta.iconId || '';
     meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
@@ -6049,28 +5943,18 @@ if (typeof slugify !== 'function') {
     meta.lastUsed = nowTimestamp();
     markerLabelCompositeStore.set(labelSpriteId, meta);
     if(mapInstance.hasImage?.(compositeId)){
-      if(markerLabelCompositePlaceholderIds.has(compositeId)){
-        try{ mapInstance.removeImage(compositeId); }catch(err){}
-        markerLabelCompositePlaceholderIds.delete(compositeId);
-      } else {
-        return compositeId;
-      }
-    }
-    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
-      try{ mapInstance.removeImage(highlightId); }catch(err){}
-      markerLabelCompositePlaceholderIds.delete(highlightId);
+      return compositeId;
     }
     if(meta.image && meta.highlightImage){
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
         try{ if(mapInstance.hasImage?.(compositeId)) mapInstance.removeImage(compositeId); }catch(err){}
         mapInstance.addImage(compositeId, meta.image, meta.options || {});
-        markerLabelCompositePlaceholderIds.delete(compositeId);
+        const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
         if(meta.highlightImage){
           try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
           try{ mapInstance.addImage(highlightId, meta.highlightImage, meta.highlightOptions || meta.options || {}); }
           catch(err){ console.error(err); }
-          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
         return compositeId;
@@ -6082,12 +5966,10 @@ if (typeof slugify !== 'function') {
       return markerLabelCompositePending.get(labelSpriteId);
     }
     const task = (async () => {
-      const pillAssets = await ensureMarkerLabelPillImage();
-      if(!pillAssets || !pillAssets.base){
+      const pillImg = await ensureMarkerLabelPillImage();
+      if(!pillImg){
         return null;
       }
-      const pillImg = pillAssets.base;
-      const pillAccentImg = pillAssets.highlight;
       const markerSources = window.subcategoryMarkers || {};
       const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
       let iconImg = null;
@@ -6151,10 +6033,7 @@ if (typeof slugify !== 'function') {
           ctx.shadowColor = 'transparent';
         }
       };
-      const buildComposite = (backgroundImage, tintColor, tintAlpha = 1)=>{
-        if(!backgroundImage){
-          return null;
-        }
+      const buildComposite = (tintColor, tintAlpha = 1)=>{
         const canvas = document.createElement('canvas');
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
@@ -6163,11 +6042,7 @@ if (typeof slugify !== 'function') {
           return null;
         }
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        try{
-          ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
-        }catch(err){
-          console.error(err);
-        }
+        ctx.drawImage(pillImg, 0, 0, canvasWidth, canvasHeight);
         if(tintColor){
           ctx.globalCompositeOperation = 'source-atop';
           ctx.globalAlpha = tintAlpha;
@@ -6190,14 +6065,8 @@ if (typeof slugify !== 'function') {
         const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
         return { image: imageData, options };
       };
-      const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
-      let accentComposite = null;
-      if(pillAccentImg){
-        accentComposite = buildComposite(pillAccentImg, null, 1);
-      }
-      if(!accentComposite){
-        accentComposite = buildComposite(pillImg, '#2f3b73', 1);
-      }
+      const baseComposite = buildComposite('rgba(0,0,0,1)', 0.9);
+      const accentComposite = buildComposite('#2e3a72', 1);
       if(!baseComposite){
         return null;
       }
@@ -6206,23 +6075,19 @@ if (typeof slugify !== 'function') {
         if(mapInstance.hasImage?.(compositeId)){
           mapInstance.removeImage(compositeId);
         }
-        markerLabelCompositePlaceholderIds.delete(compositeId);
         const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
         if(mapInstance.hasImage?.(highlightId)){
           mapInstance.removeImage(highlightId);
         }
-        markerLabelCompositePlaceholderIds.delete(highlightId);
       }catch(err){
         console.error(err);
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
         mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
-        markerLabelCompositePlaceholderIds.delete(compositeId);
         if(highlightComposite && highlightComposite.image){
           const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
           mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
-          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, {
           image: baseComposite.image,
@@ -6279,24 +6144,16 @@ if (typeof slugify !== 'function') {
         catch(err){ already = false; }
       }
       if(already){
-        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
-          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
-          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
-          already = false;
-        } else {
-          return;
-        }
+        return;
       }
       try{
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
         mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
-        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
         if(entry.highlightImage){
           const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
           try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
           try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
           catch(err){ console.error(err); }
-          markerLabelCompositePlaceholderIds.delete(highlightId);
         }
         enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
       }catch(err){
@@ -6372,12 +6229,12 @@ if (typeof slugify !== 'function') {
     const shouldSkipLayer = (layer) => {
       if(!layer) return true;
       const meta = layer.metadata || {};
-      const featureComponent = layer['mapbox:featureComponent'] || meta['mapbox:featureComponent'];
-      const featureSet = layer['mapbox:featureset'] || meta['mapbox:featureset'];
-      if(featureSet) return true;
-      if(typeof featureComponent === 'string' && featureComponent.includes('place-label')) return true;
+      if(meta && (meta['mapbox:featureset'] || meta['mapbox:featureComponent'])){
+        const component = meta['mapbox:featureComponent'];
+        if(typeof component === 'string' && component.includes('place-label')) return true;
+        if(meta['mapbox:featureset']) return true;
+      }
       if(typeof layer.id === 'string' && layer.id.includes('place-label')) return true;
-      if(typeof layer.source === 'string' && layer.source.includes('place-label')) return true;
       return false;
     };
 
@@ -6431,23 +6288,14 @@ if (typeof slugify !== 'function') {
     if(!originalSource) return;
 
     const dedicatedId = 'terrain-dem-dedicated';
-    const ensureDedicatedSource = () => {
-      if(mapInstance.getSource?.(dedicatedId)) return true;
+    if(!mapInstance.getSource?.(dedicatedId)){
       try {
         const clone = JSON.parse(JSON.stringify(originalSource));
         mapInstance.addSource(dedicatedId, clone);
-        return !!mapInstance.getSource?.(dedicatedId);
       } catch(err){}
-      return false;
-    };
-
-    const currentTerrain = typeof mapInstance.getTerrain === 'function' ? mapInstance.getTerrain() : null;
-    if(currentTerrain && currentTerrain.source === dedicatedId && typeof currentTerrain.cutoff === 'number' && currentTerrain.cutoff > 0){
-      return;
     }
 
-    const hasDedicated = ensureDedicatedSource();
-    const targetSource = hasDedicated ? dedicatedId : terrain.source;
+    const targetSource = mapInstance.getSource?.(dedicatedId) ? dedicatedId : terrain.source;
     const nextTerrain = Object.assign({}, terrain, { source: targetSource });
     if(typeof nextTerrain.cutoff !== 'number' || nextTerrain.cutoff <= 0){
       nextTerrain.cutoff = 0.01;
@@ -6472,13 +6320,7 @@ if (typeof slugify !== 'function') {
 
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
-    const POINTER_READY_IDS = new Set([
-      'marker-label',
-      'marker-label-highlight',
-      'multi-post-mapmarker-label',
-      'multi-post-mapmarker-label-highlight',
-      'post-balloons'
-    ]);
+    const POINTER_READY_IDS = new Set(['marker-label','multi-post-mapmarker-label','post-balloons']);
 
     function shouldAttachPointer(layer){
       if (!layer || layer.type !== 'symbol') return false;
@@ -6551,7 +6393,6 @@ if (typeof slugify !== 'function') {
     }catch(err){}
   }
   const CARD_SURFACE = 'linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.6))';
-  const CARD_HIGHLIGHT = '#2e3a72';
   const MapRegistry = {
     list: [],
     limit: 4,
@@ -6644,26 +6485,17 @@ if (typeof slugify !== 'function') {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
-      const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
-      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_SPRITE_ZOOM * ZOOM_VISIBILITY_PRECISION);
+      const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       const MULTI_CARD_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
-      const MARKER_LAYER_IDS = [
-        'hover-fill',
-        'marker-label',
-        'marker-label-highlight',
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
-      ];
-      const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
-      const SPRITE_MARKER_CLASS = 'map--sprite-markers';
+      const MARKER_LAYER_IDS = ['hover-fill','marker-label','multi-post-mapmarker-label'];
         const BALLOON_SOURCE_ID = 'post-balloon-source';
         const BALLOON_LAYER_ID = 'post-balloons';
         const BALLOON_LAYER_IDS = [BALLOON_LAYER_ID];
         const BALLOON_IMAGE_ID = 'seed-balloon-icon';
-        const BALLOON_IMAGE_URL = 'assets/balloons/Colourful-Balloons-80.png';
+        const BALLOON_IMAGE_URL = 'assets/balloons/balloons-icon-16185.webp';
         const BALLOON_MIN_ZOOM = 0;
         const BALLOON_MAX_ZOOM = MARKER_ZOOM_THRESHOLD;
         let balloonLayersVisible = true;
@@ -7248,12 +7080,7 @@ if (typeof slugify !== 'function') {
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    const MARKER_INTERACTIVE_LAYERS = [
-      'marker-label',
-      'marker-label-highlight',
-      'multi-post-mapmarker-label',
-      'multi-post-mapmarker-label-highlight'
-    ];
+    const MARKER_INTERACTIVE_LAYERS = ['marker-label','multi-post-mapmarker-label'];
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -7292,30 +7119,6 @@ if (typeof slugify !== 'function') {
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
-      const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && (el.classList.contains('post-card') || el.classList.contains('post-header')));
-      const restoreHighlightBackground = (el)=>{
-        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
-        if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
-          const prev = el.dataset.prevHighlightBackground;
-          delete el.dataset.prevHighlightBackground;
-          if(prev){
-            el.style.background = prev;
-            return;
-          }
-        }
-        if(Object.prototype.hasOwnProperty.call(el.dataset, 'surfaceBg')){
-          el.style.background = el.dataset.surfaceBg;
-        } else {
-          el.style.removeProperty('background');
-        }
-      };
-      const applyHighlightBackground = (el)=>{
-        if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
-        if(!Object.prototype.hasOwnProperty.call(el.dataset, 'prevHighlightBackground')){
-          el.dataset.prevHighlightBackground = el.style.background || '';
-        }
-        el.style.background = CARD_HIGHLIGHT;
-      };
       const restoreAttr = (el)=>{
         if(!el || !el.dataset) return;
         if(Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -7328,10 +7131,9 @@ if (typeof slugify !== 'function') {
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .map-card.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
-        restoreHighlightBackground(el);
       });
       document.querySelectorAll(`.mapmarker-container.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
@@ -7363,7 +7165,6 @@ if (typeof slugify !== 'function') {
         }
         el.classList.add(highlightClass);
         el.setAttribute('aria-selected', 'true');
-        applyHighlightBackground(el);
       };
       idsToHighlight.forEach(id => {
         const selectorId = escapeAttr(id);
@@ -7373,9 +7174,6 @@ if (typeof slugify !== 'function') {
         applyHighlight(openHeader);
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .mapmarker-container`).forEach(el => {
           el.classList.add(markerHighlightClass);
-        });
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
-          el.classList.add(highlightClass);
         });
       });
       updateMapFeatureHighlights(idsToHighlight);
@@ -7441,6 +7239,24 @@ function scheduleMultiPostCardRemoval(delay=160){
   }, delay);
 }
 
+function formatMultiPostDateRange(items){
+  const allDates = items.flatMap(p => Array.isArray(p.dates) ? p.dates : []).filter(Boolean).sort();
+  const first = allDates[0] || null;
+  const last = allDates[allDates.length - 1] || first;
+  const fmt = (iso)=>{
+    if(!iso) return 'Unknown date';
+    try{
+      return parseISODate(iso).toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'}).replace(',', '').replace(/ (\d{4})$/, ', $1');
+    }catch(err){
+      return iso;
+    }
+  };
+  return {
+    startText: fmt(first),
+    endText: fmt(last)
+  };
+}
+
 function positionMultiPostCardContainer(point){
   if(!multiPostCardState || !multiPostCardState.element) return;
   const containerEl = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
@@ -7463,9 +7279,12 @@ function positionMultiPostCardContainer(point){
   const height = root.offsetHeight;
   const anchor = point || multiPostCardState.anchorPoint || { x: mapRect.width / 2, y: mapRect.height / 2 };
   let left = anchor.x + 16;
-  let top = anchor.y + 16;
+  let top = anchor.y - height - 16;
+  if(top < topPad){
+    top = anchor.y + 16;
+  }
   if(top + height > mapRect.height - pad){
-    top = Math.max(topPad, mapRect.height - height - pad);
+    top = mapRect.height - height - pad;
   }
   if(top < topPad){
     top = topPad;
@@ -7540,74 +7359,36 @@ function showMultiPostCardContainer(point, items, options = {}){
   const { lockOnOpen = false, venueKey = null } = options;
   destroyMultiPostCardContainer();
   const root = document.createElement('div');
-  root.className = 'multi-post-map-container';
+  root.className = 'multi-post-map-card-container';
   root.style.visibility = 'hidden';
+  const header = document.createElement('div');
+  header.className = 'multi-post-map-card-header';
+  const { startText, endText } = formatMultiPostDateRange(items);
+  const headerLine1 = document.createElement('div');
+  const markerCount = countMarkersForVenue(items, venueKey);
+  headerLine1.textContent = `${markerCount} map markers here`;
+  const headerLine2 = document.createElement('span');
+  headerLine2.className = 'date-range';
+  headerLine2.textContent = `${startText} – ${endText}`;
+  header.append(headerLine1, headerLine2);
+  const cardsWrap = document.createElement('div');
+  cardsWrap.className = 'multi-post-map-cards map-card-list';
   const ordered = sortMultiPostItems(items);
-  const markerSources = window.subcategoryMarkers || {};
-  const markerIds = window.subcategoryMarkerIds || {};
-  const slugifyFn = typeof slugify === 'function'
-    ? slugify
-    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-  const markerIconUrlFor = (post)=>{
-    const candidates = [];
-    if(post && post.subcategory){
-      const mappedId = markerIds[post.subcategory];
-      if(mappedId) candidates.push(mappedId);
-      candidates.push(slugifyFn(post.subcategory));
-    }
-    candidates.push(MULTI_POST_MAPMARKER_ID);
-    const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
-    return url || MULTI_POST_MAPMARKER_URL;
-  };
-
-  const createIcon = (url)=>{
-    const icon = new Image();
-    try{ icon.decoding = 'async'; }catch(err){}
-    icon.alt = '';
-    icon.className = 'multi-post-marker-icon';
-    icon.draggable = false;
-    icon.onerror = ()=>{
-      icon.onerror = null;
-      icon.src = MULTI_POST_MAPMARKER_URL;
-    };
-    icon.src = url || MULTI_POST_MAPMARKER_URL;
-    return icon;
-  };
-
-  const summaryItem = document.createElement('div');
-  summaryItem.className = 'multi-post-marker-item multi-post-marker-item--summary';
-  summaryItem.setAttribute('aria-hidden', 'true');
-  const summaryIcon = createIcon(MULTI_POST_MAPMARKER_URL);
-  const summaryLabel = document.createElement('div');
-  summaryLabel.className = 'multi-post-marker-label multi-post-marker-label--summary';
-  const summaryLine = document.createElement('span');
-  summaryLine.textContent = `${ordered.length} posts here`;
-  summaryLabel.appendChild(summaryLine);
-  summaryItem.append(summaryIcon, summaryLabel);
-  root.appendChild(summaryItem);
-
+  const fragment = document.createDocumentFragment();
   ordered.forEach(post => {
-    if(!post) return;
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'multi-post-marker-item';
-    if(post.id) item.dataset.id = String(post.id);
-    const iconUrl = markerIconUrlFor(post);
-    item.appendChild(createIcon(iconUrl));
-    const labelWrap = document.createElement('div');
-    labelWrap.className = 'multi-post-marker-label';
-    const labelLines = getMarkerLabelLines(post);
-    const line1 = document.createElement('span');
-    line1.textContent = labelLines.line1 || '';
-    labelWrap.appendChild(line1);
-    if(labelLines.line2){
-      const line2 = document.createElement('span');
-      line2.textContent = labelLines.line2;
-      labelWrap.appendChild(line2);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = mapCardHTML(post, { variant: 'list', extraClasses: ['multi-post-map-card'], venueKey });
+    const cardEl = wrapper.firstElementChild;
+    if(cardEl){
+      cardEl.setAttribute('role', 'button');
+      cardEl.setAttribute('tabindex', '0');
+      fragment.appendChild(cardEl);
     }
-    item.appendChild(labelWrap);
-    root.appendChild(item);
   });
+  cardsWrap.appendChild(fragment);
+  cardsWrap.scrollTop = 0;
+  root.appendChild(header);
+  root.appendChild(cardsWrap);
   containerEl.appendChild(root);
   multiPostCardState = {
     element: root,
@@ -7669,16 +7450,16 @@ function showMultiPostCardContainer(point, items, options = {}){
     openPostFromCard(id);
   };
 
-  root.addEventListener('click', (evt)=>{
-    const item = evt.target.closest('.multi-post-marker-item[data-id]');
-    handleCardActivation(item, evt);
+  cardsWrap.addEventListener('click', (evt)=>{
+    const card = evt.target.closest('.map-card');
+    handleCardActivation(card, evt);
   }, { capture: true });
 
-  root.addEventListener('keydown', (evt)=>{
+  cardsWrap.addEventListener('keydown', (evt)=>{
     const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
     if(!isActivationKey) return;
-    const item = evt.target.closest('.multi-post-marker-item[data-id]');
-    handleCardActivation(item, evt);
+    const card = evt.target.closest('.map-card');
+    handleCardActivation(card, evt);
   }, { capture: true });
 
   requestAnimationFrame(()=>{
@@ -9562,17 +9343,6 @@ function makePosts(){
       }
     }
 
-    function updateMarkerZoomClasses(zoom){
-      if(!map || typeof map.getContainer !== 'function') return;
-      const container = map.getContainer();
-      if(!container || !container.classList) return;
-      const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      const isMidZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
-      const isSpriteZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
-      container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
-      container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
-    }
-
     function updateLayerVisibility(zoom){
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
       const zoomBucket = Number.isFinite(zoomValue)
@@ -9605,11 +9375,7 @@ function makePosts(){
       }
       updatePostsButtonState(lastKnownZoom);
       updateLayerVisibility(lastKnownZoom);
-      updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
-        map.__retainAllMarkerSprites = true;
-      }
       if(!markersLoaded){
         const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
         if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
@@ -9728,7 +9494,7 @@ function makePosts(){
       if(p.member && p.member.avatar){
         return p.member.avatar;
       }
-      return 'assets/balloons/Colourful-Balloons-80.png';
+      return 'assets/balloons/balloons-icon-16185.png';
     }
 
     function mapCardHTML(p, opts={}){
@@ -10876,10 +10642,8 @@ function makePosts(){
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
-        head.dataset.surfaceBg = CARD_SURFACE;
         head.style.background = CARD_SURFACE;
       });
-      wrap.dataset.surfaceBg = CARD_SURFACE;
       wrap.style.background = CARD_SURFACE;
         // progressive hero swap
         (function(){
@@ -11632,7 +11396,6 @@ function makePosts(){
           bearing: startBearing,
           attributionControl:true
         });
-        try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -11679,18 +11442,7 @@ if (!map.__pillHooksInstalled) {
         const ensureCompositeOnStyleMissing = (evt) => {
           if(!evt || !evt.id) return;
           if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-            const isAccent = evt.id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
-            const baseId = isAccent ? evt.id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : evt.id;
-            const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
-            if(!spriteId){
-              return;
-            }
-            try{
-              if(!map.hasImage?.(evt.id)){
-                map.addImage(evt.id, createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx), { pixelRatio: 1 });
-                markerLabelCompositePlaceholderIds.add(evt.id);
-              }
-            }catch(err){}
+            const spriteId = evt.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
             const meta = markerLabelCompositeStore.get(spriteId) || {};
             try{
               ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
@@ -11705,14 +11457,12 @@ if (!map.__pillHooksInstalled) {
         try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
 
         const applyStyleAdjustments = () => {
-          try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
           patchMapboxStyleArtifacts(map);
         };
         whenStyleReady(map, applyStyleAdjustments);
         map.on('style.load', applyStyleAdjustments);
         map.on('styledata', () => {
-          try{ ensurePlaceholderSprites(map); }catch(err){}
           if(map.isStyleLoaded && map.isStyleLoaded()){
             patchMapboxStyleArtifacts(map);
           }
@@ -12120,7 +11870,7 @@ if (!map.__pillHooksInstalled) {
         const sampleVenue = sampleEntry.loc && sampleEntry.loc.venue ? sampleEntry.loc.venue : getPrimaryVenueName(sample);
         const canonicalVenue = coordLabels.get(key) || sampleVenue || '';
         if(count > 1){
-          const multiTitle = `${count} posts here`;
+          const multiTitle = `${count} map markers here`;
           const labelTitle = shortenMarkerLabelText(multiTitle);
           const venueLine = canonicalVenue ? shortenMarkerLabelText(canonicalVenue) : '';
           const combinedLabel = buildMarkerLabelText(sample, {
@@ -12214,9 +11964,6 @@ if (!map.__pillHooksInstalled) {
         return;
       }
       addingPostSource = true;
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
-        map.__retainAllMarkerSprites = true;
-      }
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const collections = getMarkerCollections(markerList);
@@ -12226,7 +11973,7 @@ if (!map.__pillHooksInstalled) {
       if(featureCount > 1000){
         await new Promise(resolve => scheduleIdle(resolve, 120));
       }
-      const MARKER_MIN_ZOOM = MARKER_SPRITE_ZOOM;
+      const MARKER_MIN_ZOOM = MARKER_ZOOM_THRESHOLD;
       const existing = map.getSource('posts');
       if(!existing){
         map.addSource('posts', { type:'geojson', data: postsData, promoteId: 'featureId' });
@@ -12252,6 +11999,7 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
+        const activeSpriteIds = new Set();
         const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
         const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
         postsData.features.forEach(feature => {
@@ -12268,6 +12016,9 @@ if (!map.__pillHooksInstalled) {
             if(Number.isFinite(lng) && Number.isFinite(lat)){
               inView = pointWithinBounds(lng, lat, priorityBounds);
             }
+          }
+          if(inView){
+            activeSpriteIds.add(spriteId);
           }
           const existing = markerLabelCompositeStore.get(spriteId) || {};
           const stored = spriteMeta.get(spriteId);
@@ -12294,6 +12045,18 @@ if (!map.__pillHooksInstalled) {
             priority,
             lastUsed
           });
+        });
+        Array.from(markerLabelCompositeStore.keys()).forEach(spriteId => {
+          if(activeSpriteIds.has(spriteId)){
+            return;
+          }
+          markerLabelCompositeStore.delete(spriteId);
+          const compositeId = `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
+          try{
+            if(typeof map.hasImage === 'function' ? map.hasImage(compositeId) : true){
+              map.removeImage(compositeId);
+            }
+          }catch(e){}
         });
         const spriteEntries = Array.from(spriteMeta.entries());
         spriteEntries.sort((a, b) => {
@@ -12348,31 +12111,25 @@ if (!map.__pillHooksInstalled) {
       const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
         ['case',
           ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+          ['case',
+            ['boolean', ['feature-state', 'isHighlighted'], false],
+            MARKER_LABEL_BG_ACCENT_ID,
+            MARKER_LABEL_BG_ID
+          ],
+          ['case',
+            ['boolean', ['feature-state', 'isHighlighted'], false],
+            ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX],
+            ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+          ]
         ]
       ];
-
-      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ACCENT_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
-        ]
-      ];
-
-      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
-      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
-      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilters.single, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity },
-        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1102, filter: markerLabelFilters.multi, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity },
-        { id:'multi-post-mapmarker-label-highlight', source:'multi-posts', sortKey: 1103, filter: markerLabelFilters.multi, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilters.single },
+        { id:'multi-post-mapmarker-label', source:'multi-posts', sortKey: 1101, filter: markerLabelFilters.multi }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter }) => {
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
           try{
@@ -12383,7 +12140,7 @@ if (!map.__pillHooksInstalled) {
               filter: filter || markerLabelFilters.single,
               minzoom: markerLabelMinZoom,
               layout:{
-                'icon-image': iconImage || markerLabelIconImage,
+                'icon-image': markerLabelIconImage,
                 'icon-size': 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
@@ -12395,7 +12152,7 @@ if (!map.__pillHooksInstalled) {
               paint:{
                 'icon-translate': [markerLabelBgTranslatePx, 0],
                 'icon-translate-anchor': 'viewport',
-                'icon-opacity': iconOpacity || 1
+                'icon-opacity': 1
               }
             });
             layerExists = !!map.getLayer(id);
@@ -12407,7 +12164,7 @@ if (!map.__pillHooksInstalled) {
           return;
         }
         try{ map.setFilter(id, filter || markerLabelFilters.single); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-image', markerLabelIconImage); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
@@ -12417,25 +12174,17 @@ if (!map.__pillHooksInstalled) {
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity',1); }catch(e){}
         try{ map.setLayerZoomRange(id, markerLabelMinZoom, 24); }catch(e){}
       });
-      [
-        'hover-fill',
-        'marker-label',
-        'marker-label-highlight',
-        'multi-post-mapmarker-label',
-        'multi-post-mapmarker-label-highlight'
-      ].forEach(id=>{
+      ['hover-fill','marker-label','multi-post-mapmarker-label'].forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
       [
         ['marker-label','icon-opacity-transition'],
-        ['marker-label-highlight','icon-opacity-transition'],
-        ['multi-post-mapmarker-label','icon-opacity-transition'],
-        ['multi-post-mapmarker-label-highlight','icon-opacity-transition']
+        ['multi-post-mapmarker-label','icon-opacity-transition']
       ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
@@ -13037,7 +12786,6 @@ if (!map.__pillHooksInstalled) {
           <svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
         </button>
       `;
-      el.dataset.surfaceBg = CARD_SURFACE;
       el.style.background = CARD_SURFACE;
       el.querySelector('.fav').addEventListener('click', (e)=>{
         e.stopPropagation();
