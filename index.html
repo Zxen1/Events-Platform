@@ -4773,13 +4773,31 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
   pointer-events: auto;
   touch-action: pan-y;
   margin-top: 0;
 }
 
-.multi-post-marker-trigger,
+.multi-post-marker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 220px;
+  padding: 16px 16px 14px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+.multi-post-marker-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
 .multi-post-marker-icon-button {
   display: inline-flex;
   align-items: center;
@@ -4791,50 +4809,30 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
-  pointer-events: auto;
 }
 
-.multi-post-marker-trigger:focus-visible,
 .multi-post-marker-icon-button:focus-visible {
   outline: 2px solid #2e3a72;
   outline-offset: 4px;
 }
 
-.multi-post-marker-trigger .mapmarker,
 .multi-post-marker-icon-button .mapmarker {
   pointer-events: none;
 }
 
-.multi-post-marker-container {
-  display: none;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  width: 220px;
-  padding: 16px 16px 14px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
-}
-
-.multi-post-marker-stack:hover .multi-post-marker-container,
-.multi-post-marker-stack.is-hovered .multi-post-marker-container,
-.multi-post-marker-stack.is-open .multi-post-marker-container {
-  display: flex;
-  pointer-events: auto;
-}
-
-.multi-post-marker-stack:hover .multi-post-marker-trigger,
-.multi-post-marker-stack.is-hovered .multi-post-marker-trigger,
-.multi-post-marker-stack.is-open .multi-post-marker-trigger {
+.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-children {
   display: none;
 }
 
-.multi-post-marker-icon-button {
-  background: none;
-  align-self: center;
-  margin-bottom: 4px;
+.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-container {
+  width: auto;
+  padding: 6px;
+  gap: 0;
+  box-shadow: none;
+}
+
+.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-header {
+  margin-bottom: 0;
 }
 
 .multi-post-marker-children {
@@ -7625,22 +7623,17 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
-    const trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'multi-post-marker-trigger';
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', 'Show posts at this location');
-    const triggerIcon = createMarkerIcon(MULTI_POST_MAPMARKER_URL);
-    triggerIcon.classList.add('multi-post-marker-trigger-icon');
-    trigger.append(triggerIcon);
-
     const container = document.createElement('div');
     container.className = 'multi-post-marker-container';
+
+    const header = document.createElement('div');
+    header.className = 'multi-post-marker-header';
 
     const iconButton = document.createElement('button');
     iconButton.type = 'button';
     iconButton.className = 'multi-post-marker-icon-button';
     iconButton.setAttribute('aria-label', 'Show posts at this location');
+    iconButton.setAttribute('aria-expanded', 'false');
     const iconButtonIcon = createMarkerIcon(MULTI_POST_MAPMARKER_URL);
     iconButtonIcon.classList.add('multi-post-marker-trigger-icon');
     iconButton.append(iconButtonIcon);
@@ -7648,8 +7641,9 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const childrenRoot = document.createElement('div');
     childrenRoot.className = 'multi-post-marker-children';
 
-    container.append(iconButton, childrenRoot);
-    root.append(trigger, container);
+    header.append(iconButton);
+    container.append(header, childrenRoot);
+    root.append(container);
 
     const marker = new mapboxgl.Marker({ element: root, anchor: 'top' });
     entry = {
@@ -7657,7 +7651,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       element: root,
       childrenRoot,
       container,
-      trigger,
       iconButton,
       isLockedOpen: false,
       postIds: [],
@@ -7677,10 +7670,9 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const setLockedOpen = (locked)=>{
       entry.isLockedOpen = !!locked;
       root.classList.toggle('is-open', entry.isLockedOpen);
-      trigger.setAttribute('aria-expanded', entry.isLockedOpen ? 'true' : 'false');
       const label = entry.isLockedOpen ? 'Hide posts at this location' : 'Show posts at this location';
-      trigger.setAttribute('aria-label', label);
       iconButton.setAttribute('aria-label', label);
+      iconButton.setAttribute('aria-expanded', entry.isLockedOpen ? 'true' : 'false');
     };
 
     const highlightGroup = ()=>{
@@ -7718,12 +7710,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       }
     };
     ['pointerdown','mousedown','touchstart'].forEach(type => {
-      trigger.addEventListener(type, ev => {
-        if(type !== 'touchstart'){
-          try{ ev.preventDefault(); }catch(err){}
-        }
-        try{ ev.stopPropagation(); }catch(err){}
-      }, { capture: true });
       iconButton.addEventListener(type, ev => {
         if(type !== 'touchstart'){
           try{ ev.preventDefault(); }catch(err){}
@@ -7731,7 +7717,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
         try{ ev.stopPropagation(); }catch(err){}
       }, { capture: true });
     });
-    trigger.addEventListener('click', toggleLockedOpen);
     iconButton.addEventListener('click', toggleLockedOpen);
 
     root.addEventListener('mouseenter', highlightGroup);
