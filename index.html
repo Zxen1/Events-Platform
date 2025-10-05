@@ -4770,42 +4770,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .multi-post-marker-stack {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
   pointer-events: auto;
   touch-action: pan-y;
-}
-
-.multi-post-marker-head {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.multi-post-marker-head img {
-  display: block;
-  width: 30px;
-  height: 30px;
-}
-
-.multi-post-marker-count {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  width: 150px;
+  margin-top: 10px;
 }
 
 .multi-post-marker-children {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 6px;
 }
 
@@ -4834,10 +4810,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .multi-post-marker-children .mapmarker-container:hover,
 .multi-post-marker-children .mapmarker-container:focus-visible {
   background-color: #2e3a72;
-}
-
-.multi-post-marker-stack.is-highlighted .multi-post-marker-head img {
-  filter: drop-shadow(0 0 4px rgba(46,58,114,0.9));
 }
 
 .hero img.lqip{
@@ -7595,28 +7567,14 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
-    const anchorHead = document.createElement('div');
-    anchorHead.className = 'multi-post-marker-head';
-    const anchorIcon = new Image();
-    try{ anchorIcon.decoding = 'async'; }catch(err){}
-    anchorIcon.alt = '';
-    anchorIcon.src = MULTI_POST_MAPMARKER_URL;
-    anchorIcon.draggable = false;
-    anchorIcon.loading = 'lazy';
-    anchorIcon.className = 'mapmarker multi-post-marker-icon';
-    const countEl = document.createElement('span');
-    countEl.className = 'multi-post-marker-count';
-    anchorHead.append(anchorIcon, countEl);
     const childrenRoot = document.createElement('div');
     childrenRoot.className = 'multi-post-marker-children';
-    root.append(anchorHead, childrenRoot);
+    root.append(childrenRoot);
 
     const marker = new mapboxgl.Marker({ element: root, anchor: 'top' });
     entry = {
       marker,
       element: root,
-      anchorHead,
-      countEl,
       childrenRoot,
       postIds: [],
       childMarkers: new Map(),
@@ -7648,14 +7606,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       restoreGroup();
     });
 
-      anchorHead.addEventListener('click', (evt)=>{
-        evt.preventDefault();
-        evt.stopPropagation();
-        if(typeof setMode === 'function'){ setMode('posts'); }
-        setPersistentMultiHighlightState(venueKey, entry.postIds);
-        setMarkerHoverIds(entry.postIds);
-        selectedVenueKey = venueKey;
-      });
   }
 
   try{ entry.marker.setLngLat([coords[0], coords[1]]).addTo(map); }catch(err){}
@@ -7795,12 +7745,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     });
     entry.childrenRoot.appendChild(markerContainer);
   });
-  if(entry.countEl){
-    entry.countEl.textContent = ordered.length ? String(ordered.length) : '';
-    const ariaLabel = ordered.length === 1 ? '1 post here' : `${ordered.length} posts here`;
-    entry.anchorHead.setAttribute('aria-label', ariaLabel);
-    entry.anchorHead.setAttribute('title', ariaLabel);
-  }
   updateSelectedMarkerRing();
 }
 
