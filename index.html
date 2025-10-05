@@ -13519,6 +13519,22 @@ function openPostModal(id){
 
           const refreshMarkers = () => {
             if(!map) return;
+            const STACK_SEPARATION = 10;
+            const DEFAULT_MARKER_SIZE = 32;
+            const getMarkerVisualHeight = (el) => {
+              if(!el) return 0;
+              if(el instanceof HTMLImageElement){
+                return el.naturalHeight || el.height || el.offsetHeight || 0;
+              }
+              if(typeof el.getBoundingClientRect === 'function'){
+                const rect = el.getBoundingClientRect();
+                if(rect && Number.isFinite(rect.height)){
+                  return rect.height;
+                }
+              }
+              return el.offsetHeight || 0;
+            };
+            const venueStackCounts = new Map();
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
             allLocations.forEach((location, idx) => {
@@ -13541,6 +13557,11 @@ function openPostModal(id){
               element.setAttribute('role', 'button');
               element.setAttribute('aria-pressed', 'false');
               element.setAttribute('aria-label', `${location.venue} (${location.address})`);
+              const venueKey = (typeof location.venue === 'string' && location.venue.trim())
+                ? location.venue.trim().toLowerCase()
+                : `${location.lng},${location.lat}`;
+              const stackIndex = venueStackCounts.get(venueKey) || 0;
+              venueStackCounts.set(venueKey, stackIndex + 1);
               element.addEventListener('click', () => {
                 if(idx === currentVenueIndex) return;
                 updateVenue(idx);
@@ -13552,6 +13573,19 @@ function openPostModal(id){
                 }
               });
               const markerInstance = new mapboxgl.Marker({ element, anchor: 'center' }).setLngLat([location.lng, location.lat]).addTo(map);
+              if(stackIndex === 0){
+                markerInstance.setOffset([0, 0]);
+              } else {
+                const updateStackOffset = () => {
+                  const markerHeight = getMarkerVisualHeight(element) || DEFAULT_MARKER_SIZE;
+                  const offsetY = stackIndex * (markerHeight + STACK_SEPARATION);
+                  markerInstance.setOffset([0, offsetY]);
+                };
+                updateStackOffset();
+                if(element instanceof HTMLImageElement && !element.complete){
+                  element.addEventListener('load', updateStackOffset, { once: true });
+                }
+              }
               locationMarkers.push({ marker: markerInstance, element, index: idx });
             });
             updateDetailMarkerSelection(selectedIdx);
