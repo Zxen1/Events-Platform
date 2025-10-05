@@ -11684,6 +11684,44 @@ if (!map.__pillHooksInstalled) {
     };
 
     // Map layers
+    function collectLocationEntries(post){
+      const entries = [];
+      const locs = Array.isArray(post?.locations) ? post.locations : [];
+      locs.forEach((loc, idx) => {
+        if(!loc) return;
+        const lng = Number(loc.lng);
+        const lat = Number(loc.lat);
+        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+        entries.push({
+          post,
+          loc,
+          lng,
+          lat,
+          index: idx,
+          key: venueKey(lng, lat)
+        });
+      });
+      if(!entries.length && Number.isFinite(post?.lng) && Number.isFinite(post?.lat)){
+        const fallbackVenue = typeof post?.venue === 'string' && post.venue
+          ? post.venue
+          : (post?.city || '');
+        entries.push({
+          post,
+          loc:{
+            venue: fallbackVenue,
+            address: post?.city || '',
+            lng: post.lng,
+            lat: post.lat
+          },
+          lng: post.lng,
+          lat: post.lat,
+          index: 0,
+          key: venueKey(post.lng, post.lat)
+        });
+      }
+      return entries.filter(entry => entry.key);
+    }
+
     function postsToGeoJSON(list){
       const features = [];
       if(!Array.isArray(list) || !list.length){
