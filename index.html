@@ -4776,7 +4776,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   touch-action: pan-y;
   width: 150px;
   margin-top: 0;
-  transform: translate(var(--multi-post-marker-offset-x, 60px), var(--multi-post-marker-offset-y, 40px));
 }
 
 .multi-post-marker-children {
@@ -7563,8 +7562,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
-    root.style.setProperty('--multi-post-marker-offset-x', `${multiPostChildHorizontalOffsetPx}px`);
-    root.style.setProperty('--multi-post-marker-offset-y', `${multiPostChildVerticalOffsetPx}px`);
     const childrenRoot = document.createElement('div');
     childrenRoot.className = 'multi-post-marker-children';
     root.append(childrenRoot);
