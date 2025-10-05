@@ -4776,7 +4776,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   touch-action: pan-y;
   width: 150px;
   margin-top: 0;
-  transform: translate(var(--multi-post-marker-offset-x, 55px), var(--multi-post-marker-offset-y, 30px));
+  transform: translate(var(--multi-post-marker-offset-x, 60px), var(--multi-post-marker-offset-y, 40px));
 }
 
 .multi-post-marker-children {
@@ -5690,7 +5690,7 @@ if (typeof slugify !== 'function') {
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
-  const multiPostChildHorizontalOffsetPx = (markerIconBaseSizePx * markerIconSize - markerLabelBackgroundWidthPx) / 2;
+  const multiPostChildHorizontalOffsetPx = (markerLabelBackgroundWidthPx - markerIconBaseSizePx * markerIconSize) / 2;
   const multiPostChildVerticalOffsetPx = markerIconBaseSizePx * markerIconSize + 10;
   let markerLabelMeasureContext = null;
   const markerLabelCompositePlaceholderIds = new Set();
@@ -12677,8 +12677,6 @@ if (!map.__pillHooksInstalled) {
             markerPill.alt = '';
             markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
             markerPill.className = 'mapmarker-pill';
-            markerPill.style.opacity = '0.9';
-            markerPill.style.visibility = 'visible';
             markerPill.draggable = false;
 
             const labelLines = getMarkerLabelLines(post);
