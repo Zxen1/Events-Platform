@@ -11990,7 +11990,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
       const markerStackOffsetExpression = ['coalesce', ['get','stackOffsetPx'], ['*', ['coalesce', ['get','stackIndex'], 0], markerStackSpacingPx]];
-      const markerIconTranslateExpression = ['case', ['has','iconTranslate'], ['get','iconTranslate'], ['array', markerLabelBgTranslatePx, markerStackOffsetExpression]];
+      const markerIconTranslateExpression = ['case', ['has','iconTranslate'], ['get','iconTranslate'], ['array', ['literal', ['number', 2]], markerLabelBgTranslatePx, markerStackOffsetExpression]];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
