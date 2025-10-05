@@ -115,40 +115,6 @@
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
-    .multi-post-marker-root{
-      position: relative;
-      width: 0;
-      height: 0;
-      pointer-events: none;
-    }
-    .multi-post-marker-primary{
-      position: absolute;
-      left: 0;
-      top: 0;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    .multi-post-map-container{
-      position: absolute;
-      left: 0;
-      transform: translate(-50%, 0);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 20px;
-      width: max-content;
-      box-sizing: border-box;
-      pointer-events: none;
-    }
-    .multi-post-map-container .mapmarker-container{
-      position: relative;
-      left: auto;
-      top: auto;
-      transform: none;
-    }
     .mapmarker{
       position: relative;
       left: auto;
@@ -7360,150 +7326,6 @@ if (typeof slugify !== 'function') {
       updateMapFeatureHighlights(idsToHighlight);
     }
 
-    let multiVenueMarkers = [];
-    function clearMultiVenueMarkers(){
-      multiVenueMarkers.forEach(marker => {
-        if(!marker) return;
-        try{ marker.remove(); }catch(err){}
-      });
-      multiVenueMarkers = [];
-    }
-
-    function createInlineMapMarker(post, feature){
-      const markerContainer = document.createElement('div');
-      markerContainer.className = 'mapmarker-container';
-      if(feature && feature.properties && feature.properties.id !== undefined && feature.properties.id !== null){
-        markerContainer.dataset.id = String(feature.properties.id);
-      }
-      markerContainer.setAttribute('aria-hidden', 'true');
-      markerContainer.style.pointerEvents = 'none';
-      markerContainer.style.userSelect = 'none';
-
-      const markerPill = new Image();
-      try{ markerPill.decoding = 'async'; }catch(err){}
-      markerPill.alt = '';
-      markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
-      markerPill.className = 'mapmarker-pill';
-      markerPill.style.opacity = '0.9';
-      markerPill.style.visibility = 'visible';
-      markerPill.draggable = false;
-
-      const markerIcon = new Image();
-      try{ markerIcon.decoding = 'async'; }catch(err){}
-      markerIcon.alt = '';
-      markerIcon.className = 'mapmarker';
-      markerIcon.draggable = false;
-      markerIcon.referrerPolicy = 'no-referrer';
-      markerIcon.loading = 'lazy';
-      const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
-      markerIcon.onerror = ()=>{
-        markerIcon.onerror = null;
-        markerIcon.src = markerFallback;
-      };
-      const markerSources = window.subcategoryMarkers || {};
-      const markerIds = window.subcategoryMarkerIds || {};
-      const slugifyFn = typeof slugify === 'function'
-        ? slugify
-        : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-      const featureSub = feature && feature.properties ? (feature.properties.sub || feature.properties.baseSub || '') : '';
-      const markerIdCandidates = [];
-      if(featureSub){ markerIdCandidates.push(featureSub); }
-      if(post && post.subcategory){
-        const mappedId = markerIds[post.subcategory];
-        if(mappedId) markerIdCandidates.push(mappedId);
-        markerIdCandidates.push(slugifyFn(post.subcategory));
-      }
-      const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-      markerIcon.src = markerIconUrl || markerFallback;
-
-      const markerLabel = document.createElement('div');
-      markerLabel.className = 'mapmarker-label';
-      const line1 = document.createElement('div');
-      line1.className = 'mapmarker-label-line';
-      line1.textContent = feature && feature.properties ? (feature.properties.labelLine1 || '') : '';
-      markerLabel.appendChild(line1);
-      const secondLine = feature && feature.properties ? (feature.properties.labelLine2 || '') : '';
-      if(secondLine){
-        const line2 = document.createElement('div');
-        line2.className = 'mapmarker-label-line';
-        line2.textContent = secondLine;
-        markerLabel.appendChild(line2);
-      }
-
-      markerContainer.append(markerPill, markerIcon, markerLabel);
-      return markerContainer;
-    }
-
-    function updateMultiVenueMarkers(postsData, markerList){
-      clearMultiVenueMarkers();
-      if(!map || !postsData || !Array.isArray(postsData.features)) return;
-      if(typeof mapboxgl === 'undefined' || typeof mapboxgl.Marker !== 'function') return;
-      const postLookup = new Map();
-      if(Array.isArray(markerList)){
-        markerList.forEach(post => {
-          if(!post) return;
-          const id = post.id;
-          if(id === undefined || id === null) return;
-          postLookup.set(String(id), post);
-        });
-      }
-      const groups = new Map();
-      postsData.features.forEach(feature => {
-        if(!feature || !feature.properties) return;
-        const size = Number(feature.properties.venueGroupSize) || 0;
-        if(size <= 1) return;
-        const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
-          ? feature.geometry.coordinates
-          : null;
-        if(!coords || coords.length < 2) return;
-        const key = feature.properties.venueKey || `${coords[0]},${coords[1]}`;
-        const existing = groups.get(key) || { coords, features: [] };
-        const idx = Number(feature.properties.venueGroupIndex) || 0;
-        existing.features[idx] = feature;
-        groups.set(key, existing);
-      });
-      if(!groups.size) return;
-      const markerHeight = Number(markerLabelBackgroundHeightPx) || 40;
-      const stackOffset = markerHeight / 2;
-      groups.forEach(({ coords, features }) => {
-        const ordered = features.filter(Boolean).sort((a, b) => {
-          const aIdx = Number(a && a.properties ? a.properties.venueGroupIndex : 0) || 0;
-          const bIdx = Number(b && b.properties ? b.properties.venueGroupIndex : 0) || 0;
-          return aIdx - bIdx;
-        });
-        if(ordered.length <= 1) return;
-        const outer = document.createElement('div');
-        outer.className = 'multi-post-marker-root';
-        outer.style.pointerEvents = 'none';
-
-        const primaryFeature = ordered[0];
-        const primaryPost = postLookup.get(String(primaryFeature && primaryFeature.properties ? primaryFeature.properties.id : '')) || null;
-        const primaryMarker = createInlineMapMarker(primaryPost, primaryFeature);
-        primaryMarker.classList.add('multi-post-marker-primary');
-        outer.appendChild(primaryMarker);
-
-        if(ordered.length > 1){
-          const stack = document.createElement('div');
-          stack.className = 'multi-post-map-container';
-          stack.style.top = `${stackOffset}px`;
-          ordered.slice(1).forEach(feature => {
-            const post = postLookup.get(String(feature && feature.properties ? feature.properties.id : '')) || null;
-            const markerEl = createInlineMapMarker(post, feature);
-            stack.appendChild(markerEl);
-          });
-          outer.appendChild(stack);
-        }
-
-        try{
-          const markerInstance = new mapboxgl.Marker({ element: outer, anchor: 'center' });
-          markerInstance.setLngLat(coords).addTo(map);
-          multiVenueMarkers.push(markerInstance);
-        }catch(err){
-          try{ outer.remove(); }catch(removeErr){}
-        }
-      });
-    }
-
     function hashString(str){
       let hash = 0;
       for(let i=0;i<str.length;i++){
@@ -9338,7 +9160,6 @@ function makePosts(){
           postsSource.__markerSignature = null;
         }
       }
-      clearMultiVenueMarkers();
       updateLayerVisibility(lastKnownZoom);
     }
 
@@ -11906,24 +11727,13 @@ if (!map.__pillHooksInstalled) {
       if(!Array.isArray(list) || !list.length){
         return { type:'FeatureCollection', features };
       }
-      const grouped = new Map();
       list.forEach(p => {
         if(!p) return;
         const entries = collectLocationEntries(p);
         entries.forEach(entry => {
           if(!entry || !entry.key) return;
-          const bucket = grouped.get(entry.key) || [];
-          bucket.push({ entry, post: entry.post || p });
-          grouped.set(entry.key, bucket);
-        });
-      });
-      grouped.forEach((bucket, key) => {
-        const size = bucket.length;
-        bucket.forEach((item, index) => {
-          if(!item || !item.entry) return;
-          const { entry } = item;
-          const post = item.post || entry.post;
-          if(!post) return;
+          const key = entry.key;
+          const post = entry.post || p;
           const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
           const labelLines = getMarkerLabelLines(post);
           const combinedLabel = buildMarkerLabelText(post, labelLines);
@@ -11948,9 +11758,7 @@ if (!map.__pillHooksInstalled) {
               sub: baseSub,
               baseSub,
               venueKey: key,
-              locationIndex: entry.index,
-              venueGroupIndex: index,
-              venueGroupSize: size
+              locationIndex: entry.index
             },
             geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
           });
@@ -12034,8 +11842,7 @@ if (!map.__pillHooksInstalled) {
           const iconId = props.sub || props.baseSub || '';
           const labelLine1 = props.labelLine1 || '';
           const labelLine2 = props.labelLine2 || '';
-          const groupSize = Number(props.venueGroupSize) || 0;
-          const isMulti = groupSize > 1;
+          const isMulti = false;
           const priority = Boolean((stored ? stored.priority : false) || inView || existing.priority);
           const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
           const updatedMeta = Object.assign({}, existing, {
@@ -12096,12 +11903,10 @@ if (!map.__pillHooksInstalled) {
         enforceMarkerLabelCompositeBudget(map);
       }
       ensureMarkerLabelBackground(map);
-      updateMultiVenueMarkers(postsData, markerList);
       updateMapFeatureHighlights(lastHighlightedPostIds);
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
-        ['has','title'],
-        ['==', ['coalesce', ['get','venueGroupIndex'], 0], 0]
+        ['has','title']
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
 
