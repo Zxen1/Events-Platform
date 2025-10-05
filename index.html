@@ -4801,11 +4801,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   border-radius: 16px;
 }
 
-.multi-post-marker-children .mapmarker-pill {
-  visibility: visible;
-  opacity: 0.9;
-}
-
 .multi-post-marker-stack.is-highlighted .multi-post-marker-children .mapmarker-container,
 .multi-post-marker-children .mapmarker-container.is-active,
 .multi-post-marker-children .mapmarker-container:hover,
@@ -7511,8 +7506,6 @@ function createMarkerPill(){
   pill.src = 'assets/icons-30/150x40-pill-70.webp';
   pill.className = 'mapmarker-pill';
   pill.draggable = false;
-  pill.style.opacity = '0.9';
-  pill.style.visibility = 'visible';
   return pill;
 }
 
