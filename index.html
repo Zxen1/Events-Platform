@@ -54,11 +54,8 @@
     }
     .mapmarker-overlay{
       position: relative;
-      width: 150px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 0;
+      height: 0;
       transform: translateZ(0);
       pointer-events: none;
       isolation: isolate;
@@ -73,7 +70,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(45px, -10px);
+      transform: translate(-30px, -30px);
       pointer-events: auto;
       z-index: 30;
     }
@@ -102,9 +99,12 @@
       z-index: 0;
     }
     .mapmarker-container{
-      position: relative;
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 40px;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
@@ -4767,105 +4767,72 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-
-.multi-post-marker-stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: auto;
-  touch-action: pan-y;
-  margin-top: 0;
-}
-
-.multi-post-marker-container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  width: 220px;
-  padding: 16px 16px 14px;
-  background: rgba(0, 0, 0, 0.7);
+.multi-post-map-container {
+  position: absolute;
+  z-index: 20050;
+  padding: 16px;
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  pointer-events: auto;
-}
-
-.multi-post-marker-header {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 280px;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
 }
 
-.multi-post-marker-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 4px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
+.multi-post-map-container .multi-post-map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.multi-post-marker-icon-button:focus-visible {
-  outline: 2px solid #2e3a72;
-  outline-offset: 4px;
-}
-
-.multi-post-marker-icon-button .mapmarker {
+.multi-post-map-container .multi-post-map-summary {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 4px;
   pointer-events: none;
 }
 
-.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-children {
-  display: none;
-}
-
-.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-container {
-  width: auto;
-  padding: 6px;
-  gap: 0;
-  box-shadow: none;
-}
-
-.multi-post-marker-stack:not(.is-hovered):not(.is-open):not(:hover) .multi-post-marker-header {
-  margin-bottom: 0;
-}
-
-.multi-post-marker-children {
+.multi-post-map-container .multi-post-map-item {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
+  align-items: center;
+  justify-content: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
-.multi-post-marker-children .mapmarker-container {
-  width: 100%;
+.multi-post-map-container .multi-post-map-item:focus-visible {
+  outline: 2px solid #2e3a72;
+  outline-offset: 2px;
+  border-radius: 12px;
 }
 
-.multi-post-marker-children .mapmarker-container {
+.multi-post-map-container .multi-post-map-item:hover .mapmarker-container,
+.multi-post-map-container .multi-post-map-item:focus-visible .mapmarker-container {
+  background-color: #2e3a72;
+}
+
+.multi-post-map-container .mapmarker-container {
   position: relative;
   left: auto;
   top: auto;
   transform: none;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
 }
 
-.multi-post-marker-children .mapmarker-container:focus-visible {
-  outline: 2px solid #2e3a72;
-  outline-offset: 4px;
-  border-radius: 16px;
-}
-
-.multi-post-marker-stack.is-highlighted .multi-post-marker-children .mapmarker-container,
-.multi-post-marker-children .mapmarker-container.is-active,
-.multi-post-marker-children .mapmarker-container:hover,
-.multi-post-marker-children .mapmarker-container:focus-visible {
-  background-color: #2e3a72;
+.multi-post-map-container .mapmarker-pill {
+  visibility: visible;
 }
 
 .hero img.lqip{
@@ -5750,8 +5717,6 @@ if (typeof slugify !== 'function') {
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
-  const multiPostChildHorizontalOffsetPx = (markerLabelBackgroundWidthPx - markerIconBaseSizePx * markerIconSize) / 2;
-  const multiPostChildVerticalOffsetPx = markerIconBaseSizePx * markerIconSize + 10;
   let markerLabelMeasureContext = null;
   const markerLabelCompositePlaceholderIds = new Set();
 
@@ -6705,7 +6670,7 @@ if (typeof slugify !== 'function') {
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       // Multi-post marker layers are managed separately so they remain visible at all zoom levels.
-      const THRESHOLD_MARKER_LAYER_IDS = [
+      const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
         'marker-label-highlight'
@@ -6714,7 +6679,7 @@ if (typeof slugify !== 'function') {
         'multi-post-mapmarker-label',
         'multi-post-mapmarker-label-highlight'
       ];
-      const ALL_MARKER_LAYER_IDS = [...THRESHOLD_MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS];
+      const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS, ...MULTI_POST_MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
         const BALLOON_SOURCE_ID = 'post-balloon-source';
@@ -7119,9 +7084,6 @@ if (typeof slugify !== 'function') {
     let markerFeatureIndex = new Map();
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
-    let markerHoverIds = [];
-    let persistentMultiHighlight = null;
-    const multiMarkerOverlays = new Map();
     function updateMapFeatureHighlights(postIds){
       const normalized = Array.from(new Set((Array.isArray(postIds) ? postIds : [postIds])
         .filter(id => id !== undefined && id !== null)
@@ -7298,6 +7260,7 @@ if (typeof slugify !== 'function') {
 
     // === 0528 helpers: cluster contextmenu list (robust positioning + locking) ===
     let listLocked = false;
+    let lastListOpenAt = 0;
     function lockMap(lock){
       listLocked = lock;
       const fn = lock ? 'disable' : 'enable';
@@ -7347,44 +7310,6 @@ if (typeof slugify !== 'function') {
           updateSelectedMarkerRing();
         }
       }, delay);
-    }
-
-    function refreshMultiMarkerOverlayHighlights(ids, options = {}){
-      const { activeId = null, highlightAllChildren = false } = options;
-      const idSet = new Set((Array.isArray(ids) ? ids : []).map(id => String(id)));
-      const activeIdStr = activeId ? String(activeId) : null;
-      multiMarkerOverlays.forEach(entry => {
-        const hasAny = entry.postIds.some(id => idSet.has(id));
-        if(entry.element){
-          entry.element.classList.toggle('is-highlighted', hasAny);
-        }
-        entry.childMarkers.forEach((marker, id) => {
-          const isHighlighted = idSet.has(id) && (highlightAllChildren || !activeIdStr || id === activeIdStr);
-          marker.classList.toggle('is-active', isHighlighted);
-        });
-      });
-    }
-
-    function setMarkerHoverIds(ids){
-      markerHoverIds = Array.isArray(ids) ? ids.map(id => String(id)) : [];
-      updateSelectedMarkerRing();
-    }
-
-    function clearMarkerHoverIds(){
-      setMarkerHoverIds([]);
-    }
-
-    function setPersistentMultiHighlightState(venueKey, ids, activeId = null){
-      if(venueKey && Array.isArray(ids) && ids.length){
-        persistentMultiHighlight = {
-          venueKey,
-          ids: Array.from(new Set(ids.map(id => String(id)))),
-          activeId: activeId !== null && activeId !== undefined ? String(activeId) : null
-        };
-      } else {
-        persistentMultiHighlight = null;
-      }
-      updateSelectedMarkerRing();
     }
 
     function updateSelectedMarkerRing(){
@@ -7448,20 +7373,8 @@ if (typeof slugify !== 'function') {
           fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
         }
       }
-      const fallbackIds = Array.from(new Set([overlayId, fallbackId].filter(Boolean)));
-      const persistedIds = persistentMultiHighlight && Array.isArray(persistentMultiHighlight.ids)
-        ? persistentMultiHighlight.ids
-        : [];
-      let idsToHighlight = [];
-      if(Array.isArray(markerHoverIds) && markerHoverIds.length){
-        idsToHighlight = Array.from(new Set(markerHoverIds.map(id => String(id))));
-      } else if(persistedIds.length){
-        idsToHighlight = Array.from(new Set(persistedIds.map(id => String(id))));
-      } else {
-        idsToHighlight = fallbackIds;
-      }
+      const idsToHighlight = Array.from(new Set([overlayId, fallbackId].filter(Boolean)));
       if(!idsToHighlight.length){
-        refreshMultiMarkerOverlayHighlights([]);
         updateMapFeatureHighlights([]);
         return;
       }
@@ -7487,15 +7400,6 @@ if (typeof slugify !== 'function') {
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
           el.classList.add(highlightClass);
         });
-      });
-      const usingHoverIds = Array.isArray(markerHoverIds) && markerHoverIds.length > 0;
-      const persistentActiveId = !usingHoverIds && persistedIds.length && persistentMultiHighlight
-        ? persistentMultiHighlight.activeId
-        : null;
-      const highlightAllChildren = usingHoverIds || (!usingHoverIds && (!persistentActiveId));
-      refreshMultiMarkerOverlayHighlights(idsToHighlight, {
-        activeId: usingHoverIds ? null : persistentActiveId,
-        highlightAllChildren
       });
       updateMapFeatureHighlights(idsToHighlight);
     }
@@ -7526,374 +7430,81 @@ function sortMultiPostItems(items){
   return arr;
 }
 
-function markerIconUrlForPost(post){
-  const markerSources = window.subcategoryMarkers || {};
-  const markerIds = window.subcategoryMarkerIds || {};
-  const slugifyFn = typeof slugify === 'function'
-    ? slugify
-    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-  const candidates = [];
-  if(post && post.subcategory){
-    const mappedId = markerIds[post.subcategory];
-    if(mappedId) candidates.push(mappedId);
-    candidates.push(slugifyFn(post.subcategory));
+let multiPostCardState = null;
+
+function destroyMultiPostCardContainer(){
+  const state = multiPostCardState;
+  if(!state) return;
+  if(state.lockOnOpen){
+    lockMap(false);
   }
-  candidates.push(MULTI_POST_MAPMARKER_ID);
-  const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
-  return url || MULTI_POST_MAPMARKER_URL;
-}
-
-function createMarkerIcon(url){
-  const icon = new Image();
-  try{ icon.decoding = 'async'; }catch(err){}
-  icon.alt = '';
-  icon.className = 'mapmarker';
-  icon.draggable = false;
-  icon.referrerPolicy = 'no-referrer';
-  icon.loading = 'lazy';
-  icon.onerror = ()=>{
-    icon.onerror = null;
-    icon.src = MULTI_POST_MAPMARKER_URL;
-  };
-  icon.src = url || MULTI_POST_MAPMARKER_URL;
-  return icon;
-}
-
-function createMarkerPill(){
-  const pill = new Image();
-  try{ pill.decoding = 'async'; }catch(err){}
-  pill.alt = '';
-  pill.src = 'assets/icons-30/150x40-pill-70.webp';
-  pill.className = 'mapmarker-pill';
-  pill.draggable = false;
-  return pill;
-}
-
-function createMarkerLabel(labelLines){
-  const markerLabel = document.createElement('div');
-  markerLabel.className = 'mapmarker-label';
-  const markerLine1 = document.createElement('div');
-  markerLine1.className = 'mapmarker-label-line';
-  markerLine1.textContent = labelLines.line1 || '';
-  markerLabel.appendChild(markerLine1);
-  if(labelLines.line2){
-    const markerLine2 = document.createElement('div');
-    markerLine2.className = 'mapmarker-label-line';
-    markerLine2.textContent = labelLines.line2;
-    markerLabel.appendChild(markerLine2);
+  const root = state.element;
+  if(root && root.parentNode){
+    root.parentNode.removeChild(root);
   }
-  return markerLabel;
+  multiPostCardState = null;
+  window.__overCard = false;
 }
 
-function buildMultiMarkerChild(post){
-  const id = post && post.id ? String(post.id) : '';
-  if(!id) return null;
-  const markerContainer = document.createElement('div');
-  markerContainer.className = 'mapmarker-container';
-  markerContainer.dataset.id = id;
-  const labelLines = getMarkerLabelLines(post);
-  const iconUrl = markerIconUrlForPost(post);
-  const markerIcon = createMarkerIcon(iconUrl);
-  const markerPill = createMarkerPill();
-  const markerLabel = createMarkerLabel(labelLines);
-  markerContainer.append(markerPill, markerIcon, markerLabel);
-  return { markerContainer, id };
-}
-
-function removeMultiMarkerOverlay(key){
-  const existing = multiMarkerOverlays.get(key);
-  if(!existing) return;
-  try{ existing.marker?.remove(); }catch(err){}
-  multiMarkerOverlays.delete(key);
-  if(persistentMultiHighlight && persistentMultiHighlight.venueKey === key){
-    setPersistentMultiHighlightState(null, []);
-  }
-}
-
-function ensureMultiMarkerOverlay(venueKey, coords, posts){
-  if(!map || !venueKey || !Array.isArray(coords) || coords.length < 2){
-    return;
-  }
-  if(!Array.isArray(posts) || posts.length <= 1){
-    removeMultiMarkerOverlay(venueKey);
-    return;
-  }
-  let entry = multiMarkerOverlays.get(venueKey);
-  if(!entry){
-    const root = document.createElement('div');
-    root.className = 'multi-post-marker-stack';
-    root.dataset.venueKey = venueKey;
-    const container = document.createElement('div');
-    container.className = 'multi-post-marker-container';
-
-    const header = document.createElement('div');
-    header.className = 'multi-post-marker-header';
-
-    const iconButton = document.createElement('button');
-    iconButton.type = 'button';
-    iconButton.className = 'multi-post-marker-icon-button';
-    iconButton.setAttribute('aria-label', 'Show posts at this location');
-    iconButton.setAttribute('aria-expanded', 'false');
-    const iconButtonIcon = createMarkerIcon(MULTI_POST_MAPMARKER_URL);
-    iconButtonIcon.classList.add('multi-post-marker-trigger-icon');
-    iconButton.append(iconButtonIcon);
-
-    const childrenRoot = document.createElement('div');
-    childrenRoot.className = 'multi-post-marker-children';
-
-    header.append(iconButton);
-    container.append(header, childrenRoot);
-    root.append(container);
-
-    const marker = new mapboxgl.Marker({ element: root, anchor: 'top' });
-    entry = {
-      marker,
-      element: root,
-      childrenRoot,
-      container,
-      iconButton,
-      isLockedOpen: false,
-      postIds: [],
-      childMarkers: new Map(),
-      venueKey
-    };
-    multiMarkerOverlays.set(venueKey, entry);
-
-    const setHoverState = (active)=>{
-      if(active){
-        root.classList.add('is-hovered');
-      } else if(!entry.isLockedOpen){
-        root.classList.remove('is-hovered');
-      }
-    };
-
-    const setLockedOpen = (locked)=>{
-      entry.isLockedOpen = !!locked;
-      root.classList.toggle('is-open', entry.isLockedOpen);
-      const label = entry.isLockedOpen ? 'Hide posts at this location' : 'Show posts at this location';
-      iconButton.setAttribute('aria-label', label);
-      iconButton.setAttribute('aria-expanded', entry.isLockedOpen ? 'true' : 'false');
-    };
-
-    const highlightGroup = ()=>{
-      setHoverState(true);
-      if(entry.postIds.length){
-        setMarkerHoverIds(entry.postIds);
-      }
-    };
-    const restoreGroup = ()=>{
-      if(entry.isLockedOpen){
-        return;
-      }
-      setHoverState(false);
-      if(persistentMultiHighlight && persistentMultiHighlight.venueKey === venueKey && persistentMultiHighlight.ids){
-        if(persistentMultiHighlight.activeId){
-          setMarkerHoverIds([persistentMultiHighlight.activeId]);
-        } else {
-          setMarkerHoverIds(persistentMultiHighlight.ids);
-        }
-      } else {
-        clearMarkerHoverIds();
-      }
-    };
-    const toggleLockedOpen = (ev)=>{
-      if(ev){
-        try{ ev.preventDefault(); }catch(err){}
-        try{ ev.stopPropagation(); }catch(err){}
-      }
-      const next = !entry.isLockedOpen;
-      setLockedOpen(next);
-      if(next){
-        highlightGroup();
-      } else {
-        restoreGroup();
-      }
-    };
-    ['pointerdown','mousedown','touchstart'].forEach(type => {
-      iconButton.addEventListener(type, ev => {
-        if(type !== 'touchstart'){
-          try{ ev.preventDefault(); }catch(err){}
-        }
-        try{ ev.stopPropagation(); }catch(err){}
-      }, { capture: true });
-    });
-    iconButton.addEventListener('click', toggleLockedOpen);
-
-    root.addEventListener('mouseenter', highlightGroup);
-    root.addEventListener('mouseleave', restoreGroup);
-    root.addEventListener('focusin', highlightGroup);
-    root.addEventListener('focusout', (evt)=>{
-      if(evt.relatedTarget && root.contains(evt.relatedTarget)) return;
-      restoreGroup();
-    });
-
-  }
-
-  try{ entry.marker.setLngLat([coords[0], coords[1]]).addTo(map); }catch(err){}
-
-  const ordered = sortMultiPostItems(posts).filter(item => item && item.id !== undefined && item.id !== null);
-  entry.postIds = ordered.map(post => String(post.id));
-  entry.childrenRoot.innerHTML = '';
-  entry.childMarkers.clear();
-  ordered.forEach(post => {
-    const child = buildMultiMarkerChild(post);
-    if(!child) return;
-    const { markerContainer, id } = child;
-    markerContainer.setAttribute('aria-label', [post.title, getPrimaryVenueName(post)].filter(Boolean).join(' • '));
-    entry.childMarkers.set(id, markerContainer);
-    ['pointerdown','mousedown','touchstart'].forEach(type => {
-      markerContainer.addEventListener(type, ev => {
-        if(type !== 'touchstart'){ try{ ev.preventDefault(); }catch(err){} }
-        try{ ev.stopPropagation(); }catch(err){}
-      }, { capture: true });
-    });
-    let pointerHoverActive = false;
-    const showChildHover = (pointerType='')=>{
-      const normalized = typeof pointerType === 'string' ? pointerType.toLowerCase() : '';
-      if(normalized === 'touch'){
-        return;
-      }
-      setMarkerHoverIds([id]);
-      const targetPost = posts.find(item => item && item.id === post.id) || post;
-      if(!targetPost){
-        return;
-      }
-      const existingPopupEl = hoverPopup && typeof hoverPopup.getElement === 'function'
-        ? hoverPopup.getElement()
-        : null;
-      if(existingPopupEl && existingPopupEl.dataset && existingPopupEl.dataset.id === id){
-        return;
-      }
-      if(hoverPopup){
-        try{ hoverPopup.remove(); }catch(err){}
-        hoverPopup = null;
-      }
-      const matchedLngLat = (()=>{
-        if(Array.isArray(targetPost.locations) && targetPost.locations.length){
-          const match = targetPost.locations.find(loc => {
-            if(!loc) return false;
-            const lng = Number(loc.lng);
-            const lat = Number(loc.lat);
-            if(!Number.isFinite(lng) || !Number.isFinite(lat)) return false;
-            const key = toVenueCoordKey(lng, lat);
-            return key && key === venueKey;
-          });
-          if(match){
-            return { lng: Number(match.lng), lat: Number(match.lat) };
-          }
-        }
-        if(Number.isFinite(targetPost.lng) && Number.isFinite(targetPost.lat)){
-          return { lng: Number(targetPost.lng), lat: Number(targetPost.lat) };
-        }
-        const hasCoords = Array.isArray(coords) && coords.length >= 2
-          && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
-        if(hasCoords){
-          return { lng: Number(coords[0]), lat: Number(coords[1]) };
-        }
-        return null;
-      })();
-      const overlayOptions = { venueKey };
-      if(matchedLngLat){
-        overlayOptions.targetLngLat = matchedLngLat;
-        overlayOptions.fixedLngLat = matchedLngLat;
-        overlayOptions.eventLngLat = matchedLngLat;
-      }
-      const overlay = createMapCardOverlay(targetPost, overlayOptions);
-      if(overlay){
-        hoverPopup = overlay;
-        updateSelectedMarkerRing();
-      }
-    };
-    const handleChildEnter = (pointerType='')=>{
-      pointerHoverActive = true;
-      showChildHover(pointerType);
-    };
-    const handleChildLeave = (nextTarget=null)=>{
-      pointerHoverActive = false;
-      let movingToChild = false;
-      if(nextTarget && typeof nextTarget.closest === 'function'){
-        const childTarget = nextTarget.closest('.mapmarker-container');
-        movingToChild = !!(childTarget && entry.childrenRoot.contains(childTarget));
-      } else if(!nextTarget && typeof document !== 'undefined' && document.activeElement){
-        movingToChild = entry.childrenRoot.contains(document.activeElement);
-      }
-      if(movingToChild){
-        return;
-      }
-      schedulePopupRemoval(hoverPopup, 160);
-      restoreGroup();
-    };
-    markerContainer.addEventListener('pointerenter', ev => {
-      const pointerType = ev && typeof ev.pointerType === 'string' ? ev.pointerType : '';
-      handleChildEnter(pointerType);
-    });
-    markerContainer.addEventListener('mouseenter', () => {
-      if(pointerHoverActive) return;
-      handleChildEnter('');
-    });
-    markerContainer.addEventListener('focus', () => {
-      handleChildEnter('');
-    });
-    markerContainer.addEventListener('pointerleave', ev => {
-      handleChildLeave(ev ? ev.relatedTarget : null);
-    });
-    markerContainer.addEventListener('mouseleave', ev => {
-      handleChildLeave(ev ? ev.relatedTarget : null);
-    });
-    markerContainer.addEventListener('blur', ev => {
-      handleChildLeave(ev ? ev.relatedTarget : null);
-    });
-      markerContainer.addEventListener('click', (ev)=>{
-        ev.preventDefault();
-        ev.stopPropagation();
-        if(typeof setMode === 'function'){ setMode('posts'); }
-        setPersistentMultiHighlightState(venueKey, entry.postIds, id);
-        setMarkerHoverIds([id]);
-        selectedVenueKey = venueKey;
-        activePostId = post.id;
-      callWhenDefined('openPost', (fn)=>{
-        requestAnimationFrame(()=>{
-          try{
-            touchMarker = null;
-            stopSpin();
-            if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
-              try{ closePanel(filterPanel); }catch(err){}
-            }
-            fn(id, false, true);
-          }catch(err){ console.error(err); }
-        });
-      });
-    });
-    entry.childrenRoot.appendChild(markerContainer);
-  });
-  updateSelectedMarkerRing();
-}
-
-function syncMultiMarkerOverlays(features){
-  const featureList = Array.isArray(features) ? features : [];
-  const activeKeys = new Set();
-  featureList.forEach(feature => {
-    if(!feature || !feature.properties) return;
-    const props = feature.properties;
-    const venueKey = props.venueKey || '';
-    const coords = feature.geometry && Array.isArray(feature.geometry.coordinates) ? feature.geometry.coordinates : null;
-    if(!venueKey || !coords){
-      return;
+function positionMultiPostCardContainer(point){
+  if(!multiPostCardState || !multiPostCardState.element) return;
+  const containerEl = map && typeof map.getContainer === 'function' ? map.getContainer() : null;
+  if(!containerEl) return;
+  const root = multiPostCardState.element;
+  const pad = 12;
+  let headerOffset = 0;
+  try{
+    const rootEl = document.documentElement;
+    if(rootEl){
+      const rootStyles = getComputedStyle(rootEl);
+      const headerH = parseFloat(rootStyles.getPropertyValue('--header-h')) || 0;
+      const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
+      headerOffset = Math.max(0, headerH + safeTop);
     }
-    const postsAtVenue = getPostsAtVenueByCoords(coords[0], coords[1]);
-    if(!Array.isArray(postsAtVenue) || postsAtVenue.length <= 1){
-      removeMultiMarkerOverlay(venueKey);
-      return;
-    }
-    activeKeys.add(venueKey);
-    ensureMultiMarkerOverlay(venueKey, coords, postsAtVenue);
-  });
-  Array.from(multiMarkerOverlays.keys()).forEach(key => {
-    if(!activeKeys.has(key)){
-      removeMultiMarkerOverlay(key);
-    }
-  });
-  updateSelectedMarkerRing();
+  }catch(err){}
+  const topPad = pad + headerOffset;
+  const mapRect = containerEl.getBoundingClientRect();
+  const width = root.offsetWidth;
+  const height = root.offsetHeight;
+  let anchor = null;
+  if(point && Number.isFinite(point.x) && Number.isFinite(point.y)){
+    anchor = { x: point.x, y: point.y };
+  } else if(multiPostCardState.anchorPoint && Number.isFinite(multiPostCardState.anchorPoint.x) && Number.isFinite(multiPostCardState.anchorPoint.y)){
+    anchor = { x: multiPostCardState.anchorPoint.x, y: multiPostCardState.anchorPoint.y };
+  } else if(map && typeof map.project === 'function' && multiPostCardState.markerLngLat){
+    try{
+      const projected = map.project([multiPostCardState.markerLngLat.lng, multiPostCardState.markerLngLat.lat]);
+      if(projected && Number.isFinite(projected.x) && Number.isFinite(projected.y)){
+        anchor = { x: projected.x, y: projected.y };
+      }
+    }catch(err){}
+  }
+  if(!anchor){
+    anchor = { x: mapRect.width / 2, y: mapRect.height / 2 };
+  }
+  multiPostCardState.anchorPoint = { x: anchor.x, y: anchor.y };
+  const verticalOffset = 20;
+  let top = anchor.y + verticalOffset;
+  const bottomSpace = mapRect.height - anchor.y - verticalOffset;
+  const topSpace = anchor.y - topPad - verticalOffset;
+  if(height > bottomSpace && topSpace > height){
+    top = anchor.y - height - verticalOffset;
+  }
+  let left = anchor.x - width / 2;
+  if(left < pad){
+    left = pad;
+  }
+  if(left + width > mapRect.width - pad){
+    left = Math.max(pad, mapRect.width - width - pad);
+  }
+  if(top < topPad){
+    top = topPad;
+  }
+  if(top + height > mapRect.height - pad){
+    top = Math.max(topPad, mapRect.height - height - pad);
+  }
+  root.style.left = `${Math.round(left)}px`;
+  root.style.top = `${Math.round(top)}px`;
 }
 
 function countMarkersForVenue(postsAtVenue, venueKey, bounds){
@@ -7948,6 +7559,245 @@ function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   }, 0);
 }
 
+function createMultiPostCardContainer(point, items, options = {}){
+  if(!map || typeof map.getContainer !== 'function') return null;
+  if(!Array.isArray(items) || items.length <= 1){
+    destroyMultiPostCardContainer();
+    return null;
+  }
+  const containerEl = map.getContainer();
+  if(!containerEl) return null;
+  const { lockOnOpen = false, venueKey = null, lngLat = null } = options;
+  const ordered = sortMultiPostItems(items);
+  const markerSources = window.subcategoryMarkers || {};
+  const markerIds = window.subcategoryMarkerIds || {};
+  const slugifyFn = typeof slugify === 'function'
+    ? slugify
+    : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+  const markerIconUrlFor = (post)=>{
+    const candidates = [];
+    if(post && post.subcategory){
+      const mappedId = markerIds[post.subcategory];
+      if(mappedId) candidates.push(mappedId);
+      candidates.push(slugifyFn(post.subcategory));
+    }
+    candidates.push(MULTI_POST_MAPMARKER_ID);
+    const url = candidates.map(id => (id && markerSources[id]) || null).find(Boolean);
+    return url || MULTI_POST_MAPMARKER_URL;
+  };
+  const createMarkerIcon = (url)=>{
+    const icon = new Image();
+    try{ icon.decoding = 'async'; }catch(err){}
+    icon.alt = '';
+    icon.className = 'mapmarker';
+    icon.draggable = false;
+    icon.referrerPolicy = 'no-referrer';
+    icon.loading = 'lazy';
+    icon.onerror = ()=>{
+      icon.onerror = null;
+      icon.src = MULTI_POST_MAPMARKER_URL;
+    };
+    icon.src = url || MULTI_POST_MAPMARKER_URL;
+    return icon;
+  };
+
+  const createMarkerPill = ()=>{
+    const pill = new Image();
+    try{ pill.decoding = 'async'; }catch(err){}
+    pill.alt = '';
+    pill.src = 'assets/icons-30/150x40-pill-70.webp';
+    pill.className = 'mapmarker-pill';
+    pill.draggable = false;
+    pill.style.opacity = '0.9';
+    pill.style.visibility = 'visible';
+    return pill;
+  };
+
+  const createMarkerLabel = (labelLines)=>{
+    const markerLabel = document.createElement('div');
+    markerLabel.className = 'mapmarker-label';
+    const markerLine1 = document.createElement('div');
+    markerLine1.className = 'mapmarker-label-line';
+    markerLine1.textContent = labelLines.line1 || '';
+    markerLabel.appendChild(markerLine1);
+    if(labelLines.line2){
+      const markerLine2 = document.createElement('div');
+      markerLine2.className = 'mapmarker-label-line';
+      markerLine2.textContent = labelLines.line2;
+      markerLabel.appendChild(markerLine2);
+    }
+    return markerLabel;
+  };
+
+  const openPostFromCard = (postId)=>{
+    if(!postId) return;
+    callWhenDefined('openPost', (fn)=>{
+      requestAnimationFrame(()=>{
+        try{
+          touchMarker = null;
+          destroyMultiPostCardContainer();
+          stopSpin();
+          if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+            try{ closePanel(filterPanel); }catch(err){}
+          }
+          fn(postId, false, true);
+        }catch(err){ console.error(err); }
+      });
+    });
+  };
+
+  const handleCardActivation = (target, originalEvent)=>{
+    if(!target) return;
+    const id = target.getAttribute('data-id');
+    if(!id) return;
+    if(originalEvent){
+      try{ originalEvent.preventDefault(); }catch(err){}
+      try{ originalEvent.stopPropagation(); }catch(err){}
+    }
+    openPostFromCard(id);
+  };
+
+  let state = multiPostCardState;
+  let root;
+  let summaryEl;
+  let listEl;
+
+  if(!state || !state.element || !state.element.parentNode){
+    destroyMultiPostCardContainer();
+    root = document.createElement('div');
+    root.className = 'multi-post-map-container';
+
+    summaryEl = document.createElement('div');
+    summaryEl.className = 'multi-post-map-summary';
+    summaryEl.setAttribute('aria-hidden', 'true');
+
+    listEl = document.createElement('div');
+    listEl.className = 'multi-post-map-list';
+
+    root.append(summaryEl, listEl);
+    containerEl.appendChild(root);
+
+    state = multiPostCardState = {
+      element: root,
+      summaryEl,
+      listEl,
+      items: [],
+      anchorPoint: null,
+      lockOnOpen: false,
+      venueKey: null,
+      markerLngLat: null
+    };
+    window.__overCard = false;
+
+    const stop = (ev)=>{
+      try{ ev.preventDefault(); }catch(err){}
+      try{ ev.stopPropagation(); }catch(err){}
+    };
+    ['pointerdown','mousedown','touchstart'].forEach(type => {
+      root.addEventListener(type, stop, { capture: true });
+    });
+    root.addEventListener('wheel', (ev)=>{ try{ ev.stopPropagation(); }catch(err){}; }, { capture: true });
+    root.addEventListener('click', (evt)=>{
+      const item = evt.target.closest('.multi-post-map-item[data-id]');
+      handleCardActivation(item, evt);
+    }, { capture: true });
+    root.addEventListener('keydown', (evt)=>{
+      const isActivationKey = evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar';
+      if(!isActivationKey) return;
+      const item = evt.target.closest('.multi-post-map-item[data-id]');
+      handleCardActivation(item, evt);
+    }, { capture: true });
+  } else {
+    root = state.element;
+    summaryEl = state.summaryEl || root.querySelector('.multi-post-map-summary');
+    listEl = state.listEl || root.querySelector('.multi-post-map-list');
+    if(summaryEl){
+      state.summaryEl = summaryEl;
+    }
+    if(listEl){
+      state.listEl = listEl;
+      listEl.innerHTML = '';
+    }
+  }
+
+  if(!summaryEl || !listEl){
+    return state;
+  }
+
+  if(ordered.length){
+    summaryEl.textContent = `${ordered.length} posts here`;
+    summaryEl.style.display = '';
+  } else {
+    summaryEl.textContent = '';
+    summaryEl.style.display = 'none';
+  }
+
+  const frag = document.createDocumentFragment();
+  ordered.forEach(post => {
+    if(!post) return;
+    const labelLines = getMarkerLabelLines(post);
+    const itemButton = document.createElement('button');
+    itemButton.type = 'button';
+    itemButton.className = 'multi-post-map-item';
+    const id = post.id ? String(post.id) : '';
+    if(id) itemButton.dataset.id = id;
+    const ariaLabel = [labelLines.line1, labelLines.line2].filter(Boolean).join(' • ');
+    if(ariaLabel){
+      itemButton.setAttribute('aria-label', ariaLabel);
+    }
+    const markerContainer = document.createElement('div');
+    markerContainer.className = 'mapmarker-container';
+    if(id) markerContainer.dataset.id = id;
+    const iconUrl = markerIconUrlFor(post);
+    const markerIcon = createMarkerIcon(iconUrl);
+    const markerPill = createMarkerPill();
+    const markerLabel = createMarkerLabel(labelLines);
+    markerContainer.append(markerPill, markerIcon, markerLabel);
+    itemButton.appendChild(markerContainer);
+    frag.appendChild(itemButton);
+  });
+  listEl.innerHTML = '';
+  listEl.appendChild(frag);
+
+  const previousLock = state.lockOnOpen;
+  state.items = ordered;
+  state.anchorPoint = point ? { x: point.x, y: point.y } : null;
+  state.lockOnOpen = !!lockOnOpen;
+  state.venueKey = venueKey || null;
+
+  let anchorLngLat = null;
+  if(lngLat && Number.isFinite(lngLat.lng) && Number.isFinite(lngLat.lat)){
+    anchorLngLat = { lng: Number(lngLat.lng), lat: Number(lngLat.lat) };
+  } else if(point && map && typeof map.unproject === 'function'){
+    try{
+      const projected = map.unproject([point.x, point.y]);
+      if(projected && Number.isFinite(projected.lng) && Number.isFinite(projected.lat)){
+        anchorLngLat = { lng: projected.lng, lat: projected.lat };
+      }
+    }catch(err){}
+  }
+  state.markerLngLat = anchorLngLat;
+
+  if(previousLock && !state.lockOnOpen){
+    lockMap(false);
+  }
+  if(state.lockOnOpen){
+    if(!previousLock){
+      lockMap(true);
+    }
+  }
+
+  requestAnimationFrame(()=>{
+    positionMultiPostCardContainer(point);
+  });
+
+  return state;
+}
+
+function repositionMultiPostCardContainer(){
+  if(!multiPostCardState) return;
+  positionMultiPostCardContainer(multiPostCardState.anchorPoint);
+}
 
 function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
     const rnd = mulberry32(42);
@@ -9620,10 +9470,6 @@ function makePosts(){
           updated = true;
         }
       }
-      if(map){
-        try{ syncMultiMarkerOverlays(multiData && Array.isArray(multiData.features) ? multiData.features : []); }
-        catch(err){ console.error(err); }
-      }
       if(updated || force){
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
@@ -9841,7 +9687,7 @@ function makePosts(){
       const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
-        THRESHOLD_MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
+        MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
         markerLayersVisible = shouldShowMarkers;
       }
       // Keep multi-post labels visible regardless of the marker bucket gating.
@@ -9880,7 +9726,7 @@ function makePosts(){
         }
       }
       if(!Number.isFinite(lastKnownZoom)){
-        clearMarkerHoverIds();
+        destroyMultiPostCardContainer();
       }
     }
 
@@ -11217,6 +11063,7 @@ function makePosts(){
 
       async function openPost(id, fromHistory=false, fromMap=false, originEl=null){
         lockMap(false);
+        destroyMultiPostCardContainer();
         touchMarker = null;
         if(hoverPopup){
           let shouldRemovePopup = true;
@@ -12732,19 +12579,26 @@ if (!map.__pillHooksInstalled) {
         }
       });
       if(!postSourceEventsBound){
-        window.addEventListener('keydown', (ev)=>{
-          if(ev.key === 'Escape'){
-            setPersistentMultiHighlightState(null, []);
-            clearMarkerHoverIds();
+        // Right-click a venue marker -> show multi-post cards
+        const handleMarkerContextMenu = (e)=>{
+          const f = e.features && e.features[0]; if(!f) return;
+          const props = f.properties || {};
+          const venueKey = props.venueKey || null;
+          if(e.preventDefault) e.preventDefault();
+          const coords = f.geometry && f.geometry.coordinates; if(!coords || coords.length<2) return;
+          const items = getPostsAtVenueByCoords(coords[0], coords[1]);
+          if(!items || items.length <= 1){ return; }
+          const coordsLngLat = Array.isArray(coords) && coords.length >= 2
+            ? { lng: coords[0], lat: coords[1] }
+            : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const state = createMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey, lngLat: coordsLngLat });
+          if(state){
+            lastListOpenAt = Date.now();
           }
-        });
-        ['movestart','zoomstart','pitchstart','rotatestart'].forEach(type => {
-          map.on(type, ()=>{
-            if(!persistentMultiHighlight){
-              clearMarkerHoverIds();
-            }
-          });
-        });
+        };
+        MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('contextmenu', layer, handleMarkerContextMenu));
+        window.addEventListener('resize', repositionMultiPostCardContainer);
+        map.on('move', repositionMultiPostCardContainer);
 
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
@@ -12800,6 +12654,8 @@ if (!map.__pillHooksInstalled) {
             markerPill.alt = '';
             markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
             markerPill.className = 'mapmarker-pill';
+            markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
             markerPill.draggable = false;
 
             const labelLines = getMarkerLabelLines(post);
@@ -12915,6 +12771,7 @@ if (!map.__pillHooksInstalled) {
             });
             cardRoot.addEventListener('mouseleave', ()=>{
               window.__overCard = false;
+              if(listLocked) return;
               const currentPopup = hoverPopup;
               schedulePopupRemoval(currentPopup, 160);
             });
@@ -12948,33 +12805,30 @@ if (!map.__pillHooksInstalled) {
           const props = f.properties || {};
           const venueKey = props.venueKey || null;
           const id = props.id;
-          const coords = f.geometry && f.geometry.coordinates;
-          const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
-          if(coords && coords.length>=2){
-            const items = getPostsAtVenueByCoords(coords[0], coords[1]);
-            if(items && items.length>1){
-              if(e.preventDefault) e.preventDefault();
-              if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
-              const ids = items.map(item => item && item.id !== undefined && item.id !== null ? String(item.id) : '').filter(Boolean);
-              if(ids.length){
-                setPersistentMultiHighlightState(venueKey, ids);
-                setMarkerHoverIds(ids);
-                selectedVenueKey = venueKey;
-                if(typeof setMode === 'function'){ setMode('posts'); }
-              }
-              return;
-            }
-          }
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
             updateSelectedMarkerRing();
           }
-          setPersistentMultiHighlightState(null, []);
-          const hasCoordsForPopup = hasCoords;
-          const baseLngLat = hasCoordsForPopup ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
+          const coords = f.geometry && f.geometry.coordinates;
+          const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+          const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const fixedLngLat = baseLngLat || (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
           const targetLngLat = baseLngLat || (e ? e.lngLat : null);
+          if(coords && coords.length>=2){
+            const items = getPostsAtVenueByCoords(coords[0], coords[1]);
+            if(items && items.length>1){
+              if(e.preventDefault) e.preventDefault();
+              if(e.originalEvent){ e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); }
+              const coordsLngLat = { lng: coords[0], lat: coords[1] };
+              const state = createMultiPostCardContainer(e.point, items, { lockOnOpen: true, venueKey, lngLat: coordsLngLat });
+              if(state){
+                lastListOpenAt = Date.now();
+                return;
+              }
+            }
+          }
+          destroyMultiPostCardContainer();
           const touchClick = isTouchDevice || (e.originalEvent && (e.originalEvent.pointerType === 'touch' || e.originalEvent.pointerType === 'pen'));
           if(touchClick){
             if(touchMarker !== id || !hoverPopup){
@@ -12998,7 +12852,7 @@ if (!map.__pillHooksInstalled) {
       map.on('click', e=>{
         const originalTarget = e.originalEvent && e.originalEvent.target;
         const targetEl = originalTarget && typeof originalTarget.closest === 'function'
-          ? originalTarget.closest('.mapmarker-overlay, .multi-post-marker-stack')
+          ? originalTarget.closest('.mapmarker-overlay')
           : null;
         if(targetEl){
           return;
@@ -13009,9 +12863,8 @@ if (!map.__pillHooksInstalled) {
             try{ hoverPopup.remove(); }catch(err){}
             hoverPopup = null;
           }
-          setPersistentMultiHighlightState(null, []);
-          clearMarkerHoverIds();
           updateSelectedMarkerRing();
+          destroyMultiPostCardContainer();
           touchMarker = null;
         }
       });
@@ -13038,15 +12891,12 @@ if (!map.__pillHooksInstalled) {
             hoverPopup = null;
             updateSelectedMarkerRing();
           }
-          const ids = multi.map(item => item && item.id !== undefined && item.id !== null ? String(item.id) : '').filter(Boolean);
-          if(ids.length){
-            selectedVenueKey = venueKey;
-            setMarkerHoverIds(ids);
+          const state = createMultiPostCardContainer(e.point, multi, { venueKey, lngLat: baseLngLat });
+          if(state){
+            return;
           }
-          return;
-        }
-        if(id !== undefined && id !== null){
-          setMarkerHoverIds([String(id)]);
+        } else {
+          destroyMultiPostCardContainer();
         }
         const p = posts.find(x=>x.id===id);
         if(!p){
@@ -13063,6 +12913,13 @@ if (!map.__pillHooksInstalled) {
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
 
       const onMarkerMove = window.rafThrottle((evt)=>{
+        if(multiPostCardState && evt && evt.point){
+          multiPostCardState.anchorPoint = { x: evt.point.x, y: evt.point.y };
+          if(evt.lngLat && Number.isFinite(evt.lngLat.lng) && Number.isFinite(evt.lngLat.lat)){
+            multiPostCardState.markerLngLat = { lng: evt.lngLat.lng, lat: evt.lngLat.lat };
+          }
+          positionMultiPostCardContainer(multiPostCardState.anchorPoint);
+        }
         if(hoverPopup && typeof hoverPopup.setLngLat === 'function'){
           const fixed = hoverPopup.__fixedLngLat;
           if(fixed && Number.isFinite(fixed.lng) && Number.isFinite(fixed.lat)){
@@ -13074,11 +12931,9 @@ if (!map.__pillHooksInstalled) {
 
       const handleMarkerMouseLeave = ()=>{
         map.getCanvas().style.cursor = 'grab';
+        if(listLocked) return;
         const currentPopup = hoverPopup;
         schedulePopupRemoval(currentPopup, 200);
-        if(!persistentMultiHighlight){
-          clearMarkerHoverIds();
-        }
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseleave', layer, handleMarkerMouseLeave));
 
