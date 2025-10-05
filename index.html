@@ -4775,7 +4775,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   pointer-events: auto;
   touch-action: pan-y;
   width: 150px;
-  margin-top: 10px;
+  margin-top: 0;
+  transform: translate(var(--multi-post-marker-offset-x, 55px), var(--multi-post-marker-offset-y, 30px));
 }
 
 .multi-post-marker-children {
@@ -5694,6 +5695,8 @@ if (typeof slugify !== 'function') {
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
+  const multiPostChildHorizontalOffsetPx = markerLabelBackgroundWidthPx / 2 + markerLabelBgTranslatePx;
+  const multiPostChildVerticalOffsetPx = markerLabelBackgroundHeightPx / 2 + 10;
   let markerLabelMeasureContext = null;
   const markerLabelCompositePlaceholderIds = new Set();
 
@@ -7567,6 +7570,8 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
+    root.style.setProperty('--multi-post-marker-offset-x', `${multiPostChildHorizontalOffsetPx}px`);
+    root.style.setProperty('--multi-post-marker-offset-y', `${multiPostChildVerticalOffsetPx}px`);
     const childrenRoot = document.createElement('div');
     childrenRoot.className = 'multi-post-marker-children';
     root.append(childrenRoot);
