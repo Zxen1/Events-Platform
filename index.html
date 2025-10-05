@@ -42,13 +42,6 @@
   </style>
 
   <style>
-    :root{
-      --mapmarker-icon-size: 30px;
-      --mapmarker-icon-padding-left: 5px;
-      --mapmarker-icon-padding-vertical: 5px;
-      --map-card-thumb-size: 50px;
-      --map-card-thumb-padding: 5px;
-    }
     .map-card{
       position: relative;
       width: 225px;
@@ -77,10 +70,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(
-        calc(-1 * (var(--map-card-thumb-padding) + var(--map-card-thumb-size) / 2)),
-        calc(-1 * (var(--map-card-thumb-padding) + var(--map-card-thumb-size) / 2))
-      );
+      transform: translate(-30px, -30px);
       pointer-events: auto;
       z-index: 30;
     }
@@ -113,16 +103,15 @@
       left: 0;
       top: 0;
       width: 150px;
-      height: calc(var(--mapmarker-icon-size) + 2 * var(--mapmarker-icon-padding-vertical));
-      --mapmarker-anchor-x: calc(var(--mapmarker-icon-padding-left) + var(--mapmarker-icon-size) / 2);
-      transform: translate(calc(-1 * var(--mapmarker-anchor-x)), -50%);
+      height: 40px;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: var(--mapmarker-icon-padding-vertical) 10px var(--mapmarker-icon-padding-vertical) var(--mapmarker-icon-padding-left);
+      padding: 5px 10px 5px 5px;
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
@@ -130,11 +119,11 @@
       position: relative;
       left: auto;
       top: auto;
-      width: var(--mapmarker-icon-size);
-      height: var(--mapmarker-icon-size);
+      width: 30px;
+      height: 30px;
       pointer-events: none;
       z-index: 2;
-      flex: 0 0 var(--mapmarker-icon-size);
+      flex: 0 0 30px;
     }
     .map--midzoom-markers .mapmarker{
       border-radius: 50%;
@@ -173,10 +162,10 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: var(--map-card-thumb-padding);
-      top: var(--map-card-thumb-padding);
-      width: var(--map-card-thumb-size);
-      height: var(--map-card-thumb-size);
+      left: 5px;
+      top: 5px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
@@ -185,10 +174,10 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: calc(var(--map-card-thumb-padding) + var(--map-card-thumb-size) + 5px);
-      top: var(--map-card-thumb-padding);
-      width: calc(100% - (var(--map-card-thumb-padding) + var(--map-card-thumb-size) + 10px));
-      height: var(--map-card-thumb-size);
+      left: 60px;
+      top: 5px;
+      width: calc(100% - 65px);
+      height: 50px;
       padding: 0 5px 0 0;
       display: flex;
       flex-direction: column;
@@ -5658,7 +5647,6 @@ if (typeof slugify !== 'function') {
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
-  const markerStackSpacingPx = markerLabelBackgroundHeightPx + 10;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -11696,50 +11684,11 @@ if (!map.__pillHooksInstalled) {
     };
 
     // Map layers
-    function collectLocationEntries(post){
-      const entries = [];
-      const locs = Array.isArray(post?.locations) ? post.locations : [];
-      locs.forEach((loc, idx) => {
-        if(!loc) return;
-        const lng = Number(loc.lng);
-        const lat = Number(loc.lat);
-        if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
-        entries.push({
-          post,
-          loc,
-          lng,
-          lat,
-          index: idx,
-          key: venueKey(lng, lat)
-        });
-      });
-      if(!entries.length && Number.isFinite(post?.lng) && Number.isFinite(post?.lat)){
-        const fallbackVenue = typeof post?.venue === 'string' && post.venue
-          ? post.venue
-          : (post?.city || '');
-        entries.push({
-          post,
-          loc:{
-            venue: fallbackVenue,
-            address: post?.city || '',
-            lng: post.lng,
-            lat: post.lat
-          },
-          lng: post.lng,
-          lat: post.lat,
-          index: 0,
-          key: venueKey(post.lng, post.lat)
-        });
-      }
-      return entries.filter(entry => entry.key);
-    }
-
     function postsToGeoJSON(list){
       const features = [];
       if(!Array.isArray(list) || !list.length){
         return { type:'FeatureCollection', features };
       }
-      const groupedByVenue = new Map();
       list.forEach(p => {
         if(!p) return;
         const entries = collectLocationEntries(p);
@@ -11752,75 +11701,28 @@ if (!map.__pillHooksInstalled) {
           const combinedLabel = buildMarkerLabelText(post, labelLines);
           const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
           const labelSpriteId = hashString(spriteSource);
+          const featureId = `post:${post.id}::${key}::${entry.index}`;
           const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
-          if(!groupedByVenue.has(key)){
-            groupedByVenue.set(key, []);
-          }
-          groupedByVenue.get(key).push({
-            post,
-            entry,
-            key,
-            baseSub,
-            labelLines,
-            combinedLabel,
-            labelSpriteId,
-            venueName,
-            coordinates: [entry.lng, entry.lat]
-          });
-        });
-      });
-      const toComparableIndex = (value)=> Number.isFinite(value) ? value : 0;
-      groupedByVenue.forEach((items, key) => {
-        if(!Array.isArray(items) || !items.length) return;
-        items.sort((a, b) => {
-          const aIdx = toComparableIndex(a?.entry?.index);
-          const bIdx = toComparableIndex(b?.entry?.index);
-          if(aIdx !== bIdx){
-            return aIdx - bIdx;
-          }
-          const aId = a?.post?.id;
-          const bId = b?.post?.id;
-          const aIdStr = aId === undefined || aId === null ? '' : String(aId);
-          const bIdStr = bId === undefined || bId === null ? '' : String(bId);
-          if(aIdStr !== bIdStr){
-            return aIdStr.localeCompare(bIdStr);
-          }
-          const aTitle = a?.post?.title || '';
-          const bTitle = b?.post?.title || '';
-          if(aTitle !== bTitle){
-            return String(aTitle).localeCompare(String(bTitle));
-          }
-          return 0;
-        });
-        items.forEach((item, stackIndex) => {
-          if(!item) return;
-          const coordinates = Array.isArray(item.coordinates) ? item.coordinates : [];
-          if(coordinates.length < 2) return;
-          const stackOffsetPx = stackIndex * markerStackSpacingPx;
-          const featureId = `post:${item.post.id}::${key}::${stackIndex}`;
           features.push({
             type:'Feature',
             id: featureId,
             properties:{
-              id: item.post.id,
+              id: post.id,
               featureId,
-              title: item.post.title,
-              label: item.combinedLabel,
-              labelLine1: item.labelLines.line1,
-              labelLine2: item.labelLines.line2,
-              labelSpriteId: item.labelSpriteId,
-              venueName: item.venueName,
-              city: item.post.city,
-              cat: item.post.category,
-              sub: item.baseSub,
-              baseSub: item.baseSub,
+              title: post.title,
+              label: combinedLabel,
+              labelLine1: labelLines.line1,
+              labelLine2: labelLines.line2,
+              labelSpriteId,
+              venueName,
+              city: post.city,
+              cat: post.category,
+              sub: baseSub,
+              baseSub,
               venueKey: key,
-              locationIndex: item.entry.index,
-              stackIndex,
-              stackOffsetPx,
-              iconTranslate: [markerLabelBgTranslatePx, stackOffsetPx]
+              locationIndex: entry.index
             },
-            geometry:{ type:'Point', coordinates }
+            geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
           });
         });
       });
@@ -11989,8 +11891,6 @@ if (!map.__pillHooksInstalled) {
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
-      const markerStackOffsetExpression = ['coalesce', ['get','stackOffsetPx'], ['*', ['coalesce', ['get','stackIndex'], 0], markerStackSpacingPx]];
-      const markerIconTranslateExpression = ['case', ['has','iconTranslate'], ['get','iconTranslate'], ['array', 'number', markerLabelBgTranslatePx, markerStackOffsetExpression]];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
@@ -12019,7 +11919,7 @@ if (!map.__pillHooksInstalled) {
                 'symbol-sort-key': sortKey
               },
               paint:{
-                'icon-translate': markerIconTranslateExpression,
+                'icon-translate': [markerLabelBgTranslatePx, 0],
                 'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
@@ -12041,7 +11941,7 @@ if (!map.__pillHooksInstalled) {
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate', markerIconTranslateExpression); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
         try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
@@ -12061,7 +11961,7 @@ if (!map.__pillHooksInstalled) {
       });
       if(!postSourceEventsBound){
         function createMapCardOverlay(post, opts = {}){
-          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null, stackIndex: overlayStackIndex = 0, stackOffsetPx: overlayStackOffsetPx = null } = opts;
+          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
           const previousKey = selectedVenueKey;
           if(overlayVenueKey){
             selectedVenueKey = overlayVenueKey;
@@ -12076,12 +11976,6 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.setAttribute('aria-hidden', 'true');
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
-            const parsedStackIndex = Number(overlayStackIndex);
-            const normalizedStackIndex = Number.isFinite(parsedStackIndex) ? parsedStackIndex : 0;
-            const parsedStackOffset = Number(overlayStackOffsetPx);
-            const stackOffsetPx = Number.isFinite(parsedStackOffset) ? parsedStackOffset : normalizedStackIndex * markerStackSpacingPx;
-            overlayRoot.dataset.stackIndex = String(normalizedStackIndex);
-            overlayRoot.dataset.stackOffsetPx = String(stackOffsetPx);
 
             const markerContainer = document.createElement('div');
             markerContainer.className = 'mapmarker-container';
@@ -12241,7 +12135,7 @@ if (!map.__pillHooksInstalled) {
               schedulePopupRemoval(currentPopup, 160);
             });
 
-            const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center', offset: [0, stackOffsetPx] });
+            const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
               try{ marker.setZIndexOffset(20000); }catch(e){}
             }
@@ -12270,10 +12164,6 @@ if (!map.__pillHooksInstalled) {
           const props = f.properties || {};
           const venueKey = props.venueKey || null;
           const id = props.id;
-          const rawStackIndex = Number(props.stackIndex);
-          const stackIndex = Number.isFinite(rawStackIndex) ? rawStackIndex : 0;
-          const rawStackOffset = Number(props.stackOffsetPx);
-          const stackOffsetPx = Number.isFinite(rawStackOffset) ? rawStackOffset : stackIndex * markerStackSpacingPx;
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
@@ -12295,7 +12185,7 @@ if (!map.__pillHooksInstalled) {
               }
               const p = posts.find(x=>x.id===id);
               if(p){
-                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey, stackIndex, stackOffsetPx });
+                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
                 updateSelectedMarkerRing();
               }
             }
@@ -12333,10 +12223,6 @@ if (!map.__pillHooksInstalled) {
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
-        const rawStackIndex = Number(props.stackIndex);
-        const stackIndex = Number.isFinite(rawStackIndex) ? rawStackIndex : 0;
-        const rawStackOffset = Number(props.stackOffsetPx);
-        const stackOffsetPx = Number.isFinite(rawStackOffset) ? rawStackOffset : stackIndex * markerStackSpacingPx;
         const coords = f.geometry && f.geometry.coordinates;
         const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
@@ -12351,7 +12237,7 @@ if (!map.__pillHooksInstalled) {
           hoverPopup = null;
           updateSelectedMarkerRing();
         }
-        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey, stackIndex, stackOffsetPx });
+        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
         updateSelectedMarkerRing();
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
@@ -13595,22 +13481,6 @@ function openPostModal(id){
 
           const refreshMarkers = () => {
             if(!map) return;
-            const STACK_SEPARATION = 10;
-            const DEFAULT_MARKER_SIZE = 32;
-            const getMarkerVisualHeight = (el) => {
-              if(!el) return 0;
-              if(el instanceof HTMLImageElement){
-                return el.naturalHeight || el.height || el.offsetHeight || 0;
-              }
-              if(typeof el.getBoundingClientRect === 'function'){
-                const rect = el.getBoundingClientRect();
-                if(rect && Number.isFinite(rect.height)){
-                  return rect.height;
-                }
-              }
-              return el.offsetHeight || 0;
-            };
-            const venueStackCounts = new Map();
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
             allLocations.forEach((location, idx) => {
@@ -13633,11 +13503,6 @@ function openPostModal(id){
               element.setAttribute('role', 'button');
               element.setAttribute('aria-pressed', 'false');
               element.setAttribute('aria-label', `${location.venue} (${location.address})`);
-              const venueKey = (typeof location.venue === 'string' && location.venue.trim())
-                ? location.venue.trim().toLowerCase()
-                : `${location.lng},${location.lat}`;
-              const stackIndex = venueStackCounts.get(venueKey) || 0;
-              venueStackCounts.set(venueKey, stackIndex + 1);
               element.addEventListener('click', () => {
                 if(idx === currentVenueIndex) return;
                 updateVenue(idx);
@@ -13649,19 +13514,6 @@ function openPostModal(id){
                 }
               });
               const markerInstance = new mapboxgl.Marker({ element, anchor: 'center' }).setLngLat([location.lng, location.lat]).addTo(map);
-              if(stackIndex === 0){
-                markerInstance.setOffset([0, 0]);
-              } else {
-                const updateStackOffset = () => {
-                  const markerHeight = getMarkerVisualHeight(element) || DEFAULT_MARKER_SIZE;
-                  const offsetY = stackIndex * (markerHeight + STACK_SEPARATION);
-                  markerInstance.setOffset([0, offsetY]);
-                };
-                updateStackOffset();
-                if(element instanceof HTMLImageElement && !element.complete){
-                  element.addEventListener('load', updateStackOffset, { once: true });
-                }
-              }
               locationMarkers.push({ marker: markerInstance, element, index: idx });
             });
             updateDetailMarkerSelection(selectedIdx);
