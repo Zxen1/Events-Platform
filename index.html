@@ -42,6 +42,13 @@
   </style>
 
   <style>
+    :root{
+      --mapmarker-icon-size: 30px;
+      --mapmarker-icon-padding-left: 5px;
+      --mapmarker-icon-padding-vertical: 5px;
+      --map-card-thumb-size: 50px;
+      --map-card-thumb-padding: 5px;
+    }
     .map-card{
       position: relative;
       width: 225px;
@@ -70,7 +77,10 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(-30px, -30px);
+      transform: translate(
+        calc(-1 * (var(--map-card-thumb-padding) + var(--map-card-thumb-size) / 2)),
+        calc(-1 * (var(--map-card-thumb-padding) + var(--map-card-thumb-size) / 2))
+      );
       pointer-events: auto;
       z-index: 30;
     }
@@ -103,15 +113,16 @@
       left: 0;
       top: 0;
       width: 150px;
-      height: 40px;
-      transform: translate(-50%, -50%);
+      height: calc(var(--mapmarker-icon-size) + 2 * var(--mapmarker-icon-padding-vertical));
+      --mapmarker-anchor-x: calc(var(--mapmarker-icon-padding-left) + var(--mapmarker-icon-size) / 2);
+      transform: translate(calc(-1 * var(--mapmarker-anchor-x)), -50%);
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px 5px 5px;
+      padding: var(--mapmarker-icon-padding-vertical) 10px var(--mapmarker-icon-padding-vertical) var(--mapmarker-icon-padding-left);
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
@@ -119,11 +130,11 @@
       position: relative;
       left: auto;
       top: auto;
-      width: 30px;
-      height: 30px;
+      width: var(--mapmarker-icon-size);
+      height: var(--mapmarker-icon-size);
       pointer-events: none;
       z-index: 2;
-      flex: 0 0 30px;
+      flex: 0 0 var(--mapmarker-icon-size);
     }
     .map--midzoom-markers .mapmarker{
       border-radius: 50%;
@@ -162,10 +173,10 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: 5px;
-      top: 5px;
-      width: 50px;
-      height: 50px;
+      left: var(--map-card-thumb-padding);
+      top: var(--map-card-thumb-padding);
+      width: var(--map-card-thumb-size);
+      height: var(--map-card-thumb-size);
       border-radius: 50%;
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
@@ -174,10 +185,10 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: 60px;
-      top: 5px;
-      width: calc(100% - 65px);
-      height: 50px;
+      left: calc(var(--map-card-thumb-padding) + var(--map-card-thumb-size) + 5px);
+      top: var(--map-card-thumb-padding);
+      width: calc(100% - (var(--map-card-thumb-padding) + var(--map-card-thumb-size) + 10px));
+      height: var(--map-card-thumb-size);
       padding: 0 5px 0 0;
       display: flex;
       flex-direction: column;
