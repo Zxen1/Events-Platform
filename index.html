@@ -5695,8 +5695,8 @@ if (typeof slugify !== 'function') {
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
-  const multiPostChildHorizontalOffsetPx = markerLabelBackgroundWidthPx / 2 + markerLabelBgTranslatePx;
-  const multiPostChildVerticalOffsetPx = markerLabelBackgroundHeightPx / 2 + 10;
+  const multiPostChildHorizontalOffsetPx = (markerIconBaseSizePx * markerIconSize - markerLabelBackgroundWidthPx) / 2;
+  const multiPostChildVerticalOffsetPx = markerIconBaseSizePx * markerIconSize + 10;
   let markerLabelMeasureContext = null;
   const markerLabelCompositePlaceholderIds = new Set();
 
