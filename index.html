@@ -4776,7 +4776,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   touch-action: pan-y;
 }
 
-.multi-post-marker-anchor {
+.multi-post-marker-head {
   position: relative;
   display: flex;
   align-items: center;
@@ -4784,13 +4784,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   cursor: pointer;
 }
 
-.multi-post-marker-anchor:focus-visible {
-  outline: 2px solid #2e3a72;
-  outline-offset: 4px;
-  border-radius: 50%;
-}
-
-.multi-post-marker-anchor img {
+.multi-post-marker-head img {
   display: block;
   width: 30px;
   height: 30px;
@@ -4842,7 +4836,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   background-color: #2e3a72;
 }
 
-.multi-post-marker-stack.is-highlighted .multi-post-marker-anchor img {
+.multi-post-marker-stack.is-highlighted .multi-post-marker-head img {
   filter: drop-shadow(0 0 4px rgba(46,58,114,0.9));
 }
 
@@ -7569,7 +7563,6 @@ function buildMultiMarkerChild(post){
   const markerContainer = document.createElement('div');
   markerContainer.className = 'mapmarker-container';
   markerContainer.dataset.id = id;
-  markerContainer.tabIndex = 0;
   const labelLines = getMarkerLabelLines(post);
   const iconUrl = markerIconUrlForPost(post);
   const markerIcon = createMarkerIcon(iconUrl);
@@ -7602,10 +7595,8 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     const root = document.createElement('div');
     root.className = 'multi-post-marker-stack';
     root.dataset.venueKey = venueKey;
-    const anchorBtn = document.createElement('div');
-    anchorBtn.className = 'multi-post-marker-anchor';
-    anchorBtn.tabIndex = 0;
-    anchorBtn.setAttribute('role', 'button');
+    const anchorHead = document.createElement('div');
+    anchorHead.className = 'multi-post-marker-head';
     const anchorIcon = new Image();
     try{ anchorIcon.decoding = 'async'; }catch(err){}
     anchorIcon.alt = '';
@@ -7615,16 +7606,16 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     anchorIcon.className = 'mapmarker multi-post-marker-icon';
     const countEl = document.createElement('span');
     countEl.className = 'multi-post-marker-count';
-    anchorBtn.append(anchorIcon, countEl);
+    anchorHead.append(anchorIcon, countEl);
     const childrenRoot = document.createElement('div');
     childrenRoot.className = 'multi-post-marker-children';
-    root.append(anchorBtn, childrenRoot);
+    root.append(anchorHead, childrenRoot);
 
     const marker = new mapboxgl.Marker({ element: root, anchor: 'top' });
     entry = {
       marker,
       element: root,
-      anchorBtn,
+      anchorHead,
       countEl,
       childrenRoot,
       postIds: [],
@@ -7657,7 +7648,7 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
       restoreGroup();
     });
 
-      anchorBtn.addEventListener('click', (evt)=>{
+      anchorHead.addEventListener('click', (evt)=>{
         evt.preventDefault();
         evt.stopPropagation();
         if(typeof setMode === 'function'){ setMode('posts'); }
@@ -7665,12 +7656,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
         setMarkerHoverIds(entry.postIds);
         selectedVenueKey = venueKey;
       });
-    anchorBtn.addEventListener('keydown', (evt)=>{
-      if(evt.key === 'Enter' || evt.key === ' ' || evt.key === 'Spacebar'){
-        evt.preventDefault();
-        anchorBtn.click();
-      }
-    });
   }
 
   try{ entry.marker.setLngLat([coords[0], coords[1]]).addTo(map); }catch(err){}
@@ -7684,7 +7669,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     if(!child) return;
     const { markerContainer, id } = child;
     markerContainer.setAttribute('aria-label', [post.title, getPrimaryVenueName(post)].filter(Boolean).join(' • '));
-    markerContainer.setAttribute('role', 'button');
     entry.childMarkers.set(id, markerContainer);
     ['pointerdown','mousedown','touchstart'].forEach(type => {
       markerContainer.addEventListener(type, ev => {
@@ -7788,12 +7772,6 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
     markerContainer.addEventListener('blur', ev => {
       handleChildLeave(ev ? ev.relatedTarget : null);
     });
-    markerContainer.addEventListener('keydown', ev => {
-      if(ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar'){
-        ev.preventDefault();
-        markerContainer.click();
-      }
-    });
       markerContainer.addEventListener('click', (ev)=>{
         ev.preventDefault();
         ev.stopPropagation();
@@ -7820,8 +7798,8 @@ function ensureMultiMarkerOverlay(venueKey, coords, posts){
   if(entry.countEl){
     entry.countEl.textContent = ordered.length ? String(ordered.length) : '';
     const ariaLabel = ordered.length === 1 ? '1 post here' : `${ordered.length} posts here`;
-    entry.anchorBtn.setAttribute('aria-label', ariaLabel);
-    entry.anchorBtn.setAttribute('title', ariaLabel);
+    entry.anchorHead.setAttribute('aria-label', ariaLabel);
+    entry.anchorHead.setAttribute('title', ariaLabel);
   }
   updateSelectedMarkerRing();
 }
