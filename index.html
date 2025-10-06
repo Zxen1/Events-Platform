@@ -148,13 +148,15 @@
       transition: background-color 0.2s ease;
     }
     .big-map-card--popup.is-map-highlight,
+    .big-map-card--popup.is-hover-highlight,
     .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
     }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
     }
-    .small-map-card.is-pill-highlight{
+    .small-map-card.is-pill-highlight,
+    .small-map-card.is-hover-highlight{
       background-color: #2e3a72;
     }
     .mapmarker-overlay:hover .small-map-card{
@@ -3394,7 +3396,8 @@ body.filters-active #filterBtn{
   border-radius:0;
   border-bottom:1px solid rgba(255,255,255,0.12);
 }
-.post-board .post-card.is-map-highlight{
+.post-board .post-card.is-map-highlight,
+.post-board .post-card.is-hover-highlight{
   background-color:#2e3a72;
 }
 .post-board .post-card:last-child,
@@ -4700,13 +4703,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex: 0 0 auto;
 }
 
-.recents-card[aria-selected="true"]{
+.recents-card[aria-selected="true"],
+.recents-card.is-hover-highlight{
   position:relative;
   z-index:0;
   background:none;
 }
 
-.recents-card[aria-selected="true"]::before{
+.recents-card[aria-selected="true"]::before,
+.recents-card.is-hover-highlight::before{
   content:"";
   position:absolute;
   inset:0;
@@ -12502,6 +12507,44 @@ if (!map.__pillHooksInstalled) {
       });
     }
 
+    const HOVER_HIGHLIGHT_CLASS = 'is-hover-highlight';
+
+    function escapeCardSelector(value){
+      const str = String(value ?? '');
+      if(typeof CSS !== 'undefined' && CSS && typeof CSS.escape === 'function'){
+        try { return CSS.escape(str); } catch(err){}
+      }
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"');
+    }
+
+    function syncCardHoverHighlight(cardEl, shouldHighlight){
+      if(!cardEl || !cardEl.dataset) return;
+      const id = cardEl.dataset.id;
+      if(!id) return;
+      const highlight = !!shouldHighlight;
+      cardEl.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
+      const selectorId = escapeCardSelector(id);
+      const relatedSelector = `.mapmarker-overlay[data-id="${selectorId}"]`;
+      document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
+        el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
+      });
+    }
+
+    function attachCardHoverInteractions(cardEl){
+      if(!cardEl || cardEl.__hoverHandlersAttached) return;
+      cardEl.__hoverHandlersAttached = true;
+      const applyHighlight = ()=> syncCardHoverHighlight(cardEl, true);
+      const removeHighlight = ()=> syncCardHoverHighlight(cardEl, false);
+      cardEl.addEventListener('mouseenter', applyHighlight);
+      cardEl.addEventListener('mouseleave', removeHighlight);
+      cardEl.addEventListener('focusin', applyHighlight);
+      cardEl.addEventListener('focusout', removeHighlight);
+      cardEl.addEventListener('pointerdown', removeHighlight, { capture: true });
+      cardEl.addEventListener('click', removeHighlight, { capture: true });
+    }
+
     function card(p, wide=false){
       const el = document.createElement('article');
       el.className = wide ? 'post-card' : 'recents-card';
@@ -12534,6 +12577,7 @@ if (!map.__pillHooksInstalled) {
         });
         renderHistoryBoard();
       });
+      attachCardHoverInteractions(el);
       return el;
     }
 
