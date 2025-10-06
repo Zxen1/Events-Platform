@@ -12667,11 +12667,15 @@ if (!map.__pillHooksInstalled) {
     function renderHistoryBoard(){
       if(!recentsBoard) return;
       recentsBoard.innerHTML='';
-      viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
+      const allPosts = getAllPostsCache();
+      const postIndex = Array.isArray(allPosts)
+        ? new Map(allPosts.map(post => [post.id, post]))
+        : new Map();
+      viewHistory = viewHistory.filter(v => postIndex.has(v.id));
       saveHistory();
       const items = viewHistory.slice(0,100);
       for(const v of items){
-        const p = posts.find(x=>x.id===v.id);
+        const p = postIndex.get(v.id);
         if(!p) continue;
         if(!v.lastOpened) v.lastOpened = Date.now();
         const labelEl = document.createElement('div');
