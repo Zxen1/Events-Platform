@@ -118,7 +118,8 @@
       transition: background-color 0.2s ease;
     }
     .multi-post-map-card{
-      transform: translate(calc(-50% + 55px), -50%);
+      /* Keep the card anchored relative to the marker regardless of hover state */
+      transform: translate(-20px, -50%);
     }
     .mapmarker{
       position: relative;
