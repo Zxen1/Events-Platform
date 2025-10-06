@@ -42,7 +42,7 @@
   </style>
 
   <style>
-    .map-card{
+    .big-map-card{
       position: relative;
       width: 225px;
       height: 60px;
@@ -66,7 +66,7 @@
       z-index: 5;
       will-change: transform;
     }
-    .mapmarker-overlay > .map-card{
+    .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
       top: 0;
@@ -74,7 +74,7 @@
       pointer-events: auto;
       z-index: 30;
     }
-    .mapmarker-overlay.is-card-visible > .mapmarker-container{
+    .mapmarker-overlay.is-card-visible > .small-map-card{
       opacity: 0;
       visibility: hidden;
     }
@@ -82,9 +82,9 @@
       pointer-events: auto;
       z-index: 20000;
     }
-    .map-card img,
-    .mapmarker-container img{ display:block; }
-    .map-card-pill{
+    .big-map-card img,
+    .small-map-card img{ display:block; }
+    .big-map-card-pill{
       position: absolute;
       inset: auto;
       left: 5px;
@@ -98,7 +98,7 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .mapmarker-container{
+    .small-map-card{
       position: absolute;
       left: 0;
       top: 0;
@@ -143,24 +143,24 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .map-card--popup{
+    .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
       transition: background-color 0.2s ease;
     }
-    .map-card--popup.is-map-highlight,
-    .mapmarker-overlay:hover .map-card--popup{
+    .big-map-card--popup.is-map-highlight,
+    .mapmarker-overlay:hover .big-map-card--popup{
       background-color: #2e3a72;
     }
     .open-post .post-header.is-map-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-container.is-pill-highlight{
+    .small-map-card.is-pill-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-overlay:hover .mapmarker-container{
+    .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
     }
-    .map-card-thumb{
+    .big-map-card-thumb{
       position: absolute;
       left: 5px;
       top: 5px;
@@ -171,7 +171,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 40;
     }
-    .map-card-label,
+    .big-map-card-label,
     .mapmarker-label{
       position: absolute;
       left: 60px;
@@ -246,18 +246,18 @@
       transform: scale(1.1);
     }
 
-    .map-card-label{
+    .big-map-card-label{
       justify-content: center;
     }
 
-    .map-card-title{
+    .big-map-card-title{
       display: flex;
       flex-direction: column;
       gap: 1px;
       width: 100%;
     }
 
-    .map-card-title-line{
+    .big-map-card-title-line{
       width: 100%;
       display: block;
       white-space: nowrap;
@@ -268,7 +268,7 @@
       font-weight: 400;
     }
 
-    .map-card-venue{
+    .big-map-card-venue{
       font-weight: 400;
       font-size: 12px;
       line-height: 1.2;
@@ -280,7 +280,7 @@
       margin-top: 0;
       color: #d0d0d0;
     }
-    .map-card--list{
+    .big-map-card--list{
       position: relative;
       width: 100%;
       height: auto;
@@ -292,7 +292,7 @@
       border-radius: 0;
       box-shadow: none;
     }
-    .map-card--list .map-card-thumb{
+    .big-map-card--list .big-map-card-thumb{
       position: static;
       width: 64px;
       height: 64px;
@@ -300,7 +300,7 @@
       box-shadow: none;
       flex: 0 0 64px;
     }
-    .map-card--list .map-card-label{
+    .big-map-card--list .big-map-card-label{
       position: static;
       width: auto;
       height: auto;
@@ -308,13 +308,13 @@
       gap: 4px;
       text-shadow: none;
     }
-    .map-card--list .map-card-title{
+    .big-map-card--list .big-map-card-title{
       white-space: normal;
     }
-    .map-card--list .map-card-title-line{
+    .big-map-card--list .big-map-card-title-line{
       white-space: normal;
     }
-    .map-card--list .map-card-venue{
+    .big-map-card--list .big-map-card-venue{
       white-space: nowrap;
     }
   </style>
@@ -4715,16 +4715,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   z-index:-1;
 }
 
-.map-card--popup,
-.map-card--list{
+.big-map-card--popup,
+.big-map-card--list{
   pointer-events: auto;
   cursor: pointer;
 }
-.map-card--popup{
+.big-map-card--popup{
   display: block;
 }
 
-.map-card-list{
+.big-map-card-list{
   max-height: 360px;
   overflow-y: auto;
   overflow-y: overlay;
@@ -4736,7 +4736,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   gap: 8px;
 }
 
-.map-card-list-item{
+.big-map-card-list-item{
   padding: 5px;
   border-radius: 8px;
   cursor: pointer;
@@ -4755,7 +4755,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   overflow:hidden;
 }
 
-.mapboxgl-popup.map-card .mapboxgl-popup-content{
+.mapboxgl-popup.big-map-card .mapboxgl-popup-content{
   overflow: visible;
 }
 
@@ -7273,12 +7273,12 @@ if (typeof slugify !== 'function') {
           delete el.dataset.prevAriaSelected;
         }
       };
-      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .map-card.${highlightClass}`).forEach(el => {
+      document.querySelectorAll(`.post-card.${highlightClass}, .open-post .post-header.${highlightClass}, .big-map-card.${highlightClass}`).forEach(el => {
         el.classList.remove(highlightClass);
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
-      document.querySelectorAll(`.mapmarker-container.${markerHighlightClass}`).forEach(el => {
+      document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
       });
 
@@ -7316,10 +7316,10 @@ if (typeof slugify !== 'function') {
         applyHighlight(listCard);
         const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
         applyHighlight(openHeader);
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .mapmarker-container`).forEach(el => {
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .small-map-card`).forEach(el => {
           el.classList.add(markerHighlightClass);
         });
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .big-map-card`).forEach(el => {
           el.classList.add(highlightClass);
         });
       });
@@ -9413,25 +9413,25 @@ function makePosts(){
         const hasSecondTitleLine = Boolean((normalizedTitleLines[1] || '').trim());
         const displayTitleLines = hasSecondTitleLine ? normalizedTitleLines : [firstTitleLine];
         const titleHtml = displayTitleLines
-          .map(line => `<div class="map-card-title-line">${line}</div>`)
+          .map(line => `<div class="big-map-card-title-line">${line}</div>`)
           .join('');
         const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
-        const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
-        const labelClasses = ['map-card-label'];
+        const venueHtml = venueLine ? `<div class="big-map-card-venue">${venueLine}</div>` : '';
+        const labelClasses = ['big-map-card-label'];
         if(!hasSecondTitleLine){
-          labelClasses.push('map-card-label--single-line');
+          labelClasses.push('big-map-card-label--single-line');
         }
-        const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
-        const classes = ['map-card'];
+        const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="big-map-card-title">${titleHtml}</div>${venueHtml}</div>`;
+        const classes = ['big-map-card'];
         const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
         const variant = opts.variant || 'popup';
-        if(variant === 'popup') classes.push('map-card--popup');
-        if(variant === 'list') classes.push('map-card--list');
+        if(variant === 'popup') classes.push('big-map-card--popup');
+        if(variant === 'list') classes.push('big-map-card--list');
         extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
         if(variant === 'list'){
-          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="big-map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="big-map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="big-map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -10658,7 +10658,7 @@ function makePosts(){
           }
         }
         $$('.recents-card[aria-selected="true"], .post-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
-        $$('.mapboxgl-popup.map-card .map-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
+        $$('.mapboxgl-popup.big-map-card .big-map-card[aria-selected="true"]').forEach(el=>el.removeAttribute('aria-selected'));
 
         const container = fromHistory ? document.getElementById('recentsBoard') : postsWideEl;
         if(!container) return;
@@ -10770,7 +10770,7 @@ function makePosts(){
             }
           }
         }
-        const mapCard = document.querySelector('.mapboxgl-popup.map-card .map-card');
+        const mapCard = document.querySelector('.mapboxgl-popup.big-map-card .big-map-card');
         if(mapCard) mapCard.setAttribute('aria-selected','true');
 
         const detail = buildDetail(p);
@@ -12016,7 +12016,7 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.style.userSelect = 'none';
 
             const markerContainer = document.createElement('div');
-            markerContainer.className = 'mapmarker-container';
+            markerContainer.className = 'small-map-card';
             markerContainer.dataset.id = overlayRoot.dataset.id;
             markerContainer.setAttribute('aria-hidden', 'true');
             markerContainer.style.pointerEvents = 'none';
@@ -12072,7 +12072,7 @@ if (!map.__pillHooksInstalled) {
             markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
-            cardRoot.className = 'map-card map-card--popup';
+            cardRoot.className = 'big-map-card big-map-card--popup';
             cardRoot.dataset.id = overlayRoot.dataset.id;
             cardRoot.setAttribute('aria-hidden', 'true');
             cardRoot.style.pointerEvents = 'auto';
@@ -12082,7 +12082,7 @@ if (!map.__pillHooksInstalled) {
             try{ pillImg.decoding = 'async'; }catch(e){}
             pillImg.alt = '';
             pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-            pillImg.className = 'map-card-pill';
+            pillImg.className = 'big-map-card-pill';
             pillImg.style.opacity = '0.9';
             pillImg.draggable = false;
 
@@ -12096,27 +12096,27 @@ if (!map.__pillHooksInstalled) {
               thumbImg.src = thumbFallback;
             };
             thumbImg.src = imgThumb(post) || thumbFallback;
-            thumbImg.className = 'map-card-thumb';
+            thumbImg.className = 'big-map-card-thumb';
             thumbImg.referrerPolicy = 'no-referrer';
             thumbImg.draggable = false;
 
             const labelEl = document.createElement('div');
-            labelEl.className = 'map-card-label';
+            labelEl.className = 'big-map-card-label';
             const titleWrap = document.createElement('div');
-            titleWrap.className = 'map-card-title';
+            titleWrap.className = 'big-map-card-title';
             const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
               ? labelLines.cardTitleLines.slice(0, 2)
               : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
             cardTitleLines.forEach(line => {
               if(!line) return;
               const lineEl = document.createElement('div');
-              lineEl.className = 'map-card-title-line';
+              lineEl.className = 'big-map-card-title-line';
               lineEl.textContent = line;
               titleWrap.appendChild(lineEl);
             });
             if(!titleWrap.childElementCount){
               const lineEl = document.createElement('div');
-              lineEl.className = 'map-card-title-line';
+              lineEl.className = 'big-map-card-title-line';
               lineEl.textContent = '';
               titleWrap.appendChild(lineEl);
             }
@@ -12124,7 +12124,7 @@ if (!map.__pillHooksInstalled) {
             const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
             if(venueLine){
               const venueEl = document.createElement('div');
-              venueEl.className = 'map-card-venue';
+              venueEl.className = 'big-map-card-venue';
               venueEl.textContent = venueLine;
               labelEl.appendChild(venueEl);
             }
@@ -12761,10 +12761,10 @@ function openPostModal(id){
     });
 
     document.addEventListener('click', (ev)=>{
-      const card = ev.target.closest('.mapboxgl-popup.map-card .map-card');
+      const card = ev.target.closest('.mapboxgl-popup.big-map-card .big-map-card');
       if(card){
         ev.preventDefault();
-        const pid = card.getAttribute('data-id') || (card.closest('.map-card-list-item') && card.closest('.map-card-list-item').getAttribute('data-id'));
+        const pid = card.getAttribute('data-id') || (card.closest('.big-map-card-list-item') && card.closest('.big-map-card-list-item').getAttribute('data-id'));
         if(pid){
           callWhenDefined('openPost', (fn)=>{
             requestAnimationFrame(() => {
@@ -14512,7 +14512,7 @@ document.addEventListener('pointerdown', (e) => {
     {key:'list', label:'List', selectors:{bg:['.quick-list-board'], text:['.quick-list-board'], title:['.quick-list-board .recents-card .t','.quick-list-board .recents-card .title'], btn:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], btnText:['.quick-list-board button','.quick-list-board .sq','.quick-list-board .tiny','.quick-list-board .btn'], card:['.quick-list-board .recents-card']}},
     {key:'post-board', label:'Closed Posts', selectors:{bg:['.post-board'], text:['.post-board','.post-board .posts'], title:['.post-board .post-card .t','.post-board .post-card .title','.post-board .open-post .t','.post-board .open-post .title'], btn:['.post-board button'], btnText:['.post-board button'], card:['.post-board .post-card','.post-board .open-post']}},
     {key:'open-post', label:'Open Posts', selectors:{text:['.open-post','.open-post .venue-info','.open-post .session-info'], title:['.open-post .t','.open-post .title'], btn:['.open-post button'], btnText:['.open-post button'], card:['.open-post'], header:['.open-post .post-header'], image:['.open-post .image-box'], menu:['.open-post .venue-menu button','.open-post .session-menu button']}},
-    {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.map-card .mapboxgl-popup-content','.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], popupText:['.mapboxgl-popup.map-card .map-card','.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .map-card-venue','.mapboxgl-popup.map-card .chip','.mapboxgl-popup.map-card .chip-small','.mapboxgl-popup.map-card .map-card-list-item'], title:['.mapboxgl-popup.map-card .map-card-title','.mapboxgl-popup.map-card .chip .t','.mapboxgl-popup.map-card .chip .title','.mapboxgl-popup.map-card .chip-small .t','.mapboxgl-popup.map-card .chip-small .title']}},
+    {key:'map', label:'Map', selectors:{popupBg:['.mapboxgl-popup.big-map-card .mapboxgl-popup-content','.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .big-map-card-list-item'], popupText:['.mapboxgl-popup.big-map-card .big-map-card','.mapboxgl-popup.big-map-card .big-map-card-title','.mapboxgl-popup.big-map-card .big-map-card-venue','.mapboxgl-popup.big-map-card .chip','.mapboxgl-popup.big-map-card .chip-small','.mapboxgl-popup.big-map-card .big-map-card-list-item'], title:['.mapboxgl-popup.big-map-card .big-map-card-title','.mapboxgl-popup.big-map-card .chip .t','.mapboxgl-popup.big-map-card .chip .title','.mapboxgl-popup.big-map-card .chip-small .t','.mapboxgl-popup.big-map-card .chip-small .title']}},
     {key:'filter', label:'Filter Panel', selectors:{bg:['#filterPanel .panel-content'], text:['#filterPanel .panel-content'], title:['#filterPanel .panel-content .t','#filterPanel .panel-content .title'], btn:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny'], btnText:['#filterPanel button:not([class*="mapboxgl-"])','#filterPanel .sq','#filterPanel .tiny']}},
     {key:'calendar', label:'Calendar', selectors:{bg:['.calendar'], text:['.calendar .day'], weekday:['.calendar .weekday'], title:['.calendar .calendar-header'], header:['.calendar .calendar-header']}},
   {key:'adminPanel', label:'Admin Panel', selectors:{bg:['#adminPanel .panel-content'], text:['#adminPanel .panel-content'], title:['#adminPanel .panel-content .t','#adminPanel .panel-content .title'], btn:['#adminPanel button','#adminPanel #spinType span'], btnText:['#adminPanel button','#adminPanel #spinType span']}},
