@@ -83,7 +83,8 @@
       z-index: 20000;
     }
     .big-map-card img,
-    .small-map-card img{ display:block; }
+    .small-map-card img,
+    .multi-post-map-card img{ display:block; }
     .big-map-card-pill{
       position: absolute;
       inset: auto;
@@ -98,7 +99,8 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .small-map-card{
+    .small-map-card,
+    .multi-post-map-card{
       position: absolute;
       left: 0;
       top: 0;
@@ -143,6 +145,39 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
+    .multi-post-map-container{
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 20px;
+      background: #000;
+      opacity: 0.7;
+      color: #fff;
+      pointer-events: none;
+      box-sizing: border-box;
+      z-index: 20010;
+    }
+    .multi-post-map-container.is-open{
+      display: flex;
+      pointer-events: auto;
+    }
+    .multi-post-map-card{
+      pointer-events: auto;
+    }
+    .multi-post-map-container .small-map-card{
+      position: relative;
+      transform: none;
+      pointer-events: auto;
+      left: auto;
+      top: auto;
+      width: 100%;
+      max-width: 260px;
+    }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
       transition: background-color 0.2s ease;
@@ -156,10 +191,13 @@
       background-color: #2e3a72;
     }
     .small-map-card.is-pill-highlight,
-    .small-map-card.is-hover-highlight{
+    .small-map-card.is-hover-highlight,
+    .multi-post-map-card.is-pill-highlight,
+    .multi-post-map-card.is-hover-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-overlay:hover .small-map-card{
+    .mapmarker-overlay:hover .small-map-card,
+    .mapmarker-overlay:hover .multi-post-map-card{
       background-color: #2e3a72;
     }
     .big-map-card-thumb{
@@ -7284,7 +7322,7 @@ if (typeof slugify !== 'function') {
         restoreAttr(el);
         restoreHighlightBackground(el);
       });
-      document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
+      document.querySelectorAll(`.small-map-card.${markerHighlightClass}, .multi-post-map-card.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
       });
 
@@ -7322,7 +7360,7 @@ if (typeof slugify !== 'function') {
         applyHighlight(listCard);
         const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
         applyHighlight(openHeader);
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .small-map-card`).forEach(el => {
+        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .small-map-card, .mapmarker-overlay[data-id="${selectorId}"] .multi-post-map-card`).forEach(el => {
           el.classList.add(markerHighlightClass);
         });
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .big-map-card`).forEach(el => {
@@ -7331,6 +7369,115 @@ if (typeof slugify !== 'function') {
       });
       updateMapFeatureHighlights(idsToHighlight);
     }
+
+    const multiPostContainerSet = new Set();
+
+    function getMultiPostContainer(el){
+      if(!el) return null;
+      if(typeof el.closest !== 'function') return null;
+      return el.closest('.multi-post-map-container');
+    }
+
+    function setMultiPostContainerOpen(container, open, options = {}){
+      if(!container) return;
+      const nextOpen = !!open;
+      const lock = !!options.lock;
+      if(nextOpen){
+        container.classList.add('is-open');
+        if(lock){
+          container.dataset.locked = 'true';
+        }
+        multiPostContainerSet.add(container);
+      } else {
+        if(container.dataset.locked === 'true' && !options.force){
+          return;
+        }
+        container.classList.remove('is-open');
+        if(container.dataset.locked){
+          delete container.dataset.locked;
+        }
+        multiPostContainerSet.delete(container);
+      }
+    }
+
+    function closeOtherMultiPostContainers(except){
+      multiPostContainerSet.forEach(container => {
+        if(container !== except){
+          setMultiPostContainerOpen(container, false, { force: true });
+        }
+      });
+    }
+
+    function syncMultiPostHighlights(container, active){
+      if(!container) return;
+      const flag = !!active;
+      const primaryCard = container.querySelector('.multi-post-map-card');
+      if(primaryCard){
+        primaryCard.classList.toggle('is-hover-highlight', flag);
+      }
+      container.querySelectorAll('.small-map-card').forEach(card => {
+        card.classList.toggle('is-hover-highlight', flag);
+      });
+    }
+
+    document.addEventListener('pointerenter', (event)=>{
+      const card = event.target && event.target.closest ? event.target.closest('.multi-post-map-card') : null;
+      if(!card) return;
+      const container = getMultiPostContainer(card);
+      if(!container) return;
+      closeOtherMultiPostContainers(container);
+      setMultiPostContainerOpen(container, true);
+      syncMultiPostHighlights(container, true);
+    }, true);
+
+    document.addEventListener('pointerenter', (event)=>{
+      const container = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
+      if(!container) return;
+      setMultiPostContainerOpen(container, true);
+      syncMultiPostHighlights(container, true);
+    }, true);
+
+    document.addEventListener('pointerout', (event)=>{
+      const container = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
+      if(!container) return;
+      const related = event.relatedTarget;
+      if(related && container.contains(related)){
+        return;
+      }
+      if(container.dataset.locked === 'true'){
+        syncMultiPostHighlights(container, false);
+        return;
+      }
+      syncMultiPostHighlights(container, false);
+      setMultiPostContainerOpen(container, false);
+    }, true);
+
+    document.addEventListener('click', (event)=>{
+      const card = event.target && event.target.closest ? event.target.closest('.multi-post-map-card') : null;
+      if(!card) return;
+      const container = getMultiPostContainer(card);
+      if(!container) return;
+      const locked = container.dataset.locked === 'true';
+      if(locked){
+        if(container.dataset.locked){
+          delete container.dataset.locked;
+        }
+        syncMultiPostHighlights(container, false);
+        setMultiPostContainerOpen(container, false, { force: true });
+      } else {
+        closeOtherMultiPostContainers(container);
+        setMultiPostContainerOpen(container, true, { lock: true });
+        syncMultiPostHighlights(container, true);
+      }
+      try{ event.preventDefault(); }catch(err){}
+      try{ event.stopPropagation(); }catch(err){}
+    }, true);
+
+    document.addEventListener('pointerdown', (event)=>{
+      const inside = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
+      if(inside) return;
+      closeOtherMultiPostContainers(null);
+    }, true);
 
     function hashString(str){
       let hash = 0;
@@ -8240,7 +8387,7 @@ function makePosts(){
     worldProduced++;
   }
 
-  // ---- Fixed Sydney Opera House posts to show multi-marker clustering ----
+  // ---- Fixed Sydney Opera House posts to show multi-post-map-card clustering ----
   const operaCity = 'Sydney, Australia';
   const operaVenueName = 'Sydney Opera House';
   const operaAddress = 'Bennelong Point, Sydney NSW 2000, Australia';
@@ -12539,7 +12686,7 @@ if (!map.__pillHooksInstalled) {
       cardEl.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       const selectorId = escapeCardSelector(id);
       const relatedSelector = `.mapmarker-overlay[data-id="${selectorId}"]`;
-      document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
+      document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .multi-post-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
         el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       });
     }
