@@ -12287,10 +12287,6 @@ if (!map.__pillHooksInstalled) {
             }catch(err){ currentId = null; }
             if(currentId === hoveredId){
               hoverPopup.__fixedLngLat = fixedLngLat;
-              const nextLngLat = targetLngLat || fixedLngLat;
-              if(nextLngLat && Number.isFinite(nextLngLat.lng) && Number.isFinite(nextLngLat.lat)){
-                try{ hoverPopup.setLngLat(nextLngLat); }catch(err){}
-              }
               updateSelectedMarkerRing();
               return;
             }
@@ -12302,16 +12298,6 @@ if (!map.__pillHooksInstalled) {
           updateSelectedMarkerRing();
         };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
-
-      const onMarkerMove = window.rafThrottle((evt)=>{
-        if(hoverPopup && typeof hoverPopup.setLngLat === 'function'){
-          const fixed = hoverPopup.__fixedLngLat;
-          if(fixed && Number.isFinite(fixed.lng) && Number.isFinite(fixed.lat)){
-            hoverPopup.setLngLat(fixed);
-          }
-        }
-      });
-      MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mousemove', layer, onMarkerMove));
 
       const handleMarkerMouseLeave = ()=>{
         map.getCanvas().style.cursor = 'grab';
