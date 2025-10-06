@@ -119,6 +119,8 @@
     }
     .multi-post-map-card{
       transform: translate(calc(-50% + 55px), -50%);
+      background: transparent;
+      transition: none;
     }
     .mapmarker{
       position: relative;
@@ -216,13 +218,10 @@
       background-color: #2e3a72;
     }
     .small-map-card.is-pill-highlight,
-    .small-map-card.is-hover-highlight,
-    .multi-post-map-card.is-pill-highlight,
-    .multi-post-map-card.is-hover-highlight{
+    .small-map-card.is-hover-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-overlay:hover .small-map-card,
-    .mapmarker-overlay:hover .multi-post-map-card{
+    .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
     }
     .big-map-card-thumb{
@@ -12485,6 +12484,8 @@ if (!map.__pillHooksInstalled) {
               markerContainer.setAttribute('aria-hidden', 'true');
               markerContainer.style.pointerEvents = 'auto';
               markerContainer.style.userSelect = 'none';
+              markerContainer.dataset.surfaceBg = 'transparent';
+              markerContainer.style.background = 'transparent';
 
               const markerPill = new Image();
               try{ markerPill.decoding = 'async'; }catch(e){}
@@ -13079,34 +13080,35 @@ if (!map.__pillHooksInstalled) {
       const id = cardEl.dataset.id;
       if(!id) return;
       const highlight = !!shouldHighlight;
-      if(highlight){
-        if(!cardEl.dataset.hoverBg){
-          cardEl.dataset.hoverBg = cardEl.style.background || '';
+      const isMultiMapCard = cardEl.classList.contains('multi-post-map-card');
+      if(isMultiMapCard){
+        if(cardEl.dataset.hoverBg){
+          delete cardEl.dataset.hoverBg;
         }
-        cardEl.style.background = CARD_HIGHLIGHT;
+        if(!highlight){
+          const fallbackBg = cardEl.dataset.surfaceBg || '';
+          cardEl.style.background = fallbackBg;
+        }
+        cardEl.classList.remove(HOVER_HIGHLIGHT_CLASS);
       } else {
-        const cachedBg = cardEl.dataset.hoverBg;
-        const fallbackBg = cardEl.dataset.surfaceBg || '';
-        const restoreBg = cachedBg ? cachedBg : fallbackBg;
-        cardEl.style.background = restoreBg;
-        delete cardEl.dataset.hoverBg;
+        if(highlight){
+          if(!cardEl.dataset.hoverBg){
+            cardEl.dataset.hoverBg = cardEl.style.background || '';
+          }
+          cardEl.style.background = CARD_HIGHLIGHT;
+        } else {
+          const cachedBg = cardEl.dataset.hoverBg;
+          const fallbackBg = cardEl.dataset.surfaceBg || '';
+          const restoreBg = cachedBg ? cachedBg : fallbackBg;
+          cardEl.style.background = restoreBg;
+          delete cardEl.dataset.hoverBg;
+        }
+        cardEl.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       }
-      cardEl.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       const selectorId = escapeCardSelector(id);
       const relatedSelector = `.mapmarker-overlay[data-id="${selectorId}"]`;
-      document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .multi-post-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
+      document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
         el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
-      });
-      document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
-        const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
-        if(!idsAttr) return;
-        const overlayIds = parseMultiPostIds(idsAttr);
-        if(!overlayIds.length) return;
-        const shouldToggle = overlayIds.includes(String(id));
-        if(!shouldToggle) return;
-        overlay.querySelectorAll('.multi-post-map-card').forEach(el => {
-          el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
-        });
       });
     }
 
