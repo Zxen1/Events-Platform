@@ -12524,6 +12524,18 @@ if (!map.__pillHooksInstalled) {
       const id = cardEl.dataset.id;
       if(!id) return;
       const highlight = !!shouldHighlight;
+      if(highlight){
+        if(!cardEl.dataset.hoverBg){
+          cardEl.dataset.hoverBg = cardEl.style.background || '';
+        }
+        cardEl.style.background = CARD_HIGHLIGHT;
+      } else {
+        const cachedBg = cardEl.dataset.hoverBg;
+        const fallbackBg = cardEl.dataset.surfaceBg || '';
+        const restoreBg = cachedBg ? cachedBg : fallbackBg;
+        cardEl.style.background = restoreBg;
+        delete cardEl.dataset.hoverBg;
+      }
       cardEl.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       const selectorId = escapeCardSelector(id);
       const relatedSelector = `.mapmarker-overlay[data-id="${selectorId}"]`;
