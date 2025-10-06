@@ -5647,6 +5647,7 @@ if (typeof slugify !== 'function') {
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
   const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
+  const markerLabelBgOffsetUnits = markerLabelBgTranslatePx / markerLabelBackgroundWidthPx;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -11952,13 +11953,12 @@ if (!map.__pillHooksInstalled) {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-anchor': 'left',
+                'icon-offset': [markerLabelBgOffsetUnits, 0],
                 'icon-pitch-alignment': 'viewport',
                 'symbol-z-order': 'viewport-y',
                 'symbol-sort-key': sortKey
               },
               paint:{
-                'icon-translate': [markerLabelBgTranslatePx, 0],
-                'icon-translate-anchor': 'viewport',
                 'icon-opacity': iconOpacity || 1
               }
             });
@@ -11976,11 +11976,10 @@ if (!map.__pillHooksInstalled) {
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-offset',[markerLabelBgOffsetUnits,0]); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
