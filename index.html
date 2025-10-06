@@ -10736,7 +10736,8 @@ function makePosts(){
         const pointerCard = pointerTarget ? pointerTarget.closest('.post-card, .recents-card') : null;
         const pointerInsideCardContainer = pointerCard && container.contains(pointerCard);
         const pointerInAdBoard = pointerTarget ? pointerTarget.closest('.ad-board, .ad-panel') : null;
-        const shouldAlignToTop = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldScrollToCard = fromMap || (!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer;
+        const shouldReorderToTop = (!fromMap && ((!!pointerInAdBoard && !pointerInsideCardContainer) || pointerInsideCardContainer));
 
         if(!target && !fromHistory){
           target = ensurePostCardForId(id);
@@ -10753,7 +10754,7 @@ function makePosts(){
           } else {
             container.prepend(target);
           }
-        } else if(shouldAlignToTop && container.contains(target) && !pointerInsideCardContainer){
+        } else if(shouldReorderToTop && container.contains(target) && !pointerInsideCardContainer){
           const firstCard = container.querySelector('.open-post, .post-card, .recents-card');
           if(firstCard && firstCard !== target){
             container.insertBefore(target, firstCard);
@@ -10804,7 +10805,7 @@ function makePosts(){
           header.style.scrollMarginTop = h + 'px';
         }
 
-        if(shouldAlignToTop && container && container.contains(detail)){
+        if(shouldScrollToCard && container && container.contains(detail)){
           requestAnimationFrame(() => {
             const containerRect = container.getBoundingClientRect();
             const detailRect = detail.getBoundingClientRect();
