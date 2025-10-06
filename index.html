@@ -118,7 +118,8 @@
       transition: background-color 0.2s ease;
     }
     .multi-post-map-card{
-      transform: translate(calc(-50% + 55px), -50%);
+      /* Keep the summary pill anchored consistently when hovering */
+      transform: translate(-20px, -50%);
       background: transparent;
       transition: none;
     }
@@ -9685,7 +9686,15 @@ function makePosts(){
           overlay.dataset.id = primaryId;
           overlay.dataset.primaryPostId = primaryId;
         }
-        const card = overlay.querySelector('.multi-post-map-card');
+        const cards = overlay.querySelectorAll('.multi-post-map-card');
+        if(cards.length > 1){
+          cards.forEach((node, index) => {
+            if(index > 0){
+              node.remove();
+            }
+          });
+        }
+        const card = cards[0] || null;
         if(card){
           card.dataset.count = String(ids.length);
           const countLine = card.querySelector('.multi-post-map-count');
