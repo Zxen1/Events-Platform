@@ -10937,7 +10937,14 @@ function makePosts(){
         spinEnabled = false;
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
-        const p = posts.find(x=>x.id===id); if(!p) return;
+        let p = posts.find(x=>x.id===id);
+        if(!p){
+          const allPosts = getAllPostsCache();
+          if(Array.isArray(allPosts)){
+            p = allPosts.find(x=>x && x.id === id);
+          }
+        }
+        if(!p) return;
         activePostId = id;
         selectedVenueKey = null;
         updateSelectedMarkerRing();
