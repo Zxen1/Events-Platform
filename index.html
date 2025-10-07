@@ -109,7 +109,6 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -117,7 +116,12 @@
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
-    .multi-post-map-card{ pointer-events: auto; gap: 0; }
+    .small-map-card{ background: rgba(0, 0, 0, 0.9); }
+    .multi-post-map-card{
+      pointer-events: auto;
+      gap: 0;
+      background: transparent;
+    }
     .mapmarker{
       position: relative;
       left: auto;
@@ -7320,18 +7324,27 @@ if (typeof slugify !== 'function') {
       const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
         ? hoverPopup.getElement()
         : null;
-      const overlayId = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.id || '') : '';
-      const overlayMultiIds = overlayEl && overlayEl.dataset ? parseMultiPostIds(overlayEl.dataset.multiPostIds || '') : [];
+      const overlayVenueKey = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.venueKey || '') : '';
+      const rawOverlayId = overlayEl && overlayEl.dataset ? overlayEl.dataset.id : '';
+      const overlayId = isValidMarkerId(rawOverlayId) ? String(rawOverlayId) : '';
+      const overlayMultiIds = overlayEl && overlayEl.dataset
+        ? parseMultiPostIds(overlayEl.dataset.multiPostIds || '')
+        : [];
       let fallbackId = '';
       if(!overlayId){
         if(activePostId !== undefined && activePostId !== null){
-          fallbackId = String(activePostId);
+          fallbackId = isValidMarkerId(activePostId) ? String(activePostId) : '';
         } else {
           const openEl = document.querySelector('.post-board .open-post[data-id]');
-          fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
+          const openId = openEl && openEl.dataset ? openEl.dataset.id : '';
+          fallbackId = isValidMarkerId(openId) ? String(openId) : '';
         }
       }
-      const idsToHighlight = Array.from(new Set([overlayId, fallbackId, ...overlayMultiIds].filter(Boolean)));
+      const idsToHighlight = Array.from(new Set([
+        overlayId,
+        fallbackId,
+        ...overlayMultiIds
+      ].filter(isValidMarkerId)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
         return;
@@ -7360,12 +7373,14 @@ if (typeof slugify !== 'function') {
         });
       });
       const highlightIdSet = new Set(idsToHighlight.map(String));
+      const highlightVenueKey = overlayVenueKey || (typeof selectedVenueKey === 'string' ? selectedVenueKey : '');
       document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
         const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
-        if(!idsAttr) return;
-        const overlayIds = parseMultiPostIds(idsAttr);
-        if(!overlayIds.length) return;
-        const shouldHighlight = overlayIds.some(pid => highlightIdSet.has(String(pid)));
+        const overlayIds = idsAttr ? parseMultiPostIds(idsAttr) : [];
+        const overlayKey = overlay && overlay.dataset ? overlay.dataset.venueKey || '' : '';
+        const shouldHighlightByVenue = highlightVenueKey && overlayKey === highlightVenueKey;
+        const shouldHighlight = shouldHighlightByVenue
+          || overlayIds.some(pid => highlightIdSet.has(String(pid)));
         overlay.querySelectorAll('.multi-post-map-card').forEach(card => {
           card.classList.toggle(markerHighlightClass, shouldHighlight);
         });
@@ -9519,9 +9534,20 @@ function makePosts(){
       return matches[0] || null;
     }
 
+    function isValidMarkerId(value){
+      if(value === undefined || value === null) return false;
+      const str = String(value).trim();
+      if(!str) return false;
+      if(str === 'undefined' || str === 'null' || str === 'NaN') return false;
+      return true;
+    }
+
     function parseMultiPostIds(attr){
       if(!attr) return [];
-      return attr.split(',').map(id => id.trim()).filter(Boolean);
+      return attr
+        .split(',')
+        .map(id => id.trim())
+        .filter(isValidMarkerId);
     }
 
     function updateMultiPostCardOverlays(){
@@ -9532,23 +9558,35 @@ function makePosts(){
           return;
         }
         const postsAtVenue = getVenuePosts(venueKey);
-        const ids = postsAtVenue.map(post => String(post.id));
-        overlay.dataset.multiPostIds = ids.join(',');
-        overlay.dataset.multiCount = String(ids.length);
+        const totalCount = postsAtVenue.length;
+        const validIds = postsAtVenue
+          .map(post => (post && post.id !== undefined && post.id !== null ? String(post.id) : ''))
+          .filter(isValidMarkerId);
+        overlay.dataset.multiPostIds = validIds.length ? validIds.join(',') : '';
+        overlay.dataset.multiCount = String(totalCount);
         const primary = getFirstPostForVenue(venueKey);
-        const primaryId = primary && primary.id !== undefined && primary.id !== null
-          ? String(primary.id)
-          : (ids[0] || '');
+        const fallbackPrimaryId = validIds.length ? validIds[0] : '';
+        const resolvedPrimaryId = primary && primary.id !== undefined && primary.id !== null
+          ? primary.id
+          : fallbackPrimaryId;
+        const primaryId = isValidMarkerId(resolvedPrimaryId) ? String(resolvedPrimaryId) : '';
         if(primaryId){
           overlay.dataset.id = primaryId;
           overlay.dataset.primaryPostId = primaryId;
+        } else {
+          if(Object.prototype.hasOwnProperty.call(overlay.dataset, 'id')){
+            delete overlay.dataset.id;
+          }
+          if(overlay.dataset.primaryPostId){
+            delete overlay.dataset.primaryPostId;
+          }
         }
         const card = overlay.querySelector('.multi-post-map-card');
         if(card){
-          card.dataset.count = String(ids.length);
+          card.dataset.count = String(totalCount);
           const countLine = card.querySelector('.multi-post-map-count');
           if(countLine){
-            countLine.textContent = `${ids.length} posts here`;
+            countLine.textContent = `${totalCount} posts here`;
           }
           const venueLine = card.querySelector('.multi-post-map-venue');
           if(venueLine){
@@ -12308,32 +12346,42 @@ if (!map.__pillHooksInstalled) {
             const multiCount = venuePosts.length;
             const isMultiVenue = resolvedVenueKey && multiCount > 1;
             const primaryPost = isMultiVenue ? (getFirstPostForVenue(resolvedVenueKey) || post) : post;
-            const primaryId = primaryPost && primaryPost.id !== undefined && primaryPost.id !== null
-              ? String(primaryPost.id)
-              : (post && post.id !== undefined && post.id !== null ? String(post.id) : '');
+            const resolvedPrimary = primaryPost && primaryPost.id !== undefined && primaryPost.id !== null
+              ? primaryPost.id
+              : (post && post.id !== undefined && post.id !== null ? post.id : '');
+            const primaryId = isValidMarkerId(resolvedPrimary) ? String(resolvedPrimary) : '';
 
             if(primaryId){
               overlayRoot.dataset.id = primaryId;
               overlayRoot.dataset.primaryPostId = primaryId;
             } else {
-              overlayRoot.dataset.id = '';
-              if(overlayRoot.dataset.primaryPostId){
+              if(overlayRoot.dataset && Object.prototype.hasOwnProperty.call(overlayRoot.dataset, 'id')){
+                delete overlayRoot.dataset.id;
+              }
+              if(overlayRoot.dataset && overlayRoot.dataset.primaryPostId){
                 delete overlayRoot.dataset.primaryPostId;
               }
             }
 
             if(isMultiVenue){
               overlayRoot.dataset.multi = 'true';
-              overlayRoot.dataset.multiPostIds = venuePosts.map(p => String(p.id)).join(',');
+              const validIds = venuePosts
+                .map(p => (p && p.id !== undefined && p.id !== null ? String(p.id) : ''))
+                .filter(isValidMarkerId);
+              if(validIds.length){
+                overlayRoot.dataset.multiPostIds = validIds.join(',');
+              } else {
+                overlayRoot.dataset.multiPostIds = '';
+              }
               overlayRoot.dataset.multiCount = String(multiCount);
             } else {
               if(overlayRoot.dataset.multi){
                 delete overlayRoot.dataset.multi;
               }
-              if(overlayRoot.dataset.multiPostIds){
+              if(Object.prototype.hasOwnProperty.call(overlayRoot.dataset, 'multiPostIds')){
                 delete overlayRoot.dataset.multiPostIds;
               }
-              if(overlayRoot.dataset.multiCount){
+              if(Object.prototype.hasOwnProperty.call(overlayRoot.dataset, 'multiCount')){
                 delete overlayRoot.dataset.multiCount;
               }
             }
@@ -12438,7 +12486,11 @@ if (!map.__pillHooksInstalled) {
                 });
               }
 
-              markerContainer.dataset.id = overlayRoot.dataset.id || '';
+              if(primaryId){
+                markerContainer.dataset.id = primaryId;
+              } else if(markerContainer.dataset.id){
+                delete markerContainer.dataset.id;
+              }
               markerContainer.dataset.count = String(multiCount);
               markerContainer.dataset.venueKey = resolvedVenueKey;
 
@@ -12989,13 +13041,30 @@ if (!map.__pillHooksInstalled) {
       document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .multi-post-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
         el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       });
-      document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
-        const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
-        if(!idsAttr) return;
-        const overlayIds = parseMultiPostIds(idsAttr);
-        if(!overlayIds.length) return;
-        const shouldToggle = overlayIds.includes(String(id));
-        if(!shouldToggle) return;
+      const overlaysToToggle = new Set();
+      const multiOverlay = cardEl.closest('.mapmarker-overlay[data-multi-post-ids]');
+      if(multiOverlay){
+        overlaysToToggle.add(multiOverlay);
+      }
+      const cardVenueKey = cardEl.dataset.venueKey
+        || (multiOverlay && multiOverlay.dataset ? multiOverlay.dataset.venueKey : '');
+      if(cardVenueKey){
+        const venueSelector = escapeCardSelector(cardVenueKey);
+        document
+          .querySelectorAll(`.mapmarker-overlay[data-venue-key="${venueSelector}"][data-multi-post-ids]`)
+          .forEach(overlay => overlaysToToggle.add(overlay));
+      }
+      if(!overlaysToToggle.size){
+        document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
+          const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
+          if(!idsAttr) return;
+          const overlayIds = parseMultiPostIds(idsAttr);
+          if(!overlayIds.length) return;
+          if(!overlayIds.includes(String(id))) return;
+          overlaysToToggle.add(overlay);
+        });
+      }
+      overlaysToToggle.forEach(overlay => {
         overlay.querySelectorAll('.multi-post-map-card').forEach(el => {
           el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
         });
