@@ -102,46 +102,89 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: 150px;
-      height: 40px;
-      transform: translate(-20px, -20px);
+      width: 185px;
+      height: 52px;
+      transform: translate(-24px, -30px);
       pointer-events: none;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
+      background-color: rgba(0, 0, 0, 0.88);
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 10px 5px 5px;
+      gap: 10px;
+      padding: 6px 16px 6px 10px;
       box-sizing: border-box;
       transition: background-color 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
     }
-    .mapmarker{
+    .small-map-card > .map-card-pill{
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.9 !important;
+      visibility: visible;
+      pointer-events: none;
+      mix-blend-mode: normal;
+      z-index: 0;
+    }
+    .small-map-card > .map-card-thumb{
       position: relative;
       left: auto;
       top: auto;
-      width: 30px;
-      height: 30px;
-      pointer-events: none;
-      z-index: 2;
-      flex: 0 0 30px;
-    }
-    .map--midzoom-markers .mapmarker{
-      border-radius: 50%;
-      box-shadow: 0 0 0 3px #000;
-      box-sizing: border-box;
-    }
-    .mapmarker-pill{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 150px;
+      width: 40px;
       height: 40px;
-      object-fit: contain;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      z-index: 1;
+      flex: 0 0 40px;
+    }
+    .small-map-card .map-card-label{
+      position: relative;
+      left: auto;
+      top: auto;
+      width: auto;
+      height: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2px;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
       pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
+      z-index: 1;
+      min-width: 0;
+    }
+    .small-map-card .map-card-title{
+      gap: 1px;
+      width: 100%;
+    }
+    .small-map-card .map-card-title-line{
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .small-map-card .map-card-title-line:first-child{
+      font-weight: 600;
+    }
+    .small-map-card .map-card-title-line:not(:first-child){
+      font-weight: 500;
+      opacity: 0.9;
+    }
+    .small-map-card .map-card-venue{
+      font-size: 10px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0;
+      color: #d0d0d0;
     }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
@@ -171,8 +214,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 40;
     }
-    .map-card-label,
-    .mapmarker-label{
+    .map-card-label{
       position: absolute;
       left: 60px;
       top: 5px;
@@ -195,36 +237,6 @@
       z-index: 1;
       pointer-events: auto;
     }
-
-    .mapmarker-label{
-      position: relative;
-      left: auto;
-      top: auto;
-      width: auto;
-      height: auto;
-      padding: 0;
-      pointer-events: none;
-      color: #fff;
-      gap: 1px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-      white-space: normal;
-      z-index: 3;
-      text-align: left;
-      flex: 1 1 auto;
-      min-width: 0;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    .mapmarker-label-line{
-      width: 100%;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .mapmarker-label-line:first-child{ font-weight: 600; }
-    .mapmarker-label-line:not(:first-child){ font-weight: 400; }
 
     .post-location-marker{
       width: 32px;
@@ -9520,35 +9532,54 @@ function makePosts(){
       if(overrideKey){
         selectedVenueKey = overrideKey;
       }
+      const titleWidthPx = typeof opts.titleWidthPx === 'number' && opts.titleWidthPx > 0 ? opts.titleWidthPx : mapCardTitleWidthPx;
+      const venueWidthPx = typeof opts.venueWidthPx === 'number' && opts.venueWidthPx > 0 ? opts.venueWidthPx : titleWidthPx;
       try{
         const venueName = getPrimaryVenueName(p) || p.city;
+        const variant = opts.variant || 'popup';
         const labelLines = getMarkerLabelLines(p);
-        const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+        const fallbackTitleLines = [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+        const defaultTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
           ? labelLines.cardTitleLines.slice(0, 2)
-          : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-        const normalizedTitleLines = cardTitleLines.slice(0, 2);
+          : fallbackTitleLines;
+        const variantTitleLines = variant === 'small'
+          ? splitTextAcrossLines(p && p.title ? p.title : '', titleWidthPx, 2)
+          : defaultTitleLines;
+        while(variantTitleLines.length < 2){ variantTitleLines.push(''); }
+        const normalizedTitleLines = variantTitleLines.slice(0, 2);
         const firstTitleLine = normalizedTitleLines[0] || '';
         const hasSecondTitleLine = Boolean((normalizedTitleLines[1] || '').trim());
         const displayTitleLines = hasSecondTitleLine ? normalizedTitleLines : [firstTitleLine];
         const titleHtml = displayTitleLines
           .map(line => `<div class="map-card-title-line">${line}</div>`)
           .join('');
-        const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
+        const venueLine = (venueWidthPx === mapCardTitleWidthPx && labelLines.venueLine)
+          ? labelLines.venueLine
+          : (venueName ? shortenMarkerLabelText(venueName, venueWidthPx) : '');
         const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
         const labelClasses = ['map-card-label'];
+        if(variant === 'small'){
+          labelClasses.push('map-card-label--small');
+        }
         if(!hasSecondTitleLine){
           labelClasses.push('map-card-label--single-line');
         }
         const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
-        const classes = ['big-map-card'];
         const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
-        const variant = opts.variant || 'popup';
-        if(variant === 'popup') classes.push('big-map-card--popup');
-        if(variant === 'list') classes.push('big-map-card--list');
-        extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
         if(variant === 'list'){
+          const classes = ['big-map-card', 'big-map-card--list'];
+          extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
           return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
+        if(variant === 'small'){
+          const classes = ['small-map-card'];
+          extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
+          const pillSrc = opts.pillSrc || 'assets/icons-30/225x60-pill-99.webp';
+          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="${pillSrc}" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        }
+        const classes = ['big-map-card'];
+        if(variant === 'popup') classes.push('big-map-card--popup');
+        extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
         return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
@@ -12133,61 +12164,59 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
 
-            const markerContainer = document.createElement('div');
-            markerContainer.className = 'small-map-card';
+            const markerTemplate = document.createElement('template');
+            markerTemplate.innerHTML = mapCardHTML(post, {
+              variant: 'small',
+              titleWidthPx: 140,
+              venueWidthPx: 140
+            });
+            let markerContainer = markerTemplate.content.firstElementChild;
+            if(!markerContainer){
+              markerContainer = document.createElement('div');
+              markerContainer.className = 'small-map-card';
+            }
             markerContainer.dataset.id = overlayRoot.dataset.id;
             markerContainer.setAttribute('aria-hidden', 'true');
             markerContainer.style.pointerEvents = 'none';
             markerContainer.style.userSelect = 'none';
-
-            const markerIcon = new Image();
-            try{ markerIcon.decoding = 'async'; }catch(e){}
-            markerIcon.alt = '';
-            markerIcon.className = 'mapmarker';
-            markerIcon.draggable = false;
-            const markerSources = window.subcategoryMarkers || {};
-            const markerIds = window.subcategoryMarkerIds || {};
-            const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-            const markerIdCandidates = [];
-            if(post && post.subcategory){
-              const mappedId = markerIds[post.subcategory];
-              if(mappedId) markerIdCandidates.push(mappedId);
-              markerIdCandidates.push(slugifyFn(post.subcategory));
+            if(!markerContainer.classList.contains('small-map-card')){
+              markerContainer.classList.add('small-map-card');
             }
-            const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-            const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
-            markerIcon.referrerPolicy = 'no-referrer';
-            markerIcon.loading = 'lazy';
-            markerIcon.onerror = ()=>{
-              markerIcon.onerror = null;
-              markerIcon.src = markerFallback;
-            };
-            markerIcon.src = markerIconUrl || markerFallback;
 
-            const markerPill = new Image();
-            try{ markerPill.decoding = 'async'; }catch(e){}
-            markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
-            markerPill.className = 'mapmarker-pill';
-            markerPill.style.opacity = '0.9';
-            markerPill.style.visibility = 'visible';
-            markerPill.draggable = false;
+            const pillImgEl = markerContainer.querySelector('.map-card-pill');
+            if(pillImgEl){
+              try{ pillImgEl.decoding = 'async'; }catch(e){}
+              pillImgEl.alt = '';
+              pillImgEl.draggable = false;
+              if(!pillImgEl.getAttribute('src')){
+                pillImgEl.src = 'assets/icons-30/225x60-pill-99.webp';
+              }
+            }
+
+            const thumbImgEl = markerContainer.querySelector('.map-card-thumb');
+            if(thumbImgEl){
+              const thumbFallback = 'assets/funmap-logo-small.png';
+              try{ thumbImgEl.decoding = 'async'; }catch(e){}
+              thumbImgEl.alt = '';
+              thumbImgEl.loading = 'lazy';
+              thumbImgEl.referrerPolicy = 'no-referrer';
+              thumbImgEl.draggable = false;
+              if(!thumbImgEl.getAttribute('src')){
+                thumbImgEl.src = imgThumb(post) || thumbFallback;
+              }
+              const handleThumbError = ()=>{
+                thumbImgEl.onerror = null;
+                thumbImgEl.src = thumbFallback;
+              };
+              thumbImgEl.onerror = handleThumbError;
+            }
+
+            const markerLabelEl = markerContainer.querySelector('.map-card-label');
+            if(markerLabelEl){
+              markerLabelEl.setAttribute('aria-hidden', 'true');
+            }
 
             const labelLines = getMarkerLabelLines(post);
-            const markerLabel = document.createElement('div');
-            markerLabel.className = 'mapmarker-label';
-            const markerLine1 = document.createElement('div');
-            markerLine1.className = 'mapmarker-label-line';
-            markerLine1.textContent = labelLines.line1;
-            markerLabel.appendChild(markerLine1);
-            if(labelLines.line2){
-              const markerLine2 = document.createElement('div');
-              markerLine2.className = 'mapmarker-label-line';
-              markerLine2.textContent = labelLines.line2;
-              markerLabel.appendChild(markerLine2);
-            }
-
-            markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
