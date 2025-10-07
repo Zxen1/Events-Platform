@@ -10811,12 +10811,147 @@ function makePosts(){
       });
 
     function buildDetail(p){
+      function buildSessionFromIso(iso){
+        const trimmed = typeof iso === 'string' ? iso.trim() : '';
+        if(!trimmed){
+          return null;
+        }
+        let label = trimmed;
+        if(/^\d{4}-\d{2}-\d{2}$/.test(trimmed)){
+          try{
+            label = fmtShort(trimmed);
+          }catch(err){
+            label = trimmed;
+          }
+        }
+        return { full: trimmed, date: label, time: '' };
+      }
+
+      function formatSessionLabel(session){
+        if(!session || typeof session !== 'object') return '';
+        if(typeof session.date === 'string' && session.date.trim()){
+          return session.date.trim();
+        }
+        if(typeof session.full === 'string' && session.full.trim()){
+          const full = session.full.trim();
+          if(/^\d{4}-\d{2}-\d{2}$/.test(full)){
+            try{ return fmtShort(full); }
+            catch(err){ return full; }
+          }
+          return full;
+        }
+        return '';
+      }
+
+      function normalizeSession(session){
+        if(!session) return null;
+        if(typeof session === 'string'){
+          return buildSessionFromIso(session);
+        }
+        if(typeof session !== 'object') return null;
+        const normalized = Object.assign({}, session);
+        if(typeof normalized.full === 'string'){ normalized.full = normalized.full.trim(); }
+        if(typeof normalized.time !== 'string'){
+          normalized.time = normalized.time == null ? '' : String(normalized.time);
+        }
+        if(!normalized.full && typeof normalized.date === 'string'){
+          normalized.full = normalized.date.trim();
+        }
+        if(typeof normalized.date !== 'string' || !normalized.date.trim()){
+          const label = formatSessionLabel(normalized) || (normalized.full ? formatSessionLabel({ full: normalized.full }) : '');
+          normalized.date = label;
+        } else {
+          normalized.date = normalized.date.trim();
+        }
+        if(!normalized.full && normalized.date){
+          normalized.full = normalized.date;
+        }
+        return normalized;
+      }
+
+      function fallbackSessions(){
+        if(!Array.isArray(p.dates) || !p.dates.length) return [];
+        return p.dates
+          .map(value => (typeof value === 'string' ? value.trim() : ''))
+          .filter(Boolean)
+          .map(buildSessionFromIso)
+          .filter(Boolean);
+      }
+
+      function normalizeLocation(loc){
+        if(!loc || typeof loc !== 'object') return null;
+        const normalized = Object.assign({}, loc);
+        const fallbackVenue = (typeof p.city === 'string' && p.city.trim()) ? p.city.trim() : 'Venue not specified';
+        normalized.venue = (typeof normalized.venue === 'string' && normalized.venue.trim()) ? normalized.venue.trim() : fallbackVenue;
+        normalized.address = typeof normalized.address === 'string' ? normalized.address : '';
+        if(!Number.isFinite(normalized.lng) && Number.isFinite(p.lng)) normalized.lng = p.lng;
+        if(!Number.isFinite(normalized.lat) && Number.isFinite(p.lat)) normalized.lat = p.lat;
+        const rawDates = Array.isArray(normalized.dates) ? normalized.dates : [];
+        normalized.dates = rawDates.map(normalizeSession).filter(Boolean);
+        if(typeof normalized.price === 'string'){
+          normalized.price = normalized.price.trim();
+        } else if(normalized.price == null){
+          normalized.price = '';
+        } else {
+          normalized.price = String(normalized.price);
+        }
+        return normalized;
+      }
+
+      function ensureLocations(){
+        const baseList = Array.isArray(p.locations) && p.locations.length
+          ? p.locations
+          : [{
+              venue: (typeof p.city === 'string' && p.city.trim()) ? p.city.trim() : 'Venue not specified',
+              address: typeof p.city === 'string' ? p.city : '',
+              lng: Number.isFinite(p.lng) ? p.lng : 0,
+              lat: Number.isFinite(p.lat) ? p.lat : 0,
+              dates: fallbackSessions(),
+              price: typeof p.price === 'string' ? p.price : ''
+            }];
+        const normalized = baseList.map(normalizeLocation).filter(Boolean);
+        if(normalized.length){
+          return normalized;
+        }
+        return [{
+          venue: (typeof p.city === 'string' && p.city.trim()) ? p.city.trim() : 'Venue not specified',
+          address: typeof p.city === 'string' ? p.city : '',
+          lng: Number.isFinite(p.lng) ? p.lng : 0,
+          lat: Number.isFinite(p.lat) ? p.lat : 0,
+          dates: [],
+          price: ''
+        }];
+      }
+
+      const locations = ensureLocations();
+      p.locations = locations;
+      const primaryLocation = locations[0] || {};
+      const sessionDates = Array.isArray(primaryLocation.dates) ? primaryLocation.dates : [];
+      const sortedSessions = sessionDates.slice().sort((a,b)=>{
+        const aFull = (a && typeof a.full === 'string') ? a.full : '';
+        const bFull = (b && typeof b.full === 'string') ? b.full : '';
+        return aFull.localeCompare(bFull);
+      });
+      const priceLabelRaw = typeof primaryLocation.price === 'string' ? primaryLocation.price.trim() : '';
+      const priceLabel = priceLabelRaw || 'Price unavailable';
+      const firstSessionLabel = formatSessionLabel(sortedSessions[0]);
+      const lastSessionLabel = formatSessionLabel(sortedSessions[sortedSessions.length - 1]);
+      let dateRangeLabel = '';
+      if(firstSessionLabel && lastSessionLabel){
+        dateRangeLabel = (sortedSessions.length > 1 && firstSessionLabel !== lastSessionLabel)
+          ? `${firstSessionLabel} - ${lastSessionLabel}`
+          : firstSessionLabel;
+      } else if(firstSessionLabel){
+        dateRangeLabel = firstSessionLabel;
+      }
+      const infoParts = [`💲 ${priceLabel}`];
+      if(dateRangeLabel){
+        infoParts.push(`📅 ${dateRangeLabel}`);
+      }
+      const defaultInfo = `${infoParts.join(' | ')}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const wrap = document.createElement('div');
       wrap.className = 'open-post';
       wrap.dataset.id = p.id;
-      const loc0 = p.locations[0];
-      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
-      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const thumbSrc = imgThumb(p);
       const headerInner = `
           <div class="title-block">
@@ -10839,11 +10974,11 @@ function makePosts(){
         </div>
         <div class="post-body">
           <div class="second-post-column">
-            <div class="post-details">
+              <div class="post-details">
               <div class="post-venue-selection-container"></div>
               <div class="post-session-selection-container"></div>
               <div class="location-section">
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${primaryLocation.venue}</span><span class="venue-address">${primaryLocation.address || ''}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address || ''}</span></button>`).join('')}</div></div></div>
                 <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
               </div>
               <div class="post-details-info-container">
