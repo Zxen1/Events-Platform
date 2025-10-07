@@ -7378,9 +7378,12 @@ if (typeof slugify !== 'function') {
         const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
         const overlayIds = idsAttr ? parseMultiPostIds(idsAttr) : [];
         const overlayKey = overlay && overlay.dataset ? overlay.dataset.venueKey || '' : '';
-        const shouldHighlightByVenue = highlightVenueKey && overlayKey === highlightVenueKey;
-        const shouldHighlight = shouldHighlightByVenue
-          || overlayIds.some(pid => highlightIdSet.has(String(pid)));
+        const isHoveredOverlay = overlay === overlayEl;
+        const shouldHighlightByVenue = Boolean(highlightVenueKey) && overlayKey === highlightVenueKey;
+        const allowIdHighlight = !highlightVenueKey || overlayKey === highlightVenueKey;
+        const shouldHighlightById = allowIdHighlight
+          && overlayIds.some(pid => highlightIdSet.has(String(pid)));
+        const shouldHighlight = isHoveredOverlay || shouldHighlightByVenue || shouldHighlightById;
         overlay.querySelectorAll('.multi-post-map-card').forEach(card => {
           card.classList.toggle(markerHighlightClass, shouldHighlight);
         });
@@ -12365,6 +12368,9 @@ if (!map.__pillHooksInstalled) {
 
             if(isMultiVenue){
               overlayRoot.dataset.multi = 'true';
+              overlayRoot.querySelectorAll('.small-map-card').forEach(card => {
+                try{ card.remove(); }catch(err){}
+              });
               const validIds = venuePosts
                 .map(p => (p && p.id !== undefined && p.id !== null ? String(p.id) : ''))
                 .filter(isValidMarkerId);
