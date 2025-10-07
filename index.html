@@ -6911,16 +6911,24 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const targetZoom = Math.min(8, maxAllowedZoom);
-              let finalZoom = targetZoom;
+              const desiredLeafZoom = Math.min(9, maxAllowedZoom);
+              let finalZoom;
+              if(hasChildTarget){
+                const childZoom = childTarget && Number.isFinite(childTarget.zoom)
+                  ? Math.min(childTarget.zoom, maxAllowedZoom)
+                  : NaN;
+                finalZoom = Number.isFinite(childZoom) ? childZoom : safeCurrentZoom;
+                if(finalZoom < safeCurrentZoom){
+                  finalZoom = safeCurrentZoom;
+                }
+              } else {
+                finalZoom = Number.isFinite(desiredLeafZoom) ? desiredLeafZoom : safeCurrentZoom;
+                if(finalZoom < safeCurrentZoom){
+                  finalZoom = safeCurrentZoom;
+                }
+              }
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
-              }
-              if(finalZoom < safeCurrentZoom){
-                finalZoom = safeCurrentZoom;
-              }
-              if(finalZoom > targetZoom){
-                finalZoom = targetZoom;
               }
               let currentPitch = null;
               try{
@@ -7009,12 +7017,35 @@ if (typeof slugify !== 'function') {
     let markerFeatureIndex = new Map();
     let lastHighlightedPostIds = [];
     let highlightedFeatureKeys = [];
-    function updateMapFeatureHighlights(postIds){
-      const normalized = Array.from(new Set((Array.isArray(postIds) ? postIds : [postIds])
-        .filter(id => id !== undefined && id !== null)
-        .map(id => String(id))
-        .filter(Boolean)));
-      lastHighlightedPostIds = normalized;
+    function updateMapFeatureHighlights(targets){
+      const input = Array.isArray(targets) ? targets : [targets];
+      const seen = new Set();
+      const normalized = [];
+      input.forEach(entry => {
+        if(entry === undefined || entry === null) return;
+        let idValue;
+        let venueKeyValue = null;
+        if(typeof entry === 'object' && !Array.isArray(entry)){
+          const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
+          if(rawId === undefined || rawId === null) return;
+          idValue = String(rawId);
+          const rawVenue = entry.venueKey ?? entry.venue_key ?? entry.venue;
+          if(rawVenue !== undefined && rawVenue !== null){
+            const venueString = String(rawVenue).trim();
+            if(venueString){
+              venueKeyValue = venueString;
+            }
+          }
+        } else {
+          idValue = String(entry);
+        }
+        if(!idValue) return;
+        const dedupeKey = venueKeyValue ? `${idValue}::${venueKeyValue}` : idValue;
+        if(seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        normalized.push({ id: idValue, venueKey: venueKeyValue });
+      });
+      lastHighlightedPostIds = normalized.map(item => ({ id: item.id, venueKey: item.venueKey }));
       if(!map || typeof map.setFeatureState !== 'function'){
         if(!normalized.length){
           highlightedFeatureKeys = [];
@@ -7031,14 +7062,26 @@ if (typeof slugify !== 'function') {
       }
       const nextEntries = [];
       const nextKeys = new Set();
-      normalized.forEach(id => {
-        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(id) : null;
+      const extractVenueFromId = (featureId)=>{
+        if(typeof featureId !== 'string') return '';
+        const parts = featureId.split('::');
+        return parts.length >= 3 ? String(parts[1] || '') : '';
+      };
+      normalized.forEach(target => {
+        if(!target || !target.id) return;
+        const entries = markerFeatureIndex instanceof Map ? markerFeatureIndex.get(target.id) : null;
         if(!entries || !entries.length) return;
         entries.forEach(entry => {
           if(!entry) return;
           const source = entry.source || 'posts';
           const featureId = entry.id;
           if(featureId === undefined || featureId === null) return;
+          if(target.venueKey){
+            const entryVenueKey = entry.venueKey ? String(entry.venueKey) : extractVenueFromId(featureId);
+            if(!entryVenueKey || entryVenueKey !== target.venueKey){
+              return;
+            }
+          }
           const compositeKey = `${source}::${featureId}`;
           if(nextKeys.has(compositeKey)) return;
           nextKeys.add(compositeKey);
@@ -7310,20 +7353,41 @@ if (typeof slugify !== 'function') {
         el.setAttribute('aria-selected', 'true');
         applyHighlightBackground(el);
       };
+      const overlayVenueKey = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.venueKey || '').trim() : '';
+      const globalVenueKey = typeof selectedVenueKey === 'string' && selectedVenueKey ? String(selectedVenueKey).trim() : '';
+      const highlightTargets = [];
+      const targetSeen = new Set();
       idsToHighlight.forEach(id => {
-        const selectorId = escapeAttr(id);
+        const strId = String(id);
+        const selectorId = escapeAttr(strId);
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
         const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
         applyHighlight(openHeader);
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .mapmarker-container`).forEach(el => {
-          el.classList.add(markerHighlightClass);
+        const preferredVenue = (overlayId && strId === overlayId && overlayVenueKey)
+          ? overlayVenueKey
+          : globalVenueKey;
+        const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
+        const overlays = Array.from(document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"]`));
+        overlays.forEach(overlay => {
+          const overlayKey = overlay && overlay.dataset ? String(overlay.dataset.venueKey || '').trim() : '';
+          if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
+            return;
+          }
+          overlay.querySelectorAll('.mapmarker-container').forEach(el => {
+            el.classList.add(markerHighlightClass);
+          });
+          overlay.querySelectorAll('.map-card').forEach(el => {
+            el.classList.add(highlightClass);
+          });
         });
-        document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .map-card`).forEach(el => {
-          el.classList.add(highlightClass);
-        });
+        const dedupeKey = normalizedVenue ? `${strId}::${normalizedVenue}` : strId;
+        if(!targetSeen.has(dedupeKey)){
+          targetSeen.add(dedupeKey);
+          highlightTargets.push({ id: strId, venueKey: normalizedVenue || null });
+        }
       });
-      updateMapFeatureHighlights(idsToHighlight);
+      updateMapFeatureHighlights(highlightTargets);
     }
 
     function hashString(str){
@@ -9019,10 +9083,20 @@ function makePosts(){
         const key = String(baseId);
         const fid = feature.id ?? props.featureId;
         if(fid === undefined || fid === null) return;
+        let venueKey = '';
+        if(props.venueKey !== undefined && props.venueKey !== null){
+          const venueString = String(props.venueKey).trim();
+          venueKey = venueString;
+        } else if(typeof fid === 'string'){
+          const parts = fid.split('::');
+          if(parts.length >= 3){
+            venueKey = String(parts[1] || '');
+          }
+        }
         if(!index.has(key)){
           index.set(key, []);
         }
-        index.get(key).push({ source: 'posts', id: fid });
+        index.get(key).push({ source: 'posts', id: fid, venueKey });
       });
       return index;
     }
