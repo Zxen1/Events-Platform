@@ -3265,14 +3265,14 @@ body.filters-active #filterBtn{
   flex:0 0 auto;
 }
 #welcomeBody .map-control-row > .geocoder{
-  flex:1 1 240px;
+  flex:1 1 300px;
   min-width:0;
   width:100%;
-  max-width:360px;
+  max-width:300px;
 }
 #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
   width:100% !important;
-  max-width:360px !important;
+  max-width:300px !important;
   min-width:0 !important;
 }
 #welcomeBody .map-controls-welcome .mapboxgl-ctrl-geocoder{
@@ -3320,15 +3320,15 @@ body.filters-active #filterBtn{
 }
 
 .map-controls-map .geocoder{
-  flex:1 1 auto;
+  flex:1 1 300px;
   min-width:0;
   width:100%;
-  max-width:100%;
+  max-width:300px;
 }
 
 .map-controls-map .mapboxgl-ctrl-geocoder{
   width:100% !important;
-  max-width:100% !important;
+  max-width:300px !important;
   min-width:0 !important;
 }
 
@@ -3344,12 +3344,12 @@ body.filters-active #filterBtn{
   .map-controls-map .mapboxgl-ctrl-geocoder{
     flex:1 1 100%;
     width:100% !important;
-    max-width:100% !important;
+    max-width:min(100%, 300px) !important;
   }
   #welcomeBody .map-control-row > .geocoder,
   #welcomeBody .map-control-row .mapboxgl-ctrl-geocoder{
     width:100% !important;
-    max-width:100% !important;
+    max-width:min(100%, 300px) !important;
   }
 }
 
