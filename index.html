@@ -13199,7 +13199,7 @@ function openPostModal(id){
           const width = imageBox.clientWidth || 1;
           let adjustedDelta = deltaX;
           if((currentIdx === 0 && adjustedDelta > 0) || (currentIdx === imgs.length-1 && adjustedDelta < 0)){
-            adjustedDelta *= 0.3;
+            adjustedDelta = 0;
           }
           const deltaPercent = (adjustedDelta / width) * 100;
           const basePercent = -currentIdx * 100;
