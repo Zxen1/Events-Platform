@@ -46,7 +46,8 @@
       position: relative;
       width: 225px;
       height: 60px;
-      transform: translateZ(0);
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
       pointer-events: auto;
       isolation: isolate;
       touch-action: none;
@@ -70,7 +71,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate(-30px, -30px);
+      transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: 30;
     }
@@ -104,7 +105,7 @@
       top: 0;
       width: 150px;
       height: 40px;
-      transform: translate(-20px, -20px);
+      transform: translate3d(-20px, -20px, 0);
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
@@ -5646,7 +5647,7 @@ if (typeof slugify !== 'function') {
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = -(markerIconBaseSizePx * markerIconSize / 2 + markerLabelMarkerInsetPx);
+  const markerLabelBgTranslatePx = 0;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
@@ -6065,10 +6066,19 @@ if (typeof slugify !== 'function') {
         labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
       }
       const drawForeground = (ctx)=>{
+        if(!ctx){
+          return;
+        }
+        try{
+          ctx.imageSmoothingEnabled = true;
+          if('imageSmoothingQuality' in ctx){
+            ctx.imageSmoothingQuality = 'high';
+          }
+        }catch(err){}
         if(iconImg){
           const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
-          const destX = markerLabelMarkerInsetPx * pixelRatio;
-          const destY = (canvasHeight - iconSizePx) / 2;
+          const destX = Math.round(markerLabelMarkerInsetPx * pixelRatio);
+          const destY = Math.round((canvasHeight - iconSizePx) / 2);
           try{
             ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
           }catch(err){
@@ -6079,11 +6089,11 @@ if (typeof slugify !== 'function') {
           const fontSizePx = markerLabelTextSize * pixelRatio;
           const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
           const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-          let textY = (canvasHeight - totalHeight) / 2;
+          let textY = Math.round((canvasHeight - totalHeight) / 2);
           if(!Number.isFinite(textY) || textY < 0){
             textY = 0;
           }
-          const textX = markerLabelTextPaddingPx * pixelRatio;
+          const textX = Math.round(markerLabelTextPaddingPx * pixelRatio);
           ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
           ctx.textBaseline = 'top';
           ctx.textAlign = 'left';
@@ -6955,9 +6965,13 @@ if (typeof slugify !== 'function') {
                   flight.pitch = currentPitch;
                 }
                 if(typeof mapInstance.flyTo === 'function'){
-                  mapInstance.flyTo(Object.assign({}, flight, { speed: 1.6, curve: 1.42, easing: t => t }));
+                  mapInstance.flyTo(Object.assign({}, flight, {
+                    speed: 1.35,
+                    curve: 1.5,
+                    easing: t => 1 - Math.pow(1 - t, 3)
+                  }));
                 } else {
-                  mapInstance.easeTo(Object.assign({}, flight, { duration: 400 }));
+                  mapInstance.easeTo(Object.assign({}, flight, { duration: 650, easing: t => 1 - Math.pow(1 - t, 3) }));
                 }
               }catch(err){ console.error(err); }
             };
@@ -12169,21 +12183,32 @@ if (!map.__pillHooksInstalled) {
             const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
             const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
             markerIcon.referrerPolicy = 'no-referrer';
-            markerIcon.loading = 'lazy';
+            markerIcon.loading = 'eager';
             markerIcon.onerror = ()=>{
               markerIcon.onerror = null;
               markerIcon.src = markerFallback;
             };
             markerIcon.src = markerIconUrl || markerFallback;
+            requestAnimationFrame(() => {
+              if(typeof markerIcon.decode === 'function'){
+                markerIcon.decode().catch(()=>{});
+              }
+            });
 
             const markerPill = new Image();
             try{ markerPill.decoding = 'async'; }catch(e){}
             markerPill.alt = '';
             markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
             markerPill.className = 'mapmarker-pill';
+            markerPill.loading = 'eager';
             markerPill.style.opacity = '0.9';
             markerPill.style.visibility = 'visible';
             markerPill.draggable = false;
+            requestAnimationFrame(() => {
+              if(typeof markerPill.decode === 'function'){
+                markerPill.decode().catch(()=>{});
+              }
+            });
 
             const labelLines = getMarkerLabelLines(post);
             const markerLabel = document.createElement('div');
@@ -12220,7 +12245,7 @@ if (!map.__pillHooksInstalled) {
             try{ thumbImg.decoding = 'async'; }catch(e){}
             thumbImg.alt = '';
             const thumbFallback = 'assets/funmap-logo-small.png';
-            thumbImg.loading = 'lazy';
+            thumbImg.loading = 'eager';
             thumbImg.onerror = ()=>{
               thumbImg.onerror = null;
               thumbImg.src = thumbFallback;
@@ -12229,6 +12254,11 @@ if (!map.__pillHooksInstalled) {
             thumbImg.className = 'map-card-thumb';
             thumbImg.referrerPolicy = 'no-referrer';
             thumbImg.draggable = false;
+            requestAnimationFrame(() => {
+              if(typeof thumbImg.decode === 'function'){
+                thumbImg.decode().catch(()=>{});
+              }
+            });
 
             const labelEl = document.createElement('div');
             labelEl.className = 'map-card-label';
