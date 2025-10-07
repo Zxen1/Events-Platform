@@ -7262,14 +7262,26 @@ if (typeof slugify !== 'function') {
     }
 
     function popupIsHovered(popup){
+      if(window.__overCard){
+        return true;
+      }
       const el = getPopupElement(popup);
       if(!el) return false;
       if(el.matches(':hover')) return true;
       try {
-        return !!el.querySelector(':hover');
-      } catch(err){
-        return false;
-      }
+        const hovered = el.querySelector(':hover');
+        if(hovered) return true;
+      } catch(err){}
+      try {
+        const hoveredList = document.querySelectorAll(':hover');
+        for(let i = hoveredList.length - 1; i >= 0; i--){
+          const node = hoveredList[i];
+          if(node && (node === el || el.contains(node))){
+            return true;
+          }
+        }
+      } catch(err){}
+      return false;
     }
 
     function schedulePopupRemoval(popup, delay=180){
