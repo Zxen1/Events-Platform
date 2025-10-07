@@ -154,6 +154,13 @@
       z-index: 0;
       opacity: 1;
       visibility: visible;
+      filter: brightness(1);
+      transition: filter 0.2s ease;
+    }
+    .multi-post-map-card.is-pill-highlight .mapmarker-pill,
+    .multi-post-map-card.is-hover-highlight .mapmarker-pill,
+    .mapmarker-overlay:hover .multi-post-map-card .mapmarker-pill{
+      filter: brightness(1.2);
     }
     .multi-post-map-card .mapmarker{
       position: relative;
@@ -7239,33 +7246,14 @@ if (typeof slugify !== 'function') {
 
     const MULTI_POST_CARD_CLASS = 'multi-post-map-card';
     const MULTI_POST_CARD_PILL_CLASS = 'mapmarker-pill';
-    const MULTI_POST_CARD_PILL_HIGHLIGHT_CLASS = 'is-pill-highlight';
-    const MULTI_POST_CARD_HOVER_CLASS = 'is-hover-highlight';
     const MULTI_POST_PILL_BASE_URL = 'assets/icons-30/150x40-pill-70.webp';
-    const MULTI_POST_PILL_ACCENT_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
-
-    function multiPostCardShouldUseAccent(card){
-      if(!card || !card.classList) return false;
-      if(card.classList.contains(MULTI_POST_CARD_PILL_HIGHLIGHT_CLASS)) return true;
-      if(card.classList.contains(MULTI_POST_CARD_HOVER_CLASS)) return true;
-      let isHovered = false;
-      try { isHovered = card.matches(':hover'); } catch(err){ isHovered = false; }
-      if(isHovered) return true;
-      const overlay = card.closest('.mapmarker-overlay');
-      if(!overlay) return false;
-      let overlayHovered = false;
-      try { overlayHovered = overlay.matches(':hover'); } catch(err){ overlayHovered = false; }
-      return overlayHovered;
-    }
 
     function refreshMultiPostCardPill(card){
       if(!card || !card.classList || !card.classList.contains(MULTI_POST_CARD_CLASS)) return;
       const pill = card.querySelector(`.${MULTI_POST_CARD_PILL_CLASS}`);
       if(!pill) return;
-      const useAccent = multiPostCardShouldUseAccent(card);
-      const desiredSrc = useAccent ? MULTI_POST_PILL_ACCENT_URL : MULTI_POST_PILL_BASE_URL;
-      if(pill.src !== desiredSrc){
-        pill.src = desiredSrc;
+      if(pill.src !== MULTI_POST_PILL_BASE_URL){
+        pill.src = MULTI_POST_PILL_BASE_URL;
       }
     }
 
