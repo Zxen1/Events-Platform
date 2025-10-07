@@ -6947,7 +6947,7 @@ if (typeof slugify !== 'function') {
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const targetZoom = Math.min(8, maxAllowedZoom);
+              const targetZoom = Math.min(9, maxAllowedZoom);
               let finalZoom = targetZoom;
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
@@ -6970,9 +6970,9 @@ if (typeof slugify !== 'function') {
                   flight.pitch = currentPitch;
                 }
                 if(typeof mapInstance.flyTo === 'function'){
-                  mapInstance.flyTo(Object.assign({}, flight, { speed: 0.8, curve: 1.42, easing: t => t }));
+                  mapInstance.flyTo(Object.assign({}, flight, { speed: 1.6, curve: 1.42, easing: t => t }));
                 } else {
-                  mapInstance.easeTo(Object.assign({}, flight, { duration: 800 }));
+                  mapInstance.easeTo(Object.assign({}, flight, { duration: 400 }));
                 }
               }catch(err){ console.error(err); }
             };
