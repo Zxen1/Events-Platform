@@ -102,8 +102,8 @@
     .small-map-card,
     .multi-post-map-card{
       position: absolute;
-      left: 0;
-      top: 0;
+      left: 50%;
+      top: 50%;
       width: 150px;
       height: 40px;
       transform: translate(-50%, -50%);
@@ -117,10 +117,7 @@
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
-    .multi-post-map-card{
-      /* Keep the card centered on the marker */
-      transform: translate(-50%, -50%);
-    }
+    .multi-post-map-card{ pointer-events: auto; gap: 0; }
     .mapmarker{
       position: relative;
       left: auto;
@@ -149,33 +146,10 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .multi-post-map-container{
-      position: absolute;
-      left: 0;
-      top: 0;
-      transform: translate(-50%, -50%);
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      padding: 10px;
-      border-radius: 20px;
-      background: #000;
-      opacity: 0.7;
-      color: #fff;
-      pointer-events: none;
-      box-sizing: border-box;
-      z-index: 20010;
-    }
-    .multi-post-map-container.is-open{
-      display: flex;
-      pointer-events: auto;
-    }
-    .multi-post-map-card{
-      pointer-events: auto;
-      gap: 0;
-    }
     .multi-post-map-card .mapmarker-pill{
       z-index: 0;
+      opacity: 1;
+      visibility: visible;
     }
     .multi-post-map-card .mapmarker{
       position: relative;
@@ -194,15 +168,6 @@
     }
     .multi-post-map-label .mapmarker-label-line{
       width: 100%;
-    }
-    .multi-post-map-container .small-map-card{
-      position: relative;
-      transform: none;
-      pointer-events: auto;
-      left: auto;
-      top: auto;
-      width: 100%;
-      max-width: 260px;
     }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
@@ -7407,115 +7372,6 @@ if (typeof slugify !== 'function') {
       });
       updateMapFeatureHighlights(idsToHighlight);
     }
-
-    const multiPostContainerSet = new Set();
-
-    function getMultiPostContainer(el){
-      if(!el) return null;
-      if(typeof el.closest !== 'function') return null;
-      return el.closest('.multi-post-map-container');
-    }
-
-    function setMultiPostContainerOpen(container, open, options = {}){
-      if(!container) return;
-      const nextOpen = !!open;
-      const lock = !!options.lock;
-      if(nextOpen){
-        container.classList.add('is-open');
-        if(lock){
-          container.dataset.locked = 'true';
-        }
-        multiPostContainerSet.add(container);
-      } else {
-        if(container.dataset.locked === 'true' && !options.force){
-          return;
-        }
-        container.classList.remove('is-open');
-        if(container.dataset.locked){
-          delete container.dataset.locked;
-        }
-        multiPostContainerSet.delete(container);
-      }
-    }
-
-    function closeOtherMultiPostContainers(except){
-      multiPostContainerSet.forEach(container => {
-        if(container !== except){
-          setMultiPostContainerOpen(container, false, { force: true });
-        }
-      });
-    }
-
-    function syncMultiPostHighlights(container, active){
-      if(!container) return;
-      const flag = !!active;
-      const primaryCard = container.querySelector('.multi-post-map-card');
-      if(primaryCard){
-        primaryCard.classList.toggle('is-hover-highlight', flag);
-      }
-      container.querySelectorAll('.small-map-card').forEach(card => {
-        card.classList.toggle('is-hover-highlight', flag);
-      });
-    }
-
-    document.addEventListener('pointerenter', (event)=>{
-      const card = event.target && event.target.closest ? event.target.closest('.multi-post-map-card') : null;
-      if(!card) return;
-      const container = getMultiPostContainer(card);
-      if(!container) return;
-      closeOtherMultiPostContainers(container);
-      setMultiPostContainerOpen(container, true);
-      syncMultiPostHighlights(container, true);
-    }, true);
-
-    document.addEventListener('pointerenter', (event)=>{
-      const container = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
-      if(!container) return;
-      setMultiPostContainerOpen(container, true);
-      syncMultiPostHighlights(container, true);
-    }, true);
-
-    document.addEventListener('pointerout', (event)=>{
-      const container = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
-      if(!container) return;
-      const related = event.relatedTarget;
-      if(related && container.contains(related)){
-        return;
-      }
-      if(container.dataset.locked === 'true'){
-        syncMultiPostHighlights(container, false);
-        return;
-      }
-      syncMultiPostHighlights(container, false);
-      setMultiPostContainerOpen(container, false);
-    }, true);
-
-    document.addEventListener('click', (event)=>{
-      const card = event.target && event.target.closest ? event.target.closest('.multi-post-map-card') : null;
-      if(!card) return;
-      const container = getMultiPostContainer(card);
-      if(!container) return;
-      const locked = container.dataset.locked === 'true';
-      if(locked){
-        if(container.dataset.locked){
-          delete container.dataset.locked;
-        }
-        syncMultiPostHighlights(container, false);
-        setMultiPostContainerOpen(container, false, { force: true });
-      } else {
-        closeOtherMultiPostContainers(container);
-        setMultiPostContainerOpen(container, true, { lock: true });
-        syncMultiPostHighlights(container, true);
-      }
-      try{ event.preventDefault(); }catch(err){}
-      try{ event.stopPropagation(); }catch(err){}
-    }, true);
-
-    document.addEventListener('pointerdown', (event)=>{
-      const inside = event.target && event.target.closest ? event.target.closest('.multi-post-map-container') : null;
-      if(inside) return;
-      closeOtherMultiPostContainers(null);
-    }, true);
 
     function hashString(str){
       let hash = 0;
