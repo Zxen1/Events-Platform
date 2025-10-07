@@ -10628,13 +10628,18 @@ function makePosts(){
           postsButton.classList.toggle('is-disabled', !postsEnabled);
         }
         document.body.classList.toggle('hide-posts-ui', !postsEnabled);
+        const historyActive = document.body.classList.contains('show-history');
         if(!postsEnabled){
-          if(typeof setMode === 'function' && document.body.classList.contains('mode-posts')){
+          if(typeof setMode === 'function' && document.body.classList.contains('mode-posts') && !historyActive){
             setMode('map', true);
+          } else if(typeof adjustBoards === 'function'){
+            adjustBoards();
           }
-          document.body.classList.remove('show-history');
-          if(typeof adjustBoards === 'function'){ adjustBoards(); }
+          if(!historyActive){
+            document.body.classList.remove('show-history');
+          }
           if(typeof updateModeToggle === 'function'){ updateModeToggle(); }
+          return;
         }
       };
 
