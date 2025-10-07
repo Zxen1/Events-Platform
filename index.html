@@ -186,13 +186,10 @@
       background-color: #2e3a72;
     }
     .small-map-card.is-pill-highlight,
-    .small-map-card.is-hover-highlight,
-    .multi-post-map-card.is-pill-highlight,
-    .multi-post-map-card.is-hover-highlight{
+    .small-map-card.is-hover-highlight{
       background-color: #2e3a72;
     }
-    .mapmarker-overlay:hover .small-map-card,
-    .mapmarker-overlay:hover .multi-post-map-card{
+    .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
     }
     .big-map-card-thumb{
@@ -7240,6 +7237,42 @@ if (typeof slugify !== 'function') {
     ];
     window.__overCard = window.__overCard || false;
 
+    const MULTI_POST_CARD_CLASS = 'multi-post-map-card';
+    const MULTI_POST_CARD_PILL_CLASS = 'mapmarker-pill';
+    const MULTI_POST_CARD_PILL_HIGHLIGHT_CLASS = 'is-pill-highlight';
+    const MULTI_POST_CARD_HOVER_CLASS = 'is-hover-highlight';
+    const MULTI_POST_PILL_BASE_URL = 'assets/icons-30/150x40-pill-70.webp';
+    const MULTI_POST_PILL_ACCENT_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+
+    function multiPostCardShouldUseAccent(card){
+      if(!card || !card.classList) return false;
+      if(card.classList.contains(MULTI_POST_CARD_PILL_HIGHLIGHT_CLASS)) return true;
+      if(card.classList.contains(MULTI_POST_CARD_HOVER_CLASS)) return true;
+      let isHovered = false;
+      try { isHovered = card.matches(':hover'); } catch(err){ isHovered = false; }
+      if(isHovered) return true;
+      const overlay = card.closest('.mapmarker-overlay');
+      if(!overlay) return false;
+      let overlayHovered = false;
+      try { overlayHovered = overlay.matches(':hover'); } catch(err){ overlayHovered = false; }
+      return overlayHovered;
+    }
+
+    function refreshMultiPostCardPill(card){
+      if(!card || !card.classList || !card.classList.contains(MULTI_POST_CARD_CLASS)) return;
+      const pill = card.querySelector(`.${MULTI_POST_CARD_PILL_CLASS}`);
+      if(!pill) return;
+      const useAccent = multiPostCardShouldUseAccent(card);
+      const desiredSrc = useAccent ? MULTI_POST_PILL_ACCENT_URL : MULTI_POST_PILL_BASE_URL;
+      if(pill.src !== desiredSrc){
+        pill.src = desiredSrc;
+      }
+    }
+
+    function refreshAllMultiPostCardPills(){
+      document.querySelectorAll(`.${MULTI_POST_CARD_CLASS}`).forEach(refreshMultiPostCardPill);
+    }
+
     function getPopupElement(popup){
       return popup && typeof popup.getElement === 'function' ? popup.getElement() : null;
     }
@@ -7319,6 +7352,9 @@ if (typeof slugify !== 'function') {
       });
       document.querySelectorAll(`.small-map-card.${markerHighlightClass}, .multi-post-map-card.${markerHighlightClass}`).forEach(el => {
         el.classList.remove(markerHighlightClass);
+        if(el.classList.contains(MULTI_POST_CARD_CLASS)){
+          refreshMultiPostCardPill(el);
+        }
       });
 
       const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
@@ -7347,6 +7383,7 @@ if (typeof slugify !== 'function') {
       ].filter(isValidMarkerId)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
+        refreshAllMultiPostCardPills();
         return;
       }
       const escapeAttr = (value)=> String(value).replace(/"/g, '\\"');
@@ -7367,6 +7404,9 @@ if (typeof slugify !== 'function') {
         applyHighlight(openHeader);
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .small-map-card, .mapmarker-overlay[data-id="${selectorId}"] .multi-post-map-card`).forEach(el => {
           el.classList.add(markerHighlightClass);
+          if(el.classList.contains(MULTI_POST_CARD_CLASS)){
+            refreshMultiPostCardPill(el);
+          }
         });
         document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"] .big-map-card`).forEach(el => {
           el.classList.add(highlightClass);
@@ -7386,9 +7426,11 @@ if (typeof slugify !== 'function') {
         const shouldHighlight = isHoveredOverlay || shouldHighlightByVenue || shouldHighlightById;
         overlay.querySelectorAll('.multi-post-map-card').forEach(card => {
           card.classList.toggle(markerHighlightClass, shouldHighlight);
+          refreshMultiPostCardPill(card);
         });
       });
       updateMapFeatureHighlights(idsToHighlight);
+      refreshAllMultiPostCardPills();
     }
 
     function hashString(str){
@@ -9596,6 +9638,7 @@ function makePosts(){
             const venueName = primary ? getVenueNameForKey(primary, venueKey) : '';
             venueLine.textContent = venueName;
           }
+          refreshMultiPostCardPill(card);
         }
         if(hoverPopup && typeof getPopupElement === 'function'){
           const popupEl = getPopupElement(hoverPopup);
@@ -12442,9 +12485,19 @@ if (!map.__pillHooksInstalled) {
                 markerLabel.appendChild(venueLineEl);
 
                 markerContainer.append(markerPill, markerIcon, markerLabel);
+                refreshMultiPostCardPill(markerContainer);
                 overlayRoot.append(markerContainer);
                 overlayRoot.classList.add('is-card-visible');
                 overlayRoot.style.pointerEvents = '';
+                if(!overlayRoot.__multiPostPillHoverBound){
+                  overlayRoot.__multiPostPillHoverBound = true;
+                  overlayRoot.addEventListener('mouseenter', ()=>{
+                    refreshMultiPostCardPill(markerContainer);
+                  });
+                  overlayRoot.addEventListener('mouseleave', ()=>{
+                    refreshMultiPostCardPill(markerContainer);
+                  });
+                }
 
                 const handleMultiCardClick = (ev)=>{
                   ev.preventDefault();
@@ -12483,12 +12536,14 @@ if (!map.__pillHooksInstalled) {
                 });
                 markerContainer.addEventListener('mouseenter', ()=>{
                   window.__overCard = true;
+                  refreshMultiPostCardPill(markerContainer);
                 });
                 markerContainer.addEventListener('mouseleave', ()=>{
                   window.__overCard = false;
                   if(listLocked) return;
                   const currentPopup = hoverPopup;
                   schedulePopupRemoval(currentPopup, 160);
+                  refreshMultiPostCardPill(markerContainer);
                 });
               }
 
@@ -12504,6 +12559,7 @@ if (!map.__pillHooksInstalled) {
               if(pillImg){
                 pillImg.style.opacity = '';
                 pillImg.style.visibility = '';
+                refreshMultiPostCardPill(markerContainer);
               }
 
               const countLine = markerContainer.querySelector('.multi-post-map-count');
@@ -13046,6 +13102,9 @@ if (!map.__pillHooksInstalled) {
       const relatedSelector = `.mapmarker-overlay[data-id="${selectorId}"]`;
       document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .multi-post-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
         el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
+        if(el.classList && el.classList.contains(MULTI_POST_CARD_CLASS)){
+          refreshMultiPostCardPill(el);
+        }
       });
       const overlaysToToggle = new Set();
       const multiOverlay = cardEl.closest('.mapmarker-overlay[data-multi-post-ids]');
@@ -13073,6 +13132,7 @@ if (!map.__pillHooksInstalled) {
       overlaysToToggle.forEach(overlay => {
         overlay.querySelectorAll('.multi-post-map-card').forEach(el => {
           el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
+          refreshMultiPostCardPill(el);
         });
       });
     }
