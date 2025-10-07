@@ -52,6 +52,7 @@
       isolation: isolate;
       touch-action: none;
       border-radius: 999px;
+      transform-origin: 30px 30px;
     }
     .mapmarker-overlay{
       position: relative;
@@ -74,10 +75,6 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: 30;
-    }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
-      opacity: 0;
-      visibility: hidden;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -108,13 +105,15 @@
       transform: translate3d(-20px, -20px, 0);
       pointer-events: none;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.92);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px 5px 5px;
+      padding: 5px 10px 5px 6px;
       box-sizing: border-box;
       transition: background-color 0.2s ease;
+      contain: layout paint;
     }
     .mapmarker{
       position: relative;
@@ -125,24 +124,12 @@
       pointer-events: none;
       z-index: 2;
       flex: 0 0 30px;
+      display: block;
     }
     .map--midzoom-markers .mapmarker{
       border-radius: 50%;
       box-shadow: 0 0 0 3px #000;
       box-sizing: border-box;
-    }
-    .mapmarker-pill{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 150px;
-      height: 40px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
     }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
@@ -206,7 +193,7 @@
       padding: 0;
       pointer-events: none;
       color: #fff;
-      gap: 1px;
+      gap: 2px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
       z-index: 3;
@@ -215,6 +202,8 @@
       min-width: 0;
       justify-content: center;
       align-items: flex-start;
+      line-height: 1.25;
+      text-rendering: optimizeLegibility;
     }
 
     .mapmarker-label-line{
@@ -223,6 +212,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.25;
     }
     .mapmarker-label-line:first-child{ font-weight: 600; }
     .mapmarker-label-line:not(:first-child){ font-weight: 400; }
@@ -12195,21 +12185,6 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const markerPill = new Image();
-            try{ markerPill.decoding = 'async'; }catch(e){}
-            markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
-            markerPill.className = 'mapmarker-pill';
-            markerPill.loading = 'eager';
-            markerPill.style.opacity = '0.9';
-            markerPill.style.visibility = 'visible';
-            markerPill.draggable = false;
-            requestAnimationFrame(() => {
-              if(typeof markerPill.decode === 'function'){
-                markerPill.decode().catch(()=>{});
-              }
-            });
-
             const labelLines = getMarkerLabelLines(post);
             const markerLabel = document.createElement('div');
             markerLabel.className = 'mapmarker-label';
@@ -12224,7 +12199,7 @@ if (!map.__pillHooksInstalled) {
               markerLabel.appendChild(markerLine2);
             }
 
-            markerContainer.append(markerPill, markerIcon, markerLabel);
+            markerContainer.append(markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
