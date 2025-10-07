@@ -6934,9 +6934,9 @@ if (typeof slugify !== 'function') {
                   flight.pitch = currentPitch;
                 }
                 if(typeof mapInstance.flyTo === 'function'){
-                  mapInstance.flyTo(Object.assign({}, flight, { speed: 0.8, curve: 1.42, easing: t => t }));
+                  mapInstance.flyTo(Object.assign({}, flight, { speed: 1.6, curve: 1.42, easing: t => t }));
                 } else {
-                  mapInstance.easeTo(Object.assign({}, flight, { duration: 800 }));
+                  mapInstance.easeTo(Object.assign({}, flight, { duration: 400 }));
                 }
               }catch(err){ console.error(err); }
             };
@@ -8921,6 +8921,19 @@ function makePosts(){
 }
 
     let ALL_POSTS_CACHE = null;
+    let ALL_POSTS_BY_ID = null;
+    function rebuildAllPostsIndex(cache){
+      if(!Array.isArray(cache)){
+        ALL_POSTS_BY_ID = null;
+        return;
+      }
+      const map = new Map();
+      cache.forEach(item => {
+        if(!item || item.id === undefined || item.id === null) return;
+        map.set(String(item.id), item);
+      });
+      ALL_POSTS_BY_ID = map;
+    }
     function getAllPostsCache(options = {}){
       const { allowInitialize = true } = options;
       if(Array.isArray(ALL_POSTS_CACHE)){
@@ -8930,7 +8943,25 @@ function makePosts(){
         return null;
       }
       ALL_POSTS_CACHE = makePosts();
+      rebuildAllPostsIndex(ALL_POSTS_CACHE);
       return ALL_POSTS_CACHE;
+    }
+    function getPostByIdAnywhere(id){
+      if(id === undefined || id === null) return null;
+      const normalizedId = String(id);
+      const checkList = (list) => {
+        if(!Array.isArray(list)) return null;
+        return list.find(entry => entry && String(entry.id) === normalizedId) || null;
+      };
+      const loaded = checkList(posts);
+      if(loaded) return loaded;
+      if(!ALL_POSTS_BY_ID || !(ALL_POSTS_BY_ID instanceof Map)){
+        const cache = getAllPostsCache({ allowInitialize: true });
+        if(Array.isArray(cache)){
+          rebuildAllPostsIndex(cache);
+        }
+      }
+      return ALL_POSTS_BY_ID instanceof Map ? (ALL_POSTS_BY_ID.get(normalizedId) || null) : null;
     }
     const EMPTY_FEATURE_COLLECTION = { type:'FeatureCollection', features: [] };
 
@@ -10641,7 +10672,7 @@ function makePosts(){
         spinEnabled = false;
         localStorage.setItem('spinGlobe', 'false');
         stopSpin();
-        const p = posts.find(x=>x.id===id); if(!p) return;
+        const p = getPostByIdAnywhere(id); if(!p) return;
         activePostId = id;
         selectedVenueKey = null;
         updateSelectedMarkerRing();
@@ -10704,7 +10735,7 @@ function makePosts(){
               cleanupDetailMap(mapNode);
             }
             const exId = ex.dataset && ex.dataset.id;
-            const prev = posts.find(x=> x.id===exId);
+            const prev = getPostByIdAnywhere(exId);
             if(prev){ ex.replaceWith(card(prev, fromHistory ? false : true)); } else { ex.remove(); }
           }
         })();
@@ -10844,7 +10875,7 @@ function makePosts(){
         const container = openEl.closest('.post-board, #recentsBoard') || postsWideEl;
         const isHistory = container && container.id === 'recentsBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
-        const post = id ? posts.find(x => x.id === id) : null;
+        const post = id ? getPostByIdAnywhere(id) : null;
         const detachedColumn = document.querySelector('.post-mode-boards > .second-post-column');
         if(detachedColumn){
           detachedColumn.classList.remove('is-visible');
@@ -12645,11 +12676,12 @@ if (!map.__pillHooksInstalled) {
     function renderHistoryBoard(){
       if(!recentsBoard) return;
       recentsBoard.innerHTML='';
-      viewHistory = viewHistory.filter(v => posts.some(p => p.id === v.id));
+      const validHistory = viewHistory.filter(v => getPostByIdAnywhere(v.id));
+      viewHistory = validHistory;
       saveHistory();
       const items = viewHistory.slice(0,100);
       for(const v of items){
-        const p = posts.find(x=>x.id===v.id);
+        const p = getPostByIdAnywhere(v.id);
         if(!p) continue;
         if(!v.lastOpened) v.lastOpened = Date.now();
         const labelEl = document.createElement('div');
@@ -12674,7 +12706,7 @@ if (!map.__pillHooksInstalled) {
     renderHistoryBoard();
 
 function openPostModal(id){
-      const p = posts.find(x=>x.id===id);
+      const p = getPostByIdAnywhere(id);
       if(!p) return;
       activePostId = id;
       updateSelectedMarkerRing();
@@ -12741,10 +12773,18 @@ function openPostModal(id){
         return;
       }
       const m = location.hash.match(/\/post\/([^\/]+)-([^\/]+)$/);
-      if(!m || !(Array.isArray(posts) && posts.length)) return;
+      if(!m) return;
       const slug = decodeURIComponent(m[1]);
       const created = m[2];
-      const post = posts.find(x=>x.slug===slug && x.created===created);
+      const matchPost = (list) => {
+        if(!Array.isArray(list) || !list.length) return null;
+        return list.find(x => x && x.slug === slug && x.created === created) || null;
+      };
+      let post = matchPost(posts);
+      if(!post){
+        const cache = getAllPostsCache({ allowInitialize: true });
+        post = matchPost(cache);
+      }
       if(post){ openPostModal(post.id); }
     }
 
