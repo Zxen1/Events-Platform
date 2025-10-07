@@ -109,7 +109,6 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
       border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -117,7 +116,12 @@
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
-    .multi-post-map-card{ pointer-events: auto; gap: 0; }
+    .small-map-card{ background: rgba(0, 0, 0, 0.9); }
+    .multi-post-map-card{
+      pointer-events: auto;
+      gap: 0;
+      background: transparent;
+    }
     .mapmarker{
       position: relative;
       left: auto;
@@ -12989,13 +12993,30 @@ if (!map.__pillHooksInstalled) {
       document.querySelectorAll(`${relatedSelector} .small-map-card, ${relatedSelector} .multi-post-map-card, ${relatedSelector} .big-map-card`).forEach(el => {
         el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
       });
-      document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
-        const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
-        if(!idsAttr) return;
-        const overlayIds = parseMultiPostIds(idsAttr);
-        if(!overlayIds.length) return;
-        const shouldToggle = overlayIds.includes(String(id));
-        if(!shouldToggle) return;
+      const overlaysToToggle = new Set();
+      const multiOverlay = cardEl.closest('.mapmarker-overlay[data-multi-post-ids]');
+      if(multiOverlay){
+        overlaysToToggle.add(multiOverlay);
+      }
+      const cardVenueKey = cardEl.dataset.venueKey
+        || (multiOverlay && multiOverlay.dataset ? multiOverlay.dataset.venueKey : '');
+      if(cardVenueKey){
+        const venueSelector = escapeCardSelector(cardVenueKey);
+        document
+          .querySelectorAll(`.mapmarker-overlay[data-venue-key="${venueSelector}"][data-multi-post-ids]`)
+          .forEach(overlay => overlaysToToggle.add(overlay));
+      }
+      if(!overlaysToToggle.size){
+        document.querySelectorAll('.mapmarker-overlay[data-multi-post-ids]').forEach(overlay => {
+          const idsAttr = overlay && overlay.dataset ? overlay.dataset.multiPostIds || '' : '';
+          if(!idsAttr) return;
+          const overlayIds = parseMultiPostIds(idsAttr);
+          if(!overlayIds.length) return;
+          if(!overlayIds.includes(String(id))) return;
+          overlaysToToggle.add(overlay);
+        });
+      }
+      overlaysToToggle.forEach(overlay => {
         overlay.querySelectorAll('.multi-post-map-card').forEach(el => {
           el.classList.toggle(HOVER_HIGHLIGHT_CLASS, highlight);
         });
