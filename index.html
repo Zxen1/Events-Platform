@@ -7505,6 +7505,7 @@ if (typeof slugify !== 'function') {
           return;
         }
         window.__overCard = false;
+        runOverlayCleanup(target);
         try{ target.remove(); }catch(e){}
         if(hoverPopup === target){
           hoverPopup = null;
@@ -7515,6 +7516,27 @@ if (typeof slugify !== 'function') {
 
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
     const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
+    const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
+
+    function registerOverlayCleanup(overlayEl, fn){
+      if(!overlayEl || typeof fn !== 'function') return;
+      const list = Array.isArray(overlayEl.__cleanupFns)
+        ? overlayEl.__cleanupFns
+        : (overlayEl.__cleanupFns = []);
+      list.push(fn);
+    }
+
+    function runOverlayCleanup(target){
+      if(!target) return;
+      const el = typeof target.getElement === 'function' ? target.getElement() : target;
+      if(!el) return;
+      const fns = Array.isArray(el.__cleanupFns) ? el.__cleanupFns.slice() : [];
+      if(!fns.length) return;
+      el.__cleanupFns = [];
+      fns.forEach(fn => {
+        try{ fn(); }catch(err){}
+      });
+    }
 
     function setSmallMapCardPillImage(cardEl, highlighted){
       if(!cardEl) return;
@@ -7532,6 +7554,48 @@ if (typeof slugify !== 'function') {
         : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
       if((pillImg.getAttribute('src') || '') !== targetSrc){
         pillImg.setAttribute('src', targetSrc);
+      }
+    }
+
+    function enforceSmallMultiMapCardIcon(img, overlayEl){
+      if(!img) return;
+      const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
+      const apply = ()=>{
+        const currentSrc = img.getAttribute('src') || '';
+        if(currentSrc !== targetSrc){
+          img.setAttribute('src', targetSrc);
+        }
+      };
+      apply();
+      const onLoad = ()=> apply();
+      const onError = ()=> apply();
+      img.addEventListener('load', onLoad);
+      img.addEventListener('error', onError);
+      if(overlayEl){
+        registerOverlayCleanup(overlayEl, ()=>{
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+        });
+      }
+      if(typeof MutationObserver === 'function'){
+        const observer = new MutationObserver(()=>{
+          if(!img.isConnected){
+            observer.disconnect();
+            return;
+          }
+          apply();
+        });
+        try{
+          observer.observe(img, { attributes: true, attributeFilter: ['src'] });
+        }catch(err){
+          try{ observer.disconnect(); }catch(e){}
+          return;
+        }
+        if(overlayEl){
+          registerOverlayCleanup(overlayEl, ()=>{
+            try{ observer.disconnect(); }catch(e){}
+          });
+        }
       }
     }
 
@@ -11044,6 +11108,7 @@ function makePosts(){
             }
           }
           if(shouldRemovePopup){
+            runOverlayCleanup(hoverPopup);
             try{ hoverPopup.remove(); }catch(err){}
             hoverPopup = null;
           }
@@ -12615,7 +12680,8 @@ if (!map.__pillHooksInstalled) {
             markerIcon.loading = 'eager';
             markerIcon.referrerPolicy = 'no-referrer';
             if(isMultiVenue){
-              markerIcon.src = 'assets/icons-30/multi-post-icon-30.webp';
+              markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
+              enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
               const markerSources = window.subcategoryMarkers || {};
               const markerIds = window.subcategoryMarkerIds || {};
@@ -12871,6 +12937,7 @@ if (!map.__pillHooksInstalled) {
             if(touchMarker !== id || !hoverPopup){
               touchMarker = id;
               if(hoverPopup){
+                runOverlayCleanup(hoverPopup);
                 try{ hoverPopup.remove(); }catch(err){}
                 hoverPopup = null;
                 updateSelectedMarkerRing();
@@ -12897,6 +12964,7 @@ if (!map.__pillHooksInstalled) {
         const feats = map.queryRenderedFeatures(e.point);
         if(!feats.length){
           if(hoverPopup){
+            runOverlayCleanup(hoverPopup);
             try{ hoverPopup.remove(); }catch(err){}
             hoverPopup = null;
           }
@@ -12925,6 +12993,7 @@ if (!map.__pillHooksInstalled) {
           return;
         }
         if(hoverPopup){
+          runOverlayCleanup(hoverPopup);
           try{ hoverPopup.remove(); }catch(e){}
           hoverPopup = null;
           updateSelectedMarkerRing();
