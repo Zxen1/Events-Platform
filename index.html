@@ -5065,6 +5065,15 @@ img.thumb{
     return `${url}?${ASSET_VERSION}`;
   }
 
+  function toAbsoluteUrl(url){
+    if (!url) return url;
+    try {
+      return new URL(url, window.location.href).href;
+    } catch (err) {
+      return url;
+    }
+  }
+
   function bustCacheAttributes(){
     const attrs = ['src', 'href'];
     attrs.forEach((attr) => {
@@ -5105,12 +5114,12 @@ img.thumb{
       short_name: 'Events',
       icons: [
         {
-          src: withVersion('assets/favicons/android-chrome-192x192.png'),
+          src: toAbsoluteUrl(withVersion('assets/favicons/android-chrome-192x192.png')),
           sizes: '192x192',
           type: 'image/png'
         },
         {
-          src: withVersion('assets/favicons/android-chrome-512x512.png'),
+          src: toAbsoluteUrl(withVersion('assets/favicons/android-chrome-512x512.png')),
           sizes: '512x512',
           type: 'image/png'
         }
@@ -6026,7 +6035,7 @@ if (typeof slugify !== 'function') {
   // or text. Each composite registers both a base pill and its accent variant,
   // so cap the composites to keep the total image count comfortably below the
   // platform ceiling.
-  const MARKER_LABEL_COMPOSITE_LIMIT = 400;
+  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
