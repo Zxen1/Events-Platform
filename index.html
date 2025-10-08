@@ -13415,7 +13415,7 @@ if (!map.__pillHooksInstalled) {
 
     document.addEventListener('mouseover', event => {
       const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      if(!cardEl) return;
       const related = event.relatedTarget;
       if(related && cardEl.contains(related)) return;
       const id = cardEl.dataset ? cardEl.dataset.id : null;
@@ -13425,7 +13425,7 @@ if (!map.__pillHooksInstalled) {
 
     document.addEventListener('mouseout', event => {
       const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      if(!cardEl) return;
       const related = event.relatedTarget;
       if(related && cardEl.contains(related)) return;
       const id = cardEl.dataset ? cardEl.dataset.id : null;
