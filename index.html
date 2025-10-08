@@ -22,6 +22,11 @@
       cursor: pointer;
     }
 
+    .mapboxgl-popup-track-pointer * {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
     .logo img.is-loading {
       animation: logo-rotate 1s linear infinite;
       transform-origin: 50% 50%;
@@ -5012,6 +5017,108 @@ img.thumb{
     target.removeEventListener('scroll', listener, capture);
   }
   </script>
+
+<script>
+(function(){
+  const ASSET_VERSION = 'v=20240705';
+  const assetPattern = /^(?:\.\/)?assets\//;
+
+  function withVersion(url){
+    if (!url || url.includes('?')) return url;
+    if (!assetPattern.test(url)) return url;
+    if (url.startsWith('./')) {
+      return `./${url.slice(2)}?${ASSET_VERSION}`;
+    }
+    return `${url}?${ASSET_VERSION}`;
+  }
+
+  function bustCacheAttributes(){
+    const attrs = ['src', 'href'];
+    attrs.forEach((attr) => {
+      document.querySelectorAll(`[${attr}]`).forEach((node) => {
+        const current = node.getAttribute(attr);
+        const updated = withVersion(current);
+        if (updated && updated !== current) {
+          node.setAttribute(attr, updated);
+        }
+      });
+    });
+
+    document.querySelectorAll('[srcset]').forEach((node) => {
+      const srcset = node.getAttribute('srcset');
+      if (!srcset) return;
+      const rewritten = srcset
+        .split(',')
+        .map((entry) => {
+          const trimmed = entry.trim();
+          if (!trimmed) return trimmed;
+          const parts = trimmed.split(/\s+/, 2);
+          const nextUrl = withVersion(parts[0]);
+          if (!nextUrl || nextUrl === parts[0]) return trimmed;
+          return parts[1] ? `${nextUrl} ${parts[1]}` : nextUrl;
+        })
+        .join(', ');
+      if (rewritten !== srcset) {
+        node.setAttribute('srcset', rewritten);
+      }
+    });
+  }
+
+  function updateManifest(){
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    const manifest = {
+      name: 'Events Platform',
+      short_name: 'Events',
+      icons: [
+        {
+          src: withVersion('assets/favicons/android-chrome-192x192.png'),
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: withVersion('assets/favicons/android-chrome-512x512.png'),
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ],
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone'
+    };
+    const serialized = encodeURIComponent(JSON.stringify(manifest));
+    link.setAttribute('href', `data:application/manifest+json;charset=utf-8,${serialized}`);
+  }
+
+  function hideGeocoderIconFromAT(){
+    let applied = false;
+    document.querySelectorAll('.mapboxgl-ctrl-geocoder--icon').forEach((icon) => {
+      if (icon.getAttribute('aria-hidden') === 'true') return;
+      icon.setAttribute('aria-hidden', 'true');
+      icon.setAttribute('role', 'presentation');
+      applied = true;
+    });
+    return applied;
+  }
+
+  function setupGeocoderObserver(){
+    const observer = new MutationObserver(() => {
+      if (hideGeocoderIconFromAT()) {
+        /* noop */
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => observer.disconnect(), 5000);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    bustCacheAttributes();
+    updateManifest();
+    hideGeocoderIconFromAT();
+    setupGeocoderObserver();
+  });
+})();
+</script>
 
 <script>
 if (typeof slugify !== 'function') {
