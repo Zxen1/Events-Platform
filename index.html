@@ -121,6 +121,33 @@
       box-sizing: border-box;
       transition: background-color 0.2s ease;
     }
+    .small-multi-post-map-card{
+      gap: 5px;
+      padding-right: 10px;
+    }
+    .small-multi-post-map-card .mapmarker{
+      flex: 0 0 30px;
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+    .small-multi-post-map-card .mapmarker-label{
+      position: static;
+      left: auto;
+      top: auto;
+      width: auto;
+      height: auto;
+      padding: 0;
+      gap: 2px;
+      align-items: flex-start;
+    }
+    .small-multi-post-map-card .mapmarker-label-line{
+      width: auto;
+      text-align: left;
+    }
+    .small-multi-post-map-card .mapmarker-label-line:first-child{
+      font-weight: 600;
+    }
     .mapmarker{
       position: relative;
       left: auto;
@@ -176,6 +203,12 @@
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 40;
+    }
+    .big-multi-post-map-card .map-card-thumb{
+      border-radius: 12px;
+      object-fit: contain;
+      background: transparent;
+      box-shadow: none;
     }
     .map-card-label,
     .mapmarker-label{
@@ -7502,6 +7535,41 @@ if (typeof slugify !== 'function') {
       }
     }
 
+    function escapeAttrValue(value){
+      const raw = String(value);
+      if(typeof window !== 'undefined' && window.CSS && typeof window.CSS.escape === 'function'){
+        try{ return window.CSS.escape(raw); }catch(err){ /* fall through */ }
+      }
+      return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+    }
+
+    function getOverlayMultiIds(overlay){
+      if(!overlay || !overlay.dataset) return [];
+      const raw = overlay.dataset.multiIds || '';
+      if(!raw) return [];
+      return raw.split(',').map(id => id.trim()).filter(Boolean);
+    }
+
+    function findMarkerOverlaysById(id){
+      if(id === undefined || id === null) return [];
+      const strId = String(id);
+      const matches = new Set();
+      const escaped = escapeAttrValue(strId);
+      if(typeof document !== 'undefined' && document.querySelectorAll){
+        try{
+          document.querySelectorAll(`.mapmarker-overlay[data-id="${escaped}"]`).forEach(el => matches.add(el));
+        }catch(err){ /* ignore selector issues */ }
+        document.querySelectorAll('.mapmarker-overlay[data-multi-ids]').forEach(el => {
+          if(matches.has(el)) return;
+          const multiIds = getOverlayMultiIds(el);
+          if(multiIds.includes(strId)){
+            matches.add(el);
+          }
+        });
+      }
+      return Array.from(matches);
+    }
+
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
@@ -7555,6 +7623,7 @@ if (typeof slugify !== 'function') {
         ? hoverPopup.getElement()
         : null;
       const overlayId = overlayEl && overlayEl.dataset ? String(overlayEl.dataset.id || '') : '';
+      const overlayMultiIds = overlayEl ? getOverlayMultiIds(overlayEl) : [];
       let fallbackId = '';
       if(!overlayId){
         if(activePostId !== undefined && activePostId !== null){
@@ -7564,18 +7633,11 @@ if (typeof slugify !== 'function') {
           fallbackId = openEl && openEl.dataset ? String(openEl.dataset.id || '') : '';
         }
       }
-      const idsToHighlight = Array.from(new Set([overlayId, fallbackId].filter(Boolean)));
+      const idsToHighlight = Array.from(new Set([overlayId, fallbackId, ...(overlayMultiIds || [])].filter(Boolean)));
       if(!idsToHighlight.length){
         updateMapFeatureHighlights([]);
         return;
       }
-      const escapeAttr = (value)=>{
-        const raw = String(value);
-        if(window.CSS && typeof window.CSS.escape === 'function'){
-          try{ return window.CSS.escape(raw); }catch(err){ /* fall through */ }
-        }
-        return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
-      };
       const applyHighlight = (el)=>{
         if(!el) return;
         if(el.dataset && !Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -7591,7 +7653,7 @@ if (typeof slugify !== 'function') {
       const targetSeen = new Set();
       idsToHighlight.forEach(id => {
         const strId = String(id);
-        const selectorId = escapeAttr(strId);
+        const selectorId = escapeAttrValue(strId);
         const listCard = postsWideEl ? postsWideEl.querySelector(`.post-card[data-id="${selectorId}"]`) : null;
         applyHighlight(listCard);
         const openHeader = document.querySelector(`.open-post[data-id="${selectorId}"] .post-header`);
@@ -7600,7 +7662,7 @@ if (typeof slugify !== 'function') {
           ? overlayVenueKey
           : globalVenueKey;
         const normalizedVenue = preferredVenue ? String(preferredVenue).trim() : '';
-        const overlays = Array.from(document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"]`));
+        const overlays = findMarkerOverlaysById(strId);
         overlays.forEach(overlay => {
           const overlayKey = overlay && overlay.dataset ? String(overlay.dataset.venueKey || '').trim() : '';
           if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
@@ -12345,17 +12407,99 @@ if (!map.__pillHooksInstalled) {
           try{
             const overlayRoot = document.createElement('div');
             overlayRoot.className = 'mapmarker-overlay';
-            overlayRoot.dataset.id = String(post.id);
-            if(overlayVenueKey){
-              overlayRoot.dataset.venueKey = overlayVenueKey;
-            }
             overlayRoot.setAttribute('aria-hidden', 'true');
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
 
+            const parseVenueKey = (key)=>{
+              if(typeof key !== 'string') return null;
+              const parts = key.split(',');
+              if(parts.length !== 2) return null;
+              const lng = Number(parts[0]);
+              const lat = Number(parts[1]);
+              if(!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+              return { lng, lat };
+            };
+
+            let resolvedVenueKey = typeof overlayVenueKey === 'string' && overlayVenueKey ? overlayVenueKey : '';
+            let resolvedCoords = resolvedVenueKey ? parseVenueKey(resolvedVenueKey) : null;
+            const sourceCoord = targetLngLat || fixedLngLat || eventLngLat || (Number.isFinite(post?.lng) && Number.isFinite(post?.lat) ? { lng: post.lng, lat: post.lat } : null);
+            if(!resolvedCoords && sourceCoord && Number.isFinite(sourceCoord.lng) && Number.isFinite(sourceCoord.lat)){
+              resolvedCoords = { lng: Number(sourceCoord.lng), lat: Number(sourceCoord.lat) };
+            }
+            if(!resolvedVenueKey && resolvedCoords){
+              resolvedVenueKey = toVenueCoordKey(resolvedCoords.lng, resolvedCoords.lat);
+            }
+            if(resolvedVenueKey){
+              overlayRoot.dataset.venueKey = resolvedVenueKey;
+            } else if(overlayVenueKey){
+              overlayRoot.dataset.venueKey = overlayVenueKey;
+            } else {
+              delete overlayRoot.dataset.venueKey;
+            }
+
+            const visibleList = (filtersInitialized && Array.isArray(filtered) && filtered.length) ? filtered : posts;
+            const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
+              if(!item || item.id === undefined || item.id === null) return '';
+              return String(item.id);
+            }).filter(Boolean) : []);
+            let venuePostsAll = [];
+            if(resolvedCoords && typeof getPostsAtVenueByCoords === 'function'){
+              venuePostsAll = getPostsAtVenueByCoords(resolvedCoords.lng, resolvedCoords.lat) || [];
+            } else if(resolvedVenueKey && typeof getPostsAtVenueByCoords === 'function'){
+              const coords = parseVenueKey(resolvedVenueKey);
+              if(coords){
+                venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
+              }
+            }
+            let venuePostsVisible = Array.isArray(venuePostsAll) ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id))) : [];
+            if(!venuePostsVisible.length){
+              const fallbackPost = Array.isArray(visibleList) ? visibleList.find(item => item && String(item.id) === String(post && post.id)) : null;
+              if(fallbackPost){
+                venuePostsVisible = [fallbackPost];
+              } else if(post){
+                venuePostsVisible = [post];
+              }
+            }
+            const uniqueVenuePosts = [];
+            const venuePostIds = new Set();
+            venuePostsVisible.forEach(item => {
+              if(!item || item.id === undefined || item.id === null) return;
+              const idStr = String(item.id);
+              if(!idStr || venuePostIds.has(idStr)) return;
+              venuePostIds.add(idStr);
+              uniqueVenuePosts.push(item);
+            });
+            if(!uniqueVenuePosts.length && post){
+              uniqueVenuePosts.push(post);
+              if(post.id !== undefined && post.id !== null){
+                venuePostIds.add(String(post.id));
+              }
+            }
+            const multiIds = Array.from(venuePostIds);
+            const multiCount = uniqueVenuePosts.length;
+            const isMultiVenue = multiCount > 1;
+            if(isMultiVenue){
+              overlayRoot.dataset.multiIds = multiIds.join(',');
+            } else {
+              delete overlayRoot.dataset.multiIds;
+            }
+            const sortedList = Array.isArray(sortedPostList) ? sortedPostList : [];
+            let primaryVenuePost = null;
+            if(isMultiVenue && sortedList.length){
+              primaryVenuePost = sortedList.find(entry => entry && venuePostIds.has(String(entry.id))) || null;
+            }
+            if(!primaryVenuePost){
+              primaryVenuePost = uniqueVenuePosts[0] || post;
+            }
+            const overlayId = primaryVenuePost && primaryVenuePost.id !== undefined && primaryVenuePost.id !== null
+              ? String(primaryVenuePost.id)
+              : String(post.id);
+            overlayRoot.dataset.id = overlayId;
+
             const markerContainer = document.createElement('div');
             markerContainer.className = 'small-map-card';
-            markerContainer.dataset.id = overlayRoot.dataset.id;
+            markerContainer.dataset.id = overlayId;
             markerContainer.setAttribute('aria-hidden', 'true');
             markerContainer.style.pointerEvents = 'none';
             markerContainer.style.userSelect = 'none';
@@ -12365,24 +12509,28 @@ if (!map.__pillHooksInstalled) {
             markerIcon.alt = '';
             markerIcon.className = 'mapmarker';
             markerIcon.draggable = false;
-            const markerSources = window.subcategoryMarkers || {};
-            const markerIds = window.subcategoryMarkerIds || {};
-            const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-            const markerIdCandidates = [];
-            if(post && post.subcategory){
-              const mappedId = markerIds[post.subcategory];
-              if(mappedId) markerIdCandidates.push(mappedId);
-              markerIdCandidates.push(slugifyFn(post.subcategory));
-            }
-            const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-            const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
-            markerIcon.referrerPolicy = 'no-referrer';
             markerIcon.loading = 'eager';
-            markerIcon.onerror = ()=>{
-              markerIcon.onerror = null;
-              markerIcon.src = markerFallback;
-            };
-            markerIcon.src = markerIconUrl || markerFallback;
+            markerIcon.referrerPolicy = 'no-referrer';
+            if(isMultiVenue){
+              markerIcon.src = 'assets/icons-30/multi-post-icon-30.webp';
+            } else {
+              const markerSources = window.subcategoryMarkers || {};
+              const markerIds = window.subcategoryMarkerIds || {};
+              const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+              const markerIdCandidates = [];
+              if(post && post.subcategory){
+                const mappedId = markerIds[post.subcategory];
+                if(mappedId) markerIdCandidates.push(mappedId);
+                markerIdCandidates.push(slugifyFn(post.subcategory));
+              }
+              const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+              const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
+              markerIcon.onerror = ()=>{
+                markerIcon.onerror = null;
+                markerIcon.src = markerFallback;
+              };
+              markerIcon.src = markerIconUrl || markerFallback;
+            }
             requestAnimationFrame(() => {
               if(typeof markerIcon.decode === 'function'){
                 markerIcon.decode().catch(()=>{});
@@ -12406,25 +12554,56 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const labelLines = getMarkerLabelLines(post);
+            const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
+            const venueDisplayName = (()=>{
+              if(resolvedVenueKey){
+                const candidates = uniqueVenuePosts.length ? uniqueVenuePosts : (post ? [post] : []);
+                for(const candidate of candidates){
+                  const locs = Array.isArray(candidate?.locations) ? candidate.locations : [];
+                  const match = locs.find(loc => loc && toVenueCoordKey(loc.lng, loc.lat) === resolvedVenueKey && loc.venue);
+                  if(match && match.venue){
+                    return match.venue;
+                  }
+                }
+              }
+              const fallback = uniqueVenuePosts[0] || post;
+              return getPrimaryVenueName(fallback) || '';
+            })();
+            const multiSmallVenueText = shortenMarkerLabelText(venueDisplayName, markerLabelTextAreaWidthPx);
+            const multiBigVenueText = shortenMarkerLabelText(venueDisplayName, mapCardTitleWidthPx);
+            const multiCountLabel = `${multiCount} posts here`;
             const markerLabel = document.createElement('div');
             markerLabel.className = 'mapmarker-label';
-            const markerLine1 = document.createElement('div');
-            markerLine1.className = 'mapmarker-label-line';
-            markerLine1.textContent = labelLines.line1;
-            markerLabel.appendChild(markerLine1);
-            if(labelLines.line2){
+            if(isMultiVenue){
+              markerContainer.classList.add('small-multi-post-map-card');
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = multiCountLabel;
               const markerLine2 = document.createElement('div');
               markerLine2.className = 'mapmarker-label-line';
-              markerLine2.textContent = labelLines.line2;
-              markerLabel.appendChild(markerLine2);
+              markerLine2.textContent = multiSmallVenueText || venueDisplayName || '';
+              markerLabel.append(markerLine1, markerLine2);
+            } else if(labelLines){
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = labelLines.line1;
+              markerLabel.appendChild(markerLine1);
+              if(labelLines.line2){
+                const markerLine2 = document.createElement('div');
+                markerLine2.className = 'mapmarker-label-line';
+                markerLine2.textContent = labelLines.line2;
+                markerLabel.appendChild(markerLine2);
+              }
             }
 
             markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
-            cardRoot.dataset.id = overlayRoot.dataset.id;
+            if(isMultiVenue){
+              cardRoot.classList.add('big-multi-post-map-card');
+            }
+            cardRoot.dataset.id = overlayId;
             cardRoot.setAttribute('aria-hidden', 'true');
             cardRoot.style.pointerEvents = 'auto';
             cardRoot.style.userSelect = 'none';
@@ -12440,16 +12619,21 @@ if (!map.__pillHooksInstalled) {
             const thumbImg = new Image();
             try{ thumbImg.decoding = 'async'; }catch(e){}
             thumbImg.alt = '';
-            const thumbFallback = 'assets/funmap-logo-small.png';
             thumbImg.loading = 'eager';
-            thumbImg.onerror = ()=>{
-              thumbImg.onerror = null;
-              thumbImg.src = thumbFallback;
-            };
-            thumbImg.src = imgThumb(post) || thumbFallback;
-            thumbImg.className = 'map-card-thumb';
-            thumbImg.referrerPolicy = 'no-referrer';
             thumbImg.draggable = false;
+            if(isMultiVenue){
+              thumbImg.src = 'assets/icons-30/multi-post-icon-50.webp';
+              thumbImg.className = 'map-card-thumb';
+            } else {
+              const thumbFallback = 'assets/funmap-logo-small.png';
+              thumbImg.onerror = ()=>{
+                thumbImg.onerror = null;
+                thumbImg.src = thumbFallback;
+              };
+              thumbImg.src = imgThumb(post) || thumbFallback;
+              thumbImg.className = 'map-card-thumb';
+              thumbImg.referrerPolicy = 'no-referrer';
+            }
             requestAnimationFrame(() => {
               if(typeof thumbImg.decode === 'function'){
                 thumbImg.decode().catch(()=>{});
@@ -12460,16 +12644,25 @@ if (!map.__pillHooksInstalled) {
             labelEl.className = 'map-card-label';
             const titleWrap = document.createElement('div');
             titleWrap.className = 'map-card-title';
-            const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-              ? labelLines.cardTitleLines.slice(0, 2)
-              : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-            cardTitleLines.forEach(line => {
-              if(!line) return;
-              const lineEl = document.createElement('div');
-              lineEl.className = 'map-card-title-line';
-              lineEl.textContent = line;
-              titleWrap.appendChild(lineEl);
-            });
+            if(isMultiVenue){
+              [multiCountLabel, multiBigVenueText || venueDisplayName || ''].forEach(line => {
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            } else if(labelLines){
+              const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+                ? labelLines.cardTitleLines.slice(0, 2)
+                : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+              cardTitleLines.forEach(line => {
+                if(!line) return;
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            }
             if(!titleWrap.childElementCount){
               const lineEl = document.createElement('div');
               lineEl.className = 'map-card-title-line';
@@ -12477,12 +12670,14 @@ if (!map.__pillHooksInstalled) {
               titleWrap.appendChild(lineEl);
             }
             labelEl.appendChild(titleWrap);
-            const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
-            if(venueLine){
-              const venueEl = document.createElement('div');
-              venueEl.className = 'map-card-venue';
-              venueEl.textContent = venueLine;
-              labelEl.appendChild(venueEl);
+            if(!isMultiVenue && labelLines){
+              const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+              if(venueLine){
+                const venueEl = document.createElement('div');
+                venueEl.className = 'map-card-venue';
+                venueEl.textContent = venueLine;
+                labelEl.appendChild(venueEl);
+              }
             }
 
             cardRoot.append(pillImg, thumbImg, labelEl);
@@ -12882,17 +13077,9 @@ if (!map.__pillHooksInstalled) {
         renderHistoryBoard();
       });
 
-      const escapeAttr = (value)=>{
-        const raw = String(value);
-        if(window.CSS && typeof window.CSS.escape === 'function'){
-          try{ return window.CSS.escape(raw); }catch(err){ /* fall through */ }
-        }
-        return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
-      };
       const mapHighlightClass = 'is-pill-highlight';
       const applyHoverMapHighlight = (shouldHighlight)=>{
-        const selectorId = escapeAttr(p.id);
-        const overlays = document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"]`);
+        const overlays = findMarkerOverlaysById(p.id);
         overlays.forEach(overlay => {
           overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
             if(shouldHighlight){
