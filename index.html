@@ -6019,7 +6019,13 @@ if (typeof slugify !== 'function') {
   const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
-  const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
+  // Mapbox GL JS enforces a hard limit on the number of images that can be
+  // registered with a style (currently ~1000). Generating a composite sprite
+  // for every single marker label without a cap quickly exhausts that budget,
+  // which in turn causes Mapbox to render the fallback pill without any icon
+  // or text. Keep the working set well below the platform ceiling so older
+  // composites are retired and fresh ones can always be created.
+  const MARKER_LABEL_COMPOSITE_LIMIT = 850;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
