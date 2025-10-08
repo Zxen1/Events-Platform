@@ -6046,7 +6046,12 @@ if (typeof slugify !== 'function') {
   // or text. Each composite registers both a base pill and its accent variant,
   // so cap the composites to keep the total image count comfortably below the
   // platform ceiling.
-  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
+  // Each composite registers a base pill image and its highlighted variant, so the
+  // effective image count is roughly double the number of composites. Mapbox GL
+  // enforces a hard limit of ~1000 images per style, therefore cap the composite
+  // count to keep the combined base+highlight images (plus other sprites) well
+  // under that ceiling.
+  const MARKER_LABEL_COMPOSITE_LIMIT = 420;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
