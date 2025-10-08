@@ -52,7 +52,6 @@
       isolation: isolate;
       touch-action: none;
       border-radius: 999px;
-      transform-origin: 30px 30px;
     }
     .mapmarker-overlay{
       position: relative;
@@ -75,6 +74,10 @@
       transform: translate3d(-30px, -30px, 0);
       pointer-events: auto;
       z-index: 30;
+    }
+    .mapmarker-overlay.is-card-visible > .small-map-card{
+      opacity: 0;
+      visibility: hidden;
     }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
@@ -100,89 +103,18 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: 185px;
-      height: 52px;
-      transform: translate3d(-24px, -30px, 0);
+      width: 150px;
+      height: 40px;
+      transform: translate3d(-20px, -20px, 0);
       pointer-events: none;
       border-radius: 999px;
-      background-color: rgba(0, 0, 0, 0.88);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+      background: rgba(0, 0, 0, 0.9);
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 6px 16px 6px 10px;
+      gap: 6px;
+      padding: 5px 10px 5px 5px;
       box-sizing: border-box;
       transition: background-color 0.2s ease;
-      overflow: hidden;
-    }
-    .small-map-card > .map-card-pill{
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.9 !important;
-      visibility: visible;
-      pointer-events: none;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
-    .small-map-card > .map-card-thumb{
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      z-index: 1;
-      flex: 0 0 40px;
-    }
-    .small-map-card .map-card-label{
-      position: relative;
-      left: auto;
-      top: auto;
-      width: auto;
-      height: auto;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2px;
-      color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      pointer-events: none;
-      z-index: 1;
-      min-width: 0;
-    }
-    .small-map-card .map-card-title{
-      gap: 1px;
-      width: 100%;
-    }
-    .small-map-card .map-card-title-line{
-      font-size: 11px;
-      font-weight: 500;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .small-map-card .map-card-title-line:first-child{
-      font-weight: 600;
-    }
-    .small-map-card .map-card-title-line:not(:first-child){
-      font-weight: 500;
-      opacity: 0.9;
-    }
-    .small-map-card .map-card-venue{
-      font-size: 10px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 0;
-      color: #d0d0d0;
     }
     .mapmarker{
       position: relative;
@@ -193,12 +125,24 @@
       pointer-events: none;
       z-index: 2;
       flex: 0 0 30px;
-      display: block;
     }
     .map--midzoom-markers .mapmarker{
       border-radius: 50%;
       box-shadow: 0 0 0 3px #000;
       box-sizing: border-box;
+    }
+    .mapmarker-pill{
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 40px;
+      object-fit: contain;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      mix-blend-mode: normal;
+      z-index: 0;
     }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
@@ -214,14 +158,8 @@
     .small-map-card.is-pill-highlight{
       background-color: #2e3a72;
     }
-    .small-map-card.is-pill-highlight > .map-card-pill{
-      opacity: 0;
-    }
     .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
-    }
-    .mapmarker-overlay:hover .small-map-card > .map-card-pill{
-      opacity: 0;
     }
     .map-card-thumb{
       position: absolute;
@@ -268,7 +206,7 @@
       padding: 0;
       pointer-events: none;
       color: #fff;
-      gap: 2px;
+      gap: 1px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
       white-space: normal;
       z-index: 3;
@@ -277,8 +215,6 @@
       min-width: 0;
       justify-content: center;
       align-items: flex-start;
-      line-height: 1.25;
-      text-rendering: optimizeLegibility;
     }
 
     .mapmarker-label-line{
@@ -287,7 +223,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      line-height: 1.25;
     }
     .mapmarker-label-line:first-child{ font-weight: 600; }
     .mapmarker-label-line:not(:first-child){ font-weight: 400; }
@@ -5055,6 +4990,147 @@ if (typeof slugify !== 'function') {
 }
 </script>
 
+<script>
+// === 150x40 pill provider (sprite id: marker-label-bg) ===
+(function(){
+  const PILL_ID = 'marker-label-bg';
+  const ACCENT_ID = `${PILL_ID}--accent`;
+  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
+  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+  let cachedImages = null;
+  let loadingTask = null;
+  const pendingMaps = new Set();
+
+  function applyImageToMap(map){
+    if(!map || typeof map.hasImage !== 'function' || !cachedImages){
+      return;
+    }
+    try{
+      if(map.hasImage(PILL_ID)){
+        try{ map.removeImage(PILL_ID); }catch(e){}
+      }
+      if(map.hasImage(ACCENT_ID)){
+        try{ map.removeImage(ACCENT_ID); }catch(e){}
+      }
+      const baseImage = cachedImages.base || cachedImages.accent;
+      if(baseImage){
+        map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
+      }
+      const accentImage = cachedImages.accent || cachedImages.base;
+      if(accentImage){
+        map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
+      }
+    }catch(e){ /* silent */ }
+  }
+
+  function tintImage(sourceImage, color, alpha = 1){
+    if(!sourceImage){
+      return null;
+    }
+    try{
+      const width = sourceImage.naturalWidth || sourceImage.width || 150;
+      const height = sourceImage.naturalHeight || sourceImage.height || 40;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width));
+      canvas.height = Math.max(1, Math.round(height));
+      const ctx = canvas.getContext('2d');
+      if(!ctx){
+        return null;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+      if(color){
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      return canvas;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function prepareCachedImages(baseImage, accentImage){
+    if(!baseImage){
+      cachedImages = null;
+      return;
+    }
+    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
+    let highlight = null;
+    if(accentImage){
+      highlight = tintImage(accentImage, null, 1) || accentImage;
+    }
+    if(!highlight){
+      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
+    }
+    cachedImages = { base: tintedBase, accent: highlight };
+  }
+
+  function loadImage(url){
+    if(!url){
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(e){}
+      try{ img.decoding = 'async'; }catch(e){}
+      img.onload = () => {
+        if(img.naturalWidth > 0 && img.naturalHeight > 0){
+          resolve(img);
+        }else{
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
+        resolve(img);
+      }
+    });
+  }
+
+  function ensureImage(){
+    if(cachedImages || loadingTask){
+      return;
+    }
+    loadingTask = Promise.all([
+      loadImage(PILL_BASE_IMAGE_URL),
+      loadImage(PILL_ACCENT_IMAGE_URL)
+    ]).then(([baseImage, accentImage]) => {
+      if(baseImage){
+        prepareCachedImages(baseImage, accentImage);
+        if(cachedImages){
+          pendingMaps.forEach((map) => applyImageToMap(map));
+        }
+      }
+    }).catch(() => {
+      cachedImages = null;
+    }).finally(() => {
+      pendingMaps.clear();
+      loadingTask = null;
+    });
+  }
+
+  function addOrReplacePill(map){
+    try{
+      if(!map || typeof map.hasImage !== 'function'){
+        return;
+      }
+      if(cachedImages){
+        applyImageToMap(map);
+        return;
+      }
+      pendingMaps.add(map);
+      ensureImage();
+    }catch(e){ /* silent */ }
+  }
+
+  window.__addOrReplacePill150x40 = addOrReplacePill;
+  ensureImage();
+})();
 </script>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
@@ -5575,6 +5651,8 @@ if (typeof slugify !== 'function') {
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
+  const markerLabelCompositePlaceholderIds = new Set();
+
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
       return markerLabelMeasureContext;
@@ -5738,171 +5816,514 @@ if (typeof slugify !== 'function') {
     return lines.line1;
   }
 
+  const MARKER_LABEL_BG_ID = 'marker-label-bg';
+  const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
+  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
+  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
+  const markerLabelCompositeStore = new Map();
+  const markerLabelCompositePending = new Map();
+  const MARKER_LABEL_COMPOSITE_LIMIT = Infinity;
+  const MARKER_SPRITE_RETAIN_ZOOM = 12;
+  let markerLabelPillImagePromise = null;
 
-  const MARKER_HIT_IMAGE_ID = 'marker-label-hit-placeholder';
-  const MARKER_HIT_LAYER_ID = 'marker-label';
-  const smallMarkerOverlayStore = new Map();
-
-  function ensureMarkerHitPlaceholder(mapInstance){
-    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
+  function nowTimestamp(){
     try{
-      if(mapInstance.hasImage?.(MARKER_HIT_IMAGE_ID)) return;
-    }catch(err){
-      try{ mapInstance.addImage(MARKER_HIT_IMAGE_ID, createTransparentPlaceholder(4), { pixelRatio: 1 }); }catch(e){}
+      if(typeof performance !== 'undefined' && typeof performance.now === 'function'){
+        return performance.now();
+      }
+    }catch(err){}
+    return Date.now();
+  }
+
+  function collectActiveCompositeEntries(mapInstance){
+    const entries = [];
+    if(!mapInstance) return entries;
+    markerLabelCompositeStore.forEach((meta, spriteId) => {
+      if(!meta || !meta.image) return;
+      const compositeId = markerLabelCompositeId(spriteId);
+      let present = false;
+      if(typeof mapInstance.hasImage === 'function'){
+        try{ present = !!mapInstance.hasImage(compositeId); }
+        catch(err){ present = false; }
+      }
+      if(!present) return;
+      entries.push({
+        spriteId,
+        compositeId,
+        priority: Boolean(meta.priority),
+        lastUsed: Number.isFinite(meta.lastUsed) ? meta.lastUsed : 0
+      });
+    });
+    return entries;
+  }
+
+  function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
+    if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
       return;
     }
-    try{
-      mapInstance.addImage(
-        MARKER_HIT_IMAGE_ID,
-        createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx),
-        { pixelRatio: 1 }
-      );
-    }catch(err){
-      try{ mapInstance.addImage(MARKER_HIT_IMAGE_ID, createTransparentPlaceholder(4), { pixelRatio: 1 }); }catch(e){}
+    let zoomForBudget = NaN;
+    if(typeof mapInstance.getZoom === 'function'){
+      try{ zoomForBudget = mapInstance.getZoom(); }
+      catch(err){ zoomForBudget = NaN; }
     }
-  }
-
-  function destroySmallMarkerOverlays(){
-    smallMarkerOverlayStore.forEach(entry => {
-      if(entry && entry.marker){
-        try{ entry.marker.remove(); }catch(err){}
-      }
-    });
-    smallMarkerOverlayStore.clear();
-  }
-
-  function resolveMarkerIconUrl(post){
-    const markerSources = window.subcategoryMarkers || {};
-    const markerIds = window.subcategoryMarkerIds || {};
-    const slugifyFn = typeof slugify === 'function'
-      ? slugify
-      : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-    const candidates = [];
-    if(post && post.subcategory){
-      const mappedId = markerIds[post.subcategory];
-      if(mappedId) candidates.push(mappedId);
-      candidates.push(slugifyFn(post.subcategory));
+    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
+      mapInstance.__retainAllMarkerSprites = true;
     }
-    for(const id of candidates){
-      if(id && markerSources[id]){
-        return markerSources[id];
-      }
-    }
-    return '';
-  }
-
-  function createSmallMarkerCard(post){
-    const markerContainer = document.createElement('div');
-    markerContainer.className = 'small-map-card';
-    markerContainer.dataset.id = post ? String(post.id) : '';
-    markerContainer.setAttribute('aria-hidden', 'true');
-    markerContainer.style.pointerEvents = 'none';
-    markerContainer.style.userSelect = 'none';
-
-    const pillImg = new Image();
-    try{ pillImg.decoding = 'async'; }catch(e){}
-    pillImg.alt = '';
-    pillImg.src = 'assets/icons-30/150x40-pill-99.webp';
-    pillImg.className = 'map-card-pill';
-    pillImg.draggable = false;
-
-    const thumbImg = new Image();
-    try{ thumbImg.decoding = 'async'; }catch(e){}
-    thumbImg.alt = '';
-    thumbImg.loading = 'eager';
-    const thumbFallback = 'assets/funmap-logo-small.png';
-    thumbImg.onerror = ()=>{
-      thumbImg.onerror = null;
-      thumbImg.src = thumbFallback;
-    };
-    thumbImg.src = imgThumb(post) || thumbFallback;
-    thumbImg.className = 'map-card-thumb';
-    thumbImg.referrerPolicy = 'no-referrer';
-    thumbImg.draggable = false;
-    requestAnimationFrame(() => {
-      if(typeof thumbImg.decode === 'function'){
-        thumbImg.decode().catch(()=>{});
-      }
-    });
-
-    const labelLines = getMarkerLabelLines(post);
-    const markerLabel = document.createElement('div');
-    markerLabel.className = 'map-card-label';
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'map-card-title';
-    const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
-      ? labelLines.cardTitleLines.slice(0, 2)
-      : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
-    cardTitleLines.forEach(line => {
-      if(!line) return;
-      const lineEl = document.createElement('div');
-      lineEl.className = 'map-card-title-line';
-      lineEl.textContent = line;
-      titleWrap.appendChild(lineEl);
-    });
-    if(!titleWrap.childElementCount){
-      const lineEl = document.createElement('div');
-      lineEl.className = 'map-card-title-line';
-      lineEl.textContent = '';
-      titleWrap.appendChild(lineEl);
-    }
-    markerLabel.appendChild(titleWrap);
-    const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
-    if(venueLine){
-      const venueEl = document.createElement('div');
-      venueEl.className = 'map-card-venue';
-      venueEl.textContent = venueLine;
-      markerLabel.appendChild(venueEl);
-    }
-
-    markerContainer.append(pillImg, thumbImg, markerLabel);
-    return markerContainer;
-  }
-
-  function rebuildSmallMarkerOverlays(mapInstance, postsData){
-    destroySmallMarkerOverlays();
-    if(!mapInstance || !postsData || !Array.isArray(postsData.features)){
+    if(mapInstance.__retainAllMarkerSprites){
       return;
     }
-    postsData.features.forEach(feature => {
-      if(!feature || !feature.geometry || !Array.isArray(feature.geometry.coordinates)){
+    if(typeof mapInstance.removeImage !== 'function'){
+      return;
+    }
+    const { keep = [], reserve = 0 } = options || {};
+    const keepList = Array.isArray(keep) ? keep : [keep];
+    const keepSet = new Set(keepList.filter(Boolean));
+    const entries = collectActiveCompositeEntries(mapInstance);
+    if(!entries.length){
+      return;
+    }
+    const effectiveLimit = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, reserve));
+    if(entries.length <= effectiveLimit){
+      return;
+    }
+    entries.forEach(entry => {
+      entry.keep = keepSet.has(entry.spriteId);
+    });
+    entries.sort((a, b) => {
+      if(a.keep !== b.keep){
+        return a.keep ? -1 : 1;
+      }
+      if(a.priority !== b.priority){
+        return a.priority ? -1 : 1;
+      }
+      return (b.lastUsed || 0) - (a.lastUsed || 0);
+    });
+    entries.slice(effectiveLimit).forEach(entry => {
+      if(keepSet.has(entry.spriteId)) return;
+      const meta = markerLabelCompositeStore.get(entry.spriteId);
+      if(meta){
+        if(meta.image){
+          try{ delete meta.image; }catch(err){ meta.image = null; }
+        }
+        if(meta.options){
+          try{ delete meta.options; }catch(err){ meta.options = undefined; }
+        }
+        if(meta.highlightImage){
+          try{ delete meta.highlightImage; }catch(err){ meta.highlightImage = null; }
+        }
+        if(meta.highlightOptions){
+          try{ delete meta.highlightOptions; }catch(err){ meta.highlightOptions = undefined; }
+        }
+        markerLabelCompositeStore.set(entry.spriteId, meta);
+      }
+      markerLabelCompositePending.delete(entry.spriteId);
+      try{
+        if(typeof mapInstance.hasImage === 'function'){
+          if(mapInstance.hasImage(entry.compositeId)){
+            mapInstance.removeImage(entry.compositeId);
+          }
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          if(mapInstance.hasImage(highlightId)){
+            mapInstance.removeImage(highlightId);
+          }
+        }
+      }catch(err){}
+    });
+  }
+
+  function loadMarkerLabelImage(url){
+    return new Promise((resolve, reject) => {
+      if(!url){
+        reject(new Error('Missing URL'));
         return;
       }
-      const coords = feature.geometry.coordinates;
-      if(coords.length < 2 || !Number.isFinite(coords[0]) || !Number.isFinite(coords[1])){
-        return;
+      const img = new Image();
+      try{ img.crossOrigin = 'anonymous'; }catch(err){}
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to load ${url}`));
+      img.src = url;
+      if(img.complete){
+        setTimeout(() => {
+          if(img.naturalWidth > 0 && img.naturalHeight > 0){
+            resolve(img);
+          }
+        }, 0);
       }
-      const props = feature.properties || {};
-      const postId = props.id;
-      if(postId === undefined || postId === null){
-        return;
+    });
+  }
+
+  async function ensureMarkerLabelPillImage(){
+    if(markerLabelPillImagePromise){
+      return markerLabelPillImagePromise;
+    }
+    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
+    const accentUrl = 'assets/icons-30/150x40-pill-%232f3b73.webp';
+    const promise = Promise.all([
+      loadMarkerLabelImage(baseUrl),
+      loadMarkerLabelImage(accentUrl).catch(() => null)
+    ]).then(([baseImg, accentImg]) => {
+      if(!baseImg){
+        return null;
       }
-      let post = posts.find(item => item && String(item.id) === String(postId));
-      if(!post){
+      return { base: baseImg, highlight: accentImg };
+    }).catch(err => {
+      console.error(err);
+      return null;
+    });
+    markerLabelPillImagePromise = promise;
+    promise.then(result => {
+      if(!result){
+        markerLabelPillImagePromise = null;
+      }
+    }).catch(() => {
+      markerLabelPillImagePromise = null;
+    });
+    return markerLabelPillImagePromise;
+  }
+
+  function markerLabelCompositeId(spriteId){
+    return `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
+  }
+
+  async function ensureMarkerLabelComposite(mapInstance, labelSpriteId, iconId, labelLine1, labelLine2, isMulti, options = {}){
+    if(!mapInstance || !labelSpriteId){
+      return null;
+    }
+    const { priority = false } = options || {};
+    const compositeId = markerLabelCompositeId(labelSpriteId);
+    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+    const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
+    meta.iconId = iconId || meta.iconId || '';
+    meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
+    meta.labelLine2 = labelLine2 ?? meta.labelLine2 ?? '';
+    meta.isMulti = Boolean(isMulti ?? meta.isMulti);
+    meta.priority = Boolean(priority);
+    meta.lastUsed = nowTimestamp();
+    markerLabelCompositeStore.set(labelSpriteId, meta);
+    if(mapInstance.hasImage?.(compositeId)){
+      if(markerLabelCompositePlaceholderIds.has(compositeId)){
+        try{ mapInstance.removeImage(compositeId); }catch(err){}
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+      } else {
+        return compositeId;
+      }
+    }
+    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
+      try{ mapInstance.removeImage(highlightId); }catch(err){}
+      markerLabelCompositePlaceholderIds.delete(highlightId);
+    }
+    if(meta.image && meta.highlightImage){
+      try{
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
+        try{ if(mapInstance.hasImage?.(compositeId)) mapInstance.removeImage(compositeId); }catch(err){}
+        mapInstance.addImage(compositeId, meta.image, meta.options || {});
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        if(meta.highlightImage){
+          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
+          try{ mapInstance.addImage(highlightId, meta.highlightImage, meta.highlightOptions || meta.options || {}); }
+          catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
+        return compositeId;
+      }catch(err){
+        console.error(err);
+      }
+    }
+    if(markerLabelCompositePending.has(labelSpriteId)){
+      return markerLabelCompositePending.get(labelSpriteId);
+    }
+    const task = (async () => {
+      const pillAssets = await ensureMarkerLabelPillImage();
+      if(!pillAssets || !pillAssets.base){
+        return null;
+      }
+      const pillImg = pillAssets.base;
+      const pillAccentImg = pillAssets.highlight;
+      const markerSources = window.subcategoryMarkers || {};
+      const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
+      let iconImg = null;
+      if(iconUrl){
         try{
-          post = getPostByIdAnywhere(postId);
+          iconImg = await loadMarkerLabelImage(iconUrl);
         }catch(err){
-          post = null;
+          console.error(err);
         }
       }
-      if(!post){
+      const rawWidth = pillImg.naturalWidth || pillImg.width || markerLabelBackgroundWidthPx;
+      const rawHeight = pillImg.naturalHeight || pillImg.height || markerLabelBackgroundHeightPx;
+      const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
+      const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
+      const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
+      const labelLines = [];
+      const line1 = (meta.labelLine1 || '').trim();
+      const line2 = (meta.labelLine2 || '').trim();
+      if(line1){
+        labelLines.push({ text: line1, color: '#ffffff' });
+      }
+      if(line2){
+        labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
+      }
+      const drawForeground = (ctx)=>{
+        if(!ctx){
+          return;
+        }
+        try{
+          ctx.imageSmoothingEnabled = true;
+          if('imageSmoothingQuality' in ctx){
+            ctx.imageSmoothingQuality = 'high';
+          }
+        }catch(err){}
+        if(iconImg){
+          const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
+          const destX = Math.round(markerLabelMarkerInsetPx * pixelRatio);
+          const destY = Math.round((canvasHeight - iconSizePx) / 2);
+          try{
+            ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
+          }catch(err){
+            console.error(err);
+          }
+        }
+        if(labelLines.length){
+          const fontSizePx = markerLabelTextSize * pixelRatio;
+          const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
+          const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
+          let textY = Math.round((canvasHeight - totalHeight) / 2);
+          if(!Number.isFinite(textY) || textY < 0){
+            textY = 0;
+          }
+          const textX = Math.round(markerLabelTextPaddingPx * pixelRatio);
+          ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
+          ctx.textBaseline = 'top';
+          ctx.textAlign = 'left';
+          ctx.shadowColor = 'rgba(0,0,0,0.4)';
+          ctx.shadowBlur = 2 * pixelRatio;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 1 * pixelRatio;
+          labelLines.forEach(line => {
+            ctx.fillStyle = line.color;
+            try{
+              ctx.fillText(line.text, textX, textY);
+            }catch(err){
+              console.error(err);
+            }
+            textY += fontSizePx + lineGapPx;
+          });
+          ctx.shadowColor = 'transparent';
+        }
+      };
+      const buildComposite = (backgroundImage, tintColor, tintAlpha = 1)=>{
+        if(!backgroundImage){
+          return null;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        const ctx = canvas.getContext('2d');
+        if(!ctx){
+          return null;
+        }
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        try{
+          ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+        }catch(err){
+          console.error(err);
+        }
+        if(tintColor){
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.globalAlpha = tintAlpha;
+          ctx.fillStyle = tintColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        drawForeground(ctx);
+        let imageData = null;
+        try{
+          imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        }catch(err){
+          console.error(err);
+          imageData = null;
+        }
+        if(!imageData){
+          return null;
+        }
+        const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
+        return { image: imageData, options };
+      };
+      const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
+      let accentComposite = null;
+      if(pillAccentImg){
+        accentComposite = buildComposite(pillAccentImg, null, 1);
+      }
+      if(!accentComposite){
+        accentComposite = buildComposite(pillImg, '#2f3b73', 1);
+      }
+      if(!baseComposite){
+        return null;
+      }
+      const highlightComposite = accentComposite || baseComposite;
+      try{
+        if(mapInstance.hasImage?.(compositeId)){
+          mapInstance.removeImage(compositeId);
+        }
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+        if(mapInstance.hasImage?.(highlightId)){
+          mapInstance.removeImage(highlightId);
+        }
+        markerLabelCompositePlaceholderIds.delete(highlightId);
+      }catch(err){
+        console.error(err);
+      }
+      try{
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
+        mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
+        markerLabelCompositePlaceholderIds.delete(compositeId);
+        if(highlightComposite && highlightComposite.image){
+          const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
+        markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, {
+          image: baseComposite.image,
+          options: baseComposite.options,
+          highlightImage: highlightComposite.image,
+          highlightOptions: highlightComposite.options || baseComposite.options
+        }));
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
+        return compositeId;
+      }catch(err){
+        console.error(err);
+        return null;
+      }
+    })().finally(() => {
+      markerLabelCompositePending.delete(labelSpriteId);
+    });
+    markerLabelCompositePending.set(labelSpriteId, task);
+    return task;
+  }
+
+  function reapplyMarkerLabelComposites(mapInstance){
+    if(!mapInstance){
+      return;
+    }
+    const entries = [];
+    markerLabelCompositeStore.forEach((entry, spriteId) => {
+      if(!entry || !entry.image){
         return;
       }
-      const overlayRoot = document.createElement('div');
-      overlayRoot.className = 'mapmarker-overlay';
-      overlayRoot.dataset.id = String(post.id);
-      if(props.venueKey){
-        overlayRoot.dataset.venueKey = String(props.venueKey);
-      }
-      overlayRoot.setAttribute('aria-hidden', 'true');
-      overlayRoot.style.pointerEvents = 'none';
-      overlayRoot.style.userSelect = 'none';
-      overlayRoot.appendChild(createSmallMarkerCard(post));
-      const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
-      marker.setLngLat({ lng: coords[0], lat: coords[1] });
-      marker.addTo(mapInstance);
-      smallMarkerOverlayStore.set(feature.id ?? props.featureId ?? `${post.id}-${coords[0]}-${coords[1]}`, { marker, postId: String(post.id) });
+      entries.push({
+        spriteId,
+        compositeId: markerLabelCompositeId(spriteId),
+        image: entry.image,
+        options: entry.options || {},
+        highlightImage: entry.highlightImage,
+        highlightOptions: entry.highlightOptions || entry.options || {},
+        priority: Boolean(entry.priority),
+        lastUsed: Number.isFinite(entry.lastUsed) ? entry.lastUsed : 0
+      });
     });
+    entries.sort((a, b) => {
+      if(a.priority !== b.priority){
+        return a.priority ? -1 : 1;
+      }
+      if(a.lastUsed !== b.lastUsed){
+        return (b.lastUsed || 0) - (a.lastUsed || 0);
+      }
+      return a.spriteId.localeCompare(b.spriteId);
+    });
+    entries.forEach(entry => {
+      let already = false;
+      if(typeof mapInstance.hasImage === 'function'){
+        try{ already = !!mapInstance.hasImage(entry.compositeId); }
+        catch(err){ already = false; }
+      }
+      if(already){
+        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
+          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
+          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+          already = false;
+        } else {
+          return;
+        }
+      }
+      try{
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
+        mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
+        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
+        if(entry.highlightImage){
+          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
+          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
+          try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
+          catch(err){ console.error(err); }
+          markerLabelCompositePlaceholderIds.delete(highlightId);
+        }
+        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
+      }catch(err){
+        console.error(err);
+      }
+    });
+  }
+
+  function scheduleMarkerLabelBackgroundRetry(mapInstance){
+    if(!mapInstance || typeof mapInstance === 'undefined') return;
+    const mark = '__markerLabelBgRetryScheduled';
+    if(mapInstance[mark]) return;
+    mapInstance[mark] = true;
+    const retry = () => {
+      mapInstance[mark] = false;
+      try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+    };
+    if(typeof mapInstance.once === 'function'){
+      mapInstance.once('style.load', retry);
+    } else if(typeof mapInstance.on === 'function'){
+      const handler = () => {
+        try{ mapInstance.off?.('style.load', handler); }catch(err){}
+        retry();
+      };
+      mapInstance.on('style.load', handler);
+    } else {
+      setTimeout(retry, 0);
+    }
+  }
+
+  function ensureMarkerLabelBackground(mapInstance){
+    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
+    try{
+      if(mapInstance.hasImage && mapInstance.hasImage(MARKER_LABEL_BG_ID)){
+        mapInstance.__markerLabelBgRetryScheduled = false;
+        return;
+      }
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    const placeholder = document.createElement('canvas');
+    try{
+      placeholder.width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
+      placeholder.height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
+      const phCtx = placeholder.getContext('2d');
+      if(phCtx){
+        phCtx.clearRect(0, 0, placeholder.width, placeholder.height);
+      }
+    }catch(err){
+      placeholder.width = 1;
+      placeholder.height = 1;
+    }
+    try{
+      mapInstance.addImage(MARKER_LABEL_BG_ID, placeholder, { pixelRatio: 1 });
+      mapInstance.__markerLabelBgRetryScheduled = false;
+    }catch(err){
+      scheduleMarkerLabelBackgroundRetry(mapInstance);
+      return;
+    }
+    try{ window.__addOrReplacePill150x40?.(mapInstance); }catch(err){}
   }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
@@ -6014,7 +6435,8 @@ if (typeof slugify !== 'function') {
   // Attach pointer cursor only after style is ready, and re-attach if style changes later.
   function armPointerOnSymbolLayers(map){
     const POINTER_READY_IDS = new Set([
-      MARKER_HIT_LAYER_ID,
+      'marker-label',
+      'marker-label-highlight',
       'post-balloons'
     ]);
 
@@ -6182,14 +6604,15 @@ if (typeof slugify !== 'function') {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
-      const MARKER_SPRITE_ZOOM = Infinity;
+      const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       const MARKER_LAYER_IDS = [
         'hover-fill',
-        MARKER_HIT_LAYER_ID
+        'marker-label',
+        'marker-label-highlight'
       ];
       const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
@@ -6843,7 +7266,8 @@ if (typeof slugify !== 'function') {
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
     const MARKER_INTERACTIVE_LAYERS = [
-      MARKER_HIT_LAYER_ID
+      'marker-label',
+      'marker-label-highlight'
     ];
     window.__overCard = window.__overCard || false;
 
@@ -7194,9 +7618,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return task;
       }
 
-
       mapInstance.on('style.load', async () => {
-        try{ ensureMarkerHitPlaceholder(mapInstance); }catch(err){}
+        try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+        try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
         const preload = new Set([...KNOWN, ...Object.keys(markers)]);
         for(const iconName of preload){
@@ -7206,8 +7630,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
       mapInstance.on('styleimagemissing', e => {
         if(!e || !e.id) return;
-        if(e.id === MARKER_HIT_IMAGE_ID){
-          try{ ensureMarkerHitPlaceholder(mapInstance); }catch(err){}
+        if(e.id === MARKER_LABEL_BG_ID){
+          try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
+          return;
+        }
+        if(e.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+          const spriteId = e.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+          const meta = markerLabelCompositeStore.get(spriteId) || {};
+          const hasLabelText = Boolean((meta.labelLine1 && meta.labelLine1.trim()) || (meta.labelLine2 && meta.labelLine2.trim()));
+          if(!hasLabelText){
+            return;
+          }
+          ensureMarkerLabelComposite(mapInstance, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
           return;
         }
         addIcon(e.id);
@@ -8749,8 +9183,6 @@ function makePosts(){
         }
       }
       if(updated || force){
-        try{ ensureMarkerHitPlaceholder(map); }catch(err){}
-        try{ rebuildSmallMarkerOverlays(map, postsData); }catch(err){}
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
@@ -8987,6 +9419,9 @@ function makePosts(){
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
       if(!markersLoaded){
         const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
         if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
@@ -11063,6 +11498,52 @@ function makePosts(){
           map.once('load', updateZoomIndicator);
           updateZoomIndicator();
         }
+// === Pill hooks (safe) ===
+try { if (typeof __addOrReplacePill150x40 === 'function') __addOrReplacePill150x40(map); } catch(e){}
+if (!map.__pillHooksInstalled) {
+  try { map.on('style.load', () => __addOrReplacePill150x40(map)); } catch(e){}
+  try { map.on('styleimagemissing', (evt) => { if (evt && evt.id === 'marker-label-bg') __addOrReplacePill150x40(map); }); } catch(e){}
+  map.__pillHooksInstalled = true;
+}
+        const ensureMissingStyleImage = (evt) => {
+          if(!evt || !evt.id) return;
+          const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
+          if(!placeholders.includes(evt.id)) return;
+          try{
+            if(map.hasImage?.(evt.id)) return;
+            map.addImage(evt.id, createTransparentPlaceholder(4), { pixelRatio: 1 });
+          }catch(err){}
+        };
+        try{ map.on('styleimagemissing', ensureMissingStyleImage); }catch(err){}
+
+        const ensureCompositeOnStyleMissing = (evt) => {
+          if(!evt || !evt.id) return;
+          if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
+            const isAccent = evt.id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
+            const baseId = isAccent ? evt.id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : evt.id;
+            const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
+            if(!spriteId){
+              return;
+            }
+            try{
+              if(!map.hasImage?.(evt.id)){
+                map.addImage(evt.id, createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx), { pixelRatio: 1 });
+                markerLabelCompositePlaceholderIds.add(evt.id);
+              }
+            }catch(err){}
+            const meta = markerLabelCompositeStore.get(spriteId) || {};
+            try{
+              ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
+            }catch(err){}
+          }
+        };
+        if(!map.__compositeStyleHookInstalled){
+          try{ map.on('styleimagemissing', ensureCompositeOnStyleMissing); }catch(err){}
+          map.__compositeStyleHookInstalled = true;
+        }
+
+        try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
+
         const applyStyleAdjustments = () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
           applyNightSky(map);
@@ -11455,6 +11936,9 @@ function makePosts(){
         return;
       }
       addingPostSource = true;
+      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+        map.__retainAllMarkerSprites = true;
+      }
       try{
       const markerList = filtersInitialized && Array.isArray(filtered) ? filtered : posts;
       const collections = getMarkerCollections(markerList);
@@ -11474,79 +11958,185 @@ function makePosts(){
         existing.setData(postsData);
         existing.__markerSignature = signature;
       }
-
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
       }
-      ensureMarkerHitPlaceholder(map);
-      rebuildSmallMarkerOverlays(map, postsData);
+      if(typeof ensureMarkerLabelComposite === 'function'){
+        const spriteMeta = new Map();
+        const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
+        const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
+        postsData.features.forEach(feature => {
+          if(!feature || !feature.properties) return;
+          const props = feature.properties;
+          const spriteId = props.labelSpriteId;
+          if(!spriteId || spriteMeta.has(spriteId)) return;
+          const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
+            ? feature.geometry.coordinates
+            : null;
+          let inView = false;
+          if(coords && coords.length >= 2 && priorityBounds){
+            const [lng, lat] = coords;
+            if(Number.isFinite(lng) && Number.isFinite(lat)){
+              inView = pointWithinBounds(lng, lat, priorityBounds);
+            }
+          }
+          const existing = markerLabelCompositeStore.get(spriteId) || {};
+          const stored = spriteMeta.get(spriteId);
+          const iconId = props.sub || props.baseSub || '';
+          const labelLine1 = props.labelLine1 || '';
+          const labelLine2 = props.labelLine2 || '';
+          const isMulti = false;
+          const priority = Boolean((stored ? stored.priority : false) || inView || existing.priority);
+          const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
+          const updatedMeta = Object.assign({}, existing, {
+            iconId,
+            labelLine1,
+            labelLine2,
+            isMulti,
+            priority,
+            lastUsed
+          });
+          markerLabelCompositeStore.set(spriteId, updatedMeta);
+          spriteMeta.set(spriteId, {
+            iconId,
+            labelLine1,
+            labelLine2,
+            isMulti,
+            priority,
+            lastUsed
+          });
+        });
+        const spriteEntries = Array.from(spriteMeta.entries());
+        spriteEntries.sort((a, b) => {
+          const aMeta = a[1] || {};
+          const bMeta = b[1] || {};
+          const aPriority = aMeta.priority ? 1 : 0;
+          const bPriority = bMeta.priority ? 1 : 0;
+          if(aPriority !== bPriority){
+            return bPriority - aPriority;
+          }
+          const aLast = Number.isFinite(aMeta.lastUsed) ? aMeta.lastUsed : 0;
+          const bLast = Number.isFinite(bMeta.lastUsed) ? bMeta.lastUsed : 0;
+          if(aLast !== bLast){
+            return bLast - aLast;
+          }
+          return String(a[0]).localeCompare(String(b[0]));
+        });
+        const compositeSafetyBuffer = 25;
+        let eagerSpriteEntries = spriteEntries;
+        if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
+          const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
+          if(maxEager <= 0){
+            eagerSpriteEntries = [];
+          } else if(spriteEntries.length > maxEager){
+            eagerSpriteEntries = spriteEntries.slice(0, maxEager);
+          }
+        }
+        await Promise.all(eagerSpriteEntries.map(([spriteId, meta]) =>
+          ensureMarkerLabelComposite(
+            map,
+            spriteId,
+            meta.iconId,
+            meta.labelLine1,
+            meta.labelLine2,
+            meta.isMulti,
+            { priority: meta.priority }
+          ).catch(()=>{})
+        ));
+        enforceMarkerLabelCompositeBudget(map);
+      }
+      ensureMarkerLabelBackground(map);
       updateMapFeatureHighlights(lastHighlightedPostIds);
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
         ['has','title']
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
+
+      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
+        ]
+      ];
+
+      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+        ['case',
+          ['==', ['var','spriteId'], ''],
+          MARKER_LABEL_BG_ACCENT_ID,
+          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
+        ]
+      ];
+
+      const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
+      const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
+      const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
+
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      const layerConfig = {
-        id: MARKER_HIT_LAYER_ID,
-        source: 'posts',
-        sortKey: 1100,
-        filter: markerLabelFilter,
-        minZoom: markerLabelMinZoom
-      };
-      const layerMinZoom = Number.isFinite(layerConfig.minZoom) ? layerConfig.minZoom : markerLabelMinZoom;
-      let layerExists = !!map.getLayer(layerConfig.id);
-      if(!layerExists){
-        try{
-          map.addLayer({
-            id: layerConfig.id,
-            type: 'symbol',
-            source: layerConfig.source,
-            filter: layerConfig.filter,
-            minzoom: layerMinZoom,
-            layout:{
-              'icon-image': MARKER_HIT_IMAGE_ID,
-              'icon-size': 1,
-              'icon-allow-overlap': true,
-              'icon-ignore-placement': true,
-              'icon-anchor': 'left',
-              'icon-pitch-alignment': 'viewport',
-              'symbol-z-order': 'viewport-y',
-              'symbol-sort-key': layerConfig.sortKey
-            },
-            paint:{
-              'icon-translate': [markerLabelBgTranslatePx, 0],
-              'icon-translate-anchor': 'viewport',
-              'icon-opacity': 0
-            }
-          });
-          layerExists = !!map.getLayer(layerConfig.id);
-        }catch(e){
-          layerExists = !!map.getLayer(layerConfig.id);
+      const labelLayersConfig = [
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+      ];
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
+        const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
+        let layerExists = !!map.getLayer(id);
+        if(!layerExists){
+          try{
+            map.addLayer({
+              id,
+              type:'symbol',
+              source,
+              filter: filter || markerLabelFilter,
+              minzoom: layerMinZoom,
+              layout:{
+                'icon-image': iconImage || markerLabelIconImage,
+                'icon-size': 1,
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+                'icon-anchor': 'left',
+                'icon-pitch-alignment': 'viewport',
+                'symbol-z-order': 'viewport-y',
+                'symbol-sort-key': sortKey
+              },
+              paint:{
+                'icon-translate': [markerLabelBgTranslatePx, 0],
+                'icon-translate-anchor': 'viewport',
+                'icon-opacity': iconOpacity || 1
+              }
+            });
+            layerExists = !!map.getLayer(id);
+          }catch(e){
+            layerExists = !!map.getLayer(id);
+          }
         }
-      }
-      if(layerExists){
-        try{ map.setFilter(layerConfig.id, layerConfig.filter); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-image', MARKER_HIT_IMAGE_ID); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-size', 1); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-allow-overlap', true); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-anchor','left'); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'icon-pitch-alignment','viewport'); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'symbol-z-order','viewport-y'); }catch(e){}
-        try{ map.setLayoutProperty(layerConfig.id,'symbol-sort-key', layerConfig.sortKey); }catch(e){}
-        try{ map.setPaintProperty(layerConfig.id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
-        try{ map.setPaintProperty(layerConfig.id,'icon-translate-anchor','viewport'); }catch(e){}
-        try{ map.setPaintProperty(layerConfig.id,'icon-opacity', 0); }catch(e){}
-        try{ map.setLayerZoomRange(layerConfig.id, layerMinZoom, 24); }catch(e){}
-      }
+        if(!layerExists){
+          return;
+        }
+        try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
+        try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
+      });
       ALL_MARKER_LAYER_IDS.forEach(id=>{
         if(map.getLayer(id)){
           try{ map.moveLayer(id); }catch(e){}
         }
       });
-      [[MARKER_HIT_LAYER_ID,'icon-opacity-transition']].forEach(([layer, prop])=>{
+      [
+        ['marker-label','icon-opacity-transition'],
+        ['marker-label-highlight','icon-opacity-transition']
+      ].forEach(([layer, prop])=>{
         if(map.getLayer(layer)){
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
@@ -11569,10 +12159,72 @@ function makePosts(){
             overlayRoot.style.pointerEvents = 'none';
             overlayRoot.style.userSelect = 'none';
 
-            const markerContainer = createSmallMarkerCard(post);
+            const markerContainer = document.createElement('div');
+            markerContainer.className = 'small-map-card';
             markerContainer.dataset.id = overlayRoot.dataset.id;
+            markerContainer.setAttribute('aria-hidden', 'true');
+            markerContainer.style.pointerEvents = 'none';
+            markerContainer.style.userSelect = 'none';
+
+            const markerIcon = new Image();
+            try{ markerIcon.decoding = 'async'; }catch(e){}
+            markerIcon.alt = '';
+            markerIcon.className = 'mapmarker';
+            markerIcon.draggable = false;
+            const markerSources = window.subcategoryMarkers || {};
+            const markerIds = window.subcategoryMarkerIds || {};
+            const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+            const markerIdCandidates = [];
+            if(post && post.subcategory){
+              const mappedId = markerIds[post.subcategory];
+              if(mappedId) markerIdCandidates.push(mappedId);
+              markerIdCandidates.push(slugifyFn(post.subcategory));
+            }
+            const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+            const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
+            markerIcon.referrerPolicy = 'no-referrer';
+            markerIcon.loading = 'eager';
+            markerIcon.onerror = ()=>{
+              markerIcon.onerror = null;
+              markerIcon.src = markerFallback;
+            };
+            markerIcon.src = markerIconUrl || markerFallback;
+            requestAnimationFrame(() => {
+              if(typeof markerIcon.decode === 'function'){
+                markerIcon.decode().catch(()=>{});
+              }
+            });
+
+            const markerPill = new Image();
+            try{ markerPill.decoding = 'async'; }catch(e){}
+            markerPill.alt = '';
+            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
+            markerPill.className = 'mapmarker-pill';
+            markerPill.loading = 'eager';
+            markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
+            markerPill.draggable = false;
+            requestAnimationFrame(() => {
+              if(typeof markerPill.decode === 'function'){
+                markerPill.decode().catch(()=>{});
+              }
+            });
 
             const labelLines = getMarkerLabelLines(post);
+            const markerLabel = document.createElement('div');
+            markerLabel.className = 'mapmarker-label';
+            const markerLine1 = document.createElement('div');
+            markerLine1.className = 'mapmarker-label-line';
+            markerLine1.textContent = labelLines.line1;
+            markerLabel.appendChild(markerLine1);
+            if(labelLines.line2){
+              const markerLine2 = document.createElement('div');
+              markerLine2.className = 'mapmarker-label-line';
+              markerLine2.textContent = labelLines.line2;
+              markerLabel.appendChild(markerLine2);
+            }
+
+            markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
