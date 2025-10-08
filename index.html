@@ -10807,7 +10807,14 @@ function makePosts(){
 
       function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
         if(trigger !== 'click' && trigger !== 'touch') return;
-        if(userClosedPostBoard) return;
+        const body = document.body;
+        if(userClosedPostBoard){
+          const postsModeActive = body && body.classList.contains('mode-posts');
+          if(postsModeActive){
+            return;
+          }
+          userClosedPostBoard = false;
+        }
         if(!isWideScreenPostBoard()) return;
         const normalizedIds = Array.isArray(multiIds)
           ? multiIds.map(id => String(id)).filter(Boolean)
@@ -10817,8 +10824,8 @@ function makePosts(){
         const total = Math.max(normalizedIds.length, normalizedCount, 0);
         if(total <= 1) return;
         if(typeof setMode !== 'function') return;
-        const wasPostsMode = document.body.classList.contains('mode-posts');
-        const hadHistory = document.body.classList.contains('show-history');
+        const wasPostsMode = body && body.classList.contains('mode-posts');
+        const hadHistory = body && body.classList.contains('show-history');
         if(hadHistory){
           document.body.classList.remove('show-history');
         }
