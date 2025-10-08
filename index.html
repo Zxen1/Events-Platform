@@ -638,9 +638,19 @@
 
 *:not([class*="mapboxgl-"]){
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   border-color: var(--border) !important;
+}
+
+@supports (scrollbar-width: thin){
+  *:not([class*="mapboxgl-"]){
+    scrollbar-width: thin;
+  }
+}
+
+@supports (scrollbar-color: #000 #fff){
+  *:not([class*="mapboxgl-"]){
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
 }
 
 fieldset{
@@ -699,6 +709,7 @@ html,body{
     display: flex;
     flex-direction: column;
     min-height: calc(var(--vh, 1vh) * 100);
+    -webkit-user-select: text;
     user-select: text;
     touch-action: manipulation;
   }
@@ -719,6 +730,7 @@ input,
 textarea,
 .wysiwyg{
   caret-color: auto;
+  -webkit-user-select: text;
   user-select: text;
 }
 
@@ -929,6 +941,7 @@ input[type="checkbox"]{
     gap: var(--gap);
     font-weight: 800;
     letter-spacing: .4px;
+    -webkit-user-select: none;
     user-select: none;
     cursor: pointer;
   }
@@ -1452,14 +1465,14 @@ button[aria-expanded="true"] .results-arrow{
     max-height:none;
   }
 }
-#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;user-select:none;width:100%;max-width:420px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
+#adminPanel legend{font-weight:600;padding:0 6px;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer;-webkit-user-select:none;user-select:none;width:100%;max-width:420px;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);box-sizing:border-box;margin:0 auto;}
 #adminPanel legend::after{content:'\25BC';margin-left:auto;font-size:14px;}
 #adminPanel fieldset.collapsed legend::after{content:'\25B6';}
 #adminPanel fieldset.collapsed > :not(legend){display:none;}
 #adminPanel .fieldset-actions{display:flex;gap:4px;margin:4px 6px;}
 #adminPanel .fieldset-actions .same-btn{flex:1 1 0;padding:6px;}
 #adminPanel .control-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 auto;padding:10px 0;width:100%;max-width:420px;}
-#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;user-select:none;}
+#adminPanel .control-row label:first-child{min-width:80px;font-size:14px;cursor:pointer;-webkit-user-select:none;user-select:none;}
 .control-row > *:last-child{margin-left:auto;width:200px;}
 #post-mode-background-field{
   width:100%;
@@ -2654,8 +2667,13 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   gap:5px;
   overflow-x:auto;
   overflow-y:hidden;
-  scrollbar-gutter:stable both-edges;
   justify-content:flex-start;
+}
+
+@supports (scrollbar-gutter: stable){
+  .post-images .thumbnail-row{
+    scrollbar-gutter:stable both-edges;
+  }
 }
 
 .post-images .thumbnail-row img{
@@ -2966,8 +2984,8 @@ body.filters-active #filterBtn{
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  line-clamp: 2;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -3368,10 +3386,18 @@ body.filters-active #filterBtn{
   padding:0;
   margin:0;
 }
-.post-board .posts,
-.recents-board{
-  scrollbar-width:thin;
-  scrollbar-color:rgba(255,255,255,0.4) rgba(0,0,0,0);
+@supports (scrollbar-width: thin){
+  .post-board .posts,
+  .recents-board{
+    scrollbar-width:thin;
+  }
+}
+
+@supports (scrollbar-color: #000 #fff){
+  .post-board .posts,
+  .recents-board{
+    scrollbar-color:rgba(255,255,255,0.4) rgba(0,0,0,0);
+  }
 }
 .post-board .posts::-webkit-scrollbar,
 .recents-board::-webkit-scrollbar{
@@ -4087,7 +4113,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex:1 1 auto;
   max-width:100%;
   margin-bottom:0;
-  scrollbar-gutter: stable;
+}
+
+@supports (scrollbar-gutter: stable){
+  .open-post .calendar-container .calendar-scroll,
+  .second-post-column .calendar-container .calendar-scroll{
+    scrollbar-gutter: stable;
+  }
 }
 .open-post .post-calendar .calendar,
 .second-post-column .post-calendar .calendar,
@@ -5143,7 +5175,7 @@ if (typeof slugify !== 'function') {
     <div class="logo" aria-label="Site logo">
       <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
     </div>
-    <nav class="view-toggle" aria-label="Primary" role="tablist">
+    <nav class="view-toggle" aria-label="Primary">
       <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
       <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
         <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
