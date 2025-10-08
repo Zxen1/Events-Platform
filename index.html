@@ -2925,6 +2925,11 @@ body.filters-active #filterBtn{
   cursor:pointer;
 }
 
+.post-card:hover,
+.recents-card:hover{
+  background:#2e3a72 !important;
+}
+
 .post-card{
   border:none;
   border-radius:8px;
@@ -7382,7 +7387,13 @@ if (typeof slugify !== 'function') {
         updateMapFeatureHighlights([]);
         return;
       }
-      const escapeAttr = (value)=> String(value).replace(/"/g, '\\"');
+      const escapeAttr = (value)=>{
+        const raw = String(value);
+        if(window.CSS && typeof window.CSS.escape === 'function'){
+          try{ return window.CSS.escape(raw); }catch(err){ /* fall through */ }
+        }
+        return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+      };
       const applyHighlight = (el)=>{
         if(!el) return;
         if(el.dataset && !Object.prototype.hasOwnProperty.call(el.dataset, 'prevAriaSelected')){
@@ -12685,6 +12696,38 @@ if (!map.__pillHooksInstalled) {
         });
         renderHistoryBoard();
       });
+
+      const escapeAttr = (value)=>{
+        const raw = String(value);
+        if(window.CSS && typeof window.CSS.escape === 'function'){
+          try{ return window.CSS.escape(raw); }catch(err){ /* fall through */ }
+        }
+        return raw.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+      };
+      const mapHighlightClass = 'is-pill-highlight';
+      const applyHoverMapHighlight = (shouldHighlight)=>{
+        const selectorId = escapeAttr(p.id);
+        const overlays = document.querySelectorAll(`.mapmarker-overlay[data-id="${selectorId}"]`);
+        overlays.forEach(overlay => {
+          overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
+            if(shouldHighlight){
+              if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+                cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
+              }
+              cardEl.classList.add(mapHighlightClass);
+            } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+              const prev = cardEl.dataset.hoverPrevHighlight === '1';
+              delete cardEl.dataset.hoverPrevHighlight;
+              if(!prev){
+                cardEl.classList.remove(mapHighlightClass);
+              }
+            }
+          });
+        });
+      };
+
+      el.addEventListener('mouseenter', ()=> applyHoverMapHighlight(true));
+      el.addEventListener('mouseleave', ()=> applyHoverMapHighlight(false));
       return el;
     }
 
