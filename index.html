@@ -5632,12 +5632,32 @@ if (typeof slugify !== 'function') {
   function ensurePlaceholderSprites(mapInstance){
     if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
     const required = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
-    required.forEach(name => {
-      try{
-        if(mapInstance.hasImage?.(name)) return;
-        mapInstance.addImage(name, createTransparentPlaceholder(4), { pixelRatio: 1 });
-      }catch(err){}
-    });
+    const install = () => {
+      required.forEach(name => {
+        try{
+          if(mapInstance.hasImage?.(name)) return;
+          const size = name === 'mx-federal-5' ? 2 : 4;
+          const options = { pixelRatio: 1 };
+          if(name !== 'mx-federal-5'){
+            options.sdf = true;
+          }
+          mapInstance.addImage(name, createTransparentPlaceholder(size), options);
+        }catch(err){}
+      });
+    };
+    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
+      if(!mapInstance.__placeholderSpriteReady){
+        const onStyleLoad = () => {
+          try{ install(); }catch(err){}
+          try{ mapInstance.off?.('style.load', onStyleLoad); }catch(err){}
+          mapInstance.__placeholderSpriteReady = null;
+        };
+        mapInstance.__placeholderSpriteReady = onStyleLoad;
+        try{ mapInstance.on('style.load', onStyleLoad); }catch(err){}
+      }
+      return;
+    }
+    install();
   }
 
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
