@@ -10798,6 +10798,36 @@ function makePosts(){
       const mapButton = $('#map-button');
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
+      let userClosedPostBoard = false;
+      const WIDE_SCREEN_CLUSTER_MIN_WIDTH = 1200;
+
+      function isWideScreenPostBoard(){
+        return window.innerWidth >= WIDE_SCREEN_CLUSTER_MIN_WIDTH;
+      }
+
+      function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
+        if(trigger !== 'click' && trigger !== 'touch') return;
+        if(userClosedPostBoard) return;
+        if(!isWideScreenPostBoard()) return;
+        const normalizedIds = Array.isArray(multiIds)
+          ? multiIds.map(id => String(id)).filter(Boolean)
+          : [];
+        const numericCount = Number(multiCount);
+        const normalizedCount = Number.isFinite(numericCount) && numericCount > 0 ? numericCount : 0;
+        const total = Math.max(normalizedIds.length, normalizedCount, 0);
+        if(total <= 1) return;
+        if(typeof setMode !== 'function') return;
+        const wasPostsMode = document.body.classList.contains('mode-posts');
+        const hadHistory = document.body.classList.contains('show-history');
+        if(hadHistory){
+          document.body.classList.remove('show-history');
+        }
+        if(!wasPostsMode){
+          setMode('posts');
+        } else if(hadHistory && typeof adjustBoards === 'function'){
+          adjustBoards();
+        }
+      }
 
       updatePostsButtonState = function(currentZoom){
         const threshold = MARKER_ZOOM_THRESHOLD;
@@ -11006,6 +11036,7 @@ function makePosts(){
         const isPostsMode = document.body.classList.contains('mode-posts');
         const historyActive = document.body.classList.contains('show-history');
         if(isPostsMode && historyActive){
+          userClosedPostBoard = true;
           setMode('map');
           return;
         }
@@ -11026,6 +11057,7 @@ function makePosts(){
         const historyActive = document.body.classList.contains('show-history');
         const isPostsMode = document.body.classList.contains('mode-posts');
         if(isPostsMode && !historyActive){
+          userClosedPostBoard = true;
           setMode('map');
           return;
         }
@@ -11046,6 +11078,7 @@ function makePosts(){
       mapButton && mapButton.addEventListener('click', ()=>{
         const isMapMode = document.body.classList.contains('mode-map');
         if(!isMapMode){
+          userClosedPostBoard = true;
           setMode('map');
         } else if(document.body.classList.contains('show-history')){
           document.body.classList.remove('show-history');
@@ -11449,6 +11482,7 @@ function makePosts(){
             return;
           }
           if(e.target === postsWide && postsWide.querySelector('.open-post')){
+            userClosedPostBoard = true;
             setTimeout(()=> setMode('map'), 0);
           }
         }, { capture:true });
@@ -11456,6 +11490,7 @@ function makePosts(){
 
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
+          userClosedPostBoard = true;
           setMode('map');
         }
       });
@@ -11474,6 +11509,7 @@ function makePosts(){
         }
         updateModeToggle();
         if(m === 'posts'){
+          userClosedPostBoard = false;
           const boardEl = document.querySelector('.post-board');
           if(boardEl){
             boardEl.style.width = '';
@@ -13012,6 +13048,15 @@ if (!map.__pillHooksInstalled) {
           const props = f.properties || {};
           const venueKey = props.venueKey || null;
           const id = props.id;
+          const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+          const normalizedMultiIds = rawMultiIds.map(item => String(item)).filter(Boolean);
+          const multiCountFromProps = Number(props.multiCount);
+          let normalizedMultiCount = Number.isFinite(multiCountFromProps) && multiCountFromProps > 0 ? multiCountFromProps : 0;
+          if(!normalizedMultiCount){
+            normalizedMultiCount = normalizedMultiIds.length;
+          }
+          const helperMultiCount = Math.max(normalizedMultiIds.length, normalizedMultiCount, props.isMultiVenue ? 2 : 0);
+          const isMultiCluster = helperMultiCount > 1;
           if(id !== undefined && id !== null){
             activePostId = id;
             selectedVenueKey = venueKey;
@@ -13038,7 +13083,21 @@ if (!map.__pillHooksInstalled) {
                 updateSelectedMarkerRing();
               }
             }
+            if(isMultiCluster){
+              autoOpenPostBoardForCluster({
+                multiIds: normalizedMultiIds,
+                multiCount: helperMultiCount,
+                trigger: 'touch'
+              });
+            }
             return;
+          }
+          if(isMultiCluster){
+            autoOpenPostBoardForCluster({
+              multiIds: normalizedMultiIds,
+              multiCount: helperMultiCount,
+              trigger: 'click'
+            });
           }
         };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('click', layer, handleMarkerClick));
