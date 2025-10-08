@@ -7651,6 +7651,34 @@ if (typeof slugify !== 'function') {
       return Array.from(matches);
     }
 
+    function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
+      if(postId === undefined || postId === null) return;
+      const highlightClass = 'is-pill-highlight';
+      const overlays = findMarkerOverlaysById(postId);
+      overlays.forEach(overlay => {
+        overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
+          if(shouldHighlight){
+            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+              cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
+            }
+            if(!cardEl.classList.contains(highlightClass)){
+              cardEl.classList.add(highlightClass);
+            }
+            setSmallMapCardPillImage(cardEl, true);
+          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
+            const prev = cardEl.dataset.hoverPrevHighlight === '1';
+            delete cardEl.dataset.hoverPrevHighlight;
+            if(!prev){
+              cardEl.classList.remove(highlightClass);
+              setSmallMapCardPillImage(cardEl, false);
+            } else {
+              setSmallMapCardPillImage(cardEl, true);
+            }
+          }
+        });
+      });
+    }
+
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
       const markerHighlightClass = 'is-pill-highlight';
@@ -13296,35 +13324,33 @@ if (!map.__pillHooksInstalled) {
         renderHistoryBoard();
       });
 
-      const mapHighlightClass = 'is-pill-highlight';
-      const applyHoverMapHighlight = (shouldHighlight)=>{
-        const overlays = findMarkerOverlaysById(p.id);
-        overlays.forEach(overlay => {
-          overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
-            if(shouldHighlight){
-              if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-                cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
-              }
-              cardEl.classList.add(mapHighlightClass);
-              setSmallMapCardPillImage(cardEl, true);
-            } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-              const prev = cardEl.dataset.hoverPrevHighlight === '1';
-              delete cardEl.dataset.hoverPrevHighlight;
-              if(!prev){
-                cardEl.classList.remove(mapHighlightClass);
-                setSmallMapCardPillImage(cardEl, false);
-              } else {
-                setSmallMapCardPillImage(cardEl, true);
-              }
-            }
-          });
-        });
-      };
+      const handleHoverHighlight = (state)=> toggleSmallMapCardHoverHighlight(p.id, state);
 
-      el.addEventListener('mouseenter', ()=> applyHoverMapHighlight(true));
-      el.addEventListener('mouseleave', ()=> applyHoverMapHighlight(false));
+      el.addEventListener('mouseenter', ()=> handleHoverHighlight(true));
+      el.addEventListener('mouseleave', ()=> handleHoverHighlight(false));
+      el.dataset.hoverHighlightBound = '1';
       return el;
     }
+
+    document.addEventListener('mouseover', event => {
+      const cardEl = event.target.closest('.post-card, .recents-card');
+      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      const related = event.relatedTarget;
+      if(related && cardEl.contains(related)) return;
+      const id = cardEl.dataset ? cardEl.dataset.id : null;
+      if(!id) return;
+      toggleSmallMapCardHoverHighlight(id, true);
+    });
+
+    document.addEventListener('mouseout', event => {
+      const cardEl = event.target.closest('.post-card, .recents-card');
+      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
+      const related = event.relatedTarget;
+      if(related && cardEl.contains(related)) return;
+      const id = cardEl.dataset ? cardEl.dataset.id : null;
+      if(!id) return;
+      toggleSmallMapCardHoverHighlight(id, false);
+    });
 
     // History board
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
