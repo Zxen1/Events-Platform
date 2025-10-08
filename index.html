@@ -66,12 +66,14 @@
       box-shadow: none;
       z-index: 5;
       will-change: transform;
+      --marker-anchor-offset-x: -20px;
+      --marker-anchor-offset-y: -20px;
     }
     .mapmarker-overlay > .big-map-card{
       position: absolute;
       left: 0;
       top: 0;
-      transform: translate3d(-30px, -30px, 0);
+      transform: translate3d(var(--marker-anchor-offset-x), var(--marker-anchor-offset-y), 0);
       pointer-events: auto;
       z-index: 30;
     }
@@ -105,7 +107,7 @@
       top: 0;
       width: 150px;
       height: 40px;
-      transform: translate3d(-20px, -20px, 0);
+      transform: translate3d(var(--marker-anchor-offset-x), var(--marker-anchor-offset-y), 0);
       pointer-events: none;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.9);
@@ -163,8 +165,8 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: 5px;
-      top: 5px;
+      left: -5px;
+      top: -5px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -175,9 +177,9 @@
     .map-card-label,
     .mapmarker-label{
       position: absolute;
-      left: 60px;
+      left: 50px;
       top: 5px;
-      width: calc(100% - 65px);
+      width: calc(100% - 55px);
       height: 50px;
       padding: 0 5px 0 0;
       display: flex;
