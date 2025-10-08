@@ -6023,9 +6023,10 @@ if (typeof slugify !== 'function') {
   // registered with a style (currently ~1000). Generating a composite sprite
   // for every single marker label without a cap quickly exhausts that budget,
   // which in turn causes Mapbox to render the fallback pill without any icon
-  // or text. Keep the working set well below the platform ceiling so older
-  // composites are retired and fresh ones can always be created.
-  const MARKER_LABEL_COMPOSITE_LIMIT = 850;
+  // or text. Each composite registers both a base pill and its accent variant,
+  // so cap the composites to keep the total image count comfortably below the
+  // platform ceiling.
+  const MARKER_LABEL_COMPOSITE_LIMIT = 400;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
   let markerLabelPillImagePromise = null;
 
@@ -12396,8 +12397,20 @@ if (!map.__pillHooksInstalled) {
       }
       if(typeof ensureMarkerLabelComposite === 'function'){
         const spriteMeta = new Map();
-        const rawBounds = typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
+        const zoomLevel = typeof map.getZoom === 'function' ? Number(map.getZoom()) : NaN;
+        const zoomEligible = Number.isFinite(zoomLevel) && zoomLevel >= 8;
+        const rawBounds = zoomEligible && typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
         const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
+        const highlightedPostIdSet = new Set();
+        lastHighlightedPostIds.forEach(entry => {
+          if(!entry) return;
+          const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
+          if(rawId === undefined || rawId === null) return;
+          const strId = String(rawId);
+          if(strId){
+            highlightedPostIdSet.add(strId);
+          }
+        });
         postsData.features.forEach(feature => {
           if(!feature || !feature.properties) return;
           const props = feature.properties;
@@ -12407,7 +12420,7 @@ if (!map.__pillHooksInstalled) {
             ? feature.geometry.coordinates
             : null;
           let inView = false;
-          if(coords && coords.length >= 2 && priorityBounds){
+          if(zoomEligible && coords && coords.length >= 2 && priorityBounds){
             const [lng, lat] = coords;
             if(Number.isFinite(lng) && Number.isFinite(lat)){
               inView = pointWithinBounds(lng, lat, priorityBounds);
@@ -12420,7 +12433,17 @@ if (!map.__pillHooksInstalled) {
           const labelLine2 = props.labelLine2 || '';
           const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
           const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
-          const priority = Boolean((stored ? stored.priority : false) || inView || existing.priority);
+          const isHighlighted = (() => {
+            const ownId = props.id !== undefined && props.id !== null ? String(props.id) : '';
+            if(ownId && highlightedPostIdSet.has(ownId)){
+              return true;
+            }
+            return multiIds.some(mid => {
+              if(mid === undefined || mid === null) return false;
+              return highlightedPostIdSet.has(String(mid));
+            });
+          })();
+          const priority = Boolean(inView || isHighlighted);
           const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
           const updatedMeta = Object.assign({}, existing, {
             iconId,
@@ -12428,7 +12451,8 @@ if (!map.__pillHooksInstalled) {
             labelLine2,
             isMulti,
             priority,
-            lastUsed
+            lastUsed,
+            inView
           });
           markerLabelCompositeStore.set(spriteId, updatedMeta);
           spriteMeta.set(spriteId, {
@@ -12437,11 +12461,12 @@ if (!map.__pillHooksInstalled) {
             labelLine2,
             isMulti,
             priority,
-            lastUsed
+            lastUsed,
+            inView
           });
         });
         const spriteEntries = Array.from(spriteMeta.entries());
-        spriteEntries.sort((a, b) => {
+        const compareEntries = (a, b) => {
           const aMeta = a[1] || {};
           const bMeta = b[1] || {};
           const aPriority = aMeta.priority ? 1 : 0;
@@ -12455,15 +12480,19 @@ if (!map.__pillHooksInstalled) {
             return bLast - aLast;
           }
           return String(a[0]).localeCompare(String(b[0]));
-        });
+        };
+        spriteEntries.sort(compareEntries);
         const compositeSafetyBuffer = 25;
-        let eagerSpriteEntries = spriteEntries;
-        if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
-          const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
-          if(maxEager <= 0){
-            eagerSpriteEntries = [];
-          } else if(spriteEntries.length > maxEager){
-            eagerSpriteEntries = spriteEntries.slice(0, maxEager);
+        let eagerSpriteEntries = [];
+        if(zoomEligible){
+          eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
+          if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
+            const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
+            if(maxEager <= 0){
+              eagerSpriteEntries = [];
+            } else if(eagerSpriteEntries.length > maxEager){
+              eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
+            }
           }
         }
         await Promise.all(eagerSpriteEntries.map(([spriteId, meta]) =>
