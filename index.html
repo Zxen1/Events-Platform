@@ -7151,14 +7151,14 @@ if (typeof slugify !== 'function') {
                 : null;
               const bucketData = grouping && bucketKey ? grouping.get(bucketKey) : null;
               const childZoomLimit = Number.isFinite(maxZoom)
-                ? Math.min(maxZoom, Math.max(maxAllowedZoom, 9))
-                : 9;
+                ? Math.min(maxZoom, Math.max(maxAllowedZoom, 12))
+                : 12;
               const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, childZoomLimit);
               const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
-              const desiredLeafZoom = Number.isFinite(maxZoom) ? Math.min(9, maxZoom) : 9;
+              const desiredLeafZoom = Number.isFinite(maxZoom) ? Math.min(12, maxZoom) : 12;
               let finalZoom;
               if(hasChildTarget){
                 const childZoom = childTarget && Number.isFinite(childTarget.zoom)
