@@ -5877,7 +5877,14 @@ if (typeof slugify !== 'function') {
       if(postId === undefined || postId === null){
         return;
       }
-      const post = posts.find(item => item && String(item.id) === String(postId));
+      let post = posts.find(item => item && String(item.id) === String(postId));
+      if(!post){
+        try{
+          post = getPostByIdAnywhere(postId);
+        }catch(err){
+          post = null;
+        }
+      }
       if(!post){
         return;
       }
