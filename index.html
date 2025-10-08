@@ -9375,7 +9375,6 @@ function makePosts(){
         const props = feature.properties;
         const baseId = props.id;
         if(baseId === undefined || baseId === null) return;
-        const key = String(baseId);
         const fid = feature.id ?? props.featureId;
         if(fid === undefined || fid === null) return;
         let venueKey = '';
@@ -9388,10 +9387,21 @@ function makePosts(){
             venueKey = String(parts[1] || '');
           }
         }
-        if(!index.has(key)){
-          index.set(key, []);
+        const ids = new Set();
+        ids.add(String(baseId));
+        if(Array.isArray(props.multiPostIds)){
+          props.multiPostIds.forEach(postId => {
+            if(postId === undefined || postId === null) return;
+            const strId = String(postId);
+            if(strId) ids.add(strId);
+          });
         }
-        index.get(key).push({ source: 'posts', id: fid, venueKey });
+        ids.forEach(idValue => {
+          if(!index.has(idValue)){
+            index.set(idValue, []);
+          }
+          index.get(idValue).push({ source: 'posts', id: fid, venueKey });
+        });
       });
       return index;
     }
@@ -12127,43 +12137,135 @@ if (!map.__pillHooksInstalled) {
       if(!Array.isArray(list) || !list.length){
         return { type:'FeatureCollection', features };
       }
+
+      const venueGroups = new Map();
+      const orphanEntries = [];
+
       list.forEach(p => {
         if(!p) return;
         const entries = collectLocationEntries(p);
         entries.forEach(entry => {
-          if(!entry || !entry.key) return;
+          if(!entry) return;
           const key = entry.key;
           const post = entry.post || p;
-          const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
-          const labelLines = getMarkerLabelLines(post);
-          const combinedLabel = buildMarkerLabelText(post, labelLines);
-          const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
-          const labelSpriteId = hashString(spriteSource);
-          const featureId = `post:${post.id}::${key}::${entry.index}`;
-          const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
-          features.push({
-            type:'Feature',
-            id: featureId,
-            properties:{
-              id: post.id,
-              featureId,
-              title: post.title,
-              label: combinedLabel,
-              labelLine1: labelLines.line1,
-              labelLine2: labelLines.line2,
-              labelSpriteId,
-              venueName,
-              city: post.city,
-              cat: post.category,
-              sub: baseSub,
-              baseSub,
-              venueKey: key,
-              locationIndex: entry.index
-            },
-            geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
-          });
+          if(!key){
+            orphanEntries.push({ post, entry });
+            return;
+          }
+          let group = venueGroups.get(key);
+          if(!group){
+            group = { key, entries: [], postIds: new Set() };
+            venueGroups.set(key, group);
+          }
+          group.entries.push({ post, entry });
+          if(post && post.id !== undefined && post.id !== null){
+            const strId = String(post.id);
+            if(strId) group.postIds.add(strId);
+          }
         });
       });
+
+      const buildSingleFeature = ({ post, entry }) => {
+        if(!post || !entry) return null;
+        const key = entry.key || '';
+        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        const labelLines = getMarkerLabelLines(post);
+        const combinedLabel = buildMarkerLabelText(post, labelLines);
+        const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
+        const labelSpriteId = hashString(spriteSource);
+        const featureId = key
+          ? `post:${post.id}::${key}::${entry.index}`
+          : `post:${post.id}::${entry.index}`;
+        const venueName = entry.loc && entry.loc.venue ? entry.loc.venue : getPrimaryVenueName(post);
+        return {
+          type:'Feature',
+          id: featureId,
+          properties:{
+            id: post.id,
+            featureId,
+            title: post.title,
+            label: combinedLabel,
+            labelLine1: labelLines.line1,
+            labelLine2: labelLines.line2,
+            labelSpriteId,
+            venueName,
+            city: post.city,
+            cat: post.category,
+            sub: baseSub,
+            baseSub,
+            venueKey: key,
+            locationIndex: entry.index,
+            isMultiVenue: false
+          },
+          geometry:{ type:'Point', coordinates:[entry.lng, entry.lat] }
+        };
+      };
+
+      const buildMultiFeature = (group) => {
+        if(!group || !group.entries.length) return null;
+        const multiCount = group.postIds.size;
+        if(multiCount <= 1){
+          return group.entries.map(buildSingleFeature).filter(Boolean);
+        }
+        const primary = group.entries[0];
+        if(!primary || !primary.post || !primary.entry) return null;
+        const { post, entry } = primary;
+        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        const venueName = (() => {
+          for(const item of group.entries){
+            const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
+            if(candidate){
+              return candidate;
+            }
+          }
+          return getPrimaryVenueName(post);
+        })() || '';
+        const multiCountLabel = `${multiCount} posts here`;
+        const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
+        const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
+        const spriteSource = ['multi', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
+        const labelSpriteId = hashString(spriteSource);
+        const featureId = `venue:${group.key}::${post.id}`;
+        const coordinates = [entry.lng, entry.lat];
+        const multiIds = Array.from(group.postIds);
+        return [{
+          type:'Feature',
+          id: featureId,
+          properties:{
+            id: post.id,
+            featureId,
+            title: multiCountLabel,
+            label: combinedLabel,
+            labelLine1: multiCountLabel,
+            labelLine2: multiVenueText,
+            labelSpriteId,
+            venueName,
+            city: post.city,
+            cat: post.category,
+            sub: baseSub,
+            baseSub,
+            venueKey: group.key,
+            locationIndex: entry.index,
+            isMultiVenue: true,
+            multiCount,
+            multiPostIds: multiIds
+          },
+          geometry:{ type:'Point', coordinates }
+        }];
+      };
+
+      venueGroups.forEach(group => {
+        const result = buildMultiFeature(group);
+        if(Array.isArray(result)){
+          result.forEach(feature => { if(feature) features.push(feature); });
+        }
+      });
+
+      orphanEntries.forEach(item => {
+        const feature = buildSingleFeature(item);
+        if(feature) features.push(feature);
+      });
+
       return {
         type:'FeatureCollection',
         features
@@ -12242,7 +12344,8 @@ if (!map.__pillHooksInstalled) {
           const iconId = props.sub || props.baseSub || '';
           const labelLine1 = props.labelLine1 || '';
           const labelLine2 = props.labelLine2 || '';
-          const isMulti = false;
+          const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+          const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
           const priority = Boolean((stored ? stored.priority : false) || inView || existing.priority);
           const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
           const updatedMeta = Object.assign({}, existing, {
