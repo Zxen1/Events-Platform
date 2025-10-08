@@ -7568,7 +7568,8 @@ if (typeof slugify !== 'function') {
 
     function setSmallMapCardPillImage(cardEl, highlighted){
       if(!cardEl) return;
-      const pillImg = cardEl.querySelector('.mapmarker-pill');
+      const pillImg = cardEl.querySelector('.mapmarker-pill, .map-card-pill')
+        || cardEl.querySelector('img[src*="150x40-pill" i]');
       if(!pillImg) return;
       if(!pillImg.dataset.defaultSrc){
         const currentSrc = pillImg.getAttribute('src') || '';
@@ -7582,6 +7583,9 @@ if (typeof slugify !== 'function') {
         : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
       if((pillImg.getAttribute('src') || '') !== targetSrc){
         pillImg.setAttribute('src', targetSrc);
+      }
+      if(pillImg.getAttribute('srcset')){
+        pillImg.removeAttribute('srcset');
       }
     }
 
