@@ -16002,10 +16002,22 @@ document.addEventListener('pointerdown', (e) => {
   }
   function wireCategory(cat){
     const table=cat.querySelector('table');
-    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
-    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
-    cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
-    cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
+    const deleteBtn=cat.querySelector('.delete-category');
+    if(deleteBtn){
+      deleteBtn.addEventListener('click',()=>cat.remove());
+    }
+    const copyBtn=cat.querySelector('.copy-category');
+    if(copyBtn){
+      copyBtn.addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
+    }
+    const addSubBtn=cat.querySelector('.add-subcategory');
+    if(addSubBtn){
+      addSubBtn.addEventListener('click',()=>addSubcategory(table));
+    }
+    const addFieldBtn=cat.querySelector('.add-field');
+    if(addFieldBtn){
+      addFieldBtn.addEventListener('click',()=>addFieldRow(table));
+    }
   }
   function createCategory(){
     const cat=document.createElement('div'); cat.className='form-category';
@@ -16013,18 +16025,14 @@ document.addEventListener('pointerdown', (e) => {
     const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
     const icon=createIconSelect();
     const color=document.createElement('input'); color.type='color'; color.value='#000000';
-    const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
     const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
-    header.append(name,icon,color,copy,del);
+    header.append(name,icon,color,del);
     cat.appendChild(header);
     const table=document.createElement('table'); table.className='subcategory-table';
     const iconRow=document.createElement('tr'); iconRow.className='icon-row';
     const nameRow=document.createElement('tr'); nameRow.className='name-row';
     table.append(iconRow,nameRow);
     cat.appendChild(table);
-    const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
-    const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
-    cat.append(addSub,addField);
     addSubcategory(table);
     addFieldRow(table);
     wireCategory(cat);
