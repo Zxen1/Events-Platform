@@ -11531,15 +11531,6 @@ function makePosts(){
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
 
-      const markerTextField = ['coalesce', ['get','label'], ''];
-      const markerIconId = ['let', 'iconId', ['coalesce', ['get','sub'], ['get','baseSub'], ''],
-        ['case',
-          ['==', ['var','iconId'], ''],
-          'marker-15',
-          ['var','iconId']
-        ]
-      ];
-
       const highlightedStateExpression = ['boolean', ['feature-state', 'isHighlighted'], false];
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
