@@ -9409,16 +9409,9 @@ function makePosts(){
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
       let userClosedPostBoard = false;
-      const WIDE_SCREEN_CLUSTER_MIN_WIDTH = 1200;
-
-      function isWideScreenPostBoard(){
-        return window.innerWidth >= WIDE_SCREEN_CLUSTER_MIN_WIDTH;
-      }
-
       function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
         if(trigger !== 'click' && trigger !== 'touch') return;
         if(userClosedPostBoard) return;
-        if(!isWideScreenPostBoard()) return;
         const normalizedIds = Array.isArray(multiIds)
           ? multiIds.map(id => String(id)).filter(Boolean)
           : [];
