@@ -6165,7 +6165,7 @@ if (typeof slugify !== 'function') {
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
               }
-              if(!hasChildTarget && typeof autoOpenPostBoardForCluster === 'function'){
+              if(typeof autoOpenPostBoardForCluster === 'function'){
                 try{
                   autoOpenPostBoardForCluster({
                     multiIds: bucketIds,
