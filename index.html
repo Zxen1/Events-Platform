@@ -10065,9 +10065,18 @@ function makePosts(){
         optionsMenu.hidden = true;
 
         triggerWrap.append(menuBtn, optionsMenu);
-        header.append(triggerWrap);
-        menu.append(header);
 
+        const toggle = document.createElement('label');
+        toggle.className = 'cat-switch';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.checked = true;
+        input.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const slider = document.createElement('span');
+        slider.className = 'slider';
+        toggle.append(input, slider);
+
+        const subButtons = [];
         c.subs.forEach(sub=>{
           const subBtn = document.createElement('button');
           subBtn.type = 'button';
@@ -10075,27 +10084,60 @@ function makePosts(){
           subBtn.dataset.category = c.name;
           subBtn.dataset.subcategory = sub;
           subBtn.setAttribute('aria-pressed', 'false');
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
+          subBtn.setAttribute('aria-disabled', 'false');
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
             subLabel.textContent = sub;
           }
           subBtn.addEventListener('click', ()=>{
+            if(!input.checked) return;
             const pressed = subBtn.getAttribute('aria-pressed') === 'true';
             const next = !pressed;
             subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
             subBtn.classList.toggle('on', next);
           });
           optionsMenu.appendChild(subBtn);
+          subButtons.push(subBtn);
         });
 
+        header.append(triggerWrap, toggle);
+        menu.append(header);
+
+        let openState = false;
+        function syncExpanded(){
+          const expanded = input.checked && openState;
+          menu.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          optionsMenu.hidden = !expanded;
+        }
+        function setCategoryEnabled(enabled){
+          const isEnabled = !!enabled;
+          input.checked = isEnabled;
+          menu.classList.toggle('cat-off', !isEnabled);
+          menuBtn.disabled = !isEnabled;
+          menuBtn.setAttribute('aria-disabled', isEnabled ? 'false' : 'true');
+          subButtons.forEach(btn=>{
+            btn.disabled = !isEnabled;
+            btn.setAttribute('aria-disabled', isEnabled ? 'false' : 'true');
+          });
+          if(!isEnabled){
+            openState = false;
+          }
+          syncExpanded();
+        }
+
         menuBtn.addEventListener('click', ()=>{
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          const next = !isExpanded;
-          menu.setAttribute('aria-expanded', next ? 'true' : 'false');
-          menuBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
-          optionsMenu.hidden = !next;
+          if(menuBtn.disabled) return;
+          openState = !openState;
+          syncExpanded();
         });
+
+        input.addEventListener('change', ()=>{
+          setCategoryEnabled(input.checked);
+        });
+
+        setCategoryEnabled(true);
 
         frag.appendChild(menu);
       });
