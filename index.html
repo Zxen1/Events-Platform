@@ -130,11 +130,6 @@
       font-weight: 600;
     }
 
-    .mapmarker-overlay.is-card-visible .small-map-card {
-      opacity: 0;
-      visibility: hidden;
-    }
-
     .mapmarker-overlay.is-card-visible .big-map-card,
     .mapmarker-overlay:hover .big-map-card {
       opacity: 1;
@@ -11829,8 +11824,8 @@ function makePosts(){
 
             cardRoot.append(pillImg, thumbImg, labelEl);
             overlayRoot.append(markerContainer, cardRoot);
-            overlayRoot.classList.add('is-card-visible');
-            overlayRoot.style.pointerEvents = '';
+            overlayRoot.classList.remove('is-card-visible');
+            overlayRoot.style.pointerEvents = 'auto';
 
             const handleOverlayClick = (ev)=>{
               ev.preventDefault();
@@ -11880,11 +11875,13 @@ function makePosts(){
             const handleOverlayEnter = () => {
               window.__overCard = true;
               overlayRoot.classList.add('is-highlight');
+              overlayRoot.classList.add('is-card-visible');
               updateSelectedMarkerRing();
             };
             const handleOverlayLeave = () => {
               window.__overCard = false;
               overlayRoot.classList.remove('is-highlight');
+              overlayRoot.classList.remove('is-card-visible');
               if(listLocked) return;
               schedulePopupRemoval(marker, 160);
             };
