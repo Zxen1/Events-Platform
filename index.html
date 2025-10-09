@@ -235,19 +235,6 @@
       pointer-events: auto;
     }
 
-    @media (max-width:440px){
-      .big-map-card:not(.big-map-card--list) .map-card-label{
-        top:50%;
-        bottom:auto;
-        height:auto;
-        transform:translateY(-50%);
-      }
-
-      .small-map-card .mapmarker-label{
-        justify-content:center;
-      }
-    }
-
     .mapmarker-label{
       position: relative;
       left: auto;
@@ -266,7 +253,6 @@
       min-width: 0;
       justify-content: center;
       align-items: flex-start;
-      align-self: stretch;
     }
 
     .mapmarker-label-line{
@@ -301,8 +287,6 @@
 
     .map-card-label{
       justify-content: center;
-      bottom: 5px;
-      height: auto;
     }
 
     .map-card-title{
@@ -4415,9 +4399,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     gap:0;
     flex-direction:column;
     align-items:flex-start;
-    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   .quick-list-board,
   .post-board,
@@ -4428,10 +4409,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     right:0;
     padding:0;
     border-radius:0;
-    flex:1 1 auto;
-    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    flex:0 0 auto;
+    min-height:0;
+    height:auto;
+    max-height:100%;
   }
   .post-board{
     min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -4446,9 +4427,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
     bottom:var(--footer-h);
-    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
+    min-height:0;
   }
   .card,
   .recents-card,
@@ -10085,18 +10065,9 @@ function makePosts(){
         optionsMenu.hidden = true;
 
         triggerWrap.append(menuBtn, optionsMenu);
+        header.append(triggerWrap);
+        menu.append(header);
 
-        const toggle = document.createElement('label');
-        toggle.className = 'cat-switch';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.checked = true;
-        input.setAttribute('aria-label', `Toggle ${c.name} category`);
-        const slider = document.createElement('span');
-        slider.className = 'slider';
-        toggle.append(input, slider);
-
-        const subButtons = [];
         c.subs.forEach(sub=>{
           const subBtn = document.createElement('button');
           subBtn.type = 'button';
@@ -10104,60 +10075,27 @@ function makePosts(){
           subBtn.dataset.category = c.name;
           subBtn.dataset.subcategory = sub;
           subBtn.setAttribute('aria-pressed', 'false');
-          subBtn.setAttribute('aria-disabled', 'false');
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
             subLabel.textContent = sub;
           }
           subBtn.addEventListener('click', ()=>{
-            if(!input.checked) return;
             const pressed = subBtn.getAttribute('aria-pressed') === 'true';
             const next = !pressed;
             subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
             subBtn.classList.toggle('on', next);
           });
           optionsMenu.appendChild(subBtn);
-          subButtons.push(subBtn);
         });
-
-        header.append(triggerWrap, toggle);
-        menu.append(header);
-
-        let openState = false;
-        function syncExpanded(){
-          const expanded = input.checked && openState;
-          menu.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          menuBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          optionsMenu.hidden = !expanded;
-        }
-        function setCategoryEnabled(enabled){
-          const isEnabled = !!enabled;
-          input.checked = isEnabled;
-          menu.classList.toggle('cat-off', !isEnabled);
-          menuBtn.disabled = !isEnabled;
-          menuBtn.setAttribute('aria-disabled', isEnabled ? 'false' : 'true');
-          subButtons.forEach(btn=>{
-            btn.disabled = !isEnabled;
-            btn.setAttribute('aria-disabled', isEnabled ? 'false' : 'true');
-          });
-          if(!isEnabled){
-            openState = false;
-          }
-          syncExpanded();
-        }
 
         menuBtn.addEventListener('click', ()=>{
-          if(menuBtn.disabled) return;
-          openState = !openState;
-          syncExpanded();
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          const next = !isExpanded;
+          menu.setAttribute('aria-expanded', next ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+          optionsMenu.hidden = !next;
         });
-
-        input.addEventListener('change', ()=>{
-          setCategoryEnabled(input.checked);
-        });
-
-        setCategoryEnabled(true);
 
         frag.appendChild(menu);
       });
@@ -16002,22 +15940,10 @@ document.addEventListener('pointerdown', (e) => {
   }
   function wireCategory(cat){
     const table=cat.querySelector('table');
-    const deleteBtn=cat.querySelector('.delete-category');
-    if(deleteBtn){
-      deleteBtn.addEventListener('click',()=>cat.remove());
-    }
-    const copyBtn=cat.querySelector('.copy-category');
-    if(copyBtn){
-      copyBtn.addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
-    }
-    const addSubBtn=cat.querySelector('.add-subcategory');
-    if(addSubBtn){
-      addSubBtn.addEventListener('click',()=>addSubcategory(table));
-    }
-    const addFieldBtn=cat.querySelector('.add-field');
-    if(addFieldBtn){
-      addFieldBtn.addEventListener('click',()=>addFieldRow(table));
-    }
+    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
+    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
+    cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
+    cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
   }
   function createCategory(){
     const cat=document.createElement('div'); cat.className='form-category';
@@ -16025,14 +15951,18 @@ document.addEventListener('pointerdown', (e) => {
     const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
     const icon=createIconSelect();
     const color=document.createElement('input'); color.type='color'; color.value='#000000';
+    const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
     const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
-    header.append(name,icon,color,del);
+    header.append(name,icon,color,copy,del);
     cat.appendChild(header);
     const table=document.createElement('table'); table.className='subcategory-table';
     const iconRow=document.createElement('tr'); iconRow.className='icon-row';
     const nameRow=document.createElement('tr'); nameRow.className='name-row';
     table.append(iconRow,nameRow);
     cat.appendChild(table);
+    const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
+    const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
+    cat.append(addSub,addField);
     addSubcategory(table);
     addFieldRow(table);
     wireCategory(cat);
