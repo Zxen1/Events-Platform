@@ -50,13 +50,19 @@
     .big-map-card{
       position: relative;
       width: 225px;
-      height: 60px;
+      min-height: 60px;
       transform: translate3d(0, 0, 0);
       will-change: transform;
       pointer-events: auto;
       isolation: isolate;
       touch-action: none;
-      border-radius: 999px;
+      border-radius: 16px;
+      padding: 8px 12px 8px 64px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
     }
     .mapmarker-overlay{
       position: relative;
@@ -67,7 +73,7 @@
       isolation: isolate;
       touch-action: none;
       background: transparent;
-      border-radius: 999px;
+      border-radius: 16px;
       box-shadow: none;
       z-index: 5;
       will-change: transform;
@@ -84,21 +90,6 @@
       pointer-events: auto;
       z-index: 20000;
     }
-    .big-map-card img{ display:block; }
-    .map-card-pill{
-      position: absolute;
-      inset: auto;
-      left: 5px;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0 !important;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
       transition: background-color 0.2s ease;
@@ -112,32 +103,20 @@
     }
     .map-card-thumb{
       position: absolute;
-      left: 5px;
-      top: 5px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
+      left: 12px;
+      top: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       object-fit: cover;
       box-shadow: 0 2px 6px rgba(0,0,0,0.35);
       z-index: 40;
-    }
-    .big-multi-post-map-card .map-card-thumb{
-      border-radius: 12px;
-      object-fit: contain;
-      background: transparent;
-      box-shadow: none;
+      background: #1a1a1a;
     }
     .map-card-label{
-      position: absolute;
-      left: 60px;
-      top: 5px;
-      width: calc(100% - 65px);
-      height: 50px;
-      padding: 0 5px 0 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: flex-start;
       gap: 2px;
       color: #fff;
       font-size: 12px;
@@ -147,7 +126,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-      z-index: 1;
       pointer-events: auto;
     }
 
@@ -208,22 +186,23 @@
     .big-map-card--list{
       position: relative;
       width: 100%;
-      height: auto;
+      min-height: 72px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       transform: none;
       background: none;
-      border-radius: 0;
+      border-radius: 12px;
       box-shadow: none;
+      padding: 12px;
     }
     .big-map-card--list .map-card-thumb{
       position: static;
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
       box-shadow: none;
-      flex: 0 0 64px;
+      flex: 0 0 60px;
     }
     .big-map-card--list .map-card-label{
       position: static;
@@ -4230,15 +4209,6 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .session-info,
 .second-post-column .session-info{margin-top:8px;}
 
-.pill{
-  border: 1px solid var(--btn);
-  background: var(--btn);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .close{
   border: 0;
   background: #16283f;
@@ -5073,148 +5043,6 @@ if (typeof slugify !== 'function') {
 }
 </script>
 
-<script>
-// === 150x40 pill provider (sprite id: marker-label-bg) ===
-(function(){
-  const PILL_ID = 'marker-label-bg';
-  const ACCENT_ID = `${PILL_ID}--accent`;
-  const PILL_BASE_IMAGE_URL = 'assets/icons-30/150x40-pill-70.webp';
-  const PILL_ACCENT_IMAGE_URL = 'assets/icons-30/150x40-pill-2f3b73.webp';
-  let cachedImages = null;
-  let loadingTask = null;
-  const pendingMaps = new Set();
-
-  function applyImageToMap(map){
-    if(!map || typeof map.hasImage !== 'function' || !cachedImages){
-      return;
-    }
-    try{
-      if(map.hasImage(PILL_ID)){
-        try{ map.removeImage(PILL_ID); }catch(e){}
-      }
-      if(map.hasImage(ACCENT_ID)){
-        try{ map.removeImage(ACCENT_ID); }catch(e){}
-      }
-      const baseImage = cachedImages.base || cachedImages.accent;
-      if(baseImage){
-        map.addImage(PILL_ID, baseImage, { pixelRatio: 1 });
-      }
-      const accentImage = cachedImages.accent || cachedImages.base;
-      if(accentImage){
-        map.addImage(ACCENT_ID, accentImage, { pixelRatio: 1 });
-      }
-    }catch(e){ /* silent */ }
-  }
-
-  function tintImage(sourceImage, color, alpha = 1){
-    if(!sourceImage){
-      return null;
-    }
-    try{
-      const width = sourceImage.naturalWidth || sourceImage.width || 150;
-      const height = sourceImage.naturalHeight || sourceImage.height || 40;
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(width));
-      canvas.height = Math.max(1, Math.round(height));
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
-      if(color){
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-      }
-      return canvas;
-    }catch(err){
-      return null;
-    }
-  }
-
-  function prepareCachedImages(baseImage, accentImage){
-    if(!baseImage){
-      cachedImages = null;
-      return;
-    }
-    const tintedBase = tintImage(baseImage, 'rgba(0,0,0,1)', 0.9) || baseImage;
-    let highlight = null;
-    if(accentImage){
-      highlight = tintImage(accentImage, null, 1) || accentImage;
-    }
-    if(!highlight){
-      highlight = tintImage(baseImage, '#2f3b73', 1) || tintedBase;
-    }
-    cachedImages = { base: tintedBase, accent: highlight };
-  }
-
-  function loadImage(url){
-    if(!url){
-      return Promise.resolve(null);
-    }
-    return new Promise((resolve) => {
-      const img = new Image();
-      try{ img.crossOrigin = 'anonymous'; }catch(e){}
-      try{ img.decoding = 'async'; }catch(e){}
-      img.onload = () => {
-        if(img.naturalWidth > 0 && img.naturalHeight > 0){
-          resolve(img);
-        }else{
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-      img.src = url;
-      if(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0){
-        resolve(img);
-      }
-    });
-  }
-
-  function ensureImage(){
-    if(cachedImages || loadingTask){
-      return;
-    }
-    loadingTask = Promise.all([
-      loadImage(PILL_BASE_IMAGE_URL),
-      loadImage(PILL_ACCENT_IMAGE_URL)
-    ]).then(([baseImage, accentImage]) => {
-      if(baseImage){
-        prepareCachedImages(baseImage, accentImage);
-        if(cachedImages){
-          pendingMaps.forEach((map) => applyImageToMap(map));
-        }
-      }
-    }).catch(() => {
-      cachedImages = null;
-    }).finally(() => {
-      pendingMaps.clear();
-      loadingTask = null;
-    });
-  }
-
-  function addOrReplacePill(map){
-    try{
-      if(!map || typeof map.hasImage !== 'function'){
-        return;
-      }
-      if(cachedImages){
-        applyImageToMap(map);
-        return;
-      }
-      pendingMaps.add(map);
-      ensureImage();
-    }catch(e){ /* silent */ }
-  }
-
-  window.__addOrReplacePill150x40 = addOrReplacePill;
-  ensureImage();
-})();
-</script>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
@@ -5750,11 +5578,9 @@ if (typeof slugify !== 'function') {
   const markerLabelTextAreaWidthPx = Math.max(0, markerLabelBackgroundWidthPx - markerLabelTextPaddingPx - markerLabelTextRightPaddingPx);
   const markerLabelTextSize = 12;
   const markerLabelTextLineHeight = 1.2;
-  const markerLabelBgTranslatePx = 0;
   const markerLabelEllipsisChar = '\u2026';
   const mapCardTitleWidthPx = 165;
   let markerLabelMeasureContext = null;
-  const markerLabelCompositePlaceholderIds = new Set();
 
   function ensureMarkerLabelMeasureContext(){
     if(markerLabelMeasureContext){
@@ -5917,523 +5743,6 @@ if (typeof slugify !== 'function') {
       return `${lines.line1}\n${lines.line2}`;
     }
     return lines.line1;
-  }
-
-  const MARKER_LABEL_BG_ID = 'marker-label-bg';
-  const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
-  const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
-  const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
-  const markerLabelCompositeStore = new Map();
-  const markerLabelCompositePending = new Map();
-  // Mapbox GL JS enforces a hard limit on the number of images that can be
-  // registered with a style (currently ~1000). Generating a composite sprite
-  // for every single marker label without a cap quickly exhausts that budget,
-  // which in turn causes Mapbox to render the fallback pill without any icon
-  // or text. Each composite registers both a base pill and its accent variant,
-  // so cap the composites to keep the total image count comfortably below the
-  // platform ceiling.
-  const MARKER_LABEL_COMPOSITE_LIMIT = 900;
-  const MARKER_SPRITE_RETAIN_ZOOM = 12;
-  let markerLabelPillImagePromise = null;
-
-  function nowTimestamp(){
-    try{
-      if(typeof performance !== 'undefined' && typeof performance.now === 'function'){
-        return performance.now();
-      }
-    }catch(err){}
-    return Date.now();
-  }
-
-  function collectActiveCompositeEntries(mapInstance){
-    const entries = [];
-    if(!mapInstance) return entries;
-    markerLabelCompositeStore.forEach((meta, spriteId) => {
-      if(!meta || !meta.image) return;
-      const compositeId = markerLabelCompositeId(spriteId);
-      let present = false;
-      if(typeof mapInstance.hasImage === 'function'){
-        try{ present = !!mapInstance.hasImage(compositeId); }
-        catch(err){ present = false; }
-      }
-      if(!present) return;
-      entries.push({
-        spriteId,
-        compositeId,
-        priority: Boolean(meta.priority),
-        lastUsed: Number.isFinite(meta.lastUsed) ? meta.lastUsed : 0
-      });
-    });
-    return entries;
-  }
-
-  function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
-    if(!mapInstance || !MARKER_LABEL_COMPOSITE_LIMIT || MARKER_LABEL_COMPOSITE_LIMIT <= 0){
-      return;
-    }
-    let zoomForBudget = NaN;
-    if(typeof mapInstance.getZoom === 'function'){
-      try{ zoomForBudget = mapInstance.getZoom(); }
-      catch(err){ zoomForBudget = NaN; }
-    }
-    if(Number.isFinite(zoomForBudget) && zoomForBudget >= MARKER_SPRITE_RETAIN_ZOOM){
-      mapInstance.__retainAllMarkerSprites = true;
-    }
-    if(mapInstance.__retainAllMarkerSprites){
-      return;
-    }
-    if(typeof mapInstance.removeImage !== 'function'){
-      return;
-    }
-    const { keep = [], reserve = 0 } = options || {};
-    const keepList = Array.isArray(keep) ? keep : [keep];
-    const keepSet = new Set(keepList.filter(Boolean));
-    const entries = collectActiveCompositeEntries(mapInstance);
-    if(!entries.length){
-      return;
-    }
-    const effectiveLimit = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, reserve));
-    if(entries.length <= effectiveLimit){
-      return;
-    }
-    entries.forEach(entry => {
-      entry.keep = keepSet.has(entry.spriteId);
-    });
-    entries.sort((a, b) => {
-      if(a.keep !== b.keep){
-        return a.keep ? -1 : 1;
-      }
-      if(a.priority !== b.priority){
-        return a.priority ? -1 : 1;
-      }
-      return (b.lastUsed || 0) - (a.lastUsed || 0);
-    });
-    entries.slice(effectiveLimit).forEach(entry => {
-      if(keepSet.has(entry.spriteId)) return;
-      const meta = markerLabelCompositeStore.get(entry.spriteId);
-      if(meta){
-        if(meta.image){
-          try{ delete meta.image; }catch(err){ meta.image = null; }
-        }
-        if(meta.options){
-          try{ delete meta.options; }catch(err){ meta.options = undefined; }
-        }
-        if(meta.highlightImage){
-          try{ delete meta.highlightImage; }catch(err){ meta.highlightImage = null; }
-        }
-        if(meta.highlightOptions){
-          try{ delete meta.highlightOptions; }catch(err){ meta.highlightOptions = undefined; }
-        }
-        markerLabelCompositeStore.set(entry.spriteId, meta);
-      }
-      markerLabelCompositePending.delete(entry.spriteId);
-      try{
-        if(typeof mapInstance.hasImage === 'function'){
-          if(mapInstance.hasImage(entry.compositeId)){
-            mapInstance.removeImage(entry.compositeId);
-          }
-          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-          if(mapInstance.hasImage(highlightId)){
-            mapInstance.removeImage(highlightId);
-          }
-        }
-      }catch(err){}
-    });
-  }
-
-  function loadMarkerLabelImage(url){
-    return new Promise((resolve, reject) => {
-      if(!url){
-        reject(new Error('Missing URL'));
-        return;
-      }
-      const img = new Image();
-      try{ img.crossOrigin = 'anonymous'; }catch(err){}
-      img.decoding = 'async';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Failed to load ${url}`));
-      img.src = url;
-      if(img.complete){
-        setTimeout(() => {
-          if(img.naturalWidth > 0 && img.naturalHeight > 0){
-            resolve(img);
-          }
-        }, 0);
-      }
-    });
-  }
-
-  async function ensureMarkerLabelPillImage(){
-    if(markerLabelPillImagePromise){
-      return markerLabelPillImagePromise;
-    }
-    const baseUrl = 'assets/icons-30/150x40-pill-70.webp';
-    const accentUrl = 'assets/icons-30/150x40-pill-2f3b73.webp';
-    const promise = Promise.all([
-      loadMarkerLabelImage(baseUrl),
-      loadMarkerLabelImage(accentUrl).catch(() => null)
-    ]).then(([baseImg, accentImg]) => {
-      if(!baseImg){
-        return null;
-      }
-      return { base: baseImg, highlight: accentImg };
-    }).catch(err => {
-      console.error(err);
-      return null;
-    });
-    markerLabelPillImagePromise = promise;
-    promise.then(result => {
-      if(!result){
-        markerLabelPillImagePromise = null;
-      }
-    }).catch(() => {
-      markerLabelPillImagePromise = null;
-    });
-    return markerLabelPillImagePromise;
-  }
-
-  function markerLabelCompositeId(spriteId){
-    return `${MARKER_LABEL_COMPOSITE_PREFIX}${spriteId}`;
-  }
-
-  async function ensureMarkerLabelComposite(mapInstance, labelSpriteId, iconId, labelLine1, labelLine2, isMulti, options = {}){
-    if(!mapInstance || !labelSpriteId){
-      return null;
-    }
-    const { priority = false } = options || {};
-    const compositeId = markerLabelCompositeId(labelSpriteId);
-    const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-    const meta = markerLabelCompositeStore.get(labelSpriteId) || {};
-    meta.iconId = iconId || meta.iconId || '';
-    meta.labelLine1 = labelLine1 ?? meta.labelLine1 ?? '';
-    meta.labelLine2 = labelLine2 ?? meta.labelLine2 ?? '';
-    meta.isMulti = Boolean(isMulti ?? meta.isMulti);
-    meta.priority = Boolean(priority);
-    meta.lastUsed = nowTimestamp();
-    markerLabelCompositeStore.set(labelSpriteId, meta);
-    if(mapInstance.hasImage?.(compositeId)){
-      if(markerLabelCompositePlaceholderIds.has(compositeId)){
-        try{ mapInstance.removeImage(compositeId); }catch(err){}
-        markerLabelCompositePlaceholderIds.delete(compositeId);
-      } else {
-        return compositeId;
-      }
-    }
-    if(markerLabelCompositePlaceholderIds.has(highlightId) && mapInstance.hasImage?.(highlightId)){
-      try{ mapInstance.removeImage(highlightId); }catch(err){}
-      markerLabelCompositePlaceholderIds.delete(highlightId);
-    }
-    if(meta.image && meta.highlightImage){
-      try{
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
-        try{ if(mapInstance.hasImage?.(compositeId)) mapInstance.removeImage(compositeId); }catch(err){}
-        mapInstance.addImage(compositeId, meta.image, meta.options || {});
-        markerLabelCompositePlaceholderIds.delete(compositeId);
-        if(meta.highlightImage){
-          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
-          try{ mapInstance.addImage(highlightId, meta.highlightImage, meta.highlightOptions || meta.options || {}); }
-          catch(err){ console.error(err); }
-          markerLabelCompositePlaceholderIds.delete(highlightId);
-        }
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
-        return compositeId;
-      }catch(err){
-        console.error(err);
-      }
-    }
-    if(markerLabelCompositePending.has(labelSpriteId)){
-      return markerLabelCompositePending.get(labelSpriteId);
-    }
-    const task = (async () => {
-      const pillAssets = await ensureMarkerLabelPillImage();
-      if(!pillAssets || !pillAssets.base){
-        return null;
-      }
-      const pillImg = pillAssets.base;
-      const pillAccentImg = pillAssets.highlight;
-      const markerSources = window.subcategoryMarkers || {};
-      const iconUrl = meta.iconId ? markerSources[meta.iconId] : null;
-      let iconImg = null;
-      if(iconUrl){
-        try{
-          iconImg = await loadMarkerLabelImage(iconUrl);
-        }catch(err){
-          console.error(err);
-        }
-      }
-      const rawWidth = pillImg.naturalWidth || pillImg.width || markerLabelBackgroundWidthPx;
-      const rawHeight = pillImg.naturalHeight || pillImg.height || markerLabelBackgroundHeightPx;
-      const canvasWidth = Math.max(1, Math.round(Number.isFinite(rawWidth) && rawWidth > 0 ? rawWidth : markerLabelBackgroundWidthPx));
-      const canvasHeight = Math.max(1, Math.round(Number.isFinite(rawHeight) && rawHeight > 0 ? rawHeight : markerLabelBackgroundHeightPx));
-      const pixelRatio = canvasWidth / markerLabelBackgroundWidthPx;
-      const labelLines = [];
-      const line1 = (meta.labelLine1 || '').trim();
-      const line2 = (meta.labelLine2 || '').trim();
-      if(line1){
-        labelLines.push({ text: line1, color: '#ffffff' });
-      }
-      if(line2){
-        labelLines.push({ text: line2, color: meta.isMulti ? '#d0d0d0' : '#ffffff' });
-      }
-      const drawForeground = (ctx)=>{
-        if(!ctx){
-          return;
-        }
-        try{
-          ctx.imageSmoothingEnabled = true;
-          if('imageSmoothingQuality' in ctx){
-            ctx.imageSmoothingQuality = 'high';
-          }
-        }catch(err){}
-        if(iconImg){
-          const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
-          const destX = Math.round(markerLabelMarkerInsetPx * pixelRatio);
-          const destY = Math.round((canvasHeight - iconSizePx) / 2);
-          try{
-            ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
-          }catch(err){
-            console.error(err);
-          }
-        }
-        if(labelLines.length){
-          const fontSizePx = markerLabelTextSize * pixelRatio;
-          const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
-          const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-          let textY = Math.round((canvasHeight - totalHeight) / 2);
-          if(!Number.isFinite(textY) || textY < 0){
-            textY = 0;
-          }
-          const textX = Math.round(markerLabelTextPaddingPx * pixelRatio);
-          ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
-          ctx.textBaseline = 'top';
-          ctx.textAlign = 'left';
-          ctx.shadowColor = 'rgba(0,0,0,0.4)';
-          ctx.shadowBlur = 2 * pixelRatio;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 1 * pixelRatio;
-          labelLines.forEach(line => {
-            ctx.fillStyle = line.color;
-            try{
-              ctx.fillText(line.text, textX, textY);
-            }catch(err){
-              console.error(err);
-            }
-            textY += fontSizePx + lineGapPx;
-          });
-          ctx.shadowColor = 'transparent';
-        }
-      };
-      const buildComposite = (backgroundImage, tintColor, tintAlpha = 1)=>{
-        if(!backgroundImage){
-          return null;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        const ctx = canvas.getContext('2d');
-        if(!ctx){
-          return null;
-        }
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-        try{
-          ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
-        }catch(err){
-          console.error(err);
-        }
-        if(tintColor){
-          ctx.globalCompositeOperation = 'source-atop';
-          ctx.globalAlpha = tintAlpha;
-          ctx.fillStyle = tintColor;
-          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-          ctx.globalAlpha = 1;
-          ctx.globalCompositeOperation = 'source-over';
-        }
-        drawForeground(ctx);
-        let imageData = null;
-        try{
-          imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-        }catch(err){
-          console.error(err);
-          imageData = null;
-        }
-        if(!imageData){
-          return null;
-        }
-        const options = { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 };
-        return { image: imageData, options };
-      };
-      const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
-      let accentComposite = null;
-      if(pillAccentImg){
-        accentComposite = buildComposite(pillAccentImg, null, 1);
-      }
-      if(!accentComposite){
-        accentComposite = buildComposite(pillImg, '#2f3b73', 1);
-      }
-      if(!baseComposite){
-        return null;
-      }
-      const highlightComposite = accentComposite || baseComposite;
-      try{
-        if(mapInstance.hasImage?.(compositeId)){
-          mapInstance.removeImage(compositeId);
-        }
-        markerLabelCompositePlaceholderIds.delete(compositeId);
-        const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-        if(mapInstance.hasImage?.(highlightId)){
-          mapInstance.removeImage(highlightId);
-        }
-        markerLabelCompositePlaceholderIds.delete(highlightId);
-      }catch(err){
-        console.error(err);
-      }
-      try{
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId], reserve: 1 });
-        mapInstance.addImage(compositeId, baseComposite.image, baseComposite.options || {});
-        markerLabelCompositePlaceholderIds.delete(compositeId);
-        if(highlightComposite && highlightComposite.image){
-          const highlightId = `${compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-          mapInstance.addImage(highlightId, highlightComposite.image, highlightComposite.options || baseComposite.options || {});
-          markerLabelCompositePlaceholderIds.delete(highlightId);
-        }
-        markerLabelCompositeStore.set(labelSpriteId, Object.assign(meta, {
-          image: baseComposite.image,
-          options: baseComposite.options,
-          highlightImage: highlightComposite.image,
-          highlightOptions: highlightComposite.options || baseComposite.options
-        }));
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [labelSpriteId] });
-        return compositeId;
-      }catch(err){
-        console.error(err);
-        return null;
-      }
-    })().finally(() => {
-      markerLabelCompositePending.delete(labelSpriteId);
-    });
-    markerLabelCompositePending.set(labelSpriteId, task);
-    return task;
-  }
-
-  function reapplyMarkerLabelComposites(mapInstance){
-    if(!mapInstance){
-      return;
-    }
-    const entries = [];
-    markerLabelCompositeStore.forEach((entry, spriteId) => {
-      if(!entry || !entry.image){
-        return;
-      }
-      entries.push({
-        spriteId,
-        compositeId: markerLabelCompositeId(spriteId),
-        image: entry.image,
-        options: entry.options || {},
-        highlightImage: entry.highlightImage,
-        highlightOptions: entry.highlightOptions || entry.options || {},
-        priority: Boolean(entry.priority),
-        lastUsed: Number.isFinite(entry.lastUsed) ? entry.lastUsed : 0
-      });
-    });
-    entries.sort((a, b) => {
-      if(a.priority !== b.priority){
-        return a.priority ? -1 : 1;
-      }
-      if(a.lastUsed !== b.lastUsed){
-        return (b.lastUsed || 0) - (a.lastUsed || 0);
-      }
-      return a.spriteId.localeCompare(b.spriteId);
-    });
-    entries.forEach(entry => {
-      let already = false;
-      if(typeof mapInstance.hasImage === 'function'){
-        try{ already = !!mapInstance.hasImage(entry.compositeId); }
-        catch(err){ already = false; }
-      }
-      if(already){
-        if(markerLabelCompositePlaceholderIds.has(entry.compositeId)){
-          try{ mapInstance.removeImage(entry.compositeId); }catch(err){}
-          markerLabelCompositePlaceholderIds.delete(entry.compositeId);
-          already = false;
-        } else {
-          return;
-        }
-      }
-      try{
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId], reserve: 1 });
-        mapInstance.addImage(entry.compositeId, entry.image, entry.options || {});
-        markerLabelCompositePlaceholderIds.delete(entry.compositeId);
-        if(entry.highlightImage){
-          const highlightId = `${entry.compositeId}${MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX}`;
-          try{ if(mapInstance.hasImage?.(highlightId)) mapInstance.removeImage(highlightId); }catch(err){}
-          try{ mapInstance.addImage(highlightId, entry.highlightImage, entry.highlightOptions || entry.options || {}); }
-          catch(err){ console.error(err); }
-          markerLabelCompositePlaceholderIds.delete(highlightId);
-        }
-        enforceMarkerLabelCompositeBudget(mapInstance, { keep: [entry.spriteId] });
-      }catch(err){
-        console.error(err);
-      }
-    });
-  }
-
-  function scheduleMarkerLabelBackgroundRetry(mapInstance){
-    if(!mapInstance || typeof mapInstance === 'undefined') return;
-    const mark = '__markerLabelBgRetryScheduled';
-    if(mapInstance[mark]) return;
-    mapInstance[mark] = true;
-    const retry = () => {
-      mapInstance[mark] = false;
-      try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
-    };
-    if(typeof mapInstance.once === 'function'){
-      mapInstance.once('style.load', retry);
-    } else if(typeof mapInstance.on === 'function'){
-      const handler = () => {
-        try{ mapInstance.off?.('style.load', handler); }catch(err){}
-        retry();
-      };
-      mapInstance.on('style.load', handler);
-    } else {
-      setTimeout(retry, 0);
-    }
-  }
-
-  function ensureMarkerLabelBackground(mapInstance){
-    if(!mapInstance || typeof mapInstance.addImage !== 'function') return;
-    try{
-      if(mapInstance.hasImage && mapInstance.hasImage(MARKER_LABEL_BG_ID)){
-        mapInstance.__markerLabelBgRetryScheduled = false;
-        return;
-      }
-    }catch(err){
-      scheduleMarkerLabelBackgroundRetry(mapInstance);
-      return;
-    }
-    if(typeof mapInstance.isStyleLoaded === 'function' && !mapInstance.isStyleLoaded()){
-      scheduleMarkerLabelBackgroundRetry(mapInstance);
-      return;
-    }
-    const placeholder = document.createElement('canvas');
-    try{
-      placeholder.width = Math.max(1, Math.round(markerLabelBackgroundWidthPx));
-      placeholder.height = Math.max(1, Math.round(markerLabelBackgroundHeightPx));
-      const phCtx = placeholder.getContext('2d');
-      if(phCtx){
-        phCtx.clearRect(0, 0, placeholder.width, placeholder.height);
-      }
-    }catch(err){
-      placeholder.width = 1;
-      placeholder.height = 1;
-    }
-    try{
-      mapInstance.addImage(MARKER_LABEL_BG_ID, placeholder, { pixelRatio: 1 });
-      mapInstance.__markerLabelBgRetryScheduled = false;
-    }catch(err){
-      scheduleMarkerLabelBackgroundRetry(mapInstance);
-      return;
-    }
-    try{ window.__addOrReplacePill150x40?.(mapInstance); }catch(err){}
   }
 
   function patchLayerFiltersForMissingLayer(mapInstance, style){
@@ -7427,8 +6736,6 @@ if (typeof slugify !== 'function') {
       }, delay);
     }
 
-    const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
-
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
       const list = Array.isArray(overlayEl.__cleanupFns)
@@ -7684,7 +6991,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
-    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = 'assets/icons-30/multi-post-icon-30.webp';
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
 
@@ -7781,8 +7087,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
 
       mapInstance.on('style.load', async () => {
-        try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
-        try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
         const preload = new Set([...KNOWN, ...Object.keys(markers)]);
         for(const iconName of preload){
@@ -7792,20 +7096,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
       mapInstance.on('styleimagemissing', e => {
         if(!e || !e.id) return;
-        if(e.id === MARKER_LABEL_BG_ID){
-          try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
-          return;
-        }
-        if(e.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-          const spriteId = e.id.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
-          const meta = markerLabelCompositeStore.get(spriteId) || {};
-          const hasLabelText = Boolean((meta.labelLine1 && meta.labelLine1.trim()) || (meta.labelLine2 && meta.labelLine2.trim()));
-          if(!hasLabelText){
-            return;
-          }
-          ensureMarkerLabelComposite(mapInstance, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
-          return;
-        }
         addIcon(e.id);
       });
 
@@ -9744,10 +9034,8 @@ function makePosts(){
         if(variant === 'popup') classes.push('big-map-card--popup');
         if(variant === 'list') classes.push('big-map-card--list');
         extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
-        if(variant === 'list'){
-          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
-        }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        const thumbHtml = `<img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}">${thumbHtml}${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -11707,13 +10995,6 @@ function makePosts(){
           map.once('load', updateZoomIndicator);
           updateZoomIndicator();
         }
-// === Pill hooks (safe) ===
-try { if (typeof __addOrReplacePill150x40 === 'function') __addOrReplacePill150x40(map); } catch(e){}
-if (!map.__pillHooksInstalled) {
-  try { map.on('style.load', () => __addOrReplacePill150x40(map)); } catch(e){}
-  try { map.on('styleimagemissing', (evt) => { if (evt && evt.id === 'marker-label-bg') __addOrReplacePill150x40(map); }); } catch(e){}
-  map.__pillHooksInstalled = true;
-}
         const ensureMissingStyleImage = (evt) => {
           if(!evt || !evt.id) return;
           const placeholders = ['mx-federal-5','background','background-stroke','icon','icon-stroke'];
@@ -11724,34 +11005,6 @@ if (!map.__pillHooksInstalled) {
           }catch(err){}
         };
         try{ map.on('styleimagemissing', ensureMissingStyleImage); }catch(err){}
-
-        const ensureCompositeOnStyleMissing = (evt) => {
-          if(!evt || !evt.id) return;
-          if(evt.id.startsWith(MARKER_LABEL_COMPOSITE_PREFIX)){
-            const isAccent = evt.id.endsWith(MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX);
-            const baseId = isAccent ? evt.id.slice(0, -MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX.length) : evt.id;
-            const spriteId = baseId.slice(MARKER_LABEL_COMPOSITE_PREFIX.length);
-            if(!spriteId){
-              return;
-            }
-            try{
-              if(!map.hasImage?.(evt.id)){
-                map.addImage(evt.id, createTransparentPlaceholder(markerLabelBackgroundWidthPx, markerLabelBackgroundHeightPx), { pixelRatio: 1 });
-                markerLabelCompositePlaceholderIds.add(evt.id);
-              }
-            }catch(err){}
-            const meta = markerLabelCompositeStore.get(spriteId) || {};
-            try{
-              ensureMarkerLabelComposite(map, spriteId, meta.iconId, meta.labelLine1, meta.labelLine2, meta.isMulti, { priority: meta.priority });
-            }catch(err){}
-          }
-        };
-        if(!map.__compositeStyleHookInstalled){
-          try{ map.on('styleimagemissing', ensureCompositeOnStyleMissing); }catch(err){}
-          map.__compositeStyleHookInstalled = true;
-        }
-
-        try{ map.on('style.load', () => { try{ reapplyMarkerLabelComposites(map); }catch(err){} }); }catch(err){}
 
         const applyStyleAdjustments = () => {
           try{ ensurePlaceholderSprites(map); }catch(err){}
@@ -12154,7 +11407,6 @@ if (!map.__pillHooksInstalled) {
         if(!primary || !primary.post || !primary.entry) return null;
         const { post, entry } = primary;
         const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
-        const multiIconId = MULTI_POST_MARKER_ICON_ID;
         const venueName = (() => {
           for(const item of group.entries){
             const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
@@ -12167,7 +11419,7 @@ if (!map.__pillHooksInstalled) {
         const multiCountLabel = `${multiCount} posts here`;
         const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
-        const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
+        const spriteSource = ['multi', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
         const labelSpriteId = hashString(spriteSource);
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
@@ -12186,7 +11438,7 @@ if (!map.__pillHooksInstalled) {
             venueName,
             city: post.city,
             cat: post.category,
-            sub: multiIconId,
+            sub: baseSub,
             baseSub,
             venueKey: group.key,
             locationIndex: entry.index,
@@ -12264,120 +11516,14 @@ if (!map.__pillHooksInstalled) {
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
       }
-      if(typeof ensureMarkerLabelComposite === 'function'){
-        const spriteMeta = new Map();
-        const zoomLevel = typeof map.getZoom === 'function' ? Number(map.getZoom()) : NaN;
-        const zoomEligible = Number.isFinite(zoomLevel) && zoomLevel >= 8;
-        const rawBounds = zoomEligible && typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
-        const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
-        const highlightedPostIdSet = new Set();
-        lastHighlightedPostIds.forEach(entry => {
-          if(!entry) return;
-          const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
-          if(rawId === undefined || rawId === null) return;
-          const strId = String(rawId);
-          if(strId){
-            highlightedPostIdSet.add(strId);
-          }
-        });
-        postsData.features.forEach(feature => {
-          if(!feature || !feature.properties) return;
-          const props = feature.properties;
-          const spriteId = props.labelSpriteId;
-          if(!spriteId || spriteMeta.has(spriteId)) return;
-          const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
-            ? feature.geometry.coordinates
-            : null;
-          let inView = false;
-          if(zoomEligible && coords && coords.length >= 2 && priorityBounds){
-            const [lng, lat] = coords;
-            if(Number.isFinite(lng) && Number.isFinite(lat)){
-              inView = pointWithinBounds(lng, lat, priorityBounds);
-            }
-          }
-          const existing = markerLabelCompositeStore.get(spriteId) || {};
-          const stored = spriteMeta.get(spriteId);
-          const iconId = props.sub || props.baseSub || '';
-          const labelLine1 = props.labelLine1 || '';
-          const labelLine2 = props.labelLine2 || '';
-          const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
-          const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
-          const isHighlighted = (() => {
-            const ownId = props.id !== undefined && props.id !== null ? String(props.id) : '';
-            if(ownId && highlightedPostIdSet.has(ownId)){
-              return true;
-            }
-            return multiIds.some(mid => {
-              if(mid === undefined || mid === null) return false;
-              return highlightedPostIdSet.has(String(mid));
-            });
-          })();
-          const priority = Boolean(inView || isHighlighted);
-          const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
-          const updatedMeta = Object.assign({}, existing, {
-            iconId,
-            labelLine1,
-            labelLine2,
-            isMulti,
-            priority,
-            lastUsed,
-            inView
-          });
-          markerLabelCompositeStore.set(spriteId, updatedMeta);
-          spriteMeta.set(spriteId, {
-            iconId,
-            labelLine1,
-            labelLine2,
-            isMulti,
-            priority,
-            lastUsed,
-            inView
-          });
-        });
-        const spriteEntries = Array.from(spriteMeta.entries());
-        const compareEntries = (a, b) => {
-          const aMeta = a[1] || {};
-          const bMeta = b[1] || {};
-          const aPriority = aMeta.priority ? 1 : 0;
-          const bPriority = bMeta.priority ? 1 : 0;
-          if(aPriority !== bPriority){
-            return bPriority - aPriority;
-          }
-          const aLast = Number.isFinite(aMeta.lastUsed) ? aMeta.lastUsed : 0;
-          const bLast = Number.isFinite(bMeta.lastUsed) ? bMeta.lastUsed : 0;
-          if(aLast !== bLast){
-            return bLast - aLast;
-          }
-          return String(a[0]).localeCompare(String(b[0]));
-        };
-        spriteEntries.sort(compareEntries);
-        const compositeSafetyBuffer = 25;
-        let eagerSpriteEntries = [];
-        if(zoomEligible){
-          eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
-          if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
-            const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
-            if(maxEager <= 0){
-              eagerSpriteEntries = [];
-            } else if(eagerSpriteEntries.length > maxEager){
-              eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
-            }
-          }
-        }
-        await Promise.all(eagerSpriteEntries.map(([spriteId, meta]) =>
-          ensureMarkerLabelComposite(
-            map,
-            spriteId,
-            meta.iconId,
-            meta.labelLine1,
-            meta.labelLine2,
-            meta.isMulti,
-            { priority: meta.priority }
-          ).catch(()=>{})
-        ));
-        enforceMarkerLabelCompositeBudget(map);
-      }
-      ensureMarkerLabelBackground(map);
+      const markerTextField = ['coalesce', ['get','label'], ''];
+      const markerIconId = ['let', 'iconId', ['coalesce', ['get','sub'], ['get','baseSub'], ''],
+        ['case',
+          ['==', ['var','iconId'], ''],
+          'marker-15',
+          ['var','iconId']
+        ]
+      ];
       updateMapFeatureHighlights(lastHighlightedPostIds);
       const markerLabelBaseConditions = [
         ['!',['has','point_count']],
@@ -12385,19 +11531,12 @@ if (!map.__pillHooksInstalled) {
       ];
       const markerLabelFilter = ['all', ...markerLabelBaseConditions];
 
-      const markerLabelIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
+      const markerTextField = ['coalesce', ['get','label'], ''];
+      const markerIconId = ['let', 'iconId', ['coalesce', ['get','sub'], ['get','baseSub'], ''],
         ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId']]
-        ]
-      ];
-
-      const markerLabelHighlightIconImage = ['let', 'spriteId', ['coalesce', ['get','labelSpriteId'], ''],
-        ['case',
-          ['==', ['var','spriteId'], ''],
-          MARKER_LABEL_BG_ACCENT_ID,
-          ['concat', MARKER_LABEL_COMPOSITE_PREFIX, ['var','spriteId'], MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX]
+          ['==', ['var','iconId'], ''],
+          'marker-15',
+          ['var','iconId']
         ]
       ];
 
@@ -12405,12 +11544,38 @@ if (!map.__pillHooksInstalled) {
       const markerLabelHighlightOpacity = ['case', highlightedStateExpression, 1, 0];
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
+
+
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        {
+          id:'marker-label',
+          source:'posts',
+          sortKey: 1100,
+          filter: markerLabelFilter,
+          iconImage: markerIconId,
+          iconOpacity: markerLabelBaseOpacity,
+          textOpacity: markerLabelBaseOpacity,
+          iconSize: 0.9,
+          textColor: '#1a1a1a',
+          textHaloColor: '#ffffff',
+          minZoom: markerLabelMinZoom
+        },
+        {
+          id:'marker-label-highlight',
+          source:'posts',
+          sortKey: 1101,
+          filter: markerLabelFilter,
+          iconImage: markerIconId,
+          iconOpacity: markerLabelHighlightOpacity,
+          textOpacity: markerLabelHighlightOpacity,
+          iconSize: 1.1,
+          textColor: '#ffffff',
+          textHaloColor: '#2e3a72',
+          minZoom: markerLabelMinZoom
+        }
       ];
-      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
+      labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, textOpacity, iconSize, textColor, textHaloColor, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
         let layerExists = !!map.getLayer(id);
         if(!layerExists){
@@ -12422,19 +11587,30 @@ if (!map.__pillHooksInstalled) {
               filter: filter || markerLabelFilter,
               minzoom: layerMinZoom,
               layout:{
-                'icon-image': iconImage || markerLabelIconImage,
-                'icon-size': 1,
+                'icon-image': iconImage || markerIconId,
+                'icon-size': Number.isFinite(iconSize) ? iconSize : 1,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-anchor': 'left',
+                'icon-anchor': 'bottom',
                 'icon-pitch-alignment': 'viewport',
+                'symbol-placement': 'point',
                 'symbol-z-order': 'viewport-y',
-                'symbol-sort-key': sortKey
+                'symbol-sort-key': sortKey,
+                'text-field': markerTextField,
+                'text-font': ['literal', ['DIN Pro Medium','Arial Unicode MS Regular']],
+                'text-size': 12,
+                'text-offset': [0, 1.4],
+                'text-anchor': 'top',
+                'text-line-height': 1.2,
+                'text-justify': 'center',
+                'text-max-width': 16
               },
               paint:{
-                'icon-translate': [markerLabelBgTranslatePx, 0],
-                'icon-translate-anchor': 'viewport',
-                'icon-opacity': iconOpacity || 1
+                'icon-opacity': iconOpacity || 1,
+                'text-opacity': textOpacity || iconOpacity || 1,
+                'text-color': textColor || '#ffffff',
+                'text-halo-color': textHaloColor || 'rgba(0,0,0,0.7)',
+                'text-halo-width': 1.5
               }
             });
             layerExists = !!map.getLayer(id);
@@ -12446,17 +11622,28 @@ if (!map.__pillHooksInstalled) {
           return;
         }
         try{ map.setFilter(id, filter || markerLabelFilter); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerLabelIconImage); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-size', 1); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-image', iconImage || markerIconId); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-size', Number.isFinite(iconSize) ? iconSize : 1); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-allow-overlap', true); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-ignore-placement', true); }catch(e){}
-        try{ map.setLayoutProperty(id,'icon-anchor','left'); }catch(e){}
+        try{ map.setLayoutProperty(id,'icon-anchor','bottom'); }catch(e){}
         try{ map.setLayoutProperty(id,'icon-pitch-alignment','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'symbol-placement','point'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-z-order','viewport-y'); }catch(e){}
         try{ map.setLayoutProperty(id,'symbol-sort-key', sortKey); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate',[markerLabelBgTranslatePx,0]); }catch(e){}
-        try{ map.setPaintProperty(id,'icon-translate-anchor','viewport'); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-field', markerTextField); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-font', ['literal', ['DIN Pro Medium','Arial Unicode MS Regular']]); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-size', 12); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-offset', [0, 1.4]); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-anchor','top'); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-line-height', 1.2); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-justify','center'); }catch(e){}
+        try{ map.setLayoutProperty(id,'text-max-width', 16); }catch(e){}
         try{ map.setPaintProperty(id,'icon-opacity', iconOpacity || 1); }catch(e){}
+        try{ map.setPaintProperty(id,'text-opacity', textOpacity || iconOpacity || 1); }catch(e){}
+        try{ map.setPaintProperty(id,'text-color', textColor || '#ffffff'); }catch(e){}
+        try{ map.setPaintProperty(id,'text-halo-color', textHaloColor || 'rgba(0,0,0,0.7)'); }catch(e){}
+        try{ map.setPaintProperty(id,'text-halo-width', 1.5); }catch(e){}
         try{ map.setLayerZoomRange(id, layerMinZoom, 24); }catch(e){}
       });
       ALL_MARKER_LAYER_IDS.forEach(id=>{
@@ -12592,40 +11779,31 @@ if (!map.__pillHooksInstalled) {
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
-            if(isMultiVenue){
-              cardRoot.classList.add('big-multi-post-map-card');
-            }
             cardRoot.dataset.id = overlayId;
             cardRoot.setAttribute('aria-hidden', 'true');
             cardRoot.style.pointerEvents = 'auto';
             cardRoot.style.userSelect = 'none';
-
-            const pillImg = new Image();
-            try{ pillImg.decoding = 'async'; }catch(e){}
-            pillImg.alt = '';
-            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
-            pillImg.className = 'map-card-pill';
-            pillImg.style.opacity = '0.9';
-            pillImg.draggable = false;
 
             const thumbImg = new Image();
             try{ thumbImg.decoding = 'async'; }catch(e){}
             thumbImg.alt = '';
             thumbImg.loading = 'eager';
             thumbImg.draggable = false;
-            if(isMultiVenue){
-              thumbImg.src = 'assets/icons-30/multi-post-icon-50.webp';
-              thumbImg.className = 'map-card-thumb';
-            } else {
-              const thumbFallback = 'assets/funmap-logo-small.png';
-              thumbImg.onerror = ()=>{
-                thumbImg.onerror = null;
-                thumbImg.src = thumbFallback;
-              };
-              thumbImg.src = imgThumb(post) || thumbFallback;
-              thumbImg.className = 'map-card-thumb';
-              thumbImg.referrerPolicy = 'no-referrer';
-            }
+            const thumbSource = (() => {
+              if(isMultiVenue){
+                const primary = uniqueVenuePosts[0] || post;
+                return imgThumb(primary);
+              }
+              return imgThumb(post);
+            })();
+            const thumbFallback = 'assets/funmap-logo-small.png';
+            thumbImg.onerror = ()=>{
+              thumbImg.onerror = null;
+              thumbImg.src = thumbFallback;
+            };
+            thumbImg.src = thumbSource || thumbFallback;
+            thumbImg.className = 'map-card-thumb';
+            thumbImg.referrerPolicy = 'no-referrer';
             requestAnimationFrame(() => {
               if(typeof thumbImg.decode === 'function'){
                 thumbImg.decode().catch(()=>{});
@@ -12672,7 +11850,7 @@ if (!map.__pillHooksInstalled) {
               }
             }
 
-            cardRoot.append(pillImg, thumbImg, labelEl);
+            cardRoot.append(thumbImg, labelEl);
             overlayRoot.append(cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
