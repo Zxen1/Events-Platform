@@ -6053,6 +6053,8 @@ if (typeof slugify !== 'function') {
   // under that ceiling.
   const MARKER_LABEL_COMPOSITE_LIMIT = 420;
   const MARKER_SPRITE_RETAIN_ZOOM = 12;
+  const VISIBLE_MARKER_LABEL_LAYERS = ['marker-label','marker-label-highlight'];
+  let ensureVisibleMarkerLabelCompositesToken = null;
   let markerLabelPillImagePromise = null;
 
   function nowTimestamp(){
@@ -6158,6 +6160,107 @@ if (typeof slugify !== 'function') {
         }
       }catch(err){}
     });
+  }
+
+  function scheduleEnsureVisibleMarkerLabelComposites(){
+    if(ensureVisibleMarkerLabelCompositesToken !== null){
+      return;
+    }
+    const scheduler = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(cb, 16);
+    ensureVisibleMarkerLabelCompositesToken = scheduler(() => {
+      ensureVisibleMarkerLabelCompositesToken = null;
+      try{
+        ensureVisibleMarkerLabelComposites();
+      }catch(err){
+        console.error(err);
+      }
+    });
+  }
+
+  function ensureVisibleMarkerLabelComposites(){
+    if(!map || typeof map.queryRenderedFeatures !== 'function'){
+      return;
+    }
+    let features = [];
+    try{
+      features = map.queryRenderedFeatures({ layers: VISIBLE_MARKER_LABEL_LAYERS });
+    }catch(err){
+      features = [];
+    }
+    if(!features.length){
+      return;
+    }
+    const seenSprites = new Set();
+    const tasks = [];
+    features.forEach(feature => {
+      if(!feature || !feature.properties){
+        return;
+      }
+      const props = feature.properties;
+      const spriteId = props.labelSpriteId;
+      if(!spriteId || seenSprites.has(spriteId)){
+        return;
+      }
+      seenSprites.add(spriteId);
+      const compositeId = markerLabelCompositeId(spriteId);
+      let hasComposite = false;
+      try{
+        hasComposite = !!(map.hasImage && map.hasImage(compositeId));
+      }catch(err){
+        hasComposite = false;
+      }
+      const meta = markerLabelCompositeStore.get(spriteId) || {};
+      const iconId = props.sub || props.baseSub || meta.iconId || '';
+      const labelLine1 = props.labelLine1 || meta.labelLine1 || '';
+      const labelLine2 = props.labelLine2 || meta.labelLine2 || '';
+      const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+      const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
+      const updatedMeta = Object.assign({}, meta, {
+        iconId,
+        labelLine1,
+        labelLine2,
+        isMulti,
+        priority: true
+      });
+      markerLabelCompositeStore.set(spriteId, updatedMeta);
+      const placeholderActive = markerLabelCompositePlaceholderIds.has(compositeId);
+      if(hasComposite && !placeholderActive){
+        return;
+      }
+      tasks.push(
+        ensureMarkerLabelComposite(map, spriteId, iconId, labelLine1, labelLine2, isMulti, { priority: true }).catch(()=>{})
+      );
+    });
+    if(tasks.length){
+      Promise.allSettled(tasks).catch(()=>{});
+    }
+  }
+
+  function handleVisibleMarkerLabelSourceData(evt){
+    if(!evt){
+      return;
+    }
+    const sourceId = evt.sourceId || (evt.source && evt.source.id) || '';
+    if(sourceId && sourceId !== 'posts'){
+      return;
+    }
+    scheduleEnsureVisibleMarkerLabelComposites();
+  }
+
+  function installVisibleMarkerLabelHooks(mapInstance){
+    if(!mapInstance || mapInstance.__visibleMarkerLabelHooksInstalled){
+      return;
+    }
+    const events = ['render','move','zoom','rotate','pitch','idle','styledata'];
+    events.forEach(evt => {
+      try{ mapInstance.on(evt, scheduleEnsureVisibleMarkerLabelComposites); }
+      catch(err){}
+    });
+    try{ mapInstance.on('sourcedata', handleVisibleMarkerLabelSourceData); }
+    catch(err){}
+    mapInstance.__visibleMarkerLabelHooksInstalled = true;
   }
 
   function loadMarkerLabelImage(url){
@@ -11913,6 +12016,7 @@ function makePosts(){
           attributionControl:true
         });
         try{ ensurePlaceholderSprites(map); }catch(err){}
+        try{ installVisibleMarkerLabelHooks(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
         const updateZoomIndicator = () => {
           if(!map || !zoomIndicatorEl || typeof map.getZoom !== 'function') return;
@@ -12582,30 +12686,9 @@ if (!map.__pillHooksInstalled) {
           return String(a[0]).localeCompare(String(b[0]));
         };
         spriteEntries.sort(compareEntries);
-        const compositeSafetyBuffer = 25;
-        let eagerSpriteEntries = [];
-        if(zoomEligible){
-          eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
-          if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
-            const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
-            if(maxEager <= 0){
-              eagerSpriteEntries = [];
-            } else if(eagerSpriteEntries.length > maxEager){
-              eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
-            }
-          }
+        if(spriteEntries.length){
+          scheduleEnsureVisibleMarkerLabelComposites();
         }
-        await Promise.all(eagerSpriteEntries.map(([spriteId, meta]) =>
-          ensureMarkerLabelComposite(
-            map,
-            spriteId,
-            meta.iconId,
-            meta.labelLine1,
-            meta.labelLine2,
-            meta.isMulti,
-            { priority: meta.priority }
-          ).catch(()=>{})
-        ));
         enforceMarkerLabelCompositeBudget(map);
       }
       ensureMarkerLabelBackground(map);
