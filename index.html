@@ -7354,7 +7354,7 @@ if (typeof slugify !== 'function') {
             toggleWelcome();
             return;
           }
-          if(spinLogoClick && map && map.getZoom() <= 4){
+          if(spinLogoClick && map && map.getZoom() <= 5){
             spinEnabled = true;
             localStorage.setItem('spinGlobe', 'true');
             startSpin(true);
@@ -12286,7 +12286,7 @@ if (!map.__pillHooksInstalled) {
     function startSpin(fromCurrent=false){
       if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
-      if(map.getZoom() >= 3) return;
+      if(map.getZoom() > 5) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
       spinning = true;
       hideResultIndicators();
