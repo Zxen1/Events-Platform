@@ -6955,12 +6955,26 @@ if (typeof slugify !== 'function') {
         let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildBalloonFeatureCollection(zoom){
-          const allowInitialize = true; // ensure balloons have data even before marker zoom threshold
-          const postsSource = getAllPostsCache({ allowInitialize });
+          const postsSource = getAllPostsCache({ allowInitialize: false });
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getBalloonBucketKey(zoom);
             lastBalloonGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
+            if(!pendingBalloonRefresh){
+              pendingBalloonRefresh = true;
+              const bucketKey = groupingKey;
+              waitForAllPostsCache().then(() => {
+                pendingBalloonRefresh = false;
+                if(!map) return;
+                if(lastBalloonBucketKey === bucketKey){
+                  lastBalloonBucketKey = null;
+                }
+                scheduleIdle(() => updateBalloonSourceForZoom(zoom), 50);
+              }).catch(err => {
+                pendingBalloonRefresh = false;
+                console.error(err);
+              });
+            }
             return { type:'FeatureCollection', features: [] };
           }
           const { groups } = groupPostsForBalloonZoom(postsSource, zoom);
@@ -7027,6 +7041,7 @@ if (typeof slugify !== 'function') {
         }
 
         let lastBalloonBucketKey = null;
+        let pendingBalloonRefresh = false;
 
         function getBalloonBucketKey(zoom){
           const size = getBalloonGridSize(zoom);
@@ -7263,6 +7278,7 @@ if (typeof slugify !== 'function') {
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
+    let pendingPostsCacheRefresh = false;
     let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
@@ -9429,6 +9445,7 @@ function makePosts(){
 
     let ALL_POSTS_CACHE = null;
     let ALL_POSTS_BY_ID = null;
+    let ALL_POSTS_BUILD_PROMISE = null;
     function rebuildAllPostsIndex(cache){
       if(!Array.isArray(cache)){
         ALL_POSTS_BY_ID = null;
@@ -9441,6 +9458,47 @@ function makePosts(){
       });
       ALL_POSTS_BY_ID = map;
     }
+    function startBuildingAllPostsCache(){
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return Promise.resolve(ALL_POSTS_CACHE);
+      }
+      if(ALL_POSTS_BUILD_PROMISE){
+        return ALL_POSTS_BUILD_PROMISE;
+      }
+      const builder = new Promise(resolve => {
+        scheduleIdle(() => {
+          let generated = [];
+          try{
+            generated = makePosts();
+          }catch(err){
+            console.error(err);
+            generated = [];
+          }
+          const normalized = Array.isArray(generated) ? generated : [];
+          ALL_POSTS_CACHE = normalized;
+          rebuildAllPostsIndex(normalized);
+          resolve(normalized);
+        }, 1);
+      });
+      ALL_POSTS_BUILD_PROMISE = builder.then(
+        (result) => {
+          ALL_POSTS_BUILD_PROMISE = null;
+          return result;
+        },
+        (err) => {
+          ALL_POSTS_BUILD_PROMISE = null;
+          console.error(err);
+          return [];
+        }
+      );
+      return ALL_POSTS_BUILD_PROMISE;
+    }
+    function waitForAllPostsCache(){
+      if(Array.isArray(ALL_POSTS_CACHE)){
+        return Promise.resolve(ALL_POSTS_CACHE);
+      }
+      return startBuildingAllPostsCache();
+    }
     function getAllPostsCache(options = {}){
       const { allowInitialize = true } = options;
       if(Array.isArray(ALL_POSTS_CACHE)){
@@ -9449,10 +9507,10 @@ function makePosts(){
       if(!allowInitialize){
         return null;
       }
-      ALL_POSTS_CACHE = makePosts();
-      rebuildAllPostsIndex(ALL_POSTS_CACHE);
-      return ALL_POSTS_CACHE;
+      startBuildingAllPostsCache();
+      return null;
     }
+    scheduleIdle(() => { startBuildingAllPostsCache(); }, 250);
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
       const normalizedId = String(id);
@@ -9737,10 +9795,24 @@ function makePosts(){
         applyFilters();
         return;
       }
-      const cache = getAllPostsCache();
-      const nextPosts = Array.isArray(cache)
-        ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
-        : [];
+      const cache = getAllPostsCache({ allowInitialize: false });
+      if(!Array.isArray(cache)){
+        postLoadRequested = true;
+        hideResultIndicators();
+        if(!pendingPostsCacheRefresh){
+          pendingPostsCacheRefresh = true;
+          waitForAllPostsCache().then(() => {
+            pendingPostsCacheRefresh = false;
+            if(!map) return;
+            scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
+          }).catch(err => {
+            pendingPostsCacheRefresh = false;
+            console.error(err);
+          });
+        }
+        return;
+      }
+      const nextPosts = cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized));
       posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
@@ -13601,6 +13673,8 @@ function openPostModal(id){
     }
     window.closePostModal = closePostModal;
 
+    let pendingHashRetry = false;
+
     function handleHash(){
       if(!location.hash){
         closePostModal();
@@ -13616,8 +13690,20 @@ function openPostModal(id){
       };
       let post = matchPost(posts);
       if(!post){
-        const cache = getAllPostsCache({ allowInitialize: true });
-        post = matchPost(cache);
+        const cache = getAllPostsCache({ allowInitialize: false });
+        if(Array.isArray(cache)){
+          post = matchPost(cache);
+        } else if(!pendingHashRetry){
+          pendingHashRetry = true;
+          waitForAllPostsCache().then(() => {
+            pendingHashRetry = false;
+            if(!location.hash) return;
+            scheduleIdle(() => handleHash(), 50);
+          }).catch(err => {
+            pendingHashRetry = false;
+            console.error(err);
+          });
+        }
       }
       if(post){ openPostModal(post.id); }
     }
