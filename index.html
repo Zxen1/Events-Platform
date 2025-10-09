@@ -6165,15 +6165,6 @@ if (typeof slugify !== 'function') {
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
               }
-              if(typeof autoOpenPostBoardForCluster === 'function'){
-                try{
-                  autoOpenPostBoardForCluster({
-                    multiIds: bucketIds,
-                    multiCount: clusterCount,
-                    trigger: triggerType
-                  });
-                }catch(err){}
-              }
               let currentPitch = null;
               try{
                 currentPitch = typeof mapInstance.getPitch === 'function' ? mapInstance.getPitch() : null;
@@ -9409,28 +9400,6 @@ function makePosts(){
       const boardDisplayCache = new WeakMap();
       let boardsInitialized = false;
       let userClosedPostBoard = false;
-      function autoOpenPostBoardForCluster({ multiIds = [], multiCount = 0, trigger = 'click' } = {}){
-        if(trigger !== 'click' && trigger !== 'touch') return;
-        if(userClosedPostBoard) return;
-        const normalizedIds = Array.isArray(multiIds)
-          ? multiIds.map(id => String(id)).filter(Boolean)
-          : [];
-        const numericCount = Number(multiCount);
-        const normalizedCount = Number.isFinite(numericCount) && numericCount > 0 ? numericCount : 0;
-        const total = Math.max(normalizedIds.length, normalizedCount, 0);
-        if(total <= 1) return;
-        if(typeof setMode !== 'function') return;
-        const wasPostsMode = document.body.classList.contains('mode-posts');
-        const hadHistory = document.body.classList.contains('show-history');
-        if(hadHistory){
-          document.body.classList.remove('show-history');
-        }
-        if(!wasPostsMode){
-          setMode('posts');
-        } else if(hadHistory && typeof adjustBoards === 'function'){
-          adjustBoards();
-        }
-      }
 
       updatePostsButtonState = function(currentZoom){
         const threshold = MARKER_ZOOM_THRESHOLD;
