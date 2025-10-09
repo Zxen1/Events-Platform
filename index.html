@@ -8435,7 +8435,7 @@ function uniqueTitle(seed, cityName, idx){
 
 
   function randomImages(id){
-    const hero = imgHero(id);
+    const hero = heroUrl(id);
     const others = Array.from({length:9},(_,i)=>{
       const port = i % 2 === 0;
       return `https://picsum.photos/seed/${encodeURIComponent(id)}-${i}/${port?'800/1200':'1200/800'}`;
@@ -9936,10 +9936,7 @@ function makePosts(){
       }
     }
 
-    // Image helpers (unique per post)
-    function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
-    function imgThumb(pOrId){ const id = typeof pOrId==='string' ? pOrId : pOrId.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
-    function imgHero(pOrId){  const id = typeof pOrId==='string' ? pOrId : pOrId.id;  const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
+    // Image helpers (reuse shared utilities)
 
     function memberAvatarUrl(p){
       if(p.member && p.member.avatar){
@@ -9981,9 +9978,9 @@ function makePosts(){
         if(variant === 'list') classes.push('big-map-card--list');
         extraClasses.filter(Boolean).forEach(cls => classes.push(cls));
         if(variant === 'list'){
-          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+          return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-thumb" src="${thumbUrl(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
         }
-        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${imgThumb(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
+        return `<div class="${classes.join(' ')}" data-id="${p.id}"><img class="map-card-pill" src="assets/icons-30/225x60-pill-99.webp" alt="" /><img class="map-card-thumb" src="${thumbUrl(p)}" alt="" referrerpolicy="no-referrer" />${labelHtml}</div>`;
       } finally {
         if(overrideKey){
           selectedVenueKey = prevKey;
@@ -11131,7 +11128,7 @@ function makePosts(){
       const loc0 = p.locations[0];
       const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
       const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
-      const thumbSrc = imgThumb(p);
+      const thumbSrc = thumbUrl(p);
       const headerInner = `
           <div class="title-block">
             <div class="title">${p.title}</div>
@@ -12962,7 +12959,7 @@ if (!map.__pillHooksInstalled) {
                 thumbImg.onerror = null;
                 thumbImg.src = thumbFallback;
               };
-              thumbImg.src = imgThumb(post) || thumbFallback;
+              thumbImg.src = thumbUrl(post) || thumbFallback;
               thumbImg.className = 'map-card-thumb';
               thumbImg.referrerPolicy = 'no-referrer';
             }
@@ -13407,7 +13404,7 @@ if (!map.__pillHooksInstalled) {
       el.className = wide ? 'post-card' : 'recents-card';
       el.dataset.id = p.id;
       if(wide) el.style.gridTemplateColumns='80px 1fr 36px';
-      const thumbSrc = imgThumb(p);
+      const thumbSrc = thumbUrl(p);
       const thumb = `<img class="thumb lqip" loading="lazy" src="${thumbSrc}" alt="" referrerpolicy="no-referrer" />`;
         el.innerHTML = `
           ${thumb}
@@ -13784,7 +13781,7 @@ function openPostModal(id){
         descEl.addEventListener('keydown', toggleDesc);
       }
 
-      const imgs = p.images && p.images.length ? p.images : [imgHero(p)];
+      const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
       const thumbCol = el.querySelector('.thumbnail-row');
       const imageBox = el.querySelector('.image-box');
       const imageTrack = imageBox ? imageBox.querySelector('.image-track') : null;
@@ -14630,15 +14627,17 @@ function openPostModal(id){
         const tasks = [];
         if(mapEl){
           tasks.push(()=> {
-            window.callWhenDefined = window.callWhenDefined || function(name, cb, timeoutMs){
-              const start = performance.now(), max = timeoutMs ?? 5000;
-              (function check(){
-                const fn = window[name];
-                if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
-                if (performance.now() - start < max) requestAnimationFrame(check);
-              })();
-            };
-            callWhenDefined('ensureMapForVenue', fn => fn());
+            const ensure = typeof window.callWhenDefined === 'function'
+              ? window.callWhenDefined
+              : function(name, cb, timeoutMs){
+                  const start = performance.now(), max = timeoutMs ?? 5000;
+                  (function check(){
+                    const fn = window[name];
+                    if (typeof fn === 'function') { try { cb(fn); } catch(e){} return; }
+                    if (performance.now() - start < max) requestAnimationFrame(check);
+                  })();
+                };
+            ensure('ensureMapForVenue', fn => fn());
           });
         }
         if(calendarEl){
