@@ -6123,6 +6123,26 @@ if (typeof slugify !== 'function') {
                 : 12;
               const childTarget = computeChildBalloonTarget(bucketData, safeCurrentZoom, childZoomLimit);
               const hasChildTarget = childTarget && Array.isArray(childTarget.center) && childTarget.center.length >= 2;
+              const bucketPosts = Array.isArray(bucketData && bucketData.posts) ? bucketData.posts : [];
+              const bucketIds = bucketPosts
+                .map(post => {
+                  if(!post || post.id === undefined || post.id === null) return null;
+                  return String(post.id);
+                })
+                .filter(id => typeof id === 'string' && id.length > 0);
+              const bucketCount = bucketPosts.length;
+              const rawCount = feature.properties && feature.properties.count;
+              const numericCount = Number(rawCount);
+              const clusterCountFromFeature = Number.isFinite(numericCount) ? numericCount : 0;
+              const clusterCount = bucketIds.length > 0
+                ? bucketIds.length
+                : (bucketCount > 0 ? bucketCount : clusterCountFromFeature);
+              const originalEvent = e && e.originalEvent;
+              const pointerType = originalEvent && (originalEvent.pointerType || (originalEvent.touches ? 'touch' : ''));
+              const triggerType = pointerType === 'touch' || pointerType === 'pen'
+                || (originalEvent && typeof originalEvent.type === 'string' && originalEvent.type.indexOf('touch') !== -1)
+                ? 'touch'
+                : 'click';
               const targetCenter = hasChildTarget
                 ? [childTarget.center[0], childTarget.center[1]]
                 : [coords[0], coords[1]];
@@ -6144,6 +6164,15 @@ if (typeof slugify !== 'function') {
               }
               if(!Number.isFinite(finalZoom)){
                 finalZoom = safeCurrentZoom;
+              }
+              if(!hasChildTarget && typeof autoOpenPostBoardForCluster === 'function'){
+                try{
+                  autoOpenPostBoardForCluster({
+                    multiIds: bucketIds,
+                    multiCount: clusterCount,
+                    trigger: triggerType
+                  });
+                }catch(err){}
               }
               let currentPitch = null;
               try{
