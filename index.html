@@ -3431,9 +3431,15 @@ body.filters-active #filterBtn{
   background-color:rgba(0,0,0,0);
 }
 .post-board{color:#fff;}
-.post-board .post-card,
-.post-board .open-post{
+.post-board .post-card{
   background-color:transparent;
+  margin:0;
+  border:none;
+  border-radius:0;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+}
+.post-board .open-post{
+  background-color:#2e3a72;
   margin:0;
   border:none;
   border-radius:0;
@@ -3509,6 +3515,7 @@ body.mode-map .post-board{
 }
 
 .open-post{
+  background-color:#2e3a72;
   border:none;
   border-radius:0;
   margin:0;
