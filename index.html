@@ -6827,13 +6827,16 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
+      let markerLoadUnlocked = false;
+      window.markerLoadUnlocked = markerLoadUnlocked;
+      let pendingMarkerZoom = null;
       let mapHasZoomed = window.mapHasZoomed ?? false;
       window.mapHasZoomed = mapHasZoomed;
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
-      const MARKER_PRELOAD_OFFSET = 0.2;
+      const MARKER_PRELOAD_OFFSET = 0;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
       const MAP_ZOOM_EPSILON = 1e-4;
       const MARKER_LAYER_IDS = [
@@ -9818,12 +9821,20 @@ function makePosts(){
     }
 
     function maybeLoadMarkersForZoom(zoom){
-      if(markersLoaded || !mapHasZoomed) return;
+      if(markersLoaded) return;
       const candidate = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      if(!Number.isFinite(candidate) || candidate < MARKER_PRELOAD_ZOOM) return;
+      if(!Number.isFinite(candidate)) return;
+      if(!markerLoadUnlocked){
+        if(Number.isFinite(candidate)){
+          pendingMarkerZoom = candidate;
+        }
+        return;
+      }
+      if(candidate < MARKER_PRELOAD_ZOOM || !mapHasZoomed) return;
       try{ loadPostMarkers(); }catch(err){ console.error(err); }
       markersLoaded = true;
       window.__markersLoaded = true;
+      pendingMarkerZoom = null;
     }
 
     function updateZoomState(zoom){
@@ -12054,10 +12065,23 @@ if (!map.__pillHooksInstalled) {
           if(hasOriginalEvent || differsFromStart){
             mapHasZoomed = true;
             window.mapHasZoomed = mapHasZoomed;
+            if(!markerLoadUnlocked){
+              markerLoadUnlocked = true;
+              window.markerLoadUnlocked = markerLoadUnlocked;
+            }
             if(postLoadRequested){
               scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
             }
           }
+        }
+        if(mapHasZoomed && !markerLoadUnlocked){
+          markerLoadUnlocked = true;
+          window.markerLoadUnlocked = markerLoadUnlocked;
+        }
+        if(markerLoadUnlocked && Number.isFinite(pendingMarkerZoom)){
+          const readyZoom = pendingMarkerZoom;
+          pendingMarkerZoom = null;
+          maybeLoadMarkersForZoom(readyZoom);
         }
         maybeLoadMarkersForZoom(zoomValue);
       });
