@@ -10000,85 +10000,6 @@ function makePosts(){
     const allSubcategoryKeys = [];
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
-    const formbuilderCats = document.getElementById('formbuilderCats');
-    const syncFormbuilderCats = ()=>{
-      if(!formbuilderCats || !catsEl) return;
-      const frag = document.createDocumentFragment();
-      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        const clone = menu.cloneNode(true);
-        const trigger = clone.querySelector('.filter-category-trigger');
-        const optionsMenu = clone.querySelector('.options-menu');
-        if(optionsMenu){
-          const originalId = optionsMenu.id || '';
-          const cloneId = originalId ? `${originalId}-formbuilder` : '';
-          if(cloneId){
-            optionsMenu.id = cloneId;
-            if(trigger){
-              trigger.setAttribute('aria-controls', cloneId);
-            }
-          }
-        }
-        if(trigger && optionsMenu){
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          optionsMenu.hidden = !isExpanded;
-          trigger.addEventListener('click', ()=>{
-            if(trigger.getAttribute('aria-disabled') === 'true') return;
-            const open = clone.getAttribute('aria-expanded') === 'true';
-            const next = !open;
-            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
-            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
-            optionsMenu.hidden = !next;
-          });
-        }
-        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
-        if(optionsMenu){
-          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
-        }
-        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
-        const syncCatState = checked =>{
-          clone.classList.toggle('cat-off', !checked);
-          if(trigger){
-            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          }
-          optionButtons.forEach(btn=>{
-            btn.disabled = !checked;
-            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          });
-          if(!checked && optionsMenu){
-            optionsMenu.hidden = true;
-            clone.setAttribute('aria-expanded', 'false');
-            if(trigger){
-              trigger.setAttribute('aria-expanded', 'false');
-            }
-          }
-        };
-        const catSwitchInput = clone.querySelector('.cat-switch input');
-        if(catSwitchInput){
-          const initialActive = !clone.classList.contains('cat-off');
-          catSwitchInput.checked = initialActive;
-          syncCatState(initialActive);
-          catSwitchInput.addEventListener('change', ()=>{
-            syncCatState(catSwitchInput.checked);
-          });
-        } else {
-          syncCatState(!clone.classList.contains('cat-off'));
-        }
-        optionButtons.forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            if(btn.disabled) return;
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            btn.classList.toggle('on', next);
-          });
-        });
-        frag.appendChild(clone);
-      });
-      formbuilderCats.innerHTML = '';
-      formbuilderCats.appendChild(frag);
-    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -10277,14 +10198,8 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      syncFormbuilderCats();
-      if(formbuilderCats){
-        const observer = new MutationObserver(()=> syncFormbuilderCats());
-        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
-      }
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
