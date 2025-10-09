@@ -7669,6 +7669,7 @@ if (typeof slugify !== 'function') {
     function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
       if(postId === undefined || postId === null) return;
       const highlightClass = 'is-pill-highlight';
+      const mapHighlightClass = 'is-map-highlight';
       const overlays = findMarkerOverlaysById(postId);
       overlays.forEach(overlay => {
         overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
@@ -7688,6 +7689,22 @@ if (typeof slugify !== 'function') {
               setSmallMapCardPillImage(cardEl, false);
             } else {
               setSmallMapCardPillImage(cardEl, true);
+            }
+          }
+        });
+        overlay.querySelectorAll('.big-map-card').forEach(cardEl => {
+          if(shouldHighlight){
+            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
+              cardEl.dataset.hoverPrevMapHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
+            }
+            if(!cardEl.classList.contains(mapHighlightClass)){
+              cardEl.classList.add(mapHighlightClass);
+            }
+          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
+            const prev = cardEl.dataset.hoverPrevMapHighlight === '1';
+            delete cardEl.dataset.hoverPrevMapHighlight;
+            if(!prev){
+              cardEl.classList.remove(mapHighlightClass);
             }
           }
         });
