@@ -6827,18 +6827,12 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
-      let markerLoadUnlocked = false;
-      window.markerLoadUnlocked = markerLoadUnlocked;
-      let pendingMarkerZoom = null;
-      let mapHasZoomed = window.mapHasZoomed ?? false;
-      window.mapHasZoomed = mapHasZoomed;
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
-      const MARKER_PRELOAD_OFFSET = 0;
+      const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MAP_ZOOM_EPSILON = 1e-4;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -6955,26 +6949,12 @@ if (typeof slugify !== 'function') {
         let lastBalloonGroupingDetails = { key: null, zoom: null, groups: new Map() };
 
         function buildBalloonFeatureCollection(zoom){
-          const postsSource = getAllPostsCache({ allowInitialize: false });
+          const allowInitialize = true; // ensure balloons have data even before marker zoom threshold
+          const postsSource = getAllPostsCache({ allowInitialize });
           if(!Array.isArray(postsSource) || postsSource.length === 0){
             const emptyGroups = new Map();
             const groupingKey = getBalloonBucketKey(zoom);
             lastBalloonGroupingDetails = { key: groupingKey, zoom, groups: emptyGroups };
-            if(!pendingBalloonRefresh){
-              pendingBalloonRefresh = true;
-              const bucketKey = groupingKey;
-              waitForAllPostsCache().then(() => {
-                pendingBalloonRefresh = false;
-                if(!map) return;
-                if(lastBalloonBucketKey === bucketKey){
-                  lastBalloonBucketKey = null;
-                }
-                scheduleIdle(() => updateBalloonSourceForZoom(zoom), 50);
-              }).catch(err => {
-                pendingBalloonRefresh = false;
-                console.error(err);
-              });
-            }
             return { type:'FeatureCollection', features: [] };
           }
           const { groups } = groupPostsForBalloonZoom(postsSource, zoom);
@@ -7041,7 +7021,6 @@ if (typeof slugify !== 'function') {
         }
 
         let lastBalloonBucketKey = null;
-        let pendingBalloonRefresh = false;
 
         function getBalloonBucketKey(zoom){
           const size = getBalloonGridSize(zoom);
@@ -7278,7 +7257,6 @@ if (typeof slugify !== 'function') {
     // 'Post Panel' is defined as the current map bounds
     let postPanel = null;
     let posts = [], filtered = [], adPosts = [], adIndex = -1, adTimer = null, adPanel = null, adIdsKey = '', pendingPostLoad = false;
-    let pendingPostsCacheRefresh = false;
     let filtersInitialized = false;
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
@@ -9445,7 +9423,6 @@ function makePosts(){
 
     let ALL_POSTS_CACHE = null;
     let ALL_POSTS_BY_ID = null;
-    let ALL_POSTS_BUILD_PROMISE = null;
     function rebuildAllPostsIndex(cache){
       if(!Array.isArray(cache)){
         ALL_POSTS_BY_ID = null;
@@ -9458,47 +9435,6 @@ function makePosts(){
       });
       ALL_POSTS_BY_ID = map;
     }
-    function startBuildingAllPostsCache(){
-      if(Array.isArray(ALL_POSTS_CACHE)){
-        return Promise.resolve(ALL_POSTS_CACHE);
-      }
-      if(ALL_POSTS_BUILD_PROMISE){
-        return ALL_POSTS_BUILD_PROMISE;
-      }
-      const builder = new Promise(resolve => {
-        scheduleIdle(() => {
-          let generated = [];
-          try{
-            generated = makePosts();
-          }catch(err){
-            console.error(err);
-            generated = [];
-          }
-          const normalized = Array.isArray(generated) ? generated : [];
-          ALL_POSTS_CACHE = normalized;
-          rebuildAllPostsIndex(normalized);
-          resolve(normalized);
-        }, 1);
-      });
-      ALL_POSTS_BUILD_PROMISE = builder.then(
-        (result) => {
-          ALL_POSTS_BUILD_PROMISE = null;
-          return result;
-        },
-        (err) => {
-          ALL_POSTS_BUILD_PROMISE = null;
-          console.error(err);
-          return [];
-        }
-      );
-      return ALL_POSTS_BUILD_PROMISE;
-    }
-    function waitForAllPostsCache(){
-      if(Array.isArray(ALL_POSTS_CACHE)){
-        return Promise.resolve(ALL_POSTS_CACHE);
-      }
-      return startBuildingAllPostsCache();
-    }
     function getAllPostsCache(options = {}){
       const { allowInitialize = true } = options;
       if(Array.isArray(ALL_POSTS_CACHE)){
@@ -9507,10 +9443,10 @@ function makePosts(){
       if(!allowInitialize){
         return null;
       }
-      startBuildingAllPostsCache();
-      return null;
+      ALL_POSTS_CACHE = makePosts();
+      rebuildAllPostsIndex(ALL_POSTS_CACHE);
+      return ALL_POSTS_CACHE;
     }
-    scheduleIdle(() => { startBuildingAllPostsCache(); }, 250);
     function getPostByIdAnywhere(id){
       if(id === undefined || id === null) return null;
       const normalizedId = String(id);
@@ -9795,24 +9731,10 @@ function makePosts(){
         applyFilters();
         return;
       }
-      const cache = getAllPostsCache({ allowInitialize: false });
-      if(!Array.isArray(cache)){
-        postLoadRequested = true;
-        hideResultIndicators();
-        if(!pendingPostsCacheRefresh){
-          pendingPostsCacheRefresh = true;
-          waitForAllPostsCache().then(() => {
-            pendingPostsCacheRefresh = false;
-            if(!map) return;
-            scheduleCheckLoadPosts({ zoom: lastKnownZoom, target: map });
-          }).catch(err => {
-            pendingPostsCacheRefresh = false;
-            console.error(err);
-          });
-        }
-        return;
-      }
-      const nextPosts = cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized));
+      const cache = getAllPostsCache();
+      const nextPosts = Array.isArray(cache)
+        ? cache.filter(p => pointWithinBounds(p.lng, p.lat, normalized))
+        : [];
       posts = nextPosts;
       postsLoaded = true;
       window.postsLoaded = postsLoaded;
@@ -9892,23 +9814,6 @@ function makePosts(){
       }
     }
 
-    function maybeLoadMarkersForZoom(zoom){
-      if(markersLoaded) return;
-      const candidate = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      if(!Number.isFinite(candidate)) return;
-      if(!markerLoadUnlocked){
-        if(Number.isFinite(candidate)){
-          pendingMarkerZoom = candidate;
-        }
-        return;
-      }
-      if(candidate < MARKER_PRELOAD_ZOOM || !mapHasZoomed) return;
-      try{ loadPostMarkers(); }catch(err){ console.error(err); }
-      markersLoaded = true;
-      window.__markersLoaded = true;
-      pendingMarkerZoom = null;
-    }
-
     function updateZoomState(zoom){
       if(Number.isFinite(zoom)){
         lastKnownZoom = zoom;
@@ -9925,7 +9830,14 @@ function makePosts(){
       if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
-      maybeLoadMarkersForZoom(lastKnownZoom);
+      if(!markersLoaded){
+        const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+        if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
+          try{ loadPostMarkers(); }catch(err){ console.error(err); }
+          markersLoaded = true;
+          window.__markersLoaded = true;
+        }
+      }
     }
 
     function scheduleCheckLoadPosts(event){
@@ -9944,11 +9856,6 @@ function makePosts(){
       if(!map) return;
       const zoomCandidate = getZoomFromEvent(event);
       updateZoomState(zoomCandidate);
-      if(!mapHasZoomed){
-        postLoadRequested = true;
-        hideResultIndicators();
-        return;
-      }
       let zoomLevel = Number.isFinite(zoomCandidate) ? zoomCandidate : lastKnownZoom;
       if(!Number.isFinite(zoomLevel)){
         zoomLevel = getZoomFromEvent();
@@ -10094,7 +10001,84 @@ function makePosts(){
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
-    const syncFormbuilderCats = ()=>{};
+    const syncFormbuilderCats = ()=>{
+      if(!formbuilderCats || !catsEl) return;
+      const frag = document.createDocumentFragment();
+      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
+        const clone = menu.cloneNode(true);
+        const trigger = clone.querySelector('.filter-category-trigger');
+        const optionsMenu = clone.querySelector('.options-menu');
+        if(optionsMenu){
+          const originalId = optionsMenu.id || '';
+          const cloneId = originalId ? `${originalId}-formbuilder` : '';
+          if(cloneId){
+            optionsMenu.id = cloneId;
+            if(trigger){
+              trigger.setAttribute('aria-controls', cloneId);
+            }
+          }
+        }
+        if(trigger && optionsMenu){
+          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
+          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          optionsMenu.hidden = !isExpanded;
+          trigger.addEventListener('click', ()=>{
+            if(trigger.getAttribute('aria-disabled') === 'true') return;
+            const open = clone.getAttribute('aria-expanded') === 'true';
+            const next = !open;
+            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            optionsMenu.hidden = !next;
+          });
+        }
+        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
+        if(optionsMenu){
+          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
+        }
+        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
+        const syncCatState = checked =>{
+          clone.classList.toggle('cat-off', !checked);
+          if(trigger){
+            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          }
+          optionButtons.forEach(btn=>{
+            btn.disabled = !checked;
+            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
+          });
+          if(!checked && optionsMenu){
+            optionsMenu.hidden = true;
+            clone.setAttribute('aria-expanded', 'false');
+            if(trigger){
+              trigger.setAttribute('aria-expanded', 'false');
+            }
+          }
+        };
+        const catSwitchInput = clone.querySelector('.cat-switch input');
+        if(catSwitchInput){
+          const initialActive = !clone.classList.contains('cat-off');
+          catSwitchInput.checked = initialActive;
+          syncCatState(initialActive);
+          catSwitchInput.addEventListener('change', ()=>{
+            syncCatState(catSwitchInput.checked);
+          });
+        } else {
+          syncCatState(!clone.classList.contains('cat-off'));
+        }
+        optionButtons.forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            if(btn.disabled) return;
+            const pressed = btn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            btn.classList.toggle('on', next);
+          });
+        });
+        frag.appendChild(clone);
+      });
+      formbuilderCats.innerHTML = '';
+      formbuilderCats.appendChild(frag);
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -10293,8 +10277,14 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
+      syncFormbuilderCats();
+      if(formbuilderCats){
+        const observer = new MutationObserver(()=> syncFormbuilderCats());
+        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
+      }
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
+        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
@@ -12126,36 +12116,17 @@ if (!map.__pillHooksInstalled) {
         updateZoomState(zoomValue);
         scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
       });
-      map.on('zoomend', (evt)=>{
-        let zoomValue = getZoomFromEvent(evt);
-        if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
-          try{ zoomValue = map.getZoom(); }catch(err){ zoomValue = NaN; }
+      map.on('zoomend', ()=>{
+        if(markersLoaded) return;
+        if(!map || typeof map.getZoom !== 'function') return;
+        let currentZoom = NaN;
+        try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
+        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
+          return;
         }
-        if(!mapHasZoomed){
-          const hasOriginalEvent = Boolean(evt && evt.originalEvent);
-          const differsFromStart = Number.isFinite(zoomValue) && Math.abs(zoomValue - startZoom) > MAP_ZOOM_EPSILON;
-          if(hasOriginalEvent || differsFromStart){
-            mapHasZoomed = true;
-            window.mapHasZoomed = mapHasZoomed;
-            if(!markerLoadUnlocked){
-              markerLoadUnlocked = true;
-              window.markerLoadUnlocked = markerLoadUnlocked;
-            }
-            if(postLoadRequested){
-              scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
-            }
-          }
-        }
-        if(mapHasZoomed && !markerLoadUnlocked){
-          markerLoadUnlocked = true;
-          window.markerLoadUnlocked = markerLoadUnlocked;
-        }
-        if(markerLoadUnlocked && Number.isFinite(pendingMarkerZoom)){
-          const readyZoom = pendingMarkerZoom;
-          pendingMarkerZoom = null;
-          maybeLoadMarkersForZoom(readyZoom);
-        }
-        maybeLoadMarkersForZoom(zoomValue);
+        try{ loadPostMarkers(); }catch(err){ console.error(err); }
+        markersLoaded = true;
+        window.__markersLoaded = true;
       });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
@@ -12176,7 +12147,14 @@ if (!map.__pillHooksInstalled) {
         updatePostPanel();
         applyFilters();
         updateZoomState(getZoomFromEvent());
-        maybeLoadMarkersForZoom(lastKnownZoom);
+        if(!markersLoaded){
+          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
+          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
+            try{ loadPostMarkers(); }catch(err){ console.error(err); }
+            markersLoaded = true;
+            window.__markersLoaded = true;
+          }
+        }
         checkLoadPosts();
       });
 
@@ -13673,8 +13651,6 @@ function openPostModal(id){
     }
     window.closePostModal = closePostModal;
 
-    let pendingHashRetry = false;
-
     function handleHash(){
       if(!location.hash){
         closePostModal();
@@ -13690,20 +13666,8 @@ function openPostModal(id){
       };
       let post = matchPost(posts);
       if(!post){
-        const cache = getAllPostsCache({ allowInitialize: false });
-        if(Array.isArray(cache)){
-          post = matchPost(cache);
-        } else if(!pendingHashRetry){
-          pendingHashRetry = true;
-          waitForAllPostsCache().then(() => {
-            pendingHashRetry = false;
-            if(!location.hash) return;
-            scheduleIdle(() => handleHash(), 50);
-          }).catch(err => {
-            pendingHashRetry = false;
-            console.error(err);
-          });
-        }
+        const cache = getAllPostsCache({ allowInitialize: true });
+        post = matchPost(cache);
       }
       if(post){ openPostModal(post.id); }
     }
