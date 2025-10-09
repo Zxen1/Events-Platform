@@ -10001,82 +10001,131 @@ function makePosts(){
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
+    const formsCategoriesContainer = document.getElementById('formsCategories');
     const syncFormbuilderCats = ()=>{
-      if(!formbuilderCats || !catsEl) return;
-      const frag = document.createDocumentFragment();
-      catsEl.querySelectorAll('.filter-category-menu').forEach(menu=>{
-        const clone = menu.cloneNode(true);
-        const trigger = clone.querySelector('.filter-category-trigger');
-        const optionsMenu = clone.querySelector('.options-menu');
-        if(optionsMenu){
-          const originalId = optionsMenu.id || '';
-          const cloneId = originalId ? `${originalId}-formbuilder` : '';
-          if(cloneId){
-            optionsMenu.id = cloneId;
-            if(trigger){
-              trigger.setAttribute('aria-controls', cloneId);
-            }
-          }
-        }
-        if(trigger && optionsMenu){
-          const isExpanded = menu.getAttribute('aria-expanded') === 'true';
-          clone.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-          optionsMenu.hidden = !isExpanded;
-          trigger.addEventListener('click', ()=>{
-            if(trigger.getAttribute('aria-disabled') === 'true') return;
-            const open = clone.getAttribute('aria-expanded') === 'true';
-            const next = !open;
-            clone.setAttribute('aria-expanded', next ? 'true' : 'false');
-            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
-            optionsMenu.hidden = !next;
-          });
-        }
-        clone.querySelectorAll('.cat-switch').forEach(el => el.remove());
-        if(optionsMenu){
-          optionsMenu.querySelectorAll('.subcategory-switch').forEach(el => el.remove());
-        }
-        const optionButtons = optionsMenu ? Array.from(optionsMenu.querySelectorAll('button')) : [];
-        const syncCatState = checked =>{
-          clone.classList.toggle('cat-off', !checked);
-          if(trigger){
-            trigger.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          }
-          optionButtons.forEach(btn=>{
-            btn.disabled = !checked;
-            btn.setAttribute('aria-disabled', checked ? 'false' : 'true');
-          });
-          if(!checked && optionsMenu){
-            optionsMenu.hidden = true;
-            clone.setAttribute('aria-expanded', 'false');
-            if(trigger){
-              trigger.setAttribute('aria-expanded', 'false');
-            }
-          }
-        };
-        const catSwitchInput = clone.querySelector('.cat-switch input');
-        if(catSwitchInput){
-          const initialActive = !clone.classList.contains('cat-off');
-          catSwitchInput.checked = initialActive;
-          syncCatState(initialActive);
-          catSwitchInput.addEventListener('change', ()=>{
-            syncCatState(catSwitchInput.checked);
-          });
-        } else {
-          syncCatState(!clone.classList.contains('cat-off'));
-        }
-        optionButtons.forEach(btn=>{
-          btn.addEventListener('click', ()=>{
-            if(btn.disabled) return;
-            const pressed = btn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            btn.classList.toggle('on', next);
-          });
-        });
-        frag.appendChild(clone);
-      });
+      if(!formbuilderCats){
+        return;
+      }
       formbuilderCats.innerHTML = '';
+      if(!formsCategoriesContainer){
+        return;
+      }
+      const formCategories = Array.from(formsCategoriesContainer.querySelectorAll('.form-category'));
+      if(formCategories.length === 0){
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      formCategories.forEach((catEl, index)=>{
+        const nameInput = catEl.querySelector('.category-header input[type="text"]');
+        const iconSelect = catEl.querySelector('.category-header select');
+        const colorInput = catEl.querySelector('.category-header input[type="color"]');
+        const categoryName = (nameInput?.value || '').trim() || `Category ${index + 1}`;
+        const iconOption = iconSelect && iconSelect.options[iconSelect.selectedIndex];
+        const iconHtml = iconOption ? iconOption.innerHTML : '';
+        const colorValue = colorInput?.value || '';
+
+        const menuEl = document.createElement('div');
+        menuEl.className = 'filter-category-menu';
+        menuEl.dataset.category = categoryName;
+        menuEl.setAttribute('role','group');
+        menuEl.setAttribute('aria-expanded','false');
+
+        const header = document.createElement('div');
+        header.className = 'filter-category-header';
+
+        const triggerWrap = document.createElement('div');
+        triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
+
+        const menuBtn = document.createElement('button');
+        menuBtn.type = 'button';
+        menuBtn.className = 'filter-category-trigger';
+        menuBtn.setAttribute('aria-haspopup','true');
+        menuBtn.setAttribute('aria-expanded','false');
+        const slugBase = slugify(categoryName) || `category-${index + 1}`;
+        const menuId = `formbuilder-category-${slugBase}-${index}`;
+        menuBtn.setAttribute('aria-controls', menuId);
+
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
+        if(iconHtml){
+          categoryLogo.innerHTML = iconHtml;
+        } else {
+          categoryLogo.textContent = categoryName.charAt(0) || '';
+        }
+        if(colorValue){
+          categoryLogo.style.color = colorValue;
+        }
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = categoryName;
+
+        const arrow = document.createElement('span');
+        arrow.className = 'dropdown-arrow';
+        arrow.setAttribute('aria-hidden','true');
+
+        menuBtn.append(categoryLogo, label, arrow);
+
+        const optionsMenu = document.createElement('div');
+        optionsMenu.className = 'options-menu';
+        optionsMenu.id = menuId;
+        optionsMenu.hidden = true;
+
+        triggerWrap.append(menuBtn, optionsMenu);
+        header.append(triggerWrap);
+        menuEl.appendChild(header);
+
+        const iconRow = catEl.querySelector('.icon-row');
+        const nameRow = catEl.querySelector('.name-row');
+        const subCount = Math.max(iconRow?.children.length || 0, nameRow?.children.length || 0);
+
+        for(let i = 0; i < subCount; i++){
+          const iconCell = iconRow?.children[i];
+          const nameCell = nameRow?.children[i];
+          const subIconSelect = iconCell ? iconCell.querySelector('select') : null;
+          const subNameInput = nameCell ? nameCell.querySelector('input') : null;
+          const subIconOption = subIconSelect && subIconSelect.options[subIconSelect.selectedIndex];
+          const subIconHtml = subIconOption ? subIconOption.innerHTML : '';
+          const subName = (subNameInput?.value || '').trim() || `Subcategory ${i + 1}`;
+
+          const subBtn = document.createElement('button');
+          subBtn.type = 'button';
+          subBtn.className = 'subcategory-option';
+          subBtn.dataset.category = categoryName;
+          subBtn.dataset.subcategory = subName;
+          subBtn.setAttribute('aria-pressed','false');
+          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
+          const logoSpan = subBtn.querySelector('.subcategory-logo');
+          if(logoSpan){
+            logoSpan.innerHTML = subIconHtml;
+            if(colorValue){
+              logoSpan.style.color = colorValue;
+            }
+          }
+          const labelSpan = subBtn.querySelector('.subcategory-label');
+          if(labelSpan){
+            labelSpan.textContent = subName;
+          }
+          subBtn.addEventListener('click', ()=>{
+            const pressed = subBtn.getAttribute('aria-pressed') === 'true';
+            const next = !pressed;
+            subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+            subBtn.classList.toggle('on', next);
+          });
+          optionsMenu.appendChild(subBtn);
+        }
+
+        menuBtn.addEventListener('click', ()=>{
+          const expanded = menuEl.getAttribute('aria-expanded') === 'true';
+          const next = !expanded;
+          menuEl.setAttribute('aria-expanded', next ? 'true' : 'false');
+          menuBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+          optionsMenu.hidden = !next;
+        });
+
+        frag.appendChild(menuEl);
+      });
+
       formbuilderCats.appendChild(frag);
     };
     function updateCategoryResetBtn(){
@@ -10278,13 +10327,10 @@ function makePosts(){
       });
       refreshSubcategoryLogos();
       syncFormbuilderCats();
-      if(formbuilderCats){
-        const observer = new MutationObserver(()=> syncFormbuilderCats());
-        observer.observe(catsEl, {childList:true, subtree:true, attributes:true});
-      }
+      const handleFormCatsChange = ()=> syncFormbuilderCats();
+      document.addEventListener('form-categories-change', handleFormCatsChange);
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        syncFormbuilderCats();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
       updateCategoryResetBtn();
@@ -15883,6 +15929,16 @@ document.addEventListener('pointerdown', (e) => {
     triangle:'<svg viewBox="0 0 20 20"><polygon points="10,2 18,18 2,18" fill="#000"/></svg>'
   };
   const FIELD_TYPES = ['Text','Number','Date','Color'];
+  const notifyFormCategoriesChange = ()=>{
+    document.dispatchEvent(new CustomEvent('form-categories-change'));
+  };
+  const watchedElements = new WeakSet();
+  function watchElement(el){
+    if(!el || watchedElements.has(el)) return;
+    const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(evt, notifyFormCategoriesChange);
+    watchedElements.add(el);
+  }
   function createIconSelect(){
     const s=document.createElement('select');
     Object.keys(ICONS).forEach(k=>{
@@ -15891,6 +15947,7 @@ document.addEventListener('pointerdown', (e) => {
       o.innerHTML=ICONS[k];
       s.appendChild(o);
     });
+    watchElement(s);
     return s;
   }
   function createFieldSelect(){
@@ -15901,36 +15958,43 @@ document.addEventListener('pointerdown', (e) => {
       o.textContent=t;
       s.appendChild(o);
     });
+    watchElement(s);
     return s;
   }
   function addSubcategory(table){
     const iconRow=table.querySelector('.icon-row');
     const nameRow=table.querySelector('.name-row');
-    const iconCell=document.createElement('td'); iconCell.appendChild(createIconSelect()); iconRow.appendChild(iconCell);
-    const nameCell=document.createElement('td'); const inp=document.createElement('input'); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
+    const iconCell=document.createElement('td'); const iconSelect=createIconSelect(); iconCell.appendChild(iconSelect); iconRow.appendChild(iconCell);
+    const nameCell=document.createElement('td'); const inp=document.createElement('input'); watchElement(inp); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
     table.querySelectorAll('.field-row').forEach(row=>{
-      const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell);
+      const cell=document.createElement('td'); const fieldSelect=createFieldSelect(); cell.appendChild(fieldSelect); row.appendChild(cell);
     });
+    notifyFormCategoriesChange();
   }
   function addFieldRow(table){
     const cols=table.querySelector('.icon-row').children.length;
     const row=document.createElement('tr'); row.className='field-row';
-    for(let i=0;i<cols;i++){ const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell); }
+    for(let i=0;i<cols;i++){ const cell=document.createElement('td'); const select=createFieldSelect(); cell.appendChild(select); row.appendChild(cell); }
     table.appendChild(row);
+    notifyFormCategoriesChange();
   }
   function wireCategory(cat){
     const table=cat.querySelector('table');
-    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
-    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
+    const deleteBtn = cat.querySelector('.delete-category');
+    deleteBtn?.addEventListener('click',()=>{ cat.remove(); notifyFormCategoriesChange(); });
+    const copyBtn = cat.querySelector('.copy-category');
+    copyBtn?.addEventListener('click',()=>{ const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone); notifyFormCategoriesChange(); });
     cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
     cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
+    cat.querySelectorAll('input, select').forEach(el=>{ if(el.type==='button') return; watchElement(el); });
   }
   function createCategory(){
     const cat=document.createElement('div'); cat.className='form-category';
     const header=document.createElement('div'); header.className='category-header';
     const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
+    watchElement(name);
     const icon=createIconSelect();
-    const color=document.createElement('input'); color.type='color'; color.value='#000000';
+    const color=document.createElement('input'); color.type='color'; color.value='#000000'; watchElement(color);
     const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
     const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
     header.append(name,icon,color,copy,del);
@@ -15951,6 +16015,7 @@ document.addEventListener('pointerdown', (e) => {
   document.getElementById('addCategory').addEventListener('click',()=>{
     const cat=createCategory();
     document.getElementById('formsCategories').appendChild(cat);
+    notifyFormCategoriesChange();
   });
 })();
 </script>
