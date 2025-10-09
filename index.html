@@ -5794,16 +5794,18 @@ if (typeof slugify !== 'function') {
       let markersLoaded = false;
       window.__markersLoaded = false;
       const MARKER_ZOOM_THRESHOLD = 8;
+      const MARKER_SPRITE_RETAIN_ZOOM = MARKER_ZOOM_THRESHOLD + 1;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
+      const ENABLE_MAP_MARKERS = false;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
-      const MARKER_LAYER_IDS = [
+      const MARKER_LAYER_IDS = ENABLE_MAP_MARKERS ? [
         'hover-fill',
         'marker-label',
         'marker-label-highlight'
-      ];
+      ] : [];
       const ALL_MARKER_LAYER_IDS = [...MARKER_LAYER_IDS];
       const MID_ZOOM_MARKER_CLASS = 'map--midzoom-markers';
       const SPRITE_MARKER_CLASS = 'map--sprite-markers';
@@ -8395,8 +8397,8 @@ function makePosts(){
       const container = map.getContainer();
       if(!container || !container.classList) return;
       const zoomValue = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
-      const isMidZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
-      const isSpriteZoom = Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
+      const isMidZoom = ENABLE_MAP_MARKERS && Number.isFinite(zoomValue) && zoomValue >= MARKER_ZOOM_THRESHOLD && zoomValue < MARKER_SPRITE_ZOOM;
+      const isSpriteZoom = ENABLE_MAP_MARKERS && Number.isFinite(zoomValue) && zoomValue >= MARKER_SPRITE_ZOOM;
       container.classList.toggle(MID_ZOOM_MARKER_CLASS, isMidZoom);
       container.classList.toggle(SPRITE_MARKER_CLASS, isSpriteZoom);
     }
@@ -8407,7 +8409,8 @@ function makePosts(){
         ? Math.floor((zoomValue + 1e-6) * ZOOM_VISIBILITY_PRECISION)
         : NaN;
       const hasBucket = Number.isFinite(zoomBucket);
-      const shouldShowMarkers = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
+      const markerVisibilityCandidate = hasBucket ? zoomBucket >= MARKER_VISIBILITY_BUCKET : markerLayersVisible;
+      const shouldShowMarkers = ENABLE_MAP_MARKERS && markerVisibilityCandidate;
       const shouldShowBalloons = hasBucket ? zoomBucket < MARKER_VISIBILITY_BUCKET : balloonLayersVisible;
       if(markerLayersVisible !== shouldShowMarkers){
         MARKER_LAYER_IDS.forEach(id => setLayerVisibility(id, shouldShowMarkers));
@@ -8435,7 +8438,7 @@ function makePosts(){
       updateLayerVisibility(lastKnownZoom);
       updateMarkerZoomClasses(lastKnownZoom);
       updateBalloonSourceForZoom(lastKnownZoom);
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+      if(ENABLE_MAP_MARKERS && map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
       if(!markersLoaded){
@@ -10975,7 +10978,7 @@ function makePosts(){
         return;
       }
       addingPostSource = true;
-      if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
+      if(ENABLE_MAP_MARKERS && map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
       try{
@@ -10996,6 +10999,14 @@ function makePosts(){
       } else {
         existing.setData(postsData);
         existing.__markerSignature = signature;
+      }
+      if(!ENABLE_MAP_MARKERS){
+        ['marker-label','marker-label-highlight'].forEach(id => {
+          if(!map.getLayer(id)) return;
+          try{ map.removeLayer(id); }catch(e){}
+        });
+        markerLayersVisible = false;
+        return;
       }
       const iconIds = Object.keys(subcategoryMarkers);
       if(typeof ensureMapIcon === 'function'){
