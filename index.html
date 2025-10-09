@@ -80,16 +80,11 @@
       pointer-events: auto;
       z-index: 30;
     }
-    .mapmarker-overlay.is-card-visible > .small-map-card{
-      opacity: 0;
-      visibility: hidden;
-    }
     .mapmarker-overlay.is-card-visible{
       pointer-events: auto;
       z-index: 20000;
     }
-    .big-map-card img,
-    .small-map-card img{ display:block; }
+    .big-map-card img{ display:block; }
     .map-card-pill{
       position: absolute;
       inset: auto;
@@ -104,78 +99,6 @@
       mix-blend-mode: normal;
       z-index: 0;
     }
-    .small-map-card{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 150px;
-      height: 40px;
-      transform: translate3d(-20px, -20px, 0);
-      pointer-events: none;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.9);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px 5px 5px;
-      box-sizing: border-box;
-      transition: background-color 0.2s ease;
-    }
-    .small-multi-post-map-card{
-      gap: 5px;
-      padding-right: 10px;
-    }
-    .small-multi-post-map-card .mapmarker{
-      flex: 0 0 30px;
-      width: 30px;
-      height: 30px;
-      object-fit: contain;
-    }
-    .small-multi-post-map-card .mapmarker-label{
-      position: static;
-      left: auto;
-      top: auto;
-      width: auto;
-      height: auto;
-      padding: 0;
-      gap: 2px;
-      align-items: flex-start;
-    }
-    .small-multi-post-map-card .mapmarker-label-line{
-      width: auto;
-      text-align: left;
-    }
-    .small-multi-post-map-card .mapmarker-label-line:first-child{
-      font-weight: 600;
-    }
-    .mapmarker{
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 30px;
-      height: 30px;
-      pointer-events: none;
-      z-index: 2;
-      flex: 0 0 30px;
-    }
-    .map--midzoom-markers .mapmarker{
-      border-radius: 50%;
-      box-shadow: 0 0 0 3px #000;
-      box-sizing: border-box;
-    }
-    .mapmarker-pill{
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 150px;
-      height: 40px;
-      object-fit: contain;
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      mix-blend-mode: normal;
-      z-index: 0;
-    }
     .big-map-card--popup{
       background-color: rgba(0, 0, 0, 0.88);
       transition: background-color 0.2s ease;
@@ -185,12 +108,6 @@
       background-color: #2e3a72;
     }
     .open-post .post-header.is-map-highlight{
-      background-color: #2e3a72;
-    }
-    .small-map-card.is-pill-highlight{
-      background-color: #2e3a72;
-    }
-    .mapmarker-overlay:hover .small-map-card{
       background-color: #2e3a72;
     }
     .map-card-thumb{
@@ -210,8 +127,7 @@
       background: transparent;
       box-shadow: none;
     }
-    .map-card-label,
-    .mapmarker-label{
+    .map-card-label{
       position: absolute;
       left: 60px;
       top: 5px;
@@ -234,36 +150,6 @@
       z-index: 1;
       pointer-events: auto;
     }
-
-    .mapmarker-label{
-      position: relative;
-      left: auto;
-      top: auto;
-      width: auto;
-      height: auto;
-      padding: 0;
-      pointer-events: none;
-      color: #fff;
-      gap: 1px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-      white-space: normal;
-      z-index: 3;
-      text-align: left;
-      flex: 1 1 auto;
-      min-width: 0;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    .mapmarker-label-line{
-      width: 100%;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .mapmarker-label-line:first-child{ font-weight: 600; }
-    .mapmarker-label-line:not(:first-child){ font-weight: 400; }
 
     .post-location-marker{
       width: 32px;
@@ -7541,10 +7427,7 @@ if (typeof slugify !== 'function') {
       }, delay);
     }
 
-    const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
-    const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
@@ -7564,71 +7447,6 @@ if (typeof slugify !== 'function') {
       fns.forEach(fn => {
         try{ fn(); }catch(err){}
       });
-    }
-
-    function setSmallMapCardPillImage(cardEl, highlighted){
-      if(!cardEl) return;
-      const pillImg = cardEl.querySelector('.mapmarker-pill, .map-card-pill')
-        || cardEl.querySelector('img[src*="150x40-pill" i]');
-      if(!pillImg) return;
-      if(!pillImg.dataset.defaultSrc){
-        const currentSrc = pillImg.getAttribute('src') || '';
-        pillImg.dataset.defaultSrc = currentSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC;
-      }
-      if(!pillImg.dataset.highlightSrc){
-        pillImg.dataset.highlightSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
-      }
-      const targetSrc = highlighted
-        ? (pillImg.dataset.highlightSrc || SMALL_MAP_CARD_PILL_HOVER_SRC)
-        : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
-      if((pillImg.getAttribute('src') || '') !== targetSrc){
-        pillImg.setAttribute('src', targetSrc);
-      }
-      if(pillImg.getAttribute('srcset')){
-        pillImg.removeAttribute('srcset');
-      }
-    }
-
-    function enforceSmallMultiMapCardIcon(img, overlayEl){
-      if(!img) return;
-      const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
-      const apply = ()=>{
-        const currentSrc = img.getAttribute('src') || '';
-        if(currentSrc !== targetSrc){
-          img.setAttribute('src', targetSrc);
-        }
-      };
-      apply();
-      const onLoad = ()=> apply();
-      const onError = ()=> apply();
-      img.addEventListener('load', onLoad);
-      img.addEventListener('error', onError);
-      if(overlayEl){
-        registerOverlayCleanup(overlayEl, ()=>{
-          img.removeEventListener('load', onLoad);
-          img.removeEventListener('error', onError);
-        });
-      }
-      if(typeof MutationObserver === 'function'){
-        const observer = new MutationObserver(()=>{
-          if(!img.isConnected){
-            observer.disconnect();
-            return;
-          }
-          apply();
-        });
-        try{
-          observer.observe(img, { attributes: true, attributeFilter: ['src'] });
-        }catch(err){
-          try{ observer.disconnect(); }catch(e){}
-          return;
-        }
-        if(overlayEl){
-          registerOverlayCleanup(overlayEl, ()=>{
-            try{ observer.disconnect(); }catch(e){}
-          });
-        }
-      }
     }
 
     function escapeAttrValue(value){
@@ -7666,54 +7484,8 @@ if (typeof slugify !== 'function') {
       return Array.from(matches);
     }
 
-    function toggleSmallMapCardHoverHighlight(postId, shouldHighlight){
-      if(postId === undefined || postId === null) return;
-      const highlightClass = 'is-pill-highlight';
-      const mapHighlightClass = 'is-map-highlight';
-      const overlays = findMarkerOverlaysById(postId);
-      overlays.forEach(overlay => {
-        overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
-          if(shouldHighlight){
-            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-              cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
-            }
-            if(!cardEl.classList.contains(highlightClass)){
-              cardEl.classList.add(highlightClass);
-            }
-            setSmallMapCardPillImage(cardEl, true);
-          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
-            const prev = cardEl.dataset.hoverPrevHighlight === '1';
-            delete cardEl.dataset.hoverPrevHighlight;
-            if(!prev){
-              cardEl.classList.remove(highlightClass);
-              setSmallMapCardPillImage(cardEl, false);
-            } else {
-              setSmallMapCardPillImage(cardEl, true);
-            }
-          }
-        });
-        overlay.querySelectorAll('.big-map-card').forEach(cardEl => {
-          if(shouldHighlight){
-            if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
-              cardEl.dataset.hoverPrevMapHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
-            }
-            if(!cardEl.classList.contains(mapHighlightClass)){
-              cardEl.classList.add(mapHighlightClass);
-            }
-          } else if(Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
-            const prev = cardEl.dataset.hoverPrevMapHighlight === '1';
-            delete cardEl.dataset.hoverPrevMapHighlight;
-            if(!prev){
-              cardEl.classList.remove(mapHighlightClass);
-            }
-          }
-        });
-      });
-    }
-
     function updateSelectedMarkerRing(){
       const highlightClass = 'is-map-highlight';
-      const markerHighlightClass = 'is-pill-highlight';
       const isSurfaceHighlightTarget = (el)=> !!(el && el.classList && (el.classList.contains('post-card') || el.classList.contains('post-header')));
       const restoreHighlightBackground = (el)=>{
         if(!isSurfaceHighlightTarget(el) || !el.dataset) return;
@@ -7754,10 +7526,6 @@ if (typeof slugify !== 'function') {
         el.classList.remove(highlightClass);
         restoreAttr(el);
         restoreHighlightBackground(el);
-      });
-      document.querySelectorAll(`.small-map-card.${markerHighlightClass}`).forEach(el => {
-        setSmallMapCardPillImage(el, false);
-        el.classList.remove(markerHighlightClass);
       });
 
       const overlayEl = hoverPopup && typeof hoverPopup.getElement === 'function'
@@ -7809,10 +7577,6 @@ if (typeof slugify !== 'function') {
           if(normalizedVenue && overlayKey && overlayKey !== normalizedVenue){
             return;
           }
-          overlay.querySelectorAll('.small-map-card').forEach(el => {
-            setSmallMapCardPillImage(el, true);
-            el.classList.add(markerHighlightClass);
-          });
           overlay.querySelectorAll('.big-map-card').forEach(el => {
             el.classList.add(highlightClass);
           });
@@ -7920,7 +7684,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
-    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = SMALL_MULTI_MAP_CARD_ICON_SRC;
+    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = 'assets/icons-30/multi-post-icon-30.webp';
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
 
@@ -12808,64 +12572,6 @@ if (!map.__pillHooksInstalled) {
               : String(post.id);
             overlayRoot.dataset.id = overlayId;
 
-            const markerContainer = document.createElement('div');
-            markerContainer.className = 'small-map-card';
-            markerContainer.dataset.id = overlayId;
-            markerContainer.setAttribute('aria-hidden', 'true');
-            markerContainer.style.pointerEvents = 'none';
-            markerContainer.style.userSelect = 'none';
-
-            const markerIcon = new Image();
-            try{ markerIcon.decoding = 'async'; }catch(e){}
-            markerIcon.alt = '';
-            markerIcon.className = 'mapmarker';
-            markerIcon.draggable = false;
-            markerIcon.loading = 'eager';
-            markerIcon.referrerPolicy = 'no-referrer';
-            if(isMultiVenue){
-              markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
-              enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
-            } else {
-              const markerSources = window.subcategoryMarkers || {};
-              const markerIds = window.subcategoryMarkerIds || {};
-              const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
-              const markerIdCandidates = [];
-              if(post && post.subcategory){
-                const mappedId = markerIds[post.subcategory];
-                if(mappedId) markerIdCandidates.push(mappedId);
-                markerIdCandidates.push(slugifyFn(post.subcategory));
-              }
-              const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
-              const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
-              markerIcon.onerror = ()=>{
-                markerIcon.onerror = null;
-                markerIcon.src = markerFallback;
-              };
-              markerIcon.src = markerIconUrl || markerFallback;
-            }
-            requestAnimationFrame(() => {
-              if(typeof markerIcon.decode === 'function'){
-                markerIcon.decode().catch(()=>{});
-              }
-            });
-
-            const markerPill = new Image();
-            try{ markerPill.decoding = 'async'; }catch(e){}
-            markerPill.alt = '';
-            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
-            markerPill.dataset.defaultSrc = 'assets/icons-30/150x40-pill-70.webp';
-            markerPill.dataset.highlightSrc = 'assets/icons-30/150x40-pill-2f3b73.webp';
-            markerPill.className = 'mapmarker-pill';
-            markerPill.loading = 'eager';
-            markerPill.style.opacity = '0.9';
-            markerPill.style.visibility = 'visible';
-            markerPill.draggable = false;
-            requestAnimationFrame(() => {
-              if(typeof markerPill.decode === 'function'){
-                markerPill.decode().catch(()=>{});
-              }
-            });
-
             const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
             const venueDisplayName = (()=>{
               if(resolvedVenueKey){
@@ -12881,34 +12587,8 @@ if (!map.__pillHooksInstalled) {
               const fallback = uniqueVenuePosts[0] || post;
               return getPrimaryVenueName(fallback) || '';
             })();
-            const multiSmallVenueText = shortenMarkerLabelText(venueDisplayName, markerLabelTextAreaWidthPx);
             const multiBigVenueText = shortenMarkerLabelText(venueDisplayName, mapCardTitleWidthPx);
             const multiCountLabel = `${multiCount} posts here`;
-            const markerLabel = document.createElement('div');
-            markerLabel.className = 'mapmarker-label';
-            if(isMultiVenue){
-              markerContainer.classList.add('small-multi-post-map-card');
-              const markerLine1 = document.createElement('div');
-              markerLine1.className = 'mapmarker-label-line';
-              markerLine1.textContent = multiCountLabel;
-              const markerLine2 = document.createElement('div');
-              markerLine2.className = 'mapmarker-label-line';
-              markerLine2.textContent = multiSmallVenueText || venueDisplayName || '';
-              markerLabel.append(markerLine1, markerLine2);
-            } else if(labelLines){
-              const markerLine1 = document.createElement('div');
-              markerLine1.className = 'mapmarker-label-line';
-              markerLine1.textContent = labelLines.line1;
-              markerLabel.appendChild(markerLine1);
-              if(labelLines.line2){
-                const markerLine2 = document.createElement('div');
-                markerLine2.className = 'mapmarker-label-line';
-                markerLine2.textContent = labelLines.line2;
-                markerLabel.appendChild(markerLine2);
-              }
-            }
-
-            markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
@@ -12993,7 +12673,7 @@ if (!map.__pillHooksInstalled) {
             }
 
             cardRoot.append(pillImg, thumbImg, labelEl);
-            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.append(cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
 
@@ -13415,33 +13095,8 @@ if (!map.__pillHooksInstalled) {
         renderHistoryBoard();
       });
 
-      const handleHoverHighlight = (state)=> toggleSmallMapCardHoverHighlight(p.id, state);
-
-      el.addEventListener('mouseenter', ()=> handleHoverHighlight(true));
-      el.addEventListener('mouseleave', ()=> handleHoverHighlight(false));
-      el.dataset.hoverHighlightBound = '1';
       return el;
     }
-
-    document.addEventListener('mouseover', event => {
-      const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
-      const related = event.relatedTarget;
-      if(related && cardEl.contains(related)) return;
-      const id = cardEl.dataset ? cardEl.dataset.id : null;
-      if(!id) return;
-      toggleSmallMapCardHoverHighlight(id, true);
-    });
-
-    document.addEventListener('mouseout', event => {
-      const cardEl = event.target.closest('.post-card, .recents-card');
-      if(!cardEl || cardEl.dataset.hoverHighlightBound === '1') return;
-      const related = event.relatedTarget;
-      if(related && cardEl.contains(related)) return;
-      const id = cardEl.dataset ? cardEl.dataset.id : null;
-      if(!id) return;
-      toggleSmallMapCardHoverHighlight(id, false);
-    });
 
     // History board
     function loadHistory(){ try{ return JSON.parse(localStorage.getItem('openHistoryV2')||'[]'); }catch(e){ return []; } }
