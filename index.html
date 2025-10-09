@@ -6827,12 +6827,15 @@ if (typeof slugify !== 'function') {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
+      let mapHasZoomed = window.mapHasZoomed ?? false;
+      window.mapHasZoomed = mapHasZoomed;
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
       const MARKER_VISIBILITY_BUCKET = Math.round(MARKER_ZOOM_THRESHOLD * ZOOM_VISIBILITY_PRECISION);
       const MARKER_PRELOAD_OFFSET = 0.2;
       const MARKER_PRELOAD_ZOOM = Math.max(MARKER_ZOOM_THRESHOLD - MARKER_PRELOAD_OFFSET, 0);
+      const MAP_ZOOM_EPSILON = 1e-4;
       const MARKER_LAYER_IDS = [
         'hover-fill',
         'marker-label',
@@ -9814,6 +9817,15 @@ function makePosts(){
       }
     }
 
+    function maybeLoadMarkersForZoom(zoom){
+      if(markersLoaded || !mapHasZoomed) return;
+      const candidate = Number.isFinite(zoom) ? zoom : getZoomFromEvent();
+      if(!Number.isFinite(candidate) || candidate < MARKER_PRELOAD_ZOOM) return;
+      try{ loadPostMarkers(); }catch(err){ console.error(err); }
+      markersLoaded = true;
+      window.__markersLoaded = true;
+    }
+
     function updateZoomState(zoom){
       if(Number.isFinite(zoom)){
         lastKnownZoom = zoom;
@@ -9830,14 +9842,7 @@ function makePosts(){
       if(map && Number.isFinite(lastKnownZoom) && lastKnownZoom >= MARKER_SPRITE_ZOOM){
         map.__retainAllMarkerSprites = true;
       }
-      if(!markersLoaded){
-        const preloadCandidate = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-        if(Number.isFinite(preloadCandidate) && preloadCandidate >= MARKER_PRELOAD_ZOOM){
-          try{ loadPostMarkers(); }catch(err){ console.error(err); }
-          markersLoaded = true;
-          window.__markersLoaded = true;
-        }
-      }
+      maybeLoadMarkersForZoom(lastKnownZoom);
     }
 
     function scheduleCheckLoadPosts(event){
@@ -9856,6 +9861,11 @@ function makePosts(){
       if(!map) return;
       const zoomCandidate = getZoomFromEvent(event);
       updateZoomState(zoomCandidate);
+      if(!mapHasZoomed){
+        postLoadRequested = true;
+        hideResultIndicators();
+        return;
+      }
       let zoomLevel = Number.isFinite(zoomCandidate) ? zoomCandidate : lastKnownZoom;
       if(!Number.isFinite(zoomLevel)){
         zoomLevel = getZoomFromEvent();
@@ -12116,17 +12126,23 @@ if (!map.__pillHooksInstalled) {
         updateZoomState(zoomValue);
         scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
       });
-      map.on('zoomend', ()=>{
-        if(markersLoaded) return;
-        if(!map || typeof map.getZoom !== 'function') return;
-        let currentZoom = NaN;
-        try{ currentZoom = map.getZoom(); }catch(err){ currentZoom = NaN; }
-        if(!Number.isFinite(currentZoom) || currentZoom < MARKER_PRELOAD_ZOOM){
-          return;
+      map.on('zoomend', (evt)=>{
+        let zoomValue = getZoomFromEvent(evt);
+        if(!Number.isFinite(zoomValue) && map && typeof map.getZoom === 'function'){
+          try{ zoomValue = map.getZoom(); }catch(err){ zoomValue = NaN; }
         }
-        try{ loadPostMarkers(); }catch(err){ console.error(err); }
-        markersLoaded = true;
-        window.__markersLoaded = true;
+        if(!mapHasZoomed){
+          const hasOriginalEvent = Boolean(evt && evt.originalEvent);
+          const differsFromStart = Number.isFinite(zoomValue) && Math.abs(zoomValue - startZoom) > MAP_ZOOM_EPSILON;
+          if(hasOriginalEvent || differsFromStart){
+            mapHasZoomed = true;
+            window.mapHasZoomed = mapHasZoomed;
+            if(postLoadRequested){
+              scheduleCheckLoadPosts({ zoom: zoomValue, target: map });
+            }
+          }
+        }
+        maybeLoadMarkersForZoom(zoomValue);
       });
       map.on('moveend', ()=>{
         syncGeocoderProximityToMap();
@@ -12147,14 +12163,7 @@ if (!map.__pillHooksInstalled) {
         updatePostPanel();
         applyFilters();
         updateZoomState(getZoomFromEvent());
-        if(!markersLoaded){
-          const zoomLevel = Number.isFinite(lastKnownZoom) ? lastKnownZoom : getZoomFromEvent();
-          if(Number.isFinite(zoomLevel) && zoomLevel >= MARKER_PRELOAD_ZOOM){
-            try{ loadPostMarkers(); }catch(err){ console.error(err); }
-            markersLoaded = true;
-            window.__markersLoaded = true;
-          }
-        }
+        maybeLoadMarkersForZoom(lastKnownZoom);
         checkLoadPosts();
       });
 
