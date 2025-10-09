@@ -235,6 +235,19 @@
       pointer-events: auto;
     }
 
+    @media (max-width:440px){
+      .big-map-card:not(.big-map-card--list) .map-card-label{
+        top:50%;
+        bottom:auto;
+        height:auto;
+        transform:translateY(-50%);
+      }
+
+      .small-map-card .mapmarker-label{
+        justify-content:center;
+      }
+    }
+
     .mapmarker-label{
       position: relative;
       left: auto;
@@ -4402,6 +4415,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     gap:0;
     flex-direction:column;
     align-items:flex-start;
+    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   .quick-list-board,
   .post-board,
@@ -4412,10 +4428,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     right:0;
     padding:0;
     border-radius:0;
-    flex:0 0 auto;
-    min-height:0;
-    height:auto;
-    max-height:100%;
+    flex:1 1 auto;
+    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   .post-board{
     min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -4430,8 +4446,9 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   .panel-content{
     top:calc(var(--header-h) + var(--safe-top));
     bottom:var(--footer-h);
-    height:calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h));
-    min-height:0;
+    min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+    max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   .card,
   .recents-card,
