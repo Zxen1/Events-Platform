@@ -5634,10 +5634,300 @@ if (typeof slugify !== 'function') {
             <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
           </div>
           <style>
-            #tab-forms .form-category{margin:10px 0;border:1px solid #ccc;padding:0;}
-            #tab-forms .category-header{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
-            #tab-forms .subcategory-table{border-collapse:collapse;}
-            #tab-forms .subcategory-table td,#tab-forms .subcategory-table th{border:1px solid #999;padding:4px;}
+            #tab-forms .category-form-menu{
+              margin-bottom:12px;
+              border:1px solid var(--border);
+              border-radius:12px;
+              background:rgba(0,0,0,0.35);
+              overflow:hidden;
+              transition:border-color .2s,background .2s,opacity .2s;
+            }
+            #tab-forms .category-form-menu:last-child{
+              margin-bottom:0;
+            }
+            #tab-forms .category-form-menu .filter-category-header{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              padding:12px;
+            }
+            #tab-forms .category-form-menu .filter-category-trigger{
+              min-width:0;
+            }
+            #tab-forms .category-form-menu.cat-off{
+              opacity:0.5;
+            }
+            #tab-forms .category-form-content{
+              border-top:1px solid var(--border);
+              padding:16px;
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+              background:rgba(0,0,0,0.25);
+            }
+            #tab-forms .category-form-content[hidden]{
+              display:none;
+            }
+            #tab-forms .category-edit-menu{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .category-edit-trigger-wrap{
+              width:100%;
+            }
+            #tab-forms .category-edit-trigger{
+              width:100%;
+              height:40px;
+              border-radius:8px;
+              border:1px solid var(--btn);
+              background:var(--btn);
+              color:var(--button-text);
+              font-weight:600;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:8px;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .category-edit-trigger:hover{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .category-edit-panel{
+              border:1px solid var(--border);
+              border-radius:12px;
+              padding:16px;
+              background:rgba(0,0,0,0.25);
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+              max-width:100%;
+            }
+            #tab-forms .category-edit-panel[hidden]{
+              display:none;
+            }
+            #tab-forms .category-name-input{
+              width:300px;
+              max-width:100%;
+              height:36px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              padding:0 12px;
+            }
+            #tab-forms .iconpicker-container{
+              display:flex;
+              align-items:center;
+              gap:16px;
+              flex-wrap:wrap;
+            }
+            #tab-forms .iconpicker-upload{
+              position:relative;
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              gap:8px;
+              padding:8px 16px;
+              border-radius:8px;
+              background:var(--btn);
+              border:1px solid var(--btn);
+              color:var(--button-text);
+              font-weight:600;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .iconpicker-upload:hover{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .iconpicker-upload input[type="file"]{
+              position:absolute;
+              inset:0;
+              opacity:0;
+              cursor:pointer;
+            }
+            #tab-forms .iconpicker-preview{
+              width:64px;
+              height:64px;
+              border:1px dashed var(--border);
+              border-radius:8px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              background:rgba(0,0,0,0.35);
+              color:var(--muted);
+              font-size:12px;
+              text-align:center;
+              padding:6px;
+              box-sizing:border-box;
+            }
+            #tab-forms .iconpicker-preview img{
+              max-width:100%;
+              max-height:100%;
+              display:none;
+            }
+            #tab-forms .iconpicker-preview.has-image{
+              color:transparent;
+            }
+            #tab-forms .iconpicker-preview.has-image img{
+              display:block;
+            }
+            #tab-forms .subcategory-form-menus{
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #tab-forms .subcategory-form-menu{
+              border:1px solid var(--border);
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              overflow:hidden;
+              transition:border-color .2s,background .2s,opacity .2s;
+            }
+            #tab-forms .subcategory-form-menu.subcategory-off{
+              opacity:0.5;
+            }
+            #tab-forms .subcategory-form-header{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              padding:10px 12px;
+            }
+            #tab-forms .subcategory-trigger-wrap{
+              flex:1;
+            }
+            #tab-forms .subcategory-form-trigger{
+              width:100%;
+              border:none;
+              background:none;
+              color:inherit;
+              font:inherit;
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:10px;
+              cursor:pointer;
+            }
+            #tab-forms .subcategory-label-wrap{
+              display:flex;
+              align-items:center;
+              gap:8px;
+            }
+            #tab-forms .subcategory-logo{
+              width:28px;
+              height:28px;
+              border-radius:50%;
+              background:rgba(255,255,255,0.08);
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-weight:700;
+              text-transform:uppercase;
+              font-size:12px;
+            }
+            #tab-forms .subcategory-logo svg{
+              width:20px;
+              height:20px;
+            }
+            #tab-forms .subcategory-logo.has-icon{
+              background:transparent;
+            }
+            #tab-forms .subcategory-logo.has-icon svg{
+              width:24px;
+              height:24px;
+            }
+            #tab-forms .subcategory-form-toggle{
+              position:relative;
+              display:inline-flex;
+              align-items:center;
+              justify-content:flex-end;
+              flex:0 0 auto;
+              width:34px;
+              height:18px;
+              cursor:pointer;
+            }
+            #tab-forms .subcategory-form-toggle input{
+              position:absolute;
+              inset:0;
+              opacity:0;
+              margin:0;
+              cursor:pointer;
+            }
+            #tab-forms .subcategory-form-toggle .subcategory-switch{
+              position:relative;
+              flex:1;
+              display:flex;
+              align-items:center;
+              justify-content:flex-end;
+              width:100%;
+              height:100%;
+              pointer-events:none;
+            }
+            #tab-forms .subcategory-form-toggle .subcategory-switch .track{
+              position:absolute;
+              inset:0;
+              border-radius:12px;
+              background:var(--btn);
+              border:1px solid var(--btn);
+              transition:.2s;
+            }
+            #tab-forms .subcategory-form-toggle .subcategory-switch .thumb{
+              position:absolute;
+              width:14px;
+              height:14px;
+              border-radius:50%;
+              background:var(--button-text);
+              left:2px;
+              top:2px;
+              transition:.2s;
+            }
+            #tab-forms .subcategory-form-toggle input:checked + .subcategory-switch .track{
+              background:var(--category-switch-active);
+              border-color:var(--category-switch-active);
+            }
+            #tab-forms .subcategory-form-toggle input:checked + .subcategory-switch .thumb{
+              transform:translateX(16px);
+            }
+            #tab-forms .subcategory-form-menu.subcategory-off .subcategory-form-toggle .subcategory-switch .track{
+              background:var(--btn);
+              border-color:var(--btn);
+            }
+            #tab-forms .subcategory-form-menu.subcategory-off .subcategory-form-toggle .subcategory-switch .thumb{
+              transform:translateX(0);
+            }
+            #tab-forms .subcategory-form-content{
+              border-top:1px solid var(--border);
+              padding:12px 16px;
+              background:rgba(0,0,0,0.25);
+            }
+            #tab-forms .subcategory-form-content[hidden]{
+              display:none;
+            }
+            #tab-forms .subcategory-form-placeholder{
+              margin:0;
+              font-size:14px;
+              color:var(--muted);
+            }
+            #tab-forms .add-subcategory-btn{
+              align-self:flex-start;
+              padding:8px 16px;
+              border-radius:8px;
+              border:1px solid var(--btn);
+              background:var(--btn);
+              color:var(--button-text);
+              font-weight:600;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .add-subcategory-btn:hover{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
           </style>
           <div id="formsControls">
             <div class="settings-style-container">
@@ -10000,19 +10290,31 @@ function makePosts(){
     const formbuilderCats = document.getElementById('formbuilderCats');
     const refreshFormbuilderSubcategoryLogos = ()=>{
       if(!formbuilderCats) return;
-      formbuilderCats.querySelectorAll('.subcategory-option').forEach(btn=>{
-        const logoSpan = btn.querySelector('.subcategory-logo');
+      formbuilderCats.querySelectorAll('.subcategory-form-menu').forEach(menu=>{
+        const logoSpan = menu.querySelector('.subcategory-logo');
         if(!logoSpan) return;
-        const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
-        logoSpan.innerHTML = iconHtml;
+        const subName = menu.dataset.subcategory || '';
+        const iconHtml = subcategoryIcons[subName] || '';
+        logoSpan.innerHTML = '';
+        if(iconHtml){
+          logoSpan.innerHTML = iconHtml;
+          logoSpan.classList.add('has-icon');
+        } else {
+          logoSpan.textContent = subName ? subName.charAt(0) : '';
+          logoSpan.classList.remove('has-icon');
+        }
       });
     };
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
       const frag = document.createDocumentFragment();
-      categories.forEach(c=>{
+      categories.forEach((c, index)=>{
+        const baseId = slugify(c.name) || `category-${index + 1}`;
+        const contentId = `category-form-content-${baseId}-${index}`;
+        const editPanelId = `category-edit-panel-${baseId}-${index}`;
+
         const menu = document.createElement('div');
-        menu.className = 'filter-category-menu';
+        menu.className = 'category-form-menu filter-category-menu';
         menu.dataset.category = c.name;
         menu.setAttribute('role','group');
         menu.setAttribute('aria-expanded','false');
@@ -10026,11 +10328,9 @@ function makePosts(){
         const menuBtn = document.createElement('button');
         menuBtn.type = 'button';
         menuBtn.className = 'filter-category-trigger';
-        menuBtn.setAttribute('aria-haspopup', 'true');
-        menuBtn.setAttribute('aria-expanded', 'false');
-        const menuId = `formbuilder-category-menu-${slugify(c.name)}`;
-        menuBtn.setAttribute('aria-controls', menuId);
-        menuBtn.setAttribute('aria-disabled', 'false');
+        menuBtn.setAttribute('aria-haspopup','true');
+        menuBtn.setAttribute('aria-expanded','false');
+        menuBtn.setAttribute('aria-controls', contentId);
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className = 'category-logo';
@@ -10052,46 +10352,221 @@ function makePosts(){
 
         const arrow = document.createElement('span');
         arrow.className = 'dropdown-arrow';
-        arrow.setAttribute('aria-hidden', 'true');
+        arrow.setAttribute('aria-hidden','true');
 
         menuBtn.append(categoryLogo, label, arrow);
+        triggerWrap.append(menuBtn);
 
-        const optionsMenu = document.createElement('div');
-        optionsMenu.className = 'options-menu';
-        optionsMenu.id = menuId;
-        optionsMenu.hidden = true;
+        const toggle = document.createElement('label');
+        toggle.className = 'switch cat-switch';
+        const toggleInput = document.createElement('input');
+        toggleInput.type = 'checkbox';
+        toggleInput.checked = true;
+        toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
+        const toggleSlider = document.createElement('span');
+        toggleSlider.className = 'slider';
+        toggle.append(toggleInput, toggleSlider);
 
-        triggerWrap.append(menuBtn, optionsMenu);
-        header.append(triggerWrap);
+        header.append(triggerWrap, toggle);
         menu.append(header);
 
-        c.subs.forEach(sub=>{
+        const content = document.createElement('div');
+        content.className = 'category-form-content';
+        content.id = contentId;
+        content.hidden = true;
+
+        const editMenu = document.createElement('div');
+        editMenu.className = 'category-edit-menu';
+
+        const editWrap = document.createElement('div');
+        editWrap.className = 'options-dropdown category-edit-trigger-wrap';
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'category-edit-trigger';
+        editBtn.textContent = 'Edit Category';
+        editBtn.setAttribute('aria-expanded','false');
+        editBtn.setAttribute('aria-controls', editPanelId);
+
+        editWrap.append(editBtn);
+
+        const editPanel = document.createElement('div');
+        editPanel.className = 'category-edit-panel';
+        editPanel.id = editPanelId;
+        editPanel.hidden = true;
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'category-name-input';
+        nameInput.placeholder = 'Category Name';
+        nameInput.value = c.name || '';
+
+        const iconPicker = document.createElement('div');
+        iconPicker.className = 'iconpicker-container';
+
+        const uploadLabel = document.createElement('label');
+        uploadLabel.className = 'iconpicker-upload';
+        uploadLabel.textContent = 'Upload Icon';
+        const uploadInput = document.createElement('input');
+        uploadInput.type = 'file';
+        uploadInput.accept = 'image/*';
+        uploadInput.setAttribute('aria-label', `Upload icon for ${c.name}`);
+        uploadLabel.appendChild(uploadInput);
+
+        const preview = document.createElement('div');
+        preview.className = 'iconpicker-preview';
+        preview.textContent = 'No Icon';
+        const previewImg = document.createElement('img');
+        previewImg.alt = `${c.name} icon preview`;
+        preview.appendChild(previewImg);
+
+        iconPicker.append(uploadLabel, preview);
+
+        editPanel.append(nameInput, iconPicker);
+        editMenu.append(editWrap, editPanel);
+
+        const subMenusContainer = document.createElement('div');
+        subMenusContainer.className = 'subcategory-form-menus';
+
+        c.subs.forEach((sub, subIndex)=>{
+          const subMenu = document.createElement('div');
+          subMenu.className = 'subcategory-form-menu';
+          subMenu.dataset.category = c.name;
+          subMenu.dataset.subcategory = sub;
+          subMenu.setAttribute('aria-expanded','false');
+
+          const subHeader = document.createElement('div');
+          subHeader.className = 'subcategory-form-header';
+
+          const subTriggerWrap = document.createElement('div');
+          subTriggerWrap.className = 'options-dropdown subcategory-trigger-wrap';
+
+          const subContentId = `subcategory-form-content-${baseId}-${subIndex}`;
           const subBtn = document.createElement('button');
           subBtn.type = 'button';
-          subBtn.className = 'subcategory-option';
-          subBtn.dataset.category = c.name;
-          subBtn.dataset.subcategory = sub;
-          subBtn.setAttribute('aria-pressed', 'false');
-          subBtn.innerHTML = '<span class="subcategory-logo"></span><span class="subcategory-label"></span>';
-          const subLabel = subBtn.querySelector('.subcategory-label');
-          if(subLabel){
-            subLabel.textContent = sub;
-          }
+          subBtn.className = 'subcategory-form-trigger';
+          subBtn.setAttribute('aria-expanded','false');
+          subBtn.setAttribute('aria-controls', subContentId);
+
+          const subLabelWrap = document.createElement('span');
+          subLabelWrap.className = 'subcategory-label-wrap';
+
+          const subLogo = document.createElement('span');
+          subLogo.className = 'subcategory-logo';
+          subLogo.textContent = sub.charAt(0) || '';
+
+          const subLabel = document.createElement('span');
+          subLabel.className = 'subcategory-label';
+          subLabel.textContent = sub;
+
+          subLabelWrap.append(subLogo, subLabel);
+
+          const subArrow = document.createElement('span');
+          subArrow.className = 'dropdown-arrow';
+          subArrow.setAttribute('aria-hidden','true');
+
+          subBtn.append(subLabelWrap, subArrow);
+          subTriggerWrap.append(subBtn);
+
+          const subToggle = document.createElement('label');
+          subToggle.className = 'subcategory-form-toggle';
+          const subInput = document.createElement('input');
+          subInput.type = 'checkbox';
+          subInput.checked = true;
+          subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
+          const subSwitch = document.createElement('span');
+          subSwitch.className = 'subcategory-switch';
+          const subTrack = document.createElement('span');
+          subTrack.className = 'track';
+          const subThumb = document.createElement('span');
+          subThumb.className = 'thumb';
+          subSwitch.append(subTrack, subThumb);
+          subToggle.append(subInput, subSwitch);
+
+          subHeader.append(subTriggerWrap, subToggle);
+          subMenu.append(subHeader);
+
+          const subContent = document.createElement('div');
+          subContent.className = 'subcategory-form-content';
+          subContent.id = subContentId;
+          subContent.hidden = true;
+
+          const subPlaceholder = document.createElement('p');
+          subPlaceholder.className = 'subcategory-form-placeholder';
+          subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
+          subContent.append(subPlaceholder);
+
+          subMenu.append(subContent);
+
           subBtn.addEventListener('click', ()=>{
-            const pressed = subBtn.getAttribute('aria-pressed') === 'true';
-            const next = !pressed;
-            subBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
-            subBtn.classList.toggle('on', next);
+            const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
+            const next = !isExpanded;
+            subMenu.setAttribute('aria-expanded', next ? 'true' : 'false');
+            subBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+            subContent.hidden = !next;
           });
-          optionsMenu.appendChild(subBtn);
+
+          subInput.addEventListener('change', ()=>{
+            const isOn = subInput.checked;
+            subMenu.classList.toggle('subcategory-off', !isOn);
+          });
+
+          subMenusContainer.append(subMenu);
         });
+
+        const addSubBtn = document.createElement('button');
+        addSubBtn.type = 'button';
+        addSubBtn.className = 'add-subcategory-btn';
+        addSubBtn.textContent = 'Add Subcategory';
+        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+        subMenusContainer.append(addSubBtn);
+
+        content.append(editMenu, subMenusContainer);
+        menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
           const isExpanded = menu.getAttribute('aria-expanded') === 'true';
           const next = !isExpanded;
           menu.setAttribute('aria-expanded', next ? 'true' : 'false');
           menuBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
-          optionsMenu.hidden = !next;
+          content.hidden = !next;
+        });
+
+        toggleInput.addEventListener('change', ()=>{
+          menu.classList.toggle('cat-off', !toggleInput.checked);
+        });
+
+        editBtn.addEventListener('click', ()=>{
+          const isExpanded = editBtn.getAttribute('aria-expanded') === 'true';
+          const next = !isExpanded;
+          editBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
+          editPanel.hidden = !next;
+          if(next){
+            try{
+              nameInput.focus({ preventScroll: true });
+            }catch(err){
+              try{ nameInput.focus(); }catch(e){}
+            }
+          }
+        });
+
+        uploadInput.addEventListener('change', ()=>{
+          const file = uploadInput.files && uploadInput.files[0];
+          if(file){
+            const reader = new FileReader();
+            reader.onload = ()=>{
+              previewImg.src = typeof reader.result === 'string' ? reader.result : '';
+              preview.classList.toggle('has-image', !!reader.result);
+            };
+            reader.onerror = ()=>{
+              previewImg.removeAttribute('src');
+              preview.classList.remove('has-image');
+            };
+            reader.readAsDataURL(file);
+          } else {
+            previewImg.removeAttribute('src');
+            preview.classList.remove('has-image');
+          }
         });
 
         frag.appendChild(menu);
