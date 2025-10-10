@@ -5791,6 +5791,33 @@ if (typeof slugify !== 'function') {
             #tab-forms .subcategory-form-menu.subcategory-off{
               opacity:0.5;
             }
+            #tab-forms .delete-category-btn,
+            #tab-forms .delete-subcategory-btn{
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              padding:10px 16px;
+              border-radius:8px;
+              border:1px solid #a42828;
+              background:#b83030;
+              color:#fff;
+              font-weight:600;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .delete-category-btn:hover,
+            #tab-forms .delete-subcategory-btn:hover{
+              background:#d13c3c;
+              border-color:#d13c3c;
+            }
+            #tab-forms .delete-category-btn{
+              align-self:flex-start;
+              margin-top:4px;
+            }
+            #tab-forms .delete-subcategory-btn{
+              width:calc(100% - 24px);
+              margin:0 12px 12px;
+            }
             #tab-forms .subcategory-form-header{
               display:flex;
               align-items:center;
@@ -10498,6 +10525,19 @@ function makePosts(){
 
           subMenu.append(subContent);
 
+          const deleteSubBtn = document.createElement('button');
+          deleteSubBtn.type = 'button';
+          deleteSubBtn.className = 'delete-subcategory-btn';
+          deleteSubBtn.textContent = 'Delete Subcategory';
+          deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
+          deleteSubBtn.addEventListener('click', ()=>{
+            if(window.confirm('Are you sure?')){
+              subMenu.remove();
+            }
+          });
+
+          subMenu.append(deleteSubBtn);
+
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
             const next = !isExpanded;
@@ -10521,7 +10561,18 @@ function makePosts(){
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
         subMenusContainer.append(addSubBtn);
 
-        content.append(editMenu, subMenusContainer);
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'delete-category-btn';
+        deleteCategoryBtn.textContent = 'Delete Category';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+        deleteCategoryBtn.addEventListener('click', ()=>{
+          if(window.confirm('Are you sure?')){
+            menu.remove();
+          }
+        });
+
+        content.append(editMenu, subMenusContainer, deleteCategoryBtn);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
