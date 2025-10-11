@@ -752,7 +752,7 @@ html,body{
     touch-action: manipulation;
   }
 
-  body, .post-board, .second-post-column{
+  body, .post-board, .post-body{
     overscroll-behavior: contain;
   }
   .panel-content, .options-menu, .calendar-scroll{
@@ -2813,17 +2813,17 @@ body.hide-ads .post-mode-boards{padding-right:0;}
 .ad-board:not(.panel-visible){
   pointer-events:none;
 }
-@media (max-width:440px){
-  .post-board,
-  .recents-board,
-  .second-post-column.is-visible{
-    width:100%;
-    max-width:100%;
+  @media (max-width:440px){
+    .post-board,
+    .recents-board,
+    .post-mode-boards > .post-body.is-visible{
+      width:100%;
+      max-width:100%;
+    }
+    .post-mode-boards > .post-body{
+      display:none;
+    }
   }
-  .second-post-column{
-    display:none;
-  }
-}
 
 .last-opened-label{
   font-size:12px;
@@ -2956,7 +2956,8 @@ body.hide-ads .post-mode-boards{padding-right:0;}
   display:block;
 }
 
-.second-post-column{
+.post-mode-boards > .post-body,
+.post-body{
   width:100%;
   max-width:100%;
   min-width:0;
@@ -3805,16 +3806,14 @@ body.mode-map .post-board{
   gap:var(--gap);
   align-items:flex-start;
   align-content:flex-start;
+  flex:1 1 100%;
+  max-width:100%;
+  width:100%;
 }
 .open-post .post-body > .main-post-column{
   flex:0 0 var(--post-board-max-w);
   max-width:var(--post-board-max-w);
   width:var(--post-board-max-w);
-}
-.open-post .post-body > .second-post-column{
-  flex:1 1 100%;
-  max-width:100%;
-  width:100%;
 }
 
 .open-post .post-details{
@@ -4006,16 +4005,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     max-width:100%;
     padding:0;
   }
-  .second-post-column .venue-dropdown,
-  .second-post-column .session-dropdown{
+  .post-body .venue-dropdown,
+  .post-body .session-dropdown{
     width:100%;
     max-width:100%;
     padding:0;
   }
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
-  .second-post-column .venue-dropdown,
-  .second-post-column .session-dropdown{
+  .post-body .venue-dropdown,
+  .post-body .session-dropdown{
     min-width:0;
     width:100%;
     max-width:100%;
@@ -4050,7 +4049,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .member-avatar-row,
-.second-post-column .member-avatar-row{
+.post-body .member-avatar-row{
   display:none;
   align-items:center;
   height:50px;
@@ -4058,26 +4057,26 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   margin:var(--gap) 0 0;
 }
 .open-post.desc-expanded .member-avatar-row,
-.open-post.desc-expanded .second-post-column .member-avatar-row{
+.open-post.desc-expanded .post-body .member-avatar-row{
   display:flex;
 }
 .open-post .member-avatar-row img,
-.second-post-column .member-avatar-row img{
+.post-body .member-avatar-row img{
   width:50px;
   height:50px;
   object-fit:cover;
 }
 
 .open-post .member-avatar-row span,
-.second-post-column .member-avatar-row span{
+.post-body .member-avatar-row span{
   padding-left:10px;
 }
 
-.second-post-column .desc-wrap{
+.post-body .desc-wrap{
   width:100%;
 }
 
-.second-post-column .desc{
+.post-body .desc{
   display:-webkit-box;
   -webkit-line-clamp:2;
   line-clamp:2;
@@ -4088,11 +4087,11 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space:normal;
 }
 
-.second-post-column .desc:focus{
+.post-body .desc:focus{
   outline:none;
 }
 
-.second-post-column .desc.expanded{
+.post-body .desc.expanded{
   display:block;
   -webkit-line-clamp:unset;
   line-clamp:unset;
@@ -4101,7 +4100,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .location-section,
-.second-post-column .location-section{
+.post-body .location-section{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -4110,8 +4109,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .venue-dropdown,
 .open-post .session-dropdown,
-.second-post-column .venue-dropdown,
-.second-post-column .session-dropdown{
+.post-body .venue-dropdown,
+.post-body .session-dropdown{
   position:relative;
   width:100%;
   max-width:100%;
@@ -4130,7 +4129,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .post-venue-menu .map-container,
-.second-post-column .post-venue-menu .map-container{
+.post-body .post-venue-menu .map-container{
   position:relative;
   width:100%;
   border-radius:8px;
@@ -4141,7 +4140,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .post-venue-menu .post-map,
-.second-post-column .post-venue-menu .post-map{
+.post-body .post-venue-menu .post-map{
   width:100%;
   height:200px;
   min-height:200px;
@@ -4154,7 +4153,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .venue-dropdown > button,
-.second-post-column .venue-dropdown > button{
+.post-body .venue-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -4170,7 +4169,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .session-dropdown > button,
-.second-post-column .session-dropdown > button{
+.post-body .session-dropdown > button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -4185,42 +4184,42 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .venue-dropdown > button .venue-name,
-.second-post-column .venue-dropdown > button .venue-name{
+.post-body .venue-dropdown > button .venue-name{
   font-weight:bold;
   display:block;
 }
 
 .open-post .venue-dropdown > button .venue-address,
-.second-post-column .venue-dropdown > button .venue-address{
+.post-body .venue-dropdown > button .venue-address{
   display:block;
 }
 
 .open-post .post-venue-menu .venue-options button .venue-name,
-.second-post-column .post-venue-menu .venue-options button .venue-name{
+.post-body .post-venue-menu .venue-options button .venue-name{
   font-weight:bold;
   display:block;
 }
 
 .open-post .post-venue-menu .venue-options button .venue-address,
-.second-post-column .post-venue-menu .venue-options button .venue-address{
+.post-body .post-venue-menu .venue-options button .venue-address{
   display:block;
 }
 
 .open-post .venue-dropdown > button .venue-name,
-.second-post-column .venue-dropdown > button .venue-name,
+.post-body .venue-dropdown > button .venue-name,
 .open-post .venue-dropdown > button .venue-address,
-.second-post-column .venue-dropdown > button .venue-address,
+.post-body .venue-dropdown > button .venue-address,
 .open-post .post-venue-menu .venue-options button .venue-name,
-.second-post-column .post-venue-menu .venue-options button .venue-name,
+.post-body .post-venue-menu .venue-options button .venue-name,
 .open-post .post-venue-menu .venue-options button .venue-address,
-.second-post-column .post-venue-menu .venue-options button .venue-address{
+.post-body .post-venue-menu .venue-options button .venue-address{
   line-height:1.2;
 }
 
 .open-post .post-venue-menu,
 .open-post .session-menu,
-.second-post-column .post-venue-menu,
-.second-post-column .session-menu{
+.post-body .post-venue-menu,
+.post-body .session-menu{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -4243,18 +4242,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .open-post .session-menu{
   max-width:100%;
 }
-.second-post-column .post-venue-menu,
-.second-post-column .session-menu{
+.post-body .post-venue-menu,
+.post-body .session-menu{
   max-width:100%;
 }
 
 .open-post .post-venue-menu[hidden],
 .open-post .session-menu[hidden],
-.second-post-column .post-venue-menu[hidden],
-.second-post-column .session-menu[hidden]{display:none;}
+.post-body .post-venue-menu[hidden],
+.post-body .session-menu[hidden]{display:none;}
 
 .open-post .post-venue-menu .venue-options button,
-.second-post-column .post-venue-menu .venue-options button{
+.post-body .post-venue-menu .venue-options button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -4270,7 +4269,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .session-menu button,
-.second-post-column .session-menu button{
+.post-body .session-menu button{
   height:50px;
   background:var(--btn);
   border:1px solid var(--btn);
@@ -4285,8 +4284,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .post-venue-menu,
 .open-post .session-menu,
-.second-post-column .post-venue-menu,
-.second-post-column .session-menu,
+.post-body .post-venue-menu,
+.post-body .session-menu,
 .sort-options{
   --button-selected-bg: #2e3a72;
   --button-selected-border: #2e3a72;
@@ -4301,40 +4300,40 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .post-venue-menu .venue-options button.selected,
 .open-post .session-menu button.selected,
-.second-post-column .post-venue-menu .venue-options button.selected,
-.second-post-column .session-menu button.selected{
+.post-body .post-venue-menu .venue-options button.selected,
+.post-body .session-menu button.selected{
   background:#2e3a72;
   color:var(--button-active-text);
   border-color:#2e3a72;
 }
 
 .open-post .session-menu button .session-time,
-.second-post-column .session-menu button .session-time{
+.post-body .session-menu button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
 .open-post .session-dropdown > button .session-time,
-.second-post-column .session-dropdown > button .session-time{
+.post-body .session-dropdown > button .session-time{
   margin-left:auto;
   padding-right:20px;
 }
 
 .open-post .location-section .post-venue-menu,
-.second-post-column .location-section .post-venue-menu{
+.post-body .location-section .post-venue-menu{
   width:100%;
   box-sizing:border-box;
 }
 
 .hide-map-calendar .open-post .map-container,
 .hide-map-calendar .open-post .calendar-container,
-.hide-map-calendar .second-post-column .map-container,
-.hide-map-calendar .second-post-column .calendar-container{
+.hide-map-calendar .post-body .map-container,
+.hide-map-calendar .post-body .calendar-container{
   display:none;
 }
 
 .open-post .post-calendar,
-.second-post-column .post-calendar,
-.second-post-column .post-calendar{
+.post-body .post-calendar,
+.post-body .post-calendar{
   position:relative;
   font-size:var(--panel-label-size);
   min-width:var(--calendar-width);
@@ -4342,7 +4341,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .session-menu .calendar-container,
-.second-post-column .session-menu .calendar-container{
+.post-body .session-menu .calendar-container{
   display:flex;
   flex-direction:column;
   gap:var(--gap);
@@ -4358,7 +4357,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .calendar-container .calendar-scroll,
-.second-post-column .calendar-container .calendar-scroll{
+.post-body .calendar-container .calendar-scroll{
   width:100%;
   min-height:var(--calendar-height);
   height:auto;
@@ -4381,13 +4380,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 @supports (scrollbar-gutter: stable){
   .open-post .calendar-container .calendar-scroll,
-  .second-post-column .calendar-container .calendar-scroll{
+  .post-body .calendar-container .calendar-scroll{
     scrollbar-gutter: stable;
   }
 }
 .open-post .post-calendar .calendar,
-.second-post-column .post-calendar .calendar,
-.second-post-column .post-calendar .calendar{
+.post-body .post-calendar .calendar,
+.post-body .post-calendar .calendar{
   margin:0;
   box-sizing:border-box;
   display:flex;
@@ -4402,8 +4401,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   font-size:inherit;
 }
 .open-post .post-calendar .month,
-.second-post-column .post-calendar .month,
-.second-post-column .post-calendar .month{
+.post-body .post-calendar .month,
+.post-body .post-calendar .month{
   flex:0 0 auto;
   width:var(--calendar-width);
   min-width:var(--calendar-width);
@@ -4412,13 +4411,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   flex-direction:column;
 }
 .open-post .post-calendar .month:not(:first-child),
-.second-post-column .post-calendar .month:not(:first-child),
-.second-post-column .post-calendar .month:not(:first-child){
+.post-body .post-calendar .month:not(:first-child),
+.post-body .post-calendar .month:not(:first-child){
   border-left:1px solid var(--calendar-past-bg);
 }
 .open-post .post-calendar .grid,
-.second-post-column .post-calendar .grid,
-.second-post-column .post-calendar .grid{
+.post-body .post-calendar .grid,
+.post-body .post-calendar .grid{
   flex:1 1 auto;
   width:100%;
   height:calc(var(--calendar-height) - var(--calendar-header-h));
@@ -4427,8 +4426,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   grid-template-rows:repeat(7,var(--calendar-cell-h));
 }
 .open-post .post-calendar .calendar-header,
-.second-post-column .post-calendar .calendar-header,
-.second-post-column .post-calendar .calendar-header{
+.post-body .post-calendar .calendar-header,
+.post-body .post-calendar .calendar-header{
   height:var(--calendar-header-h);
   display:flex;
   align-items:center;
@@ -4442,10 +4441,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 .open-post .post-calendar .weekday,
 .open-post .post-calendar .day,
-.second-post-column .post-calendar .weekday,
-.second-post-column .post-calendar .day,
-.second-post-column .post-calendar .weekday,
-.second-post-column .post-calendar .day{
+.post-body .post-calendar .weekday,
+.post-body .post-calendar .day,
+.post-body .post-calendar .weekday,
+.post-body .post-calendar .day{
   width:var(--calendar-cell-w);
   height:var(--calendar-cell-h);
   line-height:var(--calendar-cell-h);
@@ -4453,67 +4452,67 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   font-size:inherit;
 }
 .open-post .post-calendar .weekday,
-.second-post-column .post-calendar .weekday,
-.second-post-column .post-calendar .weekday{
+.post-body .post-calendar .weekday,
+.post-body .post-calendar .weekday{
   font-weight:bold;
   color:var(--dropdown-text);
 }
 .open-post .post-calendar .day,
-.second-post-column .post-calendar .day,
-.second-post-column .post-calendar .day{
+.post-body .post-calendar .day,
+.post-body .post-calendar .day{
   cursor:pointer;
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
   transition:background .2s,color .2s;
 }
 .open-post .post-calendar .day.empty,
-.second-post-column .post-calendar .day.empty,
-.second-post-column .post-calendar .day.empty{
+.post-body .post-calendar .day.empty,
+.post-body .post-calendar .day.empty{
   cursor:default;
   background:var(--calendar-future-bg);
   color:var(--dropdown-text);
   opacity:0.6;
 }
 .open-post .post-calendar .day.available-day,
-.second-post-column .post-calendar .day.available-day,
-.second-post-column .post-calendar .day.available-day{
+.post-body .post-calendar .day.available-day,
+.post-body .post-calendar .day.available-day{
   background:var(--session-available);
   color:#fff;
 }
 .open-post .post-calendar .day.available-day:hover,
-.second-post-column .post-calendar .day.available-day:hover,
-.second-post-column .post-calendar .day.available-day:hover{
+.post-body .post-calendar .day.available-day:hover,
+.post-body .post-calendar .day.available-day:hover{
   background:var(--session-available);
   color:#fff;
 }
 .open-post .post-calendar .day.selected,
-.second-post-column .post-calendar .day.selected,
-.second-post-column .post-calendar .day.selected{
+.post-body .post-calendar .day.selected,
+.post-body .post-calendar .day.selected{
   background:var(--session-selected);
   color:#fff;
 }
 .open-post .post-calendar .day.selected:hover,
-.second-post-column .post-calendar .day.selected:hover,
-.second-post-column .post-calendar .day.selected:hover{
+.post-body .post-calendar .day.selected:hover,
+.post-body .post-calendar .day.selected:hover{
   background:var(--session-selected);
   color:#fff;
 }
 .open-post .post-calendar .day.today,
-.second-post-column .post-calendar .day.today,
-.second-post-column .post-calendar .day.today{color:var(--today) !important;}
+.post-body .post-calendar .day.today,
+.post-body .post-calendar .day.today{color:var(--today) !important;}
 .open-post .post-calendar .day.available-day.today,
 .open-post .post-calendar .day.available-day.selected.today,
 .open-post .post-calendar .day.selected.today,
-.second-post-column .post-calendar .day.available-day.today,
-.second-post-column .post-calendar .day.available-day.selected.today,
-.second-post-column .post-calendar .day.selected.today,
-.second-post-column .post-calendar .day.available-day.today,
-.second-post-column .post-calendar .day.available-day.selected.today,
-.second-post-column .post-calendar .day.selected.today{color:var(--today) !important;}
+.post-body .post-calendar .day.available-day.today,
+.post-body .post-calendar .day.available-day.selected.today,
+.post-body .post-calendar .day.selected.today,
+.post-body .post-calendar .day.available-day.today,
+.post-body .post-calendar .day.available-day.selected.today,
+.post-body .post-calendar .day.selected.today{color:var(--today) !important;}
 
 .open-post .post-calendar .selected-month-name,
-.second-post-column .post-calendar .selected-month-name,
-.second-post-column .post-calendar .selected-month-name{
+.post-body .post-calendar .selected-month-name,
+.post-body .post-calendar .selected-month-name{
   background:var(--accent);
   color:var(--button-hover-text);
   border-radius:8px;
@@ -4521,13 +4520,13 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 }
 
 .open-post .calendar-container .time-popup,
-.second-post-column .calendar-container .time-popup{
+.post-body .calendar-container .time-popup{
   position:absolute;
   z-index:10;
 }
 
 .open-post .calendar-container .time-popup .time-list,
-.second-post-column .calendar-container .time-popup .time-list{
+.post-body .calendar-container .time-popup .time-list{
   background:var(--dropdown-bg);
   color:var(--dropdown-text);
   padding:8px;
@@ -4538,7 +4537,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
    }
 
 .open-post .calendar-container .time-popup .time-list button,
-.second-post-column .calendar-container .time-popup .time-list button{
+.post-body .calendar-container .time-popup .time-list button{
   background:var(--btn);
   border:1px solid var(--btn);
   color:var(--button-text);
@@ -4549,15 +4548,15 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 
 .open-post .venue-info,
 .open-post .session-info,
-.second-post-column .venue-info,
-.second-post-column .session-info{
+.post-body .venue-info,
+.post-body .session-info{
   color: inherit;
   font-size: inherit;
 }
 .open-post .venue-info,
-.second-post-column .venue-info{margin-top:4px;}
+.post-body .venue-info{margin-top:4px;}
 .open-post .session-info,
-.second-post-column .session-info{margin-top:8px;}
+.post-body .session-info{margin-top:8px;}
 
 .pill{
   border: 1px solid var(--btn);
@@ -4761,20 +4760,20 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     flex-direction:column;
     gap:var(--gap);
   }
-  .open-post .post-body > .main-post-column,
-  .open-post .post-body > .second-post-column{
-    flex:1 1 100%;
-    max-width:100%;
-    width:100%;
-  }
-  .open-post .location-section,
-  .second-post-column .location-section{
-    flex-direction:column;
-  }
-  .open-post .post-details .location-section,
-  .second-post-column .post-details .location-section{
-    order:-1;
-  }
+    .open-post .post-body > .main-post-column,
+    .open-post .post-body{
+      flex:1 1 100%;
+      max-width:100%;
+      width:100%;
+    }
+    .open-post .location-section,
+    .post-body .location-section{
+      flex-direction:column;
+    }
+    .open-post .post-details .location-section,
+    .post-body .post-details .location-section{
+      order:-1;
+    }
   .open-post .image-box{
     max-width:100%;
     width:100%;
@@ -4802,8 +4801,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     }
   .open-post .venue-dropdown,
   .open-post .session-dropdown,
-  .second-post-column .venue-dropdown,
-  .second-post-column .session-dropdown{
+  .post-body .venue-dropdown,
+  .post-body .session-dropdown{
     display:block;
   }
 }
@@ -5180,20 +5179,21 @@ img.thumb{
     aspect-ratio:1/1;
     flex:0 0 100%;
   }
-  .second-post-column{
-    width:100%;
-    max-width:520px;
-    min-width:0;
-    flex:0 0 100%;
-  }
-  .open-post .second-post-column{
-    height:auto;
-    max-height:none;
-    overflow:visible;
-  }
-  .open-post .second-post-column .post-details{
-    height:auto;
-  }
+    .post-mode-boards > .post-body,
+    .post-body{
+      width:100%;
+      max-width:520px;
+      min-width:0;
+      flex:0 0 100%;
+    }
+    .open-post .post-body{
+      height:auto;
+      max-height:none;
+      overflow:visible;
+    }
+    .open-post .post-body .post-details{
+      height:auto;
+    }
 }
 
 @media (max-width:440px){
@@ -12670,29 +12670,27 @@ function makePosts(){
           ${headerInner}
         </div>
         <div class="post-body">
-          <div class="second-post-column">
-            <div class="post-details">
-              <div class="post-venue-selection-container"></div>
-              <div class="post-session-selection-container"></div>
-              <div class="location-section">
-                <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
-                <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
-              </div>
-              <div class="post-details-info-container">
-                <div id="venue-info-${p.id}" class="venue-info"></div>
-                <div id="session-info-${p.id}" class="session-info">
-                  <div>${defaultInfo}</div>
-                </div>
-              </div>
-              <div class="post-details-description-container">
-                <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
-                <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
+          <div class="post-details">
+            <div class="post-venue-selection-container"></div>
+            <div class="post-session-selection-container"></div>
+            <div class="location-section">
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
+            </div>
+            <div class="post-details-info-container">
+              <div id="venue-info-${p.id}" class="venue-info"></div>
+              <div id="session-info-${p.id}" class="session-info">
+                <div>${defaultInfo}</div>
               </div>
             </div>
-            <div class="post-images">
-              <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
-              <div class="thumbnail-row"></div>
+            <div class="post-details-description-container">
+              <div class="desc-wrap"><div class="desc" tabindex="0" aria-expanded="false">${p.desc}</div></div>
+              <div class="member-avatar-row"><img src="${memberAvatarUrl(p)}" alt="${posterName} avatar" width="50" height="50"/><span>${postedMeta}</span></div>
             </div>
+          </div>
+          <div class="post-images">
+            <div class="image-box"><div class="image-track"><img id="hero-img" class="lqip" src="${thumbSrc}" data-full="${heroUrl(p)}" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='${thumbSrc}';"/></div></div>
+            <div class="thumbnail-row"></div>
           </div>
         </div>`;
       wrap.querySelectorAll('.post-header').forEach(head => {
@@ -12969,7 +12967,7 @@ function makePosts(){
         const isHistory = container && container.id === 'recentsBoard';
         const id = openEl.dataset ? openEl.dataset.id : null;
         const post = id ? getPostByIdAnywhere(id) : null;
-        const detachedColumn = document.querySelector('.post-mode-boards > .second-post-column');
+        const detachedColumn = document.querySelector('.post-mode-boards > .post-body');
         if(detachedColumn){
           detachedColumn.classList.remove('is-visible');
           if(detachedColumn.dataset) delete detachedColumn.dataset.openPostId;
@@ -18551,11 +18549,10 @@ function initPostLayout(board){
   document.body.classList.add('detail-open');
   document.body.classList.remove('hide-map-calendar');
   const postBody = openPost.querySelector('.post-body');
-  const secondCol = postBody ? postBody.querySelector('.second-post-column') : null;
-  if(secondCol){
-    secondCol.removeAttribute('hidden');
-    secondCol.classList.remove('is-visible');
-    if(secondCol.dataset) delete secondCol.dataset.openPostId;
+  if(postBody){
+    postBody.removeAttribute('hidden');
+    postBody.classList.remove('is-visible');
+    if(postBody.dataset) delete postBody.dataset.openPostId;
   }
   const triggerDetailMapResize = target => {
     if(!target) return;
@@ -18566,7 +18563,7 @@ function initPostLayout(board){
       scheduleMapResize(mapInstance);
     }
   };
-  triggerDetailMapResize(secondCol);
+  triggerDetailMapResize(postBody);
   const thumbRow = postBody ? postBody.querySelector('.thumbnail-row') : null;
   const selectedImageBox = postBody ? postBody.querySelector('.selected-image, .image-box') : null;
   ensureImageModalReady();
@@ -18662,7 +18659,7 @@ function initPostLayout(board){
         document.documentElement.style.removeProperty('--post-header-h');
       }
     }
-    triggerDetailMapResize(secondCol);
+    triggerDetailMapResize(postBody);
     if(typeof window.adjustBoards === 'function') window.adjustBoards();
   };
   updateMetrics();
