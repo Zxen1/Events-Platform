@@ -5856,25 +5856,6 @@ if (typeof slugify !== 'function') {
             #tab-forms .iconpicker-preview.has-image img{
               display:block;
             }
-            #tab-forms .iconpicker-existing{
-              display:flex;
-              align-items:center;
-              gap:12px;
-              padding:8px 12px;
-              border-radius:8px;
-              border:1px dashed var(--border);
-              background:rgba(0,0,0,0.25);
-              color:var(--muted);
-            }
-            #tab-forms .iconpicker-existing img{
-              width:30px;
-              height:30px;
-              display:block;
-            }
-            #tab-forms .iconpicker-existing .iconpicker-existing-label{
-              font-weight:600;
-              color:var(--button-text);
-            }
             #tab-forms .subcategory-form-menus{
               display:flex;
               flex-direction:column;
@@ -10646,36 +10627,29 @@ function makePosts(){
 
         const uploadLabel = document.createElement('label');
         uploadLabel.className = 'iconpicker-upload';
-        uploadLabel.textContent = 'Upload Icon';
+        const uploadLabelText = document.createElement('span');
+        uploadLabelText.textContent = 'Upload Icon';
         const uploadInput = document.createElement('input');
         uploadInput.type = 'file';
         uploadInput.accept = 'image/*';
         uploadInput.setAttribute('aria-label', `Upload icon for ${c.name}`);
-        uploadLabel.appendChild(uploadInput);
+        uploadLabel.append(uploadLabelText, uploadInput);
 
         const preview = document.createElement('div');
         preview.className = 'iconpicker-preview';
-        preview.textContent = 'No Icon';
+        const previewLabel = document.createElement('span');
+        previewLabel.textContent = 'No Icon';
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
-        preview.appendChild(previewImg);
-
-        const existingIcon = document.createElement('div');
-        existingIcon.className = 'iconpicker-existing';
-        const existingLabel = document.createElement('span');
-        existingLabel.className = 'iconpicker-existing-label';
-        existingLabel.textContent = 'Existing Icon';
-        existingIcon.append(existingLabel);
-        const existingImg = document.createElement('img');
-        existingImg.alt = `${c.name} existing icon`;
-        existingImg.width = 30;
-        existingImg.height = 30;
+        preview.append(previewLabel, previewImg);
         const baseIconPath = iconPrefix ? `assets/icons-30/${iconPrefix}-30.webp` : '';
         if(baseIconPath){
-          existingImg.src = baseIconPath;
-          existingIcon.append(existingImg);
+          previewImg.src = baseIconPath;
+          preview.classList.add('has-image');
+          previewLabel.textContent = '';
+          uploadLabelText.textContent = 'Change Icon';
         }
-        iconPicker.append(uploadLabel, preview, existingIcon);
+        iconPicker.append(uploadLabel, preview);
 
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
@@ -10763,41 +10737,34 @@ function makePosts(){
 
           const subUploadLabel = document.createElement('label');
           subUploadLabel.className = 'iconpicker-upload';
-          subUploadLabel.textContent = 'Upload Icon';
+          const subUploadLabelText = document.createElement('span');
+          subUploadLabelText.textContent = 'Upload Icon';
           const subUploadInput = document.createElement('input');
           subUploadInput.type = 'file';
           subUploadInput.accept = 'image/*';
           subUploadInput.setAttribute('aria-label', `Upload icon for ${sub}`);
-          subUploadLabel.appendChild(subUploadInput);
+          subUploadLabel.append(subUploadLabelText, subUploadInput);
 
           const subPreview = document.createElement('div');
           subPreview.className = 'iconpicker-preview';
-          subPreview.textContent = 'No Icon';
+          const subPreviewLabel = document.createElement('span');
+          subPreviewLabel.textContent = 'No Icon';
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
-          subPreview.appendChild(subPreviewImg);
-
-          const subExistingIcon = document.createElement('div');
-          subExistingIcon.className = 'iconpicker-existing';
-          const subExistingLabel = document.createElement('span');
-          subExistingLabel.className = 'iconpicker-existing-label';
-          subExistingLabel.textContent = 'Existing Icon';
-          subExistingIcon.append(subExistingLabel);
-          const subExistingImg = document.createElement('img');
-          subExistingImg.alt = `${sub} existing icon`;
-          subExistingImg.width = 30;
-          subExistingImg.height = 30;
+          subPreview.append(subPreviewLabel, subPreviewImg);
           const subColorKey = (window.subcategoryColorMap || {})[`${c.name}::${sub}`] || '';
           const subIconPrefix = iconPrefix || '';
           const subIconPath = subIconPrefix
             ? (subColorKey ? `assets/icons-30/${subIconPrefix}-${subColorKey}-30.webp` : `assets/icons-30/${subIconPrefix}-30.webp`)
             : '';
           if(subIconPath){
-            subExistingImg.src = subIconPath;
-            subExistingIcon.append(subExistingImg);
+            subPreviewImg.src = subIconPath;
+            subPreview.classList.add('has-image');
+            subPreviewLabel.textContent = '';
+            subUploadLabelText.textContent = 'Change Icon';
           }
 
-          subIconPicker.append(subUploadLabel, subPreview, subExistingIcon);
+          subIconPicker.append(subUploadLabel, subPreview);
 
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
@@ -10822,17 +10789,36 @@ function makePosts(){
             if(file){
               const reader = new FileReader();
               reader.onload = ()=>{
-                subPreviewImg.src = typeof reader.result === 'string' ? reader.result : '';
-                subPreview.classList.toggle('has-image', !!reader.result);
+                const result = typeof reader.result === 'string' ? reader.result : '';
+                if(result){
+                  subPreviewImg.src = result;
+                  subPreview.classList.add('has-image');
+                  subPreviewLabel.textContent = '';
+                  subUploadLabelText.textContent = 'Change Icon';
+                } else {
+                  subPreviewImg.removeAttribute('src');
+                  subPreview.classList.remove('has-image');
+                  subPreviewLabel.textContent = 'No Icon';
+                  subUploadLabelText.textContent = subIconPath ? 'Change Icon' : 'Upload Icon';
+                }
               };
               reader.onerror = ()=>{
                 subPreviewImg.removeAttribute('src');
                 subPreview.classList.remove('has-image');
+                subPreviewLabel.textContent = 'No Icon';
+                subUploadLabelText.textContent = subIconPath ? 'Change Icon' : 'Upload Icon';
               };
               reader.readAsDataURL(file);
+            } else if(subIconPath){
+              subPreviewImg.src = subIconPath;
+              subPreview.classList.add('has-image');
+              subPreviewLabel.textContent = '';
+              subUploadLabelText.textContent = 'Change Icon';
             } else {
               subPreviewImg.removeAttribute('src');
               subPreview.classList.remove('has-image');
+              subPreviewLabel.textContent = 'No Icon';
+              subUploadLabelText.textContent = 'Upload Icon';
             }
           });
 
@@ -10893,17 +10879,36 @@ function makePosts(){
           if(file){
             const reader = new FileReader();
             reader.onload = ()=>{
-              previewImg.src = typeof reader.result === 'string' ? reader.result : '';
-              preview.classList.toggle('has-image', !!reader.result);
+              const result = typeof reader.result === 'string' ? reader.result : '';
+              if(result){
+                previewImg.src = result;
+                preview.classList.add('has-image');
+                previewLabel.textContent = '';
+                uploadLabelText.textContent = 'Change Icon';
+              } else {
+                previewImg.removeAttribute('src');
+                preview.classList.remove('has-image');
+                previewLabel.textContent = 'No Icon';
+                uploadLabelText.textContent = baseIconPath ? 'Change Icon' : 'Upload Icon';
+              }
             };
             reader.onerror = ()=>{
               previewImg.removeAttribute('src');
               preview.classList.remove('has-image');
+              previewLabel.textContent = 'No Icon';
+              uploadLabelText.textContent = baseIconPath ? 'Change Icon' : 'Upload Icon';
             };
             reader.readAsDataURL(file);
+          } else if(baseIconPath){
+            previewImg.src = baseIconPath;
+            preview.classList.add('has-image');
+            previewLabel.textContent = '';
+            uploadLabelText.textContent = 'Change Icon';
           } else {
             previewImg.removeAttribute('src');
             preview.classList.remove('has-image');
+            previewLabel.textContent = 'No Icon';
+            uploadLabelText.textContent = 'Upload Icon';
           }
         });
 
