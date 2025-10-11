@@ -16812,6 +16812,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#adminPanel input[type="checkbox"]').forEach(cb => {
     if (cb.closest('.switch')) return;
+    if (cb.closest('.subcategory-form-toggle')) return;
     const wrapper = document.createElement('label');
     wrapper.className = 'switch';
     cb.parentNode.insertBefore(wrapper, cb);
