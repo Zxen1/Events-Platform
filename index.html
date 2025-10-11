@@ -5873,7 +5873,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .delete-category-btn,
             #tab-forms .delete-subcategory-btn{
-              display:inline-flex;
+              display:flex;
               align-items:center;
               justify-content:center;
               padding:10px 16px;
@@ -5884,19 +5884,16 @@ if (typeof slugify !== 'function') {
               font-weight:600;
               cursor:pointer;
               transition:background .2s,border-color .2s,color .2s;
+              width:100%;
             }
             #tab-forms .delete-category-btn:hover,
             #tab-forms .delete-subcategory-btn:hover{
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .delete-category-btn{
-              align-self:flex-start;
-              margin-top:4px;
-            }
-            #tab-forms .delete-subcategory-btn{
-              width:calc(100% - 24px);
-              margin:0 12px 12px;
+            #tab-forms .category-edit-panel .delete-category-btn,
+            #tab-forms .subcategory-form-content .delete-subcategory-btn{
+              margin-top:12px;
             }
             #tab-forms .subcategory-form-header{
               display:flex;
@@ -10621,7 +10618,18 @@ function makePosts(){
 
         iconPicker.append(uploadLabel, preview);
 
-        editPanel.append(nameInput, iconPicker);
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'delete-category-btn';
+        deleteCategoryBtn.textContent = 'Delete Category';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+        deleteCategoryBtn.addEventListener('click', async ()=>{
+          const confirmed = await confirmFormbuilderDeletion(`Delete the "${c.name}" category?`, 'Delete Category');
+          if(!confirmed) return;
+          menu.remove();
+        });
+
+        editPanel.append(nameInput, iconPicker, deleteCategoryBtn);
         editMenu.append(editWrap, editPanel);
 
         const subMenusContainer = document.createElement('div');
@@ -10685,13 +10693,6 @@ function makePosts(){
           subContent.id = subContentId;
           subContent.hidden = true;
 
-          const subPlaceholder = document.createElement('p');
-          subPlaceholder.className = 'subcategory-form-placeholder';
-          subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
-          subContent.append(subPlaceholder);
-
-          subMenu.append(subContent);
-
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
           deleteSubBtn.className = 'delete-subcategory-btn';
@@ -10703,7 +10704,12 @@ function makePosts(){
             subMenu.remove();
           });
 
-          subMenu.append(deleteSubBtn);
+          const subPlaceholder = document.createElement('p');
+          subPlaceholder.className = 'subcategory-form-placeholder';
+          subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
+          subContent.append(subPlaceholder, deleteSubBtn);
+
+          subMenu.append(subContent);
 
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
@@ -10728,18 +10734,7 @@ function makePosts(){
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
         subMenusContainer.append(addSubBtn);
 
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.type = 'button';
-        deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.textContent = 'Delete Category';
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-        deleteCategoryBtn.addEventListener('click', async ()=>{
-          const confirmed = await confirmFormbuilderDeletion(`Delete the "${c.name}" category?`, 'Delete Category');
-          if(!confirmed) return;
-          menu.remove();
-        });
-
-        content.append(editMenu, subMenusContainer, deleteCategoryBtn);
+        content.append(editMenu, subMenusContainer);
         menu.append(content);
 
         menuBtn.addEventListener('click', ()=>{
