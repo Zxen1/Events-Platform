@@ -10706,8 +10706,13 @@ function makePosts(){
         const before = event.clientY < rect.top + rect.height / 2;
         updateCategoryDropIndicator(target, before);
         const reference = before ? target : target.nextSibling;
+        if((before && draggedCategoryMenu.nextElementSibling === target) || (!before && target.nextElementSibling === draggedCategoryMenu)){
+          return;
+        }
         if(reference !== draggedCategoryMenu){
-          formbuilderCats.insertBefore(draggedCategoryMenu, reference);
+          if(reference || formbuilderCats.lastElementChild !== draggedCategoryMenu){
+            formbuilderCats.insertBefore(draggedCategoryMenu, reference);
+          }
         }
       });
       formbuilderCats.addEventListener('drop', event=>{
@@ -10809,6 +10814,9 @@ function makePosts(){
           const rect = target.getBoundingClientRect();
           const before = event.clientY < rect.top + rect.height / 2;
           updateSubDropIndicator(state, target, before);
+          if((before && draggedSubcategoryMenu.nextElementSibling === target) || (!before && target.nextElementSibling === draggedSubcategoryMenu)){
+            return;
+          }
           let reference = before ? target : target.nextSibling;
           if(!reference || reference === state.addButton){
             reference = state.addButton;
