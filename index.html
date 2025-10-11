@@ -5735,8 +5735,60 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-form-menu .filter-category-trigger{
               min-width:0;
             }
+            #tab-forms .category-form-menu .filter-category-trigger-wrap{
+              flex:1;
+            }
             #tab-forms .category-form-menu.cat-off{
               opacity:0.5;
+            }
+            #tab-forms .category-drag-handle,
+            #tab-forms .subcategory-drag-handle{
+              border:none;
+              background:rgba(255,255,255,0.1);
+              color:var(--button-text);
+              width:34px;
+              height:34px;
+              border-radius:8px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              cursor:grab;
+              flex:0 0 auto;
+              transition:background .2s, color .2s;
+            }
+            #tab-forms .category-drag-handle:hover,
+            #tab-forms .subcategory-drag-handle:hover{
+              background:rgba(255,255,255,0.18);
+            }
+            #tab-forms .category-drag-handle:active,
+            #tab-forms .subcategory-drag-handle:active{
+              cursor:grabbing;
+            }
+            #tab-forms .category-drag-handle:focus-visible,
+            #tab-forms .subcategory-drag-handle:focus-visible{
+              outline:2px solid var(--btn-hover, #2e3a72);
+              outline-offset:2px;
+            }
+            #tab-forms .drag-handle-icon{
+              pointer-events:none;
+              font-size:18px;
+              line-height:1;
+            }
+            #tab-forms .category-form-menu.is-dragging,
+            #tab-forms .subcategory-form-menu.is-dragging{
+              opacity:0.65;
+            }
+            #tab-forms .category-form-menu.drag-target-before{
+              box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .category-form-menu.drag-target-after{
+              box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .subcategory-form-menu.drag-target-before{
+              box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .subcategory-form-menu.drag-target-after{
+              box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
             }
             #tab-forms .category-form-content{
               border-top:1px solid var(--border);
@@ -10406,6 +10458,302 @@ function makePosts(){
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
     let formbuilderConfirmOverlay = null;
+    let categoryDragContainerInitialized = false;
+    let draggedCategoryMenu = null;
+    let categoryDropIndicatorTarget = null;
+    let categoryDropIndicatorClass = '';
+    let categoryDropCommitted = false;
+    let draggedSubcategoryMenu = null;
+    let draggedSubcategoryContainer = null;
+    const subcategoryContainerState = new WeakMap();
+
+    function clearCategoryDropIndicator(){
+      if(categoryDropIndicatorTarget){
+        categoryDropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+        categoryDropIndicatorTarget = null;
+        categoryDropIndicatorClass = '';
+      }
+    }
+
+    function updateCategoryDropIndicator(target, before){
+      if(!target) return;
+      const cls = before ? 'drag-target-before' : 'drag-target-after';
+      if(categoryDropIndicatorTarget && categoryDropIndicatorTarget !== target){
+        categoryDropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+      }
+      if(categoryDropIndicatorTarget !== target || categoryDropIndicatorClass !== cls){
+        target.classList.remove('drag-target-before','drag-target-after');
+        target.classList.add(cls);
+        categoryDropIndicatorTarget = target;
+        categoryDropIndicatorClass = cls;
+      }
+    }
+
+    function syncCategoriesFromDom(){
+      if(!formbuilderCats) return;
+      const menuEls = Array.from(formbuilderCats.querySelectorAll('.category-form-menu'));
+      if(menuEls.length !== categories.length) return;
+      const used = new Set();
+      const newOrder = [];
+      menuEls.forEach(menu=>{
+        const idx = Number.parseInt(menu.dataset.categoryIndex, 10);
+        if(Number.isInteger(idx) && idx >= 0 && idx < categories.length && !used.has(idx)){
+          newOrder.push(categories[idx]);
+          used.add(idx);
+          return;
+        }
+        const name = menu.dataset.category || '';
+        const fallback = categories.findIndex((cat, index)=> cat && !used.has(index) && cat.name === name);
+        if(fallback !== -1){
+          newOrder.push(categories[fallback]);
+          used.add(fallback);
+        }
+      });
+      if(newOrder.length === categories.length){
+        categories.splice(0, categories.length, ...newOrder);
+      }
+      menuEls.forEach((menu, index)=>{
+        menu.dataset.categoryIndex = String(index);
+      });
+    }
+
+    function ensureCategoryDragContainer(){
+      if(categoryDragContainerInitialized || !formbuilderCats) return;
+      categoryDragContainerInitialized = true;
+      formbuilderCats.addEventListener('dragover', event=>{
+        if(!draggedCategoryMenu || draggedSubcategoryMenu){
+          return;
+        }
+        event.preventDefault();
+        if(event.dataTransfer){
+          event.dataTransfer.dropEffect = 'move';
+        }
+        const target = event.target.closest('.category-form-menu');
+        if(!target){
+          clearCategoryDropIndicator();
+          if(draggedCategoryMenu && draggedCategoryMenu !== formbuilderCats.lastElementChild){
+            formbuilderCats.appendChild(draggedCategoryMenu);
+          }
+          return;
+        }
+        if(target === draggedCategoryMenu){
+          clearCategoryDropIndicator();
+          return;
+        }
+        const rect = target.getBoundingClientRect();
+        const before = event.clientY < rect.top + rect.height / 2;
+        updateCategoryDropIndicator(target, before);
+        const reference = before ? target : target.nextSibling;
+        if(reference !== draggedCategoryMenu){
+          formbuilderCats.insertBefore(draggedCategoryMenu, reference);
+        }
+      });
+      formbuilderCats.addEventListener('drop', event=>{
+        if(!draggedCategoryMenu){
+          return;
+        }
+        event.preventDefault();
+        categoryDropCommitted = true;
+        clearCategoryDropIndicator();
+        syncCategoriesFromDom();
+      });
+      formbuilderCats.addEventListener('dragleave', event=>{
+        if(!draggedCategoryMenu || draggedSubcategoryMenu) return;
+        if(event.target === formbuilderCats){
+          clearCategoryDropIndicator();
+        }
+      });
+    }
+
+    function clearSubDropIndicator(state){
+      if(!state) return;
+      if(state.dropIndicatorTarget){
+        state.dropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+        state.dropIndicatorTarget = null;
+        state.dropIndicatorClass = '';
+      }
+    }
+
+    function updateSubDropIndicator(state, target, before){
+      if(!state || !target) return;
+      const cls = before ? 'drag-target-before' : 'drag-target-after';
+      if(state.dropIndicatorTarget && state.dropIndicatorTarget !== target){
+        state.dropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+      }
+      if(state.dropIndicatorTarget !== target || state.dropIndicatorClass !== cls){
+        target.classList.remove('drag-target-before','drag-target-after');
+        target.classList.add(cls);
+        state.dropIndicatorTarget = target;
+        state.dropIndicatorClass = cls;
+      }
+    }
+
+    function syncSubcategoryOrderFromDom(container, categoryObj){
+      if(!container || !categoryObj) return;
+      const subEls = Array.from(container.querySelectorAll('.subcategory-form-menu'));
+      const original = Array.isArray(categoryObj.subs) ? categoryObj.subs.slice() : [];
+      const used = new Set();
+      const reordered = [];
+      subEls.forEach(subMenu=>{
+        const idx = Number.parseInt(subMenu.dataset.subIndex, 10);
+        if(Number.isInteger(idx) && idx >= 0 && idx < original.length && !used.has(idx)){
+          reordered.push(original[idx]);
+          used.add(idx);
+          return;
+        }
+        const name = subMenu.dataset.subcategory || '';
+        const fallback = original.findIndex((subName, index)=> subName === name && !used.has(index));
+        if(fallback !== -1){
+          reordered.push(original[fallback]);
+          used.add(fallback);
+        }
+      });
+      if(reordered.length === original.length){
+        categoryObj.subs = reordered;
+      }
+      subEls.forEach((subMenu, index)=>{
+        subMenu.dataset.subIndex = String(index);
+      });
+    }
+
+    function setupSubcategoryContainer(container, categoryObj, addButton){
+      if(!container) return null;
+      let state = subcategoryContainerState.get(container);
+      if(!state){
+        state = {
+          dropIndicatorTarget: null,
+          dropIndicatorClass: '',
+          dropCommitted: false,
+          addButton: addButton,
+          category: categoryObj
+        };
+        subcategoryContainerState.set(container, state);
+        container.addEventListener('dragover', event=>{
+          if(!draggedSubcategoryMenu || draggedSubcategoryContainer !== container) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if(event.dataTransfer){
+            event.dataTransfer.dropEffect = 'move';
+          }
+          const target = event.target.closest('.subcategory-form-menu');
+          if(!target || target === draggedSubcategoryMenu){
+            clearSubDropIndicator(state);
+            const anchor = state.addButton || null;
+            if(anchor && draggedSubcategoryMenu !== anchor && draggedSubcategoryMenu.nextSibling !== anchor){
+              container.insertBefore(draggedSubcategoryMenu, anchor);
+            }
+            return;
+          }
+          const rect = target.getBoundingClientRect();
+          const before = event.clientY < rect.top + rect.height / 2;
+          updateSubDropIndicator(state, target, before);
+          let reference = before ? target : target.nextSibling;
+          if(!reference || reference === state.addButton){
+            reference = state.addButton;
+          }
+          if(reference !== draggedSubcategoryMenu){
+            container.insertBefore(draggedSubcategoryMenu, reference);
+          }
+        });
+        container.addEventListener('drop', event=>{
+          if(!draggedSubcategoryMenu || draggedSubcategoryContainer !== container) return;
+          event.preventDefault();
+          event.stopPropagation();
+          state.dropCommitted = true;
+          clearSubDropIndicator(state);
+          syncSubcategoryOrderFromDom(container, state.category);
+        });
+        container.addEventListener('dragleave', event=>{
+          if(!draggedSubcategoryMenu || draggedSubcategoryContainer !== container) return;
+          if(event.target === container){
+            clearSubDropIndicator(state);
+          }
+        });
+      }
+      state.addButton = addButton;
+      state.category = categoryObj;
+      return state;
+    }
+
+    function attachCategoryDragHandle(menu, handle){
+      if(!menu || !handle) return;
+      ensureCategoryDragContainer();
+      handle.draggable = true;
+      handle.addEventListener('click', event=> event.preventDefault());
+      handle.addEventListener('keydown', event=>{
+        if(event.key === ' ' || event.key === 'Enter'){
+          event.preventDefault();
+        }
+      });
+      handle.addEventListener('dragstart', event=>{
+        event.stopPropagation();
+        draggedCategoryMenu = menu;
+        categoryDropCommitted = false;
+        menu.classList.add('is-dragging');
+        if(event.dataTransfer){
+          event.dataTransfer.effectAllowed = 'move';
+          try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
+          try{
+            const rect = menu.getBoundingClientRect();
+            event.dataTransfer.setDragImage(menu, rect.width / 2, rect.height / 2);
+          }catch(err){}
+        }
+      });
+      handle.addEventListener('dragend', event=>{
+        event.stopPropagation();
+        if(draggedCategoryMenu === menu){
+          menu.classList.remove('is-dragging');
+          draggedCategoryMenu = null;
+        }
+        clearCategoryDropIndicator();
+        if(!categoryDropCommitted){
+          syncCategoriesFromDom();
+        }
+        categoryDropCommitted = false;
+      });
+    }
+
+    function attachSubcategoryDragHandle(subMenu, container, categoryObj, handle, addButton){
+      if(!subMenu || !container || !handle) return;
+      const state = setupSubcategoryContainer(container, categoryObj, addButton);
+      handle.draggable = true;
+      handle.addEventListener('click', event=> event.preventDefault());
+      handle.addEventListener('keydown', event=>{
+        if(event.key === ' ' || event.key === 'Enter'){
+          event.preventDefault();
+        }
+      });
+      handle.addEventListener('dragstart', event=>{
+        event.stopPropagation();
+        draggedSubcategoryMenu = subMenu;
+        draggedSubcategoryContainer = container;
+        if(state) state.dropCommitted = false;
+        subMenu.classList.add('is-dragging');
+        if(event.dataTransfer){
+          event.dataTransfer.effectAllowed = 'move';
+          try{ event.dataTransfer.setData('text/plain', subMenu.dataset.subcategory || ''); }catch(err){}
+          try{
+            const rect = subMenu.getBoundingClientRect();
+            event.dataTransfer.setDragImage(subMenu, rect.width / 2, rect.height / 2);
+          }catch(err){}
+        }
+      });
+      handle.addEventListener('dragend', event=>{
+        event.stopPropagation();
+        if(draggedSubcategoryMenu === subMenu){
+          subMenu.classList.remove('is-dragging');
+          draggedSubcategoryMenu = null;
+          draggedSubcategoryContainer = null;
+        }
+        if(state){
+          clearSubDropIndicator(state);
+          if(!state.dropCommitted){
+            syncSubcategoryOrderFromDom(container, state.category);
+          }
+          state.dropCommitted = false;
+        }
+      });
+    }
 
     function ensureFormbuilderConfirmOverlay(){
       if(formbuilderConfirmOverlay) return formbuilderConfirmOverlay;
@@ -10537,11 +10885,22 @@ function makePosts(){
         const menu = document.createElement('div');
         menu.className = 'category-form-menu filter-category-menu';
         menu.dataset.category = c.name;
+        menu.dataset.categoryIndex = String(index);
         menu.setAttribute('role','group');
         menu.setAttribute('aria-expanded','false');
 
         const header = document.createElement('div');
         header.className = 'filter-category-header';
+
+        const dragHandle = document.createElement('button');
+        dragHandle.type = 'button';
+        dragHandle.className = 'category-drag-handle';
+        dragHandle.setAttribute('aria-label', `Reorder ${c.name} category`);
+        const dragHandleIcon = document.createElement('span');
+        dragHandleIcon.className = 'drag-handle-icon';
+        dragHandleIcon.setAttribute('aria-hidden','true');
+        dragHandleIcon.textContent = '⋮⋮';
+        dragHandle.appendChild(dragHandleIcon);
 
         const triggerWrap = document.createElement('div');
         triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
@@ -10588,7 +10947,7 @@ function makePosts(){
         toggleSlider.className = 'slider';
         toggle.append(toggleInput, toggleSlider);
 
-        header.append(triggerWrap, toggle);
+        header.append(dragHandle, triggerWrap, toggle);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -10667,16 +11026,32 @@ function makePosts(){
 
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
+        const addSubBtn = document.createElement('button');
+        addSubBtn.type = 'button';
+        addSubBtn.className = 'add-subcategory-btn';
+        addSubBtn.textContent = 'Add Subcategory';
+        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
         c.subs.forEach((sub, subIndex)=>{
           const subMenu = document.createElement('div');
           subMenu.className = 'subcategory-form-menu';
           subMenu.dataset.category = c.name;
           subMenu.dataset.subcategory = sub;
+          subMenu.dataset.subIndex = String(subIndex);
           subMenu.setAttribute('aria-expanded','false');
 
           const subHeader = document.createElement('div');
           subHeader.className = 'subcategory-form-header';
+
+          const subDragHandle = document.createElement('button');
+          subDragHandle.type = 'button';
+          subDragHandle.className = 'subcategory-drag-handle';
+          subDragHandle.setAttribute('aria-label', `Reorder ${sub} subcategory`);
+          const subDragIcon = document.createElement('span');
+          subDragIcon.className = 'drag-handle-icon';
+          subDragIcon.setAttribute('aria-hidden','true');
+          subDragIcon.textContent = '⋮⋮';
+          subDragHandle.appendChild(subDragIcon);
 
           const subTriggerWrap = document.createElement('div');
           subTriggerWrap.className = 'options-dropdown subcategory-trigger-wrap';
@@ -10718,7 +11093,7 @@ function makePosts(){
           subSlider.className = 'slider';
           subToggle.append(subInput, subSlider);
 
-          subHeader.append(subTriggerWrap, subToggle);
+          subHeader.append(subDragHandle, subTriggerWrap, subToggle);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -10836,14 +11211,12 @@ function makePosts(){
           });
 
           subMenusContainer.append(subMenu);
+
+          attachSubcategoryDragHandle(subMenu, subMenusContainer, c, subDragHandle, addSubBtn);
         });
 
-        const addSubBtn = document.createElement('button');
-        addSubBtn.type = 'button';
-        addSubBtn.className = 'add-subcategory-btn';
-        addSubBtn.textContent = 'Add Subcategory';
-        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
         subMenusContainer.append(addSubBtn);
+        setupSubcategoryContainer(subMenusContainer, c, addSubBtn);
 
         content.append(editMenu, subMenusContainer);
         menu.append(content);
@@ -10913,6 +11286,7 @@ function makePosts(){
         });
 
         frag.appendChild(menu);
+        attachCategoryDragHandle(menu, dragHandle);
       });
       formbuilderCats.innerHTML = '';
       formbuilderCats.appendChild(frag);
