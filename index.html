@@ -5856,6 +5856,25 @@ if (typeof slugify !== 'function') {
             #tab-forms .iconpicker-preview.has-image img{
               display:block;
             }
+            #tab-forms .iconpicker-existing{
+              display:flex;
+              align-items:center;
+              gap:12px;
+              padding:8px 12px;
+              border-radius:8px;
+              border:1px dashed var(--border);
+              background:rgba(0,0,0,0.25);
+              color:var(--muted);
+            }
+            #tab-forms .iconpicker-existing img{
+              width:30px;
+              height:30px;
+              display:block;
+            }
+            #tab-forms .iconpicker-existing .iconpicker-existing-label{
+              font-weight:600;
+              color:var(--button-text);
+            }
             #tab-forms .subcategory-form-menus{
               display:flex;
               flex-direction:column;
@@ -5996,9 +6015,22 @@ if (typeof slugify !== 'function') {
               border-top:1px solid var(--border);
               padding:12px 16px;
               background:rgba(0,0,0,0.25);
+              display:flex;
+              flex-direction:column;
+              gap:12px;
             }
             #tab-forms .subcategory-form-content[hidden]{
               display:none;
+            }
+            #tab-forms .subcategory-name-input{
+              width:260px;
+              max-width:100%;
+              height:36px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              padding:0 12px;
             }
             #tab-forms .subcategory-form-placeholder{
               margin:0;
@@ -8300,6 +8332,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         "For Hire": "For-hire-category-icon"
       };
     const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
+    const subcategoryColorMap = window.subcategoryColorMap = {};
+    let subcategoryColorCursor = 0;
+    categories.forEach(cat => {
+      (cat.subs || []).forEach(sub => {
+        const color = COLOR_NAMES[subcategoryColorCursor % COLOR_NAMES.length];
+        subcategoryColorMap[`${cat.name}::${sub}`] = color;
+        subcategoryColorCursor++;
+      });
+    });
+    subcategoryColorMap["What's On::Other Events"] = 'red';
+    subcategoryColorMap['Opportunities::Other Opportunities'] = 'red';
+    subcategoryColorMap['Learning::Other Learning'] = 'red';
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
     subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = SMALL_MULTI_MAP_CARD_ICON_SRC;
@@ -10616,7 +10660,22 @@ function makePosts(){
         previewImg.alt = `${c.name} icon preview`;
         preview.appendChild(previewImg);
 
-        iconPicker.append(uploadLabel, preview);
+        const existingIcon = document.createElement('div');
+        existingIcon.className = 'iconpicker-existing';
+        const existingLabel = document.createElement('span');
+        existingLabel.className = 'iconpicker-existing-label';
+        existingLabel.textContent = 'Existing Icon';
+        existingIcon.append(existingLabel);
+        const existingImg = document.createElement('img');
+        existingImg.alt = `${c.name} existing icon`;
+        existingImg.width = 30;
+        existingImg.height = 30;
+        const baseIconPath = iconPrefix ? `assets/icons-30/${iconPrefix}-30.webp` : '';
+        if(baseIconPath){
+          existingImg.src = baseIconPath;
+          existingIcon.append(existingImg);
+        }
+        iconPicker.append(uploadLabel, preview, existingIcon);
 
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
@@ -10693,6 +10752,53 @@ function makePosts(){
           subContent.id = subContentId;
           subContent.hidden = true;
 
+          const subNameInput = document.createElement('input');
+          subNameInput.type = 'text';
+          subNameInput.className = 'subcategory-name-input';
+          subNameInput.placeholder = 'Subcategory Name';
+          subNameInput.value = sub || '';
+
+          const subIconPicker = document.createElement('div');
+          subIconPicker.className = 'iconpicker-container';
+
+          const subUploadLabel = document.createElement('label');
+          subUploadLabel.className = 'iconpicker-upload';
+          subUploadLabel.textContent = 'Upload Icon';
+          const subUploadInput = document.createElement('input');
+          subUploadInput.type = 'file';
+          subUploadInput.accept = 'image/*';
+          subUploadInput.setAttribute('aria-label', `Upload icon for ${sub}`);
+          subUploadLabel.appendChild(subUploadInput);
+
+          const subPreview = document.createElement('div');
+          subPreview.className = 'iconpicker-preview';
+          subPreview.textContent = 'No Icon';
+          const subPreviewImg = document.createElement('img');
+          subPreviewImg.alt = `${sub} icon preview`;
+          subPreview.appendChild(subPreviewImg);
+
+          const subExistingIcon = document.createElement('div');
+          subExistingIcon.className = 'iconpicker-existing';
+          const subExistingLabel = document.createElement('span');
+          subExistingLabel.className = 'iconpicker-existing-label';
+          subExistingLabel.textContent = 'Existing Icon';
+          subExistingIcon.append(subExistingLabel);
+          const subExistingImg = document.createElement('img');
+          subExistingImg.alt = `${sub} existing icon`;
+          subExistingImg.width = 30;
+          subExistingImg.height = 30;
+          const subColorKey = (window.subcategoryColorMap || {})[`${c.name}::${sub}`] || '';
+          const subIconPrefix = iconPrefix || '';
+          const subIconPath = subIconPrefix
+            ? (subColorKey ? `assets/icons-30/${subIconPrefix}-${subColorKey}-30.webp` : `assets/icons-30/${subIconPrefix}-30.webp`)
+            : '';
+          if(subIconPath){
+            subExistingImg.src = subIconPath;
+            subExistingIcon.append(subExistingImg);
+          }
+
+          subIconPicker.append(subUploadLabel, subPreview, subExistingIcon);
+
           const deleteSubBtn = document.createElement('button');
           deleteSubBtn.type = 'button';
           deleteSubBtn.className = 'delete-subcategory-btn';
@@ -10707,9 +10813,28 @@ function makePosts(){
           const subPlaceholder = document.createElement('p');
           subPlaceholder.className = 'subcategory-form-placeholder';
           subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
-          subContent.append(subPlaceholder, deleteSubBtn);
+          subContent.append(subNameInput, subIconPicker, subPlaceholder, deleteSubBtn);
 
           subMenu.append(subContent);
+
+          subUploadInput.addEventListener('change', ()=>{
+            const file = subUploadInput.files && subUploadInput.files[0];
+            if(file){
+              const reader = new FileReader();
+              reader.onload = ()=>{
+                subPreviewImg.src = typeof reader.result === 'string' ? reader.result : '';
+                subPreview.classList.toggle('has-image', !!reader.result);
+              };
+              reader.onerror = ()=>{
+                subPreviewImg.removeAttribute('src');
+                subPreview.classList.remove('has-image');
+              };
+              reader.readAsDataURL(file);
+            } else {
+              subPreviewImg.removeAttribute('src');
+              subPreview.classList.remove('has-image');
+            }
+          });
 
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
