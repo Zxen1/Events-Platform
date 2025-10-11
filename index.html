@@ -11046,7 +11046,14 @@ function makePosts(){
     };
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
-      const normalizeIconPath = (path)=> typeof path === 'string' ? path.replace(/-30(\.[^./]+)$/i, '-20$1') : path;
+      const normalizeIconPath = (path)=> {
+        if(typeof path !== 'string') return path;
+        let next = path.replace(/-30(\.[^./]+)$/i, '-20$1');
+        if(/icons-30\//i.test(next)){
+          next = next.replace(/icons-30\//i, 'icons-20/');
+        }
+        return next;
+      };
       const frag = document.createDocumentFragment();
       categories.forEach((c, index)=>{
         const baseId = slugify(c.name) || `category-${index + 1}`;
