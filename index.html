@@ -11753,6 +11753,48 @@ function makePosts(){
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
+        addSubBtn.addEventListener('click', ()=>{
+          if(!Array.isArray(c.subs)){
+            c.subs = [];
+          }
+          const baseName = 'New Subcategory';
+          const existing = new Set(c.subs.map(sub => (sub && typeof sub === 'string') ? sub : ''));
+          let candidate = baseName;
+          let counter = 2;
+          while(existing.has(candidate)){
+            candidate = `${baseName} ${counter++}`;
+          }
+          c.subs.unshift(candidate);
+          const categoryIndex = categories.indexOf(c);
+          renderFormbuilderCats();
+          notifyFormbuilderChange();
+          if(!formbuilderCats) return;
+          const categorySelector = categoryIndex >= 0 ? `.category-form-menu[data-category-index="${categoryIndex}"]` : null;
+          const categoryMenu = categorySelector ? formbuilderCats.querySelector(categorySelector) : null;
+          if(!categoryMenu) return;
+          categoryMenu.setAttribute('aria-expanded','true');
+          const menuTrigger = categoryMenu.querySelector('.filter-category-trigger');
+          const content = categoryMenu.querySelector('.category-form-content');
+          if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
+          if(content) content.hidden = false;
+          const newSubMenu = categoryMenu.querySelector('.subcategory-form-menu');
+          if(!newSubMenu) return;
+          newSubMenu.setAttribute('aria-expanded','true');
+          const subTrigger = newSubMenu.querySelector('.subcategory-form-trigger');
+          const subContent = newSubMenu.querySelector('.subcategory-form-content');
+          if(subTrigger) subTrigger.setAttribute('aria-expanded','true');
+          if(subContent) subContent.hidden = false;
+          const subNameField = newSubMenu.querySelector('.subcategory-name-input');
+          if(subNameField){
+            requestAnimationFrame(()=>{
+              try{ subNameField.focus({ preventScroll: true }); }
+              catch(err){
+                try{ subNameField.focus(); }catch(e){}
+              }
+            });
+          }
+        });
+
         applyCategoryNameChange();
 
         content.append(editMenu, subMenusContainer);
@@ -11868,10 +11910,10 @@ function makePosts(){
         while(existing.has(candidate)){
           candidate = `${baseName} ${counter++}`;
         }
-        categories.push({ name: candidate, subs: [] });
+        categories.unshift({ name: candidate, subs: [] });
         renderFormbuilderCats();
         notifyFormbuilderChange();
-        const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:last-of-type') : null;
+        const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:first-of-type') : null;
         if(!newMenu) return;
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
