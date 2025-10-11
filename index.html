@@ -6745,8 +6745,25 @@ if (typeof slugify !== 'function') {
       return;
     }
     let features = [];
+    const layersToQuery = Array.isArray(VISIBLE_MARKER_LABEL_LAYERS)
+      ? VISIBLE_MARKER_LABEL_LAYERS.filter(layerId => {
+          if(!layerId){
+            return false;
+          }
+          if(typeof mapInstance.getLayer !== 'function'){
+            return true;
+          }
+          try{
+            return Boolean(mapInstance.getLayer(layerId));
+          }catch(err){
+            return false;
+          }
+        })
+      : [];
     try{
-      features = mapInstance.queryRenderedFeatures({ layers: VISIBLE_MARKER_LABEL_LAYERS });
+      if(layersToQuery.length){
+        features = mapInstance.queryRenderedFeatures({ layers: layersToQuery });
+      }
     }catch(err){
       features = [];
     }
