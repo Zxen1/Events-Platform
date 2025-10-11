@@ -11343,26 +11343,9 @@ function makePosts(){
         const editMenu = document.createElement('div');
         editMenu.className = 'category-edit-menu';
 
-        const editWrap = document.createElement('div');
-        editWrap.className = 'options-dropdown category-edit-trigger-wrap';
-
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'category-edit-trigger';
-        editBtn.textContent = 'Edit Category';
-        const editArrow = document.createElement('span');
-        editArrow.className = 'dropdown-arrow';
-        editArrow.setAttribute('aria-hidden','true');
-        editBtn.append(editArrow);
-        editBtn.setAttribute('aria-expanded','false');
-        editBtn.setAttribute('aria-controls', editPanelId);
-
-        editWrap.append(editBtn);
-
         const editPanel = document.createElement('div');
         editPanel.className = 'category-edit-panel';
         editPanel.id = editPanelId;
-        editPanel.hidden = true;
 
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
@@ -11400,20 +11383,20 @@ function makePosts(){
         }
         iconPicker.append(uploadLabel, preview);
 
-        const deleteCategoryBtn = document.createElement('button');
-        deleteCategoryBtn.type = 'button';
-        deleteCategoryBtn.className = 'delete-category-btn';
-        deleteCategoryBtn.textContent = 'Delete Category';
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-
         const addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
 
-        editPanel.append(nameInput, iconPicker, deleteCategoryBtn);
-        editMenu.append(editWrap, addSubBtn, editPanel);
+        const deleteCategoryBtn = document.createElement('button');
+        deleteCategoryBtn.type = 'button';
+        deleteCategoryBtn.className = 'delete-category-btn';
+        deleteCategoryBtn.textContent = 'Delete Category';
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+
+        editPanel.append(nameInput, iconPicker, addSubBtn, deleteCategoryBtn);
+        editMenu.append(editPanel);
 
         const subMenusContainer = document.createElement('div');
         subMenusContainer.className = 'subcategory-form-menus';
@@ -11817,24 +11800,6 @@ function makePosts(){
               menuBtn.setAttribute('aria-expanded','false');
               content.hidden = true;
             }
-            if(editBtn.getAttribute('aria-expanded') === 'true'){
-              editBtn.setAttribute('aria-expanded','false');
-              editPanel.hidden = true;
-            }
-          }
-        });
-
-        editBtn.addEventListener('click', ()=>{
-          const isExpanded = editBtn.getAttribute('aria-expanded') === 'true';
-          const next = !isExpanded;
-          editBtn.setAttribute('aria-expanded', next ? 'true' : 'false');
-          editPanel.hidden = !next;
-          if(next){
-            try{
-              nameInput.focus({ preventScroll: true });
-            }catch(err){
-              try{ nameInput.focus(); }catch(e){}
-            }
           }
         });
 
@@ -11917,13 +11882,11 @@ function makePosts(){
         if(!newMenu) return;
         const menuTrigger = newMenu.querySelector('.filter-category-trigger');
         const content = newMenu.querySelector('.category-form-content');
-        const editTrigger = newMenu.querySelector('.category-edit-trigger');
         const editPanel = newMenu.querySelector('.category-edit-panel');
         const nameField = newMenu.querySelector('.category-name-input');
         newMenu.setAttribute('aria-expanded','true');
         if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
         if(content) content.hidden = false;
-        if(editTrigger) editTrigger.setAttribute('aria-expanded','true');
         if(editPanel) editPanel.hidden = false;
         if(nameField){
           requestAnimationFrame(()=>{
