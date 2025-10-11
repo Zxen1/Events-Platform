@@ -1229,6 +1229,11 @@ button[aria-expanded="true"] .results-arrow{
   overflow-y:overlay;
   overflow-x:hidden;
   padding:20px 10px;
+  --panel-scrollbar-overlay: 0px;
+  --panel-base-padding-end: 10px;
+  padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
+  margin-right:calc(-1 * var(--panel-scrollbar-overlay));
+  width:calc(100% + var(--panel-scrollbar-overlay));
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -16586,6 +16591,40 @@ const panelButtons = {
   adminPanel: 'adminBtn'
 };
 
+const panelScrollOverlayItems = new Set();
+
+function updatePanelScrollOverlay(target){
+  if(!target || !target.isConnected) return;
+  const overlayWidth = target.offsetWidth - target.clientWidth;
+  const value = overlayWidth > 0 ? `${overlayWidth}px` : '0px';
+  target.style.setProperty('--panel-scrollbar-overlay', value);
+}
+
+function registerPanelScrollOverlay(target){
+  if(!target || panelScrollOverlayItems.has(target)) return;
+  panelScrollOverlayItems.add(target);
+  updatePanelScrollOverlay(target);
+  if('ResizeObserver' in window){
+    const observer = new ResizeObserver(()=> updatePanelScrollOverlay(target));
+    observer.observe(target);
+  }
+  target.addEventListener('scroll', ()=> updatePanelScrollOverlay(target), { passive: true });
+}
+
+function refreshPanelScrollOverlays(){
+  document.querySelectorAll('.panel-body').forEach(registerPanelScrollOverlay);
+  panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  refreshPanelScrollOverlays();
+  window.addEventListener('resize', ()=>{
+    requestAnimationFrame(()=>{
+      panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
+    });
+  });
+});
+
 (function(){
   const MIN_HEADER_WIDTH = 390;
   const SIDE_MARGIN = 10;
@@ -16812,6 +16851,9 @@ function openPanel(m){
   if(map && typeof map.resize === 'function') setTimeout(()=> map.resize(),0);
   if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
+  if(content){
+    requestAnimationFrame(()=> refreshPanelScrollOverlays());
+  }
 }
 
 const memberPanelChangeManager = (()=>{
