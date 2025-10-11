@@ -10965,6 +10965,10 @@ function makePosts(){
         editBtn.type = 'button';
         editBtn.className = 'category-edit-trigger';
         editBtn.textContent = 'Edit Category';
+        const editArrow = document.createElement('span');
+        editArrow.className = 'dropdown-arrow';
+        editArrow.setAttribute('aria-hidden','true');
+        editBtn.append(editArrow);
         editBtn.setAttribute('aria-expanded','false');
         editBtn.setAttribute('aria-controls', editPanelId);
 
