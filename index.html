@@ -1837,6 +1837,80 @@ button[aria-expanded="true"] .results-arrow{
   margin-left:auto;
   justify-content:flex-end;
 }
+#adminPanel .panel-actions .save-changes,
+#adminPanel .panel-actions .discard-changes{
+  min-width:90px;
+}
+#adminPanel .panel-actions .primary-action,
+#adminUnsavedPrompt .primary-action{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+#adminPanel .panel-actions .primary-action:hover,
+#adminUnsavedPrompt .primary-action:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+#adminPanel .panel-actions .discard-changes[disabled],
+#adminUnsavedPrompt .confirm-discard[disabled]{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+#adminUnsavedPrompt{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.65);
+  z-index:12000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+}
+#adminUnsavedPrompt.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#adminUnsavedPrompt .admin-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+}
+#adminUnsavedPrompt .admin-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+#adminStatusMessage{
+  position:fixed;
+  top:calc(var(--safe-top, 0px) + 20px);
+  left:50%;
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  z-index:13000;
+  font-size:14px;
+}
+#adminStatusMessage.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
 .panel-header h2{
   margin:0;
 }
@@ -5616,6 +5690,8 @@ if (typeof slugify !== 'function') {
           <div class="panel-actions">
             <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
             <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="save-changes primary-action">Save</button>
+            <button type="button" class="discard-changes" disabled>Discard Changes</button>
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
@@ -6096,6 +6172,19 @@ if (typeof slugify !== 'function') {
       </form>
   </div>
   </div>
+
+  <div id="adminUnsavedPrompt" class="admin-unsaved-prompt" aria-hidden="true">
+    <div class="admin-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="adminUnsavedTitle">
+      <h3 id="adminUnsavedTitle">Unsaved Changes</h3>
+      <p>You have unsaved changes. Save before closing the admin panel?</p>
+      <div class="admin-unsaved-actions">
+        <button type="button" class="confirm-save primary-action">Save</button>
+        <button type="button" class="confirm-discard" disabled>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
 
   <script>
     // Remember where the user actually clicked/tapped
@@ -16482,6 +16571,311 @@ function openPanel(m){
   if(typeof window.adjustBoards === 'function') setTimeout(()=> window.adjustBoards(), 0);
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
 }
+
+const adminPanelChangeManager = (()=>{
+  let panel = null;
+  let form = null;
+  let saveButton = null;
+  let discardButton = null;
+  let prompt = null;
+  let promptSaveButton = null;
+  let promptDiscardButton = null;
+  let statusMessage = null;
+  let dirty = false;
+  let savedState = {};
+  let applying = false;
+  let statusTimer = null;
+  let initialized = false;
+  let pendingCloseTarget = null;
+
+  function ensureElements(){
+    panel = document.getElementById('adminPanel');
+    form = document.getElementById('adminForm');
+    if(panel){
+      saveButton = panel.querySelector('.save-changes');
+      discardButton = panel.querySelector('.discard-changes');
+    }
+    prompt = document.getElementById('adminUnsavedPrompt');
+    if(prompt){
+      promptSaveButton = prompt.querySelector('.confirm-save');
+      promptDiscardButton = prompt.querySelector('.confirm-discard');
+    }
+    statusMessage = document.getElementById('adminStatusMessage');
+  }
+
+  function trigger(el, type){
+    el.dispatchEvent(new Event(type, { bubbles: true }));
+  }
+
+  function serializeState(){
+    if(!form) return {};
+    const data = {};
+    const elements = form.querySelectorAll('input, select, textarea');
+    elements.forEach(el => {
+      if(!el) return;
+      const key = el.name || el.id;
+      if(!key) return;
+      if(el.type === 'file') return;
+      if(el.tagName === 'SELECT' && el.multiple){
+        data[key] = Array.from(el.options || []).filter(opt => opt.selected).map(opt => opt.value);
+        return;
+      }
+      if(el.type === 'checkbox'){
+        data[key] = el.checked;
+        return;
+      }
+      if(el.type === 'radio'){
+        if(!(key in data)) data[key] = null;
+        if(el.checked) data[key] = el.value;
+        return;
+      }
+      data[key] = el.value;
+    });
+    form.querySelectorAll('[contenteditable][id]').forEach(el => {
+      data[el.id] = el.innerHTML;
+    });
+    return data;
+  }
+
+  function applyState(state){
+    if(!form || !state) return;
+    applying = true;
+    try{
+      const elements = form.querySelectorAll('input, select, textarea');
+      elements.forEach(el => {
+        if(!el) return;
+        const key = el.name || el.id;
+        if(!key || !(key in state)) return;
+        if(el.type === 'file') return;
+        if(el.tagName === 'SELECT' && el.multiple){
+          const values = Array.isArray(state[key]) ? state[key].map(String) : [];
+          let changed = false;
+          Array.from(el.options || []).forEach(opt => {
+            const shouldSelect = values.includes(opt.value);
+            if(opt.selected !== shouldSelect){
+              opt.selected = shouldSelect;
+              changed = true;
+            }
+          });
+          if(changed) trigger(el, 'change');
+          return;
+        }
+        if(el.type === 'checkbox'){
+          const shouldCheck = !!state[key];
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+            trigger(el, 'change');
+          }
+          return;
+        }
+        if(el.type === 'radio'){
+          const shouldCheck = state[key] === el.value;
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+            if(shouldCheck) trigger(el, 'change');
+          }
+          return;
+        }
+        const nextValue = state[key] === null || state[key] === undefined ? '' : String(state[key]);
+        if(el.value !== nextValue){
+          el.value = nextValue;
+          trigger(el, 'input');
+          trigger(el, 'change');
+        }
+      });
+      form.querySelectorAll('[contenteditable][id]').forEach(el => {
+        if(!(el.id in state)) return;
+        const html = state[el.id] ?? '';
+        if(el.innerHTML !== html){
+          el.innerHTML = html;
+          trigger(el, 'input');
+          trigger(el, 'change');
+        }
+      });
+    } finally {
+      applying = false;
+    }
+  }
+
+  function setDirty(value){
+    dirty = !!value;
+    if(panel){
+      panel.classList.toggle('has-unsaved', dirty);
+      panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
+    }
+    if(discardButton){
+      discardButton.disabled = !dirty;
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.disabled = !dirty;
+    }
+  }
+
+  function refreshSavedState(){
+    if(!form) return;
+    savedState = serializeState();
+    setDirty(false);
+  }
+
+  function showStatus(message){
+    if(!statusMessage) statusMessage = document.getElementById('adminStatusMessage');
+    if(!statusMessage) return;
+    statusMessage.textContent = message;
+    statusMessage.setAttribute('aria-hidden','false');
+    statusMessage.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(()=>{
+      statusMessage.classList.remove('show');
+      statusMessage.setAttribute('aria-hidden','true');
+    }, 2000);
+  }
+
+  function closePrompt(){
+    if(prompt){
+      prompt.classList.remove('show');
+      prompt.setAttribute('aria-hidden','true');
+    }
+  }
+
+  function cancelPrompt(){
+    pendingCloseTarget = null;
+    closePrompt();
+  }
+
+  function openPrompt(target){
+    pendingCloseTarget = target;
+    if(prompt){
+      prompt.classList.add('show');
+      prompt.setAttribute('aria-hidden','false');
+      setTimeout(()=>{
+        if(promptSaveButton) promptSaveButton.focus();
+      }, 0);
+    }
+  }
+
+  function runSave({ closeAfter } = {}){
+    ensureElements();
+    let result = null;
+    try{
+      if(typeof window.saveAdminChanges === 'function'){
+        result = window.saveAdminChanges();
+      }
+    }catch(err){
+      console.error('Failed to save admin changes', err);
+      if(!closeAfter) cancelPrompt();
+      return;
+    }
+    Promise.resolve(result).then(()=>{
+      refreshSavedState();
+      showStatus('Saved');
+      const panelToClose = closeAfter ? pendingCloseTarget : null;
+      if(closeAfter) pendingCloseTarget = null;
+      closePrompt();
+      if(panelToClose) closePanel(panelToClose);
+    }).catch(err => {
+      console.error('Failed to save admin changes', err);
+    });
+  }
+
+  function discardChanges({ closeAfter } = {}){
+    if(savedState) applyState(savedState);
+    setDirty(false);
+    showStatus('Changes Discarded');
+    const panelToClose = closeAfter ? pendingCloseTarget : null;
+    pendingCloseTarget = null;
+    closePrompt();
+    if(panelToClose) closePanel(panelToClose);
+  }
+
+  function formChanged(){
+    if(applying) return;
+    setDirty(true);
+  }
+
+  function attachListeners(){
+    if(initialized) return;
+    ensureElements();
+    if(!panel || !form) return;
+    form.addEventListener('input', formChanged, true);
+    form.addEventListener('change', formChanged, true);
+    if(saveButton){
+      saveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        runSave({ closeAfter:false });
+      });
+    }
+    if(discardButton){
+      discardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptSaveButton){
+      promptSaveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        runSave({ closeAfter:true });
+      });
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:true });
+      });
+    }
+    if(prompt){
+      prompt.addEventListener('click', e=>{
+        if(e.target === prompt) cancelPrompt();
+      });
+    }
+    initialized = true;
+    refreshSavedState();
+  }
+
+  ensureElements();
+  attachListeners();
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(()=>{
+      ensureElements();
+      attachListeners();
+      refreshSavedState();
+    }, 0);
+  });
+
+  function isPromptOpen(){
+    return !!(prompt && prompt.classList.contains('show'));
+  }
+
+  return {
+    hasUnsaved(){
+      return !!dirty;
+    },
+    handlePanelClose(panelEl){
+      if(!panel || panelEl !== panel) return false;
+      if(isPromptOpen()) return true;
+      if(dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    },
+    handleEscape(panelEl){
+      if(isPromptOpen()){
+        cancelPrompt();
+        return true;
+      }
+      if(panel && panelEl === panel && dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    }
+  };
+})();
+
+
+
+
 function closePanel(m){
   const btnId = panelButtons[m && m.id];
   if(btnId){
@@ -16519,6 +16913,12 @@ function closePanel(m){
   }
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
 }
+
+
+
+
+
+
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
   const welcomeControls = welcomeModalEl.querySelector('.map-controls-welcome');
@@ -16535,6 +16935,9 @@ if(welcomeModalEl){
   }
 }
 function requestClosePanel(m){
+  if(m && m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
+    return;
+  }
   closePanel(m);
 }
 function togglePanel(m){
@@ -16587,8 +16990,8 @@ function handleEsc(){
     return;
   }
   if(top instanceof Element){
-    if(top.id === 'adminPanel' && typeof window.saveAdminChanges === 'function'){
-      window.saveAdminChanges();
+    if(top.id === 'adminPanel' && adminPanelChangeManager.handleEscape(top)){
+      return;
     }
     if(top.id === 'post-modal-container'){
       closePostModal();
