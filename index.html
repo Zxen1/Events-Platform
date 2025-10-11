@@ -6672,8 +6672,10 @@ if (typeof slugify !== 'function') {
   const MARKER_LABEL_BG_ACCENT_ID = `${MARKER_LABEL_BG_ID}--accent`;
   const MARKER_LABEL_COMPOSITE_PREFIX = 'marker-label-composite-';
   const MARKER_LABEL_COMPOSITE_ACCENT_SUFFIX = '--accent';
+  const VISIBLE_MARKER_LABEL_LAYERS = ['marker-label', 'marker-label-highlight'];
   const markerLabelCompositeStore = new Map();
   const markerLabelCompositePending = new Map();
+  let lastInViewMarkerLabelSpriteIds = new Set();
   // Mapbox GL JS enforces a hard limit on the number of images that can be
   // registered with a style (currently ~1000). Generating a composite sprite
   // for every single marker label without a cap quickly exhausts that budget,
@@ -6710,10 +6712,67 @@ if (typeof slugify !== 'function') {
         spriteId,
         compositeId,
         priority: Boolean(meta.priority),
+        inView: Boolean(meta.inView),
         lastUsed: Number.isFinite(meta.lastUsed) ? meta.lastUsed : 0
       });
     });
     return entries;
+  }
+
+  function touchMarkerLabelCompositeMeta(spriteId, options = {}){
+    if(!spriteId) return null;
+    const opts = options || {};
+    const meta = markerLabelCompositeStore.get(spriteId) || {};
+    const shouldUpdateTime = opts.updateTimestamp !== false;
+    if(shouldUpdateTime){
+      const ts = Number.isFinite(opts.timestamp) ? opts.timestamp : nowTimestamp();
+      meta.lastUsed = ts;
+    } else if(!Number.isFinite(meta.lastUsed)){
+      meta.lastUsed = 0;
+    }
+    if(opts.inView !== undefined){
+      meta.inView = Boolean(opts.inView);
+    }
+    if(opts.priority !== undefined){
+      meta.priority = Boolean(opts.priority);
+    }
+    markerLabelCompositeStore.set(spriteId, meta);
+    return meta;
+  }
+
+  function refreshInViewMarkerLabelComposites(mapInstance){
+    if(!mapInstance || typeof mapInstance.queryRenderedFeatures !== 'function'){
+      return;
+    }
+    let features = [];
+    try{
+      features = mapInstance.queryRenderedFeatures({ layers: VISIBLE_MARKER_LABEL_LAYERS });
+    }catch(err){
+      features = [];
+    }
+    const nextIds = new Set();
+    const timestamp = nowTimestamp();
+    features.forEach(feature => {
+      if(!feature || !feature.properties) return;
+      const rawSpriteId = feature.properties.labelSpriteId ?? feature.properties.spriteId;
+      if(rawSpriteId === undefined || rawSpriteId === null) return;
+      const spriteId = String(rawSpriteId);
+      if(!spriteId) return;
+      if(nextIds.has(spriteId)){
+        touchMarkerLabelCompositeMeta(spriteId, { inView: true, updateTimestamp: false });
+        return;
+      }
+      nextIds.add(spriteId);
+      touchMarkerLabelCompositeMeta(spriteId, { inView: true, timestamp });
+    });
+    lastInViewMarkerLabelSpriteIds.forEach(spriteId => {
+      if(nextIds.has(spriteId)) return;
+      const meta = markerLabelCompositeStore.get(spriteId);
+      if(!meta) return;
+      meta.inView = false;
+      markerLabelCompositeStore.set(spriteId, meta);
+    });
+    lastInViewMarkerLabelSpriteIds = nextIds;
   }
 
   function enforceMarkerLabelCompositeBudget(mapInstance, options = {}){
@@ -6752,6 +6811,9 @@ if (typeof slugify !== 'function') {
       if(a.keep !== b.keep){
         return a.keep ? -1 : 1;
       }
+      if(a.inView !== b.inView){
+        return a.inView ? -1 : 1;
+      }
       if(a.priority !== b.priority){
         return a.priority ? -1 : 1;
       }
@@ -6773,6 +6835,7 @@ if (typeof slugify !== 'function') {
         if(meta.highlightOptions){
           try{ delete meta.highlightOptions; }catch(err){ meta.highlightOptions = undefined; }
         }
+        meta.inView = false;
         markerLabelCompositeStore.set(entry.spriteId, meta);
       }
       markerLabelCompositePending.delete(entry.spriteId);
@@ -7907,6 +7970,7 @@ if (typeof slugify !== 'function') {
       const input = Array.isArray(targets) ? targets : [targets];
       const seen = new Set();
       const normalized = [];
+      const highlightSpriteIds = new Set();
       input.forEach(entry => {
         if(entry === undefined || entry === null) return;
         let idValue;
@@ -7972,6 +8036,12 @@ if (typeof slugify !== 'function') {
           if(nextKeys.has(compositeKey)) return;
           nextKeys.add(compositeKey);
           nextEntries.push({ source, id: featureId });
+          if(entry.spriteId){
+            const spriteValue = String(entry.spriteId);
+            if(spriteValue){
+              highlightSpriteIds.add(spriteValue);
+            }
+          }
         });
       });
       highlightedFeatureKeys.forEach(entry => {
@@ -7985,6 +8055,11 @@ if (typeof slugify !== 'function') {
         catch(err){}
       });
       highlightedFeatureKeys = nextEntries;
+      if(highlightSpriteIds.size){
+        highlightSpriteIds.forEach(spriteId => {
+          touchMarkerLabelCompositeMeta(spriteId, { updateTimestamp: true });
+        });
+      }
     }
     let selectedVenueKey = null;
     const BASE_URL = (()=>{ let b = location.origin + location.pathname.split('/post/')[0]; if(!b.endsWith('/')) b+='/'; return b; })();
@@ -8124,10 +8199,7 @@ if (typeof slugify !== 'function') {
       try{ map.doubleClickZoom[fn](); }catch(e){}
       try{ map.touchZoomRotate[fn](); }catch(e){}
     }
-    const MARKER_INTERACTIVE_LAYERS = [
-      'marker-label',
-      'marker-label-highlight'
-    ];
+    const MARKER_INTERACTIVE_LAYERS = VISIBLE_MARKER_LABEL_LAYERS.slice();
     window.__overCard = window.__overCard || false;
 
     function getPopupElement(popup){
@@ -10177,6 +10249,8 @@ function makePosts(){
             venueKey = String(parts[1] || '');
           }
         }
+        const rawSpriteId = props.labelSpriteId ?? props.spriteId ?? '';
+        const spriteId = rawSpriteId !== undefined && rawSpriteId !== null ? String(rawSpriteId) : '';
         const ids = new Set();
         ids.add(String(baseId));
         if(Array.isArray(props.multiPostIds)){
@@ -10190,7 +10264,7 @@ function makePosts(){
           if(!index.has(idValue)){
             index.set(idValue, []);
           }
-          index.get(idValue).push({ source: 'posts', id: fid, venueKey });
+          index.get(idValue).push({ source: 'posts', id: fid, venueKey, spriteId });
         });
       });
       return index;
@@ -13800,6 +13874,7 @@ if (!map.__pillHooksInstalled) {
           updatePostPanel();
           updateFilterCounts();
           refreshMarkers();
+          refreshInViewMarkerLabelComposites(map);
           const center = map.getCenter().toArray();
           const zoom = map.getZoom();
           const pitch = map.getPitch();
@@ -14145,6 +14220,7 @@ if (!map.__pillHooksInstalled) {
             highlightedPostIdSet.add(strId);
           }
         });
+        const usageTimestamp = nowTimestamp();
         postsData.features.forEach(feature => {
           if(!feature || !feature.properties) return;
           const props = feature.properties;
@@ -14178,7 +14254,10 @@ if (!map.__pillHooksInstalled) {
             });
           })();
           const priority = Boolean(inView || isHighlighted);
-          const lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
+          let lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
+          if(priority){
+            lastUsed = usageTimestamp;
+          }
           const updatedMeta = Object.assign({}, existing, {
             iconId,
             labelLine1,
@@ -14337,6 +14416,7 @@ if (!map.__pillHooksInstalled) {
           try{ map.setPaintProperty(layer, prop, {duration:0}); }catch(e){}
         }
       });
+      refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
         function createMapCardOverlay(post, opts = {}){
           const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
