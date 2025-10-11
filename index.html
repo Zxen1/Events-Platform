@@ -11038,6 +11038,7 @@ function makePosts(){
     };
     const renderFormbuilderCats = ()=>{
       if(!formbuilderCats) return;
+      const normalizeIconPath = (path)=> typeof path === 'string' ? path.replace(/-30(\.[^./]+)$/i, '-20$1') : path;
       const frag = document.createDocumentFragment();
       categories.forEach((c, index)=>{
         const baseId = slugify(c.name) || `category-${index + 1}`;
@@ -11084,6 +11085,7 @@ function makePosts(){
           img.height = 20;
           img.alt = '';
           categoryLogo.appendChild(img);
+          categoryLogo.classList.add('has-icon');
         } else {
           categoryLogo.textContent = c.name.charAt(0) || '';
         }
@@ -11167,6 +11169,7 @@ function makePosts(){
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
         preview.append(previewLabel, previewImg);
+        const baseIconPath20 = iconPrefix ? `assets/icons-20/${iconPrefix}-20.webp` : '';
         const baseIconPath = iconPrefix ? `assets/icons-30/${iconPrefix}-30.webp` : '';
         if(baseIconPath){
           previewImg.src = baseIconPath;
@@ -11181,11 +11184,6 @@ function makePosts(){
         deleteCategoryBtn.className = 'delete-category-btn';
         deleteCategoryBtn.textContent = 'Delete Category';
         deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
-        deleteCategoryBtn.addEventListener('click', async ()=>{
-          const confirmed = await confirmFormbuilderDeletion(`Delete the "${c.name}" category?`, 'Delete Category');
-          if(!confirmed) return;
-          menu.remove();
-        });
 
         editPanel.append(nameInput, iconPicker, deleteCategoryBtn);
         editMenu.append(editWrap, editPanel);
@@ -11197,6 +11195,60 @@ function makePosts(){
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+
+        const subNameUpdaters = [];
+        const getCategoryNameValue = ()=> nameInput.value.trim();
+        let lastCategoryName = c.name || 'Category';
+        const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
+        const updateCategoryIconDisplay = (src)=>{
+          categoryLogo.innerHTML = '';
+          if(src){
+            const img = document.createElement('img');
+            img.src = src;
+            img.width = 20;
+            img.height = 20;
+            img.alt = '';
+            categoryLogo.appendChild(img);
+            categoryLogo.classList.add('has-icon');
+          } else {
+            categoryLogo.textContent = getCategoryDisplayName().charAt(0) || '';
+            categoryLogo.classList.remove('has-icon');
+          }
+        };
+        const applyCategoryNameChange = ()=>{
+          const nameValue = getCategoryNameValue();
+          if(nameValue){
+            lastCategoryName = nameValue;
+          }
+          const displayName = getCategoryDisplayName();
+          const datasetValue = displayName;
+          menu.dataset.category = datasetValue;
+          label.textContent = displayName;
+          dragHandle.setAttribute('aria-label', `Reorder ${displayName} category`);
+          toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
+          uploadInput.setAttribute('aria-label', `Upload icon for ${displayName}`);
+          previewImg.alt = `${displayName} icon preview`;
+          deleteCategoryBtn.setAttribute('aria-label', `Delete ${displayName} category`);
+          addSubBtn.setAttribute('aria-label', `Add subcategory to ${displayName}`);
+          subMenusContainer.querySelectorAll('.subcategory-form-menu').forEach(subEl=>{
+            subEl.dataset.category = datasetValue;
+          });
+          if(categoryLogo.querySelector('img')){
+            categoryLogo.classList.add('has-icon');
+          } else {
+            updateCategoryIconDisplay('');
+          }
+          subNameUpdaters.forEach(fn=>{
+            try{ fn(); }catch(err){}
+          });
+        };
+        nameInput.addEventListener('input', applyCategoryNameChange);
+        deleteCategoryBtn.addEventListener('click', async ()=>{
+          const displayName = getCategoryDisplayName();
+          const confirmed = await confirmFormbuilderDeletion(`Delete the "${displayName}" category?`, 'Delete Category');
+          if(!confirmed) return;
+          menu.remove();
+        });
 
         c.subs.forEach((sub, subIndex)=>{
           const subMenu = document.createElement('div');
@@ -11312,20 +11364,86 @@ function makePosts(){
           deleteSubBtn.className = 'delete-subcategory-btn';
           deleteSubBtn.textContent = 'Delete Subcategory';
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
-          deleteSubBtn.addEventListener('click', async ()=>{
-            const confirmed = await confirmFormbuilderDeletion(`Delete the "${sub}" subcategory from ${c.name}?`, 'Delete Subcategory');
-            if(!confirmed) return;
-            subMenu.remove();
-          });
 
           const subPlaceholder = document.createElement('p');
           subPlaceholder.className = 'subcategory-form-placeholder';
           subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
+
+          const defaultSubName = sub || 'Subcategory';
+          let currentSubName = defaultSubName;
+          let lastSubName = defaultSubName;
+          const getSubNameValue = ()=> subNameInput.value.trim();
+          const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
+          const updateSubIconDisplay = (src)=>{
+            const displayName = getSubDisplayName();
+            subLogo.innerHTML = '';
+            if(src){
+              const img = document.createElement('img');
+              img.src = src;
+              img.width = 20;
+              img.height = 20;
+              img.alt = '';
+              subLogo.appendChild(img);
+              subLogo.classList.add('has-icon');
+              subcategoryIcons[currentSubName] = `<img src="${src}" width="20" height="20" alt="">`;
+            } else {
+              subLogo.textContent = displayName.charAt(0) || '';
+              subLogo.classList.remove('has-icon');
+              delete subcategoryIcons[currentSubName];
+            }
+          };
+          const applySubNameChange = ()=>{
+            const rawValue = getSubNameValue();
+            if(rawValue){
+              lastSubName = rawValue;
+            }
+            const displayName = getSubDisplayName();
+            const datasetValue = displayName;
+            subLabel.textContent = displayName;
+            subMenu.dataset.subcategory = datasetValue;
+            subBtn.dataset.subcategory = datasetValue;
+            subDragHandle.setAttribute('aria-label', `Reorder ${displayName} subcategory`);
+            subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
+            subUploadInput.setAttribute('aria-label', `Upload icon for ${displayName}`);
+            subPreviewImg.alt = `${displayName} icon preview`;
+            subPlaceholder.innerHTML = `Customize the <strong>${displayName}</strong> subcategory.`;
+            const categoryDisplayName = getCategoryDisplayName();
+            deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
+            if(!subLogo.querySelector('img')){
+              subLogo.textContent = displayName.charAt(0) || '';
+              subLogo.classList.remove('has-icon');
+            } else {
+              subLogo.classList.add('has-icon');
+            }
+            if(currentSubName !== datasetValue){
+              if(subcategoryIcons[currentSubName] !== undefined && subcategoryIcons[datasetValue] === undefined){
+                subcategoryIcons[datasetValue] = subcategoryIcons[currentSubName];
+              }
+              if(currentSubName !== datasetValue){
+                delete subcategoryIcons[currentSubName];
+              }
+              currentSubName = datasetValue;
+            }
+          };
+          subNameUpdaters.push(applySubNameChange);
+          subNameInput.addEventListener('input', ()=> applySubNameChange());
+
+          deleteSubBtn.addEventListener('click', async ()=>{
+            const categoryDisplayName = getCategoryDisplayName();
+            const subDisplayName = getSubDisplayName();
+            const confirmed = await confirmFormbuilderDeletion(`Delete the "${subDisplayName}" subcategory from ${categoryDisplayName}?`, 'Delete Subcategory');
+            if(!confirmed) return;
+            subMenu.remove();
+          });
+
+          const normalizedSubIconPath = normalizeIconPath(subIconPath) || subIconPath || '';
+
           subContent.append(subNameInput, subIconPicker, subPlaceholder, deleteSubBtn);
 
           subMenu.append(subContent);
 
           subUploadInput.addEventListener('change', ()=>{
+            applySubNameChange();
             const file = subUploadInput.files && subUploadInput.files[0];
             if(file){
               const reader = new FileReader();
@@ -11336,11 +11454,17 @@ function makePosts(){
                   subPreview.classList.add('has-image');
                   subPreviewLabel.textContent = '';
                   subUploadLabelText.textContent = 'Change Icon';
+                  updateSubIconDisplay(result);
                 } else {
                   subPreviewImg.removeAttribute('src');
                   subPreview.classList.remove('has-image');
                   subPreviewLabel.textContent = 'No Icon';
                   subUploadLabelText.textContent = subIconPath ? 'Change Icon' : 'Upload Icon';
+                  if(normalizedSubIconPath){
+                    updateSubIconDisplay(normalizedSubIconPath);
+                  } else {
+                    updateSubIconDisplay('');
+                  }
                 }
               };
               reader.onerror = ()=>{
@@ -11348,6 +11472,11 @@ function makePosts(){
                 subPreview.classList.remove('has-image');
                 subPreviewLabel.textContent = 'No Icon';
                 subUploadLabelText.textContent = subIconPath ? 'Change Icon' : 'Upload Icon';
+                if(normalizedSubIconPath){
+                  updateSubIconDisplay(normalizedSubIconPath);
+                } else {
+                  updateSubIconDisplay('');
+                }
               };
               reader.readAsDataURL(file);
             } else if(subIconPath){
@@ -11355,13 +11484,20 @@ function makePosts(){
               subPreview.classList.add('has-image');
               subPreviewLabel.textContent = '';
               subUploadLabelText.textContent = 'Change Icon';
+              updateSubIconDisplay(normalizedSubIconPath);
             } else {
               subPreviewImg.removeAttribute('src');
               subPreview.classList.remove('has-image');
               subPreviewLabel.textContent = 'No Icon';
               subUploadLabelText.textContent = 'Upload Icon';
+              updateSubIconDisplay('');
             }
           });
+
+          applySubNameChange();
+          if(subIconPath){
+            updateSubIconDisplay(normalizedSubIconPath);
+          }
 
           subBtn.addEventListener('click', ()=>{
             const isExpanded = subMenu.getAttribute('aria-expanded') === 'true';
@@ -11383,6 +11519,8 @@ function makePosts(){
 
         subMenusContainer.append(addSubBtn);
         setupSubcategoryContainer(subMenusContainer, c, addSubBtn);
+
+        applyCategoryNameChange();
 
         content.append(editMenu, subMenusContainer);
         menu.append(content);
@@ -11424,11 +11562,19 @@ function makePosts(){
                 preview.classList.add('has-image');
                 previewLabel.textContent = '';
                 uploadLabelText.textContent = 'Change Icon';
+                updateCategoryIconDisplay(result);
               } else {
                 previewImg.removeAttribute('src');
                 preview.classList.remove('has-image');
                 previewLabel.textContent = 'No Icon';
                 uploadLabelText.textContent = baseIconPath ? 'Change Icon' : 'Upload Icon';
+                if(baseIconPath20){
+                  updateCategoryIconDisplay(baseIconPath20);
+                } else if(baseIconPath){
+                  updateCategoryIconDisplay(baseIconPath);
+                } else {
+                  updateCategoryIconDisplay('');
+                }
               }
             };
             reader.onerror = ()=>{
@@ -11436,6 +11582,13 @@ function makePosts(){
               preview.classList.remove('has-image');
               previewLabel.textContent = 'No Icon';
               uploadLabelText.textContent = baseIconPath ? 'Change Icon' : 'Upload Icon';
+              if(baseIconPath20){
+                updateCategoryIconDisplay(baseIconPath20);
+              } else if(baseIconPath){
+                updateCategoryIconDisplay(baseIconPath);
+              } else {
+                updateCategoryIconDisplay('');
+              }
             };
             reader.readAsDataURL(file);
           } else if(baseIconPath){
@@ -11443,11 +11596,13 @@ function makePosts(){
             preview.classList.add('has-image');
             previewLabel.textContent = '';
             uploadLabelText.textContent = 'Change Icon';
+            updateCategoryIconDisplay(baseIconPath20 || baseIconPath);
           } else {
             previewImg.removeAttribute('src');
             preview.classList.remove('has-image');
             previewLabel.textContent = 'No Icon';
             uploadLabelText.textContent = 'Upload Icon';
+            updateCategoryIconDisplay('');
           }
         });
 
