@@ -6222,9 +6222,6 @@ if (typeof slugify !== 'function') {
             }
           </style>
           <div id="formsControls">
-            <div class="settings-style-container">
-              <button type="button" id="addCategory">Add Category</button>
-            </div>
             <div id="formsCategories"></div>
           </div>
         </div>
@@ -17005,10 +17002,27 @@ const memberPanelChangeManager = (()=>{
     }
   }
 
+  function notifyDiscard(detail = {}){
+    try{
+      document.dispatchEvent(new CustomEvent('member-panel:discarded', { detail }));
+    }catch(err){
+      console.error('Failed to dispatch member discard event', err);
+    }
+  }
+
   function discardChanges({ closeAfter } = {}){
+    if(form && typeof form.reset === 'function'){
+      applying = true;
+      try{
+        form.reset();
+      } finally {
+        applying = false;
+      }
+    }
     applyState(savedState);
     setDirty(false);
     showStatus('Changes Discarded');
+    notifyDiscard({ closeAfter: !!closeAfter });
     if(closeAfter){
       const target = pendingCloseTarget;
       pendingCloseTarget = null;
@@ -17309,10 +17323,27 @@ const adminPanelChangeManager = (()=>{
     });
   }
 
+  function notifyDiscard(detail = {}){
+    try{
+      document.dispatchEvent(new CustomEvent('admin-panel:discarded', { detail }));
+    }catch(err){
+      console.error('Failed to dispatch admin discard event', err);
+    }
+  }
+
   function discardChanges({ closeAfter } = {}){
+    if(form && typeof form.reset === 'function'){
+      applying = true;
+      try{
+        form.reset();
+      } finally {
+        applying = false;
+      }
+    }
     if(savedState) applyState(savedState);
     setDirty(false);
     showStatus('Changes Discarded');
+    notifyDiscard({ closeAfter: !!closeAfter });
     const panelToClose = closeAfter ? pendingCloseTarget : null;
     pendingCloseTarget = null;
     closePrompt();
@@ -18027,85 +18058,6 @@ document.addEventListener('pointerdown', (e) => {
   });
   document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
   if(window.postsLoaded && window.__markersLoaded){ addPostSource(); }
-})();
-</script>
-<script>
-(function(){
-  const ICONS = {
-    circle:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#000"/></svg>',
-    square:'<svg viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#000"/></svg>',
-    triangle:'<svg viewBox="0 0 20 20"><polygon points="10,2 18,18 2,18" fill="#000"/></svg>'
-  };
-  const FIELD_TYPES = ['Text','Number','Date','Color'];
-  function createIconSelect(){
-    const s=document.createElement('select');
-    Object.keys(ICONS).forEach(k=>{
-      const o=document.createElement('option');
-      o.value=k;
-      o.innerHTML=ICONS[k];
-      s.appendChild(o);
-    });
-    return s;
-  }
-  function createFieldSelect(){
-    const s=document.createElement('select');
-    FIELD_TYPES.forEach(t=>{
-      const o=document.createElement('option');
-      o.value=t.toLowerCase();
-      o.textContent=t;
-      s.appendChild(o);
-    });
-    return s;
-  }
-  function addSubcategory(table){
-    const iconRow=table.querySelector('.icon-row');
-    const nameRow=table.querySelector('.name-row');
-    const iconCell=document.createElement('td'); iconCell.appendChild(createIconSelect()); iconRow.appendChild(iconCell);
-    const nameCell=document.createElement('td'); const inp=document.createElement('input'); nameCell.appendChild(inp); nameRow.appendChild(nameCell);
-    table.querySelectorAll('.field-row').forEach(row=>{
-      const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell);
-    });
-  }
-  function addFieldRow(table){
-    const cols=table.querySelector('.icon-row').children.length;
-    const row=document.createElement('tr'); row.className='field-row';
-    for(let i=0;i<cols;i++){ const cell=document.createElement('td'); cell.appendChild(createFieldSelect()); row.appendChild(cell); }
-    table.appendChild(row);
-  }
-  function wireCategory(cat){
-    const table=cat.querySelector('table');
-    cat.querySelector('.delete-category').addEventListener('click',()=>cat.remove());
-    cat.querySelector('.copy-category').addEventListener('click',()=>{const clone=cat.cloneNode(true); wireCategory(clone); cat.after(clone);});
-    cat.querySelector('.add-subcategory').addEventListener('click',()=>addSubcategory(table));
-    cat.querySelector('.add-field').addEventListener('click',()=>addFieldRow(table));
-  }
-  function createCategory(){
-    const cat=document.createElement('div'); cat.className='form-category';
-    const header=document.createElement('div'); header.className='category-header';
-    const name=document.createElement('input'); name.type='text'; name.placeholder='Category name';
-    const icon=createIconSelect();
-    const color=document.createElement('input'); color.type='color'; color.value='#000000';
-    const copy=document.createElement('button'); copy.type='button'; copy.className='copy-category'; copy.textContent='Copy';
-    const del=document.createElement('button'); del.type='button'; del.className='delete-category'; del.textContent='Delete';
-    header.append(name,icon,color,copy,del);
-    cat.appendChild(header);
-    const table=document.createElement('table'); table.className='subcategory-table';
-    const iconRow=document.createElement('tr'); iconRow.className='icon-row';
-    const nameRow=document.createElement('tr'); nameRow.className='name-row';
-    table.append(iconRow,nameRow);
-    cat.appendChild(table);
-    const addSub=document.createElement('button'); addSub.type='button'; addSub.className='add-subcategory'; addSub.textContent='Add Subcategory';
-    const addField=document.createElement('button'); addField.type='button'; addField.className='add-field'; addField.textContent='Add Field';
-    cat.append(addSub,addField);
-    addSubcategory(table);
-    addFieldRow(table);
-    wireCategory(cat);
-    return cat;
-  }
-  document.getElementById('addCategory').addEventListener('click',()=>{
-    const cat=createCategory();
-    document.getElementById('formsCategories').appendChild(cat);
-  });
 })();
 </script>
 
