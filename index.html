@@ -5876,6 +5876,9 @@ if (typeof slugify !== 'function') {
         </div>
         <div id="tab-forms" class="tab-panel">
           <div class="formbuilder-container">
+            <div class="formbuilder-actions">
+              <button type="button" id="formbuilderAddCategory" class="formbuilder-add-category-btn">Add Category</button>
+            </div>
             <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
           </div>
           <style>
@@ -5886,6 +5889,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.35);
               overflow:hidden;
               transition:border-color .2s,background .2s,opacity .2s;
+              will-change:transform;
             }
             #tab-forms .category-form-menu:last-child{
               margin-bottom:0;
@@ -5966,6 +5970,9 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-form-content[hidden]{
               display:none;
             }
+            #tab-forms .formbuilder-actions{
+              margin-bottom:12px;
+            }
             #tab-forms .category-edit-menu{
               display:flex;
               flex-direction:column;
@@ -5974,7 +5981,9 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-edit-trigger-wrap{
               width:100%;
             }
-            #tab-forms .category-edit-trigger{
+            #tab-forms .formbuilder-add-category-btn,
+            #tab-forms .category-edit-trigger,
+            #tab-forms .add-subcategory-btn{
               width:100%;
               height:40px;
               border-radius:8px;
@@ -5989,7 +5998,9 @@ if (typeof slugify !== 'function') {
               cursor:pointer;
               transition:background .2s,border-color .2s,color .2s;
             }
-            #tab-forms .category-edit-trigger:hover{
+            #tab-forms .formbuilder-add-category-btn:hover,
+            #tab-forms .category-edit-trigger:hover,
+            #tab-forms .add-subcategory-btn:hover{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
             }
@@ -6084,6 +6095,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.2);
               overflow:hidden;
               transition:border-color .2s,background .2s,opacity .2s;
+              will-change:transform;
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
               opacity:0.5;
@@ -6236,19 +6248,16 @@ if (typeof slugify !== 'function') {
               color:var(--muted);
             }
             #tab-forms .add-subcategory-btn{
-              align-self:flex-start;
-              padding:8px 16px;
-              border-radius:8px;
-              border:1px solid var(--btn);
-              background:var(--btn);
-              color:var(--button-text);
-              font-weight:600;
-              cursor:pointer;
-              transition:background .2s,border-color .2s,color .2s;
+              padding:0 16px;
             }
-            #tab-forms .add-subcategory-btn:hover{
-              background:var(--btn-hover, #2e3a72);
-              border-color:var(--btn-hover, #2e3a72);
+            #tab-forms .subcategory-drop-anchor{
+              width:100%;
+              height:0;
+              margin:0;
+              padding:0;
+              pointer-events:none;
+              visibility:hidden;
+              display:none;
             }
           </style>
           <div id="formsControls">
@@ -10646,6 +10655,7 @@ function makePosts(){
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');
+    const formbuilderAddCategoryBtn = document.getElementById('formbuilderAddCategory');
     let formbuilderConfirmOverlay = null;
     let categoryDragContainerInitialized = false;
     let draggedCategoryMenu = null;
@@ -10678,6 +10688,52 @@ function makePosts(){
       }
     }
 
+    function captureChildPositions(container, selector){
+      const map = new Map();
+      if(!container) return map;
+      container.querySelectorAll(selector).forEach(el=>{
+        map.set(el, el.getBoundingClientRect());
+      });
+      return map;
+    }
+
+    function animateListReorder(container, selector, previousRects, exclude){
+      if(!container || !previousRects || previousRects.size === 0) return;
+      requestAnimationFrame(()=>{
+        container.querySelectorAll(selector).forEach(el=>{
+          if(el === exclude) return;
+          const prevRect = previousRects.get(el);
+          if(!prevRect) return;
+          const nextRect = el.getBoundingClientRect();
+          const dx = prevRect.left - nextRect.left;
+          const dy = prevRect.top - nextRect.top;
+          if(Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+          el.style.transition = 'none';
+          el.style.transform = `translate(${dx}px, ${dy}px)`;
+          void el.offsetWidth;
+          el.style.transition = 'transform 150ms ease';
+          el.style.transform = '';
+          const cleanup = ()=>{
+            el.style.transition = '';
+            el.style.transform = '';
+            el.removeEventListener('transitionend', cleanup);
+          };
+          el.addEventListener('transitionend', cleanup);
+        });
+      });
+    }
+
+    function notifyFormbuilderChange(){
+      if(!formbuilderCats) return;
+      try{
+        formbuilderCats.dispatchEvent(new Event('change', { bubbles: true }));
+      }catch(err){
+        const evt = document.createEvent('Event');
+        evt.initEvent('change', true, true);
+        formbuilderCats.dispatchEvent(evt);
+      }
+    }
+
     function syncCategoriesFromDom(){
       if(!formbuilderCats) return;
       const menuEls = Array.from(formbuilderCats.querySelectorAll('.category-form-menu'));
@@ -10698,12 +10754,24 @@ function makePosts(){
           used.add(fallback);
         }
       });
+      let changed = false;
       if(newOrder.length === categories.length){
-        categories.splice(0, categories.length, ...newOrder);
+        for(let i = 0; i < newOrder.length; i++){
+          if(newOrder[i] !== categories[i]){
+            changed = true;
+            break;
+          }
+        }
+        if(changed){
+          categories.splice(0, categories.length, ...newOrder);
+        }
       }
       menuEls.forEach((menu, index)=>{
         menu.dataset.categoryIndex = String(index);
       });
+      if(changed){
+        notifyFormbuilderChange();
+      }
     }
 
     function ensureCategoryDragContainer(){
@@ -10721,7 +10789,9 @@ function makePosts(){
         if(!target){
           clearCategoryDropIndicator();
           if(draggedCategoryMenu && draggedCategoryMenu !== formbuilderCats.lastElementChild){
+            const beforeRects = captureChildPositions(formbuilderCats, '.category-form-menu');
             formbuilderCats.appendChild(draggedCategoryMenu);
+            animateListReorder(formbuilderCats, '.category-form-menu', beforeRects, draggedCategoryMenu);
           }
           return;
         }
@@ -10738,7 +10808,9 @@ function makePosts(){
         }
         if(reference !== draggedCategoryMenu){
           if(reference || formbuilderCats.lastElementChild !== draggedCategoryMenu){
+            const beforeRects = captureChildPositions(formbuilderCats, '.category-form-menu');
             formbuilderCats.insertBefore(draggedCategoryMenu, reference);
+            animateListReorder(formbuilderCats, '.category-form-menu', beforeRects, draggedCategoryMenu);
           }
         }
       });
@@ -10802,12 +10874,24 @@ function makePosts(){
           used.add(fallback);
         }
       });
+      let changed = false;
       if(reordered.length === original.length){
-        categoryObj.subs = reordered;
+        for(let i = 0; i < reordered.length; i++){
+          if(reordered[i] !== original[i]){
+            changed = true;
+            break;
+          }
+        }
+        if(changed){
+          categoryObj.subs = reordered;
+        }
       }
       subEls.forEach((subMenu, index)=>{
         subMenu.dataset.subIndex = String(index);
       });
+      if(changed){
+        notifyFormbuilderChange();
+      }
     }
 
     function setupSubcategoryContainer(container, categoryObj, addButton){
@@ -10834,7 +10918,9 @@ function makePosts(){
             clearSubDropIndicator(state);
             const anchor = state.addButton || null;
             if(anchor && draggedSubcategoryMenu !== anchor && draggedSubcategoryMenu.nextSibling !== anchor){
+              const beforeRects = captureChildPositions(container, '.subcategory-form-menu');
               container.insertBefore(draggedSubcategoryMenu, anchor);
+              animateListReorder(container, '.subcategory-form-menu', beforeRects, draggedSubcategoryMenu);
             }
             return;
           }
@@ -10849,7 +10935,9 @@ function makePosts(){
             reference = state.addButton;
           }
           if(reference !== draggedSubcategoryMenu){
+            const beforeRects = captureChildPositions(container, '.subcategory-form-menu');
             container.insertBefore(draggedSubcategoryMenu, reference);
+            animateListReorder(container, '.subcategory-form-menu', beforeRects, draggedSubcategoryMenu);
           }
         });
         container.addEventListener('drop', event=>{
@@ -11227,16 +11315,20 @@ function makePosts(){
         deleteCategoryBtn.textContent = 'Delete Category';
         deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
 
-        editPanel.append(nameInput, iconPicker, deleteCategoryBtn);
-        editMenu.append(editWrap, editPanel);
-
-        const subMenusContainer = document.createElement('div');
-        subMenusContainer.className = 'subcategory-form-menus';
         const addSubBtn = document.createElement('button');
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
         addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+
+        editPanel.append(nameInput, iconPicker, deleteCategoryBtn);
+        editMenu.append(editWrap, addSubBtn, editPanel);
+
+        const subMenusContainer = document.createElement('div');
+        subMenusContainer.className = 'subcategory-form-menus';
+        const addSubAnchor = document.createElement('div');
+        addSubAnchor.className = 'subcategory-drop-anchor';
+        subMenusContainer.append(addSubAnchor);
 
         const subNameUpdaters = [];
         const getCategoryNameValue = ()=> nameInput.value.trim();
@@ -11290,6 +11382,7 @@ function makePosts(){
           const confirmed = await confirmFormbuilderDeletion(`Delete the "${displayName}" category?`, 'Delete Category');
           if(!confirmed) return;
           menu.remove();
+          notifyFormbuilderChange();
         });
 
         c.subs.forEach((sub, subIndex)=>{
@@ -11476,6 +11569,7 @@ function makePosts(){
             const confirmed = await confirmFormbuilderDeletion(`Delete the "${subDisplayName}" subcategory from ${categoryDisplayName}?`, 'Delete Subcategory');
             if(!confirmed) return;
             subMenu.remove();
+            notifyFormbuilderChange();
           });
 
           const normalizedSubIconPath = normalizeIconPath(subIconPath) || subIconPath || '';
@@ -11552,15 +11646,21 @@ function makePosts(){
           subInput.addEventListener('change', ()=>{
             const isOn = subInput.checked;
             subMenu.classList.toggle('subcategory-off', !isOn);
+            if(!isOn){
+              if(subMenu.getAttribute('aria-expanded') === 'true'){
+                subMenu.setAttribute('aria-expanded','false');
+                subBtn.setAttribute('aria-expanded','false');
+                subContent.hidden = true;
+              }
+            }
           });
 
-          subMenusContainer.append(subMenu);
+          subMenusContainer.insertBefore(subMenu, addSubAnchor);
 
-          attachSubcategoryDragHandle(subMenu, subMenusContainer, c, subDragHandle, addSubBtn);
+          attachSubcategoryDragHandle(subMenu, subMenusContainer, c, subDragHandle, addSubAnchor);
         });
 
-        subMenusContainer.append(addSubBtn);
-        setupSubcategoryContainer(subMenusContainer, c, addSubBtn);
+        setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
 
         applyCategoryNameChange();
 
@@ -11576,7 +11676,19 @@ function makePosts(){
         });
 
         toggleInput.addEventListener('change', ()=>{
-          menu.classList.toggle('cat-off', !toggleInput.checked);
+          const isOn = toggleInput.checked;
+          menu.classList.toggle('cat-off', !isOn);
+          if(!isOn){
+            if(menu.getAttribute('aria-expanded') === 'true'){
+              menu.setAttribute('aria-expanded','false');
+              menuBtn.setAttribute('aria-expanded','false');
+              content.hidden = true;
+            }
+            if(editBtn.getAttribute('aria-expanded') === 'true'){
+              editBtn.setAttribute('aria-expanded','false');
+              editPanel.hidden = true;
+            }
+          }
         });
 
         editBtn.addEventListener('click', ()=>{
@@ -11655,6 +11767,41 @@ function makePosts(){
       formbuilderCats.appendChild(frag);
       refreshFormbuilderSubcategoryLogos();
     };
+    if(formbuilderAddCategoryBtn){
+      formbuilderAddCategoryBtn.addEventListener('click', ()=>{
+        if(!Array.isArray(categories)) return;
+        const baseName = 'New Category';
+        const existing = new Set(categories.map(cat => (cat && typeof cat.name === 'string') ? cat.name : ''));
+        let candidate = baseName;
+        let counter = 2;
+        while(existing.has(candidate)){
+          candidate = `${baseName} ${counter++}`;
+        }
+        categories.push({ name: candidate, subs: [] });
+        renderFormbuilderCats();
+        notifyFormbuilderChange();
+        const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:last-of-type') : null;
+        if(!newMenu) return;
+        const menuTrigger = newMenu.querySelector('.filter-category-trigger');
+        const content = newMenu.querySelector('.category-form-content');
+        const editTrigger = newMenu.querySelector('.category-edit-trigger');
+        const editPanel = newMenu.querySelector('.category-edit-panel');
+        const nameField = newMenu.querySelector('.category-name-input');
+        newMenu.setAttribute('aria-expanded','true');
+        if(menuTrigger) menuTrigger.setAttribute('aria-expanded','true');
+        if(content) content.hidden = false;
+        if(editTrigger) editTrigger.setAttribute('aria-expanded','true');
+        if(editPanel) editPanel.hidden = false;
+        if(nameField){
+          requestAnimationFrame(()=>{
+            try{ nameField.focus({ preventScroll: true }); }
+            catch(err){
+              try{ nameField.focus(); }catch(e){}
+            }
+          });
+        }
+      });
+    }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => ({
         name: item && typeof item.name === 'string' ? item.name : '',
