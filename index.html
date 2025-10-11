@@ -11630,6 +11630,64 @@ function makePosts(){
       formbuilderCats.appendChild(frag);
       refreshFormbuilderSubcategoryLogos();
     };
+    function cloneCategoryList(list){
+      return Array.isArray(list) ? list.map(item => ({
+        name: item && typeof item.name === 'string' ? item.name : '',
+        subs: Array.isArray(item && item.subs) ? item.subs.slice() : []
+      })) : [];
+    }
+    function cloneMapLike(source){
+      const out = {};
+      if(source && typeof source === 'object'){
+        Object.keys(source).forEach(key => {
+          out[key] = source[key];
+        });
+      }
+      return out;
+    }
+    function assignMapLike(target, source){
+      if(!target || typeof target !== 'object') return;
+      Object.keys(target).forEach(key => { delete target[key]; });
+      if(source && typeof source === 'object'){
+        Object.keys(source).forEach(key => {
+          target[key] = source[key];
+        });
+      }
+    }
+    function captureFormbuilderSnapshot(){
+      return {
+        categories: cloneCategoryList(categories),
+        subcategoryIcons: cloneMapLike(subcategoryIcons),
+        subcategoryMarkers: cloneMapLike(subcategoryMarkers),
+        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
+        categoryShapes: cloneMapLike(categoryShapes)
+      };
+    }
+    let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
+    function restoreFormbuilderSnapshot(snapshot){
+      if(!snapshot) return;
+      const nextCategories = cloneCategoryList(snapshot.categories);
+      if(Array.isArray(nextCategories)){
+        categories.splice(0, categories.length, ...nextCategories);
+      }
+      assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
+      assignMapLike(subcategoryMarkers, snapshot.subcategoryMarkers);
+      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
+      assignMapLike(categoryShapes, snapshot.categoryShapes);
+      renderFormbuilderCats();
+      refreshSubcategoryLogos();
+      refreshFormbuilderSubcategoryLogos();
+    }
+    function updateFormbuilderSnapshot(){
+      savedFormbuilderSnapshot = captureFormbuilderSnapshot();
+    }
+    window.formbuilderStateManager = {
+      capture: captureFormbuilderSnapshot,
+      restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
+      save(){ updateFormbuilderSnapshot(); },
+      getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
+      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
+    };
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -11829,6 +11887,7 @@ function makePosts(){
       });
       refreshSubcategoryLogos();
       renderFormbuilderCats();
+      updateFormbuilderSnapshot();
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
         refreshFormbuilderSubcategoryLogos();
@@ -17302,6 +17361,9 @@ const adminPanelChangeManager = (()=>{
   function refreshSavedState(){
     if(!form) return;
     savedState = serializeState();
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+      window.formbuilderStateManager.save();
+    }
     setDirty(false);
   }
 
@@ -17381,6 +17443,9 @@ const adminPanelChangeManager = (()=>{
       } finally {
         applying = false;
       }
+    }
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
+      window.formbuilderStateManager.restoreSaved();
     }
     if(savedState) applyState(savedState);
     setDirty(false);
@@ -17979,7 +18044,15 @@ document.addEventListener('pointerdown', (e) => {
       COLORS.forEach(color=>{
         const colored = template.replace(/fill="(?!#fff)[^"]*"/g, `fill="${color}"`);
         const doc = new DOMParser().parseFromString(colored,'image/svg+xml');
-        const svg = doc.documentElement;
+        let svg = doc && doc.documentElement ? doc.documentElement : null;
+        if(!svg || svg.nodeName.toLowerCase() !== 'svg'){
+          svg = doc.querySelector ? doc.querySelector('svg') : null;
+        }
+        if(!svg){
+          console.warn('Unable to render SVG preview for template', colored);
+          return;
+        }
+        svg = svg.cloneNode(true);
         svg.setAttribute('width', sizeSlider.value);
         svg.setAttribute('height', sizeSlider.value);
         svg.dataset.color = color;
