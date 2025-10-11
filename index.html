@@ -5910,41 +5910,19 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-form-menu.cat-off{
               opacity:0.5;
             }
-            #tab-forms .category-drag-handle,
-            #tab-forms .subcategory-drag-handle{
-              border:none;
-              background:rgba(255,255,255,0.1);
-              color:var(--button-text);
-              width:34px;
-              height:34px;
-              border-radius:8px;
-              display:flex;
-              align-items:center;
-              justify-content:center;
+            #tab-forms .filter-category-header,
+            #tab-forms .subcategory-form-header,
+            #tab-forms .field-row-header{
               cursor:grab;
-              flex:0 0 auto;
-              transition:background .2s, color .2s;
             }
-            #tab-forms .category-drag-handle:hover,
-            #tab-forms .subcategory-drag-handle:hover{
-              background:rgba(255,255,255,0.18);
-            }
-            #tab-forms .category-drag-handle:active,
-            #tab-forms .subcategory-drag-handle:active{
+            #tab-forms .filter-category-header.is-dragging,
+            #tab-forms .subcategory-form-header.is-dragging,
+            #tab-forms .field-row-header.is-dragging{
               cursor:grabbing;
             }
-            #tab-forms .category-drag-handle:focus-visible,
-            #tab-forms .subcategory-drag-handle:focus-visible{
-              outline:2px solid var(--btn-hover, #2e3a72);
-              outline-offset:2px;
-            }
-            #tab-forms .drag-handle-icon{
-              pointer-events:none;
-              font-size:18px;
-              line-height:1;
-            }
             #tab-forms .category-form-menu.is-dragging,
-            #tab-forms .subcategory-form-menu.is-dragging{
+            #tab-forms .subcategory-form-menu.is-dragging,
+            #tab-forms .subcategory-field-row.is-dragging{
               opacity:0.65;
             }
             #tab-forms .category-form-menu.drag-target-before{
@@ -5958,6 +5936,31 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .subcategory-form-menu.drag-target-after{
               box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .subcategory-field-row.drag-target-before{
+              box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .subcategory-field-row.drag-target-after{
+              box-shadow:0 2px 0 var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .cats,
+            #tab-forms .subcategory-form-menus,
+            #tab-forms .subcategory-fields-list{
+              position:relative;
+            }
+            #tab-forms .formbuilder-drop-indicator{
+              position:absolute;
+              left:12px;
+              right:12px;
+              height:0;
+              border-top:2px solid var(--btn-hover, #2e3a72);
+              pointer-events:none;
+              opacity:0;
+              transition:opacity .15s ease;
+              z-index:5;
+            }
+            #tab-forms .formbuilder-drop-indicator.visible{
+              opacity:1;
             }
             #tab-forms .category-form-content{
               border-top:1px solid var(--border);
@@ -10846,10 +10849,69 @@ function makePosts(){
     let draggedCategoryMenu = null;
     let categoryDropIndicatorTarget = null;
     let categoryDropIndicatorClass = '';
+    let categoryDropIndicatorBefore = null;
     let categoryDropCommitted = false;
     let draggedSubcategoryMenu = null;
     let draggedSubcategoryContainer = null;
     const subcategoryContainerState = new WeakMap();
+    let draggedFieldRow = null;
+    let draggedFieldContainer = null;
+    const fieldContainerState = new WeakMap();
+    const dropIndicatorMap = new WeakMap();
+
+    function getDropIndicator(container){
+      if(!container) return null;
+      let indicator = dropIndicatorMap.get(container);
+      if(indicator && indicator.parentElement !== container){
+        dropIndicatorMap.delete(container);
+        indicator = null;
+      }
+      if(!indicator){
+        indicator = document.createElement('div');
+        indicator.className = 'formbuilder-drop-indicator';
+        container.appendChild(indicator);
+        dropIndicatorMap.set(container, indicator);
+      }
+      return indicator;
+    }
+
+    function hideDropIndicator(container){
+      if(!container) return;
+      const indicator = dropIndicatorMap.get(container);
+      if(indicator){
+        indicator.classList.remove('visible');
+      }
+    }
+
+    function positionDropIndicator(container, target, before, selector, draggedEl){
+      if(!container) return;
+      const indicator = getDropIndicator(container);
+      if(!indicator) return;
+      let top = 0;
+      if(target && target !== draggedEl){
+        top = before ? target.offsetTop : target.offsetTop + target.offsetHeight;
+      } else {
+        const items = Array.from(container.querySelectorAll(selector)).filter(el => el !== draggedEl);
+        if(items.length > 0){
+          const ref = before ? items[0] : items[items.length - 1];
+          top = before ? ref.offsetTop : ref.offsetTop + ref.offsetHeight;
+        } else {
+          top = 0;
+        }
+      }
+      indicator.style.top = `${top}px`;
+      indicator.classList.add('visible');
+    }
+
+    function sanitizeInsertionReference(node){
+      while(node && node.nodeType === 1 && node.classList.contains('formbuilder-drop-indicator')){
+        node = node.nextSibling;
+      }
+      while(node && node.nodeType === 3){
+        node = node.nextSibling;
+      }
+      return node;
+    }
 
     function clearCategoryDropIndicator(){
       if(categoryDropIndicatorTarget){
@@ -10857,20 +10919,28 @@ function makePosts(){
         categoryDropIndicatorTarget = null;
         categoryDropIndicatorClass = '';
       }
+      categoryDropIndicatorBefore = null;
+      hideDropIndicator(formbuilderCats);
     }
 
     function updateCategoryDropIndicator(target, before){
-      if(!target) return;
-      const cls = before ? 'drag-target-before' : 'drag-target-after';
+      const cls = target ? (before ? 'drag-target-before' : 'drag-target-after') : '';
       if(categoryDropIndicatorTarget && categoryDropIndicatorTarget !== target){
         categoryDropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
       }
-      if(categoryDropIndicatorTarget !== target || categoryDropIndicatorClass !== cls){
-        target.classList.remove('drag-target-before','drag-target-after');
-        target.classList.add(cls);
-        categoryDropIndicatorTarget = target;
-        categoryDropIndicatorClass = cls;
+      if(target){
+        if(categoryDropIndicatorTarget !== target || categoryDropIndicatorClass !== cls){
+          target.classList.remove('drag-target-before','drag-target-after');
+          target.classList.add(cls);
+          categoryDropIndicatorTarget = target;
+          categoryDropIndicatorClass = cls;
+        }
+      } else {
+        categoryDropIndicatorTarget = null;
+        categoryDropIndicatorClass = '';
       }
+      categoryDropIndicatorBefore = before;
+      positionDropIndicator(formbuilderCats, target, before, '.category-form-menu', draggedCategoryMenu);
     }
 
     function captureChildPositions(container, selector){
@@ -10963,7 +11033,7 @@ function makePosts(){
       if(categoryDragContainerInitialized || !formbuilderCats) return;
       categoryDragContainerInitialized = true;
       formbuilderCats.addEventListener('dragover', event=>{
-        if(!draggedCategoryMenu || draggedSubcategoryMenu){
+        if(!draggedCategoryMenu || draggedSubcategoryMenu || draggedFieldRow){
           return;
         }
         event.preventDefault();
@@ -10971,45 +11041,54 @@ function makePosts(){
           event.dataTransfer.dropEffect = 'move';
         }
         const target = event.target.closest('.category-form-menu');
-        if(!target){
-          clearCategoryDropIndicator();
-          if(draggedCategoryMenu && draggedCategoryMenu !== formbuilderCats.lastElementChild){
-            const beforeRects = captureChildPositions(formbuilderCats, '.category-form-menu');
-            formbuilderCats.appendChild(draggedCategoryMenu);
-            animateListReorder(formbuilderCats, '.category-form-menu', beforeRects, draggedCategoryMenu);
+        const menus = Array.from(formbuilderCats.querySelectorAll('.category-form-menu')).filter(menu => menu !== draggedCategoryMenu);
+        const containerRect = formbuilderCats.getBoundingClientRect();
+        if(!target || target === draggedCategoryMenu){
+          if(menus.length === 0){
+            updateCategoryDropIndicator(null, true);
+            return;
           }
-          return;
-        }
-        if(target === draggedCategoryMenu){
-          clearCategoryDropIndicator();
+          if(event.clientY <= containerRect.top + 8){
+            updateCategoryDropIndicator(menus[0], true);
+          } else {
+            updateCategoryDropIndicator(menus[menus.length - 1], false);
+          }
           return;
         }
         const rect = target.getBoundingClientRect();
         const before = event.clientY < rect.top + rect.height / 2;
         updateCategoryDropIndicator(target, before);
-        const reference = before ? target : target.nextSibling;
-        if((before && draggedCategoryMenu.nextElementSibling === target) || (!before && target.nextElementSibling === draggedCategoryMenu)){
-          return;
-        }
-        if(reference !== draggedCategoryMenu){
-          if(reference || formbuilderCats.lastElementChild !== draggedCategoryMenu){
-            const beforeRects = captureChildPositions(formbuilderCats, '.category-form-menu');
-            formbuilderCats.insertBefore(draggedCategoryMenu, reference);
-            animateListReorder(formbuilderCats, '.category-form-menu', beforeRects, draggedCategoryMenu);
-          }
-        }
       });
       formbuilderCats.addEventListener('drop', event=>{
-        if(!draggedCategoryMenu){
+        if(!draggedCategoryMenu || draggedSubcategoryMenu || draggedFieldRow){
           return;
         }
         event.preventDefault();
         categoryDropCommitted = true;
+        const target = categoryDropIndicatorTarget;
+        const before = categoryDropIndicatorBefore;
+        let reference = null;
+        if(formbuilderCats){
+          if(target && target !== draggedCategoryMenu){
+            reference = before ? target : target.nextSibling;
+          } else if(!target && before){
+            reference = formbuilderCats.firstChild;
+          }
+        }
+        reference = sanitizeInsertionReference(reference);
+        const currentNext = draggedCategoryMenu.nextSibling;
+        if(formbuilderCats){
+          const beforeRects = captureChildPositions(formbuilderCats, '.category-form-menu');
+          if(reference !== draggedCategoryMenu && reference !== currentNext){
+            formbuilderCats.insertBefore(draggedCategoryMenu, reference || null);
+            animateListReorder(formbuilderCats, '.category-form-menu', beforeRects, draggedCategoryMenu);
+          }
+        }
         clearCategoryDropIndicator();
         syncCategoriesFromDom();
       });
       formbuilderCats.addEventListener('dragleave', event=>{
-        if(!draggedCategoryMenu || draggedSubcategoryMenu) return;
+        if(!draggedCategoryMenu || draggedSubcategoryMenu || draggedFieldRow) return;
         if(event.target === formbuilderCats){
           clearCategoryDropIndicator();
         }
@@ -11023,20 +11102,29 @@ function makePosts(){
         state.dropIndicatorTarget = null;
         state.dropIndicatorClass = '';
       }
+      state.dropIndicatorBefore = null;
+      hideDropIndicator(state.container);
     }
 
     function updateSubDropIndicator(state, target, before){
-      if(!state || !target) return;
-      const cls = before ? 'drag-target-before' : 'drag-target-after';
+      if(!state) return;
+      const cls = target ? (before ? 'drag-target-before' : 'drag-target-after') : '';
       if(state.dropIndicatorTarget && state.dropIndicatorTarget !== target){
         state.dropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
       }
-      if(state.dropIndicatorTarget !== target || state.dropIndicatorClass !== cls){
-        target.classList.remove('drag-target-before','drag-target-after');
-        target.classList.add(cls);
-        state.dropIndicatorTarget = target;
-        state.dropIndicatorClass = cls;
+      if(target){
+        if(state.dropIndicatorTarget !== target || state.dropIndicatorClass !== cls){
+          target.classList.remove('drag-target-before','drag-target-after');
+          target.classList.add(cls);
+          state.dropIndicatorTarget = target;
+          state.dropIndicatorClass = cls;
+        }
+      } else {
+        state.dropIndicatorTarget = null;
+        state.dropIndicatorClass = '';
       }
+      state.dropIndicatorBefore = before;
+      positionDropIndicator(state.container, target, before, '.subcategory-form-menu', draggedSubcategoryMenu);
     }
 
     function syncSubcategoryOrderFromDom(container, categoryObj){
@@ -11086,9 +11174,11 @@ function makePosts(){
         state = {
           dropIndicatorTarget: null,
           dropIndicatorClass: '',
+          dropIndicatorBefore: null,
           dropCommitted: false,
           addButton: addButton,
-          category: categoryObj
+          category: categoryObj,
+          container
         };
         subcategoryContainerState.set(container, state);
         container.addEventListener('dragover', event=>{
@@ -11099,37 +11189,52 @@ function makePosts(){
             event.dataTransfer.dropEffect = 'move';
           }
           const target = event.target.closest('.subcategory-form-menu');
+          const subMenus = Array.from(container.querySelectorAll('.subcategory-form-menu')).filter(menu => menu !== draggedSubcategoryMenu);
+          const containerRect = container.getBoundingClientRect();
           if(!target || target === draggedSubcategoryMenu){
-            clearSubDropIndicator(state);
-            const anchor = state.addButton || null;
-            if(anchor && draggedSubcategoryMenu !== anchor && draggedSubcategoryMenu.nextSibling !== anchor){
-              const beforeRects = captureChildPositions(container, '.subcategory-form-menu');
-              container.insertBefore(draggedSubcategoryMenu, anchor);
-              animateListReorder(container, '.subcategory-form-menu', beforeRects, draggedSubcategoryMenu);
+            if(subMenus.length === 0){
+              updateSubDropIndicator(state, null, true);
+            } else if(event.clientY <= containerRect.top + 8){
+              updateSubDropIndicator(state, subMenus[0], true);
+            } else {
+              updateSubDropIndicator(state, subMenus[subMenus.length - 1], false);
             }
             return;
           }
           const rect = target.getBoundingClientRect();
           const before = event.clientY < rect.top + rect.height / 2;
           updateSubDropIndicator(state, target, before);
-          if((before && draggedSubcategoryMenu.nextElementSibling === target) || (!before && target.nextElementSibling === draggedSubcategoryMenu)){
-            return;
-          }
-          let reference = before ? target : target.nextSibling;
-          if(!reference || reference === state.addButton){
-            reference = state.addButton;
-          }
-          if(reference !== draggedSubcategoryMenu){
-            const beforeRects = captureChildPositions(container, '.subcategory-form-menu');
-            container.insertBefore(draggedSubcategoryMenu, reference);
-            animateListReorder(container, '.subcategory-form-menu', beforeRects, draggedSubcategoryMenu);
-          }
         });
         container.addEventListener('drop', event=>{
           if(!draggedSubcategoryMenu || draggedSubcategoryContainer !== container) return;
           event.preventDefault();
           event.stopPropagation();
           state.dropCommitted = true;
+          const target = state.dropIndicatorTarget;
+          const before = state.dropIndicatorBefore;
+          let reference = null;
+          if(container){
+            if(target && target !== draggedSubcategoryMenu){
+              reference = before ? target : target.nextSibling;
+            } else if(!target && before){
+              reference = container.firstChild;
+            } else if(state.addButton){
+              reference = state.addButton;
+            }
+          }
+          if(reference === state.addButton && state.addButton && state.addButton.previousSibling === draggedSubcategoryMenu){
+            reference = draggedSubcategoryMenu.nextSibling;
+          }
+          reference = sanitizeInsertionReference(reference);
+          if(reference === state.addButton && reference === draggedSubcategoryMenu.nextSibling){
+            reference = reference.nextSibling;
+          }
+          const beforeRects = captureChildPositions(container, '.subcategory-form-menu');
+          const currentNext = draggedSubcategoryMenu.nextSibling;
+          if(reference !== draggedSubcategoryMenu && reference !== currentNext){
+            container.insertBefore(draggedSubcategoryMenu, reference || state.addButton || null);
+            animateListReorder(container, '.subcategory-form-menu', beforeRects, draggedSubcategoryMenu);
+          }
           clearSubDropIndicator(state);
           syncSubcategoryOrderFromDom(container, state.category);
         });
@@ -11142,24 +11247,25 @@ function makePosts(){
       }
       state.addButton = addButton;
       state.category = categoryObj;
+      state.container = container;
       return state;
     }
 
-    function attachCategoryDragHandle(menu, handle){
-      if(!menu || !handle) return;
+    function enableCategoryDrag(menu, header){
+      if(!menu || !header) return;
       ensureCategoryDragContainer();
-      handle.draggable = true;
-      handle.addEventListener('click', event=> event.preventDefault());
-      handle.addEventListener('keydown', event=>{
-        if(event.key === ' ' || event.key === 'Enter'){
+      menu.draggable = true;
+      menu.addEventListener('dragstart', event=>{
+        const origin = event.target;
+        if(origin && origin.closest('.category-form-content')){
           event.preventDefault();
+          return;
         }
-      });
-      handle.addEventListener('dragstart', event=>{
         event.stopPropagation();
         draggedCategoryMenu = menu;
         categoryDropCommitted = false;
         menu.classList.add('is-dragging');
+        header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
           try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
@@ -11169,10 +11275,11 @@ function makePosts(){
           }catch(err){}
         }
       });
-      handle.addEventListener('dragend', event=>{
+      menu.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedCategoryMenu === menu){
           menu.classList.remove('is-dragging');
+          header.classList.remove('is-dragging');
           draggedCategoryMenu = null;
         }
         clearCategoryDropIndicator();
@@ -11183,22 +11290,22 @@ function makePosts(){
       });
     }
 
-    function attachSubcategoryDragHandle(subMenu, container, categoryObj, handle, addButton){
-      if(!subMenu || !container || !handle) return;
+    function enableSubcategoryDrag(subMenu, container, categoryObj, header, addButton){
+      if(!subMenu || !container || !header) return;
       const state = setupSubcategoryContainer(container, categoryObj, addButton);
-      handle.draggable = true;
-      handle.addEventListener('click', event=> event.preventDefault());
-      handle.addEventListener('keydown', event=>{
-        if(event.key === ' ' || event.key === 'Enter'){
+      subMenu.draggable = true;
+      subMenu.addEventListener('dragstart', event=>{
+        const origin = event.target;
+        if(origin && origin.closest('.subcategory-form-content')){
           event.preventDefault();
+          return;
         }
-      });
-      handle.addEventListener('dragstart', event=>{
         event.stopPropagation();
         draggedSubcategoryMenu = subMenu;
         draggedSubcategoryContainer = container;
         if(state) state.dropCommitted = false;
         subMenu.classList.add('is-dragging');
+        header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
           try{ event.dataTransfer.setData('text/plain', subMenu.dataset.subcategory || ''); }catch(err){}
@@ -11208,10 +11315,11 @@ function makePosts(){
           }catch(err){}
         }
       });
-      handle.addEventListener('dragend', event=>{
+      subMenu.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedSubcategoryMenu === subMenu){
           subMenu.classList.remove('is-dragging');
+          header.classList.remove('is-dragging');
           draggedSubcategoryMenu = null;
           draggedSubcategoryContainer = null;
         }
@@ -11219,6 +11327,189 @@ function makePosts(){
           clearSubDropIndicator(state);
           if(!state.dropCommitted){
             syncSubcategoryOrderFromDom(container, state.category);
+          }
+          state.dropCommitted = false;
+        }
+      });
+    }
+
+    function clearFieldDropIndicator(state){
+      if(!state) return;
+      if(state.dropIndicatorTarget){
+        state.dropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+        state.dropIndicatorTarget = null;
+        state.dropIndicatorClass = '';
+      }
+      state.dropIndicatorBefore = null;
+      hideDropIndicator(state.container);
+    }
+
+    function updateFieldDropIndicator(state, target, before){
+      if(!state) return;
+      const cls = target ? (before ? 'drag-target-before' : 'drag-target-after') : '';
+      if(state.dropIndicatorTarget && state.dropIndicatorTarget !== target){
+        state.dropIndicatorTarget.classList.remove('drag-target-before','drag-target-after');
+      }
+      if(target){
+        if(state.dropIndicatorTarget !== target || state.dropIndicatorClass !== cls){
+          target.classList.remove('drag-target-before','drag-target-after');
+          target.classList.add(cls);
+          state.dropIndicatorTarget = target;
+          state.dropIndicatorClass = cls;
+        }
+      } else {
+        state.dropIndicatorTarget = null;
+        state.dropIndicatorClass = '';
+      }
+      state.dropIndicatorBefore = before;
+      positionDropIndicator(state.container, target, before, '.subcategory-field-row', draggedFieldRow);
+    }
+
+    function syncFieldOrderFromDom(container, fields){
+      if(!container || !Array.isArray(fields)) return;
+      const rows = Array.from(container.querySelectorAll('.subcategory-field-row'));
+      const original = fields.slice();
+      const reordered = [];
+      rows.forEach(row=>{
+        const ref = row && row.__fieldRef;
+        if(ref && original.includes(ref) && !reordered.includes(ref)){
+          reordered.push(ref);
+        }
+      });
+      let changed = false;
+      if(reordered.length === original.length){
+        for(let i = 0; i < reordered.length; i++){
+          if(reordered[i] !== original[i]){
+            changed = true;
+            break;
+          }
+        }
+        if(changed){
+          fields.splice(0, fields.length, ...reordered);
+          notifyFormbuilderChange();
+        }
+      }
+      rows.forEach((row, index)=>{
+        row.dataset.fieldIndex = String(index);
+      });
+    }
+
+    function setupFieldContainer(container, fields){
+      if(!container) return null;
+      let state = fieldContainerState.get(container);
+      if(!state){
+        state = {
+          dropIndicatorTarget: null,
+          dropIndicatorClass: '',
+          dropIndicatorBefore: null,
+          dropCommitted: false,
+          fields,
+          container
+        };
+        fieldContainerState.set(container, state);
+        container.addEventListener('dragover', event=>{
+          if(!draggedFieldRow || draggedFieldContainer !== container) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if(event.dataTransfer){
+            event.dataTransfer.dropEffect = 'move';
+          }
+          const target = event.target.closest('.subcategory-field-row');
+          const rows = Array.from(container.querySelectorAll('.subcategory-field-row')).filter(row => row !== draggedFieldRow);
+          const containerRect = container.getBoundingClientRect();
+          if(!target || target === draggedFieldRow){
+            if(rows.length === 0){
+              updateFieldDropIndicator(state, null, true);
+            } else if(event.clientY <= containerRect.top + 8){
+              updateFieldDropIndicator(state, rows[0], true);
+            } else {
+              updateFieldDropIndicator(state, rows[rows.length - 1], false);
+            }
+            return;
+          }
+          const rect = target.getBoundingClientRect();
+          const before = event.clientY < rect.top + rect.height / 2;
+          updateFieldDropIndicator(state, target, before);
+        });
+        container.addEventListener('drop', event=>{
+          if(!draggedFieldRow || draggedFieldContainer !== container) return;
+          event.preventDefault();
+          event.stopPropagation();
+          state.dropCommitted = true;
+          const target = state.dropIndicatorTarget;
+          const before = state.dropIndicatorBefore;
+          let reference = null;
+          if(container){
+            if(target && target !== draggedFieldRow){
+              reference = before ? target : target.nextSibling;
+            } else if(!target && before){
+              reference = container.firstChild;
+            }
+          }
+          reference = sanitizeInsertionReference(reference);
+          const beforeRects = captureChildPositions(container, '.subcategory-field-row');
+          const currentNext = draggedFieldRow.nextSibling;
+          if(reference !== draggedFieldRow && reference !== currentNext){
+            container.insertBefore(draggedFieldRow, reference || null);
+            animateListReorder(container, '.subcategory-field-row', beforeRects, draggedFieldRow);
+          }
+          clearFieldDropIndicator(state);
+          syncFieldOrderFromDom(container, state.fields || fields);
+        });
+        container.addEventListener('dragleave', event=>{
+          if(!draggedFieldRow || draggedFieldContainer !== container) return;
+          if(event.target === container){
+            clearFieldDropIndicator(state);
+          }
+        });
+      }
+      state.fields = fields;
+      state.container = container;
+      return state;
+    }
+
+    function enableFieldDrag(row, container, fields){
+      if(!row || !container) return;
+      const state = setupFieldContainer(container, fields);
+      row.draggable = true;
+      row.addEventListener('dragstart', event=>{
+        const origin = event.target;
+        const tagName = origin && origin.tagName ? origin.tagName.toLowerCase() : '';
+        if(tagName === 'input' || tagName === 'select' || tagName === 'textarea'){ 
+          event.preventDefault();
+          return;
+        }
+        event.stopPropagation();
+        draggedFieldRow = row;
+        draggedFieldContainer = container;
+        if(state) state.dropCommitted = false;
+        row.classList.add('is-dragging');
+        if(row._header){
+          row._header.classList.add('is-dragging');
+        }
+        if(event.dataTransfer){
+          event.dataTransfer.effectAllowed = 'move';
+          try{ event.dataTransfer.setData('text/plain', (row.querySelector('.field-name-input')?.value || 'Field')); }catch(err){}
+          try{
+            const rect = row.getBoundingClientRect();
+            event.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2);
+          }catch(err){}
+        }
+      });
+      row.addEventListener('dragend', event=>{
+        event.stopPropagation();
+        if(draggedFieldRow === row){
+          row.classList.remove('is-dragging');
+          if(row._header){
+            row._header.classList.remove('is-dragging');
+          }
+          draggedFieldRow = null;
+          draggedFieldContainer = null;
+        }
+        if(state){
+          clearFieldDropIndicator(state);
+          if(!state.dropCommitted){
+            syncFieldOrderFromDom(container, state.fields || fields);
           }
           state.dropCommitted = false;
         }
@@ -11370,16 +11661,6 @@ function makePosts(){
         const header = document.createElement('div');
         header.className = 'filter-category-header';
 
-        const dragHandle = document.createElement('button');
-        dragHandle.type = 'button';
-        dragHandle.className = 'category-drag-handle';
-        dragHandle.setAttribute('aria-label', `Reorder ${c.name} category`);
-        const dragHandleIcon = document.createElement('span');
-        dragHandleIcon.className = 'drag-handle-icon';
-        dragHandleIcon.setAttribute('aria-hidden','true');
-        dragHandleIcon.textContent = '⋮⋮';
-        dragHandle.appendChild(dragHandleIcon);
-
         const triggerWrap = document.createElement('div');
         triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
 
@@ -11426,7 +11707,7 @@ function makePosts(){
         toggleSlider.className = 'slider';
         toggle.append(toggleInput, toggleSlider);
 
-        header.append(dragHandle, triggerWrap, toggle);
+        header.append(triggerWrap, toggle);
         menu.append(header);
 
         const content = document.createElement('div');
@@ -11530,7 +11811,6 @@ function makePosts(){
           const datasetValue = displayName;
           menu.dataset.category = datasetValue;
           label.textContent = displayName;
-          dragHandle.setAttribute('aria-label', `Reorder ${displayName} category`);
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
           uploadInput.setAttribute('aria-label', `Upload icon for ${displayName}`);
           previewImg.alt = `${displayName} icon preview`;
@@ -11567,16 +11847,6 @@ function makePosts(){
 
           const subHeader = document.createElement('div');
           subHeader.className = 'subcategory-form-header';
-
-          const subDragHandle = document.createElement('button');
-          subDragHandle.type = 'button';
-          subDragHandle.className = 'subcategory-drag-handle';
-          subDragHandle.setAttribute('aria-label', `Reorder ${sub} subcategory`);
-          const subDragIcon = document.createElement('span');
-          subDragIcon.className = 'drag-handle-icon';
-          subDragIcon.setAttribute('aria-hidden','true');
-          subDragIcon.textContent = '⋮⋮';
-          subDragHandle.appendChild(subDragIcon);
 
           const subTriggerWrap = document.createElement('div');
           subTriggerWrap.className = 'options-dropdown subcategory-trigger-wrap';
@@ -11618,7 +11888,7 @@ function makePosts(){
           subSlider.className = 'slider';
           subToggle.append(subInput, subSlider);
 
-          subHeader.append(subDragHandle, subTriggerWrap, subToggle);
+          subHeader.append(subTriggerWrap, subToggle);
           subMenu.append(subHeader);
 
           const subContent = document.createElement('div');
@@ -11705,6 +11975,8 @@ function makePosts(){
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
 
+          setupFieldContainer(fieldsList, fields);
+
           const createFieldRow = (field)=>{
             const safeField = ensureFieldDefaults(field);
             const row = document.createElement('div');
@@ -11712,6 +11984,7 @@ function makePosts(){
 
             const fieldHeader = document.createElement('div');
             fieldHeader.className = 'field-row-header';
+            row._header = fieldHeader;
 
             const fieldNameInput = document.createElement('input');
             fieldNameInput.type = 'text';
@@ -11775,6 +12048,7 @@ function makePosts(){
               }
               row.remove();
               notifyFormbuilderChange();
+              syncFieldOrderFromDom(fieldsList, fields);
             });
 
             updateDeleteFieldAria();
@@ -11782,6 +12056,7 @@ function makePosts(){
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
             row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderInput);
+            row.__fieldRef = safeField;
             return {
               row,
               focus(){
@@ -11794,9 +12069,11 @@ function makePosts(){
             };
           };
 
-          fields.forEach(existingField => {
+          fields.forEach((existingField, fieldIndex) => {
             const fieldRow = createFieldRow(existingField);
+            fieldRow.row.dataset.fieldIndex = String(fieldIndex);
             fieldsList.appendChild(fieldRow.row);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
           });
 
           addFieldBtn.addEventListener('click', ()=>{
@@ -11804,6 +12081,8 @@ function makePosts(){
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
             fieldsList.appendChild(fieldRow.row);
+            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
             notifyFormbuilderChange();
             requestAnimationFrame(()=> fieldRow.focus());
           });
@@ -11841,7 +12120,6 @@ function makePosts(){
             subLabel.textContent = displayName;
             subMenu.dataset.subcategory = datasetValue;
             subBtn.dataset.subcategory = datasetValue;
-            subDragHandle.setAttribute('aria-label', `Reorder ${displayName} subcategory`);
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
             subUploadInput.setAttribute('aria-label', `Upload icon for ${displayName}`);
             subPreviewImg.alt = `${displayName} icon preview`;
@@ -11966,8 +12244,7 @@ function makePosts(){
           });
 
           subMenusContainer.insertBefore(subMenu, addSubAnchor);
-
-          attachSubcategoryDragHandle(subMenu, subMenusContainer, c, subDragHandle, addSubAnchor);
+          enableSubcategoryDrag(subMenu, subMenusContainer, c, subHeader, addSubAnchor);
         });
 
         setupSubcategoryContainer(subMenusContainer, c, addSubAnchor);
@@ -12096,7 +12373,7 @@ function makePosts(){
         });
 
         frag.appendChild(menu);
-        attachCategoryDragHandle(menu, dragHandle);
+        enableCategoryDrag(menu, header);
       });
       formbuilderCats.innerHTML = '';
       formbuilderCats.appendChild(frag);
