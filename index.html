@@ -1838,23 +1838,31 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:flex-end;
 }
 #adminPanel .panel-actions .save-changes,
-#adminPanel .panel-actions .discard-changes{
+#adminPanel .panel-actions .discard-changes,
+#memberPanel .panel-actions .save-changes,
+#memberPanel .panel-actions .discard-changes{
   min-width:90px;
 }
 #adminPanel .panel-actions .primary-action,
-#adminUnsavedPrompt .primary-action{
+#memberPanel .panel-actions .primary-action,
+#adminUnsavedPrompt .primary-action,
+#memberUnsavedPrompt .primary-action{
   background:var(--button-selected-bg, var(--btn-selected));
   border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
   color:var(--button-selected-text, var(--button-active-text));
 }
 #adminPanel .panel-actions .primary-action:hover,
-#adminUnsavedPrompt .primary-action:hover{
+#memberPanel .panel-actions .primary-action:hover,
+#adminUnsavedPrompt .primary-action:hover,
+#memberUnsavedPrompt .primary-action:hover{
   background:var(--button-selected-hover, var(--btn-selected-hover));
   border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
   color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
 }
 #adminPanel .panel-actions .discard-changes[disabled],
-#adminUnsavedPrompt .confirm-discard[disabled]{
+#memberPanel .panel-actions .discard-changes[disabled],
+#adminUnsavedPrompt .confirm-discard[disabled],
+#memberUnsavedPrompt .confirm-discard[disabled]{
   opacity:0.5;
   cursor:not-allowed;
 }
@@ -1891,6 +1899,39 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:flex-end;
   gap:10px;
 }
+#memberUnsavedPrompt{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.65);
+  z-index:12000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
+}
+#memberUnsavedPrompt.show{
+  opacity:1;
+  pointer-events:auto;
+}
+#memberUnsavedPrompt .member-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+}
+#memberUnsavedPrompt .member-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
 #adminStatusMessage{
   position:fixed;
   top:calc(var(--safe-top, 0px) + 20px);
@@ -1908,6 +1949,26 @@ button[aria-expanded="true"] .results-arrow{
   font-size:14px;
 }
 #adminStatusMessage.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+#memberStatusMessage{
+  position:fixed;
+  top:calc(var(--safe-top, 0px) + 20px);
+  left:50%;
+  transform:translate(-50%, -10px);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 18px;
+  border-radius:999px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  z-index:13000;
+  font-size:14px;
+}
+#memberStatusMessage.show{
   opacity:1;
   transform:translate(-50%, 0);
 }
@@ -5650,8 +5711,8 @@ if (typeof slugify !== 'function') {
         <div class="header-top">
           <h2>Create Post</h2>
           <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
+            <button type="button" class="save-changes primary-action">Save</button>
+            <button type="button" class="discard-changes" disabled>Discard Changes</button>
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
@@ -5688,8 +5749,6 @@ if (typeof slugify !== 'function') {
         <div class="header-top">
           <h2 class="title">Admin</h2>
           <div class="panel-actions">
-            <button type="button" class="move-left" aria-label="Move panel left">&lt;</button>
-            <button type="button" class="move-right" aria-label="Move panel right">&gt;</button>
             <button type="button" class="save-changes primary-action">Save</button>
             <button type="button" class="discard-changes" disabled>Discard Changes</button>
             <button type="button" class="close-panel">Close</button>
@@ -6185,6 +6244,19 @@ if (typeof slugify !== 'function') {
   </div>
 
   <div id="adminStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true">
+    <div class="member-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="memberUnsavedTitle">
+      <h3 id="memberUnsavedTitle">Unsaved Changes</h3>
+      <p>You have unsaved changes. Save before closing the member panel?</p>
+      <div class="member-unsaved-actions">
+        <button type="button" class="confirm-save primary-action">Save</button>
+        <button type="button" class="confirm-discard" disabled>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="memberStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
 
   <script>
     // Remember where the user actually clicked/tapped
@@ -8080,6 +8152,7 @@ if (typeof slugify !== 'function') {
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
     const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
+    const MULTI_POST_MARKER_ICON_SRC = 'assets/balloons/colourful-balloons-and-confetti-80.png';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
     function registerOverlayCleanup(overlayEl, fn){
@@ -8468,7 +8541,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     subcategoryColorMap['Learning::Other Learning'] = 'red';
     const subcategoryIcons = window.subcategoryIcons = {};
     const subcategoryMarkers = window.subcategoryMarkers = {};
-    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = SMALL_MULTI_MAP_CARD_ICON_SRC;
+    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
     const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
     const categoryShapes = window.categoryShapes = {};
 
@@ -16576,6 +16649,293 @@ function openPanel(m){
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
 }
 
+const memberPanelChangeManager = (()=>{
+  let panel = null;
+  let form = null;
+  let saveButton = null;
+  let discardButton = null;
+  let prompt = null;
+  let promptSaveButton = null;
+  let promptDiscardButton = null;
+  let statusMessage = null;
+  let dirty = false;
+  let savedState = {};
+  let applying = false;
+  let initialized = false;
+  let statusTimer = null;
+  let pendingCloseTarget = null;
+
+  function ensureElements(){
+    panel = document.getElementById('memberPanel');
+    form = document.getElementById('memberForm');
+    if(panel){
+      saveButton = panel.querySelector('.save-changes');
+      discardButton = panel.querySelector('.discard-changes');
+    }
+    prompt = document.getElementById('memberUnsavedPrompt');
+    if(prompt){
+      promptSaveButton = prompt.querySelector('.confirm-save');
+      promptDiscardButton = prompt.querySelector('.confirm-discard');
+    }
+    statusMessage = document.getElementById('memberStatusMessage');
+  }
+
+  function getKey(el){
+    if(!el) return '';
+    return el.name || el.id || '';
+  }
+
+  function serializeState(){
+    if(!form) return {};
+    const data = {};
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+      const key = getKey(el);
+      if(!key) return;
+      if(el.type === 'file'){
+        data[key] = el.files && el.files.length ? '__FILE_SELECTED__' : '';
+        return;
+      }
+      if(el.type === 'checkbox'){
+        data[key] = !!el.checked;
+        return;
+      }
+      if(el.type === 'radio'){
+        if(!(key in data)) data[key] = null;
+        if(el.checked) data[key] = el.value;
+        return;
+      }
+      data[key] = el.value;
+    });
+    return data;
+  }
+
+  function stateEquals(a, b){
+    const keys = new Set([
+      ...Object.keys(a || {}),
+      ...Object.keys(b || {})
+    ]);
+    for(const key of keys){
+      if((a && a[key]) !== (b && b[key])){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function setDirty(value){
+    dirty = !!value;
+    if(panel){
+      panel.classList.toggle('has-unsaved', dirty);
+      panel.setAttribute('data-unsaved', dirty ? 'true' : 'false');
+    }
+    if(discardButton){
+      discardButton.disabled = !dirty;
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.disabled = !dirty;
+    }
+  }
+
+  function updateDirty(){
+    if(applying) return;
+    ensureElements();
+    const current = serializeState();
+    setDirty(!stateEquals(current, savedState));
+  }
+
+  function showStatus(message){
+    ensureElements();
+    if(!statusMessage) return;
+    statusMessage.textContent = message;
+    statusMessage.setAttribute('aria-hidden','false');
+    statusMessage.classList.add('show');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(()=>{
+      statusMessage.classList.remove('show');
+      statusMessage.setAttribute('aria-hidden','true');
+    }, 2000);
+  }
+
+  function applyState(state){
+    if(!form || !state) return;
+    applying = true;
+    try{
+      form.querySelectorAll('input, select, textarea').forEach(el => {
+        const key = getKey(el);
+        if(!key || !(key in state)) return;
+        const value = state[key];
+        if(el.type === 'file'){
+          const shouldClear = !value;
+          if(shouldClear && el.value){
+            el.value = '';
+          }
+          return;
+        }
+        if(el.type === 'checkbox'){
+          const nextChecked = !!value;
+          if(el.checked !== nextChecked){
+            el.checked = nextChecked;
+          }
+          return;
+        }
+        if(el.type === 'radio'){
+          const shouldCheck = value === el.value;
+          if(el.checked !== shouldCheck){
+            el.checked = shouldCheck;
+          }
+          return;
+        }
+        const nextValue = value == null ? '' : String(value);
+        if(el.value !== nextValue){
+          el.value = nextValue;
+        }
+      });
+    } finally {
+      applying = false;
+      updateDirty();
+    }
+  }
+
+  function refreshSavedState(){
+    savedState = serializeState();
+    setDirty(false);
+  }
+
+  function closePrompt(){
+    if(prompt){
+      prompt.classList.remove('show');
+      prompt.setAttribute('aria-hidden','true');
+    }
+  }
+
+  function cancelPrompt(){
+    pendingCloseTarget = null;
+    closePrompt();
+  }
+
+  function openPrompt(target){
+    pendingCloseTarget = target || panel;
+    if(prompt){
+      prompt.classList.add('show');
+      prompt.setAttribute('aria-hidden','false');
+      setTimeout(()=>{
+        if(promptSaveButton) promptSaveButton.focus();
+      }, 0);
+    }
+  }
+
+  function handleSave({ closeAfter } = {}){
+    refreshSavedState();
+    showStatus('Saved');
+    if(closeAfter){
+      const target = pendingCloseTarget;
+      pendingCloseTarget = null;
+      closePrompt();
+      if(target) closePanel(target);
+    } else {
+      pendingCloseTarget = null;
+    }
+  }
+
+  function discardChanges({ closeAfter } = {}){
+    applyState(savedState);
+    setDirty(false);
+    showStatus('Changes Discarded');
+    if(closeAfter){
+      const target = pendingCloseTarget;
+      pendingCloseTarget = null;
+      closePrompt();
+      if(target) closePanel(target);
+    } else {
+      pendingCloseTarget = null;
+      closePrompt();
+    }
+  }
+
+  function formChanged(){
+    if(applying) return;
+    updateDirty();
+  }
+
+  function attachListeners(){
+    if(initialized) return;
+    ensureElements();
+    if(!panel || !form) return;
+    form.addEventListener('input', formChanged, true);
+    form.addEventListener('change', formChanged, true);
+    if(saveButton){
+      saveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        handleSave({ closeAfter:false });
+      });
+    }
+    if(discardButton){
+      discardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        pendingCloseTarget = null;
+        discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptSaveButton){
+      promptSaveButton.addEventListener('click', e=>{
+        e.preventDefault();
+        handleSave({ closeAfter:true });
+      });
+    }
+    if(promptDiscardButton){
+      promptDiscardButton.addEventListener('click', e=>{
+        e.preventDefault();
+        discardChanges({ closeAfter:true });
+      });
+    }
+    if(prompt){
+      prompt.addEventListener('click', e=>{
+        if(e.target === prompt) cancelPrompt();
+      });
+    }
+    initialized = true;
+    refreshSavedState();
+  }
+
+  ensureElements();
+  attachListeners();
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(()=>{
+      ensureElements();
+      attachListeners();
+      refreshSavedState();
+    }, 0);
+  });
+
+  function isPromptOpen(){
+    return !!(prompt && prompt.classList.contains('show'));
+  }
+
+  return {
+    handlePanelClose(panelEl){
+      if(!panel || panelEl !== panel) return false;
+      if(isPromptOpen()) return true;
+      if(dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    },
+    handleEscape(panelEl){
+      if(isPromptOpen()){
+        cancelPrompt();
+        return true;
+      }
+      if(panel && panelEl === panel && dirty){
+        openPrompt(panelEl);
+        return true;
+      }
+      return false;
+    }
+  };
+})();
+
 const adminPanelChangeManager = (()=>{
   let panel = null;
   let form = null;
@@ -16939,8 +17299,13 @@ if(welcomeModalEl){
   }
 }
 function requestClosePanel(m){
-  if(m && m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
-    return;
+  if(m){
+    if(m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
+      return;
+    }
+    if(m.id === 'memberPanel' && memberPanelChangeManager.handlePanelClose(m)){
+      return;
+    }
   }
   closePanel(m);
 }
@@ -16995,6 +17360,9 @@ function handleEsc(){
   }
   if(top instanceof Element){
     if(top.id === 'adminPanel' && adminPanelChangeManager.handleEscape(top)){
+      return;
+    }
+    if(top.id === 'memberPanel' && memberPanelChangeManager.handleEscape(top)){
       return;
     }
     if(top.id === 'post-modal-container'){
