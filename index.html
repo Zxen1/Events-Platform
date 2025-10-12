@@ -6462,6 +6462,25 @@ if (typeof slugify !== 'function') {
               height:36px;
               padding:0 12px;
             }
+            #tab-forms .form-preview-container .form-preview-field--dropdown{
+              position:relative;
+            }
+            #tab-forms .form-preview-container .form-preview-field--dropdown::after{
+              content:'';
+              position:absolute;
+              top:50%;
+              right:18px;
+              width:8px;
+              height:8px;
+              border:2px solid var(--button-text);
+              border-top:0;
+              border-left:0;
+              transform:translateY(-50%) rotate(45deg);
+              pointer-events:none;
+            }
+            #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
+              padding-right:40px;
+            }
             #tab-forms .form-preview-container .panel-field select:disabled{
               opacity:1;
             }
@@ -12238,6 +12257,7 @@ function makePosts(){
               } else if(previewField.type === 'dropdown'){
                 const select = document.createElement('select');
                 select.className = 'form-preview-select';
+                wrapper.classList.add('form-preview-field--dropdown');
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
                 if(options.length){
                   options.forEach((optionValue, optionIndex)=>{
@@ -12254,8 +12274,6 @@ function makePosts(){
                   placeholderOption.textContent = 'Select an option';
                   select.appendChild(placeholderOption);
                 }
-                select.disabled = true;
-                select.setAttribute('aria-disabled', 'true');
                 select.tabIndex = -1;
                 control = select;
               } else {
