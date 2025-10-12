@@ -13366,6 +13366,7 @@ function makePosts(){
                 ensureSessionStructure(venue);
                 const venueCard = document.createElement('div');
                 venueCard.className = 'venue-card';
+                venueList.appendChild(venueCard);
 
                 const venueLine = document.createElement('div');
                 venueLine.className = 'venue-line';
@@ -13687,7 +13688,6 @@ function makePosts(){
                   sessionContainer.appendChild(sessionCard);
                 });
                 venueCard.appendChild(sessionContainer);
-                venueList.appendChild(venueCard);
               });
               applyFocus();
             };
