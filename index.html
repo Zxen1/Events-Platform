@@ -6149,9 +6149,9 @@ if (typeof slugify !== 'function') {
               width:100%;
               height:40px;
               border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.3);
-              color:var(--button-text);
+              border:1px solid #2e3a72;
+              background:#2e3a72;
+              color:var(--button-active-text);
               font-weight:600;
               display:flex;
               align-items:center;
@@ -6163,8 +6163,8 @@ if (typeof slugify !== 'function') {
               transition:background .2s,border-color .2s,color .2s;
             }
             #tab-forms .form-preview-btn:hover{
-              background:var(--btn-hover, #2e3a72);
-              border-color:var(--btn-hover, #2e3a72);
+              background:#2e3a72;
+              border-color:#2e3a72;
             }
             #tab-forms .form-preview-btn .dropdown-arrow{
               margin-left:auto;
@@ -6173,6 +6173,250 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .form-preview-btn[aria-expanded="true"] .dropdown-arrow{
               transform:rotate(-135deg);
+            }
+            #tab-forms .form-preview-field--venue-session .venue-session-editor{
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+            }
+            #tab-forms .venue-session-venues{
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+            }
+            #tab-forms .venue-card{
+              border:1px solid var(--border);
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              padding:12px;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .venue-line{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .venue-line-header,
+            #tab-forms .session-date-header,
+            #tab-forms .session-time-row-header,
+            #tab-forms .session-version-header{
+              display:flex;
+              align-items:center;
+              gap:8px;
+            }
+            #tab-forms .venue-line-header span,
+            #tab-forms .session-date-header span,
+            #tab-forms .session-time-row-header span,
+            #tab-forms .session-version-header span{
+              font-weight:600;
+            }
+            #tab-forms .venue-line-actions,
+            #tab-forms .session-date-actions,
+            #tab-forms .session-time-actions,
+            #tab-forms .version-actions,
+            #tab-forms .tier-actions{
+              margin-left:auto;
+              display:flex;
+              gap:4px;
+            }
+            #tab-forms .venue-name-input,
+            #tab-forms .session-date-input,
+            #tab-forms .session-time-input,
+            #tab-forms .session-version-input,
+            #tab-forms .session-tier-input,
+            #tab-forms .session-price-input{
+              width:100%;
+              height:36px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+              padding:0 12px;
+              box-sizing:border-box;
+            }
+            #tab-forms .session-time-input{
+              font-variant-numeric:tabular-nums;
+            }
+            #tab-forms .session-time-input.is-invalid{
+              border-color:#b83030;
+              box-shadow:0 0 0 1px #b83030;
+            }
+            #tab-forms .venue-address-geocoder-container,
+            #tab-forms .venue-address-fallback{
+              position:relative;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
+              width:100%;
+              min-width:0;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder{
+              box-shadow:none;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
+              height:34px;
+              padding:0 12px 0 8px;
+              color:var(--input-text);
+              background:transparent;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon,
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
+              display:none;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--button{
+              background:transparent;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+              display:none;
+            }
+            #tab-forms .session-list{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .session-card{
+              border:1px solid var(--border);
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              padding:10px;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+              position:relative;
+            }
+            #tab-forms .session-date-row,
+            #tab-forms .session-time-row{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .session-date-input{
+              cursor:pointer;
+            }
+            #tab-forms .session-times{
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #tab-forms .session-time-row{
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.25);
+              padding:10px;
+            }
+            #tab-forms .session-version-list{
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #tab-forms .session-version-card{
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              padding:10px;
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #tab-forms .session-tier-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .tier-row{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+            }
+            #tab-forms .tier-price-row{
+              display:flex;
+              align-items:center;
+              gap:8px;
+            }
+            #tab-forms .session-currency-select{
+              height:36px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+              padding:0 10px;
+            }
+            #tab-forms .tier-row .tier-actions{
+              align-self:flex-end;
+            }
+            #tab-forms .session-date-picker{
+              position:absolute;
+              z-index:25;
+              top:100%;
+              left:0;
+              margin-top:6px;
+              border-radius:12px;
+              border:1px solid var(--border);
+              background:var(--dropdown-bg);
+              box-shadow:0 12px 24px rgba(0,0,0,0.35);
+              min-width:var(--calendar-width);
+            }
+            #tab-forms .session-date-picker[hidden]{
+              display:none;
+            }
+            #tab-forms .session-date-picker .calendar-scroll{
+              width:100%;
+              max-height:300px;
+              overflow:auto;
+              padding:10px;
+              box-sizing:border-box;
+            }
+            #tab-forms .session-date-picker .calendar{
+              display:flex;
+              flex-wrap:nowrap;
+              gap:16px;
+              width:max-content;
+            }
+            #tab-forms .session-date-picker .month{
+              min-width:var(--calendar-width);
+            }
+            #tab-forms .session-date-picker .calendar-header{
+              text-align:center;
+              margin-bottom:4px;
+              font-weight:600;
+            }
+            #tab-forms .session-date-picker .grid{
+              display:grid;
+              grid-template-columns:repeat(7, var(--calendar-cell-w));
+              grid-template-rows:repeat(7, var(--calendar-cell-h));
+            }
+            #tab-forms .session-date-picker .weekday,
+            #tab-forms .session-date-picker .day{
+              text-align:center;
+              line-height:var(--calendar-cell-h);
+              font-size:var(--panel-label-size);
+            }
+            #tab-forms .session-date-picker .weekday{
+              font-weight:600;
+            }
+            #tab-forms .session-date-picker .day{
+              cursor:pointer;
+              background:var(--calendar-future-bg);
+              color:var(--dropdown-text);
+              transition:background .2s,color .2s;
+            }
+            #tab-forms .session-date-picker .day.empty{
+              cursor:default;
+              background:var(--calendar-future-bg);
+              opacity:0.5;
+            }
+            #tab-forms .session-date-picker .day.past{
+              opacity:0.6;
+            }
+            #tab-forms .session-date-picker .day.selected,
+            #tab-forms .session-date-picker .day:hover{
+              background:var(--session-selected);
+              color:#fff;
             }
             #tab-forms .subcategory-field-row{
               border:1px solid var(--border);
@@ -9162,6 +9406,202 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'venue-session-version-tier-price', label: 'Venue/Session/Version/Tier/Price' }
     ];
     const VERSION_PRICE_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'];
+    const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
+
+    function venueSessionCreateTier(){
+      return { name: '', currency: '', price: '' };
+    }
+    function venueSessionCreateVersion(){
+      return { name: '', tiers: [venueSessionCreateTier()] };
+    }
+    function venueSessionCreateTime(){
+      return { time: '', versions: [venueSessionCreateVersion()] };
+    }
+    function venueSessionCreateSession(){
+      return { date: '', times: [venueSessionCreateTime()] };
+    }
+    function venueSessionCreateVenue(){
+      return { name: '', address: '', location: null, feature: null, sessions: [venueSessionCreateSession()] };
+    }
+    function normalizeVenueSessionTier(tier){
+      let obj = tier;
+      if(!obj || typeof obj !== 'object'){
+        obj = venueSessionCreateTier();
+      }
+      if(typeof obj.name !== 'string') obj.name = '';
+      if(typeof obj.currency !== 'string') obj.currency = '';
+      if(typeof obj.price !== 'string') obj.price = '';
+      return obj;
+    }
+    function normalizeVenueSessionVersion(version){
+      let obj = version;
+      if(!obj || typeof obj !== 'object'){
+        obj = venueSessionCreateVersion();
+      }
+      if(typeof obj.name !== 'string') obj.name = '';
+      if(!Array.isArray(obj.tiers)){
+        obj.tiers = [venueSessionCreateTier()];
+      } else {
+        for(let i = 0; i < obj.tiers.length; i++){
+          obj.tiers[i] = normalizeVenueSessionTier(obj.tiers[i]);
+        }
+        if(obj.tiers.length === 0){
+          obj.tiers.push(venueSessionCreateTier());
+        }
+      }
+      return obj;
+    }
+    function normalizeVenueSessionTime(time){
+      let obj = time;
+      if(!obj || typeof obj !== 'object'){
+        obj = venueSessionCreateTime();
+      }
+      if(typeof obj.time !== 'string') obj.time = '';
+      if(!Array.isArray(obj.versions)){
+        obj.versions = [venueSessionCreateVersion()];
+      } else {
+        for(let i = 0; i < obj.versions.length; i++){
+          obj.versions[i] = normalizeVenueSessionVersion(obj.versions[i]);
+        }
+        if(obj.versions.length === 0){
+          obj.versions.push(venueSessionCreateVersion());
+        }
+      }
+      return obj;
+    }
+    function normalizeVenueSessionSession(session){
+      let obj = session;
+      if(!obj || typeof obj !== 'object'){
+        obj = venueSessionCreateSession();
+      }
+      if(typeof obj.date !== 'string') obj.date = '';
+      if(!Array.isArray(obj.times)){
+        obj.times = [venueSessionCreateTime()];
+      } else {
+        for(let i = 0; i < obj.times.length; i++){
+          obj.times[i] = normalizeVenueSessionTime(obj.times[i]);
+        }
+        if(obj.times.length === 0){
+          obj.times.push(venueSessionCreateTime());
+        }
+      }
+      return obj;
+    }
+    function normalizeVenueSessionVenue(opt){
+      let obj = opt;
+      if(!obj || typeof obj !== 'object'){
+        obj = venueSessionCreateVenue();
+      }
+      if(typeof obj.name !== 'string') obj.name = '';
+      if(typeof obj.address !== 'string') obj.address = '';
+      if(obj.location && typeof obj.location === 'object'){
+        const lng = Number(obj.location.lng);
+        const lat = Number(obj.location.lat);
+        obj.location = (Number.isFinite(lng) && Number.isFinite(lat)) ? { lng, lat } : null;
+      } else {
+        obj.location = null;
+      }
+      if(obj.feature && typeof obj.feature !== 'object'){
+        obj.feature = null;
+      }
+      if(!Array.isArray(obj.sessions)){
+        obj.sessions = [venueSessionCreateSession()];
+      } else {
+        for(let i = 0; i < obj.sessions.length; i++){
+          obj.sessions[i] = normalizeVenueSessionSession(obj.sessions[i]);
+        }
+        if(obj.sessions.length === 0){
+          obj.sessions.push(venueSessionCreateSession());
+        }
+      }
+      return obj;
+    }
+    function normalizeVenueSessionOptions(options){
+      let list = options;
+      if(!Array.isArray(list)){
+        list = [];
+      }
+      for(let i = 0; i < list.length; i++){
+        list[i] = normalizeVenueSessionVenue(list[i]);
+      }
+      if(list.length === 0){
+        list.push(venueSessionCreateVenue());
+      }
+      return list;
+    }
+    function cloneVenueSessionTier(tier){
+      const base = venueSessionCreateTier();
+      if(tier && typeof tier === 'object'){
+        if(typeof tier.name === 'string') base.name = tier.name;
+        if(typeof tier.currency === 'string') base.currency = tier.currency;
+        if(typeof tier.price === 'string') base.price = tier.price;
+      }
+      return base;
+    }
+    function cloneVenueSessionVersion(version){
+      const base = venueSessionCreateVersion();
+      base.name = (version && typeof version.name === 'string') ? version.name : '';
+      const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
+      base.tiers = tiers.length ? tiers.map(cloneVenueSessionTier) : [venueSessionCreateTier()];
+      return base;
+    }
+    function cloneVenueSessionTime(time){
+      const base = venueSessionCreateTime();
+      base.time = (time && typeof time.time === 'string') ? time.time : '';
+      const versions = time && Array.isArray(time.versions) ? time.versions : [];
+      base.versions = versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
+      return base;
+    }
+    function cloneVenueSessionSession(session){
+      const base = venueSessionCreateSession();
+      base.date = (session && typeof session.date === 'string') ? session.date : '';
+      const times = session && Array.isArray(session.times) ? session.times : [];
+      base.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
+      return base;
+    }
+    function cloneVenueSessionFeature(feature){
+      if(!feature || typeof feature !== 'object') return null;
+      try{
+        return JSON.parse(JSON.stringify(feature));
+      }catch(err){
+        return { ...feature };
+      }
+    }
+    function cloneVenueSessionVenue(venue){
+      const base = venueSessionCreateVenue();
+      base.name = (venue && typeof venue.name === 'string') ? venue.name : '';
+      base.address = (venue && typeof venue.address === 'string') ? venue.address : '';
+      if(venue && venue.location && typeof venue.location === 'object'){
+        const lng = Number(venue.location.lng);
+        const lat = Number(venue.location.lat);
+        if(Number.isFinite(lng) && Number.isFinite(lat)){
+          base.location = { lng, lat };
+        }
+      }
+      if(venue && venue.feature && typeof venue.feature === 'object'){
+        base.feature = cloneVenueSessionFeature(venue.feature);
+      }
+      const sessions = venue && Array.isArray(venue.sessions) ? venue.sessions : [];
+      base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
+      return base;
+    }
+    function getVenueAutofillState(field, venue){
+      let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
+      if(!fieldState){
+        fieldState = new WeakMap();
+        VENUE_TIME_AUTOFILL_STATE.set(field, fieldState);
+      }
+      let state = fieldState.get(venue);
+      if(!state){
+        state = { slots: [] };
+        fieldState.set(venue, state);
+      }
+      return state;
+    }
+    function resetVenueAutofillState(field){
+      VENUE_TIME_AUTOFILL_STATE.delete(field);
+    }
+
     const DEFAULT_SUBCATEGORY_FIELDS = [
       { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
       { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
@@ -12419,7 +12859,9 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(safeField.type === 'version-price'){
+            if(safeField.type === 'venue-session-version-tier-price'){
+              safeField.options = normalizeVenueSessionOptions(safeField.options);
+            } else if(safeField.type === 'version-price'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
                   return {
@@ -12446,7 +12888,812 @@ function makePosts(){
                 safeField.options.push('', '', '');
               }
             }
+            if(safeField.type !== 'venue-session-version-tier-price'){
+              resetVenueAutofillState(safeField);
+            }
             return safeField;
+          };
+
+          const buildVenueSessionPreview = (previewField, baseId)=>{
+            const editor = document.createElement('div');
+            editor.className = 'venue-session-editor';
+            editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+            const venueList = document.createElement('div');
+            venueList.className = 'venue-session-venues';
+            editor.appendChild(venueList);
+
+            const ensureOptions = ()=>{
+              previewField.options = normalizeVenueSessionOptions(previewField.options);
+              if(!Array.isArray(previewField.options) || previewField.options.length === 0){
+                previewField.options = [venueSessionCreateVenue()];
+              }
+            };
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const minPickerDate = new Date(today);
+            minPickerDate.setMonth(minPickerDate.getMonth() - 12);
+            const maxPickerDate = new Date(today);
+            maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
+
+            const openPickers = new Set();
+            const closeAllPickers = ()=>{
+              openPickers.forEach(close => {
+                try{ close(); }catch(err){}
+              });
+              openPickers.clear();
+            };
+
+            const sanitizeTimeInput = value => {
+              const digits = String(value || '').replace(/\D/g, '').slice(0, 4);
+              if(digits.length <= 2){
+                return digits;
+              }
+              return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+            };
+
+            const formatSessionDate = iso => {
+              if(!iso) return '';
+              try{
+                return parseISODate(iso).toLocaleDateString('en-GB', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short'
+                }).replace(/,/g, '');
+              }catch(err){
+                return '';
+              }
+            };
+
+            const ensureSlot = (venue, index)=>{
+              const state = getVenueAutofillState(previewField, venue);
+              if(!Array.isArray(state.slots)){
+                state.slots = [];
+              }
+              while(state.slots.length <= index){
+                state.slots.push({ value: '', locked: false, source: null });
+              }
+              const slot = state.slots[index];
+              if(!slot || typeof slot !== 'object'){
+                state.slots[index] = { value: '', locked: false, source: null };
+                return state.slots[index];
+              }
+              if(typeof slot.value !== 'string') slot.value = '';
+              if(typeof slot.locked !== 'boolean') slot.locked = false;
+              if(!Object.prototype.hasOwnProperty.call(slot, 'source')) slot.source = null;
+              return slot;
+            };
+
+            const resetSlotIfEmpty = (venue, index)=>{
+              const state = getVenueAutofillState(previewField, venue);
+              if(!state || !Array.isArray(state.slots) || !state.slots[index]) return;
+              const allEmpty = venue.sessions.every(sess => {
+                const t = sess.times[index];
+                return !t || !t.time || !t.time.trim();
+              });
+              if(allEmpty){
+                state.slots[index].value = '';
+                state.slots[index].locked = false;
+                state.slots[index].source = null;
+              }
+            };
+
+            const applyAutofillToSession = (venue, session)=>{
+              const state = getVenueAutofillState(previewField, venue);
+              const slots = Array.isArray(state.slots) ? state.slots : [];
+              for(let i = 0; i < slots.length; i++){
+                const slot = slots[i];
+                if(!slot || typeof slot !== 'object' || !slot.value || slot.locked) continue;
+                const target = session.times[i] || (session.times[i] = venueSessionCreateTime());
+                if(!target.time){
+                  target.time = slot.value;
+                }
+              }
+            };
+
+            const ensureSessionStructure = (venue)=>{
+              if(!Array.isArray(venue.sessions)){
+                venue.sessions = [venueSessionCreateSession()];
+              }
+              if(venue.sessions.length === 0){
+                venue.sessions.push(venueSessionCreateSession());
+              }
+              let maxTimes = 0;
+              venue.sessions.forEach(session => {
+                if(!Array.isArray(session.times)){
+                  session.times = [venueSessionCreateTime()];
+                }
+                if(session.times.length === 0){
+                  session.times.push(venueSessionCreateTime());
+                }
+                session.times.forEach(time => {
+                  if(!Array.isArray(time.versions)){
+                    time.versions = [venueSessionCreateVersion()];
+                  }
+                  if(time.versions.length === 0){
+                    time.versions.push(venueSessionCreateVersion());
+                  }
+                  time.versions.forEach(version => {
+                    if(!Array.isArray(version.tiers)){
+                      version.tiers = [venueSessionCreateTier()];
+                    }
+                    if(version.tiers.length === 0){
+                      version.tiers.push(venueSessionCreateTier());
+                    }
+                  });
+                });
+                maxTimes = Math.max(maxTimes, session.times.length);
+              });
+              const state = getVenueAutofillState(previewField, venue);
+              if(!Array.isArray(state.slots)) state.slots = [];
+              while(state.slots.length < maxTimes){
+                state.slots.push({ value: '', locked: false, source: null });
+              }
+              while(state.slots.length > maxTimes){
+                state.slots.pop();
+              }
+              for(let i = 0; i < maxTimes; i++){
+                ensureSlot(venue, i);
+              }
+              venue.sessions.forEach(session => {
+                while(session.times.length < maxTimes){
+                  session.times.push(venueSessionCreateTime());
+                }
+              });
+            };
+
+            const addVenue = (afterIndex)=>{
+              ensureOptions();
+              const venues = previewField.options;
+              const newVenue = venueSessionCreateVenue();
+              venues.splice(afterIndex + 1, 0, newVenue);
+              notifyFormbuilderChange();
+              renderVenues({ type: 'venue-name', venueIndex: afterIndex + 1 });
+            };
+
+            const removeVenue = (index)=>{
+              ensureOptions();
+              if(previewField.options.length <= 1) return;
+              const removed = previewField.options.splice(index, 1)[0];
+              const state = VENUE_TIME_AUTOFILL_STATE.get(previewField);
+              if(state && removed){
+                try{ state.delete(removed); }catch(err){}
+              }
+              notifyFormbuilderChange();
+              const nextIndex = Math.max(0, index - 1);
+              renderVenues({ type: 'venue-name', venueIndex: nextIndex });
+            };
+
+            const addSession = (venue, venueIndex, afterIndex)=>{
+              const sessions = venue.sessions;
+              const newSession = venueSessionCreateSession();
+              const maxTimes = Math.max(...sessions.map(sess => Array.isArray(sess.times) ? sess.times.length : 1), 1);
+              while(newSession.times.length < maxTimes){
+                newSession.times.push(venueSessionCreateTime());
+              }
+              sessions.splice(afterIndex + 1, 0, newSession);
+              applyAutofillToSession(venue, newSession);
+              notifyFormbuilderChange();
+              renderVenues({ type: 'session-date', venueIndex, sessionIndex: afterIndex + 1 });
+            };
+
+            const removeSession = (venue, venueIndex, sessionIndex)=>{
+              if(venue.sessions.length <= 1) return;
+              venue.sessions.splice(sessionIndex, 1);
+              notifyFormbuilderChange();
+              const focusSession = Math.max(0, Math.min(sessionIndex, venue.sessions.length - 1));
+              renderVenues({ type: 'session-date', venueIndex, sessionIndex: focusSession });
+            };
+
+            const addTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
+              const sessions = venue.sessions;
+              const insertion = timeIndex + 1;
+              sessions.forEach(sess => {
+                sess.times.splice(insertion, 0, venueSessionCreateTime());
+              });
+              const state = getVenueAutofillState(previewField, venue);
+              if(Array.isArray(state.slots)){
+                state.slots.splice(insertion, 0, { value: '', locked: false, source: null });
+              }
+              notifyFormbuilderChange();
+              renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: insertion });
+            };
+
+            const removeTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
+              if(venue.sessions.length === 0) return;
+              const totalSlots = venue.sessions[0].times.length;
+              if(totalSlots <= 1) return;
+              venue.sessions.forEach(sess => {
+                if(sess.times.length > timeIndex){
+                  sess.times.splice(timeIndex, 1);
+                }
+                if(sess.times.length === 0){
+                  sess.times.push(venueSessionCreateTime());
+                }
+              });
+              const state = getVenueAutofillState(previewField, venue);
+              if(Array.isArray(state.slots) && state.slots.length > timeIndex){
+                state.slots.splice(timeIndex, 1);
+              }
+              notifyFormbuilderChange();
+              const nextTime = Math.max(0, Math.min(timeIndex, venue.sessions[sessionIndex]?.times.length - 1));
+              renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: nextTime });
+            };
+
+            const addVersion = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
+              const time = venue.sessions[sessionIndex].times[timeIndex];
+              time.versions.splice(afterIndex + 1, 0, venueSessionCreateVersion());
+              notifyFormbuilderChange();
+              renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
+            };
+
+            const removeVersion = (venue, venueIndex, sessionIndex, timeIndex, versionIndex)=>{
+              const time = venue.sessions[sessionIndex].times[timeIndex];
+              if(time.versions.length <= 1) return;
+              time.versions.splice(versionIndex, 1);
+              notifyFormbuilderChange();
+              const focusVersion = Math.max(0, Math.min(versionIndex, time.versions.length - 1));
+              renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: focusVersion });
+            };
+
+            const addTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, afterIndex)=>{
+              const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
+              version.tiers.splice(afterIndex + 1, 0, venueSessionCreateTier());
+              notifyFormbuilderChange();
+              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
+            };
+
+            const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)=>{
+              const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
+              if(version.tiers.length <= 1) return;
+              version.tiers.splice(tierIndex, 1);
+              notifyFormbuilderChange();
+              const focusTier = Math.max(0, Math.min(tierIndex, version.tiers.length - 1));
+              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: focusTier });
+            };
+
+            const focusRequest = { current: null };
+            const setFocus = spec => { focusRequest.current = spec; };
+
+            const applyFocus = ()=>{
+              const spec = focusRequest.current;
+              if(!spec) return;
+              focusRequest.current = null;
+              let selector = '';
+              if(spec.type === 'venue-name'){
+                selector = `.venue-name-input[data-venue-index="${spec.venueIndex}"]`;
+              } else if(spec.type === 'session-date'){
+                selector = `.session-date-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"]`;
+              } else if(spec.type === 'session-time'){
+                selector = `.session-time-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"]`;
+              } else if(spec.type === 'version'){
+                selector = `.session-version-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
+              } else if(spec.type === 'tier'){
+                selector = `.session-tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+              } else if(spec.type === 'price'){
+                selector = `.session-price-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+              }
+              if(!selector) return;
+              const target = editor.querySelector(selector);
+              if(!target) return;
+              requestAnimationFrame(()=>{
+                try{
+                  target.focus();
+                  if(typeof target.select === 'function'){
+                    target.select();
+                  }
+                }catch(err){}
+              });
+            };
+
+            const createActionButton = (symbol, ariaLabel, onClick)=>{
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'tiny';
+              btn.textContent = symbol;
+              btn.setAttribute('aria-label', ariaLabel);
+              btn.addEventListener('click', event => {
+                event.preventDefault();
+                onClick();
+              });
+              return btn;
+            };
+
+            const commitTimeValue = ({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input })=>{
+              const raw = input.value.trim();
+              if(raw === ''){
+                if(timeObj.time){
+                  timeObj.time = '';
+                  notifyFormbuilderChange();
+                }
+                const slot = ensureSlot(venue, timeIndex);
+                if(slot.source === timeObj){
+                  slot.value = '';
+                  slot.source = null;
+                }
+                resetSlotIfEmpty(venue, timeIndex);
+                input.classList.remove('is-invalid');
+                return;
+              }
+              if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(raw)){
+                input.classList.add('is-invalid');
+                input.value = timeObj.time || '';
+                return;
+              }
+              input.classList.remove('is-invalid');
+              if(timeObj.time === raw){
+                return;
+              }
+              const slot = ensureSlot(venue, timeIndex);
+              const previousSlotValue = slot.value;
+              timeObj.time = raw;
+              if(!slot.locked && (!slot.source || slot.source === timeObj)){
+                slot.value = raw;
+                slot.source = timeObj;
+                venue.sessions.forEach((sess, idx)=>{
+                  if(idx === sessionIndex) return;
+                  const targetTime = sess.times[timeIndex] || (sess.times[timeIndex] = venueSessionCreateTime());
+                  if(!targetTime.time || targetTime.time === previousSlotValue){
+                    targetTime.time = raw;
+                    const selector = `.session-time-input[data-venue-index="${venueIndex}"][data-session-index="${idx}"][data-time-index="${timeIndex}"]`;
+                    const sibling = editor.querySelector(selector);
+                    if(sibling){
+                      sibling.value = raw;
+                      sibling.classList.remove('is-invalid');
+                    }
+                  }
+                });
+              } else if(slot.source && slot.source !== timeObj && slot.value !== raw){
+                slot.locked = true;
+                slot.value = raw;
+                slot.source = timeObj;
+              }
+              notifyFormbuilderChange();
+            };
+
+            const setupDatePicker = (input, session, venueIndex, sessionIndex)=>{
+              let picker = null;
+              const closePicker = ()=>{
+                if(!picker) return;
+                picker.remove();
+                picker = null;
+                document.removeEventListener('pointerdown', onPointerDown, true);
+                document.removeEventListener('keydown', onKeydown, true);
+                openPickers.delete(closePicker);
+              };
+              const onPointerDown = event => {
+                if(!picker) return;
+                if(event.target === input || picker.contains(event.target)) return;
+                closePicker();
+              };
+              const onKeydown = event => {
+                if(event.key === 'Escape'){
+                  event.preventDefault();
+                  closePicker();
+                  try{ input.focus(); }catch(err){}
+                }
+              };
+              const selectDate = iso => {
+                if(session.date !== iso){
+                  session.date = iso;
+                  notifyFormbuilderChange();
+                }
+                input.value = formatSessionDate(iso);
+                closePicker();
+              };
+              const buildCalendar = ()=>{
+                const container = document.createElement('div');
+                container.className = 'session-date-picker';
+                const scroll = document.createElement('div');
+                scroll.className = 'calendar-scroll';
+                const calendar = document.createElement('div');
+                calendar.className = 'calendar';
+                const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                const selected = session.date;
+                let current = new Date(minPickerDate.getFullYear(), minPickerDate.getMonth(), 1);
+                const end = new Date(maxPickerDate.getFullYear(), maxPickerDate.getMonth(), 1);
+                while(current <= end){
+                  const monthEl = document.createElement('div');
+                  monthEl.className = 'month';
+                  const header = document.createElement('div');
+                  header.className = 'calendar-header';
+                  header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                  monthEl.appendChild(header);
+                  const grid = document.createElement('div');
+                  grid.className = 'grid';
+                  weekdays.forEach(day => {
+                    const wd = document.createElement('div');
+                    wd.className = 'weekday';
+                    wd.textContent = day;
+                    grid.appendChild(wd);
+                  });
+                  const firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
+                  const startDow = firstDay.getDay();
+                  const daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+                  const totalCells = 42;
+                  for(let i = 0; i < totalCells; i++){
+                    const cell = document.createElement('div');
+                    cell.className = 'day';
+                    const dayNum = i - startDow + 1;
+                    if(i < startDow || dayNum > daysInMonth){
+                      cell.classList.add('empty');
+                    } else {
+                      cell.textContent = dayNum;
+                      const dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                      dateObj.setHours(0,0,0,0);
+                      const iso = toISODate(dateObj);
+                      cell.dataset.iso = iso;
+                      if(dateObj < today){
+                        cell.classList.add('past');
+                      } else {
+                        cell.classList.add('future');
+                      }
+                      if(selected === iso){
+                        cell.classList.add('selected');
+                      }
+                      cell.addEventListener('click', ()=> selectDate(iso));
+                    }
+                    grid.appendChild(cell);
+                  }
+                  monthEl.appendChild(grid);
+                  calendar.appendChild(monthEl);
+                  current.setMonth(current.getMonth() + 1);
+                }
+                scroll.appendChild(calendar);
+                container.appendChild(scroll);
+                return container;
+              };
+              const openPicker = ()=>{
+                if(picker) return;
+                closeAllPickers();
+                picker = buildCalendar();
+                const parentRow = input.closest('.session-date-row') || input.parentElement;
+                (parentRow || input.parentElement).appendChild(picker);
+                document.addEventListener('pointerdown', onPointerDown, true);
+                document.addEventListener('keydown', onKeydown, true);
+                openPickers.add(closePicker);
+              };
+              input.addEventListener('focus', ()=> openPicker());
+              input.addEventListener('click', ()=> openPicker());
+            };
+
+            const renderVenues = (nextFocus = null)=>{
+              closeAllPickers();
+              ensureOptions();
+              if(nextFocus) setFocus(nextFocus);
+              venueList.innerHTML = '';
+              previewField.options.forEach((venue, venueIndex)=>{
+                ensureSessionStructure(venue);
+                const venueCard = document.createElement('div');
+                venueCard.className = 'venue-card';
+
+                const venueLine = document.createElement('div');
+                venueLine.className = 'venue-line';
+                const venueHeader = document.createElement('div');
+                venueHeader.className = 'venue-line-header';
+                const venueLabel = document.createElement('span');
+                venueLabel.textContent = `Venue Name ${venueIndex + 1}`;
+                const venueActions = document.createElement('div');
+                venueActions.className = 'venue-line-actions';
+                venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
+                const removeBtn = createActionButton('-', 'Remove Venue', ()=> removeVenue(venueIndex));
+                if(previewField.options.length <= 1){
+                  removeBtn.disabled = true;
+                  removeBtn.setAttribute('aria-disabled', 'true');
+                }
+                venueActions.appendChild(removeBtn);
+                venueHeader.append(venueLabel, venueActions);
+                venueLine.appendChild(venueHeader);
+                const venueNameInput = document.createElement('input');
+                venueNameInput.type = 'text';
+                venueNameInput.className = 'venue-name-input';
+                venueNameInput.placeholder = 'Venue Name';
+                venueNameInput.value = venue.name || '';
+                venueNameInput.dataset.venueIndex = String(venueIndex);
+                venueNameInput.addEventListener('input', ()=>{
+                  venue.name = venueNameInput.value;
+                  notifyFormbuilderChange();
+                });
+                venueLine.appendChild(venueNameInput);
+                venueCard.appendChild(venueLine);
+
+                const addressLine = document.createElement('div');
+                addressLine.className = 'venue-line';
+                const addressHeader = document.createElement('div');
+                addressHeader.className = 'venue-line-header';
+                const addressLabel = document.createElement('span');
+                addressLabel.textContent = 'Venue Address';
+                addressHeader.appendChild(addressLabel);
+                addressLine.appendChild(addressHeader);
+                const geocoderContainer = document.createElement('div');
+                geocoderContainer.className = 'venue-address-geocoder-container';
+                addressLine.appendChild(geocoderContainer);
+                const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+                if(mapboxReady){
+                  const geocoderOptions = {
+                    accessToken: window.mapboxgl.accessToken,
+                    mapboxgl: window.mapboxgl,
+                    marker: false,
+                    placeholder: 'Venue Address',
+                    reverseGeocode: true,
+                    limit: 10
+                  };
+                  const geocoder = new MapboxGeocoder(geocoderOptions);
+                  geocoder.addTo(geocoderContainer);
+                  const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+                  if(geocoderInput){
+                    geocoderInput.dataset.venueIndex = String(venueIndex);
+                    geocoderInput.value = venue.address || '';
+                    geocoderInput.addEventListener('blur', ()=>{
+                      const nextValue = geocoderInput.value || '';
+                      if(venue.address !== nextValue){
+                        venue.address = nextValue;
+                        notifyFormbuilderChange();
+                      }
+                    });
+                  }
+                  geocoder.on('result', event => {
+                    const result = event && event.result;
+                    const place = result && (result.place_name || result.text || '');
+                    if(place && geocoderInput){
+                      geocoderInput.value = place;
+                    }
+                    venue.address = typeof place === 'string' ? place : '';
+                    if(result && result.geometry && Array.isArray(result.geometry.coordinates)){
+                      venue.location = {
+                        lng: Number(result.geometry.coordinates[0]),
+                        lat: Number(result.geometry.coordinates[1])
+                      };
+                    } else if(Array.isArray(result && result.center)){
+                      venue.location = {
+                        lng: Number(result.center[0]),
+                        lat: Number(result.center[1])
+                      };
+                    }
+                    notifyFormbuilderChange();
+                  });
+                  geocoder.on('clear', ()=>{
+                    venue.address = '';
+                    venue.location = null;
+                    notifyFormbuilderChange();
+                  });
+                } else {
+                  const fallback = document.createElement('input');
+                  fallback.type = 'text';
+                  fallback.className = 'venue-address-fallback';
+                  fallback.placeholder = 'Venue Address';
+                  fallback.value = venue.address || '';
+                  fallback.dataset.venueIndex = String(venueIndex);
+                  fallback.addEventListener('input', ()=>{
+                    venue.address = fallback.value;
+                    notifyFormbuilderChange();
+                  });
+                  geocoderContainer.appendChild(fallback);
+                }
+                venueCard.appendChild(addressLine);
+
+                const sessionContainer = document.createElement('div');
+                sessionContainer.className = 'session-list';
+                venue.sessions.forEach((session, sessionIndex)=>{
+                  const sessionCard = document.createElement('div');
+                  sessionCard.className = 'session-card';
+
+                  const dateRow = document.createElement('div');
+                  dateRow.className = 'session-date-row';
+                  const dateHeader = document.createElement('div');
+                  dateHeader.className = 'session-date-header';
+                  const dateLabel = document.createElement('span');
+                  dateLabel.textContent = `Session Date ${sessionIndex + 1}`;
+                  const dateActions = document.createElement('div');
+                  dateActions.className = 'session-date-actions';
+                  dateActions.appendChild(createActionButton('+', 'Add Session Date', ()=> addSession(venue, venueIndex, sessionIndex)));
+                  const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
+                  if(venue.sessions.length <= 1){
+                    removeDateBtn.disabled = true;
+                    removeDateBtn.setAttribute('aria-disabled', 'true');
+                  }
+                  dateActions.appendChild(removeDateBtn);
+                  dateHeader.append(dateLabel, dateActions);
+                  dateRow.appendChild(dateHeader);
+                  const dateInput = document.createElement('input');
+                  dateInput.type = 'text';
+                  dateInput.readOnly = true;
+                  dateInput.className = 'session-date-input';
+                  dateInput.placeholder = 'Select Date';
+                  dateInput.value = formatSessionDate(session.date);
+                  dateInput.dataset.venueIndex = String(venueIndex);
+                  dateInput.dataset.sessionIndex = String(sessionIndex);
+                  dateRow.appendChild(dateInput);
+                  sessionCard.appendChild(dateRow);
+                  setupDatePicker(dateInput, session, venueIndex, sessionIndex);
+
+                  const timesList = document.createElement('div');
+                  timesList.className = 'session-times';
+                  session.times.forEach((timeObj, timeIndex)=>{
+                    const timeRow = document.createElement('div');
+                    timeRow.className = 'session-time-row';
+                    const timeHeader = document.createElement('div');
+                    timeHeader.className = 'session-time-row-header';
+                    const timeLabel = document.createElement('span');
+                    timeLabel.textContent = `Session Time ${timeIndex + 1}`;
+                    const timeActions = document.createElement('div');
+                    timeActions.className = 'session-time-actions';
+                    timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
+                    const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
+                    if(session.times.length <= 1){
+                      removeTimeBtn.disabled = true;
+                      removeTimeBtn.setAttribute('aria-disabled', 'true');
+                    }
+                    timeActions.appendChild(removeTimeBtn);
+                    timeHeader.append(timeLabel, timeActions);
+                    timeRow.appendChild(timeHeader);
+                    const timeInput = document.createElement('input');
+                    timeInput.type = 'text';
+                    timeInput.className = 'session-time-input';
+                    timeInput.placeholder = '00:00';
+                    timeInput.inputMode = 'numeric';
+                    timeInput.pattern = '([01]\\d|2[0-3]):[0-5]\\d';
+                    timeInput.value = timeObj.time || '';
+                    timeInput.dataset.venueIndex = String(venueIndex);
+                    timeInput.dataset.sessionIndex = String(sessionIndex);
+                    timeInput.dataset.timeIndex = String(timeIndex);
+                    timeInput.addEventListener('input', ()=>{
+                      const sanitized = sanitizeTimeInput(timeInput.value);
+                      if(timeInput.value !== sanitized){
+                        timeInput.value = sanitized;
+                      }
+                      timeInput.classList.remove('is-invalid');
+                    });
+                    timeInput.addEventListener('blur', ()=>{
+                      commitTimeValue({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input: timeInput });
+                      resetSlotIfEmpty(venue, timeIndex);
+                    });
+                    timeRow.appendChild(timeInput);
+
+                    const versionList = document.createElement('div');
+                    versionList.className = 'session-version-list';
+                    timeObj.versions.forEach((version, versionIndex)=>{
+                      const versionCard = document.createElement('div');
+                      versionCard.className = 'session-version-card';
+                      const versionHeader = document.createElement('div');
+                      versionHeader.className = 'session-version-header';
+                      const versionLabel = document.createElement('span');
+                      versionLabel.textContent = `Version ${versionIndex + 1}`;
+                      const versionActions = document.createElement('div');
+                      versionActions.className = 'version-actions';
+                      versionActions.appendChild(createActionButton('+', 'Add Version', ()=> addVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex)));
+                      const removeVersionBtn = createActionButton('-', 'Remove Version', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex));
+                      if(timeObj.versions.length <= 1){
+                        removeVersionBtn.disabled = true;
+                        removeVersionBtn.setAttribute('aria-disabled', 'true');
+                      }
+                      versionActions.appendChild(removeVersionBtn);
+                      versionHeader.append(versionLabel, versionActions);
+                      versionCard.appendChild(versionHeader);
+                      const versionInput = document.createElement('input');
+                      versionInput.type = 'text';
+                      versionInput.className = 'session-version-input';
+                      versionInput.placeholder = 'Stalls';
+                      versionInput.value = version.name || '';
+                      versionInput.dataset.venueIndex = String(venueIndex);
+                      versionInput.dataset.sessionIndex = String(sessionIndex);
+                      versionInput.dataset.timeIndex = String(timeIndex);
+                      versionInput.dataset.versionIndex = String(versionIndex);
+                      versionInput.addEventListener('input', ()=>{
+                        version.name = versionInput.value;
+                        notifyFormbuilderChange();
+                      });
+                      versionCard.appendChild(versionInput);
+
+                      const tierList = document.createElement('div');
+                      tierList.className = 'session-tier-list';
+                      version.tiers.forEach((tier, tierIndex)=>{
+                        const tierRow = document.createElement('div');
+                        tierRow.className = 'tier-row';
+                        const tierHeader = document.createElement('div');
+                        tierHeader.className = 'session-version-header';
+                        const tierLabel = document.createElement('span');
+                        tierLabel.textContent = `Tier ${tierIndex + 1}`;
+                        const tierActions = document.createElement('div');
+                        tierActions.className = 'tier-actions';
+                        tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)));
+                        const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex));
+                        if(version.tiers.length <= 1){
+                          removeTierBtn.disabled = true;
+                          removeTierBtn.setAttribute('aria-disabled', 'true');
+                        }
+                        tierActions.appendChild(removeTierBtn);
+                        tierHeader.append(tierLabel, tierActions);
+                        tierRow.appendChild(tierHeader);
+
+                        const tierInput = document.createElement('input');
+                        tierInput.type = 'text';
+                        tierInput.className = 'session-tier-input';
+                        tierInput.placeholder = 'Adult, Pensioner, Child';
+                        tierInput.value = tier.name || '';
+                        tierInput.dataset.venueIndex = String(venueIndex);
+                        tierInput.dataset.sessionIndex = String(sessionIndex);
+                        tierInput.dataset.timeIndex = String(timeIndex);
+                        tierInput.dataset.versionIndex = String(versionIndex);
+                        tierInput.dataset.tierIndex = String(tierIndex);
+                        tierInput.addEventListener('input', ()=>{
+                          tier.name = tierInput.value;
+                          notifyFormbuilderChange();
+                        });
+                        tierRow.appendChild(tierInput);
+
+                        const priceRow = document.createElement('div');
+                        priceRow.className = 'tier-price-row';
+                        const currencySelect = document.createElement('select');
+                        currencySelect.className = 'session-currency-select';
+                        const emptyOpt = document.createElement('option');
+                        emptyOpt.value = '';
+                        emptyOpt.textContent = 'Currency';
+                        currencySelect.appendChild(emptyOpt);
+                        VERSION_PRICE_CURRENCIES.forEach(code => {
+                          const opt = document.createElement('option');
+                          opt.value = code;
+                          opt.textContent = code;
+                          currencySelect.appendChild(opt);
+                        });
+                        currencySelect.value = tier.currency || '';
+                        currencySelect.dataset.venueIndex = String(venueIndex);
+                        currencySelect.dataset.sessionIndex = String(sessionIndex);
+                        currencySelect.dataset.timeIndex = String(timeIndex);
+                        currencySelect.dataset.versionIndex = String(versionIndex);
+                        currencySelect.dataset.tierIndex = String(tierIndex);
+                        currencySelect.addEventListener('change', ()=>{
+                          tier.currency = currencySelect.value;
+                          notifyFormbuilderChange();
+                        });
+                        priceRow.appendChild(currencySelect);
+
+                        const priceInput = document.createElement('input');
+                        priceInput.type = 'text';
+                        priceInput.inputMode = 'decimal';
+                        priceInput.pattern = '[0-9]+([\\.,][0-9]{0,2})?';
+                        priceInput.className = 'session-price-input';
+                        priceInput.placeholder = '0.00';
+                        priceInput.value = (tier.price || '').replace(/[^0-9.,]/g, '');
+                        priceInput.dataset.venueIndex = String(venueIndex);
+                        priceInput.dataset.sessionIndex = String(sessionIndex);
+                        priceInput.dataset.timeIndex = String(timeIndex);
+                        priceInput.dataset.versionIndex = String(versionIndex);
+                        priceInput.dataset.tierIndex = String(tierIndex);
+                        priceInput.addEventListener('input', ()=>{
+                          const next = priceInput.value.replace(/[^0-9.,]/g, '');
+                          if(priceInput.value !== next){
+                            priceInput.value = next;
+                          }
+                        });
+                        priceInput.addEventListener('blur', ()=>{
+                          const next = priceInput.value.replace(/[^0-9.,]/g, '');
+                          if(tier.price !== next){
+                            tier.price = next;
+                            notifyFormbuilderChange();
+                          }
+                        });
+                        priceRow.appendChild(priceInput);
+                        tierRow.appendChild(priceRow);
+                        tierList.appendChild(tierRow);
+                      });
+                      versionCard.appendChild(tierList);
+                      versionList.appendChild(versionCard);
+                    });
+                    timeRow.appendChild(versionList);
+                    timesList.appendChild(timeRow);
+                  });
+                  sessionCard.appendChild(timesList);
+                  sessionContainer.appendChild(sessionCard);
+                });
+                venueCard.appendChild(sessionContainer);
+                venueList.appendChild(venueCard);
+              });
+              applyFocus();
+            };
+
+            renderVenues();
+            return editor;
           };
 
           const ensureDefaultFieldSet = (fieldList)=>{
@@ -12599,6 +13846,9 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
+              } else if(previewField.type === 'venue-session-version-tier-price'){
+                wrapper.classList.add('form-preview-field--venue-session');
+                control = buildVenueSessionPreview(previewField, baseId);
               } else if(previewField.type === 'version-price'){
                 wrapper.classList.add('form-preview-field--version-price');
                 const editor = document.createElement('div');
@@ -13276,7 +14526,8 @@ function makePosts(){
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               const showVersionPrice = type === 'version-price';
-              const hidePlaceholder = isOptionsType || type === 'images' || showVersionPrice;
+              const showVenueSession = type === 'venue-session-version-tier-price';
+              const hidePlaceholder = isOptionsType || type === 'images' || showVersionPrice || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
                 if(fieldPlaceholderInput.value){
@@ -13286,9 +14537,14 @@ function makePosts(){
                   safeField.placeholder = '';
                   notifyFormbuilderChange();
                 }
+              } else if(showVenueSession && safeField.placeholder){
+                safeField.placeholder = '';
+                notifyFormbuilderChange();
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
-              if(showVersionPrice){
+              if(showVenueSession){
+                safeField.options = normalizeVenueSessionOptions(safeField.options);
+              } else if(showVersionPrice){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = [{ version: '', currency: '', price: '' }];
                   notifyFormbuilderChange();
@@ -13319,7 +14575,9 @@ function makePosts(){
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
-              } else if(!showVersionPrice){
+              } else if(!showVersionPrice && !showVenueSession){
+                dropdownOptionsList.innerHTML = '';
+              } else if(showVenueSession){
                 dropdownOptionsList.innerHTML = '';
               }
             };
@@ -13714,6 +14972,9 @@ function makePosts(){
                       }
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
                       return { version: str, currency: '', price: '' };
+                    }
+                    if(field && field.type === 'venue-session-version-tier-price'){
+                      return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
                     if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
