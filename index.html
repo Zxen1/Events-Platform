@@ -13410,56 +13410,8 @@ function makePosts(){
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'venue-address-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
-                const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
-                if(mapboxReady){
-                  const geocoderOptions = {
-                    accessToken: window.mapboxgl.accessToken,
-                    mapboxgl: window.mapboxgl,
-                    marker: false,
-                    placeholder: 'Venue Address',
-                    reverseGeocode: true,
-                    limit: 10
-                  };
-                  const geocoder = new MapboxGeocoder(geocoderOptions);
-                  geocoder.addTo(geocoderContainer);
-                  const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
-                  if(geocoderInput){
-                    geocoderInput.dataset.venueIndex = String(venueIndex);
-                    geocoderInput.value = venue.address || '';
-                    geocoderInput.addEventListener('blur', ()=>{
-                      const nextValue = geocoderInput.value || '';
-                      if(venue.address !== nextValue){
-                        venue.address = nextValue;
-                        notifyFormbuilderChange();
-                      }
-                    });
-                  }
-                  geocoder.on('result', event => {
-                    const result = event && event.result;
-                    const place = result && (result.place_name || result.text || '');
-                    if(place && geocoderInput){
-                      geocoderInput.value = place;
-                    }
-                    venue.address = typeof place === 'string' ? place : '';
-                    if(result && result.geometry && Array.isArray(result.geometry.coordinates)){
-                      venue.location = {
-                        lng: Number(result.geometry.coordinates[0]),
-                        lat: Number(result.geometry.coordinates[1])
-                      };
-                    } else if(Array.isArray(result && result.center)){
-                      venue.location = {
-                        lng: Number(result.center[0]),
-                        lat: Number(result.center[1])
-                      };
-                    }
-                    notifyFormbuilderChange();
-                  });
-                  geocoder.on('clear', ()=>{
-                    venue.address = '';
-                    venue.location = null;
-                    notifyFormbuilderChange();
-                  });
-                } else {
+                const createFallbackAddressInput = ()=>{
+                  geocoderContainer.innerHTML = '';
                   const fallback = document.createElement('input');
                   fallback.type = 'text';
                   fallback.className = 'venue-address-fallback';
@@ -13471,6 +13423,83 @@ function makePosts(){
                     notifyFormbuilderChange();
                   });
                   geocoderContainer.appendChild(fallback);
+                  return fallback;
+                };
+                const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+                if(mapboxReady){
+                  const geocoderOptions = {
+                    accessToken: window.mapboxgl.accessToken,
+                    mapboxgl: window.mapboxgl,
+                    marker: false,
+                    placeholder: 'Venue Address',
+                    reverseGeocode: true,
+                    limit: 10
+                  };
+                  const geocoder = new MapboxGeocoder(geocoderOptions);
+                  const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+                    ? window.requestAnimationFrame.bind(window)
+                    : (cb)=> setTimeout(cb, 16);
+                  let attempts = 0;
+                  const maxAttempts = 20;
+                  const attachGeocoder = ()=>{
+                    if(!geocoderContainer.isConnected){
+                      attempts += 1;
+                      if(attempts > maxAttempts){
+                        createFallbackAddressInput();
+                        return;
+                      }
+                      schedule(attachGeocoder);
+                      return;
+                    }
+                    try {
+                      geocoder.addTo(geocoderContainer);
+                    } catch(err){
+                      createFallbackAddressInput();
+                      return;
+                    }
+                    const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+                    if(!geocoderInput){
+                      createFallbackAddressInput();
+                      return;
+                    }
+                    geocoderInput.dataset.venueIndex = String(venueIndex);
+                    geocoderInput.value = venue.address || '';
+                    geocoderInput.addEventListener('blur', ()=>{
+                      const nextValue = geocoderInput.value || '';
+                      if(venue.address !== nextValue){
+                        venue.address = nextValue;
+                        notifyFormbuilderChange();
+                      }
+                    });
+                    geocoder.on('result', event => {
+                      const result = event && event.result;
+                      const place = result && (result.place_name || result.text || '');
+                      if(place && geocoderInput){
+                        geocoderInput.value = place;
+                      }
+                      venue.address = typeof place === 'string' ? place : '';
+                      if(result && result.geometry && Array.isArray(result.geometry.coordinates)){
+                        venue.location = {
+                          lng: Number(result.geometry.coordinates[0]),
+                          lat: Number(result.geometry.coordinates[1])
+                        };
+                      } else if(Array.isArray(result && result.center)){
+                        venue.location = {
+                          lng: Number(result.center[0]),
+                          lat: Number(result.center[1])
+                        };
+                      }
+                      notifyFormbuilderChange();
+                    });
+                    geocoder.on('clear', ()=>{
+                      venue.address = '';
+                      venue.location = null;
+                      notifyFormbuilderChange();
+                    });
+                  };
+                  attachGeocoder();
+                } else {
+                  createFallbackAddressInput();
                 }
 
                 const sessionContainer = document.createElement('div');
