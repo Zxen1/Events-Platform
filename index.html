@@ -6494,11 +6494,10 @@ if (typeof slugify !== 'function') {
             #tab-forms .form-preview-container .form-preview-radio-option{
               display:flex;
               align-items:center;
-              gap:8px;
+              justify-content:flex-start;
+              gap:10px;
               font-size:14px;
-            }
-            #tab-forms .form-preview-container .form-preview-radio-option input[type="radio"]{
-              pointer-events:none;
+              cursor:pointer;
             }
             #tab-forms .form-preview-container .panel-field select:disabled{
               opacity:1;
@@ -12307,7 +12306,6 @@ function makePosts(){
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = `preview-radio-${previewIndex}`;
-                    radio.disabled = true;
                     radio.value = optionValue;
                     const displayValue = (typeof optionValue === 'string' && optionValue.trim())
                       ? optionValue
@@ -12322,7 +12320,6 @@ function makePosts(){
                   placeholderOption.className = 'form-preview-radio-option';
                   const radio = document.createElement('input');
                   radio.type = 'radio';
-                  radio.disabled = true;
                   placeholderOption.append(radio, document.createTextNode('Option'));
                   radioGroup.appendChild(placeholderOption);
                 }
