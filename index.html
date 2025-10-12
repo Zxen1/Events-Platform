@@ -18670,12 +18670,6 @@ function handleEsc(){
 }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') handleEsc();
-  else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
-    const top = panelStack[panelStack.length-1];
-    if(window.innerWidth >= 450 && top && (top.id==='adminPanel' || top.id==='memberPanel')){
-      movePanelToEdge(top, e.key==='ArrowLeft' ? 'left' : 'right');
-    }
-  }
 });
 
 let pointerStartedInFilterContent = false;
