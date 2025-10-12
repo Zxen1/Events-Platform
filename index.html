@@ -5785,13 +5785,13 @@ if (typeof slugify !== 'function') {
           </div>
         </div>
         <div class="tab-bar">
-          <button type="button" class="tab-btn" data-tab="map" aria-selected="true">Map</button>
-          <button type="button" class="tab-btn" data-tab="settings">Settings</button>
-          <button type="button" class="tab-btn" data-tab="forms">Forms</button>
+          <button type="button" class="tab-btn" data-tab="forms" aria-selected="true">Forms</button>
+          <button type="button" class="tab-btn" data-tab="map" aria-selected="false">Map</button>
+          <button type="button" class="tab-btn" data-tab="settings" aria-selected="false">Settings</button>
         </div>
       </div>
       <form id="adminForm" class="panel-body">
-        <div id="tab-map" class="tab-panel active">
+        <div id="tab-map" class="tab-panel">
           <div class="map-spin-container">
             <div class="panel-field">
               <div class="option-label">
@@ -5874,7 +5874,7 @@ if (typeof slugify !== 'function') {
           </div>
         </div>
         </div>
-        <div id="tab-forms" class="tab-panel">
+        <div id="tab-forms" class="tab-panel active">
           <div class="formbuilder-container">
             <div class="formbuilder-actions">
               <button type="button" id="formbuilderAddCategory" class="formbuilder-add-category-btn">Add Category</button>
