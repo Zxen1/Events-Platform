@@ -20058,6 +20058,105 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
+(function(){
+  const MESSAGE = 'Please include "@" and "." in the email address.';
+  const processedForms = new WeakSet();
+
+  function ensureFormListener(form){
+    if(!form || processedForms.has(form)) return;
+    form.addEventListener('submit', () => {
+      const candidates = form.querySelectorAll('input[data-email-textboxified="true"]');
+      candidates.forEach(input => {
+        if(typeof input._emailTextboxValidate === 'function'){
+          input._emailTextboxValidate();
+        }
+      });
+    }, true);
+    processedForms.add(form);
+  }
+
+  function applyEmailBehavior(input){
+    if(!(input instanceof HTMLInputElement)) return;
+    if(input.dataset.emailTextboxified === 'true') return;
+    input.dataset.emailTextboxified = 'true';
+    try {
+      input.type = 'text';
+    } catch(err) {}
+    ensureFormListener(input.form || null);
+
+    const validate = () => {
+      const value = input.value != null ? String(input.value).trim() : '';
+      if(!value){
+        input.setCustomValidity('');
+        return;
+      }
+      if(value.includes('@') && value.includes('.')){
+        input.setCustomValidity('');
+      } else {
+        input.setCustomValidity(MESSAGE);
+      }
+    };
+
+    input._emailTextboxValidate = validate;
+    input.addEventListener('input', validate);
+    input.addEventListener('change', validate);
+    input.addEventListener('blur', validate);
+    if(typeof input.setAttribute === 'function'){
+      input.setAttribute('title', MESSAGE);
+    }
+    validate();
+  }
+
+  function scan(root){
+    if(!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll('input[type="email"]') : [];
+    list.forEach(applyEmailBehavior);
+  }
+
+  function handleMutations(mutations){
+    for(const mutation of mutations){
+      if(mutation.type === 'childList'){
+        mutation.addedNodes.forEach(node => {
+          if(!(node instanceof Element)) return;
+          if(node.matches && node.matches('input[type="email"]')){
+            applyEmailBehavior(node);
+          }
+          if(node.querySelectorAll){
+            node.querySelectorAll('input[type="email"]').forEach(applyEmailBehavior);
+          }
+        });
+      } else if(mutation.type === 'attributes'){
+        const target = mutation.target;
+        if(target instanceof HTMLInputElement && target.type === 'email'){
+          applyEmailBehavior(target);
+        }
+      }
+    }
+  }
+
+  function init(){
+    if(!document.body){
+      return;
+    }
+    scan(document);
+    const observer = new MutationObserver(handleMutations);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['type']
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+</script>
+
+<script>
 // Wait helpers if your app exposes callWhenDefined; otherwise poll.
 (function(){
   function whenDefined(name, cb){
