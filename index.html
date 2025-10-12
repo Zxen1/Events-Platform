@@ -6145,6 +6145,32 @@ if (typeof slugify !== 'function') {
               flex-direction:column;
               gap:10px;
             }
+            #tab-forms .form-preview-btn{
+              width:100%;
+              height:40px;
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.3);
+              color:var(--button-text);
+              font-weight:600;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:8px;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .form-preview-btn:hover{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .form-preview-btn .dropdown-arrow{
+              transform:rotate(45deg);
+              transition:transform .3s ease;
+            }
+            #tab-forms .form-preview-btn[aria-expanded="true"] .dropdown-arrow{
+              transform:rotate(-135deg);
+            }
             #tab-forms .subcategory-field-row{
               border:1px solid var(--border);
               border-radius:10px;
@@ -6301,6 +6327,47 @@ if (typeof slugify !== 'function') {
               display:flex;
               flex-direction:column;
               gap:12px;
+            }
+            #tab-forms .form-preview-container{
+              border:1px solid var(--border);
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              padding:16px;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .form-preview-container[hidden]{
+              display:none;
+            }
+            #tab-forms .form-preview-fields{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .form-preview-empty{
+              margin:0;
+              font-size:14px;
+              color:var(--muted);
+            }
+            #tab-forms .form-preview-container .panel-field{
+              background:rgba(0,0,0,0.25);
+              padding:12px;
+              border-radius:10px;
+              border:1px solid var(--border);
+              max-width:none;
+            }
+            #tab-forms .form-preview-container .panel-field label{
+              font-weight:600;
+            }
+            #tab-forms .form-preview-container .panel-field input{
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+            }
+            #tab-forms .form-preview-container .panel-field input[readonly]{
+              cursor:default;
             }
             #tab-forms .subcategory-form-content[hidden]{
               display:none;
@@ -11409,6 +11476,12 @@ function makePosts(){
         if(changed){
           fields.splice(0, fields.length, ...reordered);
           notifyFormbuilderChange();
+          const state = fieldContainerState.get(container);
+          if(state && typeof state.onFieldsReordered === 'function'){
+            try{
+              state.onFieldsReordered();
+            }catch(err){}
+          }
         }
       }
       rows.forEach((row, index)=>{
@@ -11997,7 +12070,70 @@ function makePosts(){
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
 
-          setupFieldContainer(fieldsList, fields);
+          const fieldsContainerState = setupFieldContainer(fieldsList, fields);
+
+          const formPreviewBtn = document.createElement('button');
+          formPreviewBtn.type = 'button';
+          formPreviewBtn.className = 'form-preview-btn';
+          formPreviewBtn.setAttribute('aria-expanded', 'false');
+          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          const formPreviewLabel = document.createElement('span');
+          formPreviewLabel.textContent = 'Form Preview';
+          const formPreviewArrow = document.createElement('span');
+          formPreviewArrow.className = 'dropdown-arrow';
+          formPreviewArrow.setAttribute('aria-hidden', 'true');
+          formPreviewBtn.append(formPreviewLabel, formPreviewArrow);
+
+          const formPreviewContainer = document.createElement('div');
+          formPreviewContainer.className = 'form-preview-container';
+          formPreviewContainer.hidden = true;
+          const formPreviewFields = document.createElement('div');
+          formPreviewFields.className = 'form-preview-fields';
+          formPreviewContainer.appendChild(formPreviewFields);
+          const formPreviewId = `${subContentId}Preview`;
+          formPreviewContainer.id = formPreviewId;
+          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
+
+          fieldsSection.append(formPreviewBtn, formPreviewContainer);
+
+          formPreviewBtn.addEventListener('click', ()=>{
+            const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
+            const nextExpanded = !expanded;
+            formPreviewBtn.setAttribute('aria-expanded', String(nextExpanded));
+            formPreviewContainer.hidden = !nextExpanded;
+            if(nextExpanded){
+              renderFormPreview();
+            }
+          });
+
+          function renderFormPreview(){
+            formPreviewFields.innerHTML = '';
+            if(!fields.length){
+              const empty = document.createElement('p');
+              empty.className = 'form-preview-empty';
+              empty.textContent = 'No fields added yet.';
+              formPreviewFields.appendChild(empty);
+              return;
+            }
+            fields.forEach((fieldData, previewIndex)=>{
+              const previewField = ensureFieldDefaults(fieldData);
+              const wrapper = document.createElement('div');
+              wrapper.className = 'panel-field form-preview-field';
+              const label = document.createElement('label');
+              label.textContent = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.placeholder = previewField.placeholder || '';
+              input.readOnly = true;
+              input.tabIndex = -1;
+              wrapper.append(label, input);
+              formPreviewFields.appendChild(wrapper);
+            });
+          }
+
+          if(fieldsContainerState){
+            fieldsContainerState.onFieldsReordered = renderFormPreview;
+          }
 
           const createFieldRow = (field)=>{
             const safeField = ensureFieldDefaults(field);
@@ -12047,17 +12183,20 @@ function makePosts(){
               safeField.name = fieldNameInput.value;
               updateDeleteFieldAria();
               notifyFormbuilderChange();
+              renderFormPreview();
             });
 
             fieldTypeSelect.addEventListener('change', ()=>{
               const nextType = fieldTypeSelect.value;
               safeField.type = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               notifyFormbuilderChange();
+              renderFormPreview();
             });
 
             fieldPlaceholderInput.addEventListener('input', ()=>{
               safeField.placeholder = fieldPlaceholderInput.value;
               notifyFormbuilderChange();
+              renderFormPreview();
             });
 
             deleteFieldBtn.addEventListener('click', async ()=>{
@@ -12071,6 +12210,7 @@ function makePosts(){
               row.remove();
               notifyFormbuilderChange();
               syncFieldOrderFromDom(fieldsList, fields);
+              renderFormPreview();
             });
 
             updateDeleteFieldAria();
@@ -12107,7 +12247,10 @@ function makePosts(){
             enableFieldDrag(fieldRow.row, fieldsList, fields);
             notifyFormbuilderChange();
             requestAnimationFrame(()=> fieldRow.focus());
+            renderFormPreview();
           });
+
+          renderFormPreview();
 
           const defaultSubName = sub || 'Subcategory';
           let currentSubName = defaultSubName;
@@ -12149,6 +12292,7 @@ function makePosts(){
             const categoryDisplayName = getCategoryDisplayName();
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
+            formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
             if(!subLogo.querySelector('img')){
               subLogo.textContent = displayName.charAt(0) || '';
               subLogo.classList.remove('has-icon');
