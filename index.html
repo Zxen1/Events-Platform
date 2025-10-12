@@ -6199,8 +6199,75 @@ if (typeof slugify !== 'function') {
               padding:0 12px;
               box-sizing:border-box;
             }
+            #tab-forms .field-placeholder-wrapper[hidden]{
+              display:none !important;
+            }
             #tab-forms .subcategory-field-row select{
               appearance:none;
+            }
+            #tab-forms .dropdown-options-editor{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .dropdown-options-editor[hidden]{
+              display:none !important;
+            }
+            #tab-forms .dropdown-options-label{
+              font-size:14px;
+              font-weight:600;
+            }
+            #tab-forms .dropdown-options-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .dropdown-option-row{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              padding:6px 8px;
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              cursor:grab;
+            }
+            #tab-forms .dropdown-option-row.is-dragging{
+              opacity:0.65;
+              cursor:grabbing;
+            }
+            #tab-forms .dropdown-option-row input{
+              flex:1;
+            }
+            #tab-forms .dropdown-option-actions{
+              display:flex;
+              gap:6px;
+            }
+            #tab-forms .dropdown-option-actions button{
+              width:32px;
+              height:32px;
+              border-radius:6px;
+              border:1px solid var(--btn);
+              background:var(--btn);
+              color:var(--button-text);
+              font-weight:700;
+              font-size:18px;
+              line-height:1;
+              padding:0;
+              cursor:pointer;
+              transition:background .2s,border-color .2s,color .2s;
+            }
+            #tab-forms .dropdown-option-actions button:hover{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
+            }
+            #tab-forms .dropdown-option-actions .dropdown-option-remove{
+              border-color:#a42828;
+              background:#b83030;
+            }
+            #tab-forms .dropdown-option-actions .dropdown-option-remove:hover{
+              background:#d13c3c;
+              border-color:#d13c3c;
             }
             #tab-forms .subcategory-field-row .delete-field-btn{
               width:36px;
@@ -6368,6 +6435,28 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .form-preview-container .panel-field input[readonly]{
               cursor:default;
+            }
+            #tab-forms .form-preview-container .panel-field select,
+            #tab-forms .form-preview-container .panel-field textarea{
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              box-sizing:border-box;
+              width:100%;
+            }
+            #tab-forms .form-preview-container .panel-field textarea{
+              resize:vertical;
+              min-height:120px;
+              padding:8px 12px;
+            }
+            #tab-forms .form-preview-container .panel-field select{
+              appearance:none;
+              height:36px;
+              padding:0 12px;
+            }
+            #tab-forms .form-preview-container .panel-field select:disabled{
+              opacity:1;
             }
             #tab-forms .subcategory-form-content[hidden]{
               display:none;
@@ -12065,6 +12154,14 @@ function makePosts(){
               safeField.type = 'text-box';
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            if(!Array.isArray(safeField.options)){
+              safeField.options = [];
+            } else {
+              safeField.options = safeField.options.map(opt => typeof opt === 'string' ? opt : String(opt ?? ''));
+            }
+            if(safeField.type === 'dropdown' && safeField.options.length === 0){
+              safeField.options.push('', '', '');
+            }
             return safeField;
           };
 
@@ -12121,13 +12218,51 @@ function makePosts(){
               wrapper.className = 'panel-field form-preview-field';
               const label = document.createElement('label');
               label.textContent = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.placeholder = previewField.placeholder || '';
-              input.readOnly = true;
-              input.tabIndex = -1;
-              wrapper.append(label, input);
-              formPreviewFields.appendChild(wrapper);
+              let control = null;
+              if(previewField.type === 'text-area'){
+                const textarea = document.createElement('textarea');
+                textarea.rows = 5;
+                textarea.readOnly = true;
+                textarea.tabIndex = -1;
+                textarea.placeholder = previewField.placeholder || '';
+                textarea.className = 'form-preview-textarea';
+                textarea.style.resize = 'vertical';
+                control = textarea;
+              } else if(previewField.type === 'dropdown'){
+                const select = document.createElement('select');
+                select.className = 'form-preview-select';
+                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                if(options.length){
+                  options.forEach((optionValue, optionIndex)=>{
+                    const option = document.createElement('option');
+                    const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                      ? optionValue
+                      : `Option ${optionIndex + 1}`;
+                    option.value = optionValue;
+                    option.textContent = displayValue;
+                    select.appendChild(option);
+                  });
+                } else {
+                  const placeholderOption = document.createElement('option');
+                  placeholderOption.textContent = 'Select an option';
+                  select.appendChild(placeholderOption);
+                }
+                select.disabled = true;
+                select.setAttribute('aria-disabled', 'true');
+                select.tabIndex = -1;
+                control = select;
+              } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = previewField.placeholder || '';
+                input.readOnly = true;
+                input.tabIndex = -1;
+                control = input;
+              }
+              if(control){
+                wrapper.append(label, control);
+                formPreviewFields.appendChild(wrapper);
+              }
             });
           }
 
@@ -12168,6 +12303,170 @@ function makePosts(){
             fieldPlaceholderInput.placeholder = 'Field Placeholder';
             fieldPlaceholderInput.value = safeField.placeholder;
 
+            const fieldPlaceholderWrapper = document.createElement('div');
+            fieldPlaceholderWrapper.className = 'field-placeholder-wrapper';
+            fieldPlaceholderWrapper.appendChild(fieldPlaceholderInput);
+
+            const dropdownOptionsContainer = document.createElement('div');
+            dropdownOptionsContainer.className = 'dropdown-options-editor';
+            const dropdownOptionsLabel = document.createElement('div');
+            dropdownOptionsLabel.className = 'dropdown-options-label';
+            dropdownOptionsLabel.textContent = 'Dropdown Options';
+            const dropdownOptionsList = document.createElement('div');
+            dropdownOptionsList.className = 'dropdown-options-list';
+            dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
+
+            let draggedOptionRow = null;
+
+            const ensureDropdownSeeds = ()=>{
+              if(!Array.isArray(safeField.options)){
+                safeField.options = [];
+              }
+              if(safeField.options.length === 0){
+                safeField.options.push('', '', '');
+                notifyFormbuilderChange();
+              }
+            };
+
+            const renderDropdownOptions = (focusIndex = null)=>{
+              if(safeField.type !== 'dropdown'){
+                dropdownOptionsList.innerHTML = '';
+                return;
+              }
+              ensureDropdownSeeds();
+              dropdownOptionsList.innerHTML = '';
+              safeField.options.forEach((optionValue, optionIndex)=>{
+                const optionRow = document.createElement('div');
+                optionRow.className = 'dropdown-option-row';
+                optionRow.draggable = true;
+
+                const optionInput = document.createElement('input');
+                optionInput.type = 'text';
+                optionInput.className = 'dropdown-option-input';
+                optionInput.placeholder = `Option ${optionIndex + 1}`;
+                optionInput.value = optionValue;
+                optionInput.addEventListener('input', ()=>{
+                  safeField.options[optionIndex] = optionInput.value;
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+
+                const actions = document.createElement('div');
+                actions.className = 'dropdown-option-actions';
+
+                const addOptionBtn = document.createElement('button');
+                addOptionBtn.type = 'button';
+                addOptionBtn.className = 'dropdown-option-add';
+                addOptionBtn.textContent = '+';
+                addOptionBtn.setAttribute('aria-label', `Add option after Option ${optionIndex + 1}`);
+                addOptionBtn.addEventListener('click', ()=>{
+                  safeField.options.splice(optionIndex + 1, 0, '');
+                  notifyFormbuilderChange();
+                  renderDropdownOptions(optionIndex + 1);
+                  renderFormPreview();
+                });
+
+                const removeOptionBtn = document.createElement('button');
+                removeOptionBtn.type = 'button';
+                removeOptionBtn.className = 'dropdown-option-remove';
+                removeOptionBtn.textContent = '-';
+                removeOptionBtn.setAttribute('aria-label', `Remove Option ${optionIndex + 1}`);
+                removeOptionBtn.addEventListener('click', ()=>{
+                  if(safeField.options.length <= 1){
+                    safeField.options[0] = '';
+                  } else {
+                    safeField.options.splice(optionIndex, 1);
+                  }
+                  notifyFormbuilderChange();
+                  const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
+                  renderDropdownOptions(nextFocus);
+                  renderFormPreview();
+                });
+
+                actions.append(addOptionBtn, removeOptionBtn);
+                optionRow.append(optionInput, actions);
+
+                optionRow.addEventListener('dragstart', event=>{
+                  const origin = event.target;
+                  const tagName = origin && origin.tagName ? origin.tagName.toLowerCase() : '';
+                  if(tagName === 'input' || tagName === 'button'){
+                    event.preventDefault();
+                    return;
+                  }
+                  draggedOptionRow = optionRow;
+                  optionRow.classList.add('is-dragging');
+                  if(event.dataTransfer){
+                    event.dataTransfer.effectAllowed = 'move';
+                    try{ event.dataTransfer.setData('text/plain', optionInput.value || 'Option'); }catch(err){}
+                    try{
+                      const rect = optionRow.getBoundingClientRect();
+                      event.dataTransfer.setDragImage(optionRow, rect.width / 2, rect.height / 2);
+                    }catch(err){}
+                  }
+                });
+
+                optionRow.addEventListener('dragend', ()=>{
+                  optionRow.classList.remove('is-dragging');
+                  draggedOptionRow = null;
+                });
+
+                dropdownOptionsList.appendChild(optionRow);
+
+                if(focusIndex === optionIndex){
+                  requestAnimationFrame(()=>{
+                    try{ optionInput.focus({ preventScroll: true }); }
+                    catch(err){
+                      try{ optionInput.focus(); }catch(e){}
+                    }
+                  });
+                }
+              });
+            };
+
+            const getDragAfterOption = (mouseY)=>{
+              const rows = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).filter(row => row !== draggedOptionRow);
+              let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+              rows.forEach(row => {
+                const rect = row.getBoundingClientRect();
+                const offset = mouseY - (rect.top + rect.height / 2);
+                if(offset < 0 && offset > closest.offset){
+                  closest = { offset, element: row };
+                }
+              });
+              return closest.element;
+            };
+
+            dropdownOptionsList.addEventListener('dragover', event=>{
+              if(!draggedOptionRow) return;
+              event.preventDefault();
+              if(event.dataTransfer){
+                event.dataTransfer.dropEffect = 'move';
+              }
+              const afterElement = getDragAfterOption(event.clientY);
+              if(!afterElement){
+                dropdownOptionsList.appendChild(draggedOptionRow);
+              } else if(afterElement !== draggedOptionRow){
+                dropdownOptionsList.insertBefore(draggedOptionRow, afterElement);
+              }
+            });
+
+            dropdownOptionsList.addEventListener('drop', event=>{
+              if(!draggedOptionRow) return;
+              event.preventDefault();
+              const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => {
+                const input = row.querySelector('input');
+                return input ? input.value : '';
+              });
+              safeField.options.splice(0, safeField.options.length, ...orderedValues);
+              if(draggedOptionRow){
+                draggedOptionRow.classList.remove('is-dragging');
+                draggedOptionRow = null;
+              }
+              notifyFormbuilderChange();
+              renderDropdownOptions();
+              renderFormPreview();
+            });
+
             const deleteFieldBtn = document.createElement('button');
             deleteFieldBtn.type = 'button';
             deleteFieldBtn.className = 'delete-field-btn';
@@ -12190,6 +12489,7 @@ function makePosts(){
               const nextType = fieldTypeSelect.value;
               safeField.type = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               notifyFormbuilderChange();
+              updateFieldEditorsByType();
               renderFormPreview();
             });
 
@@ -12215,9 +12515,25 @@ function makePosts(){
 
             updateDeleteFieldAria();
 
+            const updateFieldEditorsByType = ()=>{
+              const type = safeField.type;
+              const isDropdown = type === 'dropdown';
+              fieldPlaceholderWrapper.hidden = isDropdown;
+              dropdownOptionsContainer.hidden = !isDropdown;
+              if(isDropdown){
+                if(!Array.isArray(safeField.options) || safeField.options.length === 0){
+                  safeField.options = ['', '', ''];
+                  notifyFormbuilderChange();
+                }
+                renderDropdownOptions();
+              }
+            };
+
+            updateFieldEditorsByType();
+
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderInput);
+            row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderWrapper, dropdownOptionsContainer);
             row.__fieldRef = safeField;
             return {
               row,
@@ -12589,7 +12905,10 @@ function makePosts(){
               type: field && typeof field.type === 'string' && FORM_FIELD_TYPES.some(opt => opt.value === field.type)
                 ? field.type
                 : 'text-box',
-              placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : ''
+              placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
+              options: Array.isArray(field && field.options)
+                ? field.options.map(opt => (typeof opt === 'string' ? opt : String(opt ?? '')))
+                : []
             }));
           } else {
             out[key] = [];
