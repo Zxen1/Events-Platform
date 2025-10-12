@@ -6342,6 +6342,11 @@ if (typeof slugify !== 'function') {
             #tab-forms .version-price-price{
               width:100%;
             }
+            #tab-forms .version-price-price.is-awaiting-currency{
+              opacity:0.45;
+              background:rgba(0,0,0,0.2);
+              cursor:not-allowed;
+            }
             #tab-forms .version-price-option-actions{
               display:flex;
               gap:6px;
@@ -6644,9 +6649,9 @@ if (typeof slugify !== 'function') {
               position:absolute;
               top:4px;
               right:4px;
-              width:22px;
-              height:22px;
-              border-radius:50%;
+              width:35px;
+              height:35px;
+              border-radius:10px;
               border:none;
               background:rgba(0,0,0,0.75);
               color:#fff;
@@ -12628,6 +12633,16 @@ function makePosts(){
                   normalizeOptions();
                   versionList.innerHTML = '';
                   let firstId = null;
+                  const currencyAlertMessage = 'Please select a currency before entering a price.';
+                  let lastCurrencyAlertAt = 0;
+                  const showCurrencyAlert = ()=>{
+                    const now = Date.now();
+                    if(now - lastCurrencyAlertAt < 400) return;
+                    lastCurrencyAlertAt = now;
+                    try{
+                      window.alert(currencyAlertMessage);
+                    }catch(err){}
+                  };
                   previewField.options.forEach((optionValue, optionIndex)=>{
                     const optionRow = document.createElement('div');
                     optionRow.className = 'version-price-option';
@@ -12668,10 +12683,7 @@ function makePosts(){
                       currencySelect.appendChild(opt);
                     });
                     currencySelect.value = optionValue.currency || '';
-                    currencySelect.addEventListener('change', ()=>{
-                      previewField.options[optionIndex].currency = currencySelect.value;
-                      notifyFormbuilderChange();
-                    });
+                    const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
 
                     const priceInput = document.createElement('input');
                     priceInput.type = 'text';
@@ -12681,7 +12693,69 @@ function makePosts(){
                     priceInput.placeholder = '0.00';
                     const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
                     priceInput.value = sanitizePriceValue(optionValue.price || '');
+                    const clearPriceValue = ()=>{
+                      let changed = false;
+                      if(priceInput.value !== ''){
+                        priceInput.value = '';
+                        changed = true;
+                      }
+                      if(previewField.options[optionIndex].price !== ''){
+                        previewField.options[optionIndex].price = '';
+                        changed = true;
+                      } else if(typeof previewField.options[optionIndex].price !== 'string'){
+                        previewField.options[optionIndex].price = '';
+                      }
+                      return changed;
+                    };
+                    const updatePriceState = ()=>{
+                      if(isCurrencySelected()){
+                        priceInput.readOnly = false;
+                        priceInput.classList.remove('is-awaiting-currency');
+                        priceInput.removeAttribute('aria-disabled');
+                        return false;
+                      }
+                      priceInput.readOnly = true;
+                      priceInput.classList.add('is-awaiting-currency');
+                      priceInput.setAttribute('aria-disabled', 'true');
+                      return clearPriceValue();
+                    };
+                    const blockPriceAccess = event => {
+                      if(isCurrencySelected()) return false;
+                      if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+                      if(event && typeof event.preventDefault === 'function'){
+                        event.preventDefault();
+                      }
+                      if(event && typeof event.stopPropagation === 'function'){
+                        event.stopPropagation();
+                      }
+                      if(typeof priceInput.blur === 'function'){
+                        requestAnimationFrame(()=>{
+                          try{ priceInput.blur(); }catch(err){}
+                        });
+                      }
+                      showCurrencyAlert();
+                      return true;
+                    };
+                    currencySelect.addEventListener('change', ()=>{
+                      const previousCurrency = previewField.options[optionIndex].currency || '';
+                      const nextCurrency = currencySelect.value;
+                      previewField.options[optionIndex].currency = nextCurrency;
+                      const priceCleared = updatePriceState();
+                      if(isCurrencySelected()){
+                        commitPriceValue();
+                      }
+                      if(previousCurrency !== nextCurrency || priceCleared){
+                        notifyFormbuilderChange();
+                      }
+                    });
+
                     const commitPriceValue = ()=>{
+                      if(!isCurrencySelected()){
+                        if(clearPriceValue()){
+                          notifyFormbuilderChange();
+                        }
+                        return;
+                      }
                       const rawValue = priceInput.value;
                       const sanitized = sanitizePriceValue(rawValue);
                       if(rawValue !== sanitized){
@@ -12706,9 +12780,24 @@ function makePosts(){
                         event.preventDefault();
                       }
                     });
+                    priceInput.addEventListener('pointerdown', event => {
+                      blockPriceAccess(event);
+                    });
+                    priceInput.addEventListener('focus', event => {
+                      blockPriceAccess(event);
+                    });
+                    priceInput.addEventListener('keydown', event => {
+                      if(event.key === 'Tab' || event.key === 'Shift') return;
+                      if(blockPriceAccess(event)) return;
+                    });
                     priceInput.addEventListener('input', commitPriceValue);
                     priceInput.addEventListener('change', commitPriceValue);
-                    commitPriceValue();
+                    const initialCleared = updatePriceState();
+                    if(isCurrencySelected()){
+                      commitPriceValue();
+                    } else if(initialCleared){
+                      notifyFormbuilderChange();
+                    }
 
                     const actions = document.createElement('div');
                     actions.className = 'dropdown-option-actions version-price-option-actions';
@@ -20924,11 +21013,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let dragState = null;
 
   function handleThumbDragStart(event){
-    const thumb = event.currentTarget;
-    if(event.target && event.target.closest('.form-preview-image-remove')){
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if(targetEl && targetEl.closest('.form-preview-image-remove')){
       event.preventDefault();
       return;
     }
+    let thumb = targetEl ? targetEl.closest('.form-preview-image-thumb') : null;
+    if(!thumb && event.currentTarget instanceof Element){
+      thumb = event.currentTarget.closest('.form-preview-image-thumb');
+    }
+    if(!thumb) return;
     const previewEl = thumb ? thumb.parentElement : null;
     if(!previewEl || !previewEl._imageInput) return;
     const index = Number.parseInt(thumb.dataset.index || '', 10);
@@ -20945,7 +21039,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleThumbDragEnd(event){
-    const thumb = event.currentTarget;
+    let thumb = event.target instanceof Element ? event.target.closest('.form-preview-image-thumb') : null;
+    if(!thumb && event.currentTarget instanceof Element){
+      thumb = event.currentTarget.closest('.form-preview-image-thumb');
+    }
+    if(!thumb) return;
     thumb.classList.remove('is-dragging');
     if(dragState && dragState.thumb === thumb){
       dragState = null;
@@ -21124,6 +21222,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const img = document.createElement('img');
         img.alt = file.name ? `${file.name} preview` : `Image preview ${index + 1}`;
+        img.draggable = true;
+        img.addEventListener('dragstart', handleThumbDragStart);
+        img.addEventListener('dragend', handleThumbDragEnd);
         thumb.append(removeBtn, img);
         previewEl.appendChild(thumb);
         const reader = new FileReader();
