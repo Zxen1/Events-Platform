@@ -1234,7 +1234,7 @@ button[aria-expanded="true"] .results-arrow{
   --panel-scrollbar-thumb: rgba(255,255,255,0.35);
   --panel-scrollbar-thumb-hover: rgba(255,255,255,0.55);
   --panel-base-padding-end: 10px;
-  padding-right:var(--panel-base-padding-end);
+  padding-right:calc(var(--panel-base-padding-end) + var(--panel-scrollbar-overlay));
   margin-right:calc(-1 * var(--panel-scrollbar-overlay));
   width:calc(100% + var(--panel-scrollbar-overlay));
   overscroll-behavior:contain;
@@ -11684,23 +11684,9 @@ function makePosts(){
       if(!menu || !header) return;
       ensureCategoryDragContainer();
       menu.draggable = true;
-      const activateHandle = ()=>{ menu.__formbuilderCategoryHandleActive = true; };
-      const deactivateHandle = ()=>{ menu.__formbuilderCategoryHandleActive = false; };
-      const addHandleListeners = (node, events, handler, options)=>{
-        events.forEach(eventName => node.addEventListener(eventName, handler, options));
-      };
-      if('PointerEvent' in window){
-        addHandleListeners(header, ['pointerdown'], activateHandle);
-        addHandleListeners(header, ['pointerup','pointerleave','pointercancel'], deactivateHandle);
-      } else {
-        addHandleListeners(header, ['mousedown','touchstart'], activateHandle, { passive: true });
-        addHandleListeners(header, ['mouseup','mouseleave','touchend','touchcancel'], deactivateHandle);
-      }
       menu.addEventListener('dragstart', event=>{
-        const path = typeof event.composedPath === 'function' ? event.composedPath() : null;
-        const fromHeader = path ? path.includes(header) : !!menu.__formbuilderCategoryHandleActive;
-        menu.__formbuilderCategoryHandleActive = false;
-        if(!fromHeader){
+        const origin = event.target;
+        if(origin && origin.closest('.category-form-content')){
           event.preventDefault();
           return;
         }
@@ -11725,7 +11711,6 @@ function makePosts(){
           header.classList.remove('is-dragging');
           draggedCategoryMenu = null;
         }
-        menu.__formbuilderCategoryHandleActive = false;
         clearCategoryDropIndicator();
         if(!categoryDropCommitted){
           syncCategoriesFromDom();
@@ -11738,23 +11723,9 @@ function makePosts(){
       if(!subMenu || !container || !header) return;
       const state = setupSubcategoryContainer(container, categoryObj, addButton);
       subMenu.draggable = true;
-      const activateSubHandle = ()=>{ subMenu.__formbuilderSubHandleActive = true; };
-      const deactivateSubHandle = ()=>{ subMenu.__formbuilderSubHandleActive = false; };
-      const addHandleListeners = (node, events, handler, options)=>{
-        events.forEach(eventName => node.addEventListener(eventName, handler, options));
-      };
-      if('PointerEvent' in window){
-        addHandleListeners(header, ['pointerdown'], activateSubHandle);
-        addHandleListeners(header, ['pointerup','pointerleave','pointercancel'], deactivateSubHandle);
-      } else {
-        addHandleListeners(header, ['mousedown','touchstart'], activateSubHandle, { passive: true });
-        addHandleListeners(header, ['mouseup','mouseleave','touchend','touchcancel'], deactivateSubHandle);
-      }
       subMenu.addEventListener('dragstart', event=>{
-        const path = typeof event.composedPath === 'function' ? event.composedPath() : null;
-        const fromHeader = path ? path.includes(header) : !!subMenu.__formbuilderSubHandleActive;
-        subMenu.__formbuilderSubHandleActive = false;
-        if(!fromHeader){
+        const origin = event.target;
+        if(origin && origin.closest('.subcategory-form-content')){
           event.preventDefault();
           return;
         }
@@ -11781,7 +11752,6 @@ function makePosts(){
           draggedSubcategoryMenu = null;
           draggedSubcategoryContainer = null;
         }
-        subMenu.__formbuilderSubHandleActive = false;
         if(state){
           clearSubDropIndicator(state);
           if(!state.dropCommitted){
