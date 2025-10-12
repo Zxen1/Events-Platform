@@ -6481,6 +6481,25 @@ if (typeof slugify !== 'function') {
             #tab-forms .form-preview-container .form-preview-field--dropdown .form-preview-select{
               padding-right:40px;
             }
+            #tab-forms .form-preview-container .form-preview-field--radio-toggle{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .form-preview-container .form-preview-radio-group{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+            }
+            #tab-forms .form-preview-container .form-preview-radio-option{
+              display:flex;
+              align-items:center;
+              gap:8px;
+              font-size:14px;
+            }
+            #tab-forms .form-preview-container .form-preview-radio-option input[type="radio"]{
+              pointer-events:none;
+            }
             #tab-forms .form-preview-container .panel-field select:disabled{
               opacity:1;
             }
@@ -12185,7 +12204,7 @@ function makePosts(){
             } else {
               safeField.options = safeField.options.map(opt => typeof opt === 'string' ? opt : String(opt ?? ''));
             }
-            if(safeField.type === 'dropdown' && safeField.options.length === 0){
+            if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
               safeField.options.push('', '', '');
             }
             return safeField;
@@ -12276,6 +12295,38 @@ function makePosts(){
                 }
                 select.tabIndex = -1;
                 control = select;
+              } else if(previewField.type === 'radio-toggle'){
+                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const radioGroup = document.createElement('div');
+                radioGroup.className = 'form-preview-radio-group';
+                wrapper.classList.add('form-preview-field--radio-toggle');
+                if(options.length){
+                  options.forEach((optionValue, optionIndex)=>{
+                    const radioLabel = document.createElement('label');
+                    radioLabel.className = 'form-preview-radio-option';
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = `preview-radio-${previewIndex}`;
+                    radio.disabled = true;
+                    radio.value = optionValue;
+                    const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                      ? optionValue
+                      : `Option ${optionIndex + 1}`;
+                    const radioText = document.createElement('span');
+                    radioText.textContent = displayValue;
+                    radioLabel.append(radio, radioText);
+                    radioGroup.appendChild(radioLabel);
+                  });
+                } else {
+                  const placeholderOption = document.createElement('label');
+                  placeholderOption.className = 'form-preview-radio-option';
+                  const radio = document.createElement('input');
+                  radio.type = 'radio';
+                  radio.disabled = true;
+                  placeholderOption.append(radio, document.createTextNode('Option'));
+                  radioGroup.appendChild(placeholderOption);
+                }
+                control = radioGroup;
               } else {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -12336,7 +12387,7 @@ function makePosts(){
             dropdownOptionsContainer.className = 'dropdown-options-editor';
             const dropdownOptionsLabel = document.createElement('div');
             dropdownOptionsLabel.className = 'dropdown-options-label';
-            dropdownOptionsLabel.textContent = 'Dropdown Options';
+            dropdownOptionsLabel.textContent = 'Field Options';
             const dropdownOptionsList = document.createElement('div');
             dropdownOptionsList.className = 'dropdown-options-list';
             dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
@@ -12347,14 +12398,15 @@ function makePosts(){
               if(!Array.isArray(safeField.options)){
                 safeField.options = [];
               }
-              if(safeField.options.length === 0){
+              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
                 safeField.options.push('', '', '');
                 notifyFormbuilderChange();
               }
             };
 
             const renderDropdownOptions = (focusIndex = null)=>{
-              if(safeField.type !== 'dropdown'){
+              const isOptionsType = safeField.type === 'dropdown' || safeField.type === 'radio-toggle';
+              if(!isOptionsType){
                 dropdownOptionsList.innerHTML = '';
                 return;
               }
@@ -12542,15 +12594,24 @@ function makePosts(){
 
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
-              const isDropdown = type === 'dropdown';
-              fieldPlaceholderWrapper.hidden = isDropdown;
-              dropdownOptionsContainer.hidden = !isDropdown;
-              if(isDropdown){
+              const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
+              fieldPlaceholderWrapper.hidden = isOptionsType;
+              dropdownOptionsContainer.hidden = !isOptionsType;
+              if(type === 'dropdown'){
+                dropdownOptionsLabel.textContent = 'Dropdown Options';
+              } else if(type === 'radio-toggle'){
+                dropdownOptionsLabel.textContent = 'Radio Options';
+              } else {
+                dropdownOptionsLabel.textContent = 'Field Options';
+              }
+              if(isOptionsType){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = ['', '', ''];
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
+              } else {
+                dropdownOptionsList.innerHTML = '';
               }
             };
 
