@@ -1837,6 +1837,17 @@ button[aria-expanded="true"] .results-arrow{
   width:100%;
   max-width:100%;
 }
+.panel-field .website-link-preview{
+  display:inline-block;
+  margin-top:6px;
+  font-size:13px;
+  word-break:break-word;
+  text-decoration:underline;
+  color:inherit;
+}
+.panel-field .website-link-preview[hidden]{
+  display:none !important;
+}
 .panel-actions{
   margin-top:10px;
   display:flex;
@@ -8917,6 +8928,158 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'checkout', label: 'Checkout' },
       { value: 'venue-session-version-tier-price', label: 'Venue Session Version Tier Price' }
     ];
+    const WEBSITE_FIELD_PATTERN_STRING = '^(?=.*\\.[A-Za-z]{2,})[^\\s]+$';
+    const WEBSITE_FIELD_REGEX = /^(?=.*\.[A-Za-z]{2,})[^\s]+$/;
+    const WEBSITE_FIELD_SELECTOR = 'input[data-field-type="website-url"], input.website-url-field';
+    let websiteFieldObserver = null;
+
+    function normalizeWebsiteInputValue(raw){
+      if(typeof raw !== 'string') return '';
+      const trimmed = raw.trim();
+      if(!trimmed || !WEBSITE_FIELD_REGEX.test(trimmed)){
+        return '';
+      }
+      if(/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)){
+        return trimmed;
+      }
+      return `https://${trimmed}`;
+    }
+
+    function enhanceWebsiteInputs(scope){
+      if(typeof document === 'undefined') return;
+      let inputs = [];
+      if(!scope){
+        inputs = Array.from(document.querySelectorAll(WEBSITE_FIELD_SELECTOR));
+      } else if(scope.nodeType === 1 || scope.nodeType === 9 || scope.nodeType === 11){
+        const elementScope = scope;
+        if(elementScope.matches && elementScope.matches(WEBSITE_FIELD_SELECTOR)){
+          inputs.push(elementScope);
+        }
+        if(typeof elementScope.querySelectorAll === 'function'){
+          inputs.push(...elementScope.querySelectorAll(WEBSITE_FIELD_SELECTOR));
+        }
+      } else if(typeof scope.forEach === 'function'){
+        scope.forEach(node => {
+          if(node && node.matches && node.matches(WEBSITE_FIELD_SELECTOR)){
+            inputs.push(node);
+          }
+        });
+      }
+
+      inputs.forEach(input => {
+        if(!input || input.dataset.websiteEnhanced === 'true') return;
+        if(!input.tagName || input.tagName.toLowerCase() !== 'input') return;
+        input.dataset.websiteEnhanced = 'true';
+        if(!input.dataset.fieldType){
+          input.dataset.fieldType = 'website-url';
+        }
+        input.classList.add('website-url-field');
+        input.setAttribute('pattern', WEBSITE_FIELD_PATTERN_STRING);
+        input.setAttribute('title', 'Enter a valid website address (must include a dot and letters after it).');
+        input.setAttribute('inputmode', 'url');
+        input.setAttribute('autocomplete', 'url');
+        if(typeof input.autocapitalize === 'string'){
+          input.autocapitalize = 'none';
+        }
+        input.spellcheck = false;
+
+        const ensureLink = ()=>{
+          const field = input.closest('.panel-field') || input.parentElement;
+          if(!field) return null;
+          let link = input.__websiteLink;
+          if(link && link.parentElement !== field){
+            try{ link.remove(); }catch(err){}
+            link = null;
+          }
+          if(!link){
+            link = document.createElement('a');
+            link.className = 'website-link-preview';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer nofollow';
+            link.hidden = true;
+            field.appendChild(link);
+            input.__websiteLink = link;
+          }
+          return link;
+        };
+
+        const updateLink = ()=>{
+          const link = ensureLink();
+          if(!link) return;
+          const rawValue = typeof input.value === 'string' ? input.value.trim() : '';
+          const normalized = normalizeWebsiteInputValue(rawValue);
+          if(normalized){
+            link.href = normalized;
+            link.textContent = rawValue || normalized;
+            link.hidden = false;
+            link.removeAttribute('aria-disabled');
+          } else {
+            link.href = '';
+            link.textContent = '';
+            link.hidden = true;
+            link.setAttribute('aria-disabled', 'true');
+          }
+        };
+
+        const clearCustomValidity = ()=>{
+          try{ input.setCustomValidity(''); }catch(err){}
+        };
+
+        const handleInvalid = ()=>{
+          if(input.validity && input.validity.patternMismatch){
+            try{ input.setCustomValidity('Enter a valid website address (must include a dot and letters after it).'); }
+            catch(err){}
+          }
+        };
+
+        const handleValueChange = ()=>{
+          clearCustomValidity();
+          updateLink();
+        };
+
+        input.addEventListener('input', handleValueChange);
+        input.addEventListener('change', handleValueChange);
+        input.addEventListener('blur', updateLink);
+        input.addEventListener('invalid', handleInvalid);
+        handleValueChange();
+      });
+    }
+
+    function scheduleWebsiteFieldEnhancements(){
+      if(typeof document === 'undefined') return;
+      const init = ()=>{
+        enhanceWebsiteInputs(document);
+        if(typeof MutationObserver !== 'function' || websiteFieldObserver) return;
+        const body = document.body;
+        if(!body){
+          requestAnimationFrame(init);
+          return;
+        }
+        websiteFieldObserver = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+              if(!node) return;
+              const type = node.nodeType;
+              if(type !== 1 && type !== 9 && type !== 11) return;
+              enhanceWebsiteInputs(node);
+            });
+          });
+        });
+        try{
+          websiteFieldObserver.observe(body, { childList: true, subtree: true });
+        }catch(err){
+          websiteFieldObserver = null;
+        }
+      };
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+      } else {
+        init();
+      }
+    }
+
+    scheduleWebsiteFieldEnhancements();
+
       const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
         "Opportunities": "opportunities-category-icon",
@@ -12258,6 +12421,21 @@ function makePosts(){
                 select.setAttribute('aria-disabled', 'true');
                 select.tabIndex = -1;
                 control = select;
+              } else if(previewField.type === 'website-url'){
+                const input = document.createElement('input');
+                input.type = 'url';
+                input.readOnly = true;
+                input.tabIndex = -1;
+                input.dataset.fieldType = 'website-url';
+                const placeholder = (typeof previewField.placeholder === 'string' && previewField.placeholder.trim())
+                  ? previewField.placeholder.trim()
+                  : '';
+                const sampleValue = placeholder && WEBSITE_FIELD_REGEX.test(placeholder)
+                  ? placeholder
+                  : 'https://example.com';
+                input.value = sampleValue;
+                input.placeholder = placeholder || 'https://example.com';
+                control = input;
               } else {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -12268,6 +12446,9 @@ function makePosts(){
               }
               if(control){
                 wrapper.append(label, control);
+                if(previewField.type === 'website-url'){
+                  enhanceWebsiteInputs(wrapper);
+                }
                 formPreviewFields.appendChild(wrapper);
               }
             });
