@@ -6318,7 +6318,7 @@ if (typeof slugify !== 'function') {
               display:flex;
               flex-direction:column;
               gap:8px;
-              padding:12px;
+              padding:0;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
             }
@@ -6657,6 +6657,7 @@ if (typeof slugify !== 'function') {
               justify-content:center;
               cursor:pointer;
               transition:background-color .2s ease;
+              z-index:1;
             }
             #tab-forms .form-preview-image-remove:hover,
             .form-preview-image-remove:hover{
@@ -12678,11 +12679,36 @@ function makePosts(){
                     priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
                     priceInput.className = 'version-price-price';
                     priceInput.placeholder = '0.00';
-                    priceInput.value = optionValue.price || '';
-                    priceInput.addEventListener('input', ()=>{
-                      previewField.options[optionIndex].price = priceInput.value;
-                      notifyFormbuilderChange();
+                    const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
+                    priceInput.value = sanitizePriceValue(optionValue.price || '');
+                    const commitPriceValue = ()=>{
+                      const rawValue = priceInput.value;
+                      const sanitized = sanitizePriceValue(rawValue);
+                      if(rawValue !== sanitized){
+                        const start = priceInput.selectionStart;
+                        const end = priceInput.selectionEnd;
+                        const removed = rawValue.length - sanitized.length;
+                        priceInput.value = sanitized;
+                        if(typeof priceInput.setSelectionRange === 'function' && start != null && end != null){
+                          const nextStart = Math.max(0, start - removed);
+                          const nextEnd = Math.max(0, end - removed);
+                          priceInput.setSelectionRange(nextStart, nextEnd);
+                        }
+                      }
+                      const previous = previewField.options[optionIndex].price || '';
+                      if(previous !== sanitized){
+                        previewField.options[optionIndex].price = sanitized;
+                        notifyFormbuilderChange();
+                      }
+                    };
+                    priceInput.addEventListener('beforeinput', event => {
+                      if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
+                        event.preventDefault();
+                      }
                     });
+                    priceInput.addEventListener('input', commitPriceValue);
+                    priceInput.addEventListener('change', commitPriceValue);
+                    commitPriceValue();
 
                     const actions = document.createElement('div');
                     actions.className = 'dropdown-option-actions version-price-option-actions';
@@ -20981,32 +21007,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if(thumbs.length === 0) return 0;
     const pointerX = event.clientX;
     const pointerY = event.clientY;
-    let bestIndex = thumbs.length;
-    let bestDistance = Number.POSITIVE_INFINITY;
-    thumbs.forEach((thumb, index) => {
-      if(dragState && dragState.thumb === thumb) return;
+    let fallbackIndex = 0;
+    for(const thumb of thumbs){
+      if(dragState && dragState.thumb === thumb) continue;
       const rect = thumb.getBoundingClientRect();
+      const datasetIndex = Number.parseInt(thumb.dataset.index || '', 10);
+      if(Number.isNaN(datasetIndex)) continue;
       const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const dx = pointerX - centerX;
-      const dy = pointerY - centerY;
-      const distance = Math.hypot(dx, dy);
-      if(distance < bestDistance){
-        bestDistance = distance;
-        if(pointerY < rect.top){
-          bestIndex = index;
-        } else if(pointerY > rect.bottom){
-          bestIndex = index + 1;
-        } else if(pointerX < centerX){
-          bestIndex = index;
-        } else {
-          bestIndex = index + 1;
-        }
+      if(pointerY < rect.top){
+        return datasetIndex;
       }
-    });
-    if(bestIndex < 0) return 0;
-    if(bestIndex > thumbs.length) return thumbs.length;
-    return bestIndex;
+      if(pointerY <= rect.bottom){
+        if(pointerX < centerX){
+          return datasetIndex;
+        }
+        fallbackIndex = datasetIndex + 1;
+        continue;
+      }
+      fallbackIndex = datasetIndex + 1;
+    }
+    return fallbackIndex;
   }
 
   function getMax(input){
