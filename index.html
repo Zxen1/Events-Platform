@@ -6465,6 +6465,19 @@ if (typeof slugify !== 'function') {
             #tab-forms .form-preview-container .panel-field select:disabled{
               opacity:1;
             }
+            #tab-forms .form-preview-radio-group{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .form-preview-radio-option{
+              display:flex;
+              align-items:center;
+              gap:8px;
+            }
+            #tab-forms .form-preview-radio-option input{
+              pointer-events:none;
+            }
             #tab-forms .subcategory-form-content[hidden]{
               display:none;
             }
@@ -12166,7 +12179,7 @@ function makePosts(){
             } else {
               safeField.options = safeField.options.map(opt => typeof opt === 'string' ? opt : String(opt ?? ''));
             }
-            if(safeField.type === 'dropdown' && safeField.options.length === 0){
+            if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
               safeField.options.push('', '', '');
             }
             return safeField;
@@ -12235,29 +12248,71 @@ function makePosts(){
                 textarea.className = 'form-preview-textarea';
                 textarea.style.resize = 'vertical';
                 control = textarea;
-              } else if(previewField.type === 'dropdown'){
-                const select = document.createElement('select');
-                select.className = 'form-preview-select';
+              } else if(previewField.type === 'dropdown' || previewField.type === 'radio-toggle'){
                 const options = Array.isArray(previewField.options) ? previewField.options : [];
-                if(options.length){
-                  options.forEach((optionValue, optionIndex)=>{
-                    const option = document.createElement('option');
-                    const displayValue = (typeof optionValue === 'string' && optionValue.trim())
-                      ? optionValue
-                      : `Option ${optionIndex + 1}`;
-                    option.value = optionValue;
-                    option.textContent = displayValue;
-                    select.appendChild(option);
-                  });
+                if(previewField.type === 'dropdown'){
+                  const select = document.createElement('select');
+                  select.className = 'form-preview-select';
+                  if(options.length){
+                    options.forEach((optionValue, optionIndex)=>{
+                      const option = document.createElement('option');
+                      const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                        ? optionValue
+                        : `Option ${optionIndex + 1}`;
+                      option.value = optionValue;
+                      option.textContent = displayValue;
+                      select.appendChild(option);
+                    });
+                  } else {
+                    const placeholderOption = document.createElement('option');
+                    placeholderOption.textContent = 'Select an option';
+                    select.appendChild(placeholderOption);
+                  }
+                  select.disabled = true;
+                  select.setAttribute('aria-disabled', 'true');
+                  select.tabIndex = -1;
+                  control = select;
                 } else {
-                  const placeholderOption = document.createElement('option');
-                  placeholderOption.textContent = 'Select an option';
-                  select.appendChild(placeholderOption);
+                  const radioGroup = document.createElement('div');
+                  radioGroup.className = 'form-preview-radio-group';
+                  const groupName = `previewRadio${previewIndex}`;
+                  if(options.length){
+                    options.forEach((optionValue, optionIndex)=>{
+                      const optionLabel = document.createElement('label');
+                      optionLabel.className = 'form-preview-radio-option';
+                      const input = document.createElement('input');
+                      input.type = 'radio';
+                      input.name = groupName;
+                      input.disabled = true;
+                      input.tabIndex = -1;
+                      input.value = optionValue;
+                      if(optionIndex === 0){
+                        input.checked = true;
+                      }
+                      const optionText = document.createElement('span');
+                      const displayValue = (typeof optionValue === 'string' && optionValue.trim())
+                        ? optionValue
+                        : `Option ${optionIndex + 1}`;
+                      optionText.textContent = displayValue;
+                      optionLabel.append(input, optionText);
+                      radioGroup.appendChild(optionLabel);
+                    });
+                  } else {
+                    const placeholderLabel = document.createElement('label');
+                    placeholderLabel.className = 'form-preview-radio-option';
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = groupName;
+                    input.disabled = true;
+                    input.tabIndex = -1;
+                    input.checked = true;
+                    const optionText = document.createElement('span');
+                    optionText.textContent = 'Option 1';
+                    placeholderLabel.append(input, optionText);
+                    radioGroup.appendChild(placeholderLabel);
+                  }
+                  control = radioGroup;
                 }
-                select.disabled = true;
-                select.setAttribute('aria-disabled', 'true');
-                select.tabIndex = -1;
-                control = select;
               } else {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -12329,14 +12384,15 @@ function makePosts(){
               if(!Array.isArray(safeField.options)){
                 safeField.options = [];
               }
-              if(safeField.options.length === 0){
+              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
                 safeField.options.push('', '', '');
                 notifyFormbuilderChange();
               }
             };
 
             const renderDropdownOptions = (focusIndex = null)=>{
-              if(safeField.type !== 'dropdown'){
+              const supportsOptions = safeField.type === 'dropdown' || safeField.type === 'radio-toggle';
+              if(!supportsOptions){
                 dropdownOptionsList.innerHTML = '';
                 return;
               }
@@ -12445,6 +12501,7 @@ function makePosts(){
 
             dropdownOptionsList.addEventListener('dragover', event=>{
               if(!draggedOptionRow) return;
+              if(safeField.type !== 'dropdown' && safeField.type !== 'radio-toggle') return;
               event.preventDefault();
               if(event.dataTransfer){
                 event.dataTransfer.dropEffect = 'move';
@@ -12459,6 +12516,7 @@ function makePosts(){
 
             dropdownOptionsList.addEventListener('drop', event=>{
               if(!draggedOptionRow) return;
+              if(safeField.type !== 'dropdown' && safeField.type !== 'radio-toggle') return;
               event.preventDefault();
               const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => {
                 const input = row.querySelector('input');
@@ -12524,15 +12582,18 @@ function makePosts(){
 
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
-              const isDropdown = type === 'dropdown';
-              fieldPlaceholderWrapper.hidden = isDropdown;
-              dropdownOptionsContainer.hidden = !isDropdown;
-              if(isDropdown){
+              const supportsOptions = type === 'dropdown' || type === 'radio-toggle';
+              fieldPlaceholderWrapper.hidden = supportsOptions;
+              dropdownOptionsContainer.hidden = !supportsOptions;
+              dropdownOptionsLabel.textContent = type === 'radio-toggle' ? 'Radio Options' : 'Dropdown Options';
+              if(supportsOptions){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = ['', '', ''];
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
+              } else {
+                dropdownOptionsList.innerHTML = '';
               }
             };
 
