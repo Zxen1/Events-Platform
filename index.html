@@ -6155,8 +6155,10 @@ if (typeof slugify !== 'function') {
               font-weight:600;
               display:flex;
               align-items:center;
-              justify-content:center;
+              justify-content:flex-start;
               gap:8px;
+              padding:0 14px;
+              text-align:left;
               cursor:pointer;
               transition:background .2s,border-color .2s,color .2s;
             }
@@ -6165,6 +6167,7 @@ if (typeof slugify !== 'function') {
               border-color:var(--btn-hover, #2e3a72);
             }
             #tab-forms .form-preview-btn .dropdown-arrow{
+              margin-left:auto;
               transform:rotate(45deg);
               transition:transform .3s ease;
             }
@@ -6354,7 +6357,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.25);
               padding:12px;
               border-radius:10px;
-              border:1px solid var(--border);
+              border:none;
               max-width:none;
             }
             #tab-forms .form-preview-container .panel-field label{
