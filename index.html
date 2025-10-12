@@ -6191,7 +6191,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .subcategory-field-row .field-row-header .field-name-input{
               flex:1;
             }
-            #tab-forms .subcategory-field-row input,
+            #tab-forms .subcategory-field-row input:not([type="radio"]):not([type="checkbox"]),
             #tab-forms .subcategory-field-row select{
               width:100%;
               height:36px;
@@ -6201,6 +6201,31 @@ if (typeof slugify !== 'function') {
               color:var(--button-text);
               padding:0 12px;
               box-sizing:border-box;
+            }
+            #tab-forms .field-required-row{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+            }
+            #tab-forms .field-required-options{
+              display:flex;
+              gap:12px;
+            }
+            #tab-forms .field-required-option{
+              display:flex;
+              align-items:center;
+              gap:6px;
+              cursor:pointer;
+              font-size:14px;
+            }
+            #tab-forms .field-required-option input[type="radio"]{
+              width:auto;
+              height:auto;
+              accent-color:#ff4d4d;
+            }
+            #tab-forms .field-required-label{
+              font-weight:600;
             }
             #tab-forms .field-placeholder-wrapper[hidden]{
               display:none !important;
@@ -6559,12 +6584,43 @@ if (typeof slugify !== 'function') {
               border:1px solid var(--border);
               background:rgba(0,0,0,0.25);
             }
+            #tab-forms .form-preview-image-remove,
+            .form-preview-image-remove{
+              position:absolute;
+              top:4px;
+              right:4px;
+              width:22px;
+              height:22px;
+              border-radius:50%;
+              border:none;
+              background:rgba(0,0,0,0.75);
+              color:#fff;
+              font-size:16px;
+              line-height:1;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              cursor:pointer;
+              transition:background-color .2s ease;
+            }
+            #tab-forms .form-preview-image-remove:hover,
+            .form-preview-image-remove:hover{
+              background:rgba(255,77,77,0.85);
+            }
+            .form-preview-image-remove span{
+              pointer-events:none;
+            }
             #tab-forms .form-preview-image-thumb img{
               position:absolute;
               inset:0;
               width:100%;
               height:100%;
               object-fit:cover;
+            }
+            #tab-forms .form-preview-field .required-asterisk,
+            .required-asterisk{
+              color:#ff4d4d;
+              font-weight:700;
             }
             #tab-forms .form-preview-container .panel-field select:disabled{
               opacity:1;
@@ -9007,6 +9063,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { name:"For Hire", subs:["Performers","Staff","Goods and Services"] }
     ];
     const FORM_FIELD_TYPES = [
+      { value: 'title', label: 'Title' },
+      { value: 'description', label: 'Description' },
       { value: 'text-box', label: 'Text Box' },
       { value: 'text-area', label: 'Text Area' },
       { value: 'dropdown', label: 'Dropdown' },
@@ -9020,6 +9078,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'version-price', label: 'Version/Price' },
       { value: 'checkout', label: 'Checkout' },
       { value: 'venue-session-version-tier-price', label: 'Venue/Session/Version/Tier/Price' }
+    ];
+    const DEFAULT_SUBCATEGORY_FIELDS = [
+      { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: false },
+      { name: 'Images', type: 'images', placeholder: '', required: false }
     ];
       const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
@@ -12265,6 +12328,7 @@ function makePosts(){
               safeField.type = 'text-box';
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            safeField.required = !!safeField.required;
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             } else {
@@ -12276,7 +12340,25 @@ function makePosts(){
             return safeField;
           };
 
+          const ensureDefaultFieldSet = (fieldList)=>{
+            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
+            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
+              fieldList.push({
+                name: typeof defaultField.name === 'string' ? defaultField.name : '',
+                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
+                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
+                required: !!defaultField.required,
+                options: []
+              });
+            });
+            return fieldList.length > 0;
+          };
+
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+
+          if(ensureDefaultFieldSet(fields)){
+            notifyFormbuilderChange();
+          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -12329,10 +12411,11 @@ function makePosts(){
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-preview-field';
               const label = document.createElement('label');
-              label.textContent = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              label.textContent = labelText;
               let control = null;
               const baseId = `form-preview-field-${++formPreviewFieldIdCounter}`;
-              if(previewField.type === 'text-area'){
+              if(previewField.type === 'text-area' || previewField.type === 'description'){
                 const textarea = document.createElement('textarea');
                 textarea.rows = 5;
                 textarea.readOnly = true;
@@ -12343,6 +12426,9 @@ function makePosts(){
                 const textareaId = `${baseId}-input`;
                 textarea.id = textareaId;
                 label.htmlFor = textareaId;
+                if(previewField.type === 'description'){
+                  textarea.classList.add('form-preview-description');
+                }
                 control = textarea;
               } else if(previewField.type === 'dropdown'){
                 const select = document.createElement('select');
@@ -12475,10 +12561,24 @@ function makePosts(){
                 input.tabIndex = -1;
                 const inputId = `${baseId}-input`;
                 input.id = inputId;
+                if(previewField.type === 'title'){
+                  input.classList.add('form-preview-title-input');
+                }
                 label.htmlFor = inputId;
                 control = input;
               }
               if(control){
+                if(control instanceof HTMLElement){
+                  control.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+                }
+                if(previewField.required){
+                  wrapper.classList.add('form-preview-field--required');
+                  label.appendChild(document.createTextNode(' '));
+                  const asterisk = document.createElement('span');
+                  asterisk.className = 'required-asterisk';
+                  asterisk.textContent = '*';
+                  label.appendChild(asterisk);
+                }
                 wrapper.append(label, control);
                 formPreviewFields.appendChild(wrapper);
               }
@@ -12525,6 +12625,60 @@ function makePosts(){
             const fieldPlaceholderWrapper = document.createElement('div');
             fieldPlaceholderWrapper.className = 'field-placeholder-wrapper';
             fieldPlaceholderWrapper.appendChild(fieldPlaceholderInput);
+
+            const fieldRequiredRow = document.createElement('div');
+            fieldRequiredRow.className = 'field-required-row';
+            const fieldRequiredLabel = document.createElement('span');
+            fieldRequiredLabel.className = 'field-required-label';
+            fieldRequiredLabel.textContent = 'Required Field';
+            const fieldRequiredOptions = document.createElement('div');
+            fieldRequiredOptions.className = 'field-required-options';
+            const requiredGroupName = `field-required-${Math.random().toString(36).slice(2)}`;
+
+            const requiredYesLabel = document.createElement('label');
+            requiredYesLabel.className = 'field-required-option';
+            const requiredYesInput = document.createElement('input');
+            requiredYesInput.type = 'radio';
+            requiredYesInput.name = requiredGroupName;
+            requiredYesInput.value = 'yes';
+            requiredYesInput.checked = !!safeField.required;
+            const requiredYesText = document.createElement('span');
+            requiredYesText.textContent = 'Yes';
+            requiredYesLabel.append(requiredYesInput, requiredYesText);
+
+            const requiredNoLabel = document.createElement('label');
+            requiredNoLabel.className = 'field-required-option';
+            const requiredNoInput = document.createElement('input');
+            requiredNoInput.type = 'radio';
+            requiredNoInput.name = requiredGroupName;
+            requiredNoInput.value = 'no';
+            requiredNoInput.checked = !safeField.required;
+            const requiredNoText = document.createElement('span');
+            requiredNoText.textContent = 'No';
+            requiredNoLabel.append(requiredNoInput, requiredNoText);
+
+            const updateRequiredState = (nextRequired)=>{
+              const next = !!nextRequired;
+              if(next === safeField.required) return;
+              safeField.required = next;
+              notifyFormbuilderChange();
+              renderFormPreview();
+            };
+
+            requiredYesInput.addEventListener('change', ()=>{
+              if(requiredYesInput.checked){
+                updateRequiredState(true);
+              }
+            });
+
+            requiredNoInput.addEventListener('change', ()=>{
+              if(requiredNoInput.checked){
+                updateRequiredState(false);
+              }
+            });
+
+            fieldRequiredOptions.append(requiredYesLabel, requiredNoLabel);
+            fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredOptions);
 
             const dropdownOptionsContainer = document.createElement('div');
             dropdownOptionsContainer.className = 'dropdown-options-editor';
@@ -12738,7 +12892,17 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              fieldPlaceholderWrapper.hidden = isOptionsType;
+              const hidePlaceholder = isOptionsType || type === 'images';
+              fieldPlaceholderWrapper.hidden = hidePlaceholder;
+              if(type === 'images'){
+                if(fieldPlaceholderInput.value){
+                  fieldPlaceholderInput.value = '';
+                }
+                if(safeField.placeholder){
+                  safeField.placeholder = '';
+                  notifyFormbuilderChange();
+                }
+              }
               dropdownOptionsContainer.hidden = !isOptionsType;
               if(type === 'dropdown'){
                 dropdownOptionsLabel.textContent = 'Dropdown Options';
@@ -12762,7 +12926,7 @@ function makePosts(){
 
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderWrapper, dropdownOptionsContainer);
+            row.append(fieldHeader, fieldTypeSelect, fieldRequiredRow, fieldPlaceholderWrapper, dropdownOptionsContainer);
             row.__fieldRef = safeField;
             return {
               row,
@@ -13135,6 +13299,7 @@ function makePosts(){
                 ? field.type
                 : 'text-box',
               placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
+              required: !!(field && field.required),
               options: Array.isArray(field && field.options)
                 ? field.options.map(opt => (typeof opt === 'string' ? opt : String(opt ?? '')))
                 : []
@@ -20427,44 +20592,86 @@ document.addEventListener('DOMContentLoaded', () => {
   const processed = new WeakSet();
   let observerStarted = false;
 
-  function limitFiles(input, files, max){
-    if(typeof DataTransfer === 'undefined'){
-      return files.slice(0, max);
+  function getMax(input){
+    return Number.parseInt(input.dataset.maxImages, 10) || DEFAULT_MAX;
+  }
+
+  function getStoredFiles(input){
+    if(Array.isArray(input._imageFiles)){
+      return input._imageFiles.slice();
     }
-    const dt = new DataTransfer();
-    files.slice(0, max).forEach(file => {
-      try { dt.items.add(file); } catch(err){}
-    });
-    input.files = dt.files;
-    return Array.from(input.files || []);
+    const files = Array.from(input.files || []);
+    input._imageFiles = files.slice();
+    return files;
+  }
+
+  function storeFiles(input, files){
+    const copy = files.slice();
+    if(typeof DataTransfer !== 'undefined'){
+      try {
+        const dt = new DataTransfer();
+        copy.forEach(file => {
+          try { dt.items.add(file); } catch(err){}
+        });
+        input.files = dt.files;
+      } catch(err){}
+    }
+    input._imageFiles = copy;
+  }
+
+  function updateLimitMessage(input, totalSelected){
+    const max = getMax(input);
+    if(totalSelected > max){
+      input._imageLimitMessage = `Only the first ${max} images will be used.`;
+    } else {
+      input._imageLimitMessage = '';
+    }
+  }
+
+  function removeImageAt(input, index){
+    const files = getStoredFiles(input);
+    if(index < 0 || index >= files.length) return;
+    files.splice(index, 1);
+    updateLimitMessage(input, files.length);
+    storeFiles(input, files);
+    renderPreviews(input);
   }
 
   function renderPreviews(input){
     if(!(input instanceof HTMLInputElement)) return;
-    const max = Number.parseInt(input.dataset.maxImages, 10) || DEFAULT_MAX;
     const previewId = input.dataset.imagePreviewTarget || '';
     const messageId = input.dataset.imageMessageTarget || '';
     const previewEl = previewId ? document.getElementById(previewId) : null;
     const messageEl = messageId ? document.getElementById(messageId) : null;
-    let files = Array.from(input.files || []);
-    if(files.length > max){
-      files = limitFiles(input, files, max);
-      if(messageEl){
-        messageEl.textContent = `Only the first ${max} images will be used.`;
+    const files = getStoredFiles(input);
+    if(messageEl){
+      const message = input._imageLimitMessage || '';
+      if(message){
+        messageEl.textContent = message;
         messageEl.hidden = false;
+      } else {
+        messageEl.textContent = '';
+        messageEl.hidden = true;
       }
-    } else if(messageEl){
-      messageEl.textContent = '';
-      messageEl.hidden = true;
     }
     if(previewEl){
       previewEl.innerHTML = '';
       files.forEach((file, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'form-preview-image-thumb';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'form-preview-image-remove';
+        removeBtn.setAttribute('aria-label', file.name ? `Remove ${file.name}` : `Remove image ${index + 1}`);
+        removeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
+        removeBtn.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          removeImageAt(input, index);
+        });
         const img = document.createElement('img');
         img.alt = file.name ? `${file.name} preview` : `Image preview ${index + 1}`;
-        thumb.appendChild(img);
+        thumb.append(removeBtn, img);
         previewEl.appendChild(thumb);
         const reader = new FileReader();
         reader.addEventListener('load', () => {
@@ -20479,6 +20686,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function handleSelectionChange(input){
+    const newFiles = Array.from(input.files || []);
+    const existing = getStoredFiles(input);
+    if(newFiles.length === 0){
+      storeFiles(input, existing);
+      renderPreviews(input);
+      return;
+    }
+    const combined = existing.concat(newFiles);
+    updateLimitMessage(input, combined.length);
+    const max = getMax(input);
+    const limited = combined.slice(0, max);
+    storeFiles(input, limited);
+    renderPreviews(input);
+  }
+
   function applyImageBehavior(input){
     if(!(input instanceof HTMLInputElement)) return;
     if(input.type !== 'file') return;
@@ -20486,8 +20709,13 @@ document.addEventListener('DOMContentLoaded', () => {
     processed.add(input);
     input.multiple = true;
     if(!input.accept) input.accept = 'image/*';
-    input.addEventListener('change', () => renderPreviews(input));
+    const initialFiles = Array.from(input.files || []);
+    updateLimitMessage(input, initialFiles.length);
+    const max = getMax(input);
+    const limited = initialFiles.slice(0, max);
+    storeFiles(input, limited);
     renderPreviews(input);
+    input.addEventListener('change', () => handleSelectionChange(input));
   }
 
   function scan(root){
