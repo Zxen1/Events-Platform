@@ -6297,6 +6297,56 @@ if (typeof slugify !== 'function') {
               background:#d13c3c;
               border-color:#d13c3c;
             }
+            #tab-forms .version-price-options-editor{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .version-price-options-editor[hidden]{
+              display:none !important;
+            }
+            #tab-forms .version-price-options-label{
+              font-size:14px;
+              font-weight:600;
+            }
+            #tab-forms .version-price-options-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .version-price-option{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+              padding:12px;
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+            }
+            #tab-forms .version-price-row{
+              display:flex;
+              gap:8px;
+              align-items:center;
+            }
+            #tab-forms .version-price-row--top input{
+              width:100%;
+            }
+            #tab-forms .version-price-row--bottom{
+              display:grid;
+              grid-template-columns:minmax(110px, auto) 1fr auto;
+              gap:8px;
+              align-items:center;
+            }
+            #tab-forms .version-price-currency{
+              width:100%;
+            }
+            #tab-forms .version-price-price{
+              width:100%;
+            }
+            #tab-forms .version-price-option-actions{
+              display:flex;
+              gap:6px;
+              justify-content:flex-end;
+            }
             #tab-forms .subcategory-field-row .delete-field-btn{
               width:36px;
               height:36px;
@@ -6583,6 +6633,11 @@ if (typeof slugify !== 'function') {
               overflow:hidden;
               border:1px solid var(--border);
               background:rgba(0,0,0,0.25);
+              cursor:grab;
+            }
+            #tab-forms .form-preview-image-thumb.is-dragging{
+              opacity:0.7;
+              cursor:grabbing;
             }
             #tab-forms .form-preview-image-remove,
             .form-preview-image-remove{
@@ -6616,6 +6671,27 @@ if (typeof slugify !== 'function') {
               width:100%;
               height:100%;
               object-fit:cover;
+            }
+            #tab-forms .form-preview-field--version-price .form-preview-version-price{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #tab-forms .form-preview-version-price-item{
+              border:1px solid var(--border);
+              border-radius:8px;
+              padding:10px 12px;
+              background:rgba(0,0,0,0.25);
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+            }
+            #tab-forms .form-preview-version-price-name{
+              font-weight:600;
+            }
+            #tab-forms .form-preview-version-price-price{
+              font-size:14px;
+              color:rgba(255,255,255,0.85);
             }
             #tab-forms .form-preview-field .required-asterisk,
             .required-asterisk{
@@ -9079,10 +9155,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'checkout', label: 'Checkout' },
       { value: 'venue-session-version-tier-price', label: 'Venue/Session/Version/Tier/Price' }
     ];
+    const VERSION_PRICE_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'];
     const DEFAULT_SUBCATEGORY_FIELDS = [
       { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: false },
-      { name: 'Images', type: 'images', placeholder: '', required: false }
+      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+      { name: 'Images', type: 'images', placeholder: '', required: true }
     ];
       const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
@@ -12328,14 +12405,40 @@ function makePosts(){
               safeField.type = 'text-box';
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-            safeField.required = !!safeField.required;
+            const requiresByDefault = safeField.type === 'title'
+              || safeField.type === 'description'
+              || safeField.type === 'images';
+            const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
+            safeField.required = hasRequiredProp ? !!safeField.required : requiresByDefault;
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
-            } else {
-              safeField.options = safeField.options.map(opt => typeof opt === 'string' ? opt : String(opt ?? ''));
             }
-            if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
-              safeField.options.push('', '', '');
+            if(safeField.type === 'version-price'){
+              safeField.options = safeField.options.map(opt => {
+                if(opt && typeof opt === 'object'){
+                  return {
+                    version: typeof opt.version === 'string' ? opt.version : '',
+                    currency: typeof opt.currency === 'string' ? opt.currency : '',
+                    price: typeof opt.price === 'string' ? opt.price : ''
+                  };
+                }
+                const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                return { version: str, currency: '', price: '' };
+              });
+              if(safeField.options.length === 0){
+                safeField.options.push({ version: '', currency: '', price: '' });
+              }
+            } else {
+              safeField.options = safeField.options.map(opt => {
+                if(typeof opt === 'string') return opt;
+                if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
+                  return opt.version;
+                }
+                return String(opt ?? '');
+              });
+              if((safeField.type === 'dropdown' || safeField.type === 'radio-toggle') && safeField.options.length === 0){
+                safeField.options.push('', '', '');
+              }
             }
             return safeField;
           };
@@ -12490,6 +12593,39 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
+              } else if(previewField.type === 'version-price'){
+                wrapper.classList.add('form-preview-field--version-price');
+                const versionList = document.createElement('div');
+                versionList.className = 'form-preview-version-price';
+                const options = Array.isArray(previewField.options) ? previewField.options : [];
+                const normalized = options.length ? options : [{ version: '', currency: '', price: '' }];
+                normalized.forEach((optionValue, optionIndex)=>{
+                  const opt = optionValue && typeof optionValue === 'object'
+                    ? {
+                        version: typeof optionValue.version === 'string' ? optionValue.version : '',
+                        currency: typeof optionValue.currency === 'string' ? optionValue.currency : '',
+                        price: typeof optionValue.price === 'string' ? optionValue.price : ''
+                      }
+                    : {
+                        version: typeof optionValue === 'string' ? optionValue : '',
+                        currency: '',
+                        price: ''
+                      };
+                  const item = document.createElement('div');
+                  item.className = 'form-preview-version-price-item';
+                  const name = document.createElement('div');
+                  name.className = 'form-preview-version-price-name';
+                  name.textContent = opt.version || `Version ${optionIndex + 1}`;
+                  const priceLine = document.createElement('div');
+                  priceLine.className = 'form-preview-version-price-price';
+                  const priceText = opt.price || '0.00';
+                  const currencyText = opt.currency || 'Currency';
+                  const combined = `${currencyText ? `${currencyText} ` : ''}${priceText}`.trim();
+                  priceLine.textContent = combined || 'Currency 0.00';
+                  item.append(name, priceLine);
+                  versionList.appendChild(item);
+                });
+                control = versionList;
               } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
                 wrapper.classList.add('form-preview-field--url');
                 const urlWrapper = document.createElement('div');
@@ -12689,6 +12825,16 @@ function makePosts(){
             dropdownOptionsList.className = 'dropdown-options-list';
             dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
 
+            const versionPriceContainer = document.createElement('div');
+            versionPriceContainer.className = 'version-price-options-editor';
+            versionPriceContainer.hidden = true;
+            const versionPriceLabel = document.createElement('div');
+            versionPriceLabel.className = 'version-price-options-label';
+            versionPriceLabel.textContent = 'Version Options';
+            const versionPriceList = document.createElement('div');
+            versionPriceList.className = 'version-price-options-list';
+            versionPriceContainer.append(versionPriceLabel, versionPriceList);
+
             let draggedOptionRow = null;
 
             const ensureDropdownSeeds = ()=>{
@@ -12710,17 +12856,24 @@ function makePosts(){
               ensureDropdownSeeds();
               dropdownOptionsList.innerHTML = '';
               safeField.options.forEach((optionValue, optionIndex)=>{
+                const optionText = typeof optionValue === 'string'
+                  ? optionValue
+                  : (optionValue && typeof optionValue === 'object' && typeof optionValue.version === 'string'
+                    ? optionValue.version
+                    : '');
                 const optionRow = document.createElement('div');
                 optionRow.className = 'dropdown-option-row';
                 optionRow.draggable = true;
+                optionRow._optionValue = safeField.options[optionIndex];
 
                 const optionInput = document.createElement('input');
                 optionInput.type = 'text';
                 optionInput.className = 'dropdown-option-input';
                 optionInput.placeholder = `Option ${optionIndex + 1}`;
-                optionInput.value = optionValue;
+                optionInput.value = optionText;
                 optionInput.addEventListener('input', ()=>{
                   safeField.options[optionIndex] = optionInput.value;
+                  optionRow._optionValue = optionInput.value;
                   notifyFormbuilderChange();
                   renderFormPreview();
                 });
@@ -12827,10 +12980,9 @@ function makePosts(){
             dropdownOptionsList.addEventListener('drop', event=>{
               if(!draggedOptionRow) return;
               event.preventDefault();
-              const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => {
-                const input = row.querySelector('input');
-                return input ? input.value : '';
-              });
+              const orderedValues = Array.from(dropdownOptionsList.querySelectorAll('.dropdown-option-row')).map(row => (
+                row && Object.prototype.hasOwnProperty.call(row, '_optionValue') ? row._optionValue : ''
+              ));
               safeField.options.splice(0, safeField.options.length, ...orderedValues);
               if(draggedOptionRow){
                 draggedOptionRow.classList.remove('is-dragging');
@@ -12840,6 +12992,149 @@ function makePosts(){
               renderDropdownOptions();
               renderFormPreview();
             });
+
+            const createEmptyVersionPriceOption = ()=>({ version: '', currency: '', price: '' });
+
+            const normalizeVersionPriceOptions = ()=>{
+              if(!Array.isArray(safeField.options)){
+                safeField.options = [];
+              }
+              safeField.options = safeField.options.map(opt => {
+                if(opt && typeof opt === 'object'){
+                  return {
+                    version: typeof opt.version === 'string' ? opt.version : '',
+                    currency: typeof opt.currency === 'string' ? opt.currency : '',
+                    price: typeof opt.price === 'string' ? opt.price : ''
+                  };
+                }
+                const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                return { version: str, currency: '', price: '' };
+              });
+              if(safeField.options.length === 0){
+                safeField.options.push(createEmptyVersionPriceOption());
+              }
+            };
+
+            const renderVersionPriceOptions = (focusIndex = null, focusTarget = 'version')=>{
+              normalizeVersionPriceOptions();
+              versionPriceList.innerHTML = '';
+              safeField.options.forEach((optionValue, optionIndex)=>{
+                const optionRow = document.createElement('div');
+                optionRow.className = 'version-price-option';
+                optionRow.dataset.optionIndex = String(optionIndex);
+
+                const topRow = document.createElement('div');
+                topRow.className = 'version-price-row version-price-row--top';
+
+                const versionInput = document.createElement('input');
+                versionInput.type = 'text';
+                versionInput.className = 'version-price-name';
+                versionInput.placeholder = 'Version Name';
+                versionInput.value = optionValue.version || '';
+                versionInput.addEventListener('input', ()=>{
+                  safeField.options[optionIndex].version = versionInput.value;
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+                topRow.appendChild(versionInput);
+
+                const bottomRow = document.createElement('div');
+                bottomRow.className = 'version-price-row version-price-row--bottom';
+
+                const currencySelect = document.createElement('select');
+                currencySelect.className = 'version-price-currency';
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = 'Currency';
+                currencySelect.appendChild(emptyOption);
+                VERSION_PRICE_CURRENCIES.forEach(code => {
+                  const opt = document.createElement('option');
+                  opt.value = code;
+                  opt.textContent = code;
+                  if(code === optionValue.currency){
+                    opt.selected = true;
+                  }
+                  currencySelect.appendChild(opt);
+                });
+                currencySelect.addEventListener('change', ()=>{
+                  safeField.options[optionIndex].currency = currencySelect.value;
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+
+                const priceInput = document.createElement('input');
+                priceInput.type = 'text';
+                priceInput.inputMode = 'decimal';
+                priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
+                priceInput.className = 'version-price-price';
+                priceInput.placeholder = '0.00';
+                priceInput.value = optionValue.price || '';
+                priceInput.addEventListener('input', ()=>{
+                  safeField.options[optionIndex].price = priceInput.value;
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+
+                const actions = document.createElement('div');
+                actions.className = 'dropdown-option-actions version-price-option-actions';
+
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.className = 'dropdown-option-add';
+                addBtn.textContent = '+';
+                addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+                addBtn.addEventListener('click', ()=>{
+                  safeField.options.splice(optionIndex + 1, 0, createEmptyVersionPriceOption());
+                  notifyFormbuilderChange();
+                  renderVersionPriceOptions(optionIndex + 1);
+                  renderFormPreview();
+                });
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'dropdown-option-remove';
+                removeBtn.textContent = '-';
+                removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+                removeBtn.disabled = safeField.options.length <= 1;
+                removeBtn.addEventListener('click', ()=>{
+                  if(safeField.options.length <= 1){
+                    safeField.options[0] = createEmptyVersionPriceOption();
+                  } else {
+                    safeField.options.splice(optionIndex, 1);
+                  }
+                  notifyFormbuilderChange();
+                  const nextFocus = Math.min(optionIndex, Math.max(safeField.options.length - 1, 0));
+                  renderVersionPriceOptions(nextFocus);
+                  renderFormPreview();
+                });
+
+                actions.append(addBtn, removeBtn);
+                bottomRow.append(currencySelect, priceInput, actions);
+
+                optionRow.append(topRow, bottomRow);
+                versionPriceList.appendChild(optionRow);
+              });
+
+              if(focusIndex !== null){
+                requestAnimationFrame(()=>{
+                  const targetRow = versionPriceList.querySelector(`.version-price-option[data-option-index="${focusIndex}"]`);
+                  if(!targetRow) return;
+                  let focusEl = null;
+                  if(focusTarget === 'price'){
+                    focusEl = targetRow.querySelector('.version-price-price');
+                  }
+                  if(!focusEl){
+                    focusEl = targetRow.querySelector('.version-price-name');
+                  }
+                  if(focusEl && typeof focusEl.focus === 'function'){
+                    try{ focusEl.focus({ preventScroll: true }); }
+                    catch(err){
+                      try{ focusEl.focus(); }catch(e){}
+                    }
+                  }
+                });
+              }
+            };
 
             const deleteFieldBtn = document.createElement('button');
             deleteFieldBtn.type = 'button';
@@ -12892,7 +13187,8 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const hidePlaceholder = isOptionsType || type === 'images';
+              const showVersionPrice = type === 'version-price';
+              const hidePlaceholder = isOptionsType || type === 'images' || showVersionPrice;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
                 if(fieldPlaceholderInput.value){
@@ -12904,6 +13200,12 @@ function makePosts(){
                 }
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
+              versionPriceContainer.hidden = !showVersionPrice;
+              if(showVersionPrice){
+                renderVersionPriceOptions();
+              } else {
+                versionPriceList.innerHTML = '';
+              }
               if(type === 'dropdown'){
                 dropdownOptionsLabel.textContent = 'Dropdown Options';
               } else if(type === 'radio-toggle'){
@@ -12917,7 +13219,7 @@ function makePosts(){
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
-              } else {
+              } else if(!showVersionPrice){
                 dropdownOptionsList.innerHTML = '';
               }
             };
@@ -12926,7 +13228,7 @@ function makePosts(){
 
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeSelect, fieldRequiredRow, fieldPlaceholderWrapper, dropdownOptionsContainer);
+            row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer, versionPriceContainer);
             row.__fieldRef = safeField;
             return {
               row,
@@ -13301,7 +13603,24 @@ function makePosts(){
               placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
               required: !!(field && field.required),
               options: Array.isArray(field && field.options)
-                ? field.options.map(opt => (typeof opt === 'string' ? opt : String(opt ?? '')))
+                ? field.options.map(opt => {
+                    if(field && field.type === 'version-price'){
+                      if(opt && typeof opt === 'object'){
+                        return {
+                          version: typeof opt.version === 'string' ? opt.version : '',
+                          currency: typeof opt.currency === 'string' ? opt.currency : '',
+                          price: typeof opt.price === 'string' ? opt.price : ''
+                        };
+                      }
+                      const str = typeof opt === 'string' ? opt : String(opt ?? '');
+                      return { version: str, currency: '', price: '' };
+                    }
+                    if(typeof opt === 'string') return opt;
+                    if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
+                      return opt.version;
+                    }
+                    return String(opt ?? '');
+                  })
                 : []
             }));
           } else {
@@ -20591,6 +20910,92 @@ document.addEventListener('DOMContentLoaded', () => {
   const DEFAULT_MAX = 10;
   const processed = new WeakSet();
   let observerStarted = false;
+  let dragState = null;
+
+  function handleThumbDragStart(event){
+    const thumb = event.currentTarget;
+    if(event.target && event.target.closest('.form-preview-image-remove')){
+      event.preventDefault();
+      return;
+    }
+    const previewEl = thumb ? thumb.parentElement : null;
+    if(!previewEl || !previewEl._imageInput) return;
+    const index = Number.parseInt(thumb.dataset.index || '', 10);
+    dragState = {
+      input: previewEl._imageInput,
+      fromIndex: Number.isNaN(index) ? -1 : index,
+      thumb
+    };
+    thumb.classList.add('is-dragging');
+    if(event.dataTransfer){
+      event.dataTransfer.effectAllowed = 'move';
+      try{ event.dataTransfer.setData('text/plain', thumb.dataset.index || ''); }catch(err){}
+    }
+  }
+
+  function handleThumbDragEnd(event){
+    const thumb = event.currentTarget;
+    thumb.classList.remove('is-dragging');
+    if(dragState && dragState.thumb === thumb){
+      dragState = null;
+    }
+  }
+
+  function handlePreviewDragOver(event){
+    if(!dragState) return;
+    const previewEl = event.currentTarget;
+    if(!previewEl || previewEl._imageInput !== dragState.input) return;
+    event.preventDefault();
+    if(event.dataTransfer){
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  function handlePreviewDrop(event){
+    if(!dragState) return;
+    const previewEl = event.currentTarget;
+    if(!previewEl || previewEl._imageInput !== dragState.input) return;
+    event.preventDefault();
+    const files = getStoredFiles(dragState.input);
+    const from = dragState.fromIndex;
+    if(from < 0 || from >= files.length){
+      if(dragState.thumb){
+        dragState.thumb.classList.remove('is-dragging');
+      }
+      dragState = null;
+      return;
+    }
+    let targetIndex = files.length;
+    const targetThumb = event.target && event.target.closest ? event.target.closest('.form-preview-image-thumb') : null;
+    if(targetThumb && targetThumb.parentElement === previewEl){
+      const parsed = Number.parseInt(targetThumb.dataset.index || '', 10);
+      if(Number.isInteger(parsed)){
+        targetIndex = parsed;
+      }
+    }
+    let insertIndex = targetIndex;
+    if(!Number.isInteger(insertIndex) || insertIndex < 0){
+      insertIndex = files.length;
+    }
+    const [moved] = files.splice(from, 1);
+    if(insertIndex > files.length){
+      insertIndex = files.length;
+    }
+    if(from < insertIndex){
+      insertIndex--;
+    }
+    if(insertIndex < 0){
+      insertIndex = 0;
+    }
+    files.splice(insertIndex, 0, moved);
+    if(dragState.thumb){
+      dragState.thumb.classList.remove('is-dragging');
+    }
+    const input = dragState.input;
+    dragState = null;
+    storeFiles(input, files);
+    renderPreviews(input);
+  }
 
   function getMax(input){
     return Number.parseInt(input.dataset.maxImages, 10) || DEFAULT_MAX;
@@ -20655,10 +21060,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     if(previewEl){
+      previewEl._imageInput = input;
+      if(!previewEl._dragHandlersAttached){
+        previewEl.addEventListener('dragover', handlePreviewDragOver);
+        previewEl.addEventListener('drop', handlePreviewDrop);
+        previewEl._dragHandlersAttached = true;
+      }
       previewEl.innerHTML = '';
       files.forEach((file, index) => {
         const thumb = document.createElement('div');
         thumb.className = 'form-preview-image-thumb';
+        thumb.dataset.index = String(index);
+        thumb.draggable = true;
+        thumb.addEventListener('dragstart', handleThumbDragStart);
+        thumb.addEventListener('dragend', handleThumbDragEnd);
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'form-preview-image-remove';
