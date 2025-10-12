@@ -13406,6 +13406,7 @@ function makePosts(){
                 addressLabel.textContent = 'Venue Address';
                 addressHeader.appendChild(addressLabel);
                 addressLine.appendChild(addressHeader);
+                venueCard.appendChild(addressLine);
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'venue-address-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
@@ -13471,7 +13472,6 @@ function makePosts(){
                   });
                   geocoderContainer.appendChild(fallback);
                 }
-                venueCard.appendChild(addressLine);
 
                 const sessionContainer = document.createElement('div');
                 sessionContainer.className = 'session-list';
