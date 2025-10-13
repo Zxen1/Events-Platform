@@ -2402,6 +2402,19 @@ button[aria-expanded="true"] .results-arrow{
   border: 1px solid var(--btn);
 }
 
+.tiny.danger{
+  background:#b83030;
+  border-color:#b83030;
+  color:#fff;
+}
+
+.tiny.danger:disabled,
+.tiny.danger[aria-disabled="true"]{
+  background:rgba(184,48,48,0.4);
+  border-color:rgba(184,48,48,0.4);
+  color:rgba(255,255,255,0.6);
+}
+
 .tiny svg{
   width: 18px;
   height: 18px;
@@ -6193,24 +6206,19 @@ if (typeof slugify !== 'function') {
               flex-direction:column;
               gap:12px;
             }
-            #tab-forms .venue-line{
+            #tab-forms .venue-line,
+            #tab-forms .session-date-row,
+            #tab-forms .session-time-row,
+            #tab-forms .session-version-card,
+            #tab-forms .tier-row{
               display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #tab-forms .venue-line-header,
-            #tab-forms .session-date-header,
-            #tab-forms .session-time-row-header,
-            #tab-forms .session-version-header{
-              display:flex;
+              flex-wrap:wrap;
               align-items:center;
               gap:8px;
             }
-            #tab-forms .venue-line-header span,
-            #tab-forms .session-date-header span,
-            #tab-forms .session-time-row-header span,
-            #tab-forms .session-version-header span{
-              font-weight:600;
+            #tab-forms .venue-line,
+            #tab-forms .session-date-row{
+              position:relative;
             }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
@@ -6289,12 +6297,6 @@ if (typeof slugify !== 'function') {
               gap:12px;
               position:relative;
             }
-            #tab-forms .session-date-row,
-            #tab-forms .session-time-row{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
             #tab-forms .session-date-input{
               cursor:pointer;
             }
@@ -6313,25 +6315,19 @@ if (typeof slugify !== 'function') {
               display:flex;
               flex-direction:column;
               gap:10px;
+              width:100%;
             }
             #tab-forms .session-version-card{
               border:1px solid var(--border);
               border-radius:8px;
               background:rgba(0,0,0,0.2);
               padding:10px;
-              display:flex;
-              flex-direction:column;
-              gap:10px;
             }
             #tab-forms .session-tier-list{
               display:flex;
               flex-direction:column;
               gap:8px;
-            }
-            #tab-forms .tier-row{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
+              width:100%;
             }
             #tab-forms .tier-price-row{
               display:flex;
@@ -6346,8 +6342,47 @@ if (typeof slugify !== 'function') {
               color:var(--input-text);
               padding:0 10px;
             }
+            #tab-forms .session-version-card > *:first-child,
+            #tab-forms .session-time-row > *:first-child,
+            #tab-forms .tier-row > *:first-child{
+              flex:1 1 220px;
+            }
+            #tab-forms .session-version-card .version-actions,
             #tab-forms .tier-row .tier-actions{
-              align-self:flex-end;
+              align-self:flex-start;
+            }
+            #tab-forms .session-dropdown-toggle{
+              width:32px;
+              height:32px;
+              border-radius:50%;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              cursor:pointer;
+              transition:background 0.2s ease;
+            }
+            #tab-forms .session-dropdown-toggle:hover,
+            #tab-forms .session-dropdown-toggle:focus{
+              background:rgba(0,0,0,0.5);
+            }
+            #tab-forms .session-dropdown-toggle[aria-expanded="true"]{
+              transform:rotate(90deg);
+            }
+            #tab-forms .session-details{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+              width:100%;
+            }
+            #tab-forms .session-details[hidden]{
+              display:none;
+            }
+            #tab-forms .session-time-row .session-version-list,
+            #tab-forms .tier-row .tier-price-row{
+              flex-basis:100%;
             }
             #tab-forms .session-date-picker{
               position:absolute;
@@ -6417,6 +6452,25 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-date-picker .day:hover{
               background:var(--session-selected);
               color:#fff;
+            }
+            #tab-forms .session-date-picker .calendar-actions{
+              display:flex;
+              justify-content:flex-end;
+              gap:8px;
+              padding:10px;
+              border-top:1px solid var(--border);
+            }
+            #tab-forms .session-date-picker .calendar-actions button{
+              border-radius:8px;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
+              padding:6px 12px;
+              cursor:pointer;
+            }
+            #tab-forms .session-date-picker .calendar-actions button:hover,
+            #tab-forms .session-date-picker .calendar-actions button:focus{
+              background:rgba(0,0,0,0.5);
             }
             #tab-forms .subcategory-field-row{
               border:1px solid var(--border);
@@ -12917,6 +12971,7 @@ function makePosts(){
             maxPickerDate.setFullYear(maxPickerDate.getFullYear() + 2);
 
             const openPickers = new Set();
+            let openSessionRef = null;
             const closeAllPickers = ()=>{
               openPickers.forEach(close => {
                 try{ close(); }catch(err){}
@@ -13047,6 +13102,7 @@ function makePosts(){
               const venues = previewField.options;
               const newVenue = venueSessionCreateVenue();
               venues.splice(afterIndex + 1, 0, newVenue);
+              openSessionRef = null;
               notifyFormbuilderChange();
               renderVenues({ type: 'venue-name', venueIndex: afterIndex + 1 });
             };
@@ -13059,9 +13115,18 @@ function makePosts(){
               if(state && removed){
                 try{ state.delete(removed); }catch(err){}
               }
+              openSessionRef = null;
               notifyFormbuilderChange();
               const nextIndex = Math.max(0, index - 1);
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
+            };
+
+            const requestVenueRemoval = (index)=>{
+              ensureOptions();
+              if(previewField.options.length <= 1) return;
+              if(window.confirm('Are you sure you want to remove this venue?')){
+                removeVenue(index);
+              }
             };
 
             const addSession = (venue, venueIndex, afterIndex)=>{
@@ -13073,16 +13138,17 @@ function makePosts(){
               }
               sessions.splice(afterIndex + 1, 0, newSession);
               applyAutofillToSession(venue, newSession);
+              openSessionRef = null;
               notifyFormbuilderChange();
-              renderVenues({ type: 'session-date', venueIndex, sessionIndex: afterIndex + 1 });
+              renderVenues();
             };
 
             const removeSession = (venue, venueIndex, sessionIndex)=>{
               if(venue.sessions.length <= 1) return;
               venue.sessions.splice(sessionIndex, 1);
+              openSessionRef = null;
               notifyFormbuilderChange();
-              const focusSession = Math.max(0, Math.min(sessionIndex, venue.sessions.length - 1));
-              renderVenues({ type: 'session-date', venueIndex, sessionIndex: focusSession });
+              renderVenues();
             };
 
             const addTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
@@ -13251,8 +13317,19 @@ function makePosts(){
               notifyFormbuilderChange();
             };
 
-            const setupDatePicker = (input, session, venueIndex, sessionIndex)=>{
+            const setupDatePicker = (input, venue, session, venueIndex, sessionIndex)=>{
               let picker = null;
+              const selectedDates = new Set(
+                Array.isArray(venue.sessions)
+                  ? venue.sessions
+                      .map(sess => (sess && typeof sess.date === 'string') ? sess.date : '')
+                      .filter(Boolean)
+                  : []
+              );
+              if(session && typeof session.date === 'string' && session.date){
+                selectedDates.add(session.date);
+              }
+              const isoCells = new Map();
               const closePicker = ()=>{
                 if(!picker) return;
                 picker.remove();
@@ -13273,15 +13350,93 @@ function makePosts(){
                   try{ input.focus(); }catch(err){}
                 }
               };
-              const selectDate = iso => {
-                if(session.date !== iso){
-                  session.date = iso;
-                  notifyFormbuilderChange();
+              const updateCellSelection = iso => {
+                const cell = isoCells.get(iso);
+                if(!cell) return;
+                if(selectedDates.has(iso)){
+                  cell.classList.add('selected');
+                } else {
+                  cell.classList.remove('selected');
                 }
-                input.value = formatSessionDate(iso);
+              };
+              const toggleDate = iso => {
+                if(!iso) return;
+                if(selectedDates.has(iso)){
+                  selectedDates.delete(iso);
+                } else {
+                  selectedDates.add(iso);
+                }
+                updateCellSelection(iso);
+              };
+              const applySelection = ()=>{
+                if(selectedDates.size === 0){
+                  closePicker();
+                  return;
+                }
+                const sorted = Array.from(selectedDates).sort();
+                const existingSessions = Array.isArray(venue.sessions) ? [...venue.sessions] : [];
+                const maxTimes = Math.max(
+                  ...existingSessions.map(sess => Array.isArray(sess?.times) ? sess.times.length : 1),
+                  1
+                );
+                const sessionsByIso = new Map();
+                existingSessions.forEach(sess => {
+                  if(sess && typeof sess.date === 'string' && sess.date){
+                    if(!sessionsByIso.has(sess.date)){
+                      sessionsByIso.set(sess.date, []);
+                    }
+                    sessionsByIso.get(sess.date).push(sess);
+                  }
+                });
+                const usedSessions = new Set();
+                const takeUnused = ()=>{
+                  for(const candidate of existingSessions){
+                    if(!candidate || usedSessions.has(candidate)) continue;
+                    if(typeof candidate.date === 'string' && candidate.date && sorted.includes(candidate.date)){
+                      continue;
+                    }
+                    usedSessions.add(candidate);
+                    return candidate;
+                  }
+                  return null;
+                };
+                const newSessions = [];
+                sorted.forEach(iso => {
+                  let active = null;
+                  const pool = sessionsByIso.get(iso);
+                  if(pool && pool.length){
+                    active = pool.shift();
+                  }
+                  if(active && usedSessions.has(active)){
+                    active = null;
+                  }
+                  if(active){
+                    usedSessions.add(active);
+                  } else {
+                    active = takeUnused();
+                  }
+                  if(!active){
+                    active = venueSessionCreateSession();
+                    while(active.times.length < maxTimes){
+                      active.times.push(venueSessionCreateTime());
+                    }
+                    applyAutofillToSession(venue, active);
+                  }
+                  active.date = iso;
+                  newSessions.push(active);
+                });
+                if(newSessions.length === 0){
+                  closePicker();
+                  return;
+                }
+                venue.sessions.splice(0, venue.sessions.length, ...newSessions);
+                openSessionRef = null;
+                notifyFormbuilderChange();
                 closePicker();
+                renderVenues();
               };
               const buildCalendar = ()=>{
+                isoCells.clear();
                 const container = document.createElement('div');
                 container.className = 'session-date-picker';
                 const scroll = document.createElement('div');
@@ -13289,7 +13444,6 @@ function makePosts(){
                 const calendar = document.createElement('div');
                 calendar.className = 'calendar';
                 const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                const selected = session.date;
                 let current = new Date(minPickerDate.getFullYear(), minPickerDate.getMonth(), 1);
                 const end = new Date(maxPickerDate.getFullYear(), maxPickerDate.getMonth(), 1);
                 while(current <= end){
@@ -13322,16 +13476,19 @@ function makePosts(){
                       const dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
                       dateObj.setHours(0,0,0,0);
                       const iso = toISODate(dateObj);
-                      cell.dataset.iso = iso;
+                      isoCells.set(iso, cell);
                       if(dateObj < today){
                         cell.classList.add('past');
                       } else {
                         cell.classList.add('future');
                       }
-                      if(selected === iso){
+                      if(selectedDates.has(iso)){
                         cell.classList.add('selected');
                       }
-                      cell.addEventListener('click', ()=> selectDate(iso));
+                      cell.addEventListener('click', ()=>{
+                        if(cell.classList.contains('past')) return;
+                        toggleDate(iso);
+                      });
                     }
                     grid.appendChild(cell);
                   }
@@ -13341,6 +13498,14 @@ function makePosts(){
                 }
                 scroll.appendChild(calendar);
                 container.appendChild(scroll);
+                const actions = document.createElement('div');
+                actions.className = 'calendar-actions';
+                const okBtn = document.createElement('button');
+                okBtn.type = 'button';
+                okBtn.textContent = 'OK';
+                okBtn.addEventListener('click', ()=> applySelection());
+                actions.appendChild(okBtn);
+                container.appendChild(actions);
                 return container;
               };
               const openPicker = ()=>{
@@ -13368,27 +13533,15 @@ function makePosts(){
                 venueCard.className = 'venue-card';
                 venueList.appendChild(venueCard);
 
+
                 const venueLine = document.createElement('div');
                 venueLine.className = 'venue-line';
-                const venueHeader = document.createElement('div');
-                venueHeader.className = 'venue-line-header';
-                const venueLabel = document.createElement('span');
-                venueLabel.textContent = `Venue Name ${venueIndex + 1}`;
-                const venueActions = document.createElement('div');
-                venueActions.className = 'venue-line-actions';
-                venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
-                const removeBtn = createActionButton('-', 'Remove Venue', ()=> removeVenue(venueIndex));
-                if(previewField.options.length <= 1){
-                  removeBtn.disabled = true;
-                  removeBtn.setAttribute('aria-disabled', 'true');
-                }
-                venueActions.appendChild(removeBtn);
-                venueHeader.append(venueLabel, venueActions);
-                venueLine.appendChild(venueHeader);
+                const venueNamePlaceholder = `Venue Name ${venueIndex + 1}`;
                 const venueNameInput = document.createElement('input');
                 venueNameInput.type = 'text';
                 venueNameInput.className = 'venue-name-input';
-                venueNameInput.placeholder = 'Venue Name';
+                venueNameInput.placeholder = venueNamePlaceholder;
+                venueNameInput.setAttribute('aria-label', venueNamePlaceholder);
                 venueNameInput.value = venue.name || '';
                 venueNameInput.dataset.venueIndex = String(venueIndex);
                 venueNameInput.addEventListener('input', ()=>{
@@ -13396,26 +13549,36 @@ function makePosts(){
                   notifyFormbuilderChange();
                 });
                 venueLine.appendChild(venueNameInput);
+                const venueActions = document.createElement('div');
+                venueActions.className = 'venue-line-actions';
+                venueActions.appendChild(createActionButton('+', 'Add Venue', ()=> addVenue(venueIndex)));
+                const removeVenueBtn = createActionButton('-', 'Remove Venue', ()=> requestVenueRemoval(venueIndex));
+                removeVenueBtn.classList.add('danger');
+                if(previewField.options.length <= 1){
+                  removeVenueBtn.disabled = true;
+                  removeVenueBtn.setAttribute('aria-disabled', 'true');
+                } else {
+                  removeVenueBtn.disabled = false;
+                  removeVenueBtn.removeAttribute('aria-disabled');
+                }
+                venueActions.appendChild(removeVenueBtn);
+                venueLine.appendChild(venueActions);
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
                 addressLine.className = 'venue-line';
-                const addressHeader = document.createElement('div');
-                addressHeader.className = 'venue-line-header';
-                const addressLabel = document.createElement('span');
-                addressLabel.textContent = 'Venue Address';
-                addressHeader.appendChild(addressLabel);
-                addressLine.appendChild(addressHeader);
-                venueCard.appendChild(addressLine);
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'venue-address-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
+                venueCard.appendChild(addressLine);
+                const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
                 const createFallbackAddressInput = ()=>{
                   geocoderContainer.innerHTML = '';
                   const fallback = document.createElement('input');
                   fallback.type = 'text';
                   fallback.className = 'venue-address-fallback';
-                  fallback.placeholder = 'Venue Address';
+                  fallback.placeholder = addressPlaceholder;
+                  fallback.setAttribute('aria-label', addressPlaceholder);
                   fallback.value = venue.address || '';
                   fallback.dataset.venueIndex = String(venueIndex);
                   fallback.addEventListener('input', ()=>{
@@ -13431,7 +13594,7 @@ function makePosts(){
                     accessToken: window.mapboxgl.accessToken,
                     mapboxgl: window.mapboxgl,
                     marker: false,
-                    placeholder: 'Venue Address',
+                    placeholder: addressPlaceholder,
                     reverseGeocode: true,
                     limit: 10
                   };
@@ -13462,6 +13625,8 @@ function makePosts(){
                       createFallbackAddressInput();
                       return;
                     }
+                    geocoderInput.placeholder = addressPlaceholder;
+                    geocoderInput.setAttribute('aria-label', addressPlaceholder);
                     geocoderInput.dataset.venueIndex = String(venueIndex);
                     geocoderInput.value = venue.address || '';
                     geocoderInput.addEventListener('blur', ()=>{
@@ -13510,57 +13675,84 @@ function makePosts(){
 
                   const dateRow = document.createElement('div');
                   dateRow.className = 'session-date-row';
-                  const dateHeader = document.createElement('div');
-                  dateHeader.className = 'session-date-header';
-                  const dateLabel = document.createElement('span');
-                  dateLabel.textContent = `Session Date ${sessionIndex + 1}`;
+                  const datePlaceholder = `Session Date ${sessionIndex + 1}`;
+                  const dateInput = document.createElement('input');
+                  dateInput.type = 'text';
+                  dateInput.readOnly = true;
+                  dateInput.className = 'session-date-input';
+                  dateInput.placeholder = datePlaceholder;
+                  dateInput.setAttribute('aria-label', datePlaceholder);
+                  dateInput.value = formatSessionDate(session.date);
+                  dateInput.dataset.venueIndex = String(venueIndex);
+                  dateInput.dataset.sessionIndex = String(sessionIndex);
+                  dateRow.appendChild(dateInput);
+
                   const dateActions = document.createElement('div');
                   dateActions.className = 'session-date-actions';
+                  const dropdownToggle = document.createElement('button');
+                  dropdownToggle.type = 'button';
+                  dropdownToggle.className = 'session-dropdown-toggle';
+                  dropdownToggle.textContent = '▸';
+                  dropdownToggle.setAttribute('aria-label', 'Toggle Session Details');
+                  dateActions.appendChild(dropdownToggle);
                   dateActions.appendChild(createActionButton('+', 'Add Session Date', ()=> addSession(venue, venueIndex, sessionIndex)));
                   const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
                   if(venue.sessions.length <= 1){
                     removeDateBtn.disabled = true;
                     removeDateBtn.setAttribute('aria-disabled', 'true');
+                  } else {
+                    removeDateBtn.disabled = false;
+                    removeDateBtn.removeAttribute('aria-disabled');
                   }
                   dateActions.appendChild(removeDateBtn);
-                  dateHeader.append(dateLabel, dateActions);
-                  dateRow.appendChild(dateHeader);
-                  const dateInput = document.createElement('input');
-                  dateInput.type = 'text';
-                  dateInput.readOnly = true;
-                  dateInput.className = 'session-date-input';
-                  dateInput.placeholder = 'Select Date';
-                  dateInput.value = formatSessionDate(session.date);
-                  dateInput.dataset.venueIndex = String(venueIndex);
-                  dateInput.dataset.sessionIndex = String(sessionIndex);
-                  dateRow.appendChild(dateInput);
+                  dateRow.appendChild(dateActions);
                   sessionCard.appendChild(dateRow);
-                  setupDatePicker(dateInput, session, venueIndex, sessionIndex);
+                  setupDatePicker(dateInput, venue, session, venueIndex, sessionIndex);
+
+                  const sessionDetails = document.createElement('div');
+                  sessionDetails.className = 'session-details';
+                  const isOpen = openSessionRef === session;
+                  sessionDetails.hidden = !isOpen;
+                  dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                  dropdownToggle.addEventListener('click', event => {
+                    event.preventDefault();
+                    closeAllPickers();
+                    const currentlyOpen = openSessionRef === session;
+                    openSessionRef = currentlyOpen ? null : session;
+                    const detailNodes = editor.querySelectorAll('.session-details');
+                    detailNodes.forEach(detailNode => {
+                      const parentCard = detailNode.parentElement;
+                      const toggleButton = parentCard ? parentCard.querySelector('.session-dropdown-toggle') : null;
+                      if(detailNode === sessionDetails){
+                        const shouldOpen = !currentlyOpen;
+                        detailNode.hidden = !shouldOpen;
+                        if(toggleButton){
+                          toggleButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                        }
+                      } else {
+                        detailNode.hidden = true;
+                        if(toggleButton){
+                          toggleButton.setAttribute('aria-expanded', 'false');
+                        }
+                      }
+                    });
+                  });
+                  sessionCard.appendChild(sessionDetails);
 
                   const timesList = document.createElement('div');
                   timesList.className = 'session-times';
+                  sessionDetails.appendChild(timesList);
+
                   session.times.forEach((timeObj, timeIndex)=>{
                     const timeRow = document.createElement('div');
                     timeRow.className = 'session-time-row';
-                    const timeHeader = document.createElement('div');
-                    timeHeader.className = 'session-time-row-header';
-                    const timeLabel = document.createElement('span');
-                    timeLabel.textContent = `Session Time ${timeIndex + 1}`;
-                    const timeActions = document.createElement('div');
-                    timeActions.className = 'session-time-actions';
-                    timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
-                    const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
-                    if(session.times.length <= 1){
-                      removeTimeBtn.disabled = true;
-                      removeTimeBtn.setAttribute('aria-disabled', 'true');
-                    }
-                    timeActions.appendChild(removeTimeBtn);
-                    timeHeader.append(timeLabel, timeActions);
-                    timeRow.appendChild(timeHeader);
+
+                    const timePlaceholder = `Session Time ${timeIndex + 1}`;
                     const timeInput = document.createElement('input');
                     timeInput.type = 'text';
                     timeInput.className = 'session-time-input';
-                    timeInput.placeholder = '00:00';
+                    timeInput.placeholder = timePlaceholder;
+                    timeInput.setAttribute('aria-label', timePlaceholder);
                     timeInput.inputMode = 'numeric';
                     timeInput.pattern = '([01]\\d|2[0-3]):[0-5]\\d';
                     timeInput.value = timeObj.time || '';
@@ -13580,30 +13772,34 @@ function makePosts(){
                     });
                     timeRow.appendChild(timeInput);
 
+                    const timeActions = document.createElement('div');
+                    timeActions.className = 'session-time-actions';
+                    timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
+                    const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
+                    if(session.times.length <= 1){
+                      removeTimeBtn.disabled = true;
+                      removeTimeBtn.setAttribute('aria-disabled', 'true');
+                    } else {
+                      removeTimeBtn.disabled = false;
+                      removeTimeBtn.removeAttribute('aria-disabled');
+                    }
+                    timeActions.appendChild(removeTimeBtn);
+                    timeRow.appendChild(timeActions);
+
                     const versionList = document.createElement('div');
                     versionList.className = 'session-version-list';
+                    timeRow.appendChild(versionList);
+
                     timeObj.versions.forEach((version, versionIndex)=>{
                       const versionCard = document.createElement('div');
                       versionCard.className = 'session-version-card';
-                      const versionHeader = document.createElement('div');
-                      versionHeader.className = 'session-version-header';
-                      const versionLabel = document.createElement('span');
-                      versionLabel.textContent = `Version ${versionIndex + 1}`;
-                      const versionActions = document.createElement('div');
-                      versionActions.className = 'version-actions';
-                      versionActions.appendChild(createActionButton('+', 'Add Version', ()=> addVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex)));
-                      const removeVersionBtn = createActionButton('-', 'Remove Version', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex));
-                      if(timeObj.versions.length <= 1){
-                        removeVersionBtn.disabled = true;
-                        removeVersionBtn.setAttribute('aria-disabled', 'true');
-                      }
-                      versionActions.appendChild(removeVersionBtn);
-                      versionHeader.append(versionLabel, versionActions);
-                      versionCard.appendChild(versionHeader);
+
+                      const versionPlaceholder = `Version ${versionIndex + 1}`;
                       const versionInput = document.createElement('input');
                       versionInput.type = 'text';
                       versionInput.className = 'session-version-input';
-                      versionInput.placeholder = 'Stalls';
+                      versionInput.placeholder = versionPlaceholder;
+                      versionInput.setAttribute('aria-label', versionPlaceholder);
                       versionInput.value = version.name || '';
                       versionInput.dataset.venueIndex = String(venueIndex);
                       versionInput.dataset.sessionIndex = String(sessionIndex);
@@ -13615,31 +13811,32 @@ function makePosts(){
                       });
                       versionCard.appendChild(versionInput);
 
+                      const versionActions = document.createElement('div');
+                      versionActions.className = 'version-actions';
+                      versionActions.appendChild(createActionButton('+', 'Add Version', ()=> addVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex)));
+                      const removeVersionBtn = createActionButton('-', 'Remove Version', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex));
+                      if(timeObj.versions.length <= 1){
+                        removeVersionBtn.disabled = true;
+                        removeVersionBtn.setAttribute('aria-disabled', 'true');
+                      } else {
+                        removeVersionBtn.disabled = false;
+                        removeVersionBtn.removeAttribute('aria-disabled');
+                      }
+                      versionActions.appendChild(removeVersionBtn);
+                      versionCard.appendChild(versionActions);
+
                       const tierList = document.createElement('div');
                       tierList.className = 'session-tier-list';
                       version.tiers.forEach((tier, tierIndex)=>{
                         const tierRow = document.createElement('div');
                         tierRow.className = 'tier-row';
-                        const tierHeader = document.createElement('div');
-                        tierHeader.className = 'session-version-header';
-                        const tierLabel = document.createElement('span');
-                        tierLabel.textContent = `Tier ${tierIndex + 1}`;
-                        const tierActions = document.createElement('div');
-                        tierActions.className = 'tier-actions';
-                        tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)));
-                        const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex));
-                        if(version.tiers.length <= 1){
-                          removeTierBtn.disabled = true;
-                          removeTierBtn.setAttribute('aria-disabled', 'true');
-                        }
-                        tierActions.appendChild(removeTierBtn);
-                        tierHeader.append(tierLabel, tierActions);
-                        tierRow.appendChild(tierHeader);
 
+                        const tierPlaceholder = `Tier ${tierIndex + 1}`;
                         const tierInput = document.createElement('input');
                         tierInput.type = 'text';
                         tierInput.className = 'session-tier-input';
-                        tierInput.placeholder = 'Adult, Pensioner, Child';
+                        tierInput.placeholder = tierPlaceholder;
+                        tierInput.setAttribute('aria-label', tierPlaceholder);
                         tierInput.value = tier.name || '';
                         tierInput.dataset.venueIndex = String(venueIndex);
                         tierInput.dataset.sessionIndex = String(sessionIndex);
@@ -13651,6 +13848,20 @@ function makePosts(){
                           notifyFormbuilderChange();
                         });
                         tierRow.appendChild(tierInput);
+
+                        const tierActions = document.createElement('div');
+                        tierActions.className = 'tier-actions';
+                        tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)));
+                        const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex));
+                        if(version.tiers.length <= 1){
+                          removeTierBtn.disabled = true;
+                          removeTierBtn.setAttribute('aria-disabled', 'true');
+                        } else {
+                          removeTierBtn.disabled = false;
+                          removeTierBtn.removeAttribute('aria-disabled');
+                        }
+                        tierActions.appendChild(removeTierBtn);
+                        tierRow.appendChild(tierActions);
 
                         const priceRow = document.createElement('div');
                         priceRow.className = 'tier-price-row';
@@ -13681,7 +13892,7 @@ function makePosts(){
                         const priceInput = document.createElement('input');
                         priceInput.type = 'text';
                         priceInput.inputMode = 'decimal';
-                        priceInput.pattern = '[0-9]+([\\.,][0-9]{0,2})?';
+                        priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
                         priceInput.className = 'session-price-input';
                         priceInput.placeholder = '0.00';
                         priceInput.value = (tier.price || '').replace(/[^0-9.,]/g, '');
@@ -13710,13 +13921,12 @@ function makePosts(){
                       versionCard.appendChild(tierList);
                       versionList.appendChild(versionCard);
                     });
-                    timeRow.appendChild(versionList);
                     timesList.appendChild(timeRow);
                   });
-                  sessionCard.appendChild(timesList);
                   sessionContainer.appendChild(sessionCard);
                 });
                 venueCard.appendChild(sessionContainer);
+
               });
               applyFocus();
             };
