@@ -6317,6 +6317,9 @@ if (typeof slugify !== 'function') {
             #tab-forms .venue-address-fallback{
               position:relative;
             }
+            #tab-forms .venue-address-geocoder-container{
+              z-index:60000;
+            }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
               width:100%;
@@ -6328,6 +6331,8 @@ if (typeof slugify !== 'function') {
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
               min-height:36px;
+              position:relative;
+              z-index:60005;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
@@ -6346,6 +6351,9 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
+            }
+            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+              z-index:60010;
             }
             #tab-forms .session-list{
               display:flex;
@@ -6494,7 +6502,7 @@ if (typeof slugify !== 'function') {
               pointer-events:none;
               transform:translateY(4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:40000;
+              z-index:60000;
             }
             #tab-forms .session-date-picker.is-visible{
               opacity:1;
