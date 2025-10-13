@@ -6264,6 +6264,10 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-date-row{
               position:relative;
             }
+            #tab-forms .venue-address-geocoder-container.is-geocoder-active,
+            #tab-forms .session-date-row.has-open-session-picker{
+              z-index:2147483647;
+            }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
             #tab-forms .session-time-actions,
@@ -6396,7 +6400,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.25);
               padding:0;
             }
-            #tab-forms .session-version-list{
+            #tab-forms .session-section-list{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -6420,7 +6424,7 @@ if (typeof slugify !== 'function') {
               align-items:center;
               gap:8px;
             }
-            #tab-forms .session-time-row .session-version-list,
+            #tab-forms .session-time-row .session-section-list,
             #tab-forms .session-pricing-card .session-tier-list,
             #tab-forms .tier-row .tier-price-row{
               grid-column:1 / -1;
@@ -6485,7 +6489,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-details[hidden]{
               display:none;
             }
-            #tab-forms .session-time-row .session-version-list,
+            #tab-forms .session-time-row .session-section-list,
             #tab-forms .tier-row .tier-price-row{
               width:100%;
             }
@@ -13929,7 +13933,13 @@ function makePosts(){
                 selectedDates.add(session.date);
               }
               const isoCells = new Map();
+              const pickerHostRow = input.closest('.session-date-row');
+              let activePickerHost = null;
               const closePicker = ()=>{
+                if(activePickerHost){
+                  activePickerHost.classList.remove('has-open-session-picker');
+                  activePickerHost = null;
+                }
                 if(!picker) return;
                 cleanupMarker();
                 picker.remove();
@@ -14177,8 +14187,22 @@ function makePosts(){
                 if(picker) return;
                 closeAllPickers();
                 picker = buildCalendar();
-                const parentRow = input.closest('.session-date-row') || input.parentElement;
-                (parentRow || input.parentElement).appendChild(picker);
+                const appendTarget = pickerHostRow || input.parentElement;
+                if(pickerHostRow instanceof Element){
+                  activePickerHost = pickerHostRow;
+                } else if(appendTarget instanceof Element){
+                  activePickerHost = appendTarget;
+                } else {
+                  activePickerHost = null;
+                }
+                if(activePickerHost){
+                  activePickerHost.classList.add('has-open-session-picker');
+                }
+                if(appendTarget instanceof Element){
+                  appendTarget.appendChild(picker);
+                } else if(input.parentElement instanceof Element){
+                  input.parentElement.appendChild(picker);
+                }
                 if(picker){
                   initializePicker(picker);
                   const pickerEl = picker;
@@ -14430,6 +14454,7 @@ function makePosts(){
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
                 const createFallbackAddressInput = ()=>{
                   geocoderContainer.innerHTML = '';
+                  geocoderContainer.classList.remove('is-geocoder-active');
                   const fallback = document.createElement('input');
                   fallback.type = 'text';
                   fallback.className = 'venue-address-fallback';
@@ -14481,6 +14506,24 @@ function makePosts(){
                       createFallbackAddressInput();
                       return;
                     }
+                    const setGeocoderActive = (isActive)=>{
+                      geocoderContainer.classList.toggle('is-geocoder-active', !!isActive);
+                    };
+                    setGeocoderActive(false);
+                    const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+                    if(geocoderRoot){
+                      const handleFocusIn = ()=> setGeocoderActive(true);
+                      const handleFocusOut = event => {
+                        const nextTarget = event && event.relatedTarget;
+                        if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                          setGeocoderActive(false);
+                        }
+                      };
+                      const handlePointerDown = ()=> setGeocoderActive(true);
+                      geocoderRoot.addEventListener('focusin', handleFocusIn);
+                      geocoderRoot.addEventListener('focusout', handleFocusOut);
+                      geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                    }
                     const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
                     if(!geocoderInput){
                       createFallbackAddressInput();
@@ -14498,6 +14541,7 @@ function makePosts(){
                         notifyFormbuilderChange();
                       }
                     });
+                    geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       const result = event && event.result;
                       if(result){
@@ -14505,13 +14549,16 @@ function makePosts(){
                         applyFeatureToVenue(result, { updateName: shouldUpdateName });
                         updateNameSuggestions([result]);
                       }
+                      setGeocoderActive(false);
                     });
                     geocoder.on('clear', ()=>{
                       venue.address = '';
                       venue.location = null;
                       clearNameSuggestions();
                       notifyFormbuilderChange();
+                      setGeocoderActive(false);
                     });
+                    geocoder.on('error', ()=> setGeocoderActive(false));
                   };
                   attachGeocoder();
                 } else {
@@ -14705,7 +14752,7 @@ function makePosts(){
                     timeRow.appendChild(timeActions);
 
                     const versionList = document.createElement('div');
-                    versionList.className = 'session-version-list';
+                    versionList.className = 'session-section-list';
                     let samePricingRow = null;
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
@@ -14713,6 +14760,7 @@ function makePosts(){
                     const updateSamePricingUI = ()=>{
                       const isSamePricing = timeIndex > 0 && timeObj.samePricingAsAbove === true;
                       versionList.hidden = isSamePricing;
+                      versionList.style.display = isSamePricing ? 'none' : '';
                       timeRow.classList.toggle('has-same-pricing', isSamePricing);
                       if(samePricingYesInput){
                         samePricingYesInput.checked = isSamePricing;
