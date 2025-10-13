@@ -6229,7 +6229,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
             #tab-forms .session-time-row,
-            #tab-forms .session-version-card,
+            #tab-forms .session-pricing-card,
             #tab-forms .tier-row{
               display:grid;
               grid-template-columns:minmax(0, 1fr) auto;
@@ -6281,6 +6281,29 @@ if (typeof slugify !== 'function') {
             #tab-forms .venue-name-input,
             #tab-forms .session-date-input{
               background:#2e3a72;
+              color:var(--button-text);
+            }
+            #tab-forms .session-date-input-wrapper{
+              position:relative;
+              display:flex;
+              align-items:center;
+              width:100%;
+            }
+            #tab-forms .session-date-input{
+              padding-right:36px;
+            }
+            #tab-forms .session-date-dropdown-indicator{
+              position:absolute;
+              right:12px;
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              pointer-events:none;
+              color:var(--button-text);
+              transition:transform 0.2s ease;
+            }
+            #tab-forms .session-date-input-wrapper.is-open .session-date-dropdown-indicator{
+              transform:rotate(180deg);
             }
             #tab-forms .session-time-input{
               font-variant-numeric:tabular-nums;
@@ -6358,7 +6381,7 @@ if (typeof slugify !== 'function') {
               gap:10px;
               width:100%;
             }
-            #tab-forms .session-version-card{
+            #tab-forms .session-pricing-card{
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
@@ -6377,7 +6400,7 @@ if (typeof slugify !== 'function') {
               gap:8px;
             }
             #tab-forms .session-time-row .session-version-list,
-            #tab-forms .session-version-card .session-tier-list,
+            #tab-forms .session-pricing-card .session-tier-list,
             #tab-forms .tier-row .tier-price-row{
               grid-column:1 / -1;
             }
@@ -6418,7 +6441,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .venue-line > *:first-child,
             #tab-forms .session-date-row > *:first-child,
             #tab-forms .session-time-row > *:first-child,
-            #tab-forms .session-version-card > *:first-child,
+            #tab-forms .session-pricing-card > *:first-child,
             #tab-forms .tier-row > *:first-child{
               min-width:0;
               width:100%;
@@ -6427,30 +6450,10 @@ if (typeof slugify !== 'function') {
               min-width:0;
               width:100%;
             }
-            #tab-forms .session-version-card .version-actions,
+            #tab-forms .session-pricing-card .version-actions,
             #tab-forms .tier-row .tier-actions{
               align-self:start;
               justify-self:end;
-            }
-            #tab-forms .session-dropdown-toggle{
-              width:32px;
-              height:32px;
-              border-radius:50%;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--input-text);
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              cursor:pointer;
-              transition:background 0.2s ease;
-            }
-            #tab-forms .session-dropdown-toggle:hover,
-            #tab-forms .session-dropdown-toggle:focus{
-              background:rgba(0,0,0,0.5);
-            }
-            #tab-forms .session-dropdown-toggle[aria-expanded="true"]{
-              transform:rotate(90deg);
             }
             #tab-forms .session-details{
               display:flex;
@@ -6490,7 +6493,7 @@ if (typeof slugify !== 'function') {
               pointer-events:none;
               transform:translateY(4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:5000;
+              z-index:40000;
             }
             #tab-forms .session-date-picker.is-visible{
               opacity:1;
@@ -6559,6 +6562,23 @@ if (typeof slugify !== 'function') {
               display:flex;
               align-items:center;
               gap:8px;
+            }
+            #tab-forms .field-type-select-wrapper{
+              position:relative;
+              display:flex;
+              align-items:center;
+              flex:0 0 auto;
+            }
+            #tab-forms .field-type-select{
+              padding-right:32px;
+            }
+            #tab-forms .field-type-select-arrow{
+              position:absolute;
+              right:12px;
+              pointer-events:none;
+              color:var(--button-text);
+              font-size:12px;
+              line-height:1;
             }
             #tab-forms .subcategory-field-row .field-row-header .field-name-input{
               flex:1;
@@ -13418,7 +13438,8 @@ function makePosts(){
               notifyFormbuilderChange();
             };
 
-            const setupDatePicker = (input, venue, session, venueIndex, sessionIndex)=>{
+            const setupDatePicker = (input, venue, session, venueIndex, sessionIndex, options = {})=>{
+              const trigger = options && options.trigger ? options.trigger : input;
               let picker = null;
               let todayMonthNode = null;
               let todayMarker = null;
@@ -13478,16 +13499,26 @@ function makePosts(){
                 document.removeEventListener('keydown', onKeydown, true);
                 openPickers.delete(closePicker);
               };
+              const isTriggerElement = element => {
+                if(!trigger || !(trigger instanceof Element)) return false;
+                return trigger === element || trigger.contains(element);
+              };
               const onPointerDown = event => {
                 if(!picker) return;
-                if(event.target === input || picker.contains(event.target)) return;
+                const target = event.target;
+                if(target === input || (input && typeof input.contains === 'function' && input.contains(target))) return;
+                if(isTriggerElement(target)) return;
+                if(picker.contains(target)) return;
                 closePicker();
               };
               const onKeydown = event => {
                 if(event.key === 'Escape'){
                   event.preventDefault();
                   closePicker();
-                  try{ input.focus(); }catch(err){}
+                  const focusTarget = trigger || input;
+                  if(focusTarget && typeof focusTarget.focus === 'function'){
+                    try{ focusTarget.focus(); }catch(err){}
+                  }
                 }
               };
               const updateCellSelection = iso => {
@@ -13650,6 +13681,11 @@ function makePosts(){
                 container.appendChild(scroll);
                 const actions = document.createElement('div');
                 actions.className = 'calendar-actions';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.addEventListener('click', ()=> closePicker());
+                actions.appendChild(cancelBtn);
                 const okBtn = document.createElement('button');
                 okBtn.type = 'button';
                 okBtn.textContent = 'OK';
@@ -13714,8 +13750,24 @@ function makePosts(){
                 document.addEventListener('keydown', onKeydown, true);
                 openPickers.add(closePicker);
               };
-              input.addEventListener('focus', ()=> openPicker());
-              input.addEventListener('click', ()=> openPicker());
+              if(trigger === input){
+                input.addEventListener('focus', ()=> openPicker());
+                input.addEventListener('click', ()=> openPicker());
+              } else if(trigger){
+                const handleTriggerClick = event => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openPicker();
+                };
+                const handleTriggerKeydown = event => {
+                  if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
+                    event.preventDefault();
+                    openPicker();
+                  }
+                };
+                trigger.addEventListener('click', handleTriggerClick);
+                trigger.addEventListener('keydown', handleTriggerKeydown);
+              }
             };
 
             const renderVenues = (nextFocus = null)=>{
@@ -13882,17 +13934,27 @@ function makePosts(){
                   dateInput.value = formatSessionDate(session.date);
                   dateInput.dataset.venueIndex = String(venueIndex);
                   dateInput.dataset.sessionIndex = String(sessionIndex);
-                  dateRow.appendChild(dateInput);
+                  dateInput.setAttribute('role', 'button');
+                  dateInput.setAttribute('aria-haspopup', 'region');
+                  const dateInputWrapper = document.createElement('div');
+                  dateInputWrapper.className = 'session-date-input-wrapper';
+                  dateInputWrapper.appendChild(dateInput);
+                  const dropdownIndicator = document.createElement('span');
+                  dropdownIndicator.className = 'session-date-dropdown-indicator';
+                  dropdownIndicator.setAttribute('aria-hidden', 'true');
+                  dropdownIndicator.textContent = '▾';
+                  dateInputWrapper.appendChild(dropdownIndicator);
+                  dateRow.appendChild(dateInputWrapper);
 
                   const dateActions = document.createElement('div');
                   dateActions.className = 'session-date-actions';
-                  const dropdownToggle = document.createElement('button');
-                  dropdownToggle.type = 'button';
-                  dropdownToggle.className = 'session-dropdown-toggle';
-                  dropdownToggle.textContent = '▸';
-                  dropdownToggle.setAttribute('aria-label', 'Toggle Session Details');
-                  dateActions.appendChild(dropdownToggle);
-                  dateActions.appendChild(createActionButton('+', 'Add Session Date', ()=> addSession(venue, venueIndex, sessionIndex)));
+                  const openDatePickerBtn = document.createElement('button');
+                  openDatePickerBtn.type = 'button';
+                  openDatePickerBtn.className = 'tiny';
+                  openDatePickerBtn.textContent = '+';
+                  openDatePickerBtn.setAttribute('aria-label', 'Select Session Dates');
+                  openDatePickerBtn.setAttribute('aria-haspopup', 'dialog');
+                  dateActions.appendChild(openDatePickerBtn);
                   const removeDateBtn = createActionButton('-', 'Remove Session Date', ()=> removeSession(venue, venueIndex, sessionIndex));
                   if(venue.sessions.length <= 1){
                     removeDateBtn.disabled = true;
@@ -13904,35 +13966,51 @@ function makePosts(){
                   dateActions.appendChild(removeDateBtn);
                   dateRow.appendChild(dateActions);
                   sessionCard.appendChild(dateRow);
-                  setupDatePicker(dateInput, venue, session, venueIndex, sessionIndex);
+                  setupDatePicker(dateInput, venue, session, venueIndex, sessionIndex, { trigger: openDatePickerBtn });
 
                   const sessionDetails = document.createElement('div');
                   sessionDetails.className = 'session-details';
+                  const detailsId = `session-details-${venueIndex}-${sessionIndex}`;
+                  sessionDetails.id = detailsId;
                   const isOpen = openSessionRef === session;
                   sessionDetails.hidden = !isOpen;
-                  dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                  dropdownToggle.addEventListener('click', event => {
-                    event.preventDefault();
-                    closeAllPickers();
-                    const currentlyOpen = openSessionRef === session;
-                    openSessionRef = currentlyOpen ? null : session;
+                  dateInputWrapper.classList.toggle('is-open', isOpen);
+                  dateInput.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                  dateInput.setAttribute('aria-controls', detailsId);
+
+                  const syncSessionVisibility = (targetDetails, shouldOpen)=>{
                     const detailNodes = editor.querySelectorAll('.session-details');
                     detailNodes.forEach(detailNode => {
-                      const parentCard = detailNode.parentElement;
-                      const toggleButton = parentCard ? parentCard.querySelector('.session-dropdown-toggle') : null;
-                      if(detailNode === sessionDetails){
-                        const shouldOpen = !currentlyOpen;
-                        detailNode.hidden = !shouldOpen;
-                        if(toggleButton){
-                          toggleButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-                        }
-                      } else {
-                        detailNode.hidden = true;
-                        if(toggleButton){
-                          toggleButton.setAttribute('aria-expanded', 'false');
-                        }
+                      const parentCard = detailNode.closest('.session-card');
+                      const wrapperNode = parentCard ? parentCard.querySelector('.session-date-input-wrapper') : null;
+                      const inputNode = parentCard ? parentCard.querySelector('.session-date-input') : null;
+                      const openThis = detailNode === targetDetails ? shouldOpen : false;
+                      detailNode.hidden = !openThis;
+                      if(wrapperNode){
+                        wrapperNode.classList.toggle('is-open', openThis);
+                      }
+                      if(inputNode){
+                        inputNode.setAttribute('aria-expanded', openThis ? 'true' : 'false');
                       }
                     });
+                  };
+
+                  dateInput.addEventListener('click', ()=> {
+                    closeAllPickers();
+                    const currentlyOpen = openSessionRef === session;
+                    const nextShouldOpen = !currentlyOpen;
+                    openSessionRef = nextShouldOpen ? session : null;
+                    syncSessionVisibility(sessionDetails, nextShouldOpen);
+                  });
+                  dateInput.addEventListener('keydown', event => {
+                    if(event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar'){
+                      event.preventDefault();
+                      closeAllPickers();
+                      const currentlyOpen = openSessionRef === session;
+                      const nextShouldOpen = !currentlyOpen;
+                      openSessionRef = nextShouldOpen ? session : null;
+                      syncSessionVisibility(sessionDetails, nextShouldOpen);
+                    }
                   });
                   sessionCard.appendChild(sessionDetails);
 
@@ -14017,7 +14095,7 @@ function makePosts(){
                       versionList.innerHTML = '';
                       timeObj.versions.forEach((version, versionIndex)=>{
                         const versionCard = document.createElement('div');
-                        versionCard.className = 'session-version-card';
+                        versionCard.className = 'session-pricing-card';
 
                         const versionPlaceholder = `Section ${versionIndex + 1}`;
                         const versionInput = document.createElement('input');
@@ -14782,6 +14860,14 @@ function makePosts(){
               fieldTypeSelect.appendChild(option);
             });
 
+            const fieldTypeWrapper = document.createElement('div');
+            fieldTypeWrapper.className = 'field-type-select-wrapper';
+            const fieldTypeArrow = document.createElement('span');
+            fieldTypeArrow.className = 'field-type-select-arrow';
+            fieldTypeArrow.setAttribute('aria-hidden', 'true');
+            fieldTypeArrow.textContent = '▾';
+            fieldTypeWrapper.append(fieldTypeSelect, fieldTypeArrow);
+
             const fieldPlaceholderInput = document.createElement('input');
             fieldPlaceholderInput.type = 'text';
             fieldPlaceholderInput.className = 'field-placeholder-input';
@@ -15136,7 +15222,7 @@ function makePosts(){
 
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeSelect, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer);
+            row.append(fieldHeader, fieldTypeWrapper, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer);
             row.__fieldRef = safeField;
             return {
               row,
