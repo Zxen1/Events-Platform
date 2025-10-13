@@ -4263,6 +4263,18 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
 .post-body .post-venue-menu .venue-options button .venue-address{
   line-height:1.2;
 }
+.open-post .venue-dropdown > button .venue-address,
+.post-body .venue-dropdown > button .venue-address,
+.open-post .post-venue-menu .venue-options button .venue-address,
+.post-body .post-venue-menu .venue-options button .venue-address{
+  white-space:normal;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+  font-size:inherit;
+}
 
 .open-post .post-venue-menu,
 .open-post .session-menu,
@@ -6256,7 +6268,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .venue-name-input,
             #tab-forms .session-date-input,
             #tab-forms .session-time-input,
-            #tab-forms .session-version-input,
+            #tab-forms .session-section-input,
             #tab-forms .session-tier-input,
             #tab-forms .session-price-input{
               width:100%;
@@ -6468,6 +6480,7 @@ if (typeof slugify !== 'function') {
               box-sizing:content-box;
               -webkit-overflow-scrolling:touch;
               touch-action:pan-x pan-y;
+              position:relative;
             }
             #tab-forms .session-date-picker .calendar{
               display:flex;
@@ -6476,6 +6489,15 @@ if (typeof slugify !== 'function') {
               transform-origin:top left;
               background:var(--dropdown-bg);
               color:var(--dropdown-text);
+            }
+            #tab-forms .session-date-picker .today-marker{
+              position:absolute;
+              bottom:0;
+              width:8px;
+              height:8px;
+              border-radius:50%;
+              background:var(--today);
+              cursor:pointer;
             }
             #tab-forms .session-date-picker .calendar-actions{
               display:flex;
@@ -9481,8 +9503,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'coupon', label: 'Coupon' },
       { value: 'version-price', label: 'Version/Price' },
       { value: 'checkout', label: 'Checkout' },
-      { value: 'venue-session-version-tier-price', label: 'Venue/Session/Version/Tier/Price' }
+      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
     ];
+    const getFormFieldTypeLabel = (value)=>{
+      const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
+      return match ? match.label : '';
+    };
     const VERSION_PRICE_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'];
     const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
 
@@ -12921,12 +12947,22 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
-            if(typeof safeField.name !== 'string') safeField.name = '';
+            if(typeof safeField.name !== 'string'){
+              safeField.name = '';
+            } else if(!safeField.name.trim()){
+              safeField.name = '';
+            }
             if(safeField.type === 'venue-session-price'){
               safeField.type = 'venue-session-version-tier-price';
             }
             if(typeof safeField.type !== 'string' || !FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
               safeField.type = 'text-box';
+            }
+            if(!safeField.name){
+              const typeLabel = getFormFieldTypeLabel(safeField.type).trim();
+              if(typeLabel){
+                safeField.name = typeLabel;
+              }
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
             const requiresByDefault = safeField.type === 'title'
@@ -13257,7 +13293,7 @@ function makePosts(){
               } else if(spec.type === 'session-time'){
                 selector = `.session-time-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"]`;
               } else if(spec.type === 'version'){
-                selector = `.session-version-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
+                selector = `.session-section-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
               } else if(spec.type === 'tier'){
                 selector = `.session-tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
               } else if(spec.type === 'price'){
@@ -13343,6 +13379,44 @@ function makePosts(){
 
             const setupDatePicker = (input, venue, session, venueIndex, sessionIndex)=>{
               let picker = null;
+              let todayMonthNode = null;
+              let todayMarker = null;
+              let markerScrollTarget = null;
+              let markerScrollListener = null;
+              let markerScrollOptions = null;
+
+              const cleanupMarker = ()=>{
+                if(todayMarker){
+                  todayMarker.remove();
+                  todayMarker = null;
+                }
+                if(markerScrollTarget && markerScrollListener){
+                  removeScrollListener(markerScrollTarget, markerScrollListener, markerScrollOptions);
+                }
+                markerScrollTarget = null;
+                markerScrollListener = null;
+                markerScrollOptions = null;
+                todayMonthNode = null;
+              };
+
+              const scrollToMonth = (scrollEl, monthEl, behavior = 'auto')=>{
+                if(!scrollEl || !monthEl) return 0;
+                const left = monthEl.offsetLeft;
+                scrollEl.scrollTo({ left, behavior });
+                return left;
+              };
+
+              const scrollToTodayMonth = (behavior = 'auto')=>{
+                if(!picker || !todayMonthNode) return;
+                const scrollEl = picker.querySelector('.calendar-scroll');
+                if(!scrollEl) return;
+                const left = scrollToMonth(scrollEl, todayMonthNode, behavior);
+                if(todayMarker){
+                  const base = parseFloat(todayMarker.dataset.pos || '0');
+                  todayMarker.style.left = `${base + left}px`;
+                }
+              };
+
               const selectedDates = new Set(
                 Array.isArray(venue.sessions)
                   ? venue.sessions
@@ -13356,6 +13430,7 @@ function makePosts(){
               const isoCells = new Map();
               const closePicker = ()=>{
                 if(!picker) return;
+                cleanupMarker();
                 picker.remove();
                 picker = null;
                 document.removeEventListener('pointerdown', onPointerDown, true);
@@ -13461,21 +13536,25 @@ function makePosts(){
               };
               const buildCalendar = ()=>{
                 isoCells.clear();
+                cleanupMarker();
                 const container = document.createElement('div');
                 container.className = 'session-date-picker';
                 const scroll = document.createElement('div');
                 scroll.className = 'calendar-scroll';
+                setupHorizontalWheel(scroll);
                 const calendar = document.createElement('div');
                 calendar.className = 'calendar';
                 const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                const todayIso = toISODate(today);
                 let current = new Date(minPickerDate.getFullYear(), minPickerDate.getMonth(), 1);
                 const end = new Date(maxPickerDate.getFullYear(), maxPickerDate.getMonth(), 1);
                 while(current <= end){
+                  const monthDate = new Date(current.getFullYear(), current.getMonth(), 1);
                   const monthEl = document.createElement('div');
                   monthEl.className = 'month';
                   const header = document.createElement('div');
                   header.className = 'calendar-header';
-                  header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                  header.textContent = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
                   monthEl.appendChild(header);
                   const grid = document.createElement('div');
                   grid.className = 'grid';
@@ -13485,9 +13564,9 @@ function makePosts(){
                     wd.textContent = day;
                     grid.appendChild(wd);
                   });
-                  const firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
+                  const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
                   const startDow = firstDay.getDay();
-                  const daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+                  const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
                   const totalCells = 42;
                   for(let i = 0; i < totalCells; i++){
                     const cell = document.createElement('div');
@@ -13497,20 +13576,26 @@ function makePosts(){
                       cell.classList.add('empty');
                     } else {
                       cell.textContent = dayNum;
-                      const dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                      const dateObj = new Date(monthDate.getFullYear(), monthDate.getMonth(), dayNum);
                       dateObj.setHours(0,0,0,0);
                       const iso = toISODate(dateObj);
+                      cell.dataset.iso = iso;
                       isoCells.set(iso, cell);
                       if(dateObj < today){
                         cell.classList.add('past');
                       } else {
                         cell.classList.add('future');
                       }
+                      if(iso === todayIso){
+                        cell.classList.add('today');
+                        if(!todayMonthNode){
+                          todayMonthNode = monthEl;
+                        }
+                      }
                       if(selectedDates.has(iso)){
                         cell.classList.add('selected');
                       }
                       cell.addEventListener('click', ()=>{
-                        if(cell.classList.contains('past')) return;
                         toggleDate(iso);
                       });
                     }
@@ -13532,6 +13617,42 @@ function makePosts(){
                 container.appendChild(actions);
                 return container;
               };
+              const initializePicker = pickerEl => {
+                if(!pickerEl) return;
+                const scrollEl = pickerEl.querySelector('.calendar-scroll');
+                if(!scrollEl) return;
+                scrollEl.setAttribute('tabindex', '0');
+                const calendarEl = scrollEl.querySelector('.calendar');
+                if(!calendarEl){
+                  return;
+                }
+                const targetMonth = todayMonthNode || calendarEl.querySelector('.month');
+                if(targetMonth){
+                  scrollEl.scrollLeft = targetMonth.offsetLeft;
+                }
+                if(todayMonthNode){
+                  const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+                  const track = scrollEl.clientWidth - 20;
+                  const scrollPos = todayMonthNode.offsetLeft;
+                  todayMarker = document.createElement('div');
+                  todayMarker.className = 'today-marker';
+                  const basePos = maxScroll > 0 ? (scrollPos / maxScroll) * track + 10 : 10;
+                  todayMarker.dataset.pos = String(basePos);
+                  todayMarker.style.left = `${basePos + scrollEl.scrollLeft}px`;
+                  todayMarker.addEventListener('click', ()=> scrollToTodayMonth('smooth'));
+                  scrollEl.appendChild(todayMarker);
+                  const onScroll = ()=>{
+                    if(!todayMarker) return;
+                    const base = parseFloat(todayMarker.dataset.pos || '0');
+                    todayMarker.style.left = `${base + scrollEl.scrollLeft}px`;
+                  };
+                  markerScrollListener = onScroll;
+                  markerScrollTarget = scrollEl;
+                  markerScrollOptions = addPassiveScrollListener(scrollEl, onScroll);
+                  onScroll();
+                }
+                scrollToTodayMonth('auto');
+              };
               const openPicker = ()=>{
                 if(picker) return;
                 closeAllPickers();
@@ -13539,6 +13660,7 @@ function makePosts(){
                 const parentRow = input.closest('.session-date-row') || input.parentElement;
                 (parentRow || input.parentElement).appendChild(picker);
                 if(picker){
+                  initializePicker(picker);
                   const pickerEl = picker;
                   const showPicker = ()=> pickerEl && pickerEl.classList.add('is-visible');
                   if(typeof requestAnimationFrame === 'function'){
@@ -13827,10 +13949,10 @@ function makePosts(){
                       const versionCard = document.createElement('div');
                       versionCard.className = 'session-version-card';
 
-                      const versionPlaceholder = `Version ${versionIndex + 1}`;
+                      const versionPlaceholder = `Section ${versionIndex + 1}`;
                       const versionInput = document.createElement('input');
                       versionInput.type = 'text';
-                      versionInput.className = 'session-version-input';
+                      versionInput.className = 'session-section-input';
                       versionInput.placeholder = versionPlaceholder;
                       versionInput.setAttribute('aria-label', versionPlaceholder);
                       versionInput.value = version.name || '';
@@ -14765,8 +14887,19 @@ function makePosts(){
             });
 
             fieldTypeSelect.addEventListener('change', ()=>{
+              const previousType = safeField.type;
+              const previousLabel = getFormFieldTypeLabel(previousType).trim();
+              const currentName = fieldNameInput.value.trim();
               const nextType = fieldTypeSelect.value;
-              safeField.type = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+              const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
+              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
+              safeField.type = nextValidType;
+              if(shouldAutofillName && nextLabel){
+                safeField.name = nextLabel;
+                fieldNameInput.value = nextLabel;
+                updateDeleteFieldAria();
+              }
               notifyFormbuilderChange();
               updateFieldEditorsByType();
               renderFormPreview();
