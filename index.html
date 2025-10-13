@@ -14920,7 +14920,38 @@ function makePosts(){
                     priceInput.className = 'version-price-price';
                     priceInput.placeholder = '0.00';
                     const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
-                    priceInput.value = sanitizePriceValue(optionValue.price || '');
+                    const formatPriceValue = value => {
+                      const trimmed = (value || '').trim();
+                      if(trimmed === '') return '';
+                      let normalized = trimmed.replace(/,/g, '.');
+                      if(normalized === '.') return '0.00';
+                      if(normalized.startsWith('.')){
+                        normalized = `0${normalized}`;
+                      }
+                      const dotIndex = normalized.indexOf('.');
+                      if(dotIndex === -1){
+                        return `${normalized}.00`;
+                      }
+                      let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
+                      if(integerPart === ''){
+                        integerPart = '0';
+                      }
+                      let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+                      if(decimalPart.length === 0){
+                        decimalPart = '00';
+                      } else if(decimalPart.length === 1){
+                        decimalPart = `${decimalPart}0`;
+                      } else {
+                        decimalPart = decimalPart.slice(0, 2);
+                      }
+                      return `${integerPart}.${decimalPart}`;
+                    };
+                    const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+                    const formattedInitialPrice = formatPriceValue(initialPriceValue);
+                    priceInput.value = formattedInitialPrice;
+                    if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
+                      previewField.options[optionIndex].price = formattedInitialPrice;
+                    }
                     const clearPriceValue = ()=>{
                       let changed = false;
                       if(priceInput.value !== ''){
@@ -14977,7 +15008,7 @@ function makePosts(){
                       }
                     });
 
-                    const commitPriceValue = ()=>{
+                    const commitPriceValue = event => {
                       if(!isCurrencySelected()){
                         if(clearPriceValue()){
                           notifyFormbuilderChange();
@@ -14987,19 +15018,37 @@ function makePosts(){
                       const rawValue = priceInput.value;
                       const sanitized = sanitizePriceValue(rawValue);
                       if(rawValue !== sanitized){
-                        const start = priceInput.selectionStart;
-                        const end = priceInput.selectionEnd;
-                        const removed = rawValue.length - sanitized.length;
                         priceInput.value = sanitized;
-                        if(typeof priceInput.setSelectionRange === 'function' && start != null && end != null){
-                          const nextStart = Math.max(0, start - removed);
-                          const nextEnd = Math.max(0, end - removed);
-                          priceInput.setSelectionRange(nextStart, nextEnd);
+                      }
+                      const formatted = formatPriceValue(sanitized);
+                      if(priceInput.value !== formatted){
+                        priceInput.value = formatted;
+                      }
+                      if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
+                        if(formatted === ''){
+                          priceInput.setSelectionRange(0, 0);
+                        } else if(!/[.,]/.test(sanitized)){ 
+                          const dotIndex = formatted.indexOf('.');
+                          const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
+                          priceInput.setSelectionRange(caretPos, caretPos);
+                        } else {
+                          const dotIndex = formatted.indexOf('.');
+                          if(dotIndex === -1){
+                            priceInput.setSelectionRange(formatted.length, formatted.length);
+                          } else {
+                            const decimals = sanitized.split(/[.,]/)[1] || '';
+                            if(decimals.length === 0){
+                              priceInput.setSelectionRange(dotIndex + 1, formatted.length);
+                            } else {
+                              const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
+                              priceInput.setSelectionRange(caretPos, caretPos);
+                            }
+                          }
                         }
                       }
                       const previous = previewField.options[optionIndex].price || '';
-                      if(previous !== sanitized){
-                        previewField.options[optionIndex].price = sanitized;
+                      if(previous !== formatted){
+                        previewField.options[optionIndex].price = formatted;
                         notifyFormbuilderChange();
                       }
                     };
