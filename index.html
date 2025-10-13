@@ -1455,18 +1455,23 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
 }
 #filterPanel .calendar .weekday,
-#filterPanel .calendar .day{
+#filterPanel .calendar .day,
+#tab-forms .session-date-picker .calendar .weekday,
+#tab-forms .session-date-picker .calendar .day{
   border-radius:0;
 }
-#filterPanel .calendar .day.range-start{
+#filterPanel .calendar .day.range-start,
+#tab-forms .session-date-picker .calendar .day.range-start{
   border-top-left-radius:8px;
   border-bottom-left-radius:8px;
 }
-#filterPanel .calendar .day.range-end{
+#filterPanel .calendar .day.range-end,
+#tab-forms .session-date-picker .calendar .day.range-end{
   border-top-right-radius:8px;
   border-bottom-right-radius:8px;
 }
-#filterPanel .calendar .day.range-start.range-end{
+#filterPanel .calendar .day.range-start.range-end,
+#tab-forms .session-date-picker .calendar .day.range-start.range-end{
   border-radius:8px;
 }
 .calendar .weekday{font-weight:bold;}
@@ -6222,6 +6227,15 @@ if (typeof slugify !== 'function') {
               row-gap:12px;
               width:100%;
             }
+            #tab-forms .venue-address-line{
+              grid-template-columns:1fr;
+              justify-items:stretch;
+              align-items:stretch;
+            }
+            #tab-forms .venue-address-line > *{
+              width:100%;
+              min-width:0;
+            }
             #tab-forms .venue-line,
             #tab-forms .session-date-row{
               position:relative;
@@ -6275,12 +6289,15 @@ if (typeof slugify !== 'function') {
               border-radius:8px;
               border:1px solid var(--border);
               background:rgba(0,0,0,0.35);
+              min-height:36px;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
-              height:34px;
-              padding:0 12px 0 8px;
+              height:36px;
+              line-height:36px;
+              padding:0 12px;
               color:var(--input-text);
               background:transparent;
+              font-size:inherit;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon,
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
@@ -6301,7 +6318,7 @@ if (typeof slugify !== 'function') {
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
-              padding:10px;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:12px;
@@ -6319,7 +6336,7 @@ if (typeof slugify !== 'function') {
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.25);
-              padding:10px;
+              padding:0;
             }
             #tab-forms .session-version-list{
               display:flex;
@@ -6331,7 +6348,7 @@ if (typeof slugify !== 'function') {
               border:none;
               border-radius:8px;
               background:rgba(0,0,0,0.2);
-              padding:10px;
+              padding:0;
             }
             #tab-forms .session-tier-list{
               display:flex;
@@ -6340,7 +6357,8 @@ if (typeof slugify !== 'function') {
               width:100%;
             }
             #tab-forms .tier-price-row{
-              display:flex;
+              display:grid;
+              grid-template-columns:minmax(110px, auto) 1fr;
               align-items:center;
               gap:8px;
             }
@@ -6366,8 +6384,8 @@ if (typeof slugify !== 'function') {
               width:100%;
             }
             #tab-forms .tier-price-row > *{
-              flex:1 0 180px;
-              min-width:180px;
+              min-width:0;
+              width:100%;
             }
             #tab-forms .session-version-card .version-actions,
             #tab-forms .tier-row .tier-actions{
@@ -6405,76 +6423,59 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-time-row .session-version-list,
             #tab-forms .tier-row .tier-price-row{
-              flex-basis:100%;
+              width:100%;
             }
             #tab-forms .session-date-picker{
+              background:var(--dropdown-bg);
               position:absolute;
-              z-index:25;
               top:100%;
               left:0;
               margin-top:6px;
-              border-radius:12px;
+              display:flex;
+              flex-direction:column;
+              align-items:stretch;
+              font-size:var(--panel-label-size);
+              width:340px;
+              min-height:var(--calendar-height);
+              max-width:100%;
               border:1px solid var(--border);
-              background:var(--dropdown-bg);
-              box-shadow:0 12px 24px rgba(0,0,0,0.35);
-              min-width:var(--calendar-width);
+              border-radius:8px;
+              box-shadow:0 12px 32px rgba(0,0,0,0.4);
+              box-sizing:content-box;
+              overscroll-behavior:contain;
+              -webkit-overflow-scrolling:touch;
+              touch-action:pan-x pan-y;
+              opacity:0;
+              visibility:hidden;
+              pointer-events:none;
+              transform:translateY(4px);
+              transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+              z-index:5000;
             }
-            #tab-forms .session-date-picker[hidden]{
-              display:none;
+            #tab-forms .session-date-picker.is-visible{
+              opacity:1;
+              visibility:visible;
+              pointer-events:auto;
+              transform:translateY(0);
             }
             #tab-forms .session-date-picker .calendar-scroll{
-              width:100%;
-              max-height:300px;
-              overflow:auto;
-              padding:10px;
-              box-sizing:border-box;
+              flex:1 1 auto;
+              overflow-x:auto;
+              overflow-y:hidden;
+              padding:0;
+              margin:0;
+              padding-bottom:var(--scrollbar-h);
+              box-sizing:content-box;
+              -webkit-overflow-scrolling:touch;
+              touch-action:pan-x pan-y;
             }
             #tab-forms .session-date-picker .calendar{
               display:flex;
-              flex-wrap:nowrap;
-              gap:16px;
               width:max-content;
-            }
-            #tab-forms .session-date-picker .month{
-              min-width:var(--calendar-width);
-            }
-            #tab-forms .session-date-picker .calendar-header{
-              text-align:center;
-              margin-bottom:4px;
-              font-weight:600;
-            }
-            #tab-forms .session-date-picker .grid{
-              display:grid;
-              grid-template-columns:repeat(7, var(--calendar-cell-w));
-              grid-template-rows:repeat(7, var(--calendar-cell-h));
-            }
-            #tab-forms .session-date-picker .weekday,
-            #tab-forms .session-date-picker .day{
-              text-align:center;
-              line-height:var(--calendar-cell-h);
-              font-size:var(--panel-label-size);
-            }
-            #tab-forms .session-date-picker .weekday{
-              font-weight:600;
-            }
-            #tab-forms .session-date-picker .day{
-              cursor:pointer;
-              background:var(--calendar-future-bg);
+              transform:scale(var(--calendar-scale));
+              transform-origin:top left;
+              background:var(--dropdown-bg);
               color:var(--dropdown-text);
-              transition:background .2s,color .2s;
-            }
-            #tab-forms .session-date-picker .day.empty{
-              cursor:default;
-              background:var(--calendar-future-bg);
-              opacity:0.5;
-            }
-            #tab-forms .session-date-picker .day.past{
-              opacity:0.6;
-            }
-            #tab-forms .session-date-picker .day.selected,
-            #tab-forms .session-date-picker .day:hover{
-              background:var(--session-selected);
-              color:#fff;
             }
             #tab-forms .session-date-picker .calendar-actions{
               display:flex;
@@ -13537,6 +13538,15 @@ function makePosts(){
                 picker = buildCalendar();
                 const parentRow = input.closest('.session-date-row') || input.parentElement;
                 (parentRow || input.parentElement).appendChild(picker);
+                if(picker){
+                  const pickerEl = picker;
+                  const showPicker = ()=> pickerEl && pickerEl.classList.add('is-visible');
+                  if(typeof requestAnimationFrame === 'function'){
+                    requestAnimationFrame(showPicker);
+                  } else {
+                    showPicker();
+                  }
+                }
                 document.addEventListener('pointerdown', onPointerDown, true);
                 document.addEventListener('keydown', onKeydown, true);
                 openPickers.add(closePicker);
@@ -13589,7 +13599,7 @@ function makePosts(){
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
-                addressLine.className = 'venue-line';
+                addressLine.className = 'venue-line venue-address-line';
                 const geocoderContainer = document.createElement('div');
                 geocoderContainer.className = 'venue-address-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
