@@ -2248,6 +2248,9 @@ button[aria-expanded="true"] .results-arrow{
   border-radius:8px;
   padding:10px;
 }
+#tab-forms .formbuilder-container{
+  position:relative;
+}
 #filterPanel .filter-basics-container{
   position:relative;
 }
@@ -5926,7 +5929,7 @@ if (typeof slugify !== 'function') {
               border:1px solid var(--border);
               border-radius:12px;
               background:rgba(0,0,0,0.35);
-              overflow:hidden;
+              overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
               will-change:transform;
             }
@@ -6137,7 +6140,7 @@ if (typeof slugify !== 'function') {
               border:1px solid var(--border);
               border-radius:10px;
               background:rgba(0,0,0,0.2);
-              overflow:hidden;
+              overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
               will-change:transform;
             }
@@ -6327,7 +6330,7 @@ if (typeof slugify !== 'function') {
               position:relative;
             }
             #tab-forms .venue-address-geocoder-container{
-              z-index:1000000;
+              z-index:2147483647;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
@@ -6341,7 +6344,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.35);
               min-height:36px;
               position:relative;
-              z-index:1000001;
+              z-index:2147483647;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
@@ -6362,7 +6365,7 @@ if (typeof slugify !== 'function') {
               display:none;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              z-index:1000002;
+              z-index:2147483647;
             }
             #tab-forms .session-list{
               display:flex;
@@ -6511,7 +6514,7 @@ if (typeof slugify !== 'function') {
               pointer-events:none;
               transform:translateY(4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:1000000;
+              z-index:2147483647;
             }
             #tab-forms .session-date-picker.is-visible{
               opacity:1;
