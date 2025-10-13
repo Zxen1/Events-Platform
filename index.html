@@ -6148,6 +6148,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .subcategory-form-menu.subcategory-off{
               opacity:0.5;
             }
+            #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
               z-index:2147483647;
             }
@@ -14096,6 +14097,7 @@ function makePosts(){
               const isoCells = new Map();
               const pickerHostRow = input.closest('.session-date-row');
               const parentSubMenu = input.closest('.subcategory-form-menu');
+              const parentCategoryMenu = input.closest('.category-form-menu');
               let activePickerHost = null;
               const closePicker = ()=>{
                 if(activePickerHost){
@@ -14104,6 +14106,9 @@ function makePosts(){
                 }
                 if(parentSubMenu){
                   parentSubMenu.classList.remove('has-floating-overlay');
+                }
+                if(parentCategoryMenu){
+                  parentCategoryMenu.classList.remove('has-floating-overlay');
                 }
                 if(!picker) return;
                 cleanupMarker();
@@ -14370,6 +14375,9 @@ function makePosts(){
                 }
                 if(parentSubMenu){
                   parentSubMenu.classList.add('has-floating-overlay');
+                }
+                if(parentCategoryMenu){
+                  parentCategoryMenu.classList.add('has-floating-overlay');
                 }
                 if(picker){
                   initializePicker(picker);
@@ -14680,6 +14688,12 @@ function makePosts(){
                       const subMenu = geocoderContainer.closest('.subcategory-form-menu');
                       if(subMenu){
                         subMenu.classList.toggle('has-floating-overlay', active);
+                      }
+                      const categoryMenu = subMenu
+                        ? subMenu.closest('.category-form-menu')
+                        : geocoderContainer.closest('.category-form-menu');
+                      if(categoryMenu){
+                        categoryMenu.classList.toggle('has-floating-overlay', active);
                       }
                     };
                     setGeocoderActive(false);
