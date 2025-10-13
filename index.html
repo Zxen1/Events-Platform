@@ -1327,6 +1327,15 @@ button[aria-expanded="true"] .results-arrow{
     background:#222222;
     color:#fff;
   }
+
+  #adminPanel .mapboxgl-ctrl-geocoder{
+    position:relative;
+    z-index:1000001;
+  }
+
+  #adminPanel .mapboxgl-ctrl-geocoder .suggestions{
+    z-index:1000002;
+  }
 #filterPanel .panel-content{
   width:100%;
   max-width:380px;
@@ -6318,7 +6327,7 @@ if (typeof slugify !== 'function') {
               position:relative;
             }
             #tab-forms .venue-address-geocoder-container{
-              z-index:60000;
+              z-index:1000000;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
@@ -6332,7 +6341,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.35);
               min-height:36px;
               position:relative;
-              z-index:60005;
+              z-index:1000001;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
@@ -6353,7 +6362,7 @@ if (typeof slugify !== 'function') {
               display:none;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              z-index:60010;
+              z-index:1000002;
             }
             #tab-forms .session-list{
               display:flex;
@@ -6502,7 +6511,7 @@ if (typeof slugify !== 'function') {
               pointer-events:none;
               transform:translateY(4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:60000;
+              z-index:1000000;
             }
             #tab-forms .session-date-picker.is-visible{
               opacity:1;
