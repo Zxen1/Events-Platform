@@ -6201,10 +6201,13 @@ if (typeof slugify !== 'function') {
               border:none;
               border-radius:10px;
               background:rgba(0,0,0,0.2);
-              padding:12px;
+              padding:0;
               display:flex;
               flex-direction:column;
               gap:12px;
+            }
+            #tab-forms .venue-card > *{
+              width:100%;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row,
@@ -6213,9 +6216,11 @@ if (typeof slugify !== 'function') {
             #tab-forms .tier-row{
               display:grid;
               grid-template-columns:minmax(0, 1fr) auto;
+              justify-items:start;
               align-items:start;
               column-gap:8px;
-              row-gap:8px;
+              row-gap:12px;
+              width:100%;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row{
@@ -6232,6 +6237,7 @@ if (typeof slugify !== 'function') {
               align-items:center;
               justify-self:end;
               align-self:center;
+              justify-content:flex-end;
             }
             #tab-forms .venue-name-input,
             #tab-forms .session-date-input,
