@@ -6342,10 +6342,17 @@ if (typeof slugify !== 'function') {
               color:var(--input-text);
               padding:0 10px;
             }
-            #tab-forms .session-version-card > *:first-child,
+            #tab-forms .venue-line > *:first-child,
+            #tab-forms .session-date-row > *:first-child,
             #tab-forms .session-time-row > *:first-child,
+            #tab-forms .session-version-card > *:first-child,
             #tab-forms .tier-row > *:first-child{
-              flex:1 1 220px;
+              flex:1 0 280px;
+              min-width:280px;
+            }
+            #tab-forms .tier-price-row > *{
+              flex:1 0 180px;
+              min-width:180px;
             }
             #tab-forms .session-version-card .version-actions,
             #tab-forms .tier-row .tier-actions{
