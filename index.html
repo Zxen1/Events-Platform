@@ -6280,7 +6280,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .venue-name-input,
             #tab-forms .session-date-input{
-              background:#2e3a72;
+              background:#2e3a72 !important;
               color:var(--button-text);
             }
             #tab-forms .session-date-input-wrapper{
@@ -6291,6 +6291,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-date-input{
               padding-right:36px;
+              text-align:left;
             }
             #tab-forms .session-date-dropdown-indicator{
               position:absolute;
@@ -6735,6 +6736,11 @@ if (typeof slugify !== 'function') {
               width:100%;
             }
             #tab-forms .version-price-price.is-awaiting-currency{
+              opacity:0.45;
+              background:rgba(0,0,0,0.2);
+              cursor:not-allowed;
+            }
+            #tab-forms .session-price-input.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
@@ -9559,6 +9565,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     };
     const VERSION_PRICE_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'];
     const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
+    const VENUE_CURRENCY_STATE = new WeakMap();
+    let LAST_SELECTED_VENUE_CURRENCY = '';
 
     function venueSessionCreateTier(){
       return { name: '', currency: '', price: '' };
@@ -13079,6 +13087,7 @@ function makePosts(){
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            const currentYear = today.getFullYear();
             const minPickerDate = new Date(today);
             minPickerDate.setMonth(minPickerDate.getMonth() - 12);
             const maxPickerDate = new Date(today);
@@ -13093,6 +13102,139 @@ function makePosts(){
               openPickers.clear();
             };
 
+            const currencyAlertMessage = 'Please select a currency before entering a price.';
+            let lastCurrencyAlertTimestamp = 0;
+            const showCurrencyAlert = ()=>{
+              const now = Date.now();
+              if(now - lastCurrencyAlertTimestamp < 400) return;
+              lastCurrencyAlertTimestamp = now;
+              try{
+                window.alert(currencyAlertMessage);
+              }catch(err){}
+            };
+
+            const sanitizeSessionPriceValue = value => {
+              const raw = typeof value === 'string' ? value : String(value ?? '');
+              const cleaned = raw.replace(/[^0-9.,]/g, '');
+              if(cleaned === '') return '';
+              let integerPart = '';
+              let fractionPart = '';
+              let separator = '';
+              for(let i = 0; i < cleaned.length; i++){
+                const ch = cleaned[i];
+                if(ch >= '0' && ch <= '9'){
+                  if(separator){
+                    if(fractionPart.length < 2){
+                      fractionPart += ch;
+                    }
+                  } else {
+                    integerPart += ch;
+                  }
+                } else if((ch === '.' || ch === ',') && !separator){
+                  separator = ch;
+                }
+              }
+              if(separator){
+                if(integerPart === '') integerPart = '0';
+                return fractionPart.length > 0 ? `${integerPart}${separator}${fractionPart}` : `${integerPart}${separator}`;
+              }
+              return integerPart;
+            };
+
+            const ensureVenueCurrencyState = venue => {
+              let state = VENUE_CURRENCY_STATE.get(venue);
+              if(!state){
+                state = { currency: '' };
+                VENUE_CURRENCY_STATE.set(venue, state);
+              }
+              if(typeof state.currency !== 'string'){
+                state.currency = '';
+              }
+              return state;
+            };
+
+            const findFirstVenueCurrency = venue => {
+              if(!venue || !Array.isArray(venue.sessions)) return '';
+              for(const session of venue.sessions){
+                if(!session || !Array.isArray(session.times)) continue;
+                for(const time of session.times){
+                  if(!time || !Array.isArray(time.versions)) continue;
+                  for(const version of time.versions){
+                    if(!version || !Array.isArray(version.tiers)) continue;
+                    for(const tier of version.tiers){
+                      if(tier && typeof tier.currency === 'string'){
+                        const trimmed = tier.currency.trim();
+                        if(trimmed) return trimmed;
+                      }
+                    }
+                  }
+                }
+              }
+              return '';
+            };
+
+            const getVenueCurrencyValue = venue => {
+              const state = ensureVenueCurrencyState(venue);
+              if(state.currency){
+                return state.currency;
+              }
+              const detected = findFirstVenueCurrency(venue);
+              if(detected){
+                state.currency = detected;
+                LAST_SELECTED_VENUE_CURRENCY = detected;
+                return detected;
+              }
+              return '';
+            };
+
+            const setVenueCurrencyState = (venue, currency)=>{
+              const state = ensureVenueCurrencyState(venue);
+              const normalized = typeof currency === 'string' ? currency.trim() : '';
+              state.currency = normalized;
+              if(normalized){
+                LAST_SELECTED_VENUE_CURRENCY = normalized;
+              }
+            };
+
+            const applyCurrencyToVenueData = (venue, currency, options = {})=>{
+              const normalized = typeof currency === 'string' ? currency.trim() : '';
+              const onlyUnset = options && options.onlyUnset === true;
+              const sourceTier = options ? options.sourceTier : null;
+              const clearPrices = options && options.clearPrices === true;
+              let changed = false;
+              if(!venue || !Array.isArray(venue.sessions)) return changed;
+              venue.sessions.forEach(session => {
+                if(!session || !Array.isArray(session.times)) return;
+                session.times.forEach(time => {
+                  if(!time || !Array.isArray(time.versions)) return;
+                  time.versions.forEach(version => {
+                    if(!version || !Array.isArray(version.tiers)) return;
+                    version.tiers.forEach(tierItem => {
+                      if(!tierItem || typeof tierItem !== 'object') return;
+                      if(sourceTier && tierItem === sourceTier) return;
+                      const current = typeof tierItem.currency === 'string' ? tierItem.currency : '';
+                      if(normalized){
+                        if((!onlyUnset || !current) && current !== normalized){
+                          tierItem.currency = normalized;
+                          changed = true;
+                        }
+                      } else if(!onlyUnset && current){
+                        tierItem.currency = '';
+                        changed = true;
+                      }
+                      if(clearPrices && (!normalized || !current)){
+                        if(typeof tierItem.price === 'string' && tierItem.price !== ''){
+                          tierItem.price = '';
+                          changed = true;
+                        }
+                      }
+                    });
+                  });
+                });
+              });
+              return changed;
+            };
+
             const sanitizeTimeInput = value => {
               const digits = String(value || '').replace(/\D/g, '').slice(0, 4);
               if(digits.length <= 2){
@@ -13104,11 +13246,16 @@ function makePosts(){
             const formatSessionDate = iso => {
               if(!iso) return '';
               try{
-                return parseISODate(iso).toLocaleDateString('en-GB', {
+                const parsed = parseISODate(iso);
+                const options = {
                   weekday: 'short',
                   day: 'numeric',
                   month: 'short'
-                }).replace(/,/g, '');
+                };
+                if(parsed.getFullYear() !== currentYear){
+                  options.year = 'numeric';
+                }
+                return parsed.toLocaleDateString('en-GB', options).replace(/,/g, '');
               }catch(err){
                 return '';
               }
@@ -13175,7 +13322,7 @@ function makePosts(){
                 if(session.times.length === 0){
                   session.times.push(venueSessionCreateTime());
                 }
-                session.times.forEach(time => {
+                session.times.forEach((time, timeIndex) => {
                   if(!Array.isArray(time.versions)){
                     time.versions = [venueSessionCreateVersion()];
                   }
@@ -13183,7 +13330,7 @@ function makePosts(){
                     time.versions.push(venueSessionCreateVersion());
                   }
                   if(typeof time.samePricingAsAbove !== 'boolean'){
-                    time.samePricingAsAbove = false;
+                    time.samePricingAsAbove = timeIndex > 0;
                   }
                   const sourceIndex = Number(time.samePricingSourceIndex);
                   if(!Number.isInteger(sourceIndex) || sourceIndex < 0){
@@ -13222,6 +13369,21 @@ function makePosts(){
               ensureOptions();
               const venues = previewField.options;
               const newVenue = venueSessionCreateVenue();
+              let defaultCurrency = '';
+              if(Array.isArray(venues) && venues.length > 0){
+                const referenceIndex = Math.min(Math.max(afterIndex, 0), venues.length - 1);
+                const referenceVenue = venues[referenceIndex];
+                if(referenceVenue){
+                  defaultCurrency = getVenueCurrencyValue(referenceVenue) || defaultCurrency;
+                }
+              }
+              if(!defaultCurrency && LAST_SELECTED_VENUE_CURRENCY){
+                defaultCurrency = LAST_SELECTED_VENUE_CURRENCY;
+              }
+              if(defaultCurrency){
+                applyCurrencyToVenueData(newVenue, defaultCurrency);
+                setVenueCurrencyState(newVenue, defaultCurrency);
+              }
               venues.splice(afterIndex + 1, 0, newVenue);
               openSessionRef = null;
               notifyFormbuilderChange();
@@ -13257,6 +13419,32 @@ function makePosts(){
               while(newSession.times.length < maxTimes){
                 newSession.times.push(venueSessionCreateTime());
               }
+              newSession.times.forEach((time, index)=>{
+                time.samePricingSourceIndex = 0;
+                if(index === 0){
+                  time.samePricingAsAbove = false;
+                } else {
+                  time.samePricingAsAbove = true;
+                  const baseTime = newSession.times[0];
+                  if(baseTime && baseTime !== time){
+                    time.versions = baseTime.versions;
+                  }
+                }
+              });
+              const venueCurrency = getVenueCurrencyValue(venue);
+              if(venueCurrency){
+                newSession.times.forEach(time => {
+                  if(!time || !Array.isArray(time.versions)) return;
+                  time.versions.forEach(version => {
+                    if(!version || !Array.isArray(version.tiers)) return;
+                    version.tiers.forEach(tier => {
+                      if(tier && !tier.currency){
+                        tier.currency = venueCurrency;
+                      }
+                    });
+                  });
+                });
+              }
               sessions.splice(afterIndex + 1, 0, newSession);
               applyAutofillToSession(venue, newSession);
               openSessionRef = null;
@@ -13275,8 +13463,30 @@ function makePosts(){
             const addTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
               const sessions = venue.sessions;
               const insertion = timeIndex + 1;
+              const venueCurrency = getVenueCurrencyValue(venue);
               sessions.forEach(sess => {
-                sess.times.splice(insertion, 0, venueSessionCreateTime());
+                const newTime = venueSessionCreateTime();
+                newTime.samePricingSourceIndex = 0;
+                if(insertion === 0){
+                  newTime.samePricingAsAbove = false;
+                } else {
+                  newTime.samePricingAsAbove = true;
+                  const baseReference = sess.times[0];
+                  if(baseReference && baseReference !== newTime){
+                    newTime.versions = baseReference.versions;
+                  }
+                }
+                if(venueCurrency && Array.isArray(newTime.versions)){
+                  newTime.versions.forEach(version => {
+                    if(!version || !Array.isArray(version.tiers)) return;
+                    version.tiers.forEach(tier => {
+                      if(tier && !tier.currency){
+                        tier.currency = venueCurrency;
+                      }
+                    });
+                  });
+                }
+                sess.times.splice(insertion, 0, newTime);
               });
               const state = getVenueAutofillState(previewField, venue);
               if(Array.isArray(state.slots)){
@@ -13309,7 +13519,16 @@ function makePosts(){
 
             const addVersion = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
               const time = venue.sessions[sessionIndex].times[timeIndex];
-              time.versions.splice(afterIndex + 1, 0, venueSessionCreateVersion());
+              const newVersion = venueSessionCreateVersion();
+              const venueCurrency = getVenueCurrencyValue(venue);
+              if(venueCurrency && Array.isArray(newVersion.tiers)){
+                newVersion.tiers.forEach(tier => {
+                  if(tier && !tier.currency){
+                    tier.currency = venueCurrency;
+                  }
+                });
+              }
+              time.versions.splice(afterIndex + 1, 0, newVersion);
               notifyFormbuilderChange();
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
             };
@@ -13325,7 +13544,12 @@ function makePosts(){
 
             const addTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, afterIndex)=>{
               const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
-              version.tiers.splice(afterIndex + 1, 0, venueSessionCreateTier());
+              const newTier = venueSessionCreateTier();
+              const venueCurrency = getVenueCurrencyValue(venue);
+              if(venueCurrency){
+                newTier.currency = venueCurrency;
+              }
+              version.tiers.splice(afterIndex + 1, 0, newTier);
               notifyFormbuilderChange();
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
             };
@@ -13773,6 +13997,8 @@ function makePosts(){
             const renderVenues = (nextFocus = null)=>{
               closeAllPickers();
               ensureOptions();
+              let shouldNotifyAfterRender = false;
+              const markAutoChange = ()=>{ shouldNotifyAfterRender = true; };
               if(nextFocus) setFocus(nextFocus);
               venueList.innerHTML = '';
               previewField.options.forEach((venue, venueIndex)=>{
@@ -14022,19 +14248,35 @@ function makePosts(){
                     if(timeIndex === 0){
                       timeObj.samePricingAsAbove = false;
                       timeObj.samePricingSourceIndex = 0;
-                    } else if(timeObj.samePricingAsAbove){
+                    } else {
+                      if(typeof timeObj.samePricingAsAbove !== 'boolean'){
+                        timeObj.samePricingAsAbove = true;
+                      }
+                      if(!Number.isInteger(timeObj.samePricingSourceIndex) || timeObj.samePricingSourceIndex < 0){
+                        timeObj.samePricingSourceIndex = 0;
+                      }
                       const baseIndex = Number.isInteger(timeObj.samePricingSourceIndex) && timeObj.samePricingSourceIndex >= 0
                         ? timeObj.samePricingSourceIndex
                         : 0;
                       const referenceTime = session.times[baseIndex] || session.times[0];
-                      if(referenceTime && referenceTime !== timeObj){
-                        timeObj.versions = referenceTime.versions;
+                      if(timeObj.samePricingAsAbove){
+                        if(referenceTime && referenceTime !== timeObj){
+                          timeObj.versions = referenceTime.versions;
+                        }
+                      } else {
+                        const reference = referenceTime || session.times[0];
+                        if(reference && timeObj.versions === reference.versions){
+                          timeObj.versions = reference.versions.map(cloneVenueSessionVersion);
+                        }
+                        if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
+                          timeObj.versions = [venueSessionCreateVersion()];
+                        }
                       }
                     }
                     const timeRow = document.createElement('div');
                     timeRow.className = 'session-time-row';
 
-                    const timePlaceholder = `Session Time ${timeIndex + 1}`;
+                    const timePlaceholder = `Session Time ${timeIndex + 1} (24 hr clock)`;
                     const timeInput = document.createElement('input');
                     timeInput.type = 'text';
                     timeInput.className = 'session-time-input';
@@ -14097,7 +14339,7 @@ function makePosts(){
                         const versionCard = document.createElement('div');
                         versionCard.className = 'session-pricing-card';
 
-                        const versionPlaceholder = `Section ${versionIndex + 1}`;
+                        const versionPlaceholder = `Section ${versionIndex + 1} (eg. General, Stalls)`;
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
                         versionInput.className = 'session-section-input';
@@ -14134,7 +14376,7 @@ function makePosts(){
                           const tierRow = document.createElement('div');
                           tierRow.className = 'tier-row';
 
-                          const tierPlaceholder = `Tier ${tierIndex + 1}`;
+                          const tierPlaceholder = `Tier ${tierIndex + 1} (eg. Child, Concession, Adult)`;
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
                           tierInput.className = 'session-tier-input';
@@ -14180,16 +14422,13 @@ function makePosts(){
                             opt.textContent = code;
                             currencySelect.appendChild(opt);
                           });
-                          currencySelect.value = tier.currency || '';
+                          const existingCurrency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
+                          currencySelect.value = existingCurrency;
                           currencySelect.dataset.venueIndex = String(venueIndex);
                           currencySelect.dataset.sessionIndex = String(sessionIndex);
                           currencySelect.dataset.timeIndex = String(timeIndex);
                           currencySelect.dataset.versionIndex = String(versionIndex);
                           currencySelect.dataset.tierIndex = String(tierIndex);
-                          currencySelect.addEventListener('change', ()=>{
-                            tier.currency = currencySelect.value;
-                            notifyFormbuilderChange();
-                          });
                           priceRow.appendChild(currencySelect);
 
                           const priceInput = document.createElement('input');
@@ -14198,25 +14437,144 @@ function makePosts(){
                           priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
                           priceInput.className = 'session-price-input';
                           priceInput.placeholder = '0.00';
-                          priceInput.value = (tier.price || '').replace(/[^0-9.,]/g, '');
+                          const sanitizedInitialPrice = sanitizeSessionPriceValue(tier.price || '');
+                          if(typeof tier.price !== 'string' || tier.price !== sanitizedInitialPrice){
+                            tier.price = sanitizedInitialPrice;
+                            markAutoChange();
+                          }
+                          priceInput.value = sanitizedInitialPrice;
                           priceInput.dataset.venueIndex = String(venueIndex);
                           priceInput.dataset.sessionIndex = String(sessionIndex);
                           priceInput.dataset.timeIndex = String(timeIndex);
                           priceInput.dataset.versionIndex = String(versionIndex);
                           priceInput.dataset.tierIndex = String(tierIndex);
-                          priceInput.addEventListener('input', ()=>{
-                            const next = priceInput.value.replace(/[^0-9.,]/g, '');
-                            if(priceInput.value !== next){
-                              priceInput.value = next;
+
+                          const hasCurrencySelected = ()=> currencySelect.value.trim() !== '';
+
+                          const updatePriceState = (options = {})=>{
+                            const opts = options || {};
+                            if(hasCurrencySelected()){
+                              priceInput.readOnly = false;
+                              priceInput.classList.remove('is-awaiting-currency');
+                              priceInput.removeAttribute('aria-disabled');
+                              if(opts.sanitize !== false){
+                                const sanitized = sanitizeSessionPriceValue(priceInput.value);
+                                if(priceInput.value !== sanitized){
+                                  priceInput.value = sanitized;
+                                }
+                              }
+                              return false;
                             }
-                          });
-                          priceInput.addEventListener('blur', ()=>{
-                            const next = priceInput.value.replace(/[^0-9.,]/g, '');
-                            if(tier.price !== next){
-                              tier.price = next;
+                            priceInput.readOnly = true;
+                            priceInput.classList.add('is-awaiting-currency');
+                            priceInput.setAttribute('aria-disabled', 'true');
+                            let priceChanged = false;
+                            if(opts.clearPrice){
+                              if(priceInput.value !== ''){
+                                priceInput.value = '';
+                              }
+                              if(tier.price){
+                                tier.price = '';
+                                priceChanged = true;
+                              }
+                            }
+                            return priceChanged;
+                          };
+
+                          const commitPriceValue = ()=>{
+                            if(!hasCurrencySelected()){
+                              const cleared = updatePriceState({ clearPrice: true, sanitize: false });
+                              if(cleared){
+                                notifyFormbuilderChange();
+                              }
+                              return;
+                            }
+                            const sanitized = sanitizeSessionPriceValue(priceInput.value);
+                            if(priceInput.value !== sanitized){
+                              priceInput.value = sanitized;
+                            }
+                            const previous = typeof tier.price === 'string' ? tier.price : '';
+                            if(previous !== sanitized){
+                              tier.price = sanitized;
                               notifyFormbuilderChange();
                             }
+                          };
+
+                          const blockPriceAccess = event => {
+                            if(hasCurrencySelected()) return false;
+                            if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+                            if(event && typeof event.preventDefault === 'function'){
+                              event.preventDefault();
+                            }
+                            if(event && typeof event.stopPropagation === 'function'){
+                              event.stopPropagation();
+                            }
+                            if(typeof priceInput.blur === 'function'){
+                              requestAnimationFrame(()=>{
+                                try{ priceInput.blur(); }catch(err){}
+                              });
+                            }
+                            showCurrencyAlert();
+                            return true;
+                          };
+
+                          currencySelect.addEventListener('change', ()=>{
+                            const nextCurrency = currencySelect.value.trim();
+                            const previousCurrency = typeof tier.currency === 'string' ? tier.currency : '';
+                            tier.currency = nextCurrency;
+                            const shouldClearPrice = nextCurrency === '';
+                            const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
+                            const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                              sourceTier: tier,
+                              clearPrices: shouldClearPrice
+                            });
+                            setVenueCurrencyState(venue, nextCurrency);
+                            let notifyNeeded = (previousCurrency !== nextCurrency) || priceCleared || propagated;
+                            if(notifyNeeded){
+                              notifyFormbuilderChange();
+                            }
+                            renderVenues({ type: 'price', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex });
                           });
+
+                          priceInput.addEventListener('beforeinput', event => {
+                            if(hasCurrencySelected()){
+                              const data = event && event.data;
+                              if(typeof data === 'string' && /[^0-9.,]/.test(data)){
+                                event.preventDefault();
+                              }
+                              return;
+                            }
+                            if(event){
+                              event.preventDefault();
+                            }
+                            showCurrencyAlert();
+                          });
+                          priceInput.addEventListener('pointerdown', blockPriceAccess);
+                          priceInput.addEventListener('focus', blockPriceAccess);
+                          priceInput.addEventListener('keydown', event => {
+                            if(event.key === 'Tab' || event.key === 'Shift') return;
+                            blockPriceAccess(event);
+                          });
+                          priceInput.addEventListener('input', ()=>{
+                            if(!hasCurrencySelected()) return;
+                            const rawValue = priceInput.value;
+                            const sanitized = sanitizeSessionPriceValue(rawValue);
+                            if(rawValue !== sanitized){
+                              const start = priceInput.selectionStart;
+                              const end = priceInput.selectionEnd;
+                              priceInput.value = sanitized;
+                              if(typeof priceInput.setSelectionRange === 'function' && start != null && end != null){
+                                const adjustment = rawValue.length - sanitized.length;
+                                const nextStart = Math.max(0, start - adjustment);
+                                const nextEnd = Math.max(0, end - adjustment);
+                                priceInput.setSelectionRange(nextStart, nextEnd);
+                              }
+                            }
+                          });
+                          priceInput.addEventListener('blur', commitPriceValue);
+                          priceInput.addEventListener('change', commitPriceValue);
+
+                          updatePriceState({ clearPrice: false, sanitize: false });
                           priceRow.appendChild(priceInput);
                           tierRow.appendChild(priceRow);
                           tierList.appendChild(tierRow);
@@ -14306,6 +14664,9 @@ function makePosts(){
                 venueCard.appendChild(sessionContainer);
 
               });
+              if(shouldNotifyAfterRender){
+                notifyFormbuilderChange();
+              }
               applyFocus();
             };
 
