@@ -10315,6 +10315,168 @@ function uniqueTitle(seed, cityName, idx){
 
   const localVenueGeocoder = (query) => searchLocalVenues(query);
 
+  const MAPBOX_VENUE_ENDPOINT = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
+  const MAPBOX_VENUE_CACHE_LIMIT = 40;
+  const MAPBOX_VENUE_MIN_QUERY = 2;
+  const mapboxVenueCache = new Map();
+
+  function mapboxVenueCacheKey(query, options={}){
+    const normalized = (query || '').trim().toLowerCase();
+    const limit = Number.isFinite(options.limit) ? options.limit : 0;
+    const types = typeof options.types === 'string' ? options.types : '';
+    const prox = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
+      ? `${options.proximity.longitude.toFixed(3)},${options.proximity.latitude.toFixed(3)}`
+      : '';
+    const language = typeof options.language === 'string' ? options.language : '';
+    const country = typeof options.country === 'string' ? options.country : '';
+    const bbox = Array.isArray(options.bbox) ? options.bbox.join(',') : '';
+    return [normalized, limit, types, prox, language, country, bbox].join('|');
+  }
+
+  function rememberMapboxVenueResult(key, features){
+    if(!key) return;
+    try{
+      mapboxVenueCache.set(key, features);
+      if(mapboxVenueCache.size > MAPBOX_VENUE_CACHE_LIMIT){
+        const firstKey = mapboxVenueCache.keys().next().value;
+        if(firstKey) mapboxVenueCache.delete(firstKey);
+      }
+    }catch(err){}
+  }
+
+  function getMapboxVenueFeatureCenter(feature){
+    if(feature && Array.isArray(feature.center) && feature.center.length === 2){
+      const [lng, lat] = feature.center;
+      if(Number.isFinite(lng) && Number.isFinite(lat)) return [lng, lat];
+    }
+    const coords = feature && feature.geometry && Array.isArray(feature.geometry.coordinates)
+      ? feature.geometry.coordinates
+      : null;
+    if(coords && coords.length >= 2){
+      const [lng, lat] = coords;
+      if(Number.isFinite(lng) && Number.isFinite(lat)) return [lng, lat];
+    }
+    return null;
+  }
+
+  function normalizeMapboxVenueFeature(feature){
+    if(!feature || typeof feature !== 'object') return null;
+    const clone = cloneGeocoderFeature(feature);
+    const center = getMapboxVenueFeatureCenter(clone);
+    if(center){
+      clone.center = center.slice();
+      clone.geometry = clone.geometry || { type:'Point', coordinates:center.slice() };
+      if(Array.isArray(clone.geometry.coordinates)){
+        clone.geometry.coordinates[0] = center[0];
+        clone.geometry.coordinates[1] = center[1];
+      }
+    }
+    if(!Array.isArray(clone.place_type) || !clone.place_type.length){
+      clone.place_type = Array.isArray(feature.place_type) && feature.place_type.length
+        ? feature.place_type.slice()
+        : ['poi'];
+    }
+    clone.properties = clone.properties || {};
+    if(!clone.properties.name && typeof clone.text === 'string'){
+      clone.properties.name = clone.text;
+    }
+    if(typeof feature.properties === 'object'){
+      if(!clone.properties.address && typeof feature.properties.address === 'string'){
+        clone.properties.address = feature.properties.address;
+      }
+      if(!clone.properties.category && typeof feature.properties.category === 'string'){
+        clone.properties.category = feature.properties.category;
+      }
+    }
+    if(!clone.properties.source){
+      clone.properties.source = 'mapbox-places';
+    }
+    if(typeof clone.text !== 'string' && typeof feature.text === 'string'){
+      clone.text = feature.text;
+    }
+    if(typeof clone.place_name !== 'string' && typeof feature.place_name === 'string'){
+      clone.place_name = feature.place_name;
+    }
+    return clone;
+  }
+
+  async function searchMapboxVenues(query, options={}){
+    const normalized = (query || '').trim();
+    if(!normalized || normalized.length < MAPBOX_VENUE_MIN_QUERY) return [];
+    if(typeof MAPBOX_TOKEN !== 'string' || !MAPBOX_TOKEN){
+      return [];
+    }
+    const limitRaw = Number.isFinite(options.limit) ? options.limit : 5;
+    const limit = Math.max(1, Math.min(10, limitRaw));
+    const typesRaw = typeof options.types === 'string' && options.types.trim() ? options.types : 'poi';
+    const types = typesRaw.split(',').map(t => t.trim()).filter(Boolean).join(',');
+    const language = typeof options.language === 'string' && options.language ? options.language : '';
+    const country = typeof options.country === 'string' && options.country ? options.country : '';
+    const bbox = Array.isArray(options.bbox) ? options.bbox : null;
+    const proximity = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
+      ? { longitude: options.proximity.longitude, latitude: options.proximity.latitude }
+      : null;
+    const cacheKey = mapboxVenueCacheKey(normalized, { limit, types, proximity, language, country, bbox });
+    if(mapboxVenueCache.has(cacheKey)){
+      const cached = mapboxVenueCache.get(cacheKey);
+      return Array.isArray(cached) ? cached.map(cloneGeocoderFeature) : [];
+    }
+    const params = new URLSearchParams({
+      access_token: MAPBOX_TOKEN,
+      autocomplete: 'true',
+      types: types || 'poi',
+      limit: String(limit)
+    });
+    if(language) params.set('language', language);
+    if(country) params.set('country', country);
+    if(proximity){
+      params.set('proximity', `${proximity.longitude},${proximity.latitude}`);
+    }
+    if(bbox && bbox.length === 4 && bbox.every(val => Number.isFinite(val))){
+      params.set('bbox', bbox.join(','));
+    }
+    const url = `${MAPBOX_VENUE_ENDPOINT}${encodeURIComponent(normalized)}.json?${params.toString()}`;
+    const fetchOptions = {};
+    if(options.signal) fetchOptions.signal = options.signal;
+    let data = null;
+    try{
+      const response = await fetch(url, fetchOptions);
+      if(!response || !response.ok){
+        return [];
+      }
+      data = await response.json();
+    }catch(err){
+      if(options.signal && options.signal.aborted){
+        return [];
+      }
+      console.warn('Mapbox venue search failed', err);
+      return [];
+    }
+    const features = Array.isArray(data && data.features) ? data.features : [];
+    const normalizedResults = [];
+    for(const feature of features){
+      const normalizedFeature = normalizeMapboxVenueFeature(feature);
+      const center = getMapboxVenueFeatureCenter(normalizedFeature);
+      if(!normalizedFeature || !center) continue;
+      normalizedResults.push(normalizedFeature);
+    }
+    rememberMapboxVenueResult(cacheKey, normalizedResults.map(cloneGeocoderFeature));
+    return normalizedResults.map(cloneGeocoderFeature);
+  }
+
+  function externalMapboxVenueGeocoder(query){
+    const contextOptions = (this && this.options) ? this.options : {};
+    const limit = Number.isFinite(contextOptions.limit) ? contextOptions.limit : undefined;
+    const proximity = contextOptions.proximity && typeof contextOptions.proximity === 'object'
+      ? contextOptions.proximity
+      : null;
+    const language = contextOptions.language;
+    const country = contextOptions.country;
+    const bbox = contextOptions.bbox;
+    const types = contextOptions.types;
+    return searchMapboxVenues(query, { limit, proximity, language, country, bbox, types });
+  }
+
   rebuildVenueIndex();
 
 
@@ -14001,6 +14163,7 @@ function makePosts(){
               const markAutoChange = ()=>{ shouldNotifyAfterRender = true; };
               if(nextFocus) setFocus(nextFocus);
               venueList.innerHTML = '';
+              const datalistSeed = Date.now();
               previewField.options.forEach((venue, venueIndex)=>{
                 ensureSessionStructure(venue);
                 const venueCard = document.createElement('div');
@@ -14010,6 +14173,82 @@ function makePosts(){
 
                 const venueLine = document.createElement('div');
                 venueLine.className = 'venue-line';
+                let geocoderInputRef = null;
+                let nameResultsByKey = Object.create(null);
+                let nameSearchTimeout = null;
+                let nameSearchAbort = null;
+                const NAME_AUTOCOMPLETE_DELAY = 220;
+                const nameDatalistId = `venue-name-options-${datalistSeed}-${venueIndex}`;
+                const venueNameDatalist = document.createElement('datalist');
+                venueNameDatalist.id = nameDatalistId;
+                venueCard.appendChild(venueNameDatalist);
+
+                const clearNameSuggestions = ()=>{
+                  nameResultsByKey = Object.create(null);
+                  venueNameDatalist.innerHTML = '';
+                };
+
+                const getFeatureKey = (feature)=>{
+                  if(!feature || typeof feature !== 'object') return '';
+                  return feature.id
+                    || (feature.properties && feature.properties.mapbox_id)
+                    || feature.place_name
+                    || feature.text
+                    || '';
+                };
+
+                const updateNameSuggestions = (features)=>{
+                  clearNameSuggestions();
+                  if(!Array.isArray(features) || !features.length) return;
+                  const seenKeys = new Set();
+                  for(const feature of features){
+                    if(!feature) continue;
+                    const key = getFeatureKey(feature);
+                    if(!key || seenKeys.has(key)) continue;
+                    seenKeys.add(key);
+                    const featureClone = cloneGeocoderFeature(feature);
+                    nameResultsByKey[key] = featureClone;
+                    const option = document.createElement('option');
+                    const optionLabel = featureClone.place_name || featureClone.text || '';
+                    option.value = featureClone.text || optionLabel;
+                    if(optionLabel && optionLabel !== option.value){
+                      option.label = optionLabel;
+                      option.textContent = optionLabel;
+                    } else if(optionLabel){
+                      option.textContent = optionLabel;
+                    }
+                    option.dataset.featureKey = key;
+                    venueNameDatalist.appendChild(option);
+                  }
+                };
+
+                const applyFeatureToVenue = (feature, { updateName=false }={})=>{
+                  if(!feature || typeof feature !== 'object') return;
+                  const clone = cloneGeocoderFeature(feature);
+                  const center = getMapboxVenueFeatureCenter(clone);
+                  const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                  const featureName = (typeof clone.text === 'string' && clone.text.trim())
+                    ? clone.text.trim()
+                    : (typeof clone.properties?.name === 'string' ? clone.properties.name.trim() : '');
+                  if(updateName && featureName){
+                    venue.name = featureName;
+                    venueNameInput.value = featureName;
+                  }
+                  if(placeName){
+                    venue.address = placeName;
+                    if(geocoderInputRef){
+                      geocoderInputRef.value = placeName;
+                    }
+                  }
+                  if(center){
+                    venue.location = {
+                      lng: Number(center[0]),
+                      lat: Number(center[1])
+                    };
+                  }
+                  notifyFormbuilderChange();
+                };
+
                 const venueNamePlaceholder = `Venue Name ${venueIndex + 1}`;
                 const venueNameInput = document.createElement('input');
                 venueNameInput.type = 'text';
@@ -14018,9 +14257,94 @@ function makePosts(){
                 venueNameInput.setAttribute('aria-label', venueNamePlaceholder);
                 venueNameInput.value = venue.name || '';
                 venueNameInput.dataset.venueIndex = String(venueIndex);
+                venueNameInput.setAttribute('list', nameDatalistId);
                 venueNameInput.addEventListener('input', ()=>{
-                  venue.name = venueNameInput.value;
+                  const value = venueNameInput.value || '';
+                  venue.name = value;
                   notifyFormbuilderChange();
+                  if(nameSearchTimeout){
+                    clearTimeout(nameSearchTimeout);
+                    nameSearchTimeout = null;
+                  }
+                  if(nameSearchAbort && typeof nameSearchAbort.abort === 'function'){
+                    nameSearchAbort.abort();
+                    nameSearchAbort = null;
+                  }
+                  const trimmed = value.trim();
+                  if(trimmed.length < MAPBOX_VENUE_MIN_QUERY){
+                    clearNameSuggestions();
+                    return;
+                  }
+                  nameSearchTimeout = setTimeout(async ()=>{
+                    nameSearchTimeout = null;
+                    const controller = (typeof AbortController === 'function') ? new AbortController() : null;
+                    if(controller) nameSearchAbort = controller;
+                    const signal = controller ? controller.signal : undefined;
+                    try{
+                      const normalizedQuery = venueNameInput.value.trim();
+                      if(normalizedQuery.length < MAPBOX_VENUE_MIN_QUERY){
+                        clearNameSuggestions();
+                        if(controller) controller.abort();
+                        return;
+                      }
+                      const localResults = searchLocalVenues(normalizedQuery) || [];
+                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi' });
+                      if(signal && signal.aborted) return;
+                      if((venueNameInput.value || '').trim() !== normalizedQuery){
+                        return;
+                      }
+                      updateNameSuggestions([...localResults, ...remoteResults]);
+                    } catch(err){
+                      if(signal && signal.aborted) return;
+                      console.warn('Venue name lookup failed', err);
+                      clearNameSuggestions();
+                    } finally {
+                      if(nameSearchAbort === controller){
+                        nameSearchAbort = null;
+                      }
+                    }
+                  }, NAME_AUTOCOMPLETE_DELAY);
+                });
+
+                const commitNameSelection = ()=>{
+                  const value = (venueNameInput.value || '').trim();
+                  if(!value){
+                    return;
+                  }
+                  let selectedFeature = null;
+                  const options = venueNameDatalist.querySelectorAll('option');
+                  for(const option of options){
+                    if(option.value === value && option.dataset && option.dataset.featureKey){
+                      const stored = nameResultsByKey[option.dataset.featureKey];
+                      if(stored){
+                        selectedFeature = stored;
+                        break;
+                      }
+                    }
+                  }
+                  if(!selectedFeature){
+                    const lower = value.toLowerCase();
+                    for(const key of Object.keys(nameResultsByKey)){
+                      const candidate = nameResultsByKey[key];
+                      const candidateName = (candidate.text || candidate.place_name || '').toLowerCase();
+                      if(candidateName === lower){
+                        selectedFeature = candidate;
+                        break;
+                      }
+                    }
+                  }
+                  if(selectedFeature){
+                    applyFeatureToVenue(selectedFeature, { updateName:true });
+                    updateNameSuggestions([selectedFeature]);
+                  }
+                };
+
+                venueNameInput.addEventListener('change', commitNameSelection);
+                venueNameInput.addEventListener('blur', commitNameSelection);
+                venueNameInput.addEventListener('keydown', (event)=>{
+                  if(event.key === 'Enter'){
+                    commitNameSelection();
+                  }
                 });
                 venueLine.appendChild(venueNameInput);
                 const venueActions = document.createElement('div');
@@ -14060,6 +14384,7 @@ function makePosts(){
                     notifyFormbuilderChange();
                   });
                   geocoderContainer.appendChild(fallback);
+                  geocoderInputRef = fallback;
                   return fallback;
                 };
                 const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
@@ -14071,7 +14396,10 @@ function makePosts(){
                     placeholder: addressPlaceholder,
                     types: 'poi,place,address',
                     reverseGeocode: true,
-                    limit: 10
+                    localGeocoder: localVenueGeocoder,
+                    externalGeocoder: externalMapboxVenueGeocoder,
+                    limit: 10,
+                    language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
                   const geocoder = new MapboxGeocoder(geocoderOptions);
                   const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
@@ -14104,6 +14432,7 @@ function makePosts(){
                     geocoderInput.setAttribute('aria-label', addressPlaceholder);
                     geocoderInput.dataset.venueIndex = String(venueIndex);
                     geocoderInput.value = venue.address || '';
+                    geocoderInputRef = geocoderInput;
                     geocoderInput.addEventListener('blur', ()=>{
                       const nextValue = geocoderInput.value || '';
                       if(venue.address !== nextValue){
@@ -14113,27 +14442,16 @@ function makePosts(){
                     });
                     geocoder.on('result', event => {
                       const result = event && event.result;
-                      const place = result && (result.place_name || result.text || '');
-                      if(place && geocoderInput){
-                        geocoderInput.value = place;
+                      if(result){
+                        const shouldUpdateName = !(venue.name && venue.name.trim());
+                        applyFeatureToVenue(result, { updateName: shouldUpdateName });
+                        updateNameSuggestions([result]);
                       }
-                      venue.address = typeof place === 'string' ? place : '';
-                      if(result && result.geometry && Array.isArray(result.geometry.coordinates)){
-                        venue.location = {
-                          lng: Number(result.geometry.coordinates[0]),
-                          lat: Number(result.geometry.coordinates[1])
-                        };
-                      } else if(Array.isArray(result && result.center)){
-                        venue.location = {
-                          lng: Number(result.center[0]),
-                          lat: Number(result.center[1])
-                        };
-                      }
-                      notifyFormbuilderChange();
                     });
                     geocoder.on('clear', ()=>{
                       venue.address = '';
                       venue.location = null;
+                      clearNameSuggestions();
                       notifyFormbuilderChange();
                     });
                   };
@@ -17789,8 +18107,10 @@ function makePosts(){
           reverseGeocode:true,
           collapsed:false,
           localGeocoder: localVenueGeocoder,
+          externalGeocoder: externalMapboxVenueGeocoder,
           localGeocoderOnly:false,
-          limit: 10
+          limit: 10,
+          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
         };
         if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
           geocoderOptions.proximity = { longitude: center.lng, latitude: center.lat };
