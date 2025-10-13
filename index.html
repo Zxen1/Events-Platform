@@ -6211,10 +6211,11 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-time-row,
             #tab-forms .session-version-card,
             #tab-forms .tier-row{
-              display:flex;
-              flex-wrap:wrap;
-              align-items:center;
-              gap:8px;
+              display:grid;
+              grid-template-columns:minmax(0, 1fr) auto;
+              align-items:start;
+              column-gap:8px;
+              row-gap:8px;
             }
             #tab-forms .venue-line,
             #tab-forms .session-date-row{
@@ -6225,9 +6226,12 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-time-actions,
             #tab-forms .version-actions,
             #tab-forms .tier-actions{
-              margin-left:auto;
+              margin-left:0;
               display:flex;
               gap:4px;
+              align-items:center;
+              justify-self:end;
+              align-self:center;
             }
             #tab-forms .venue-name-input,
             #tab-forms .session-date-input,
@@ -6334,6 +6338,11 @@ if (typeof slugify !== 'function') {
               align-items:center;
               gap:8px;
             }
+            #tab-forms .session-time-row .session-version-list,
+            #tab-forms .session-version-card .session-tier-list,
+            #tab-forms .tier-row .tier-price-row{
+              grid-column:1 / -1;
+            }
             #tab-forms .session-currency-select{
               height:36px;
               border-radius:8px;
@@ -6347,8 +6356,8 @@ if (typeof slugify !== 'function') {
             #tab-forms .session-time-row > *:first-child,
             #tab-forms .session-version-card > *:first-child,
             #tab-forms .tier-row > *:first-child{
-              flex:1 0 280px;
-              min-width:280px;
+              min-width:0;
+              width:100%;
             }
             #tab-forms .tier-price-row > *{
               flex:1 0 180px;
@@ -6356,7 +6365,8 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-version-card .version-actions,
             #tab-forms .tier-row .tier-actions{
-              align-self:flex-start;
+              align-self:start;
+              justify-self:end;
             }
             #tab-forms .session-dropdown-toggle{
               width:32px;
