@@ -6143,9 +6143,13 @@ if (typeof slugify !== 'function') {
               overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
               will-change:transform;
+              position:relative;
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
               opacity:0.5;
+            }
+            #tab-forms .subcategory-form-menu.has-floating-overlay{
+              z-index:2147483647;
             }
             #tab-forms .delete-category-btn,
             #tab-forms .delete-subcategory-btn{
@@ -13492,7 +13496,52 @@ function makePosts(){
               }
             };
 
+            const isSessionMirrorLocked = venue => {
+              const state = getVenueAutofillState(previewField, venue);
+              if(typeof state.sessionMirrorLocked !== 'boolean'){
+                state.sessionMirrorLocked = false;
+              }
+              return state.sessionMirrorLocked;
+            };
+
+            const lockSessionMirror = venue => {
+              const state = getVenueAutofillState(previewField, venue);
+              if(state.sessionMirrorLocked === true) return;
+              state.sessionMirrorLocked = true;
+              if(Array.isArray(state.slots)){
+                state.slots.forEach(slot => {
+                  if(slot && typeof slot === 'object'){
+                    slot.locked = true;
+                  }
+                });
+              }
+            };
+
+            const forEachOtherSession = (venue, callback)=>{
+              if(!venue || !Array.isArray(venue.sessions)) return;
+              venue.sessions.forEach((sess, idx)=>{
+                if(idx === 0 || !sess) return;
+                callback(sess, idx);
+              });
+            };
+
+            const cloneSessionTimesFromFirst = (venue, targetSession)=>{
+              if(!venue || !targetSession) return;
+              if(isSessionMirrorLocked(venue)) return;
+              const sessions = Array.isArray(venue.sessions) ? venue.sessions : [];
+              if(sessions.length === 0) return;
+              const template = sessions[0];
+              if(!template || template === targetSession) return;
+              const preservedDate = typeof targetSession.date === 'string' ? targetSession.date : '';
+              const times = Array.isArray(template.times) ? template.times : [];
+              targetSession.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
+              targetSession.date = preservedDate;
+            };
+
             const applyAutofillToSession = (venue, session)=>{
+              if(!session) return;
+              cloneSessionTimesFromFirst(venue, session);
+              if(isSessionMirrorLocked(venue)) return;
               const state = getVenueAutofillState(previewField, venue);
               const slots = Array.isArray(state.slots) ? state.slots : [];
               for(let i = 0; i < slots.length; i++){
@@ -13511,6 +13560,12 @@ function makePosts(){
               }
               if(venue.sessions.length === 0){
                 venue.sessions.push(venueSessionCreateSession());
+              }
+              if(!isSessionMirrorLocked(venue)){
+                venue.sessions.forEach((session, index)=>{
+                  if(index === 0) return;
+                  cloneSessionTimesFromFirst(venue, session);
+                });
               }
               let maxTimes = 0;
               venue.sessions.forEach(session => {
@@ -13564,6 +13619,17 @@ function makePosts(){
                   session.times.push(venueSessionCreateTime());
                 }
               });
+              if(!isSessionMirrorLocked(venue)){
+                const template = venue.sessions[0];
+                if(template && Array.isArray(template.times)){
+                  template.times.forEach((time, index)=>{
+                    const slot = ensureSlot(venue, index);
+                    slot.value = typeof time.time === 'string' ? time.time : '';
+                    slot.source = time;
+                    slot.locked = false;
+                  });
+                }
+              }
             };
 
             const addVenue = (afterIndex)=>{
@@ -13665,7 +13731,10 @@ function makePosts(){
               const sessions = venue.sessions;
               const insertion = timeIndex + 1;
               const venueCurrency = getVenueCurrencyValue(venue);
-              sessions.forEach(sess => {
+              const mirrorLocked = isSessionMirrorLocked(venue);
+              const targets = mirrorLocked ? [sessions[sessionIndex]] : sessions;
+              targets.forEach((sess, idx) => {
+                if(!sess) return;
                 const newTime = venueSessionCreateTime();
                 newTime.samePricingSourceIndex = 0;
                 if(insertion === 0){
@@ -13691,7 +13760,10 @@ function makePosts(){
               });
               const state = getVenueAutofillState(previewField, venue);
               if(Array.isArray(state.slots)){
-                state.slots.splice(insertion, 0, { value: '', locked: false, source: null });
+                state.slots.splice(insertion, 0, { value: '', locked: mirrorLocked, source: null });
+              }
+              if(mirrorLocked && sessionIndex > 0){
+                lockSessionMirror(venue);
               }
               notifyFormbuilderChange();
               renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: insertion });
@@ -13699,16 +13771,30 @@ function makePosts(){
 
             const removeTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
               if(venue.sessions.length === 0) return;
-              const totalSlots = venue.sessions[0].times.length;
+              const mirrorLocked = isSessionMirrorLocked(venue);
+              const referenceSession = mirrorLocked ? venue.sessions[sessionIndex] : venue.sessions[0];
+              if(!referenceSession) return;
+              const totalSlots = Array.isArray(referenceSession.times) ? referenceSession.times.length : 0;
               if(totalSlots <= 1) return;
-              venue.sessions.forEach(sess => {
-                if(sess.times.length > timeIndex){
+              if(mirrorLocked){
+                const sess = venue.sessions[sessionIndex];
+                if(sess && sess.times.length > timeIndex){
                   sess.times.splice(timeIndex, 1);
                 }
-                if(sess.times.length === 0){
+                if(sess && sess.times.length === 0){
                   sess.times.push(venueSessionCreateTime());
                 }
-              });
+                lockSessionMirror(venue);
+              } else {
+                venue.sessions.forEach(sess => {
+                  if(sess.times.length > timeIndex){
+                    sess.times.splice(timeIndex, 1);
+                  }
+                  if(sess.times.length === 0){
+                    sess.times.push(venueSessionCreateTime());
+                  }
+                });
+              }
               const state = getVenueAutofillState(previewField, venue);
               if(Array.isArray(state.slots) && state.slots.length > timeIndex){
                 state.slots.splice(timeIndex, 1);
@@ -13740,6 +13826,15 @@ function makePosts(){
               }
               copyTemplateTiersToVersion(time, newVersion);
               time.versions.splice(afterIndex + 1, 0, newVersion);
+              if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
+                forEachOtherSession(venue, otherSess => {
+                  const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                  const clone = cloneVenueSessionVersion(newVersion);
+                  otherTime.versions.splice(afterIndex + 1, 0, clone);
+                });
+              } else if(sessionIndex > 0){
+                lockSessionMirror(venue);
+              }
               notifyFormbuilderChange();
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
             };
@@ -13747,6 +13842,20 @@ function makePosts(){
             const removeVersion = (venue, venueIndex, sessionIndex, timeIndex, versionIndex)=>{
               const time = venue.sessions[sessionIndex].times[timeIndex];
               if(time.versions.length <= 1) return;
+              if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
+                forEachOtherSession(venue, otherSess => {
+                  const otherTime = otherSess.times[timeIndex];
+                  if(!otherTime || !Array.isArray(otherTime.versions)) return;
+                  if(otherTime.versions.length > versionIndex){
+                    otherTime.versions.splice(versionIndex, 1);
+                  }
+                  if(otherTime.versions.length === 0){
+                    otherTime.versions.push(venueSessionCreateVersion());
+                  }
+                });
+              } else if(sessionIndex > 0){
+                lockSessionMirror(venue);
+              }
               time.versions.splice(versionIndex, 1);
               notifyFormbuilderChange();
               const focusVersion = Math.max(0, Math.min(versionIndex, time.versions.length - 1));
@@ -13761,6 +13870,21 @@ function makePosts(){
                 newTier.currency = venueCurrency;
               }
               version.tiers.splice(afterIndex + 1, 0, newTier);
+              if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
+                forEachOtherSession(venue, otherSess => {
+                  const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                  const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
+                  while(otherVersions.length <= versionIndex){
+                    otherVersions.push(venueSessionCreateVersion());
+                  }
+                  const otherVersion = otherVersions[versionIndex];
+                  if(!otherVersion) return;
+                  const clone = cloneVenueSessionTier(newTier);
+                  otherVersion.tiers.splice(afterIndex + 1, 0, clone);
+                });
+              } else if(sessionIndex > 0){
+                lockSessionMirror(venue);
+              }
               notifyFormbuilderChange();
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
             };
@@ -13768,6 +13892,22 @@ function makePosts(){
             const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)=>{
               const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
               if(version.tiers.length <= 1) return;
+              if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
+                forEachOtherSession(venue, otherSess => {
+                  const otherTime = otherSess.times[timeIndex];
+                  if(!otherTime || !Array.isArray(otherTime.versions)) return;
+                  const otherVersion = otherTime.versions[versionIndex];
+                  if(!otherVersion || !Array.isArray(otherVersion.tiers)) return;
+                  if(otherVersion.tiers.length > tierIndex){
+                    otherVersion.tiers.splice(tierIndex, 1);
+                  }
+                  if(otherVersion.tiers.length === 0){
+                    otherVersion.tiers.push(venueSessionCreateTier());
+                  }
+                });
+              } else if(sessionIndex > 0){
+                lockSessionMirror(venue);
+              }
               version.tiers.splice(tierIndex, 1);
               notifyFormbuilderChange();
               const focusTier = Math.max(0, Math.min(tierIndex, version.tiers.length - 1));
@@ -13830,6 +13970,11 @@ function makePosts(){
             };
 
             const commitTimeValue = ({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input })=>{
+              const isMaster = sessionIndex === 0;
+              if(!isMaster){
+                lockSessionMirror(venue);
+              }
+              const mirrorLocked = isSessionMirrorLocked(venue);
               const raw = input.value.trim();
               if(raw === ''){
                 if(timeObj.time){
@@ -13837,9 +13982,28 @@ function makePosts(){
                   notifyFormbuilderChange();
                 }
                 const slot = ensureSlot(venue, timeIndex);
-                if(slot.source === timeObj){
+                if(isMaster && !mirrorLocked){
                   slot.value = '';
-                  slot.source = null;
+                  slot.source = timeObj;
+                  slot.locked = false;
+                  forEachOtherSession(venue, (sess, idx)=>{
+                    const targetTime = sess.times[timeIndex] || (sess.times[timeIndex] = venueSessionCreateTime());
+                    if(targetTime.time){
+                      targetTime.time = '';
+                    }
+                    const selector = `.session-time-input[data-venue-index="${venueIndex}"][data-session-index="${idx}"][data-time-index="${timeIndex}"]`;
+                    const sibling = editor.querySelector(selector);
+                    if(sibling){
+                      sibling.value = '';
+                      sibling.classList.remove('is-invalid');
+                    }
+                  });
+                } else {
+                  if(slot.source === timeObj){
+                    slot.source = null;
+                  }
+                  slot.value = '';
+                  slot.locked = true;
                 }
                 resetSlotIfEmpty(venue, timeIndex);
                 input.classList.remove('is-invalid');
@@ -13855,28 +14019,25 @@ function makePosts(){
                 return;
               }
               const slot = ensureSlot(venue, timeIndex);
-              const previousSlotValue = slot.value;
               timeObj.time = raw;
-              if(!slot.locked && (!slot.source || slot.source === timeObj)){
+              if(isMaster && !mirrorLocked){
                 slot.value = raw;
                 slot.source = timeObj;
-                venue.sessions.forEach((sess, idx)=>{
-                  if(idx === sessionIndex) return;
+                slot.locked = false;
+                forEachOtherSession(venue, (sess, idx)=>{
                   const targetTime = sess.times[timeIndex] || (sess.times[timeIndex] = venueSessionCreateTime());
-                  if(!targetTime.time || targetTime.time === previousSlotValue){
-                    targetTime.time = raw;
-                    const selector = `.session-time-input[data-venue-index="${venueIndex}"][data-session-index="${idx}"][data-time-index="${timeIndex}"]`;
-                    const sibling = editor.querySelector(selector);
-                    if(sibling){
-                      sibling.value = raw;
-                      sibling.classList.remove('is-invalid');
-                    }
+                  targetTime.time = raw;
+                  const selector = `.session-time-input[data-venue-index="${venueIndex}"][data-session-index="${idx}"][data-time-index="${timeIndex}"]`;
+                  const sibling = editor.querySelector(selector);
+                  if(sibling){
+                    sibling.value = raw;
+                    sibling.classList.remove('is-invalid');
                   }
                 });
-              } else if(slot.source && slot.source !== timeObj && slot.value !== raw){
-                slot.locked = true;
+              } else {
                 slot.value = raw;
                 slot.source = timeObj;
+                slot.locked = true;
               }
               notifyFormbuilderChange();
             };
@@ -13934,11 +14095,15 @@ function makePosts(){
               }
               const isoCells = new Map();
               const pickerHostRow = input.closest('.session-date-row');
+              const parentSubMenu = input.closest('.subcategory-form-menu');
               let activePickerHost = null;
               const closePicker = ()=>{
                 if(activePickerHost){
                   activePickerHost.classList.remove('has-open-session-picker');
                   activePickerHost = null;
+                }
+                if(parentSubMenu){
+                  parentSubMenu.classList.remove('has-floating-overlay');
                 }
                 if(!picker) return;
                 cleanupMarker();
@@ -14202,6 +14367,9 @@ function makePosts(){
                   appendTarget.appendChild(picker);
                 } else if(input.parentElement instanceof Element){
                   input.parentElement.appendChild(picker);
+                }
+                if(parentSubMenu){
+                  parentSubMenu.classList.add('has-floating-overlay');
                 }
                 if(picker){
                   initializePicker(picker);
@@ -14507,7 +14675,12 @@ function makePosts(){
                       return;
                     }
                     const setGeocoderActive = (isActive)=>{
-                      geocoderContainer.classList.toggle('is-geocoder-active', !!isActive);
+                      const active = !!isActive;
+                      geocoderContainer.classList.toggle('is-geocoder-active', active);
+                      const subMenu = geocoderContainer.closest('.subcategory-form-menu');
+                      if(subMenu){
+                        subMenu.classList.toggle('has-floating-overlay', active);
+                      }
                     };
                     setGeocoderActive(false);
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
@@ -14788,7 +14961,29 @@ function makePosts(){
                         versionInput.dataset.timeIndex = String(timeIndex);
                         versionInput.dataset.versionIndex = String(versionIndex);
                         versionInput.addEventListener('input', ()=>{
-                          version.name = versionInput.value;
+                          const previous = typeof version.name === 'string' ? version.name : '';
+                          const nextValue = versionInput.value;
+                          version.name = nextValue;
+                          if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== nextValue){
+                            forEachOtherSession(venue, (otherSess, otherIndex)=>{
+                              const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                              const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
+                              while(otherVersions.length <= versionIndex){
+                                otherVersions.push(venueSessionCreateVersion());
+                              }
+                              const otherVersion = otherVersions[versionIndex];
+                              if(otherVersion){
+                                otherVersion.name = nextValue;
+                                const selector = `.session-section-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
+                                const peer = editor.querySelector(selector);
+                                if(peer){
+                                  peer.value = nextValue;
+                                }
+                              }
+                            });
+                          } else if(sessionIndex > 0 && previous !== nextValue){
+                            lockSessionMirror(venue);
+                          }
                           notifyFormbuilderChange();
                         });
                         versionCard.appendChild(versionInput);
@@ -14829,6 +15024,32 @@ function makePosts(){
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
                             tier.name = nextValue;
+                            if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== nextValue){
+                              forEachOtherSession(venue, (otherSess, otherIndex)=>{
+                                const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                                const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
+                                while(otherVersions.length <= versionIndex){
+                                  otherVersions.push(venueSessionCreateVersion());
+                                }
+                                const otherVersion = otherVersions[versionIndex];
+                                if(!otherVersion) return;
+                                const otherTiers = Array.isArray(otherVersion.tiers) ? otherVersion.tiers : (otherVersion.tiers = [venueSessionCreateTier()]);
+                                while(otherTiers.length <= tierIndex){
+                                  otherTiers.push(venueSessionCreateTier());
+                                }
+                                const otherTier = otherTiers[tierIndex];
+                                if(otherTier){
+                                  otherTier.name = nextValue;
+                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const peer = editor.querySelector(selector);
+                                  if(peer){
+                                    peer.value = nextValue;
+                                  }
+                                }
+                              });
+                            } else if(sessionIndex > 0 && previous !== nextValue){
+                              lockSessionMirror(venue);
+                            }
                             const locked = lockTierAutofillIfNeeded(timeObj);
                             if(previous !== nextValue || locked){
                               notifyFormbuilderChange();
@@ -14926,23 +15147,52 @@ function makePosts(){
                           const commitPriceValue = ()=>{
                             let shouldNotify = false;
                             let shouldLock = false;
+                            let sanitizedPrice = '';
+                            const previous = typeof tier.price === 'string' ? tier.price : '';
                             if(!hasCurrencySelected()){
                               const cleared = updatePriceState({ clearPrice: true, sanitize: false });
                               if(cleared){
+                                tier.price = '';
+                                sanitizedPrice = '';
                                 shouldNotify = true;
                                 shouldLock = true;
                               }
                             } else {
-                              const sanitized = sanitizeSessionPriceValue(priceInput.value);
-                              if(priceInput.value !== sanitized){
-                                priceInput.value = sanitized;
+                              sanitizedPrice = sanitizeSessionPriceValue(priceInput.value);
+                              if(priceInput.value !== sanitizedPrice){
+                                priceInput.value = sanitizedPrice;
                               }
-                              const previous = typeof tier.price === 'string' ? tier.price : '';
-                              if(previous !== sanitized){
-                                tier.price = sanitized;
+                              if(previous !== sanitizedPrice){
+                                tier.price = sanitizedPrice;
                                 shouldNotify = true;
                                 shouldLock = true;
                               }
+                            }
+                            if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== tier.price){
+                              const nextValue = tier.price || '';
+                              forEachOtherSession(venue, (otherSess, otherIndex)=>{
+                                const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                                const otherVersions = Array.isArray(otherTime.versions) ? otherTime.versions : (otherTime.versions = [venueSessionCreateVersion()]);
+                                while(otherVersions.length <= versionIndex){
+                                  otherVersions.push(venueSessionCreateVersion());
+                                }
+                                const otherVersion = otherVersions[versionIndex];
+                                if(!otherVersion) return;
+                                const otherTiers = Array.isArray(otherVersion.tiers) ? otherVersion.tiers : (otherVersion.tiers = [venueSessionCreateTier()]);
+                                while(otherTiers.length <= tierIndex){
+                                  otherTiers.push(venueSessionCreateTier());
+                                }
+                                const otherTier = otherTiers[tierIndex];
+                                if(!otherTier) return;
+                                otherTier.price = nextValue;
+                                const selector = `.session-price-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                const peer = editor.querySelector(selector);
+                                if(peer){
+                                  peer.value = nextValue;
+                                }
+                              });
+                            } else if(sessionIndex > 0 && previous !== tier.price){
+                              lockSessionMirror(venue);
                             }
                             if(shouldLock && lockTierAutofillIfNeeded(timeObj)){
                               shouldNotify = true;
@@ -14976,10 +15226,15 @@ function makePosts(){
                             tier.currency = nextCurrency;
                             const shouldClearPrice = nextCurrency === '';
                             const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
-                            const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
-                              sourceTier: tier,
-                              clearPrices: shouldClearPrice
-                            });
+                            let propagated = false;
+                            if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
+                              propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                                sourceTier: tier,
+                                clearPrices: shouldClearPrice
+                              });
+                            } else if(previousCurrency !== nextCurrency){
+                              lockSessionMirror(venue);
+                            }
                             setVenueCurrencyState(venue, nextCurrency);
                             let notifyNeeded = (previousCurrency !== nextCurrency) || priceCleared || propagated;
                             if(lockTierAutofillIfNeeded(timeObj)){
@@ -15040,6 +15295,9 @@ function makePosts(){
                     };
 
                     const handleSamePricingSelection = (shouldMatch)=>{
+                      if(sessionIndex > 0){
+                        lockSessionMirror(venue);
+                      }
                       const baseTime = session.times[0];
                       if(shouldMatch && baseTime && baseTime !== timeObj){
                         timeObj.samePricingAsAbove = true;
