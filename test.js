@@ -10,6 +10,21 @@ assert(
 );
 
 assert(
+  html.includes("normalizeMapboxVenueTypes(options.types, 'poi');"),
+  'Mapbox venue search must normalize unsupported types to poi.'
+);
+
+assert(
+  html.includes("const resolvedTypes = types || 'poi';"),
+  'Mapbox venue search must fall back to poi when no types are provided.'
+);
+
+assert(
+  !html.includes("'poi,venue'"),
+  'Mapbox integrations must not request deprecated venue types.'
+);
+
+assert(
   html.includes("const MAPBOX_SUPPORTED_VENUE_TYPES = ['poi','place','address'];"),
   'Supported Mapbox venue types must be declared.'
 );
