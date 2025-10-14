@@ -1937,6 +1937,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   gap:14px;
   box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#000;
 }
 #adminUnsavedPrompt .admin-unsaved-actions{
   display:flex;
@@ -6541,7 +6542,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-date-picker-instructions{
               margin:12px 16px 8px;
-              color:var(--panel-text-color, var(--text));
+              color:#000;
             }
             #tab-forms .session-date-picker .calendar-scroll{
               flex:1 1 auto;
@@ -6581,15 +6582,23 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-date-picker .calendar-actions button{
               border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--input-text);
+              border:1px solid #2e3a72;
+              background:#2e3a72;
+              color:#fff;
               padding:6px 12px;
               cursor:pointer;
+              transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             }
             #tab-forms .session-date-picker .calendar-actions button:hover,
             #tab-forms .session-date-picker .calendar-actions button:focus{
-              background:rgba(0,0,0,0.5);
+              background:#3a4c94;
+              border-color:#3a4c94;
+            }
+            #tab-forms .session-date-picker .calendar-actions .primary{
+              box-shadow:0 0 0 2px rgba(255,255,255,0.6);
+            }
+            #tab-forms .session-date-picker .calendar-actions .primary:focus{
+              box-shadow:0 0 0 2px rgba(255,255,255,0.8);
             }
             #tab-forms .subcategory-field-row{
               border:1px solid var(--border);
@@ -14241,7 +14250,7 @@ function makePosts(){
                 container.className = 'session-date-picker';
                 const instructions = document.createElement('p');
                 instructions.className = 'session-date-picker-instructions';
-                instructions.textContent = 'Select all the dates for the event at this venue.';
+                instructions.textContent = 'Select all the dates for this venue.';
                 container.appendChild(instructions);
                 const scroll = document.createElement('div');
                 scroll.className = 'calendar-scroll';
@@ -14315,15 +14324,29 @@ function makePosts(){
                 actions.className = 'calendar-actions';
                 const cancelBtn = document.createElement('button');
                 cancelBtn.type = 'button';
+                cancelBtn.className = 'calendar-action cancel';
                 cancelBtn.textContent = 'Cancel';
                 cancelBtn.addEventListener('click', ()=> closePicker());
                 actions.appendChild(cancelBtn);
                 const okBtn = document.createElement('button');
                 okBtn.type = 'button';
+                okBtn.className = 'calendar-action ok primary';
                 okBtn.textContent = 'OK';
                 okBtn.addEventListener('click', ()=> applySelection());
                 actions.appendChild(okBtn);
                 container.appendChild(actions);
+                container.addEventListener('keydown', event => {
+                  if(event.key !== 'Enter' || event.repeat){
+                    return;
+                  }
+                  const target = event.target;
+                  if(target instanceof HTMLButtonElement){
+                    return;
+                  }
+                  event.preventDefault();
+                  applySelection();
+                });
+                queueMicrotask(() => okBtn.focus());
                 return container;
               };
               const initializePicker = pickerEl => {
