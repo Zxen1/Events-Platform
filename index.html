@@ -10461,6 +10461,151 @@ function uniqueTitle(seed, cityName, idx){
 
   const MAPBOX_SUPPORTED_VENUE_TYPES = ['poi','place','address'];
 
+  const MAJOR_VENUE_PRIORITY_TYPES = [
+    'country',
+    'region',
+    'district',
+    'place',
+    'locality',
+    'neighborhood',
+    'address'
+  ];
+
+  const MAJOR_VENUE_POI_KEYWORDS = [
+    'airport',
+    'international airport',
+    'airfield',
+    'railway station',
+    'train station',
+    'subway station',
+    'metro station',
+    'bus station',
+    'bus terminal',
+    'transit station',
+    'ferry terminal',
+    'cruise terminal',
+    'harbor',
+    'port',
+    'stadium',
+    'arena',
+    'ballpark',
+    'coliseum',
+    'amphitheater',
+    'amphitheatre',
+    'convention center',
+    'conference center',
+    'exhibition center',
+    'expo center',
+    'landmark',
+    'monument',
+    'memorial',
+    'tower',
+    'bridge',
+    'palace',
+    'castle',
+    'temple',
+    'shrine',
+    'cathedral',
+    'church',
+    'mosque',
+    'synagogue',
+    'basilica',
+    'pagoda',
+    'museum',
+    'gallery',
+    'art museum',
+    'science museum',
+    'science center',
+    'observatory',
+    'planetarium',
+    'library',
+    'university',
+    'college',
+    'campus',
+    'school',
+    'academy',
+    'zoo',
+    'aquarium',
+    'botanical garden',
+    'garden',
+    'park',
+    'national park',
+    'state park',
+    'theme park',
+    'amusement park',
+    'water park',
+    'heritage site',
+    'historic site',
+    'world heritage',
+    'city hall',
+    'parliament',
+    'government',
+    'embassy',
+    'consulate',
+    'consulate general',
+    'court',
+    'plaza',
+    'square',
+    'cultural center',
+    'performing arts',
+    'concert hall',
+    'opera house',
+    'theatre',
+    'theater',
+    'music hall'
+  ].map(keyword => keyword.toLowerCase());
+
+  const MAJOR_VENUE_POI_MAKI = [
+    'airport',
+    'harbor',
+    'harbour',
+    'monument',
+    'landmark',
+    'castle',
+    'town-hall',
+    'museum',
+    'park',
+    'stadium',
+    'rail',
+    'college',
+    'library',
+    'zoo',
+    'campsite'
+  ];
+
+  function isMajorVenuePoi(feature, placeTypes){
+    const properties = (feature && feature.properties) ? feature.properties : {};
+    if(properties.landmark === true) return true;
+    if(placeTypes.includes('poi.landmark')) return true;
+    const makiRaw = typeof properties.maki === 'string' ? properties.maki : '';
+    const maki = makiRaw.toLowerCase();
+    if(maki){
+      if(MAJOR_VENUE_POI_MAKI.includes(maki) || maki.startsWith('religious')){
+        return true;
+      }
+    }
+    const category = typeof properties.category === 'string' ? properties.category.toLowerCase() : '';
+    const name = typeof properties.name === 'string' ? properties.name.toLowerCase() : '';
+    const text = typeof feature.text === 'string' ? feature.text.toLowerCase() : '';
+    const placeName = typeof feature.place_name === 'string' ? feature.place_name.toLowerCase() : '';
+    const haystack = [category, name, text, placeName].filter(Boolean).join(' ');
+    if(!haystack) return false;
+    return MAJOR_VENUE_POI_KEYWORDS.some(keyword => haystack.includes(keyword));
+  }
+
+  function majorVenueFilter(feature){
+    if(!feature || typeof feature !== 'object') return false;
+    const rawTypes = Array.isArray(feature.place_type) ? feature.place_type : [];
+    const placeTypes = rawTypes.map(type => String(type || '').toLowerCase());
+    if(placeTypes.some(type => MAJOR_VENUE_PRIORITY_TYPES.includes(type))){
+      return true;
+    }
+    if(placeTypes.includes('poi') || placeTypes.includes('poi.landmark')){
+      return isMajorVenuePoi(feature, placeTypes);
+    }
+    return false;
+  }
+
   function normalizeMapboxVenueTypes(value, fallback='poi'){
     const rawList = Array.isArray(value)
       ? value
@@ -14716,7 +14861,8 @@ function makePosts(){
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: externalMapboxVenueGeocoder,
-                    limit: 10,
+                    filter: majorVenueFilter,
+                    limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
                   const geocoder = new MapboxGeocoder(geocoderOptions);
@@ -18580,7 +18726,8 @@ function makePosts(){
           localGeocoder: localVenueGeocoder,
           externalGeocoder: externalMapboxVenueGeocoder,
           localGeocoderOnly:false,
-          limit: 10,
+          filter: majorVenueFilter,
+          limit: 7,
           language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
         };
         if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
