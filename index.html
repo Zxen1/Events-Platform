@@ -10466,7 +10466,7 @@ function uniqueTitle(seed, cityName, idx){
     }
     const limitRaw = Number.isFinite(options.limit) ? options.limit : 5;
     const limit = Math.max(1, Math.min(10, limitRaw));
-    const typesRaw = typeof options.types === 'string' && options.types.trim() ? options.types : 'poi';
+    const typesRaw = typeof options.types === 'string' && options.types.trim() ? options.types : 'poi,venue';
     const types = typesRaw.split(',').map(t => t.trim()).filter(Boolean).join(',');
     const language = typeof options.language === 'string' && options.language ? options.language : '';
     const country = typeof options.country === 'string' && options.country ? options.country : '';
@@ -10482,7 +10482,7 @@ function uniqueTitle(seed, cityName, idx){
     const params = new URLSearchParams({
       access_token: MAPBOX_TOKEN,
       autocomplete: 'true',
-      types: types || 'poi',
+      types: types || 'poi,venue',
       limit: String(limit)
     });
     if(language) params.set('language', language);
@@ -14578,7 +14578,7 @@ function makePosts(){
                         return;
                       }
                       const localResults = searchLocalVenues(normalizedQuery) || [];
-                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi' });
+                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi,venue' });
                       if(signal && signal.aborted) return;
                       if((venueNameInput.value || '').trim() !== normalizedQuery){
                         return;
@@ -14685,7 +14685,7 @@ function makePosts(){
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: addressPlaceholder,
-                    types: 'poi,place,address',
+                    types: 'poi,place,address,venue',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: externalMapboxVenueGeocoder,
@@ -18546,7 +18546,7 @@ function makePosts(){
           mapboxgl,
           marker:false,
           placeholder:'Location',
-          types: 'poi,place,address',
+          types: 'poi,place,address,venue',
           reverseGeocode:true,
           collapsed:false,
           localGeocoder: localVenueGeocoder,
