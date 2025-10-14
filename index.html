@@ -8364,15 +8364,8 @@ if (typeof slugify !== 'function') {
 
   function setAllGeocoderProximity(lng, lat){
     if(!Number.isFinite(lng) || !Number.isFinite(lat)) return;
-    const prox = { longitude: lng, latitude: lat };
-    const key = `${lng.toFixed(6)},${lat.toFixed(6)}`;
-    if(lastGeocoderProximity === key) return;
-    lastGeocoderProximity = key;
-    geocoders.forEach(gc => {
-      if(gc && typeof gc.setProximity === 'function'){
-        try{ gc.setProximity(prox); }catch(err){}
-      }
-    });
+    // Temporarily disable proximity biasing to broaden search results.
+    lastGeocoderProximity = null;
   }
 
   function syncGeocoderProximityToMap(){
@@ -14857,7 +14850,7 @@ function makePosts(){
                     marker: false,
                     placeholder: addressPlaceholder,
                     geocodingUrl: MAPBOX_VENUE_ENDPOINT,
-                    types: 'poi,place,address',
+                    // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
                     types: 'address,poi',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
@@ -18721,7 +18714,7 @@ function makePosts(){
           marker:false,
           placeholder:'Location',
           geocodingUrl: MAPBOX_VENUE_ENDPOINT,
-          types: 'poi,place,address',
+          // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
           types: 'address,poi',
           reverseGeocode:true,
           collapsed:false,
@@ -18732,9 +18725,10 @@ function makePosts(){
           limit: 7,
           language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
         };
-        if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
-          geocoderOptions.proximity = { longitude: center.lng, latitude: center.lat };
-        }
+        // Temporarily disable proximity biasing to broaden search results.
+        // if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+        //   geocoderOptions.proximity = { longitude: center.lng, latitude: center.lat };
+        // }
         const gc = new MapboxGeocoder(geocoderOptions);
         gc.on('result', (e)=>{
           spinEnabled = false;
