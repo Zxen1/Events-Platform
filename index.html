@@ -7869,6 +7869,35 @@ if (typeof slugify !== 'function') {
     return { canvasWidth, canvasHeight, pixelRatio };
   }
 
+  function drawMarkerLabelComposite(ctx, image, x, y, width, height){
+    if(!ctx || !image){
+      return;
+    }
+    let scale = 1;
+    try{
+      const ratio = window.devicePixelRatio;
+      if(Number.isFinite(ratio) && ratio > 0){
+        scale = ratio;
+      }
+    }catch(err){
+      scale = 1;
+    }
+    ctx.save();
+    ctx.scale(scale, scale);
+    try{
+      ctx.imageSmoothingEnabled = false;
+      if('imageSmoothingQuality' in ctx){
+        ctx.imageSmoothingQuality = 'high';
+      }
+    }catch(err){}
+    try{
+      ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
+    }catch(err){
+      console.error(err);
+    }
+    ctx.restore();
+  }
+
   function buildMarkerLabelPillSprite(sourceImage, tintColor, tintAlpha = 1){
     if(!sourceImage){
       return null;
@@ -7966,6 +7995,21 @@ if (typeof slugify !== 'function') {
       }
     }
     const { canvasWidth, canvasHeight, pixelRatio } = computeMarkerLabelCanvasDimensions(pillImg);
+    let deviceScale = 1;
+    try{
+      const ratio = window.devicePixelRatio;
+      if(Number.isFinite(ratio) && ratio > 0){
+        deviceScale = ratio;
+      }
+    }catch(err){
+      deviceScale = 1;
+    }
+    if(!Number.isFinite(deviceScale) || deviceScale <= 0){
+      deviceScale = 1;
+    }
+    const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
+    const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
+    const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
     const labelLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
     const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
@@ -7986,31 +8030,27 @@ if (typeof slugify !== 'function') {
         }
       }catch(err){}
       if(iconImg){
-        const iconSizePx = markerIconBaseSizePx * markerIconSize * pixelRatio;
-        const destX = Math.round(markerLabelMarkerInsetPx * pixelRatio);
-        const destY = Math.round((canvasHeight - iconSizePx) / 2);
-        try{
-          ctx.drawImage(iconImg, destX, destY, iconSizePx, iconSizePx);
-        }catch(err){
-          console.error(err);
-        }
+        const iconSizePx = markerIconBaseSizePx * markerIconSize * scaledPixelRatio;
+        const destX = Math.round(markerLabelMarkerInsetPx * scaledPixelRatio);
+        const destY = Math.round((scaledCanvasHeight - iconSizePx) / 2);
+        drawMarkerLabelComposite(ctx, iconImg, destX, destY, iconSizePx, iconSizePx);
       }
       if(labelLines.length){
-        const fontSizePx = markerLabelTextSize * pixelRatio;
-        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * pixelRatio);
+        const fontSizePx = markerLabelTextSize * scaledPixelRatio;
+        const lineGapPx = Math.max(0, (markerLabelTextLineHeight - 1) * markerLabelTextSize * scaledPixelRatio);
         const totalHeight = labelLines.length * fontSizePx + Math.max(0, labelLines.length - 1) * lineGapPx;
-        let textY = Math.round((canvasHeight - totalHeight) / 2);
+        let textY = Math.round((scaledCanvasHeight - totalHeight) / 2);
         if(!Number.isFinite(textY) || textY < 0){
           textY = 0;
         }
-        const textX = Math.round(markerLabelTextPaddingPx * pixelRatio);
+        const textX = Math.round(markerLabelTextPaddingPx * scaledPixelRatio);
         ctx.font = `${fontSizePx}px "Open Sans", "Arial Unicode MS Regular", sans-serif`;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
         ctx.shadowColor = 'rgba(0,0,0,0.4)';
-        ctx.shadowBlur = 2 * pixelRatio;
+        ctx.shadowBlur = 2 * scaledPixelRatio;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 1 * pixelRatio;
+        ctx.shadowOffsetY = 1 * scaledPixelRatio;
         labelLines.forEach(line => {
           ctx.fillStyle = line.color;
           try{
@@ -8028,15 +8068,15 @@ if (typeof slugify !== 'function') {
         return null;
       }
       const canvas = document.createElement('canvas');
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+      canvas.width = scaledCanvasWidth;
+      canvas.height = scaledCanvasHeight;
       const ctx = canvas.getContext('2d');
       if(!ctx){
         return null;
       }
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.clearRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
       try{
-        ctx.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+        drawMarkerLabelComposite(ctx, backgroundImage, 0, 0, scaledCanvasWidth, scaledCanvasHeight);
       }catch(err){
         console.error(err);
       }
@@ -8044,14 +8084,14 @@ if (typeof slugify !== 'function') {
         ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = tintAlpha;
         ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        ctx.fillRect(0, 0, scaledCanvasWidth, scaledCanvasHeight);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
       }
       drawForeground(ctx);
       let imageData = null;
       try{
-        imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        imageData = ctx.getImageData(0, 0, scaledCanvasWidth, scaledCanvasHeight);
       }catch(err){
         console.error(err);
         imageData = null;
@@ -8061,7 +8101,7 @@ if (typeof slugify !== 'function') {
       }
       return {
         image: imageData,
-        options: { pixelRatio: Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1 }
+        options: { pixelRatio: Number.isFinite(scaledPixelRatio) && scaledPixelRatio > 0 ? scaledPixelRatio : 1 }
       };
     };
     const baseComposite = buildComposite(pillImg, 'rgba(0,0,0,1)', 0.9);
@@ -18889,35 +18929,48 @@ function makePosts(){
         setTimeout(addControls, 50);
         return;
       }
-      // Remove any previously added geocoder code to avoid conflicts.
       geocoders.length = 0;
       geocoder = null;
 
-      // Now add a fresh MapboxGeocoder instance with both venue and place search enabled.
-      const geocoderControl = new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken, // make sure to insert your token here
-        mapboxgl: mapboxgl,
-        types: 'poi,place' // This allows both venue (POI) and city/country (place) searches.
-        // You can re-apply other parameters like proximity or bbox here if needed.
-      });
-
-      if(map && typeof map.addControl === 'function'){
-        map.addControl(geocoderControl);
-      }
-
-      geocoder = geocoderControl;
-      geocoders.push(geocoderControl);
-
       const sets = [
-        { locate:'#geolocate-welcome', compass:'#compass-welcome' },
-        { locate:'#geolocate-map', compass:'#compass-map' },
-        { locate:'#geolocate-filter', compass:'#compass-filter' },
-        { locate:'#geolocate-member', compass:'#compass-member' }
+        {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
+        {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
+        {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
+        {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
       const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
       const cityZoomLevel = 12;
 
-      sets.forEach((sel)=>{
+      sets.forEach((sel, idx)=>{
+        const center = map && typeof map.getCenter === 'function' ? map.getCenter() : null;
+        const geocoderOptions = {
+          accessToken: mapboxgl.accessToken,
+          mapboxgl,
+          marker:false,
+          placeholder:'Search venues or places',
+          geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+          types:'poi,place,address',
+          reverseGeocode:true,
+          localGeocoder: localVenueGeocoder,
+          externalGeocoder: externalMapboxVenueGeocoder,
+          filter: majorVenueFilter,
+          limit:10,
+          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+        };
+        if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+          geocoderOptions.proximity = { longitude:center.lng, latitude:center.lat };
+        }
+
+        const gc = new MapboxGeocoder(geocoderOptions);
+        const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
+        if(gEl){
+          gEl.appendChild(gc.onAdd(map));
+        }
+        geocoders.push(gc);
+        if(idx === 1){
+          geocoder = gc;
+        }
+
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
@@ -18985,7 +19038,7 @@ function makePosts(){
         geolocate.on('error', stopGeolocateLoading);
         geolocate.on('trackuserlocationend', stopGeolocateLoading);
         geolocate.on('outofmaxbounds', stopGeolocateLoading);
-        const geoHolder = document.querySelector(sel.locate);
+        const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
@@ -19009,7 +19062,7 @@ function makePosts(){
           }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
-        const compassHolder = document.querySelector(sel.compass);
+        const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
 
