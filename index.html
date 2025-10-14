@@ -51,8 +51,8 @@
       position: relative;
       width: 225px;
       height: 60px;
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
+      transform: none;
+      will-change: auto;
       pointer-events: auto;
       isolation: isolate;
       touch-action: none;
@@ -74,9 +74,9 @@
     }
     .mapmarker-overlay > .big-map-card{
       position: absolute;
-      left: 0;
-      top: 0;
-      transform: translate3d(-30px, -30px, 0);
+      left: -30px;
+      top: -30px;
+      transform: none;
       pointer-events: auto;
       z-index: 30;
     }
@@ -9468,6 +9468,48 @@ if (typeof slugify !== 'function') {
       fns.forEach(fn => {
         try{ fn(); }catch(err){}
       });
+    }
+
+    function disableBigMapCardMouseTracking(card){
+      if(!card || card.__mouseTrackingDisabled) return;
+      if(card instanceof Element){
+        try{ card.style.transform = 'none'; }catch(err){}
+        if(card.style && typeof card.style.removeProperty === 'function'){
+          try{ card.style.removeProperty('transform'); }catch(err){}
+        }
+        card.onmousemove = null;
+        card.__mouseTrackingDisabled = true;
+      }
+    }
+
+    function applyStaticBigMapCards(root = document){
+      if(!root || typeof root.querySelectorAll !== 'function') return;
+      root.querySelectorAll('.big-map-card').forEach(disableBigMapCardMouseTracking);
+    }
+
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', ()=> applyStaticBigMapCards());
+    } else {
+      applyStaticBigMapCards();
+    }
+
+    if(typeof MutationObserver === 'function'){
+      try{
+        const bigMapCardObserver = new MutationObserver(mutations => {
+          mutations.forEach(mutation => {
+            mutation.addedNodes && mutation.addedNodes.forEach(node => {
+              if(!(node instanceof Element)) return;
+              if(node.classList && node.classList.contains('big-map-card')){
+                disableBigMapCardMouseTracking(node);
+              }
+              if(typeof node.querySelectorAll === 'function'){
+                node.querySelectorAll('.big-map-card').forEach(disableBigMapCardMouseTracking);
+              }
+            });
+          });
+        });
+        bigMapCardObserver.observe(document.documentElement || document.body, { childList: true, subtree: true });
+      } catch(err){}
     }
 
     function setSmallMapCardPillImage(cardEl, highlighted){
@@ -20190,6 +20232,7 @@ if (!map.__pillHooksInstalled) {
             }
 
             cardRoot.append(pillImg, thumbImg, labelEl);
+            disableBigMapCardMouseTracking(cardRoot);
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
