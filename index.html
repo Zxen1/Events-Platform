@@ -18880,74 +18880,44 @@ function makePosts(){
         const script = document.createElement('script');
         script.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
         script.onload = addControls;
-    script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
-    document.head.appendChild(script);
-    return;
-  }
-  const cssLink = document.querySelector('style[data-mapbox], link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"]');
-  if(!cssLink || !cssLink.sheet){
-    setTimeout(addControls, 50);
-    return;
-  }
-    const sets = [
-      {geo:'#geocoder-welcome', locate:'#geolocate-welcome', compass:'#compass-welcome'},
-      {geo:'#geocoder-map', locate:'#geolocate-map', compass:'#compass-map'},
-      {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
-      {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
-        ];
+        script.onerror = ()=> console.error('Mapbox Geocoder failed to load');
+        document.head.appendChild(script);
+        return;
+      }
+      const cssLink = document.querySelector('style[data-mapbox], link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"]');
+      if(!cssLink || !cssLink.sheet){
+        setTimeout(addControls, 50);
+        return;
+      }
+      // Remove any previously added geocoder code to avoid conflicts.
+      geocoders.length = 0;
+      geocoder = null;
+
+      // Now add a fresh MapboxGeocoder instance with both venue and place search enabled.
+      const geocoderControl = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken, // make sure to insert your token here
+        mapboxgl: mapboxgl,
+        types: 'poi,place' // This allows both venue (POI) and city/country (place) searches.
+        // You can re-apply other parameters like proximity or bbox here if needed.
+      });
+
+      if(map && typeof map.addControl === 'function'){
+        map.addControl(geocoderControl);
+      }
+
+      geocoder = geocoderControl;
+      geocoders.push(geocoderControl);
+
+      const sets = [
+        { locate:'#geolocate-welcome', compass:'#compass-welcome' },
+        { locate:'#geolocate-map', compass:'#compass-map' },
+        { locate:'#geolocate-filter', compass:'#compass-filter' },
+        { locate:'#geolocate-member', compass:'#compass-member' }
+      ];
       const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
       const cityZoomLevel = 12;
-      sets.forEach((sel, idx)=>{
-        const center = map && typeof map.getCenter === 'function' ? map.getCenter() : null;
-        const geocoderOptions = {
-          accessToken: mapboxgl.accessToken,
-          mapboxgl,
-          marker:false,
-          placeholder:'Location',
-          geocodingUrl: MAPBOX_VENUE_ENDPOINT,
-          // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
-          types: 'address,poi',
-          reverseGeocode:true,
-          collapsed:false,
-          localGeocoder: localVenueGeocoder,
-          externalGeocoder: externalMapboxVenueGeocoder,
-          localGeocoderOnly:false,
-          filter: majorVenueFilter,
-          limit: 7,
-          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
-        };
-        // Temporarily disable proximity biasing to broaden search results.
-        // if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
-        //   geocoderOptions.proximity = { longitude: center.lng, latitude: center.lat };
-        // }
-        const gc = new MapboxGeocoder(geocoderOptions);
-        gc.on('result', (e)=>{
-          spinEnabled = false;
-          localStorage.setItem('spinGlobe','false');
-          stopSpin();
-          if(mode!=='map') setMode('map');
-          if(e && e.result){
-            const coords = Array.isArray(e.result.center) ? e.result.center
-              : (e.result.geometry && Array.isArray(e.result.geometry.coordinates) ? e.result.geometry.coordinates : null);
-            if(Array.isArray(coords) && Number.isFinite(coords[0]) && Number.isFinite(coords[1])){
-              setAllGeocoderProximity(coords[0], coords[1]);
-            }
-          }
-          gc.clear();
-        });
-        const gEl = document.querySelector(sel.geo);
-        if(gEl){
-          gEl.appendChild(gc.onAdd(map));
-          const input = gEl.querySelector('input[type="text"]');
-          if(input){
-            input.setAttribute('autocomplete','street-address');
-            gc._inputReference = input;
-          }
-          const container = gEl.querySelector('.mapboxgl-ctrl-geocoder');
-          if(container) gc._container = container;
-        }
-        geocoders.push(gc);
-        if(idx===1) geocoder = gc;
+
+      sets.forEach((sel)=>{
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
@@ -19042,6 +19012,7 @@ function makePosts(){
         const compassHolder = document.querySelector(sel.compass);
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
+
       syncGeocoderProximityToMap();
     }
 
