@@ -10214,6 +10214,29 @@ function uniqueTitle(seed, cityName, idx){
   const LOCAL_GEOCODER_MAX_RESULTS = 10;
   const localVenueIndex = [];
   const localVenueKeySet = new Set();
+  const STATIC_VENUE_SUGGESTIONS = Object.freeze([
+    Object.freeze({
+      name: 'Sydney Opera House',
+      address: 'Bennelong Point',
+      city: 'Sydney, Australia',
+      lng: 151.2152967,
+      lat: -33.8567844
+    }),
+    Object.freeze({
+      name: 'Federation Square',
+      address: 'Swanston St & Flinders St',
+      city: 'Melbourne, Australia',
+      lng: 144.969098,
+      lat: -37.817979
+    }),
+    Object.freeze({
+      name: 'Madison Square Garden',
+      address: '4 Pennsylvania Plaza',
+      city: 'New York, USA',
+      lng: -73.9934387,
+      lat: 40.7505045
+    })
+  ]);
   const LOCAL_VENUE_PLACE_TYPES = Object.freeze(['poi', 'venue']);
   const MULTI_VENUE_COORD_PRECISION = 6;
   window.postsAtVenue = window.postsAtVenue && typeof window.postsAtVenue === 'object'
@@ -10340,6 +10363,7 @@ function uniqueTitle(seed, cityName, idx){
       addVenue(post.lng, post.lat, fallbackName, fallbackAddress);
     };
     postList.forEach(addFromPost);
+    STATIC_VENUE_SUGGESTIONS.forEach(addVenueToLocalIndex);
   }
 
   function searchLocalVenues(query){
