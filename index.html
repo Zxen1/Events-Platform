@@ -10214,6 +10214,7 @@ function uniqueTitle(seed, cityName, idx){
   const LOCAL_GEOCODER_MAX_RESULTS = 10;
   const localVenueIndex = [];
   const localVenueKeySet = new Set();
+  const LOCAL_VENUE_PLACE_TYPES = Object.freeze(['poi', 'venue']);
   const MULTI_VENUE_COORD_PRECISION = 6;
   window.postsAtVenue = window.postsAtVenue && typeof window.postsAtVenue === 'object'
     ? window.postsAtVenue
@@ -10297,7 +10298,7 @@ function uniqueTitle(seed, cityName, idx){
         center:[lng, lat],
         place_name: placeName,
         text: name,
-        place_type:['poi','venue'],
+        place_type: LOCAL_VENUE_PLACE_TYPES.slice(),
         properties:{
           name,
           address: address || '',
@@ -14603,7 +14604,7 @@ function makePosts(){
                         return;
                       }
                       const localResults = searchLocalVenues(normalizedQuery) || [];
-                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi' });
+                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal });
                       if(signal && signal.aborted) return;
                       if((venueNameInput.value || '').trim() !== normalizedQuery){
                         return;
