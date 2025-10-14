@@ -10297,7 +10297,7 @@ function uniqueTitle(seed, cityName, idx){
         center:[lng, lat],
         place_name: placeName,
         text: name,
-        place_type:['venue'],
+        place_type:['poi','venue'],
         properties:{
           name,
           address: address || '',
@@ -10458,6 +10458,31 @@ function uniqueTitle(seed, cityName, idx){
     return clone;
   }
 
+  const MAPBOX_SUPPORTED_VENUE_TYPES = ['poi','place','address'];
+
+  function normalizeMapboxVenueTypes(value, fallback='poi'){
+    const rawList = Array.isArray(value)
+      ? value
+      : (typeof value === 'string' ? value.split(',') : []);
+    const seen = new Set();
+    const filtered = [];
+    for(const entry of rawList){
+      const trimmed = String(entry || '').trim();
+      if(!trimmed) continue;
+      if(MAPBOX_SUPPORTED_VENUE_TYPES.includes(trimmed) && !seen.has(trimmed)){
+        seen.add(trimmed);
+        filtered.push(trimmed);
+      }
+    }
+    if(filtered.length > 0){
+      return filtered.join(',');
+    }
+    if(typeof fallback === 'string' && fallback){
+      return normalizeMapboxVenueTypes(fallback, '');
+    }
+    return '';
+  }
+
   async function searchMapboxVenues(query, options={}){
     const normalized = (query || '').trim();
     if(!normalized || normalized.length < MAPBOX_VENUE_MIN_QUERY) return [];
@@ -10466,15 +10491,15 @@ function uniqueTitle(seed, cityName, idx){
     }
     const limitRaw = Number.isFinite(options.limit) ? options.limit : 5;
     const limit = Math.max(1, Math.min(10, limitRaw));
-    const typesRaw = typeof options.types === 'string' && options.types.trim() ? options.types : 'poi,venue';
-    const types = typesRaw.split(',').map(t => t.trim()).filter(Boolean).join(',');
+    const types = normalizeMapboxVenueTypes(options.types, 'poi');
+    const resolvedTypes = types || 'poi';
     const language = typeof options.language === 'string' && options.language ? options.language : '';
     const country = typeof options.country === 'string' && options.country ? options.country : '';
     const bbox = Array.isArray(options.bbox) ? options.bbox : null;
     const proximity = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
       ? { longitude: options.proximity.longitude, latitude: options.proximity.latitude }
       : null;
-    const cacheKey = mapboxVenueCacheKey(normalized, { limit, types, proximity, language, country, bbox });
+    const cacheKey = mapboxVenueCacheKey(normalized, { limit, types: resolvedTypes, proximity, language, country, bbox });
     if(mapboxVenueCache.has(cacheKey)){
       const cached = mapboxVenueCache.get(cacheKey);
       return Array.isArray(cached) ? cached.map(cloneGeocoderFeature) : [];
@@ -10482,7 +10507,7 @@ function uniqueTitle(seed, cityName, idx){
     const params = new URLSearchParams({
       access_token: MAPBOX_TOKEN,
       autocomplete: 'true',
-      types: types || 'poi,venue',
+      types: resolvedTypes,
       limit: String(limit)
     });
     if(language) params.set('language', language);
@@ -10531,7 +10556,7 @@ function uniqueTitle(seed, cityName, idx){
     const language = contextOptions.language;
     const country = contextOptions.country;
     const bbox = contextOptions.bbox;
-    const types = contextOptions.types;
+    const types = normalizeMapboxVenueTypes(contextOptions.types, 'poi');
     return searchMapboxVenues(query, { limit, proximity, language, country, bbox, types });
   }
 
@@ -14578,7 +14603,7 @@ function makePosts(){
                         return;
                       }
                       const localResults = searchLocalVenues(normalizedQuery) || [];
-                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi,venue' });
+                      const remoteResults = await searchMapboxVenues(normalizedQuery, { limit: 6, signal, types:'poi' });
                       if(signal && signal.aborted) return;
                       if((venueNameInput.value || '').trim() !== normalizedQuery){
                         return;
@@ -14685,7 +14710,7 @@ function makePosts(){
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: addressPlaceholder,
-                    types: 'poi,place,address,venue',
+                    types: 'poi,place,address',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: externalMapboxVenueGeocoder,
@@ -18546,7 +18571,7 @@ function makePosts(){
           mapboxgl,
           marker:false,
           placeholder:'Location',
-          types: 'poi,place,address,venue',
+          types: 'poi,place,address',
           reverseGeocode:true,
           collapsed:false,
           localGeocoder: localVenueGeocoder,
