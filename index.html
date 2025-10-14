@@ -5941,7 +5941,7 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-form-menu:last-child{
               margin-bottom:0;
             }
-            #tab-forms .category-form-menu .filter-category-header{
+            #tab-forms .category-form-menu .formbuilder-category-header{
               display:flex;
               align-items:center;
               justify-content:space-between;
@@ -5957,13 +5957,13 @@ if (typeof slugify !== 'function') {
             #tab-forms .category-form-menu.cat-off{
               opacity:0.5;
             }
-            #tab-forms .filter-category-header,
-            #tab-forms .subcategory-form-header,
+            #tab-forms .formbuilder-category-header,
+            #tab-forms .formbuilder-subcategory-header,
             #tab-forms .field-row-header{
               cursor:grab;
             }
-            #tab-forms .filter-category-header.is-dragging,
-            #tab-forms .subcategory-form-header.is-dragging,
+            #tab-forms .formbuilder-category-header.is-dragging,
+            #tab-forms .formbuilder-subcategory-header.is-dragging,
             #tab-forms .field-row-header.is-dragging{
               cursor:grabbing;
             }
@@ -6812,7 +6812,7 @@ if (typeof slugify !== 'function') {
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .subcategory-form-header{
+            #tab-forms .formbuilder-subcategory-header{
               display:flex;
               align-items:center;
               justify-content:space-between;
@@ -12506,10 +12506,11 @@ function makePosts(){
     function enableCategoryDrag(menu, header){
       if(!menu || !header) return;
       ensureCategoryDragContainer();
-      menu.draggable = true;
-      menu.addEventListener('dragstart', event=>{
+      menu.draggable = false;
+      header.draggable = true;
+      header.addEventListener('dragstart', event=>{
         const origin = event.target;
-        if(origin && origin.closest('.category-form-content')){
+        if(!origin || origin.closest('.formbuilder-category-header') !== header){
           event.preventDefault();
           return;
         }
@@ -12527,7 +12528,7 @@ function makePosts(){
           }catch(err){}
         }
       });
-      menu.addEventListener('dragend', event=>{
+      header.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedCategoryMenu === menu){
           menu.classList.remove('is-dragging');
@@ -12545,10 +12546,11 @@ function makePosts(){
     function enableSubcategoryDrag(subMenu, container, categoryObj, header, addButton){
       if(!subMenu || !container || !header) return;
       const state = setupSubcategoryContainer(container, categoryObj, addButton);
-      subMenu.draggable = true;
-      subMenu.addEventListener('dragstart', event=>{
+      subMenu.draggable = false;
+      header.draggable = true;
+      header.addEventListener('dragstart', event=>{
         const origin = event.target;
-        if(origin && origin.closest('.subcategory-form-content')){
+        if(!origin || origin.closest('.formbuilder-subcategory-header') !== header){
           event.preventDefault();
           return;
         }
@@ -12567,7 +12569,7 @@ function makePosts(){
           }catch(err){}
         }
       });
-      subMenu.addEventListener('dragend', event=>{
+      header.addEventListener('dragend', event=>{
         event.stopPropagation();
         if(draggedSubcategoryMenu === subMenu){
           subMenu.classList.remove('is-dragging');
@@ -12732,8 +12734,7 @@ function makePosts(){
       row.draggable = true;
       row.addEventListener('dragstart', event=>{
         const origin = event.target;
-        const tagName = origin && origin.tagName ? origin.tagName.toLowerCase() : '';
-        if(tagName === 'input' || tagName === 'select' || tagName === 'textarea'){ 
+        if(origin !== row){
           event.preventDefault();
           return;
         }
@@ -12917,7 +12918,7 @@ function makePosts(){
         menu.setAttribute('aria-expanded','false');
 
         const header = document.createElement('div');
-        header.className = 'filter-category-header';
+        header.className = 'formbuilder-category-header';
 
         const triggerWrap = document.createElement('div');
         triggerWrap.className = 'options-dropdown filter-category-trigger-wrap';
@@ -13104,7 +13105,7 @@ function makePosts(){
           subMenu.setAttribute('aria-expanded','false');
 
           const subHeader = document.createElement('div');
-          subHeader.className = 'subcategory-form-header';
+          subHeader.className = 'formbuilder-subcategory-header';
 
           const subTriggerWrap = document.createElement('div');
           subTriggerWrap.className = 'options-dropdown subcategory-trigger-wrap';
