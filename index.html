@@ -5924,6 +5924,11 @@ if (typeof slugify !== 'function') {
             <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
           </div>
           <style>
+            #tab-forms{
+              --forms-layer-stacked: 10;
+              --forms-layer-overlay: 20;
+              --forms-layer-popover: 30;
+            }
             #tab-forms .category-form-menu{
               position: relative;
               margin-bottom:12px;
@@ -5932,7 +5937,6 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.35);
               overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
-              will-change:transform;
             }
             #tab-forms .category-form-menu:last-child{
               margin-bottom:0;
@@ -5967,6 +5971,10 @@ if (typeof slugify !== 'function') {
             #tab-forms .subcategory-form-menu.is-dragging,
             #tab-forms .subcategory-field-row.is-dragging{
               opacity:0.65;
+            }
+            #tab-forms .category-form-menu.is-dragging,
+            #tab-forms .subcategory-form-menu.is-dragging{
+              will-change:transform;
             }
             #tab-forms .category-form-menu.drag-target-before{
               box-shadow:0 -2px 0 var(--btn-hover, #2e3a72);
@@ -6143,7 +6151,6 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.2);
               overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
-              will-change:transform;
               position:relative;
             }
             #tab-forms .subcategory-form-menu.subcategory-off{
@@ -6151,7 +6158,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .category-form-menu.has-floating-overlay,
             #tab-forms .subcategory-form-menu.has-floating-overlay{
-              z-index:3900;
+              z-index:var(--forms-layer-popover);
             }
             #tab-forms .delete-category-btn,
             #tab-forms .delete-subcategory-btn{
@@ -6272,7 +6279,7 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .venue-address-geocoder-container.is-geocoder-active,
             #tab-forms .session-date-row.has-open-session-picker{
-              z-index:2147483647;
+              z-index:var(--forms-layer-overlay);
             }
             #tab-forms .venue-line-actions,
             #tab-forms .session-date-actions,
@@ -6340,7 +6347,7 @@ if (typeof slugify !== 'function') {
               position:relative;
             }
             #tab-forms .venue-address-geocoder-container{
-              z-index:2147483647;
+              z-index:var(--forms-layer-stacked);
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
@@ -6354,7 +6361,7 @@ if (typeof slugify !== 'function') {
               background:rgba(0,0,0,0.35);
               min-height:36px;
               position:relative;
-              z-index:2147483647;
+              z-index:var(--forms-layer-overlay);
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
@@ -6375,7 +6382,7 @@ if (typeof slugify !== 'function') {
               display:none;
             }
             #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
-              z-index:2147483647;
+              z-index:var(--forms-layer-popover);
             }
             #tab-forms .session-list{
               display:flex;
@@ -6524,7 +6531,7 @@ if (typeof slugify !== 'function') {
               pointer-events:none;
               transform:translateY(4px);
               transition:opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-              z-index:2147483647;
+              z-index:var(--forms-layer-popover);
             }
             #tab-forms .session-date-picker.is-visible{
               opacity:1;
