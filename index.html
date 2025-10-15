@@ -2115,6 +2115,7 @@ button[aria-expanded="true"] .results-arrow{
   flex-direction:column;
   gap:14px;
   box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#000;
 }
 #memberUnsavedPrompt .member-unsaved-actions{
   display:flex;
@@ -6753,23 +6754,41 @@ if (typeof slugify !== 'function') {
             }
             #tab-forms .session-date-picker .calendar-actions button{
               border-radius:8px;
-              border:1px solid #2e3a72;
-              background:#2e3a72;
-              color:#fff;
+              border:1px solid var(--btn);
+              background:var(--btn);
+              color:var(--button-text);
               padding:6px 12px;
               cursor:pointer;
-              transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+              transition:background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
             }
             #tab-forms .session-date-picker .calendar-actions button:hover,
             #tab-forms .session-date-picker .calendar-actions button:focus{
-              background:#3a4c94;
-              border-color:#3a4c94;
+              background:var(--btn-hover);
+              border-color:var(--btn-hover);
+              color:var(--button-hover-text);
+            }
+            #tab-forms .session-date-picker .calendar-actions button:active{
+              background:var(--btn-active);
+              border-color:var(--btn-active);
+              color:var(--button-active-text);
             }
             #tab-forms .session-date-picker .calendar-actions .primary{
+              background:var(--button-selected-bg, var(--btn-selected));
+              border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+              color:var(--button-selected-text, var(--button-active-text));
               box-shadow:0 0 0 2px rgba(255,255,255,0.6);
             }
+            #tab-forms .session-date-picker .calendar-actions .primary:hover,
             #tab-forms .session-date-picker .calendar-actions .primary:focus{
+              background:var(--button-selected-hover, var(--btn-selected-hover));
+              border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+              color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
               box-shadow:0 0 0 2px rgba(255,255,255,0.8);
+            }
+            #tab-forms .session-date-picker .calendar-actions .primary:active{
+              background:var(--button-selected-active, var(--btn-selected-active));
+              border-color:var(--button-selected-active-border, var(--button-selected-active, var(--btn-selected-active)));
+              color:var(--button-selected-active-text, var(--button-selected-text, var(--button-active-text)));
             }
             #tab-forms .subcategory-field-row{
               border:1px solid var(--border);
