@@ -9449,306 +9449,6 @@ if (typeof slugify !== 'function') {
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
-    let smallMapCardPillHiResCache = null;
-    let smallMapCardPillHiResPromise = null;
-    const smallMapMarkerHiResCache = new Map();
-    const smallMapMarkerHiResWaiters = new WeakMap();
-
-    function safeDevicePixelRatio(){
-      try{
-        const ratio = window.devicePixelRatio;
-        return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
-      }catch(err){
-        return 1;
-      }
-    }
-
-    function clampDeviceScale(scale){
-      if(!Number.isFinite(scale) || scale <= 0){
-        return 1;
-      }
-      return Math.min(4, Math.max(1, scale));
-    }
-
-    function canvasToHighResDataUrl(canvas){
-      if(!canvas){
-        return null;
-      }
-      try{
-        return canvas.toDataURL('image/webp');
-      }catch(err){}
-      try{
-        return canvas.toDataURL();
-      }catch(err){
-        return null;
-      }
-    }
-
-    function createScaledImageCanvas(sourceImage, deviceScale){
-      if(!sourceImage){
-        return null;
-      }
-      const width = Math.max(1, Math.round(Number(sourceImage.naturalWidth || sourceImage.width || 30)));
-      const height = Math.max(1, Math.round(Number(sourceImage.naturalHeight || sourceImage.height || 30)));
-      const scale = clampDeviceScale(deviceScale);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(width * scale));
-      canvas.height = Math.max(1, Math.round(height * scale));
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      ctx.imageSmoothingEnabled = true;
-      if('imageSmoothingQuality' in ctx){
-        ctx.imageSmoothingQuality = 'high';
-      }
-      try{
-        ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
-      }catch(err){
-        return null;
-      }
-      return { canvas, width, height };
-    }
-
-    function createTintedPillCanvas(sourceImage, tintColor, tintAlpha, deviceScale){
-      if(!sourceImage){
-        return null;
-      }
-      const baseWidth = Math.max(1, Math.round(Number(sourceImage.naturalWidth || sourceImage.width || markerLabelBackgroundWidthPx)));
-      const baseHeight = Math.max(1, Math.round(Number(sourceImage.naturalHeight || sourceImage.height || markerLabelBackgroundHeightPx)));
-      const scale = clampDeviceScale(deviceScale);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(baseWidth * scale));
-      canvas.height = Math.max(1, Math.round(baseHeight * scale));
-      const ctx = canvas.getContext('2d');
-      if(!ctx){
-        return null;
-      }
-      ctx.imageSmoothingEnabled = true;
-      if('imageSmoothingQuality' in ctx){
-        ctx.imageSmoothingQuality = 'high';
-      }
-      try{
-        ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
-      }catch(err){
-        return null;
-      }
-      if(tintColor){
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.globalAlpha = Number.isFinite(tintAlpha) ? tintAlpha : 1;
-        ctx.fillStyle = tintColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-      }
-      return { canvas, width: baseWidth, height: baseHeight };
-    }
-
-    function ensureSmallMapCardPillHiResAssets(){
-      const ratioKey = Math.round(clampDeviceScale(safeDevicePixelRatio()) * 100) / 100;
-      if(smallMapCardPillHiResCache && smallMapCardPillHiResCache.ratio === ratioKey){
-        return Promise.resolve(smallMapCardPillHiResCache);
-      }
-      if(smallMapCardPillHiResPromise && smallMapCardPillHiResPromise.ratio === ratioKey){
-        return smallMapCardPillHiResPromise.promise;
-      }
-      const promise = ensureMarkerLabelPillImage()
-        .then(assets => {
-          if(!assets || !assets.base){
-            return null;
-          }
-          const deviceScale = clampDeviceScale(safeDevicePixelRatio());
-          const baseCanvasData = createTintedPillCanvas(assets.base, 'rgba(0,0,0,1)', 0.9, deviceScale);
-          if(!baseCanvasData){
-            return null;
-          }
-          let highlightCanvasData = null;
-          if(assets.highlight){
-            highlightCanvasData = createTintedPillCanvas(assets.highlight, null, 1, deviceScale);
-          }
-          if(!highlightCanvasData){
-            highlightCanvasData = createTintedPillCanvas(assets.base, '#2f3b73', 1, deviceScale);
-          }
-          if(!highlightCanvasData){
-            return null;
-          }
-          const defaultUrl = canvasToHighResDataUrl(baseCanvasData.canvas);
-          const highlightUrl = canvasToHighResDataUrl(highlightCanvasData.canvas);
-          if(!defaultUrl || !highlightUrl){
-            return null;
-          }
-          const payload = {
-            ratio: ratioKey,
-            defaultUrl,
-            highlightUrl,
-            width: baseCanvasData.width,
-            height: baseCanvasData.height
-          };
-          smallMapCardPillHiResCache = payload;
-          return payload;
-        })
-        .catch(err => {
-          console.error(err);
-          return null;
-        })
-        .finally(() => {
-          if(smallMapCardPillHiResPromise && smallMapCardPillHiResPromise.ratio === ratioKey){
-            smallMapCardPillHiResPromise = null;
-          }
-        });
-      smallMapCardPillHiResPromise = { ratio: ratioKey, promise };
-      return promise;
-    }
-
-    function applySmallMapCardPillHighRes(pillImg, cardEl){
-      if(!pillImg){
-        return;
-      }
-      try{ pillImg.fetchPriority = 'high'; }catch(err){}
-      ensureSmallMapCardPillHiResAssets()
-        .then(assets => {
-          if(!assets || !pillImg.isConnected){
-            return;
-          }
-          if(assets.defaultUrl){
-            pillImg.dataset.defaultSrc = assets.defaultUrl;
-          }
-          if(assets.highlightUrl){
-            pillImg.dataset.highlightSrc = assets.highlightUrl;
-          }
-          const shouldHighlight = cardEl && cardEl.classList && cardEl.classList.contains('is-pill-highlight');
-          const targetSrc = shouldHighlight
-            ? (pillImg.dataset.highlightSrc || pillImg.dataset.defaultSrc)
-            : (pillImg.dataset.defaultSrc || pillImg.getAttribute('src'));
-          if(targetSrc && (pillImg.getAttribute('src') || '') !== targetSrc){
-            pillImg.setAttribute('src', targetSrc);
-          }
-        })
-        .catch(err => console.error(err));
-    }
-
-    function ensureSmallMapMarkerHiRes(img){
-      if(!img){
-        return;
-      }
-      const scale = clampDeviceScale(safeDevicePixelRatio());
-      if(scale <= 1){
-        const base = img.dataset.baseSrc;
-        if(base && (img.getAttribute('src') || '') !== base){
-          img.setAttribute('src', base);
-        }
-        img.dataset.hiResKey = '';
-        img.dataset.hiResSrc = '';
-        return;
-      }
-      const baseSrc = (img.dataset.baseSrc || '').trim();
-      if(!baseSrc){
-        const currentSrc = img.getAttribute('src') || '';
-        if(currentSrc && !/^data:/i.test(currentSrc)){
-          img.dataset.baseSrc = currentSrc;
-        }
-      }
-      const normalizedBase = (img.dataset.baseSrc || '').trim();
-      if(!normalizedBase){
-        return;
-      }
-      const ratioKey = Math.round(scale * 100) / 100;
-      const cacheKey = `${normalizedBase}::${ratioKey}`;
-      const useCached = (dataUrl)=>{
-        if(!dataUrl){
-          return;
-        }
-        img.dataset.hiResKey = cacheKey;
-        img.dataset.hiResSrc = dataUrl;
-        if((img.getAttribute('src') || '') !== dataUrl){
-          img.setAttribute('src', dataUrl);
-        }
-      };
-      if(img.dataset.hiResKey === cacheKey && img.dataset.hiResSrc){
-        useCached(img.dataset.hiResSrc);
-        return;
-      }
-      if(smallMapMarkerHiResCache.has(cacheKey)){
-        useCached(smallMapMarkerHiResCache.get(cacheKey));
-        return;
-      }
-      if(!img.complete || !img.naturalWidth || !img.naturalHeight){
-        let waiter = smallMapMarkerHiResWaiters.get(img);
-        if(waiter){
-          return;
-        }
-        const onLoad = ()=>{
-          smallMapMarkerHiResWaiters.delete(img);
-          ensureSmallMapMarkerHiRes(img);
-        };
-        smallMapMarkerHiResWaiters.set(img, onLoad);
-        img.addEventListener('load', onLoad, { once: true });
-        return;
-      }
-      let scaled = null;
-      try{
-        scaled = createScaledImageCanvas(img, scale);
-      }catch(err){
-        console.error(err);
-        scaled = null;
-      }
-      if(!scaled){
-        return;
-      }
-      const dataUrl = canvasToHighResDataUrl(scaled.canvas);
-      if(!dataUrl){
-        return;
-      }
-      smallMapMarkerHiResCache.set(cacheKey, dataUrl);
-      useCached(dataUrl);
-    }
-
-    function reapplySmallMarkerHiRes(){
-      try{ smallMapMarkerHiResCache.clear(); }catch(err){}
-      document.querySelectorAll('.small-map-card .mapmarker').forEach(img => ensureSmallMapMarkerHiRes(img));
-      smallMapCardPillHiResCache = null;
-      document.querySelectorAll('.small-map-card .mapmarker-pill, .small-map-card .map-card-pill').forEach(img => {
-        const card = img.closest('.small-map-card');
-        applySmallMapCardPillHighRes(img, card);
-      });
-    }
-
-    (function watchDevicePixelRatioChanges(){
-      if(typeof window.matchMedia !== 'function'){
-        return;
-      }
-      const queries = ['(min-resolution: 2dppx)', '(min-resolution: 3dppx)', '(min-resolution: 4dppx)'];
-      const handler = ()=>{ reapplySmallMarkerHiRes(); };
-      queries.forEach(query => {
-        try{
-          const mq = window.matchMedia(query);
-          if(!mq) return;
-          if(typeof mq.addEventListener === 'function'){
-            mq.addEventListener('change', handler);
-          } else if(typeof mq.addListener === 'function'){
-            mq.addListener(handler);
-          }
-        }catch(err){}
-      });
-    })();
-
-    (function primeSmallMapCardPillHiRes(){
-      const trigger = ()=>{
-        try{ ensureSmallMapCardPillHiResAssets(); }catch(err){ console.error(err); }
-      };
-      const run = ()=>{
-        if(typeof requestAnimationFrame === 'function'){
-          requestAnimationFrame(trigger);
-        } else {
-          trigger();
-        }
-      };
-      if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', run, { once: true });
-      } else {
-        run();
-      }
-    })();
 
       function resetBigMapCardTransforms(){
         document.querySelectorAll('.big-map-card').forEach(card => {
@@ -9799,7 +9499,6 @@ if (typeof slugify !== 'function') {
       if(pillImg.getAttribute('srcset')){
         pillImg.removeAttribute('srcset');
       }
-      applySmallMapCardPillHighRes(pillImg, cardEl);
     }
 
     function enforceSmallMultiMapCardIcon(img, overlayEl){
@@ -9808,10 +9507,8 @@ if (typeof slugify !== 'function') {
       const apply = ()=>{
         const currentSrc = img.getAttribute('src') || '';
         if(currentSrc !== targetSrc){
-          img.dataset.baseSrc = targetSrc;
           img.setAttribute('src', targetSrc);
         }
-        ensureSmallMapMarkerHiRes(img);
       };
       apply();
       const onLoad = ()=> apply();
@@ -20324,10 +20021,7 @@ if (!map.__pillHooksInstalled) {
             markerIcon.draggable = false;
             markerIcon.loading = 'eager';
             markerIcon.referrerPolicy = 'no-referrer';
-            const markerHiResLoadHandler = ()=> ensureSmallMapMarkerHiRes(markerIcon);
-            markerIcon.addEventListener('load', markerHiResLoadHandler);
             if(isMultiVenue){
-              markerIcon.dataset.baseSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
               markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
               enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
@@ -20344,30 +20038,15 @@ if (!map.__pillHooksInstalled) {
               const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
               markerIcon.onerror = ()=>{
                 markerIcon.onerror = null;
-                markerIcon.dataset.baseSrc = markerFallback;
                 markerIcon.src = markerFallback;
-                ensureSmallMapMarkerHiRes(markerIcon);
               };
-              const resolvedMarkerSrc = markerIconUrl || markerFallback;
-              markerIcon.dataset.baseSrc = resolvedMarkerSrc;
-              markerIcon.src = resolvedMarkerSrc;
+              markerIcon.src = markerIconUrl || markerFallback;
             }
-            ensureSmallMapMarkerHiRes(markerIcon);
             requestAnimationFrame(() => {
               if(typeof markerIcon.decode === 'function'){
                 markerIcon.decode().catch(()=>{});
               }
             });
-            if(overlayRoot){
-              registerOverlayCleanup(overlayRoot, ()=>{
-                try{ markerIcon.removeEventListener('load', markerHiResLoadHandler); }catch(err){}
-                const pending = smallMapMarkerHiResWaiters.get(markerIcon);
-                if(pending){
-                  try{ markerIcon.removeEventListener('load', pending); }catch(err){}
-                  smallMapMarkerHiResWaiters.delete(markerIcon);
-                }
-              });
-            }
 
             const markerPill = new Image();
             try{ markerPill.decoding = 'async'; }catch(e){}
@@ -20385,7 +20064,6 @@ if (!map.__pillHooksInstalled) {
                 markerPill.decode().catch(()=>{});
               }
             });
-            applySmallMapCardPillHighRes(markerPill, markerContainer);
 
             const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
             const venueDisplayName = (()=>{
