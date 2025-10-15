@@ -1023,6 +1023,28 @@ input[type="checkbox"]{
 
 .header-buttons button{width:40px;}
 
+#memberBtn{
+  position:relative;
+}
+
+#memberBtn .member-avatar{
+  display:none;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.3);
+  box-sizing:border-box;
+}
+
+#memberBtn.has-avatar svg{
+  display:none;
+}
+
+#memberBtn.has-avatar .member-avatar{
+  display:block;
+}
+
 .header button,
 .options-menu button:not([class*="mapboxgl-ctrl"]){
   height:40px;
@@ -1500,6 +1522,123 @@ button[aria-expanded="true"] .results-arrow{
   padding:0;
   height:40px;
   display:block;
+}
+
+.member-auth{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.member-auth-tabs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.member-auth-tab{
+  flex:1 1 auto;
+  min-width:0;
+  height:38px;
+  border-radius:20px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:600;
+  cursor:pointer;
+  transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.member-auth-tab[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  color:var(--button-active-text);
+}
+
+.member-auth-panel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.member-auth-panel[hidden]{
+  display:none;
+}
+
+.member-auth-panel label{
+  font-size:14px;
+  font-weight:600;
+}
+
+.member-auth-panel input{
+  height:40px;
+  border-radius:8px;
+  border:1px solid var(--border, rgba(255,255,255,0.25));
+  background:#111111;
+  color:#ffffff;
+  padding:0 12px;
+  box-sizing:border-box;
+}
+
+.member-auth-panel input:focus{
+  outline:2px solid var(--btn-selected);
+  outline-offset:2px;
+}
+
+.member-auth-panel .member-auth-submit{
+  align-self:flex-start;
+}
+
+.member-auth-profile{
+  gap:18px;
+}
+
+.member-profile{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.member-profile-avatar{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.25);
+  box-sizing:border-box;
+  background:#111111;
+}
+
+.member-profile-details{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.member-profile-name{
+  margin:0;
+  font-size:20px;
+  font-weight:700;
+}
+
+.member-profile-email{
+  margin:0;
+  font-size:14px;
+  color:rgba(255,255,255,0.7);
+}
+
+.member-profile-actions{
+  display:flex;
+  gap:10px;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-tabs{
+  display:none;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-panel{
+  gap:16px;
 }
 #welcomeBody{
   display:flex;
@@ -2016,6 +2155,14 @@ button[aria-expanded="true"] .results-arrow{
 #memberStatusMessage.show{
   opacity:1;
   transform:translate(-50%, 0);
+}
+
+#memberStatusMessage.success{
+  background:rgba(46, 160, 96, 0.92);
+}
+
+#memberStatusMessage.error{
+  background:rgba(200, 70, 70, 0.92);
 }
 .panel-header h2{
   margin:0;
@@ -5788,15 +5935,50 @@ if (typeof slugify !== 'function') {
     <div class="panel-content" style="right:0;">
       <div class="panel-header">
         <div class="header-top">
-          <h2>Create Post</h2>
+          <h2>Member Access</h2>
           <div class="panel-actions">
-            <button type="button" class="save-changes primary-action">Save</button>
-            <button type="button" class="discard-changes" disabled>Discard Changes</button>
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
       </div>
-      <form id="memberForm" class="panel-body"></form>
+      <form id="memberForm" class="panel-body" novalidate>
+        <div class="member-auth" data-state="logged-out">
+          <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
+            <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
+            <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
+          </div>
+          <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
+            <label for="memberLoginEmail">Email</label>
+            <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
+            <label for="memberLoginPassword">Password</label>
+            <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
+            <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
+          </section>
+          <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
+            <label for="memberRegisterName">Display Name</label>
+            <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
+            <label for="memberRegisterEmail">Email</label>
+            <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
+            <label for="memberRegisterPassword">Password</label>
+            <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
+            <label for="memberRegisterAvatar">Avatar URL</label>
+            <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
+            <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
+          </section>
+          <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
+            <div class="member-profile">
+              <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
+              <div class="member-profile-details">
+                <p id="memberProfileName" class="member-profile-name"></p>
+                <p id="memberProfileEmail" class="member-profile-email"></p>
+              </div>
+            </div>
+            <div class="member-profile-actions">
+              <button type="button" class="tiny" id="memberLogoutBtn">Log Out</button>
+            </div>
+          </section>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -23103,6 +23285,15 @@ const adminPanelChangeManager = (()=>{
         return true;
       }
       return false;
+    },
+    markSaved(message){
+      ensureElements();
+      refreshSavedState();
+      if(message) showStatus(message);
+    },
+    markDirty(){
+      ensureElements();
+      setDirty(true);
     }
   };
 })();
@@ -24861,6 +25052,426 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('DOMContentLoaded', init, { once: true });
   } else {
     init();
+  }
+})();
+</script>
+
+<script>
+(function(){
+  const USERS_KEY = 'member-auth-users';
+  const CURRENT_KEY = 'member-auth-current';
+  let users = [];
+  let currentUser = null;
+  let statusTimer = null;
+  let lastAction = 'login';
+
+  let form = null;
+  let container = null;
+  let tabsWrap = null;
+  let loginTab = null;
+  let registerTab = null;
+  let loginPanel = null;
+  let registerPanel = null;
+  let profilePanel = null;
+  let loginInputs = [];
+  let registerInputs = [];
+  let profileAvatar = null;
+  let profileName = null;
+  let profileEmail = null;
+  let logoutBtn = null;
+
+  function normalizeUser(user){
+    if(!user || typeof user !== 'object') return null;
+    const emailRaw = typeof user.email === 'string' ? user.email.trim() : '';
+    const normalized = typeof user.emailNormalized === 'string' && user.emailNormalized.trim()
+      ? user.emailNormalized.trim().toLowerCase()
+      : emailRaw.toLowerCase();
+    if(!normalized) return null;
+    return {
+      name: typeof user.name === 'string' ? user.name.trim() : '',
+      email: emailRaw,
+      emailNormalized: normalized,
+      password: typeof user.password === 'string' ? user.password : '',
+      avatar: typeof user.avatar === 'string' ? user.avatar.trim() : ''
+    };
+  }
+
+  function loadUsers(){
+    try{
+      const raw = localStorage.getItem(USERS_KEY);
+      if(!raw) return [];
+      const parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed)) return [];
+      return parsed.map(normalizeUser).filter(Boolean);
+    }catch(err){
+      return [];
+    }
+  }
+
+  function saveUsers(list){
+    users = Array.isArray(list) ? list.map(normalizeUser).filter(Boolean) : [];
+    try{
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }catch(err){}
+  }
+
+  function storeCurrent(user){
+    try{
+      if(user){
+        localStorage.setItem(CURRENT_KEY, JSON.stringify({ emailNormalized: user.emailNormalized }));
+      } else {
+        localStorage.removeItem(CURRENT_KEY);
+      }
+    }catch(err){}
+  }
+
+  function loadStoredCurrent(){
+    try{
+      const raw = localStorage.getItem(CURRENT_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.emailNormalized){
+        const normalized = String(parsed.emailNormalized).toLowerCase();
+        return users.find(u => u.emailNormalized === normalized) || null;
+      }
+    }catch(err){}
+    return null;
+  }
+
+  function svgPlaceholder(letter){
+    const palette = ['#2e3a72','#0ea5e9','#f97316','#14b8a6','#a855f7'];
+    const color = palette[letter.charCodeAt(0) % palette.length];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="52%" text-anchor="middle" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
+    try{
+      return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    }catch(err){
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
+    }
+  }
+
+  function createPlaceholder(name){
+    const trimmed = (name || '').trim();
+    const initial = trimmed ? trimmed[0].toUpperCase() : 'U';
+    return svgPlaceholder(initial);
+  }
+
+  function getAvatarSource(user){
+    if(!user) return createPlaceholder('');
+    const raw = user.avatar ? String(user.avatar).trim() : '';
+    if(raw) return raw;
+    return createPlaceholder(user.name || user.email || 'U');
+  }
+
+  function ensureMemberAvatarImage(){
+    const memberBtn = document.getElementById('memberBtn');
+    if(!memberBtn) return null;
+    let img = memberBtn.querySelector('.member-avatar');
+    if(!img){
+      img = document.createElement('img');
+      img.className = 'member-avatar';
+      img.alt = '';
+      img.setAttribute('aria-hidden','true');
+      memberBtn.appendChild(img);
+    }
+    return img;
+  }
+
+  function updateMemberButton(user){
+    const memberBtn = document.getElementById('memberBtn');
+    if(!memberBtn) return;
+    const img = ensureMemberAvatarImage();
+    if(!img) return;
+    img.onerror = null;
+    img.removeAttribute('data-fallback-applied');
+    if(user){
+      const descriptor = user.name || user.email || 'Member';
+      img.dataset.fallbackApplied = '';
+      img.onerror = () => {
+        if(img.dataset.fallbackApplied === '1') return;
+        img.dataset.fallbackApplied = '1';
+        img.src = createPlaceholder(descriptor);
+      };
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.src = getAvatarSource(user);
+      memberBtn.classList.add('has-avatar');
+      memberBtn.setAttribute('aria-label', `Open members area for ${descriptor}`);
+    } else {
+      img.removeAttribute('src');
+      img.removeAttribute('data-fallback-applied');
+      memberBtn.classList.remove('has-avatar');
+      memberBtn.setAttribute('aria-label', 'Open members area');
+    }
+  }
+
+  function showStatus(message, options = {}){
+    const statusEl = document.getElementById('memberStatusMessage');
+    if(!statusEl) return;
+    const isError = !!options.error;
+    statusEl.textContent = message;
+    statusEl.classList.remove('error','success','show');
+    statusEl.classList.add(isError ? 'error' : 'success');
+    statusEl.setAttribute('aria-hidden','false');
+    void statusEl.offsetWidth;
+    statusEl.classList.add('show');
+    if(statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => {
+      statusEl.classList.remove('show');
+      statusEl.classList.remove('error','success');
+      statusEl.setAttribute('aria-hidden','true');
+    }, 2400);
+  }
+
+  function disableInputs(list, disabled){
+    list.forEach(input => {
+      input.disabled = !!disabled;
+    });
+  }
+
+  function clearInputs(list){
+    list.forEach(input => {
+      if('value' in input){
+        input.value = '';
+      }
+    });
+  }
+
+  function setActivePanel(panel){
+    if(!container || container.dataset.state === 'logged-in') return;
+    const target = panel === 'register' ? 'register' : 'login';
+    const isLogin = target === 'login';
+    if(loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+    if(registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+    if(loginPanel){
+      loginPanel.hidden = !isLogin;
+      loginPanel.setAttribute('aria-hidden', (!isLogin).toString());
+      disableInputs(loginInputs, !isLogin);
+    }
+    if(registerPanel){
+      registerPanel.hidden = isLogin;
+      registerPanel.setAttribute('aria-hidden', isLogin.toString());
+      disableInputs(registerInputs, isLogin);
+    }
+    container.dataset.active = target;
+    lastAction = target;
+  }
+
+  function render(){
+    if(!container) return;
+    if(currentUser){
+      container.dataset.state = 'logged-in';
+      if(loginPanel){
+        loginPanel.hidden = true;
+        loginPanel.setAttribute('aria-hidden','true');
+      }
+      if(registerPanel){
+        registerPanel.hidden = true;
+        registerPanel.setAttribute('aria-hidden','true');
+      }
+      disableInputs(loginInputs, true);
+      disableInputs(registerInputs, true);
+      clearInputs(loginInputs);
+      clearInputs(registerInputs);
+      if(profilePanel){
+        profilePanel.hidden = false;
+        profilePanel.setAttribute('aria-hidden','false');
+      }
+      if(profileAvatar){
+        const descriptor = currentUser.name || currentUser.email || 'Member';
+        profileAvatar.dataset.fallbackApplied = '';
+        profileAvatar.onerror = () => {
+          if(profileAvatar.dataset.fallbackApplied === '1') return;
+          profileAvatar.dataset.fallbackApplied = '1';
+          profileAvatar.src = createPlaceholder(descriptor);
+        };
+        profileAvatar.loading = 'lazy';
+        profileAvatar.decoding = 'async';
+        profileAvatar.src = getAvatarSource(currentUser);
+        profileAvatar.alt = `${descriptor}'s avatar`;
+      }
+      if(profileName) profileName.textContent = currentUser.name || 'Member';
+      if(profileEmail) profileEmail.textContent = currentUser.email || '';
+      if(tabsWrap) tabsWrap.setAttribute('aria-hidden','true');
+      updateMemberButton(currentUser);
+      lastAction = 'login';
+      if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
+        window.memberPanelChangeManager.markSaved();
+      }
+    } else {
+      container.dataset.state = 'logged-out';
+      if(profilePanel){
+        profilePanel.hidden = true;
+        profilePanel.setAttribute('aria-hidden','true');
+      }
+      if(profileAvatar){
+        profileAvatar.onerror = null;
+        profileAvatar.removeAttribute('src');
+        profileAvatar.removeAttribute('data-fallback-applied');
+        profileAvatar.alt = '';
+      }
+      if(profileName) profileName.textContent = '';
+      if(profileEmail) profileEmail.textContent = '';
+      if(tabsWrap) tabsWrap.removeAttribute('aria-hidden');
+      setActivePanel('login');
+      clearInputs(loginInputs);
+      clearInputs(registerInputs);
+      updateMemberButton(null);
+      if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
+        window.memberPanelChangeManager.markSaved();
+      }
+    }
+  }
+
+  function handleLogin(){
+    const emailInput = document.getElementById('memberLoginEmail');
+    const passwordInput = document.getElementById('memberLoginPassword');
+    const emailRaw = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    if(!emailRaw || !password){
+      showStatus('Enter your email and password.', { error: true });
+      if(!emailRaw && emailInput){
+        emailInput.focus();
+      } else if(passwordInput){
+        passwordInput.focus();
+      }
+      return;
+    }
+    const normalized = emailRaw.toLowerCase();
+    const user = users.find(u => u.emailNormalized === normalized);
+    if(!user){
+      showStatus('Account not found. Please register first.', { error: true });
+      if(emailInput) emailInput.focus();
+      return;
+    }
+    if(user.password !== password){
+      showStatus('Incorrect password. Try again.', { error: true });
+      if(passwordInput){
+        passwordInput.focus();
+        passwordInput.select();
+      }
+      return;
+    }
+    currentUser = { ...user };
+    storeCurrent(currentUser);
+    render();
+    showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
+  }
+
+  function handleRegister(){
+    const nameInput = document.getElementById('memberRegisterName');
+    const emailInput = document.getElementById('memberRegisterEmail');
+    const passwordInput = document.getElementById('memberRegisterPassword');
+    const avatarInput = document.getElementById('memberRegisterAvatar');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const emailRaw = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const avatar = avatarInput ? avatarInput.value.trim() : '';
+    if(!name || !emailRaw || !password){
+      showStatus('Please complete all required fields.', { error: true });
+      if(!name && nameInput){
+        nameInput.focus();
+        return;
+      }
+      if(!emailRaw && emailInput){
+        emailInput.focus();
+        return;
+      }
+      if(!password && passwordInput){
+        passwordInput.focus();
+      }
+      return;
+    }
+    if(password.length < 4){
+      showStatus('Password must be at least 4 characters.', { error: true });
+      if(passwordInput) passwordInput.focus();
+      return;
+    }
+    const normalized = emailRaw.toLowerCase();
+    if(users.some(u => u.emailNormalized === normalized)){
+      showStatus('An account already exists for that email.', { error: true });
+      if(emailInput) emailInput.focus();
+      return;
+    }
+    const newUser = normalizeUser({ name, email: emailRaw, emailNormalized: normalized, password, avatar });
+    users.push(newUser);
+    saveUsers(users);
+    currentUser = { ...newUser };
+    storeCurrent(currentUser);
+    render();
+    showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
+  }
+
+  function handleLogout(){
+    currentUser = null;
+    storeCurrent(null);
+    render();
+    showStatus('You have been logged out.');
+  }
+
+  function setup(){
+    form = document.getElementById('memberForm');
+    if(!form) return;
+    container = form.querySelector('.member-auth');
+    if(!container) return;
+    tabsWrap = container.querySelector('.member-auth-tabs');
+    loginTab = document.getElementById('memberAuthTabLogin');
+    registerTab = document.getElementById('memberAuthTabRegister');
+    loginPanel = document.getElementById('memberLoginPanel');
+    registerPanel = document.getElementById('memberRegisterPanel');
+    profilePanel = document.getElementById('memberProfilePanel');
+    profileAvatar = document.getElementById('memberProfileAvatar');
+    profileName = document.getElementById('memberProfileName');
+    profileEmail = document.getElementById('memberProfileEmail');
+    logoutBtn = document.getElementById('memberLogoutBtn');
+    loginInputs = loginPanel ? Array.from(loginPanel.querySelectorAll('input')) : [];
+    registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const submitter = event.submitter || null;
+      const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
+      if(action === 'register'){
+        handleRegister();
+      } else {
+        handleLogin();
+      }
+    });
+
+    const submitButtons = form.querySelectorAll('.member-auth-submit');
+    submitButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lastAction = btn.dataset.action || 'login';
+      });
+    });
+
+    if(loginTab){
+      loginTab.addEventListener('click', () => {
+        setActivePanel('login');
+      });
+    }
+    if(registerTab){
+      registerTab.addEventListener('click', () => {
+        setActivePanel('register');
+      });
+    }
+    if(logoutBtn){
+      logoutBtn.addEventListener('click', event => {
+        event.preventDefault();
+        if(currentUser){
+          handleLogout();
+        }
+      });
+    }
+
+    users = loadUsers();
+    currentUser = loadStoredCurrent();
+    render();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setup, { once: true });
+  } else {
+    setup();
   }
 })();
 </script>
