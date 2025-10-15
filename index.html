@@ -2573,6 +2573,15 @@ button[aria-expanded="true"] .results-arrow{
   border: 1px solid var(--btn);
 }
 
+.tiny:disabled,
+.tiny[aria-disabled="true"]{
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .tiny.danger{
   background:#b83030;
   border-color:#b83030;
@@ -16152,7 +16161,8 @@ function makePosts(){
                     timeActions.className = 'session-time-actions';
                     timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
                     const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
-                    const canRemoveTime = venue.sessions.length > 1;
+                    const timesForSession = Array.isArray(session.times) ? session.times.filter(Boolean) : [];
+                    const canRemoveTime = timesForSession.length > 1;
                     if(!canRemoveTime){
                       removeTimeBtn.disabled = true;
                       removeTimeBtn.setAttribute('aria-disabled', 'true');
