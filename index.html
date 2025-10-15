@@ -23383,8 +23383,11 @@ const adminAuthManager = (()=>{
 
   function updateUI(){
     if(adminBtn){
-      adminBtn.hidden = !authenticated;
-      if(!authenticated){
+      const isVisible = !!authenticated;
+      adminBtn.hidden = !isVisible;
+      adminBtn.style.display = isVisible ? 'flex' : 'none';
+      adminBtn.setAttribute('aria-hidden', (!isVisible).toString());
+      if(!isVisible){
         adminBtn.setAttribute('aria-pressed','false');
       }
     }
