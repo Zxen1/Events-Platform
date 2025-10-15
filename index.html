@@ -14017,6 +14017,31 @@ function makePosts(){
               return integerPart;
             };
 
+            const formatSessionPriceValue = value => {
+              const sanitized = sanitizeSessionPriceValue(value);
+              if(sanitized === '') return '';
+              let normalized = sanitized.replace(',', '.');
+              if(normalized === '') return '';
+              if(normalized.startsWith('.')){
+                normalized = `0${normalized}`;
+              }
+              const parts = normalized.split('.');
+              let integerPart = parts[0].replace(/\D/g, '');
+              if(integerPart === ''){
+                integerPart = '0';
+              }
+              let fractionPart = parts[1] || '';
+              fractionPart = fractionPart.replace(/\D/g, '');
+              if(fractionPart.length === 0){
+                fractionPart = '00';
+              } else if(fractionPart.length === 1){
+                fractionPart = `${fractionPart}0`;
+              } else if(fractionPart.length > 2){
+                fractionPart = fractionPart.slice(0, 2);
+              }
+              return `${integerPart}.${fractionPart}`;
+            };
+
             const ensureVenueCurrencyState = venue => {
               let state = VENUE_CURRENCY_STATE.get(venue);
               if(!state){
@@ -14569,15 +14594,23 @@ function makePosts(){
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
             };
 
-            const removeVersion = (venue, venueIndex, sessionIndex, timeIndex, versionIndex)=>{
+            const removeVersion = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, expectedVersion = null)=>{
               const time = venue.sessions[sessionIndex].times[timeIndex];
-              if(time.versions.length <= 1) return;
+              const versions = Array.isArray(time.versions) ? time.versions : [];
+              if(versions.length <= 1) return;
+              let targetIndex = versionIndex;
+              if(expectedVersion && versions[targetIndex] !== expectedVersion){
+                const resolvedIndex = versions.indexOf(expectedVersion);
+                if(resolvedIndex === -1) return;
+                targetIndex = resolvedIndex;
+              }
+              if(targetIndex < 0 || targetIndex >= versions.length) return;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex];
                   if(!otherTime || !Array.isArray(otherTime.versions)) return;
-                  if(otherTime.versions.length > versionIndex){
-                    otherTime.versions.splice(versionIndex, 1);
+                  if(otherTime.versions.length > targetIndex){
+                    otherTime.versions.splice(targetIndex, 1);
                   }
                   if(otherTime.versions.length === 0){
                     otherTime.versions.push(venueSessionCreateVersion());
@@ -14586,9 +14619,9 @@ function makePosts(){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              time.versions.splice(versionIndex, 1);
+              versions.splice(targetIndex, 1);
               notifyFormbuilderChange();
-              const focusVersion = Math.max(0, Math.min(versionIndex, time.versions.length - 1));
+              const focusVersion = Math.max(0, Math.min(targetIndex, versions.length - 1));
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: focusVersion });
             };
 
@@ -14623,17 +14656,39 @@ function makePosts(){
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
             };
 
-            const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)=>{
-              const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
-              if(version.tiers.length <= 1) return;
+            const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex, expectedVersion = null, expectedTier = null)=>{
+              const time = venue.sessions[sessionIndex].times[timeIndex];
+              const versions = Array.isArray(time.versions) ? time.versions : [];
+              let targetVersionIndex = versionIndex;
+              let version = versions[targetVersionIndex];
+              if(!version && expectedVersion){
+                targetVersionIndex = versions.indexOf(expectedVersion);
+                version = versions[targetVersionIndex];
+              }
+              if(!version || !Array.isArray(version.tiers)) return;
+              if(expectedVersion && version !== expectedVersion){
+                const resolvedVersionIndex = versions.indexOf(expectedVersion);
+                if(resolvedVersionIndex === -1) return;
+                targetVersionIndex = resolvedVersionIndex;
+                version = versions[targetVersionIndex];
+              }
+              const tiers = version.tiers;
+              if(!Array.isArray(tiers) || tiers.length <= 1) return;
+              let targetTierIndex = tierIndex;
+              if(expectedTier && tiers[targetTierIndex] !== expectedTier){
+                const resolvedTierIndex = tiers.indexOf(expectedTier);
+                if(resolvedTierIndex === -1) return;
+                targetTierIndex = resolvedTierIndex;
+              }
+              if(targetTierIndex < 0 || targetTierIndex >= tiers.length) return;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex];
                   if(!otherTime || !Array.isArray(otherTime.versions)) return;
-                  const otherVersion = otherTime.versions[versionIndex];
+                  const otherVersion = otherTime.versions[targetVersionIndex];
                   if(!otherVersion || !Array.isArray(otherVersion.tiers)) return;
-                  if(otherVersion.tiers.length > tierIndex){
-                    otherVersion.tiers.splice(tierIndex, 1);
+                  if(otherVersion.tiers.length > targetTierIndex){
+                    otherVersion.tiers.splice(targetTierIndex, 1);
                   }
                   if(otherVersion.tiers.length === 0){
                     otherVersion.tiers.push(venueSessionCreateTier());
@@ -14642,10 +14697,10 @@ function makePosts(){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              version.tiers.splice(tierIndex, 1);
+              tiers.splice(targetTierIndex, 1);
               notifyFormbuilderChange();
-              const focusTier = Math.max(0, Math.min(tierIndex, version.tiers.length - 1));
-              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: focusTier });
+              const focusTier = Math.max(0, Math.min(targetTierIndex, tiers.length - 1));
+              renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex: targetVersionIndex, tierIndex: focusTier });
             };
 
             const focusRequest = { current: null };
@@ -15792,7 +15847,7 @@ function makePosts(){
                         const versionActions = document.createElement('div');
                         versionActions.className = 'version-actions';
                         versionActions.appendChild(createActionButton('+', 'Add Version', ()=> addVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex)));
-                        const removeVersionBtn = createActionButton('-', 'Remove Version', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex));
+                        const removeVersionBtn = createActionButton('-', 'Remove Version', ()=> removeVersion(venue, venueIndex, sessionIndex, timeIndex, versionIndex, version));
                         if(timeObj.versions.length <= 1){
                           removeVersionBtn.disabled = true;
                           removeVersionBtn.setAttribute('aria-disabled', 'true');
@@ -15861,7 +15916,7 @@ function makePosts(){
                           const tierActions = document.createElement('div');
                           tierActions.className = 'tier-actions';
                           tierActions.appendChild(createActionButton('+', 'Add Tier', ()=> addTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex)));
-                          const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex));
+                          const removeTierBtn = createActionButton('-', 'Remove Tier', ()=> removeTier(venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex, version, tier));
                           if(version.tiers.length <= 1){
                             removeTierBtn.disabled = true;
                             removeTierBtn.setAttribute('aria-disabled', 'true');
@@ -15902,11 +15957,12 @@ function makePosts(){
                           priceInput.className = 'session-price-input';
                           priceInput.placeholder = '0.00';
                           const sanitizedInitialPrice = sanitizeSessionPriceValue(tier.price || '');
-                          if(typeof tier.price !== 'string' || tier.price !== sanitizedInitialPrice){
-                            tier.price = sanitizedInitialPrice;
+                          const formattedInitialPrice = formatSessionPriceValue(sanitizedInitialPrice);
+                          if(typeof tier.price !== 'string' || tier.price !== formattedInitialPrice){
+                            tier.price = formattedInitialPrice;
                             markAutoChange();
                           }
-                          priceInput.value = sanitizedInitialPrice;
+                          priceInput.value = formattedInitialPrice;
                           priceInput.dataset.venueIndex = String(venueIndex);
                           priceInput.dataset.sessionIndex = String(sessionIndex);
                           priceInput.dataset.timeIndex = String(timeIndex);
@@ -15948,23 +16004,21 @@ function makePosts(){
                           const commitPriceValue = ()=>{
                             let shouldNotify = false;
                             let shouldLock = false;
-                            let sanitizedPrice = '';
                             const previous = typeof tier.price === 'string' ? tier.price : '';
                             if(!hasCurrencySelected()){
                               const cleared = updatePriceState({ clearPrice: true, sanitize: false });
                               if(cleared){
                                 tier.price = '';
-                                sanitizedPrice = '';
                                 shouldNotify = true;
                                 shouldLock = true;
                               }
                             } else {
-                              sanitizedPrice = sanitizeSessionPriceValue(priceInput.value);
-                              if(priceInput.value !== sanitizedPrice){
-                                priceInput.value = sanitizedPrice;
+                              const formattedPrice = formatSessionPriceValue(priceInput.value);
+                              if(priceInput.value !== formattedPrice){
+                                priceInput.value = formattedPrice;
                               }
-                              if(previous !== sanitizedPrice){
-                                tier.price = sanitizedPrice;
+                              if(previous !== formattedPrice){
+                                tier.price = formattedPrice;
                                 shouldNotify = true;
                                 shouldLock = true;
                               }
@@ -16027,13 +16081,11 @@ function makePosts(){
                             tier.currency = nextCurrency;
                             const shouldClearPrice = nextCurrency === '';
                             const priceCleared = updatePriceState({ clearPrice: shouldClearPrice, sanitize: true });
-                            let propagated = false;
-                            if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
-                              propagated = applyCurrencyToVenueData(venue, nextCurrency, {
-                                sourceTier: tier,
-                                clearPrices: shouldClearPrice
-                              });
-                            } else if(previousCurrency !== nextCurrency){
+                            const propagated = applyCurrencyToVenueData(venue, nextCurrency, {
+                              sourceTier: tier,
+                              clearPrices: shouldClearPrice
+                            });
+                            if(sessionIndex > 0 && previousCurrency !== nextCurrency){
                               lockSessionMirror(venue);
                             }
                             setVenueCurrencyState(venue, nextCurrency);
