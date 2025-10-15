@@ -5527,9 +5527,7 @@ if (typeof slugify !== 'function') {
       ctx.save();
       ctx.scale(scale, scale);
       ctx.imageSmoothingEnabled = false;
-      if('imageSmoothingQuality' in ctx){
-        ctx.imageSmoothingQuality = 'high';
-      }
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(sourceImage, 0, 0, canvas.width / scale, canvas.height / scale);
       ctx.restore();
       if(color){
@@ -7886,9 +7884,7 @@ if (typeof slugify !== 'function') {
     ctx.scale(scale, scale);
     try{
       ctx.imageSmoothingEnabled = false;
-      if('imageSmoothingQuality' in ctx){
-        ctx.imageSmoothingQuality = 'high';
-      }
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
     }catch(err){
       console.error(err);
@@ -7914,9 +7910,7 @@ if (typeof slugify !== 'function') {
       ctx.save();
       ctx.scale(scale, scale);
       ctx.imageSmoothingEnabled = false;
-      if('imageSmoothingQuality' in ctx){
-        ctx.imageSmoothingQuality = 'high';
-      }
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
       ctx.restore();
     }catch(err){
@@ -9456,14 +9450,13 @@ if (typeof slugify !== 'function') {
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
 
-    function resetBigMapCardTransforms(){
-      document.querySelectorAll('.big-map-card').forEach(card => {
-        if(card && card.style){
+      function resetBigMapCardTransforms(){
+        document.querySelectorAll('.big-map-card').forEach(card => {
           card.style.transform = 'none';
-        }
-      });
-    }
-    document.addEventListener('DOMContentLoaded', resetBigMapCardTransforms);
+        });
+      }
+      resetBigMapCardTransforms();
+      document.addEventListener('DOMContentLoaded', resetBigMapCardTransforms);
 
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
@@ -18961,14 +18954,13 @@ function makePosts(){
           accessToken: mapboxgl.accessToken,
           mapboxgl,
           placeholder: 'Search venues or places',
-          marker: false,
           types: 'poi,place,address',
-          reverseGeocode: true,
+          marker: false,
           limit: 10,
+          reverseGeocode: true,
           language: navigator.language,
-          // Remove proximity and bbox restrictions for global coverage
-          proximity: null,
-          bbox: null
+          proximity: null, // Remove regional bias
+          bbox: null       // Remove viewport limitation
         };
 
         const gc = new MapboxGeocoder(geocoderOptions);
