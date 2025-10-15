@@ -5523,13 +5523,7 @@ if (typeof slugify !== 'function') {
         return null;
       }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
-      ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvas.width / scale, canvas.height / scale);
-      ctx.restore();
+      ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
       if(color){
         ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = alpha;
@@ -7879,12 +7873,24 @@ if (typeof slugify !== 'function') {
     if(!ctx || !image){
       return;
     }
-    const scale = window.devicePixelRatio || 1;
+    let scale = 1;
+    try{
+      const ratio = window.devicePixelRatio;
+      if(Number.isFinite(ratio) && ratio > 0){
+        scale = ratio;
+      }
+    }catch(err){
+      scale = 1;
+    }
     ctx.save();
     ctx.scale(scale, scale);
     try{
       ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
+      if('imageSmoothingQuality' in ctx){
+        ctx.imageSmoothingQuality = 'high';
+      }
+    }catch(err){}
+    try{
       ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
     }catch(err){
       console.error(err);
@@ -7906,13 +7912,7 @@ if (typeof slugify !== 'function') {
     }
     try{
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      const scale = window.devicePixelRatio || 1;
-      ctx.save();
-      ctx.scale(scale, scale);
-      ctx.imageSmoothingEnabled = false;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(sourceImage, 0, 0, canvasWidth / scale, canvasHeight / scale);
-      ctx.restore();
+      ctx.drawImage(sourceImage, 0, 0, canvasWidth, canvasHeight);
     }catch(err){
       console.error(err);
       return null;
@@ -9449,14 +9449,6 @@ if (typeof slugify !== 'function') {
     const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
     const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
     const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
-
-      function resetBigMapCardTransforms(){
-        document.querySelectorAll('.big-map-card').forEach(card => {
-          card.style.transform = 'none';
-        });
-      }
-      resetBigMapCardTransforms();
-      document.addEventListener('DOMContentLoaded', resetBigMapCardTransforms);
 
     function registerOverlayCleanup(overlayEl, fn){
       if(!overlayEl || typeof fn !== 'function') return;
@@ -18950,18 +18942,24 @@ function makePosts(){
       const cityZoomLevel = 12;
 
       sets.forEach((sel, idx)=>{
+        const center = map && typeof map.getCenter === 'function' ? map.getCenter() : null;
         const geocoderOptions = {
           accessToken: mapboxgl.accessToken,
           mapboxgl,
-          placeholder: 'Search venues or places',
-          types: 'poi,place,address',
-          marker: false,
-          limit: 10,
-          reverseGeocode: true,
-          language: navigator.language,
-          proximity: null, // Remove regional bias
-          bbox: null       // Remove viewport limitation
+          marker:false,
+          placeholder:'Search venues or places',
+          geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+          types:'poi,place,address',
+          reverseGeocode:true,
+          localGeocoder: localVenueGeocoder,
+          externalGeocoder: externalMapboxVenueGeocoder,
+          filter: majorVenueFilter,
+          limit:10,
+          language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
         };
+        if(center && Number.isFinite(center.lng) && Number.isFinite(center.lat)){
+          geocoderOptions.proximity = { longitude:center.lng, latitude:center.lat };
+        }
 
         const gc = new MapboxGeocoder(geocoderOptions);
         const gEl = sel && sel.geo ? document.querySelector(sel.geo) : null;
@@ -19331,19 +19329,6 @@ if (!map.__pillHooksInstalled) {
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
-        const geocoder = new MapboxGeocoder({
-          accessToken: mapboxgl.accessToken,
-          mapboxgl,
-          placeholder: 'Search venues or places',
-          types: 'poi,place,address',
-          marker: false,
-          limit: 10,
-          reverseGeocode: true,
-          language: navigator.language,
-          proximity: null,
-          bbox: null
-        });
-        map.addControl(geocoder, 'top-left');
         setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
@@ -20208,7 +20193,6 @@ if (!map.__pillHooksInstalled) {
             overlayRoot.append(markerContainer, cardRoot);
             overlayRoot.classList.add('is-card-visible');
             overlayRoot.style.pointerEvents = '';
-            resetBigMapCardTransforms();
 
             const handleOverlayClick = (ev)=>{
               ev.preventDefault();
@@ -20239,6 +20223,16 @@ if (!map.__pillHooksInstalled) {
                 try{ ev.stopPropagation(); }catch(err){}
               }, { capture: true });
             });
+            cardRoot.addEventListener('mouseenter', ()=>{
+              window.__overCard = true;
+            });
+            cardRoot.addEventListener('mouseleave', ()=>{
+              window.__overCard = false;
+              if(listLocked) return;
+              const currentPopup = hoverPopup;
+              schedulePopupRemoval(currentPopup, 160);
+            });
+
             const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
             if(typeof marker.setZIndexOffset === 'function'){
               try{ marker.setZIndexOffset(20000); }catch(e){}
