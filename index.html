@@ -9469,14 +9469,6 @@ if (typeof slugify !== 'function') {
         viewportHeight = headerH + subH + footerH + safeTop;
       }
       let availableHeight = Math.max(0, viewportHeight - headerH - subH - footerH - safeTop);
-      const boardsContainer = document.querySelector('.post-mode-boards');
-      if(boardsContainer){
-        const boardsRect = boardsContainer.getBoundingClientRect();
-        if(boardsRect && Number.isFinite(boardsRect.height) && boardsRect.height > 0){
-          const measured = Math.max(0, boardsRect.height);
-          availableHeight = availableHeight > 0 ? Math.min(availableHeight, measured) : measured;
-        }
-      }
       if(!Number.isFinite(availableHeight) || availableHeight < 0){
         availableHeight = 0;
       }
