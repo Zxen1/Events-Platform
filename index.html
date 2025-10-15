@@ -14871,22 +14871,20 @@ function makePosts(){
               const time = venue.sessions[sessionIndex].times[timeIndex];
               const versions = Array.isArray(time.versions) ? time.versions : [];
               if(versions.length <= 1) return;
-              let targetIndex = versionIndex;
-              if(expectedVersion && versions[targetIndex] !== expectedVersion){
-                const resolvedIndex = versions.indexOf(expectedVersion);
-                if(resolvedIndex === -1) return;
-                targetIndex = resolvedIndex;
+              let targetVersion = expectedVersion ?? null;
+              let targetIndex = targetVersion ? versions.indexOf(targetVersion) : -1;
+              if(targetIndex === -1){
+                targetIndex = typeof versionIndex === 'number' ? versionIndex : -1;
+                if(targetIndex < 0 || targetIndex >= versions.length) return;
+                targetVersion = versions[targetIndex];
               }
-              if(targetIndex < 0 || targetIndex >= versions.length) return;
+              if(!targetVersion) return;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex];
                   if(!otherTime || !Array.isArray(otherTime.versions)) return;
-                  if(otherTime.versions.length > targetIndex){
-                    otherTime.versions.splice(targetIndex, 1);
-                  }
-                  if(otherTime.versions.length === 0){
-                    otherTime.versions.push(venueSessionCreateVersion());
+                  if(otherTime.versions === versions){
+                    otherTime.versions = otherTime.versions.map(cloneVenueSessionVersion);
                   }
                 });
               } else if(sessionIndex > 0){
@@ -14932,39 +14930,38 @@ function makePosts(){
             const removeTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex, expectedVersion = null, expectedTier = null)=>{
               const time = venue.sessions[sessionIndex].times[timeIndex];
               const versions = Array.isArray(time.versions) ? time.versions : [];
-              let targetVersionIndex = versionIndex;
-              let version = versions[targetVersionIndex];
-              if(!version && expectedVersion){
-                targetVersionIndex = versions.indexOf(expectedVersion);
-                version = versions[targetVersionIndex];
+              if(versions.length === 0) return;
+              let targetVersion = expectedVersion ?? null;
+              let targetVersionIndex = targetVersion ? versions.indexOf(targetVersion) : -1;
+              if(targetVersionIndex === -1){
+                targetVersionIndex = typeof versionIndex === 'number' ? versionIndex : -1;
+                if(targetVersionIndex < 0 || targetVersionIndex >= versions.length) return;
+                targetVersion = versions[targetVersionIndex];
               }
-              if(!version || !Array.isArray(version.tiers)) return;
-              if(expectedVersion && version !== expectedVersion){
-                const resolvedVersionIndex = versions.indexOf(expectedVersion);
-                if(resolvedVersionIndex === -1) return;
-                targetVersionIndex = resolvedVersionIndex;
-                version = versions[targetVersionIndex];
+              if(!targetVersion) return;
+              const version = versions[targetVersionIndex];
+              const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
+              if(tiers.length <= 1) return;
+              let targetTier = expectedTier ?? null;
+              let targetTierIndex = targetTier ? tiers.indexOf(targetTier) : -1;
+              if(targetTierIndex === -1){
+                targetTierIndex = typeof tierIndex === 'number' ? tierIndex : -1;
+                if(targetTierIndex < 0 || targetTierIndex >= tiers.length) return;
+                targetTier = tiers[targetTierIndex];
               }
-              const tiers = version.tiers;
-              if(!Array.isArray(tiers) || tiers.length <= 1) return;
-              let targetTierIndex = tierIndex;
-              if(expectedTier && tiers[targetTierIndex] !== expectedTier){
-                const resolvedTierIndex = tiers.indexOf(expectedTier);
-                if(resolvedTierIndex === -1) return;
-                targetTierIndex = resolvedTierIndex;
-              }
-              if(targetTierIndex < 0 || targetTierIndex >= tiers.length) return;
+              if(!targetTier) return;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex];
                   if(!otherTime || !Array.isArray(otherTime.versions)) return;
+                  if(otherTime.versions === versions){
+                    otherTime.versions = otherTime.versions.map(cloneVenueSessionVersion);
+                    return;
+                  }
                   const otherVersion = otherTime.versions[targetVersionIndex];
                   if(!otherVersion || !Array.isArray(otherVersion.tiers)) return;
-                  if(otherVersion.tiers.length > targetTierIndex){
-                    otherVersion.tiers.splice(targetTierIndex, 1);
-                  }
-                  if(otherVersion.tiers.length === 0){
-                    otherVersion.tiers.push(venueSessionCreateTier());
+                  if(otherVersion.tiers === tiers){
+                    otherVersion.tiers = otherVersion.tiers.map(cloneVenueSessionTier);
                   }
                 });
               } else if(sessionIndex > 0){
