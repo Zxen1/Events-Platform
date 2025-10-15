@@ -274,8 +274,16 @@
       cursor: pointer;
       display: block;
     }
-    .post-location-marker.is-dimmed{}
-    .post-location-marker.is-selected{}
+    .post-location-marker.is-dimmed{
+      filter: grayscale(100%);
+      opacity: 0.5;
+      transform: scale(0.9);
+    }
+    .post-location-marker.is-selected{
+      filter: none;
+      opacity: 1;
+      transform: scale(1.1);
+    }
 
     .map-card-label{
       justify-content: center;
@@ -2622,7 +2630,9 @@ button[aria-expanded="true"] .results-arrow{
 .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
   opacity:0.6;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
+  filter:grayscale(1);
+}
 .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
   color:inherit;
 }
@@ -3270,7 +3280,9 @@ body.filters-active #filterBtn{
   transition: filter .22s ease;
 }
 
-.thumb.lqip{}
+.thumb.lqip{
+  filter: none;
+}
 
 .meta{
   display: flex;
@@ -3473,7 +3485,9 @@ body.filters-active #filterBtn{
   box-shadow:none;
 }
 #memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
-#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{}
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none !important;
+}
 .map-control-row .mapboxgl-ctrl-geolocate button,
 .map-control-row .mapboxgl-ctrl-compass button{
   width:35px;
@@ -3507,7 +3521,9 @@ body.filters-active #filterBtn{
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button svg,
-.map-control-row .mapboxgl-ctrl-compass button svg{}
+.map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none;
+}
 
 .map-control-row .mapboxgl-ctrl-geocoder{
   background:#ffffff;
@@ -5125,10 +5141,16 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-.hero img.lqip{ transform .22s ease;
+.hero img.lqip{
+  filter: blur(10px);
+  transform: scale(1.02);
+  transition: filter .22s ease, transform .22s ease;
 }
 
-.hero img.ready{}
+.hero img.ready{
+  filter: none;
+  transform: none;
+}
 
 img.thumb{
   width: 80px;
@@ -10592,7 +10614,7 @@ function uniqueTitle(seed, cityName, idx){
   function mapboxVenueCacheKey(query, options={}){
     const normalized = (query || '').trim().toLowerCase();
     const limit = Number.isFinite(options.limit) ? options.limit : 0;
-    const types = typeof options.types === 'string' ? options.types : 'poi,place,address';
+    const types = typeof options.types === 'string' ? options.types : '';
     const prox = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
       ? `${options.proximity.longitude.toFixed(3)},${options.proximity.latitude.toFixed(3)}`
       : '';
@@ -15066,9 +15088,13 @@ function makePosts(){
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: addressPlaceholder,
+                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
                     // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
-                    types: 'poi,place,address',
+                    types: 'address,poi',
                     reverseGeocode: true,
+                    localGeocoder: localVenueGeocoder,
+                    externalGeocoder: externalMapboxVenueGeocoder,
+                    filter: majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
@@ -19815,8 +19841,8 @@ if (!map.__pillHooksInstalled) {
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19827,6 +19853,7 @@ if (!map.__pillHooksInstalled) {
               id,
               type:'symbol',
               source,
+              filter: filter || markerLabelFilter,
               minzoom: layerMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
@@ -24921,227 +24948,5 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 })();
 </script>
-<script>
-;(function(){
-  try {
-    if (window.MapboxGeocoder && !window.__funmap_geocoder_wrapped__) {
-      window.__funmap_geocoder_wrapped__ = true;
-      var OriginalGeocoder = window.MapboxGeocoder;
-      var GLOBAL_GEOCODER_DEFAULTS = {
-        types: 'poi,place,address',
-        marker: false,
-        limit: 10,
-        reverseGeocode: true,
-        language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined,
-        proximity: null,
-        bbox: null
-      };
-      window.MapboxGeocoder = function(options){
-        var merged = Object.assign({}, GLOBAL_GEOCODER_DEFAULTS, options || {});
-        // if caller tried to force proximity/bbox, keep null to avoid local-only bias
-        if ('proximity' in merged) merged.proximity = null;
-        if ('bbox' in merged) merged.bbox = null;
-        return new OriginalGeocoder(merged);
-      };
-      // keep plugin prototype chain
-      for (var k in OriginalGeocoder) { try { window.MapboxGeocoder[k] = OriginalGeocoder[k]; } catch(e){} }
-      window.MapboxGeocoder.prototype = OriginalGeocoder.prototype;
-    }
-  } catch(e) { console && console.warn && console.warn('Geocoder wrap failed', e); }
-})();
-</script>
-<script>
-;(function(){
-  try{
-    // auto-upscale canvases used for markers/pills by class or data attribute
-    var SCALE = (window.devicePixelRatio || 1);
-    if (SCALE <= 1) return;
-    var origGetContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function(type, opts){
-      var ctx = origGetContext.call(this, type, opts);
-      if (!ctx || type !== '2d') return ctx;
-      // detect likely marker/pill canvases by id/class/name hints
-      var isMarkerCanvas = /marker|pill|mapcard|label/i.test(this.id || '') || /marker|pill|mapcard|label/i.test(this.className || '');
-      if (!isMarkerCanvas && !this.hasAttribute('data-hidpi')) return ctx;
-      // upscale backing store once
-      if (!this.__hidpi_scaled__) {
-        this.__hidpi_scaled__ = true;
-        var cssW = this.width || this.clientWidth;
-        var cssH = this.height || this.clientHeight;
-        if (cssW && cssH) {
-          this.style.width = cssW + 'px';
-          this.style.height = cssH + 'px';
-          this.width = Math.round(cssW * SCALE);
-          this.height = Math.round(cssH * SCALE);
-          ctx.scale(SCALE, SCALE);
-        }
-        ctx.imageSmoothingEnabled = false;
-        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-      }
-      return ctx;
-    };
-  }catch(e){ console && console.warn && console.warn('HiDPI shim failed', e); }
-})();
-</script>
-<script>
-;(function(){
-  try{
-    // Remove transform wobble on big map cards
-    var cards = document.querySelectorAll('.big-map-card');
-    cards.forEach(function(card){
-      card.style.transform = 'none';
-      card.style.willChange = 'auto';
-    });
-    // Best-effort detach common listeners if bound
-    var events = ['mousemove','mouseenter','mouseleave'];
-    events.forEach(function(ev){
-      cards.forEach(function(card){
-        try{ card['on'+ev] = null; }catch(e){}
-      });
-    });
-    // Prevent future wobble: intercept addEventListener for big-map-card
-    var origAdd = Element.prototype.addEventListener;
-    Element.prototype.addEventListener = function(type, listener, options){
-      try{
-        if ((type === 'mousemove' || type === 'mouseenter' || type === 'mouseleave') &&
-            this && this.classList && this.classList.contains('big-map-card')) {
-          return; // block wobble handlers on big cards
-        }
-      }catch(e){}
-      return origAdd.call(this, type, listener, options);
-    };
-  }catch(e){ console && console.warn && console.warn('No-wobble shim failed', e); }
-})();
-</script>
-
-<script>
-(function(){
-  try{
-    function freeze(){ document.querySelectorAll('.big-map-card').forEach(function(c){ c.style.transform='none'; c.style.willChange='auto'; }); }
-    if (document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', freeze); } else { freeze(); }
-    var add=Element.prototype.addEventListener;
-    Element.prototype.addEventListener=function(t,fn,opt){
-      try{
-        if((t==='mousemove'||t==='mouseenter'||t==='mouseleave') && this && this.classList && this.classList.contains('big-map-card')){ return; }
-      }catch(e){}
-      return add.call(this,t,fn,opt);
-    };
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-(function(){
-  try{
-    if (window.mapboxgl && mapboxgl.Map && !mapboxgl.Map.__addImageHidpiPatched){
-      mapboxgl.Map.__addImageHidpiPatched = true;
-      var proto = mapboxgl.Map.prototype;
-      var orig = proto.addImage;
-      proto.addImage = function(name, image, options){
-        options = options || {};
-        if (options.pixelRatio == null) {
-          var pr = Math.max(1, Math.floor(window.devicePixelRatio||1));
-          options.pixelRatio = pr;
-        }
-        // preserve sdf/stretchX/rotate/etc if provided
-        return orig.call(this, name, image, options);
-      };
-    }
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-(function(){
-  try{
-    function freezeBigMapCards(){
-      document.querySelectorAll('.big-map-card').forEach(function(card){
-        card.style.transform = 'none';
-        card.style.willChange = 'auto';
-      });
-    }
-    if (document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', freezeBigMapCards);
-    } else {
-      freezeBigMapCards();
-    }
-    var _add = Element.prototype.addEventListener;
-    Element.prototype.addEventListener = function(type, listener, options){
-      try{
-        if((type==='mousemove'||type==='mouseenter'||type==='mouseleave') &&
-           this && this.classList && this.classList.contains('big-map-card')){
-          return; // block wobble handlers on big-map-card
-        }
-      }catch(e){}
-      return _add.call(this, type, listener, options);
-    };
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-(function(){
-  try{
-    if (window.mapboxgl && mapboxgl.Map && !mapboxgl.Map.__hidpiAddImagePatched) {
-      mapboxgl.Map.__hidpiAddImagePatched = true;
-      var proto = mapboxgl.Map.prototype;
-      var _addImage = proto.addImage;
-      proto.addImage = function(name, image, options){
-        options = options || {};
-        if (options.pixelRatio == null) {
-          var pr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-          options.pixelRatio = pr;
-        }
-        return _addImage.call(this, name, image, options);
-      };
-    }
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-(function(){
-  try{
-    var SCALE = (window.devicePixelRatio || 1);
-    if (SCALE <= 1) return;
-    var _getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function(type, opts){
-      var ctx = _getContext.call(this, type, opts);
-      if (!ctx || type !== '2d') return ctx;
-      var hint = (this.id||'') + ' ' + (this.className||'');
-      if (!/marker|pill|mapcard|label/i.test(hint) && !this.hasAttribute('data-hidpi')) return ctx;
-      if (!this.__hidpi_applied__){
-        this.__hidpi_applied__ = true;
-        var cssW = this.clientWidth || this.width;
-        var cssH = this.clientHeight || this.height;
-        if (cssW && cssH){
-          this.style.width = cssW + 'px';
-          this.style.height = cssH + 'px';
-          this.width = Math.round(cssW * SCALE);
-          this.height = Math.round(cssH * SCALE);
-          ctx.scale(SCALE, SCALE);
-        }
-        ctx.imageSmoothingEnabled = false;
-        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-      }
-      return ctx;
-    };
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-try {
-  MapboxGeocoder.prototype.endpoint = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
-} catch(e) {
-  console.warn('Failed to override Mapbox endpoint', e);
-}
-</script>
-
 </body>
 </html>
