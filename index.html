@@ -7370,26 +7370,26 @@ if (typeof slugify !== 'function') {
               font-weight:700;
             }
             .subcategory-field-overlay{
-              position:fixed;
-              inset:0;
+              position:absolute;
+              top:0;
+              left:0;
               display:none;
-              background:rgba(0,0,0,0.6);
+              background:transparent;
               z-index:200000;
+              pointer-events:none;
             }
             .subcategory-field-overlay.visible{
               display:block;
             }
             .subcategory-field-overlay-content{
               position:absolute;
-              max-height:calc(100vh - 32px);
-              overflow:auto;
               outline:none;
+              max-height:none;
+              overflow:visible;
+              pointer-events:auto;
             }
             .subcategory-field-overlay-content > .subcategory-field-row{
               margin:0;
-            }
-            body.subcategory-field-overlay-open{
-              overflow:hidden;
             }
             .subcategory-field-placeholder{
               display:none !important;
@@ -13562,6 +13562,10 @@ function makePosts(){
     let subcategoryFieldOverlayEl = null;
     let subcategoryFieldOverlayContent = null;
     let subcategoryFieldOverlayKeyHandler = null;
+    let subcategoryFieldOverlayPointerDownHandler = null;
+    let subcategoryFieldOverlayScrollHandler = null;
+    let subcategoryFieldOverlayResizeHandler = null;
+    let subcategoryFieldOverlayTrigger = null;
     function ensureSubcategoryFieldOverlay(){
       if(subcategoryFieldOverlayEl && subcategoryFieldOverlayContent) return subcategoryFieldOverlayEl;
       if(!document || !document.body) return null;
@@ -13571,14 +13575,8 @@ function makePosts(){
       const content = document.createElement('div');
       content.className = 'subcategory-field-overlay-content';
       content.setAttribute('role', 'dialog');
-      content.setAttribute('aria-modal', 'true');
       content.setAttribute('tabindex', '-1');
       overlay.appendChild(content);
-      overlay.addEventListener('pointerdown', event=>{
-        if(event.target === overlay){
-          closeSubcategoryFieldOverlay();
-        }
-      });
       document.body.appendChild(overlay);
       subcategoryFieldOverlayEl = overlay;
       subcategoryFieldOverlayContent = content;
@@ -13621,7 +13619,19 @@ function makePosts(){
       overlay.classList.remove('visible');
       overlay.removeAttribute('data-active-label');
       content.removeAttribute('aria-label');
-      document.body.classList.remove('subcategory-field-overlay-open');
+      if(subcategoryFieldOverlayPointerDownHandler){
+        document.removeEventListener('pointerdown', subcategoryFieldOverlayPointerDownHandler, true);
+        subcategoryFieldOverlayPointerDownHandler = null;
+      }
+      if(subcategoryFieldOverlayScrollHandler){
+        window.removeEventListener('scroll', subcategoryFieldOverlayScrollHandler, true);
+        subcategoryFieldOverlayScrollHandler = null;
+      }
+      if(subcategoryFieldOverlayResizeHandler){
+        window.removeEventListener('resize', subcategoryFieldOverlayResizeHandler);
+        subcategoryFieldOverlayResizeHandler = null;
+      }
+      subcategoryFieldOverlayTrigger = null;
     }
     function openSubcategoryFieldOverlay(row, labelText, triggerEl){
       if(!row) return;
@@ -13664,40 +13674,92 @@ function makePosts(){
         content.removeAttribute('aria-label');
         overlay.removeAttribute('data-active-label');
       }
+      const triggerButton = (triggerEl instanceof Element)
+        ? triggerEl.closest('.subcategory-form-button')
+        : null;
+      subcategoryFieldOverlayTrigger = triggerButton || (triggerEl instanceof Element ? triggerEl : null);
       overlay.classList.add('visible');
-      document.body.classList.add('subcategory-field-overlay-open');
       const alignOverlay = ()=>{
-        if(triggerEl && typeof triggerEl.getBoundingClientRect === 'function'){
-          const triggerRect = triggerEl.getBoundingClientRect();
-          const contentRect = content.getBoundingClientRect();
-          const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-          const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-          const buffer = 10;
-          let top = triggerRect.bottom + buffer;
-          const contentHeight = contentRect.height;
-          if(top + contentHeight > viewportHeight){
-            const aboveTop = triggerRect.top - buffer - contentHeight;
-            if(aboveTop >= buffer){
-              top = aboveTop;
-            } else {
-              top = Math.max(buffer, viewportHeight - contentHeight - buffer);
-            }
+        const buffer = 10;
+        const triggerNode = subcategoryFieldOverlayTrigger;
+        const scrollY = (typeof window !== 'undefined' && typeof window.pageYOffset === 'number')
+          ? window.pageYOffset
+          : (document.documentElement?.scrollTop || document.body?.scrollTop || 0);
+        const scrollX = (typeof window !== 'undefined' && typeof window.pageXOffset === 'number')
+          ? window.pageXOffset
+          : (document.documentElement?.scrollLeft || document.body?.scrollLeft || 0);
+        const viewportHeight = (typeof window !== 'undefined' && typeof window.innerHeight === 'number')
+          ? window.innerHeight
+          : (document.documentElement?.clientHeight || 0);
+        const viewportWidth = (typeof window !== 'undefined' && typeof window.innerWidth === 'number')
+          ? window.innerWidth
+          : (document.documentElement?.clientWidth || 0);
+        const contentRect = content.getBoundingClientRect();
+        const contentHeight = contentRect?.height || 0;
+        const contentWidth = contentRect?.width || 0;
+        let top = scrollY + buffer;
+        let left = scrollX + buffer;
+        if(triggerNode && typeof triggerNode.getBoundingClientRect === 'function'){
+          const triggerRect = triggerNode.getBoundingClientRect();
+          const minTop = scrollY + buffer;
+          let maxTop = scrollY + viewportHeight - contentHeight - buffer;
+          if(!Number.isFinite(maxTop) || maxTop < minTop){
+            maxTop = minTop;
           }
-          let left = triggerRect.left;
-          const contentWidth = contentRect.width;
-          if(left + contentWidth > viewportWidth - buffer){
-            left = viewportWidth - contentWidth - buffer;
+          let preferredTop = scrollY + triggerRect.top - buffer - contentHeight;
+          if(preferredTop < minTop){
+            preferredTop = scrollY + triggerRect.bottom + buffer;
           }
-          top = Math.max(buffer, top);
-          left = Math.max(buffer, left);
-          content.style.top = Math.round(top) + 'px';
-          content.style.left = Math.round(left) + 'px';
+          if(preferredTop > maxTop){
+            preferredTop = Math.max(minTop, Math.min(preferredTop, maxTop));
+          }
+          top = preferredTop;
+          const minLeft = scrollX + buffer;
+          let maxLeft = scrollX + viewportWidth - contentWidth - buffer;
+          if(!Number.isFinite(maxLeft) || maxLeft < minLeft){
+            maxLeft = minLeft;
+          }
+          let preferredLeft = scrollX + triggerRect.left;
+          if(preferredLeft > maxLeft){
+            preferredLeft = maxLeft;
+          }
+          if(preferredLeft < minLeft){
+            preferredLeft = minLeft;
+          }
+          left = preferredLeft;
+        }
+        content.style.top = Math.round(top) + 'px';
+        content.style.left = Math.round(left) + 'px';
+      };
+      const scheduleAlign = ()=>{
+        if(!overlay.classList.contains('visible')) return;
+        const run = ()=>{
+          if(!overlay.classList.contains('visible')) return;
+          alignOverlay();
+        };
+        if(typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'){
+          window.requestAnimationFrame(run);
         } else {
-          const buffer = 10;
-          content.style.top = buffer + 'px';
-          content.style.left = buffer + 'px';
+          setTimeout(run, 16);
         }
       };
+      const pointerDownHandler = event=>{
+        if(!overlay.classList.contains('visible')) return;
+        const target = event.target;
+        if(!target) return;
+        if(content.contains(target)) return;
+        const triggerNode = subcategoryFieldOverlayTrigger;
+        if(triggerNode && typeof triggerNode.contains === 'function' && triggerNode.contains(target)) return;
+        closeSubcategoryFieldOverlay();
+      };
+      document.addEventListener('pointerdown', pointerDownHandler, true);
+      subcategoryFieldOverlayPointerDownHandler = pointerDownHandler;
+      const onScroll = ()=> scheduleAlign();
+      const onResize = ()=> scheduleAlign();
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onResize);
+      subcategoryFieldOverlayScrollHandler = onScroll;
+      subcategoryFieldOverlayResizeHandler = onResize;
       requestAnimationFrame(()=>{
         alignOverlay();
         const focusTarget = row.querySelector('input, select, textarea, button:not([disabled])');
@@ -13713,6 +13775,7 @@ function makePosts(){
           }
         }
       });
+      scheduleAlign();
     }
     const refreshFormbuilderSubcategoryLogos = ()=>{
       if(!formbuilderCats) return;
