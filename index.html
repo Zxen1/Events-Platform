@@ -1,6 +1,26 @@
 <!doctype html> 
 <html lang="en">
 <head>
+
+<style id="crisp-map-cards">
+.small-map-card img,
+.small-multi-post-map-card img,
+.mapmarker,
+.map-card-pill{
+  image-rendering: auto;
+  -ms-interpolation-mode: nearest-neighbor;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+/* Prevent fractional CSS sizes that cause blur */
+.small-map-card,
+.small-multi-post-map-card,
+.mapmarker{
+  transform: translate3d(-20px, -20px, 0);
+}
+</style>
+
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Events Platform</title>
@@ -10614,7 +10634,7 @@ function uniqueTitle(seed, cityName, idx){
   function mapboxVenueCacheKey(query, options={}){
     const normalized = (query || '').trim().toLowerCase();
     const limit = Number.isFinite(options.limit) ? options.limit : 0;
-    const types = typeof options.types === 'string' ? options.types : '';
+    const types = typeof options.types === 'string' ? options.types : 'poi,place,address';
     const prox = options.proximity && Number.isFinite(options.proximity.longitude) && Number.isFinite(options.proximity.latitude)
       ? `${options.proximity.longitude.toFixed(3)},${options.proximity.latitude.toFixed(3)}`
       : '';
@@ -15090,7 +15110,7 @@ function makePosts(){
                     placeholder: addressPlaceholder,
                     geocodingUrl: MAPBOX_VENUE_ENDPOINT,
                     // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
-                    types: 'address,poi',
+                    types: 'poi,place,address',
                     reverseGeocode: true,
                     localGeocoder: localVenueGeocoder,
                     externalGeocoder: externalMapboxVenueGeocoder,
@@ -25040,5 +25060,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }catch(e){ console && console.warn && console.warn('No-wobble shim failed', e); }
 })();
 </script>
+
+<script>
+(function(){
+  try{
+    function freezeBigCards(){
+      document.querySelectorAll('.big-map-card').forEach(function(card){
+        card.style.transform = 'none';
+        card.style.willChange = 'auto';
+      });
+    }
+    if (document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', freezeBigCards);
+    } else {
+      freezeBigCards();
+    }
+    var add = Element.prototype.addEventListener;
+    Element.prototype.addEventListener = function(type, listener, options){
+      try{
+        if ((type === 'mousemove' || type === 'mouseenter' || type === 'mouseleave') &&
+            this && this.classList && this.classList.contains('big-map-card')){
+          return; // block wobble handlers on big-map-card only
+        }
+      }catch(e){}
+      return add.call(this, type, listener, options);
+    };
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>
