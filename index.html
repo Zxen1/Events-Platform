@@ -17343,7 +17343,29 @@ function makePosts(){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
+                let skipPreviewActivation = false;
+                labelButton.addEventListener('keydown', event => {
+                  if(event.key === 'Enter'){
+                    skipPreviewActivation = true;
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                });
+                labelButton.addEventListener('keyup', event => {
+                  if(event.key === 'Enter'){
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                });
+                labelButton.addEventListener('blur', ()=>{
+                  skipPreviewActivation = false;
+                });
                 labelButton.addEventListener('click', event=>{
+                  if(skipPreviewActivation){
+                    skipPreviewActivation = false;
+                    event.preventDefault();
+                    return;
+                  }
                   event.preventDefault();
                   let targetRow = previewField && previewField.__rowEl;
                   if(!targetRow || !targetRow.isConnected){
