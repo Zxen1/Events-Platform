@@ -15606,32 +15606,21 @@ function makePosts(){
                   sessionDetails.appendChild(timesList);
 
                   session.times.forEach((timeObj, timeIndex)=>{
-                    if(timeIndex === 0){
-                      timeObj.samePricingAsAbove = false;
+                    const isFirstSession = sessionIndex === 0;
+                    const isFirstTimeSlot = timeIndex === 0;
+                    if(isFirstTimeSlot){
                       timeObj.samePricingSourceIndex = 0;
+                      if(isFirstSession){
+                        timeObj.samePricingAsAbove = false;
+                      } else if(typeof timeObj.samePricingAsAbove !== 'boolean'){
+                        timeObj.samePricingAsAbove = true;
+                      }
                     } else {
                       if(typeof timeObj.samePricingAsAbove !== 'boolean'){
                         timeObj.samePricingAsAbove = true;
                       }
                       if(!Number.isInteger(timeObj.samePricingSourceIndex) || timeObj.samePricingSourceIndex < 0){
                         timeObj.samePricingSourceIndex = 0;
-                      }
-                      const baseIndex = Number.isInteger(timeObj.samePricingSourceIndex) && timeObj.samePricingSourceIndex >= 0
-                        ? timeObj.samePricingSourceIndex
-                        : 0;
-                      const referenceTime = session.times[baseIndex] || session.times[0];
-                      if(timeObj.samePricingAsAbove){
-                        if(referenceTime && referenceTime !== timeObj){
-                          timeObj.versions = referenceTime.versions;
-                        }
-                      } else {
-                        const reference = referenceTime || session.times[0];
-                        if(reference && timeObj.versions === reference.versions){
-                          timeObj.versions = reference.versions.map(cloneVenueSessionVersion);
-                        }
-                        if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
-                          timeObj.versions = [venueSessionCreateVersion()];
-                        }
                       }
                     }
                     const timeRow = document.createElement('div');
@@ -15705,6 +15694,25 @@ function makePosts(){
                       const fallback = session.times[0];
                       return fallback && fallback !== timeObj ? fallback : null;
                     };
+
+                    const initialReference = getSamePricingReference();
+                    if(timeObj.samePricingAsAbove === true && initialReference && initialReference !== timeObj){
+                      timeObj.samePricingSourceIndex = 0;
+                      timeObj.versions = initialReference.versions;
+                      if(sessionIndex > 0){
+                        timeObj.tierAutofillLocked = true;
+                      }
+                    } else {
+                      if(initialReference && timeObj.versions === initialReference.versions){
+                        timeObj.versions = initialReference.versions.map(cloneVenueSessionVersion);
+                      }
+                      if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
+                        timeObj.versions = [venueSessionCreateVersion()];
+                      }
+                      if(sessionIndex > 0 && timeObj.samePricingAsAbove !== true){
+                        timeObj.tierAutofillLocked = false;
+                      }
+                    }
 
                     const updateSamePricingUI = ()=>{
                       const referenceTime = getSamePricingReference();
