@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events Platform</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.16.1/mapbox-gl.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.css" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.16.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.1/mapbox-gl-geocoder.min.js"></script>
+  <script>
+    mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [144.9631, -37.8136],
+      zoom: 12
+    });
+
+    // universal geocoder configuration
+    const globalGeocoderOptions = {
+      accessToken: mapboxgl.accessToken,
+      mapboxgl,
+      placeholder: 'Search venues or places',
+      types: 'poi,place,address',
+      marker: false,
+      limit: 10,
+      reverseGeocode: true,
+      language: navigator.language,
+      proximity: null,
+      bbox: null
+    };
+
+    // automatically apply to all current and future geocoders
+    const originalGeocoder = window.MapboxGeocoder;
+    window.MapboxGeocoder = function(opts) {
+      return new originalGeocoder(Object.assign({}, globalGeocoderOptions, opts));
+    };
+
+    // create example geocoder on map
+    const mainGeocoder = new MapboxGeocoder(globalGeocoderOptions);
+    map.addControl(mainGeocoder, 'top-right');
+
+    // crisp icons rendering example
+    function drawIcon(ctx, image, x, y, width, height) {
+      const scale = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(image, x / scale, y / scale, width / scale, height / scale);
+      ctx.restore();
+    }
+
+    map.on('load', () => {
+      // ensure all big-map-cards remain static (no wobble)
+      document.querySelectorAll('.big-map-card').forEach(card => {
+        card.style.transform = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
