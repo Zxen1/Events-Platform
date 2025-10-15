@@ -7373,25 +7373,17 @@ if (typeof slugify !== 'function') {
               position:fixed;
               inset:0;
               display:none;
-              align-items:center;
-              justify-content:center;
-              padding:24px;
               background:rgba(0,0,0,0.6);
               z-index:200000;
             }
             .subcategory-field-overlay.visible{
-              display:flex;
+              display:block;
             }
             .subcategory-field-overlay-content{
-              width:min(720px, calc(100% - 32px));
-              max-height:calc(100vh - 64px);
+              position:absolute;
+              max-height:calc(100vh - 32px);
               overflow:auto;
               outline:none;
-              border-radius:12px;
-              box-shadow:0 24px 60px rgba(0,0,0,0.55);
-              background:rgba(14,14,23,0.92);
-              border:1px solid var(--border);
-              padding:16px;
             }
             .subcategory-field-overlay-content > .subcategory-field-row{
               margin:0;
@@ -13623,12 +13615,15 @@ function makePosts(){
         delete activeRow.__overlayOverlay;
       }
       content.innerHTML = '';
+      content.style.top = '';
+      content.style.left = '';
+      content.style.width = '';
       overlay.classList.remove('visible');
       overlay.removeAttribute('data-active-label');
       content.removeAttribute('aria-label');
       document.body.classList.remove('subcategory-field-overlay-open');
     }
-    function openSubcategoryFieldOverlay(row, labelText){
+    function openSubcategoryFieldOverlay(row, labelText, triggerEl){
       if(!row) return;
       const overlay = ensureSubcategoryFieldOverlay();
       const content = subcategoryFieldOverlayContent;
@@ -13642,12 +13637,26 @@ function makePosts(){
       if(!row.parentNode) return;
       const placeholder = document.createElement('div');
       placeholder.className = 'subcategory-field-placeholder';
+      const rowRect = row.getBoundingClientRect();
+      if(rowRect && rowRect.width){
+        const storedWidth = Math.round(rowRect.width);
+        if(storedWidth > 0){
+          placeholder.__overlayWidth = storedWidth;
+          placeholder.style.width = storedWidth + 'px';
+        }
+      }
       row.__overlayPlaceholder = placeholder;
       row.__overlayParent = row.parentNode;
       row.__overlayOverlay = overlay;
       row.parentNode.insertBefore(placeholder, row);
       content.innerHTML = '';
       content.appendChild(row);
+      const placeholderWidth = placeholder.__overlayWidth;
+      if(placeholderWidth){
+        content.style.width = placeholderWidth + 'px';
+      } else {
+        content.style.width = '';
+      }
       if(labelText){
         content.setAttribute('aria-label', labelText);
         overlay.setAttribute('data-active-label', labelText);
@@ -13657,7 +13666,40 @@ function makePosts(){
       }
       overlay.classList.add('visible');
       document.body.classList.add('subcategory-field-overlay-open');
+      const alignOverlay = ()=>{
+        if(triggerEl && typeof triggerEl.getBoundingClientRect === 'function'){
+          const triggerRect = triggerEl.getBoundingClientRect();
+          const contentRect = content.getBoundingClientRect();
+          const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+          const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+          const buffer = 10;
+          let top = triggerRect.bottom + buffer;
+          const contentHeight = contentRect.height;
+          if(top + contentHeight > viewportHeight){
+            const aboveTop = triggerRect.top - buffer - contentHeight;
+            if(aboveTop >= buffer){
+              top = aboveTop;
+            } else {
+              top = Math.max(buffer, viewportHeight - contentHeight - buffer);
+            }
+          }
+          let left = triggerRect.left;
+          const contentWidth = contentRect.width;
+          if(left + contentWidth > viewportWidth - buffer){
+            left = viewportWidth - contentWidth - buffer;
+          }
+          top = Math.max(buffer, top);
+          left = Math.max(buffer, left);
+          content.style.top = Math.round(top) + 'px';
+          content.style.left = Math.round(left) + 'px';
+        } else {
+          const buffer = 10;
+          content.style.top = buffer + 'px';
+          content.style.left = buffer + 'px';
+        }
+      };
       requestAnimationFrame(()=>{
+        alignOverlay();
         const focusTarget = row.querySelector('input, select, textarea, button:not([disabled])');
         if(focusTarget && typeof focusTarget.focus === 'function'){
           try{ focusTarget.focus({ preventScroll: true }); }
@@ -16998,7 +17040,7 @@ function makePosts(){
                     targetRow = Array.from(fieldsList.querySelectorAll('.subcategory-field-row')).find(row => row.__fieldRef === previewField) || targetRow;
                   }
                   if(targetRow && typeof openSubcategoryFieldOverlay === 'function'){
-                    openSubcategoryFieldOverlay(targetRow, labelText);
+                    openSubcategoryFieldOverlay(targetRow, labelText, event.currentTarget || event.target);
                   }
                 });
                 if(previewField.required){
