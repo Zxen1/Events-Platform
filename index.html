@@ -1932,8 +1932,20 @@ button[aria-expanded="true"] .results-arrow{
   color:var(--button-text);
   cursor:pointer;
 }
+#memberPanel .tab-bar{display:flex;gap:6px;margin-top:8px;}
+#memberPanel .tab-bar .tab-btn{
+  flex:1;
+  padding:6px 10px;
+  border-radius:8px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  cursor:pointer;
+}
 #adminPanel .tab-panel{display:none;}
 #adminPanel .tab-panel.active{display:flex;flex-direction:column;align-items:flex-start;gap:12px;}
+#memberPanel .member-tab-panel{display:none;}
+#memberPanel .member-tab-panel.active{display:flex;flex-direction:column;gap:12px;}
 #adminPanel .marker-grid{display:flex;flex-direction:column;gap:8px;}
 #adminPanel .marker-grid select{min-width:120px;}
 #adminPanel .marker-options{display:flex;gap:8px;align-items:center;}
@@ -5956,44 +5968,53 @@ if (typeof slugify !== 'function') {
             <button type="button" class="close-panel">Close</button>
           </div>
         </div>
+        <div class="tab-bar" role="tablist" aria-label="Member sections">
+          <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create">Create Post</button>
+          <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts">My Posts</button>
+          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile">Profile</button>
+        </div>
       </div>
       <form id="memberForm" class="panel-body" novalidate>
-        <div class="member-auth" data-state="logged-out">
-          <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
-            <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
-            <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
-          </div>
-          <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
-            <label for="memberLoginEmail">Email</label>
-            <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
-            <label for="memberLoginPassword">Password</label>
-            <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
-            <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
-          </section>
-          <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
-            <label for="memberRegisterName">Display Name</label>
-            <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
-            <label for="memberRegisterEmail">Email</label>
-            <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
-            <label for="memberRegisterPassword">Password</label>
-            <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
-            <label for="memberRegisterAvatar">Avatar URL</label>
-            <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
-            <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
-          </section>
-          <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
-            <div class="member-profile">
-              <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
-              <div class="member-profile-details">
-                <p id="memberProfileName" class="member-profile-name"></p>
-                <p id="memberProfileEmail" class="member-profile-email"></p>
+        <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden></section>
+        <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
+        <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
+          <div class="member-auth" data-state="logged-out">
+            <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
+              <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
+              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
+            </div>
+            <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
+              <label for="memberLoginEmail">Email</label>
+              <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
+              <label for="memberLoginPassword">Password</label>
+              <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
+              <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
+            </section>
+            <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
+              <label for="memberRegisterName">Display Name</label>
+              <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
+              <label for="memberRegisterEmail">Email</label>
+              <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
+              <label for="memberRegisterPassword">Password</label>
+              <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
+              <label for="memberRegisterAvatar">Avatar URL</label>
+              <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
+              <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
+            </section>
+            <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
+              <div class="member-profile">
+                <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
+                <div class="member-profile-details">
+                  <p id="memberProfileName" class="member-profile-name"></p>
+                  <p id="memberProfileEmail" class="member-profile-email"></p>
+                </div>
               </div>
-            </div>
-            <div class="member-profile-actions">
-              <button type="button" class="tiny" id="memberLogoutBtn">Log Out</button>
-            </div>
-          </section>
-        </div>
+              <div class="member-profile-actions">
+                <button type="button" class="tiny" id="memberLogoutBtn">Log Out</button>
+              </div>
+            </section>
+          </div>
+        </section>
       </form>
     </div>
   </div>
@@ -24557,6 +24578,24 @@ document.addEventListener('pointerdown', (e) => {
       btn.setAttribute('aria-selected','true');
       const panel = document.getElementById(`tab-${btn.dataset.tab}`);
       panel && panel.classList.add('active');
+    });
+  });
+
+  const memberTabs = document.querySelectorAll('#memberPanel .tab-bar .tab-btn');
+  const memberPanels = document.querySelectorAll('#memberPanel .member-tab-panel');
+  memberTabs.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      memberTabs.forEach(b=>b.setAttribute('aria-selected','false'));
+      memberPanels.forEach(p=>{
+        p.classList.remove('active');
+        p.setAttribute('hidden','');
+      });
+      btn.setAttribute('aria-selected','true');
+      const panel = document.getElementById(`memberTab-${btn.dataset.tab}`);
+      if(panel){
+        panel.classList.add('active');
+        panel.removeAttribute('hidden');
+      }
     });
   });
 
