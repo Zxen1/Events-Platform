@@ -5102,7 +5102,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     flex:0 0 auto;
   }
 
-  .copy-msg{ 
+  .copy-msg{
     position:absolute;
     background:rgba(0,0,0,0.8);
     color:#fff;
@@ -5111,6 +5111,7 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
     opacity:0;
     transition:opacity .3s;
     pointer-events:none;
+    z-index:10000;
   }
   .copy-msg.show{opacity:1;}
 
@@ -11186,6 +11187,48 @@ function uniqueTitle(seed, cityName, idx){
     setTimeout(()=>msg.remove(),1500);
   }
 
+  function showCopyStyleMessage(text, target){
+    if(!target || typeof target.getBoundingClientRect !== 'function') return null;
+    const msg = document.createElement('div');
+    msg.className = 'copy-msg';
+    msg.textContent = text;
+    document.body.appendChild(msg);
+
+    let removed = false;
+    const remove = ()=>{
+      if(removed) return;
+      removed = true;
+      if(msg && msg.parentNode){
+        msg.remove();
+      }
+    };
+
+    const reposition = ()=>{
+      if(!target || typeof target.getBoundingClientRect !== 'function'){
+        remove();
+        return;
+      }
+      if(document.body && !document.body.contains(target)){
+        remove();
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const msgRect = msg.getBoundingClientRect();
+      const top = rect.top + window.scrollY + (rect.height - msgRect.height) / 2;
+      const left = rect.left + window.scrollX + (rect.width - msgRect.width) / 2;
+      msg.style.top = `${top}px`;
+      msg.style.left = `${left}px`;
+    };
+
+    reposition();
+    requestAnimationFrame(()=>{
+      reposition();
+      msg.classList.add('show');
+    });
+
+    return { element: msg, remove, reposition };
+  }
+
 function makePosts(){
   const out = [];
   const cityCounts = Object.create(null);
@@ -13912,13 +13955,42 @@ function makePosts(){
 
             const currencyAlertMessage = 'Please select a currency before entering a price.';
             let lastCurrencyAlertTimestamp = 0;
-            const showCurrencyAlert = ()=>{
+            let activeCurrencyAlert = null;
+            let activeCurrencyAlertTimeout = 0;
+            const showCurrencyAlert = target => {
+              const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                ? target
+                : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                  ? document.activeElement
+                  : null);
+              const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+              if(!inputEl) return;
               const now = Date.now();
-              if(now - lastCurrencyAlertTimestamp < 400) return;
+              if(now - lastCurrencyAlertTimestamp < 400){
+                if(activeCurrencyAlert && typeof activeCurrencyAlert.reposition === 'function'){
+                  activeCurrencyAlert.reposition();
+                }
+                return;
+              }
               lastCurrencyAlertTimestamp = now;
-              try{
-                window.alert(currencyAlertMessage);
-              }catch(err){}
+              if(activeCurrencyAlertTimeout){
+                clearTimeout(activeCurrencyAlertTimeout);
+                activeCurrencyAlertTimeout = 0;
+              }
+              if(activeCurrencyAlert && typeof activeCurrencyAlert.remove === 'function'){
+                activeCurrencyAlert.remove();
+                activeCurrencyAlert = null;
+              }
+              const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
+              if(!handle) return;
+              activeCurrencyAlert = handle;
+              activeCurrencyAlertTimeout = window.setTimeout(()=>{
+                handle.remove();
+                if(activeCurrencyAlert === handle){
+                  activeCurrencyAlert = null;
+                }
+                activeCurrencyAlertTimeout = 0;
+              }, 1500);
             };
 
             const sanitizeSessionPriceValue = value => {
@@ -15852,7 +15924,7 @@ function makePosts(){
                                 try{ priceInput.blur(); }catch(err){}
                               });
                             }
-                            showCurrencyAlert();
+                            showCurrencyAlert(priceInput);
                             return true;
                           };
 
@@ -15893,7 +15965,7 @@ function makePosts(){
                             if(event){
                               event.preventDefault();
                             }
-                            showCurrencyAlert();
+                            showCurrencyAlert(priceInput);
                           });
                           priceInput.addEventListener('pointerdown', blockPriceAccess);
                           priceInput.addEventListener('focus', blockPriceAccess);
@@ -16214,13 +16286,42 @@ function makePosts(){
                   let firstId = null;
                   const currencyAlertMessage = 'Please select a currency before entering a price.';
                   let lastCurrencyAlertAt = 0;
-                  const showCurrencyAlert = ()=>{
+                  let currencyAlertHandle = null;
+                  let currencyAlertTimeout = 0;
+                  const showCurrencyAlert = target => {
+                    const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                      ? target
+                      : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                        ? document.activeElement
+                        : null);
+                    const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+                    if(!inputEl) return;
                     const now = Date.now();
-                    if(now - lastCurrencyAlertAt < 400) return;
+                    if(now - lastCurrencyAlertAt < 400){
+                      if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
+                        currencyAlertHandle.reposition();
+                      }
+                      return;
+                    }
                     lastCurrencyAlertAt = now;
-                    try{
-                      window.alert(currencyAlertMessage);
-                    }catch(err){}
+                    if(currencyAlertTimeout){
+                      clearTimeout(currencyAlertTimeout);
+                      currencyAlertTimeout = 0;
+                    }
+                    if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
+                      currencyAlertHandle.remove();
+                      currencyAlertHandle = null;
+                    }
+                    const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
+                    if(!handle) return;
+                    currencyAlertHandle = handle;
+                    currencyAlertTimeout = window.setTimeout(()=>{
+                      handle.remove();
+                      if(currencyAlertHandle === handle){
+                        currencyAlertHandle = null;
+                      }
+                      currencyAlertTimeout = 0;
+                    }, 1500);
                   };
                   previewField.options.forEach((optionValue, optionIndex)=>{
                     const optionRow = document.createElement('div');
@@ -16343,7 +16444,7 @@ function makePosts(){
                           try{ priceInput.blur(); }catch(err){}
                         });
                       }
-                      showCurrencyAlert();
+                      showCurrencyAlert(priceInput);
                       return true;
                     };
                     currencySelect.addEventListener('change', ()=>{
