@@ -13798,7 +13798,16 @@ function makePosts(){
       subcategoryFieldOverlayResizeHandler = onResize;
       requestAnimationFrame(()=>{
         alignOverlay();
-        const focusTarget = row.querySelector('input, select, textarea, button:not([disabled])');
+        const focusSelectors = [
+          'input:not([disabled]):not([tabindex="-1"])',
+          'select:not([disabled]):not([tabindex="-1"])',
+          'textarea:not([disabled]):not([tabindex="-1"])',
+          'button:not([disabled]):not([tabindex="-1"])',
+          '[href]:not([tabindex="-1"])',
+          '[tabindex]:not([tabindex="-1"])',
+          '[contenteditable="true"]'
+        ].join(', ');
+        const focusTarget = row.querySelector(focusSelectors);
         if(focusTarget && typeof focusTarget.focus === 'function'){
           try{ focusTarget.focus({ preventScroll: true }); }
           catch(err){
@@ -17343,29 +17352,7 @@ function makePosts(){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
-                let skipPreviewActivation = false;
-                labelButton.addEventListener('keydown', event => {
-                  if(event.key === 'Enter'){
-                    skipPreviewActivation = true;
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }
-                });
-                labelButton.addEventListener('keyup', event => {
-                  if(event.key === 'Enter'){
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }
-                });
-                labelButton.addEventListener('blur', ()=>{
-                  skipPreviewActivation = false;
-                });
                 labelButton.addEventListener('click', event=>{
-                  if(skipPreviewActivation){
-                    skipPreviewActivation = false;
-                    event.preventDefault();
-                    return;
-                  }
                   event.preventDefault();
                   let targetRow = previewField && previewField.__rowEl;
                   if(!targetRow || !targetRow.isConnected){
