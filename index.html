@@ -6486,6 +6486,10 @@ if (typeof slugify !== 'function') {
               background:#2e3a72 !important;
               color:var(--button-text);
             }
+            #tab-forms .session-time-input{
+              background:#2e3a72 !important;
+              color:var(--button-text);
+            }
             #tab-forms .session-date-input-wrapper{
               position:relative;
               display:flex;
@@ -14203,6 +14207,11 @@ function makePosts(){
               });
             };
 
+            const cloneVersionsFromTime = sourceTime => {
+              const versions = sourceTime && Array.isArray(sourceTime.versions) ? sourceTime.versions : [];
+              return versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
+            };
+
             const cloneSessionTimesFromFirst = (venue, targetSession)=>{
               if(!venue || !targetSession) return;
               if(isSessionMirrorLocked(venue)) return;
@@ -14225,7 +14234,7 @@ function makePosts(){
                   if(index === 0){
                     if(referenceFirstTime){
                       time.samePricingAsAbove = true;
-                      time.versions = referenceFirstTime.versions;
+                      time.versions = cloneVersionsFromTime(referenceFirstTime);
                       time.tierAutofillLocked = true;
                     } else {
                       time.samePricingAsAbove = false;
@@ -14238,7 +14247,7 @@ function makePosts(){
                   if(index > 0){
                     time.samePricingAsAbove = true;
                     if(targetFirstTime && targetFirstTime !== time){
-                      time.versions = targetFirstTime.versions;
+                      time.versions = cloneVersionsFromTime(targetFirstTime);
                     }
                     time.tierAutofillLocked = true;
                   }
@@ -14402,7 +14411,7 @@ function makePosts(){
                 if(index === 0){
                   if(primaryFirstTime){
                     time.samePricingAsAbove = true;
-                    time.versions = primaryFirstTime.versions;
+                    time.versions = cloneVersionsFromTime(primaryFirstTime);
                     time.tierAutofillLocked = true;
                   } else {
                     time.samePricingAsAbove = false;
@@ -14413,9 +14422,9 @@ function makePosts(){
                   const baseTime = newSession.times[0];
                   if(primaryTimes[index]){
                     const referenceTime = primaryTimes[index];
-                    time.versions = referenceTime.versions;
+                    time.versions = cloneVersionsFromTime(referenceTime);
                   } else if(baseTime && baseTime !== time){
-                    time.versions = baseTime.versions;
+                    time.versions = cloneVersionsFromTime(baseTime);
                   }
                   time.tierAutofillLocked = true;
                 }
@@ -14465,7 +14474,7 @@ function makePosts(){
                   newTime.samePricingAsAbove = true;
                   const baseReference = sess.times[0];
                   if(baseReference && baseReference !== newTime){
-                    newTime.versions = baseReference.versions;
+                    newTime.versions = cloneVersionsFromTime(baseReference);
                   }
                 }
                 if(venueCurrency && Array.isArray(newTime.versions)){
@@ -14537,6 +14546,7 @@ function makePosts(){
 
             const addVersion = (venue, venueIndex, sessionIndex, timeIndex, afterIndex)=>{
               const time = venue.sessions[sessionIndex].times[timeIndex];
+              const timeVersionsRef = time.versions;
               const newVersion = venueSessionCreateVersion();
               const venueCurrency = getVenueCurrencyValue(venue);
               if(venueCurrency && Array.isArray(newVersion.tiers)){
@@ -14551,6 +14561,12 @@ function makePosts(){
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
+                  if(!Array.isArray(otherTime.versions)){
+                    otherTime.versions = [venueSessionCreateVersion()];
+                  }
+                  if(otherTime.versions === timeVersionsRef){
+                    return;
+                  }
                   const clone = cloneVenueSessionVersion(newVersion);
                   otherTime.versions.splice(afterIndex + 1, 0, clone);
                 });
@@ -14586,6 +14602,7 @@ function makePosts(){
 
             const addTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, afterIndex)=>{
               const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
+              const versionTiersRef = version.tiers;
               const newTier = venueSessionCreateTier();
               const venueCurrency = getVenueCurrencyValue(venue);
               if(venueCurrency){
@@ -14601,6 +14618,9 @@ function makePosts(){
                   }
                   const otherVersion = otherVersions[versionIndex];
                   if(!otherVersion) return;
+                  if(otherVersion === version || otherVersion.tiers === versionTiersRef){
+                    return;
+                  }
                   const clone = cloneVenueSessionTier(newTier);
                   otherVersion.tiers.splice(afterIndex + 1, 0, clone);
                 });
