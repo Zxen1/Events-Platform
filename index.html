@@ -14640,14 +14640,17 @@ function makePosts(){
                   session.times = sanitizedTimes.length ? [sanitizedTimes[0]] : [venueSessionCreateTime()];
                   const firstTime = session.times[0];
                   if(firstTime){
-                    firstTime.samePricingAsAbove = false;
-                    firstTime.samePricingSourceIndex = 0;
+                    if(typeof firstTime.samePricingAsAbove !== 'boolean'){
+                      firstTime.samePricingAsAbove = false;
+                    }
+                    if(!Number.isInteger(firstTime.samePricingSourceIndex) || firstTime.samePricingSourceIndex < 0){
+                      firstTime.samePricingSourceIndex = 0;
+                    }
                   }
                   return;
                 }
                 requiresLock = true;
                 const primaryTime = cloneVenueSessionTime(sanitizedTimes[0]);
-                primaryTime.samePricingAsAbove = false;
                 primaryTime.samePricingSourceIndex = 0;
                 primaryTime.tierAutofillLocked = !!primaryTime.tierAutofillLocked;
                 session.times = [primaryTime];
@@ -14657,7 +14660,6 @@ function makePosts(){
                   cloneSession.times = [cloneVenueSessionTime(sanitizedTimes[i])];
                   const firstCloneTime = cloneSession.times[0];
                   if(firstCloneTime){
-                    firstCloneTime.samePricingAsAbove = false;
                     firstCloneTime.samePricingSourceIndex = 0;
                     firstCloneTime.tierAutofillLocked = !!firstCloneTime.tierAutofillLocked;
                   }
