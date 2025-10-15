@@ -14214,6 +14214,36 @@ function makePosts(){
               const times = Array.isArray(template.times) ? template.times : [];
               targetSession.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
               targetSession.date = preservedDate;
+              const referenceTimes = times;
+              const referenceFirstTime = referenceTimes[0];
+              if(targetSession.times.length === 0){
+                targetSession.times.push(venueSessionCreateTime());
+              }
+              if(targetSession !== template){
+                targetSession.times.forEach((time, index)=>{
+                  time.samePricingSourceIndex = 0;
+                  if(index === 0){
+                    if(referenceFirstTime){
+                      time.samePricingAsAbove = true;
+                      time.versions = referenceFirstTime.versions;
+                      time.tierAutofillLocked = true;
+                    } else {
+                      time.samePricingAsAbove = false;
+                      time.tierAutofillLocked = false;
+                    }
+                  }
+                });
+                const targetFirstTime = targetSession.times[0];
+                targetSession.times.forEach((time, index)=>{
+                  if(index > 0){
+                    time.samePricingAsAbove = true;
+                    if(targetFirstTime && targetFirstTime !== time){
+                      time.versions = targetFirstTime.versions;
+                    }
+                    time.tierAutofillLocked = true;
+                  }
+                });
+              }
             };
 
             const applyAutofillToSession = (venue, session)=>{
@@ -14364,16 +14394,30 @@ function makePosts(){
               while(newSession.times.length < maxTimes){
                 newSession.times.push(venueSessionCreateTime());
               }
+              const primarySession = sessions[0];
+              const primaryTimes = Array.isArray(primarySession?.times) ? primarySession.times : [];
+              const primaryFirstTime = primaryTimes[0];
               newSession.times.forEach((time, index)=>{
                 time.samePricingSourceIndex = 0;
                 if(index === 0){
-                  time.samePricingAsAbove = false;
+                  if(primaryFirstTime){
+                    time.samePricingAsAbove = true;
+                    time.versions = primaryFirstTime.versions;
+                    time.tierAutofillLocked = true;
+                  } else {
+                    time.samePricingAsAbove = false;
+                    time.tierAutofillLocked = false;
+                  }
                 } else {
                   time.samePricingAsAbove = true;
                   const baseTime = newSession.times[0];
-                  if(baseTime && baseTime !== time){
+                  if(primaryTimes[index]){
+                    const referenceTime = primaryTimes[index];
+                    time.versions = referenceTime.versions;
+                  } else if(baseTime && baseTime !== time){
                     time.versions = baseTime.versions;
                   }
+                  time.tierAutofillLocked = true;
                 }
               });
               const venueCurrency = getVenueCurrencyValue(venue);
@@ -15637,17 +15681,46 @@ function makePosts(){
                     let samePricingRow = null;
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
+                    const showSamePricingOptions = sessionIndex > 0 || timeIndex > 0;
+
+                    const getSamePricingReference = ()=>{
+                      if(timeIndex > 0){
+                        const firstTime = session.times[0];
+                        return firstTime && firstTime !== timeObj ? firstTime : null;
+                      }
+                      if(sessionIndex > 0){
+                        const referenceSession = Array.isArray(venue.sessions) ? venue.sessions[0] : null;
+                        if(referenceSession && referenceSession !== session){
+                          const referenceTimes = Array.isArray(referenceSession.times) ? referenceSession.times : [];
+                          const referenceByIndex = referenceTimes[timeIndex];
+                          if(referenceByIndex && referenceByIndex !== timeObj){
+                            return referenceByIndex;
+                          }
+                          const fallbackReference = referenceTimes[0];
+                          if(fallbackReference && fallbackReference !== timeObj){
+                            return fallbackReference;
+                          }
+                        }
+                      }
+                      const fallback = session.times[0];
+                      return fallback && fallback !== timeObj ? fallback : null;
+                    };
 
                     const updateSamePricingUI = ()=>{
-                      const isSamePricing = timeIndex > 0 && timeObj.samePricingAsAbove === true;
+                      const referenceTime = getSamePricingReference();
+                      const isSamePricing = showSamePricingOptions && referenceTime && referenceTime !== timeObj && timeObj.samePricingAsAbove === true;
                       versionList.hidden = isSamePricing;
                       versionList.style.display = isSamePricing ? 'none' : '';
                       timeRow.classList.toggle('has-same-pricing', isSamePricing);
+                      if(samePricingRow){
+                        samePricingRow.hidden = !showSamePricingOptions;
+                        samePricingRow.style.display = showSamePricingOptions ? '' : 'none';
+                      }
                       if(samePricingYesInput){
-                        samePricingYesInput.checked = isSamePricing;
+                        samePricingYesInput.checked = showSamePricingOptions && timeObj.samePricingAsAbove === true;
                       }
                       if(samePricingNoInput){
-                        samePricingNoInput.checked = !isSamePricing;
+                        samePricingNoInput.checked = showSamePricingOptions && timeObj.samePricingAsAbove !== true;
                       }
                     };
 
@@ -16006,18 +16079,18 @@ function makePosts(){
                       if(sessionIndex > 0){
                         lockSessionMirror(venue);
                       }
-                      const baseTime = session.times[0];
-                      if(shouldMatch && baseTime && baseTime !== timeObj){
+                      const referenceTime = getSamePricingReference();
+                      const canApplyReference = shouldMatch && referenceTime && referenceTime !== timeObj;
+                      if(canApplyReference){
                         timeObj.samePricingAsAbove = true;
                         timeObj.samePricingSourceIndex = 0;
-                        timeObj.versions = baseTime.versions;
+                        timeObj.versions = referenceTime.versions;
                         timeObj.tierAutofillLocked = true;
                       } else {
                         timeObj.samePricingAsAbove = false;
                         timeObj.samePricingSourceIndex = 0;
-                        const reference = session.times[0];
-                        if(reference && timeObj.versions === reference.versions){
-                          timeObj.versions = reference.versions.map(cloneVenueSessionVersion);
+                        if(referenceTime && timeObj.versions === referenceTime.versions){
+                          timeObj.versions = referenceTime.versions.map(cloneVenueSessionVersion);
                         }
                         if(!Array.isArray(timeObj.versions) || timeObj.versions.length === 0){
                           timeObj.versions = [venueSessionCreateVersion()];
@@ -16029,7 +16102,7 @@ function makePosts(){
                       updateSamePricingUI();
                     };
 
-                    if(timeIndex > 0){
+                    if(showSamePricingOptions){
                       samePricingRow = document.createElement('div');
                       samePricingRow.className = 'same-pricing-row';
                       const samePricingLabel = document.createElement('span');
