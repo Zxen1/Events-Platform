@@ -25052,5 +25052,96 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 
+
+<script>
+(function(){
+  try{
+    function freezeBigMapCards(){
+      document.querySelectorAll('.big-map-card').forEach(function(card){
+        card.style.transform = 'none';
+        card.style.willChange = 'auto';
+      });
+    }
+    if (document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', freezeBigMapCards);
+    } else {
+      freezeBigMapCards();
+    }
+    var _add = Element.prototype.addEventListener;
+    Element.prototype.addEventListener = function(type, listener, options){
+      try{
+        if((type==='mousemove'||type==='mouseenter'||type==='mouseleave') &&
+           this && this.classList && this.classList.contains('big-map-card')){
+          return; // block wobble handlers on big-map-card
+        }
+      }catch(e){}
+      return _add.call(this, type, listener, options);
+    };
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  try{
+    if (window.mapboxgl && mapboxgl.Map && !mapboxgl.Map.__hidpiAddImagePatched) {
+      mapboxgl.Map.__hidpiAddImagePatched = true;
+      var proto = mapboxgl.Map.prototype;
+      var _addImage = proto.addImage;
+      proto.addImage = function(name, image, options){
+        options = options || {};
+        if (options.pixelRatio == null) {
+          var pr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+          options.pixelRatio = pr;
+        }
+        return _addImage.call(this, name, image, options);
+      };
+    }
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  try{
+    var SCALE = (window.devicePixelRatio || 1);
+    if (SCALE <= 1) return;
+    var _getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, opts){
+      var ctx = _getContext.call(this, type, opts);
+      if (!ctx || type !== '2d') return ctx;
+      var hint = (this.id||'') + ' ' + (this.className||'');
+      if (!/marker|pill|mapcard|label/i.test(hint) && !this.hasAttribute('data-hidpi')) return ctx;
+      if (!this.__hidpi_applied__){
+        this.__hidpi_applied__ = true;
+        var cssW = this.clientWidth || this.width;
+        var cssH = this.clientHeight || this.height;
+        if (cssW && cssH){
+          this.style.width = cssW + 'px';
+          this.style.height = cssH + 'px';
+          this.width = Math.round(cssW * SCALE);
+          this.height = Math.round(cssH * SCALE);
+          ctx.scale(SCALE, SCALE);
+        }
+        ctx.imageSmoothingEnabled = false;
+        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+      }
+      return ctx;
+    };
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+try {
+  MapboxGeocoder.prototype.endpoint = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
+} catch(e) {
+  console.warn('Failed to override Mapbox endpoint', e);
+}
+</script>
+
 </body>
 </html>
