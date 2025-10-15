@@ -1022,7 +1022,6 @@ input[type="checkbox"]{
 .header-buttons{display:flex;gap:10px;position:relative;z-index:1;}
 
 .header-buttons button{width:40px;}
-.header-buttons #adminLoginBtn,
 .header-buttons #adminBtn{
   display:flex;
   align-items:center;
@@ -1119,21 +1118,6 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .range-wrap span{
   width:40px;
   text-align:right;
-}
-#adminLoginPanel .panel-body{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-#adminLoginPanel .admin-login-actions{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-#adminLoginPanel .admin-login-message{
-  min-height:1.25em;
-  margin:0;
-  font-size:14px;
 }
 #adminPanel #balloonSize{
   width:300px;
@@ -5845,13 +5829,6 @@ if (typeof slugify !== 'function') {
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="adminLoginBtn" type="button" aria-label="Admin sign in">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
-          <path d="M8 11V8a4 4 0 118 0v3"></path>
-          <circle cx="12" cy="16" r="1"></circle>
-        </svg>
-      </button>
       <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area" hidden>
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
@@ -6006,30 +5983,6 @@ if (typeof slugify !== 'function') {
             </div>
           </section>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="adminLoginPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
-    <div class="panel-content" style="right:0;">
-      <div class="panel-header">
-        <div class="header-top">
-          <h2>Admin Sign In</h2>
-          <div class="panel-actions">
-            <button type="button" class="close-panel">Close</button>
-          </div>
-        </div>
-      </div>
-      <form id="adminLoginForm" class="panel-body" novalidate>
-        <label for="adminLoginUsername">Username</label>
-        <input type="text" id="adminLoginUsername" name="adminUsername" autocomplete="username" required />
-        <label for="adminLoginPassword">Password</label>
-        <input type="password" id="adminLoginPassword" name="adminPassword" autocomplete="current-password" required />
-        <div class="admin-login-actions">
-          <button type="submit" class="primary-action">Sign In</button>
-          <button type="button" id="adminLogoutBtn" class="tiny" hidden>Sign Out</button>
-        </div>
-        <p id="adminLoginMessage" class="admin-login-message" role="status" aria-live="polite"></p>
       </form>
     </div>
   </div>
@@ -22445,8 +22398,7 @@ function loadPanelState(m){
 const panelButtons = {
   filterPanel: 'filterBtn',
   memberPanel: 'memberBtn',
-  adminPanel: 'adminBtn',
-  adminLoginPanel: 'adminLoginBtn'
+  adminPanel: 'adminBtn'
 };
 
 const panelScrollOverlayItems = new Set();
@@ -22642,7 +22594,7 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     const viewportHeight = getViewportHeight();
     const innerWidth = window.innerWidth;
-    if(m.id==='adminPanel' || m.id==='memberPanel' || m.id==='adminLoginPanel'){
+    if(m.id==='adminPanel' || m.id==='memberPanel'){
       const topPos = headerH + safeTop;
       const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
       content.style.left='auto';
@@ -23406,21 +23358,27 @@ function closePanel(m){
 const adminAuthManager = (()=>{
   const ADMIN_USERNAME = 'admin';
   const ADMIN_PASSWORD = '1234';
+  const ADMIN_USER = Object.freeze({
+    name: 'Administrator',
+    email: 'admin',
+    emailNormalized: 'admin',
+    avatar: ''
+  });
   const STORAGE_KEY = 'admin-authenticated';
   const adminBtn = document.getElementById('adminBtn');
-  const adminLoginBtn = document.getElementById('adminLoginBtn');
   const adminPanel = document.getElementById('adminPanel');
-  const adminLoginPanel = document.getElementById('adminLoginPanel');
-  const adminLoginForm = document.getElementById('adminLoginForm');
-  const adminLoginMessage = document.getElementById('adminLoginMessage');
-  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+  const memberPanel = document.getElementById('memberPanel');
 
   let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
 
-  function ensureMessage(text=''){
-    if(adminLoginMessage){
-      adminLoginMessage.textContent = text;
+  function normalizeIdentifier(identifier){
+    const trimmed = String(identifier || '').trim().toLowerCase();
+    if(!trimmed) return '';
+    const atIndex = trimmed.indexOf('@');
+    if(atIndex > 0){
+      return trimmed.slice(0, atIndex);
     }
+    return trimmed;
   }
 
   function updateUI(){
@@ -23430,32 +23388,9 @@ const adminAuthManager = (()=>{
         adminBtn.setAttribute('aria-pressed','false');
       }
     }
-    if(adminLoginBtn){
-      adminLoginBtn.hidden = false;
-      adminLoginBtn.setAttribute('aria-pressed','false');
-      adminLoginBtn.setAttribute('aria-label', authenticated ? 'Admin sign out' : 'Admin sign in');
-    }
-    if(adminLogoutBtn){
-      adminLogoutBtn.hidden = !authenticated;
-    }
   }
 
-  function closeLoginPanel(){
-    if(!adminLoginPanel) return;
-    if(adminLoginPanel.classList.contains('show')){
-      closePanel(adminLoginPanel);
-    }
-  }
-
-  function openLoginPanel(){
-    if(!adminLoginPanel) return;
-    ensureMessage(authenticated ? 'Signed in as admin.' : '');
-    if(!adminLoginPanel.classList.contains('show')){
-      openPanel(adminLoginPanel);
-    }
-  }
-
-  function setAuthenticated(value){
+  function setAuthenticatedState(value){
     const next = !!value;
     if(next === authenticated){
       updateUI();
@@ -23469,26 +23404,19 @@ const adminAuthManager = (()=>{
       if(adminPanel && adminPanel.classList.contains('show')){
         closePanel(adminPanel);
       }
-      ensureMessage('');
     }
   }
 
-  function login(username, password){
-    if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD){
-      setAuthenticated(true);
-      ensureMessage('');
-      closeLoginPanel();
-      return true;
+  function ensureAuthenticated(){
+    if(authenticated) return true;
+    if(memberPanel && !memberPanel.classList.contains('show')){
+      openPanel(memberPanel);
     }
-    ensureMessage('Invalid username or password.');
+    const memberBtn = document.getElementById('memberBtn');
+    if(memberBtn){
+      memberBtn.focus();
+    }
     return false;
-  }
-
-  function logout(){
-    if(!authenticated) return;
-    setAuthenticated(false);
-    openLoginPanel();
-    ensureMessage('Signed out.');
   }
 
   updateUI();
@@ -23499,42 +23427,23 @@ const adminAuthManager = (()=>{
     }
   }
 
-  if(adminLoginForm){
-    adminLoginForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const formData = new FormData(adminLoginForm);
-      const username = String(formData.get('adminUsername') ?? '').trim();
-      const password = String(formData.get('adminPassword') ?? '');
-      if(login(username, password)){
-        adminLoginForm.reset();
-      }
-    });
-  }
-
-  if(adminLogoutBtn){
-    adminLogoutBtn.addEventListener('click', () => {
-      logout();
-    });
-  }
-
   return {
     isAuthenticated(){
       return authenticated;
     },
-    ensureAuthenticated(){
-      if(authenticated) return true;
-      openLoginPanel();
-      return false;
+    ensureAuthenticated,
+    setAuthenticated(value){
+      setAuthenticatedState(value);
     },
-    toggleLoginPanel(){
-      if(!adminLoginPanel) return;
-      if(adminLoginPanel.classList.contains('show')){
-        closeLoginPanel();
-      } else {
-        openLoginPanel();
-      }
+    matchesCredentials(identifier, password){
+      return normalizeIdentifier(identifier) === ADMIN_USERNAME && password === ADMIN_PASSWORD;
     },
-    updateUI
+    isAdminIdentifier(identifier){
+      return normalizeIdentifier(identifier) === ADMIN_USERNAME;
+    },
+    getAdminUser(){
+      return { ...ADMIN_USER, isAdmin: true };
+    }
   };
 })();
 window.adminAuthManager = adminAuthManager;
@@ -23592,7 +23501,7 @@ function movePanelToEdge(panel, side){
   }
 }
 function repositionPanels(){
-  ['adminPanel','memberPanel','filterPanel','adminLoginPanel'].forEach(id=>{
+  ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
     const panel = document.getElementById(id);
     if(panel && panel.classList.contains('show')){
       const content = panel.querySelector('.panel-content');
@@ -23685,11 +23594,9 @@ document.addEventListener('pointerdown', (e) => {
 (function(){
   const memberBtn = document.getElementById('memberBtn');
   const adminBtn = document.getElementById('adminBtn');
-  const adminLoginBtn = document.getElementById('adminLoginBtn');
   const filterBtn = document.getElementById('filterBtn');
   const memberPanel = document.getElementById('memberPanel');
   const adminPanel = document.getElementById('adminPanel');
-  const adminLoginPanel = document.getElementById('adminLoginPanel');
   const filterPanel = document.getElementById('filterPanel');
 
   if(memberBtn && memberPanel){
@@ -23702,15 +23609,6 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
       togglePanel(adminPanel);
-    });
-  }
-  if(adminLoginBtn && adminLoginPanel){
-    adminLoginBtn.addEventListener('click', ()=>{
-      if(window.adminAuthManager){
-        window.adminAuthManager.toggleLoginPanel();
-      } else {
-        togglePanel(adminLoginPanel);
-      }
     });
   }
   filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
@@ -23774,7 +23672,7 @@ document.addEventListener('pointerdown', (e) => {
   });
 
     const welcomeModal = document.getElementById('welcome-modal');
-    const panelsToRestore = [memberPanel, adminPanel, adminLoginPanel, welcomeModal];
+    const panelsToRestore = [memberPanel, adminPanel, welcomeModal];
     panelsToRestore.forEach(m=>{
       if(!m) return;
       if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
@@ -25336,7 +25234,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function storeCurrent(user){
     try{
       if(user){
-        localStorage.setItem(CURRENT_KEY, JSON.stringify({ emailNormalized: user.emailNormalized }));
+        if(user.isAdmin){
+          localStorage.setItem(CURRENT_KEY, JSON.stringify({ admin: true }));
+        } else {
+          localStorage.setItem(CURRENT_KEY, JSON.stringify({ emailNormalized: user.emailNormalized }));
+        }
       } else {
         localStorage.removeItem(CURRENT_KEY);
       }
@@ -25348,6 +25250,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem(CURRENT_KEY);
       if(!raw) return null;
       const parsed = JSON.parse(raw);
+      if(parsed && parsed.admin){
+        if(window.adminAuthManager && window.adminAuthManager.isAuthenticated()){
+          return window.adminAuthManager.getAdminUser();
+        }
+        return null;
+      }
       if(parsed && parsed.emailNormalized){
         const normalized = String(parsed.emailNormalized).toLowerCase();
         return users.find(u => u.emailNormalized === normalized) || null;
@@ -25475,6 +25383,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function render(){
+    if(window.adminAuthManager){
+      if(currentUser && currentUser.isAdmin){
+        window.adminAuthManager.setAuthenticated(true);
+      } else {
+        window.adminAuthManager.setAuthenticated(false);
+      }
+    }
     if(!container) return;
     if(currentUser){
       container.dataset.state = 'logged-in';
@@ -25551,6 +25466,22 @@ document.addEventListener('DOMContentLoaded', () => {
         emailInput.focus();
       } else if(passwordInput){
         passwordInput.focus();
+      }
+      return;
+    }
+    const adminManager = window.adminAuthManager;
+    if(adminManager && adminManager.matchesCredentials(emailRaw, password)){
+      currentUser = { ...adminManager.getAdminUser() };
+      storeCurrent(currentUser);
+      render();
+      showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
+      return;
+    }
+    if(adminManager && adminManager.isAdminIdentifier(emailRaw)){
+      showStatus('Incorrect password. Try again.', { error: true });
+      if(passwordInput){
+        passwordInput.focus();
+        passwordInput.select();
       }
       return;
     }
