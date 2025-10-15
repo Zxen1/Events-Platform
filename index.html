@@ -19331,6 +19331,19 @@ if (!map.__pillHooksInstalled) {
         map.scrollZoom.setZoomRate(1/240);
       }catch(e){}
       map.on('load', ()=>{
+        const geocoder = new MapboxGeocoder({
+          accessToken: mapboxgl.accessToken,
+          mapboxgl,
+          placeholder: 'Search venues or places',
+          types: 'poi,place,address',
+          marker: false,
+          limit: 10,
+          reverseGeocode: true,
+          language: navigator.language,
+          proximity: null,
+          bbox: null
+        });
+        map.addControl(geocoder, 'top-left');
         setupSeedLayers(map);
         applyNightSky(map);
         $$('.map-overlay').forEach(el=>el.remove());
