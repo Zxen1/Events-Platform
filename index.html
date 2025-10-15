@@ -6487,8 +6487,8 @@ if (typeof slugify !== 'function') {
               color:var(--button-text);
             }
             #tab-forms .session-time-input{
-              background:#2e3a72 !important;
-              color:var(--button-text);
+              background:rgba(0,0,0,0.35);
+              color:var(--input-text);
             }
             #tab-forms .session-date-input-wrapper{
               position:relative;
@@ -14435,6 +14435,45 @@ function makePosts(){
               }
             };
 
+            const getSessionPrimaryTime = session => {
+              if(!session || !Array.isArray(session.times)) return '';
+              for(let i = 0; i < session.times.length; i++){
+                const candidate = session.times[i];
+                if(candidate && typeof candidate.time === 'string' && candidate.time.trim() !== ''){
+                  return candidate.time.trim();
+                }
+              }
+              const first = session.times[0];
+              return first && typeof first.time === 'string' ? first.time.trim() : '';
+            };
+
+            const formatSessionDateWithTime = (session, overrideTime) => {
+              const dateLabel = formatSessionDate(session && session.date);
+              const override = typeof overrideTime === 'string' ? overrideTime.trim() : '';
+              const timeLabel = override || getSessionPrimaryTime(session);
+              if(dateLabel && timeLabel){
+                return `${dateLabel} ${timeLabel}`;
+              }
+              return dateLabel || timeLabel;
+            };
+
+            const setSessionDateInputValue = (input, session, overrideTime) => {
+              if(!input) return;
+              input.value = formatSessionDateWithTime(session, overrideTime);
+            };
+
+            const updateSessionDateInputDisplay = (venueIndex, sessionIndex, overrideTime) => {
+              if(!previewField || !Array.isArray(previewField.options)) return;
+              const venue = previewField.options[venueIndex];
+              if(!venue || !Array.isArray(venue.sessions)) return;
+              const session = venue.sessions[sessionIndex];
+              if(!session) return;
+              const selector = `.session-date-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"]`;
+              const input = editor.querySelector(selector);
+              if(!input) return;
+              setSessionDateInputValue(input, session, overrideTime);
+            };
+
             const ensureSlot = (venue, index)=>{
               const state = getVenueAutofillState(previewField, venue);
               if(!Array.isArray(state.slots)){
@@ -14510,6 +14549,9 @@ function makePosts(){
               const template = sessions[0];
               if(!template || template === targetSession) return;
               const preservedDate = typeof targetSession.date === 'string' ? targetSession.date : '';
+              const preservedTimes = Array.isArray(targetSession.times)
+                ? targetSession.times.map(time => (time && typeof time.time === 'string') ? time.time : '')
+                : [];
               const times = Array.isArray(template.times) ? template.times : [];
               targetSession.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
               targetSession.date = preservedDate;
@@ -14531,6 +14573,9 @@ function makePosts(){
                       time.tierAutofillLocked = false;
                     }
                   }
+                  if(preservedTimes[index]){
+                    time.time = preservedTimes[index];
+                  }
                 });
                 const targetFirstTime = targetSession.times[0];
                 targetSession.times.forEach((time, index)=>{
@@ -14543,6 +14588,59 @@ function makePosts(){
                   }
                 });
               }
+            };
+
+            const flattenSessionTimes = venue => {
+              if(!venue || !Array.isArray(venue.sessions)) return;
+              const pendingInsertions = [];
+              let requiresLock = false;
+              venue.sessions.forEach((session, index)=>{
+                if(!session) return;
+                if(!Array.isArray(session.times) || session.times.length === 0){
+                  session.times = [venueSessionCreateTime()];
+                }
+                const sanitizedTimes = session.times.filter(Boolean);
+                if(sanitizedTimes.length <= 1){
+                  session.times = sanitizedTimes.length ? [sanitizedTimes[0]] : [venueSessionCreateTime()];
+                  const firstTime = session.times[0];
+                  if(firstTime){
+                    firstTime.samePricingAsAbove = false;
+                    firstTime.samePricingSourceIndex = 0;
+                  }
+                  return;
+                }
+                requiresLock = true;
+                const primaryTime = cloneVenueSessionTime(sanitizedTimes[0]);
+                primaryTime.samePricingAsAbove = false;
+                primaryTime.samePricingSourceIndex = 0;
+                primaryTime.tierAutofillLocked = !!primaryTime.tierAutofillLocked;
+                session.times = [primaryTime];
+                const clones = [];
+                for(let i = 1; i < sanitizedTimes.length; i++){
+                  const cloneSession = cloneVenueSessionSession(session);
+                  cloneSession.times = [cloneVenueSessionTime(sanitizedTimes[i])];
+                  const firstCloneTime = cloneSession.times[0];
+                  if(firstCloneTime){
+                    firstCloneTime.samePricingAsAbove = false;
+                    firstCloneTime.samePricingSourceIndex = 0;
+                    firstCloneTime.tierAutofillLocked = !!firstCloneTime.tierAutofillLocked;
+                  }
+                  clones.push(cloneSession);
+                }
+                if(clones.length){
+                  pendingInsertions.push({ index, clones });
+                }
+              });
+              if(requiresLock){
+                lockSessionMirror(venue);
+              }
+              if(!pendingInsertions.length) return;
+              let offset = 0;
+              pendingInsertions.forEach(entry => {
+                const insertIndex = entry.index + 1 + offset;
+                venue.sessions.splice(insertIndex, 0, ...entry.clones);
+                offset += entry.clones.length;
+              });
             };
 
             const applyAutofillToSession = (venue, session)=>{
@@ -14568,6 +14666,7 @@ function makePosts(){
               if(venue.sessions.length === 0){
                 venue.sessions.push(venueSessionCreateSession());
               }
+              flattenSessionTimes(venue);
               if(!isSessionMirrorLocked(venue)){
                 venue.sessions.forEach((session, index)=>{
                   if(index === 0) return;
@@ -14749,49 +14848,57 @@ function makePosts(){
             };
 
             const addTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
+              if(!venue || !Array.isArray(venue.sessions)) return;
+              flattenSessionTimes(venue);
               const sessions = venue.sessions;
-              const insertion = timeIndex + 1;
-              const venueCurrency = getVenueCurrencyValue(venue);
-              const mirrorLocked = isSessionMirrorLocked(venue);
-              const targets = mirrorLocked ? [sessions[sessionIndex]] : sessions;
-              targets.forEach((sess, idx) => {
-                if(!sess) return;
-                const newTime = venueSessionCreateTime();
-                newTime.samePricingSourceIndex = 0;
-                if(insertion === 0){
-                  newTime.samePricingAsAbove = false;
-                } else {
-                  newTime.samePricingAsAbove = true;
-                  const baseReference = sess.times[0];
-                  if(baseReference && baseReference !== newTime){
-                    newTime.versions = cloneVersionsFromTime(baseReference);
-                  }
-                }
-                if(venueCurrency && Array.isArray(newTime.versions)){
-                  newTime.versions.forEach(version => {
-                    if(!version || !Array.isArray(version.tiers)) return;
-                    version.tiers.forEach(tier => {
-                      if(tier && !tier.currency){
-                        tier.currency = venueCurrency;
-                      }
-                    });
-                  });
-                }
-                sess.times.splice(insertion, 0, newTime);
-              });
+              if(sessionIndex < 0 || sessionIndex >= sessions.length) return;
+              const baseSession = sessions[sessionIndex];
+              if(!baseSession) return;
+              const existingTimes = Array.isArray(baseSession.times) ? baseSession.times : [];
+              const baseTime = existingTimes[timeIndex] || existingTimes[0] || venueSessionCreateTime();
+              baseSession.times = [existingTimes[0] || cloneVenueSessionTime(baseTime) || venueSessionCreateTime()];
+              const primaryTime = baseSession.times[0];
+              if(primaryTime){
+                primaryTime.samePricingAsAbove = false;
+                primaryTime.samePricingSourceIndex = 0;
+                primaryTime.tierAutofillLocked = !!primaryTime.tierAutofillLocked;
+                primaryTime.displayOrder = 1;
+              }
+              const newSession = cloneVenueSessionSession(baseSession);
+              newSession.date = baseSession.date;
+              newSession.times = [cloneVenueSessionTime(baseTime)];
+              const newTime = newSession.times[0];
+              newTime.time = '';
+              newTime.samePricingAsAbove = false;
+              newTime.samePricingSourceIndex = 0;
+              newTime.tierAutofillLocked = false;
+              newTime.displayOrder = Number.isFinite(Number(timeIndex)) ? Number(timeIndex) + 2 : 2;
+              lockSessionMirror(venue);
+              sessions.splice(sessionIndex + 1, 0, newSession);
               const state = getVenueAutofillState(previewField, venue);
-              if(Array.isArray(state.slots)){
-                state.slots.splice(insertion, 0, { value: '', locked: mirrorLocked, source: null });
+              if(Array.isArray(state.slots) && state.slots.length > 1){
+                state.slots.length = 1;
               }
-              if(mirrorLocked && sessionIndex > 0){
-                lockSessionMirror(venue);
-              }
+              openSessionRef = null;
               notifyFormbuilderChange();
-              renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: insertion });
+              renderVenues({ type: 'session-time', venueIndex, sessionIndex: sessionIndex + 1, timeIndex: 0 });
             };
 
             const removeTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
-              if(venue.sessions.length === 0) return;
+              if(!venue || !Array.isArray(venue.sessions) || venue.sessions.length === 0) return;
+              flattenSessionTimes(venue);
+              const session = venue.sessions[sessionIndex];
+              if(!session) return;
+              const times = Array.isArray(session.times) ? session.times : [];
+              if(times.length <= 1){
+                const state = getVenueAutofillState(previewField, venue);
+                if(Array.isArray(state.slots) && state.slots.length > 1){
+                  state.slots.length = 1;
+                }
+                lockSessionMirror(venue);
+                removeSession(venue, venueIndex, sessionIndex);
+                return;
+              }
               const mirrorLocked = isSessionMirrorLocked(venue);
               const referenceSession = mirrorLocked ? venue.sessions[sessionIndex] : venue.sessions[0];
               if(!referenceSession) return;
@@ -15056,6 +15163,7 @@ function makePosts(){
                       sibling.value = '';
                       sibling.classList.remove('is-invalid');
                     }
+                    updateSessionDateInputDisplay(venueIndex, idx);
                   });
                 } else {
                   if(slot.source === timeObj){
@@ -15066,6 +15174,7 @@ function makePosts(){
                 }
                 resetSlotIfEmpty(venue, timeIndex);
                 input.classList.remove('is-invalid');
+                updateSessionDateInputDisplay(venueIndex, sessionIndex);
                 return;
               }
               if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(raw)){
@@ -15079,6 +15188,7 @@ function makePosts(){
               }
               const slot = ensureSlot(venue, timeIndex);
               timeObj.time = raw;
+              updateSessionDateInputDisplay(venueIndex, sessionIndex);
               if(isMaster && !mirrorLocked){
                 slot.value = raw;
                 slot.source = timeObj;
@@ -15092,6 +15202,7 @@ function makePosts(){
                     sibling.value = raw;
                     sibling.classList.remove('is-invalid');
                   }
+                  updateSessionDateInputDisplay(venueIndex, idx);
                 });
               } else {
                 slot.value = raw;
@@ -15842,7 +15953,7 @@ function makePosts(){
                   dateInput.className = 'session-date-input';
                   dateInput.placeholder = datePlaceholder;
                   dateInput.setAttribute('aria-label', datePlaceholder);
-                  dateInput.value = formatSessionDate(session.date);
+                  setSessionDateInputValue(dateInput, session);
                   dateInput.dataset.venueIndex = String(venueIndex);
                   dateInput.dataset.sessionIndex = String(sessionIndex);
                   dateInput.setAttribute('role', 'button');
@@ -15963,7 +16074,22 @@ function makePosts(){
                     const timeRow = document.createElement('div');
                     timeRow.className = 'session-time-row';
 
-                    const timePlaceholder = `Session Time ${timeIndex + 1} (24 hr clock)`;
+                    const computeTimeOrdinal = ()=>{
+                      let ordinal = timeIndex + 1;
+                      const currentDate = typeof session.date === 'string' ? session.date : '';
+                      if(Array.isArray(venue.sessions) && currentDate){
+                        for(let i = 0; i < sessionIndex; i++){
+                          const compareSession = venue.sessions[i];
+                          if(!compareSession || typeof compareSession.date !== 'string') continue;
+                          if(compareSession.date !== currentDate) continue;
+                          const compareTimes = Array.isArray(compareSession.times) ? compareSession.times.filter(Boolean) : [];
+                          ordinal += Math.max(compareTimes.length, 1);
+                        }
+                      }
+                      return ordinal;
+                    };
+                    const timeOrdinal = computeTimeOrdinal();
+                    const timePlaceholder = `Session Time ${timeOrdinal} (24 hr clock)`;
                     const timeInput = document.createElement('input');
                     timeInput.type = 'text';
                     timeInput.className = 'session-time-input';
@@ -15981,10 +16107,12 @@ function makePosts(){
                         timeInput.value = sanitized;
                       }
                       timeInput.classList.remove('is-invalid');
+                      setSessionDateInputValue(dateInput, session, sanitized);
                     });
                     timeInput.addEventListener('blur', ()=>{
                       commitTimeValue({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input: timeInput });
                       resetSlotIfEmpty(venue, timeIndex);
+                      updateSessionDateInputDisplay(venueIndex, sessionIndex);
                     });
                     timeRow.appendChild(timeInput);
 
@@ -15992,7 +16120,8 @@ function makePosts(){
                     timeActions.className = 'session-time-actions';
                     timeActions.appendChild(createActionButton('+', 'Add Session Time', ()=> addTimeSlot(venue, venueIndex, sessionIndex, timeIndex)));
                     const removeTimeBtn = createActionButton('-', 'Remove Session Time', ()=> removeTimeSlot(venue, venueIndex, sessionIndex, timeIndex));
-                    if(session.times.length <= 1){
+                    const canRemoveTime = venue.sessions.length > 1;
+                    if(!canRemoveTime){
                       removeTimeBtn.disabled = true;
                       removeTimeBtn.setAttribute('aria-disabled', 'true');
                     } else {
