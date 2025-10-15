@@ -1022,6 +1022,12 @@ input[type="checkbox"]{
 .header-buttons{display:flex;gap:10px;position:relative;z-index:1;}
 
 .header-buttons button{width:40px;}
+.header-buttons #adminLoginBtn,
+.header-buttons #adminBtn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
 #memberBtn{
   position:relative;
@@ -1113,6 +1119,21 @@ button[aria-expanded="true"] .results-arrow{
 #adminPanel .range-wrap span{
   width:40px;
   text-align:right;
+}
+#adminLoginPanel .panel-body{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+#adminLoginPanel .admin-login-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+#adminLoginPanel .admin-login-message{
+  min-height:1.25em;
+  margin:0;
+  font-size:14px;
 }
 #adminPanel #balloonSize{
   width:300px;
@@ -5824,7 +5845,14 @@ if (typeof slugify !== 'function') {
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
         </svg>
       </button>
-      <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area">
+      <button id="adminLoginBtn" type="button" aria-label="Admin sign in">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+          <path d="M8 11V8a4 4 0 118 0v3"></path>
+          <circle cx="12" cy="16" r="1"></circle>
+        </svg>
+      </button>
+      <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area" hidden>
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
@@ -5978,6 +6006,30 @@ if (typeof slugify !== 'function') {
             </div>
           </section>
         </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminLoginPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="right:0;">
+      <div class="panel-header">
+        <div class="header-top">
+          <h2>Admin Sign In</h2>
+          <div class="panel-actions">
+            <button type="button" class="close-panel">Close</button>
+          </div>
+        </div>
+      </div>
+      <form id="adminLoginForm" class="panel-body" novalidate>
+        <label for="adminLoginUsername">Username</label>
+        <input type="text" id="adminLoginUsername" name="adminUsername" autocomplete="username" required />
+        <label for="adminLoginPassword">Password</label>
+        <input type="password" id="adminLoginPassword" name="adminPassword" autocomplete="current-password" required />
+        <div class="admin-login-actions">
+          <button type="submit" class="primary-action">Sign In</button>
+          <button type="button" id="adminLogoutBtn" class="tiny" hidden>Sign Out</button>
+        </div>
+        <p id="adminLoginMessage" class="admin-login-message" role="status" aria-live="polite"></p>
       </form>
     </div>
   </div>
@@ -22393,7 +22445,8 @@ function loadPanelState(m){
 const panelButtons = {
   filterPanel: 'filterBtn',
   memberPanel: 'memberBtn',
-  adminPanel: 'adminBtn'
+  adminPanel: 'adminBtn',
+  adminLoginPanel: 'adminLoginBtn'
 };
 
 const panelScrollOverlayItems = new Set();
@@ -22570,6 +22623,11 @@ function schedulePanelEntrance(content, force=false){
   }
 }
 function openPanel(m){
+  if(!m) return;
+  if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+    window.adminAuthManager.ensureAuthenticated();
+    return;
+  }
   const content = m.querySelector('.panel-content') || m.querySelector('.modal-content');
   if(content && m.id !== 'welcome-modal'){
     content.style.width = '';
@@ -22584,7 +22642,7 @@ function openPanel(m){
     const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top')) || 0;
     const viewportHeight = getViewportHeight();
     const innerWidth = window.innerWidth;
-    if(m.id==='adminPanel' || m.id==='memberPanel'){
+    if(m.id==='adminPanel' || m.id==='memberPanel' || m.id==='adminLoginPanel'){
       const topPos = headerH + safeTop;
       const availableHeight = Math.max(0, viewportHeight - footerH - topPos);
       content.style.left='auto';
@@ -23344,6 +23402,143 @@ function closePanel(m){
 
 
 
+
+const adminAuthManager = (()=>{
+  const ADMIN_USERNAME = 'admin';
+  const ADMIN_PASSWORD = '1234';
+  const STORAGE_KEY = 'admin-authenticated';
+  const adminBtn = document.getElementById('adminBtn');
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
+  const adminPanel = document.getElementById('adminPanel');
+  const adminLoginPanel = document.getElementById('adminLoginPanel');
+  const adminLoginForm = document.getElementById('adminLoginForm');
+  const adminLoginMessage = document.getElementById('adminLoginMessage');
+  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+  let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
+
+  function ensureMessage(text=''){
+    if(adminLoginMessage){
+      adminLoginMessage.textContent = text;
+    }
+  }
+
+  function updateUI(){
+    if(adminBtn){
+      adminBtn.hidden = !authenticated;
+      if(!authenticated){
+        adminBtn.setAttribute('aria-pressed','false');
+      }
+    }
+    if(adminLoginBtn){
+      adminLoginBtn.hidden = false;
+      adminLoginBtn.setAttribute('aria-pressed','false');
+      adminLoginBtn.setAttribute('aria-label', authenticated ? 'Admin sign out' : 'Admin sign in');
+    }
+    if(adminLogoutBtn){
+      adminLogoutBtn.hidden = !authenticated;
+    }
+  }
+
+  function closeLoginPanel(){
+    if(!adminLoginPanel) return;
+    if(adminLoginPanel.classList.contains('show')){
+      closePanel(adminLoginPanel);
+    }
+  }
+
+  function openLoginPanel(){
+    if(!adminLoginPanel) return;
+    ensureMessage(authenticated ? 'Signed in as admin.' : '');
+    if(!adminLoginPanel.classList.contains('show')){
+      openPanel(adminLoginPanel);
+    }
+  }
+
+  function setAuthenticated(value){
+    const next = !!value;
+    if(next === authenticated){
+      updateUI();
+      return;
+    }
+    authenticated = next;
+    localStorage.setItem(STORAGE_KEY, authenticated ? 'true' : 'false');
+    updateUI();
+    if(!authenticated){
+      localStorage.setItem('panel-open-adminPanel','false');
+      if(adminPanel && adminPanel.classList.contains('show')){
+        closePanel(adminPanel);
+      }
+      ensureMessage('');
+    }
+  }
+
+  function login(username, password){
+    if(username === ADMIN_USERNAME && password === ADMIN_PASSWORD){
+      setAuthenticated(true);
+      ensureMessage('');
+      closeLoginPanel();
+      return true;
+    }
+    ensureMessage('Invalid username or password.');
+    return false;
+  }
+
+  function logout(){
+    if(!authenticated) return;
+    setAuthenticated(false);
+    openLoginPanel();
+    ensureMessage('Signed out.');
+  }
+
+  updateUI();
+  if(!authenticated){
+    localStorage.setItem('panel-open-adminPanel','false');
+    if(adminPanel && adminPanel.classList.contains('show')){
+      closePanel(adminPanel);
+    }
+  }
+
+  if(adminLoginForm){
+    adminLoginForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const formData = new FormData(adminLoginForm);
+      const username = String(formData.get('adminUsername') ?? '').trim();
+      const password = String(formData.get('adminPassword') ?? '');
+      if(login(username, password)){
+        adminLoginForm.reset();
+      }
+    });
+  }
+
+  if(adminLogoutBtn){
+    adminLogoutBtn.addEventListener('click', () => {
+      logout();
+    });
+  }
+
+  return {
+    isAuthenticated(){
+      return authenticated;
+    },
+    ensureAuthenticated(){
+      if(authenticated) return true;
+      openLoginPanel();
+      return false;
+    },
+    toggleLoginPanel(){
+      if(!adminLoginPanel) return;
+      if(adminLoginPanel.classList.contains('show')){
+        closeLoginPanel();
+      } else {
+        openLoginPanel();
+      }
+    },
+    updateUI
+  };
+})();
+window.adminAuthManager = adminAuthManager;
+
 const welcomeModalEl = document.getElementById('welcome-modal');
 if(welcomeModalEl){
   const welcomeControls = welcomeModalEl.querySelector('.map-controls-welcome');
@@ -23397,7 +23592,7 @@ function movePanelToEdge(panel, side){
   }
 }
 function repositionPanels(){
-  ['adminPanel','memberPanel','filterPanel'].forEach(id=>{
+  ['adminPanel','memberPanel','filterPanel','adminLoginPanel'].forEach(id=>{
     const panel = document.getElementById(id);
     if(panel && panel.classList.contains('show')){
       const content = panel.querySelector('.panel-content');
@@ -23490,16 +23685,33 @@ document.addEventListener('pointerdown', (e) => {
 (function(){
   const memberBtn = document.getElementById('memberBtn');
   const adminBtn = document.getElementById('adminBtn');
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
   const filterBtn = document.getElementById('filterBtn');
   const memberPanel = document.getElementById('memberPanel');
   const adminPanel = document.getElementById('adminPanel');
+  const adminLoginPanel = document.getElementById('adminLoginPanel');
   const filterPanel = document.getElementById('filterPanel');
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
   }
   if(adminBtn && adminPanel){
-    adminBtn.addEventListener('click', ()=> togglePanel(adminPanel));
+    adminBtn.addEventListener('click', ()=>{
+      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+        window.adminAuthManager.ensureAuthenticated();
+        return;
+      }
+      togglePanel(adminPanel);
+    });
+  }
+  if(adminLoginBtn && adminLoginPanel){
+    adminLoginBtn.addEventListener('click', ()=>{
+      if(window.adminAuthManager){
+        window.adminAuthManager.toggleLoginPanel();
+      } else {
+        togglePanel(adminLoginPanel);
+      }
+    });
   }
   filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
@@ -23562,8 +23774,14 @@ document.addEventListener('pointerdown', (e) => {
   });
 
     const welcomeModal = document.getElementById('welcome-modal');
-    [memberPanel, adminPanel, welcomeModal].forEach(m=>{
-      if(m && localStorage.getItem(`panel-open-${m.id}`) === 'true'){
+    const panelsToRestore = [memberPanel, adminPanel, adminLoginPanel, welcomeModal];
+    panelsToRestore.forEach(m=>{
+      if(!m) return;
+      if(m.id === 'adminPanel' && window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
+        localStorage.setItem(`panel-open-${m.id}`,'false');
+        return;
+      }
+      if(localStorage.getItem(`panel-open-${m.id}`) === 'true'){
         openPanel(m);
       }
     });
