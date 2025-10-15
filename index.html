@@ -1,26 +1,6 @@
 <!doctype html> 
 <html lang="en">
 <head>
-
-<style id="crisp-map-cards">
-.small-map-card img,
-.small-multi-post-map-card img,
-.mapmarker,
-.map-card-pill{
-  image-rendering: auto;
-  -ms-interpolation-mode: nearest-neighbor;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-/* Prevent fractional CSS sizes that cause blur */
-.small-map-card,
-.small-multi-post-map-card,
-.mapmarker{
-  transform: translate3d(-20px, -20px, 0);
-}
-</style>
-
   <meta charset="utf-8" />
   <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Events Platform</title>
@@ -294,16 +274,8 @@
       cursor: pointer;
       display: block;
     }
-    .post-location-marker.is-dimmed{
-      filter: grayscale(100%);
-      opacity: 0.5;
-      transform: scale(0.9);
-    }
-    .post-location-marker.is-selected{
-      filter: none;
-      opacity: 1;
-      transform: scale(1.1);
-    }
+    .post-location-marker.is-dimmed{}
+    .post-location-marker.is-selected{}
 
     .map-card-label{
       justify-content: center;
@@ -2650,9 +2622,7 @@ button[aria-expanded="true"] .results-arrow{
 .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
   opacity:0.6;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
-  filter:grayscale(1);
-}
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{}
 .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
   color:inherit;
 }
@@ -3300,9 +3270,7 @@ body.filters-active #filterBtn{
   transition: filter .22s ease;
 }
 
-.thumb.lqip{
-  filter: none;
-}
+.thumb.lqip{}
 
 .meta{
   display: flex;
@@ -3505,9 +3473,7 @@ body.filters-active #filterBtn{
   box-shadow:none;
 }
 #memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
-#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
-  filter:none !important;
-}
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{}
 .map-control-row .mapboxgl-ctrl-geolocate button,
 .map-control-row .mapboxgl-ctrl-compass button{
   width:35px;
@@ -3541,9 +3507,7 @@ body.filters-active #filterBtn{
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button svg,
-.map-control-row .mapboxgl-ctrl-compass button svg{
-  filter:none;
-}
+.map-control-row .mapboxgl-ctrl-compass button svg{}
 
 .map-control-row .mapboxgl-ctrl-geocoder{
   background:#ffffff;
@@ -5161,16 +5125,10 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   white-space: nowrap;
 }
 
-.hero img.lqip{
-  filter: blur(10px);
-  transform: scale(1.02);
-  transition: filter .22s ease, transform .22s ease;
+.hero img.lqip{ transform .22s ease;
 }
 
-.hero img.ready{
-  filter: none;
-  transform: none;
-}
+.hero img.ready{}
 
 img.thumb{
   width: 80px;
@@ -15108,13 +15066,9 @@ function makePosts(){
                     mapboxgl: window.mapboxgl,
                     marker: false,
                     placeholder: addressPlaceholder,
-                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
                     // NOTE: types: 'poi,place,address' retained for reference while testing broader results.
                     types: 'poi,place,address',
                     reverseGeocode: true,
-                    localGeocoder: localVenueGeocoder,
-                    externalGeocoder: externalMapboxVenueGeocoder,
-                    filter: majorVenueFilter,
                     limit: 7,
                     language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
                   };
@@ -19861,8 +19815,8 @@ if (!map.__pillHooksInstalled) {
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
       const labelLayersConfig = [
-        { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
-        { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
+        { id:'marker-label', source:'posts', sortKey: 1100, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
+        { id:'marker-label-highlight', source:'posts', sortKey: 1101, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
       labelLayersConfig.forEach(({ id, source, sortKey, filter, iconImage, iconOpacity, minZoom }) => {
         const layerMinZoom = Number.isFinite(minZoom) ? minZoom : markerLabelMinZoom;
@@ -19873,7 +19827,6 @@ if (!map.__pillHooksInstalled) {
               id,
               type:'symbol',
               source,
-              filter: filter || markerLabelFilter,
               minzoom: layerMinZoom,
               layout:{
                 'icon-image': iconImage || markerLabelIconImage,
@@ -25064,27 +25017,37 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function(){
   try{
-    function freezeBigCards(){
-      document.querySelectorAll('.big-map-card').forEach(function(card){
-        card.style.transform = 'none';
-        card.style.willChange = 'auto';
-      });
-    }
-    if (document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', freezeBigCards);
-    } else {
-      freezeBigCards();
-    }
-    var add = Element.prototype.addEventListener;
-    Element.prototype.addEventListener = function(type, listener, options){
+    function freeze(){ document.querySelectorAll('.big-map-card').forEach(function(c){ c.style.transform='none'; c.style.willChange='auto'; }); }
+    if (document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', freeze); } else { freeze(); }
+    var add=Element.prototype.addEventListener;
+    Element.prototype.addEventListener=function(t,fn,opt){
       try{
-        if ((type === 'mousemove' || type === 'mouseenter' || type === 'mouseleave') &&
-            this && this.classList && this.classList.contains('big-map-card')){
-          return; // block wobble handlers on big-map-card only
-        }
+        if((t==='mousemove'||t==='mouseenter'||t==='mouseleave') && this && this.classList && this.classList.contains('big-map-card')){ return; }
       }catch(e){}
-      return add.call(this, type, listener, options);
+      return add.call(this,t,fn,opt);
     };
+  }catch(e){}
+})();
+</script>
+
+
+<script>
+(function(){
+  try{
+    if (window.mapboxgl && mapboxgl.Map && !mapboxgl.Map.__addImageHidpiPatched){
+      mapboxgl.Map.__addImageHidpiPatched = true;
+      var proto = mapboxgl.Map.prototype;
+      var orig = proto.addImage;
+      proto.addImage = function(name, image, options){
+        options = options || {};
+        if (options.pixelRatio == null) {
+          var pr = Math.max(1, Math.floor(window.devicePixelRatio||1));
+          options.pixelRatio = pr;
+        }
+        // preserve sdf/stretchX/rotate/etc if provided
+        return orig.call(this, name, image, options);
+      };
+    }
   }catch(e){}
 })();
 </script>
