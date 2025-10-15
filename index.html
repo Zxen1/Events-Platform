@@ -15040,7 +15040,11 @@ function makePosts(){
             };
 
             const addTier = (venue, venueIndex, sessionIndex, timeIndex, versionIndex, afterIndex)=>{
-              const version = venue.sessions[sessionIndex].times[timeIndex].versions[versionIndex];
+              const time = venue.sessions[sessionIndex].times[timeIndex];
+              if(versionIndex > 0){
+                lockTierAutofillIfNeeded(time, versionIndex);
+              }
+              const version = time.versions[versionIndex];
               const versionTiersRef = version.tiers;
               const newTier = venueSessionCreateTier();
               const venueCurrency = getVenueCurrencyValue(venue);
@@ -15048,6 +15052,9 @@ function makePosts(){
                 newTier.currency = venueCurrency;
               }
               version.tiers.splice(afterIndex + 1, 0, newTier);
+              if(versionIndex === 0){
+                syncTiersFromTemplate(time);
+              }
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
@@ -15082,6 +15089,9 @@ function makePosts(){
                 targetVersion = versions[targetVersionIndex];
               }
               if(!targetVersion) return;
+              if(targetVersionIndex > 0){
+                lockTierAutofillIfNeeded(time, targetVersionIndex);
+              }
               const version = versions[targetVersionIndex];
               const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
               if(tiers.length <= 1) return;
@@ -15093,6 +15103,7 @@ function makePosts(){
                 targetTier = tiers[targetTierIndex];
               }
               if(!targetTier) return;
+              const templateRemoval = targetVersionIndex === 0;
               if(sessionIndex === 0 && !isSessionMirrorLocked(venue)){
                 forEachOtherSession(venue, otherSess => {
                   const otherTime = otherSess.times[timeIndex];
@@ -15111,6 +15122,9 @@ function makePosts(){
                 lockSessionMirror(venue);
               }
               tiers.splice(targetTierIndex, 1);
+              if(templateRemoval){
+                syncTiersFromTemplate(time);
+              }
               notifyFormbuilderChange();
               const focusTier = Math.max(0, Math.min(targetTierIndex, tiers.length - 1));
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex: targetVersionIndex, tierIndex: focusTier });
@@ -15163,12 +15177,47 @@ function makePosts(){
               return btn;
             };
 
-            const lockTierAutofillIfNeeded = time => {
+            const lockTierAutofillIfNeeded = (time, versionIndex)=>{
               if(!time || time.tierAutofillLocked) return false;
+              if(typeof versionIndex !== 'number' || versionIndex <= 0) return false;
               const versionCount = Array.isArray(time.versions) ? time.versions.length : 0;
               if(versionCount <= 1) return false;
               time.tierAutofillLocked = true;
               return true;
+            };
+
+            const syncTiersFromTemplate = time => {
+              if(!time || time.tierAutofillLocked) return false;
+              const versions = Array.isArray(time.versions) ? time.versions : [];
+              if(versions.length <= 1) return false;
+              const template = versions[0];
+              if(!template || !Array.isArray(template.tiers)) return false;
+              const templateTiers = template.tiers;
+              let changed = false;
+              for(let index = 1; index < versions.length; index++){
+                const version = versions[index];
+                if(!version) continue;
+                let tiers = Array.isArray(version.tiers) ? version.tiers : (version.tiers = []);
+                if(tiers.length > templateTiers.length){
+                  tiers.length = templateTiers.length;
+                  changed = true;
+                }
+                for(let tierIndex = 0; tierIndex < templateTiers.length; tierIndex++){
+                  const templateTier = templateTiers[tierIndex];
+                  let targetTier = tiers[tierIndex];
+                  if(!targetTier){
+                    targetTier = venueSessionCreateTier();
+                    tiers[tierIndex] = targetTier;
+                    changed = true;
+                  }
+                  const templateName = typeof templateTier?.name === 'string' ? templateTier.name : '';
+                  if(targetTier.name !== templateName){
+                    targetTier.name = templateName;
+                    changed = true;
+                  }
+                }
+              }
+              return changed;
             };
 
             const commitTimeValue = ({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input })=>{
@@ -16246,17 +16295,18 @@ function makePosts(){
                         const versionCard = document.createElement('div');
                         versionCard.className = 'session-pricing-card';
 
-                        const versionPlaceholder = `Seating Area ${versionIndex + 1} (eg. General, Stalls, Balcony)`;
+                        const versionPlaceholder = 'eg. General, Stalls, Balcony';
+                        const seatingLabelText = `Seating Area ${versionIndex + 1}`;
                         const seatingLabel = document.createElement('label');
                         seatingLabel.className = 'session-seating-label';
-                        seatingLabel.textContent = `Seating Area ${versionIndex + 1}`;
+                        seatingLabel.textContent = seatingLabelText;
                         const seatingInputId = `session-seating-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
                         versionInput.className = 'session-seating-input';
                         versionInput.placeholder = versionPlaceholder;
-                        versionInput.setAttribute('aria-label', versionPlaceholder);
+                        versionInput.setAttribute('aria-label', seatingLabelText);
                         versionInput.id = seatingInputId;
                         versionInput.value = version.name || '';
                         versionInput.dataset.venueIndex = String(venueIndex);
@@ -16312,17 +16362,18 @@ function makePosts(){
                           const tierRow = document.createElement('div');
                           tierRow.className = 'tier-row';
 
-                          const tierPlaceholder = `Pricing Tier ${tierIndex + 1} (eg. Child, Student, Adult)`;
+                          const tierPlaceholder = 'eg. Child, Student, Adult';
+                          const tierLabelText = `Pricing Tier ${tierIndex + 1}`;
                           const tierLabel = document.createElement('label');
                           tierLabel.className = 'session-tier-label';
-                          tierLabel.textContent = `Pricing Tier ${tierIndex + 1}`;
+                          tierLabel.textContent = tierLabelText;
                           const tierInputId = `session-tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
                           tierInput.className = 'session-tier-input';
                           tierInput.placeholder = tierPlaceholder;
-                          tierInput.setAttribute('aria-label', tierPlaceholder);
+                          tierInput.setAttribute('aria-label', tierLabelText);
                           tierInput.id = tierInputId;
                           tierInput.value = tier.name || '';
                           tierInput.dataset.venueIndex = String(venueIndex);
@@ -16335,6 +16386,20 @@ function makePosts(){
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
                             tier.name = nextValue;
+                            let syncedFromTemplate = false;
+                            if(versionIndex === 0){
+                              syncedFromTemplate = syncTiersFromTemplate(timeObj);
+                              if(!timeObj.tierAutofillLocked){
+                                const versions = Array.isArray(timeObj.versions) ? timeObj.versions : [];
+                                for(let otherVersionIndex = 1; otherVersionIndex < versions.length; otherVersionIndex++){
+                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const peer = editor.querySelector(selector);
+                                  if(peer){
+                                    peer.value = nextValue;
+                                  }
+                                }
+                              }
+                            }
                             if(sessionIndex === 0 && !isSessionMirrorLocked(venue) && previous !== nextValue){
                               forEachOtherSession(venue, (otherSess, otherIndex)=>{
                                 const otherTime = otherSess.times[timeIndex] || (otherSess.times[timeIndex] = venueSessionCreateTime());
@@ -16361,8 +16426,8 @@ function makePosts(){
                             } else if(sessionIndex > 0 && previous !== nextValue){
                               lockSessionMirror(venue);
                             }
-                            const locked = lockTierAutofillIfNeeded(timeObj);
-                            if(previous !== nextValue || locked){
+                            const locked = lockTierAutofillIfNeeded(timeObj, versionIndex);
+                            if(previous !== nextValue || locked || syncedFromTemplate){
                               notifyFormbuilderChange();
                             }
                           });
@@ -16504,7 +16569,7 @@ function makePosts(){
                             } else if(sessionIndex > 0 && previous !== tier.price){
                               lockSessionMirror(venue);
                             }
-                            if(shouldLock && lockTierAutofillIfNeeded(timeObj)){
+                            if(shouldLock && lockTierAutofillIfNeeded(timeObj, versionIndex)){
                               shouldNotify = true;
                             }
                             if(shouldNotify){
@@ -16545,7 +16610,7 @@ function makePosts(){
                             }
                             setVenueCurrencyState(venue, nextCurrency);
                             let notifyNeeded = (previousCurrency !== nextCurrency) || priceCleared || propagated;
-                            if(lockTierAutofillIfNeeded(timeObj)){
+                            if(lockTierAutofillIfNeeded(timeObj, versionIndex)){
                               notifyNeeded = true;
                             }
                             if(notifyNeeded){
