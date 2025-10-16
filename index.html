@@ -1984,121 +1984,17 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0.8;
 }
 #memberPanel .member-create-form{
-  border:1px solid var(--border);
-  border-radius:10px;
-  background:rgba(0,0,0,0.2);
-  padding:0;
   display:flex;
   flex-direction:column;
-  gap:0;
+  gap:16px;
 }
 #memberPanel .member-create-fields{
   display:flex;
   flex-direction:column;
-  gap:0;
+  gap:16px;
 }
 #memberPanel .member-create-fields .panel-field{
   max-width:100%;
-}
-#memberPanel .member-create-field{
-  background:rgba(0,0,0,0.25);
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  max-width:none;
-}
-#memberPanel .member-create-field label{
-  font-weight:600;
-}
-#memberPanel .member-create-field input,
-#memberPanel .member-create-field select,
-#memberPanel .member-create-field textarea{
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:rgba(0,0,0,0.35);
-  color:var(--button-text);
-  box-sizing:border-box;
-  width:100%;
-}
-#memberPanel .member-create-field input{
-  height:36px;
-  padding:0 12px;
-}
-#memberPanel .member-create-field input[readonly]{
-  cursor:default;
-}
-#memberPanel .member-create-field select{
-  appearance:none;
-  height:36px;
-  padding:0 12px;
-}
-#memberPanel .member-create-field textarea{
-  resize:vertical;
-  min-height:120px;
-  padding:8px 12px;
-}
-#memberPanel .member-create-field--dropdown{
-  position:relative;
-}
-#memberPanel .member-create-field--dropdown select{
-  padding-right:40px;
-}
-#memberPanel .member-create-field--dropdown::after{
-  content:'';
-  position:absolute;
-  top:50%;
-  right:18px;
-  width:8px;
-  height:8px;
-  border:2px solid var(--button-text);
-  border-top:0;
-  border-left:0;
-  transform:translateY(-50%) rotate(45deg);
-  pointer-events:none;
-}
-#memberPanel .member-create-field input[type="file"]{
-  color:inherit;
-}
-#memberPanel .member-create-field--images .form-preview-images{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-#memberPanel .member-create-field--images input[type="file"]{
-  color:inherit;
-}
-#memberPanel .member-create-field--images .form-preview-image-hint{
-  font-size:12px;
-  color:rgba(255,255,255,0.7);
-}
-#memberPanel .member-create-field--images .form-preview-image-message{
-  font-size:12px;
-  color:#ffb347;
-}
-#memberPanel .member-create-field--images .form-preview-image-previews{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-  gap:8px;
-}
-#memberPanel .member-create-field--images .form-preview-image-thumb{
-  position:relative;
-  padding-top:100%;
-  border-radius:8px;
-  overflow:hidden;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,0.25);
-  cursor:grab;
-}
-#memberPanel .member-create-field--images .form-preview-image-thumb.is-dragging{
-  opacity:0.7;
-  cursor:grabbing;
-}
-#memberPanel .member-create-field--images .form-preview-image-thumb img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
 }
 #memberPanel .member-create-checkout{
   display:flex;
@@ -2159,18 +2055,12 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:6px;
-  align-items:flex-start;
-  width:100%;
 }
 #memberPanel .member-radio-option{
   display:flex;
   align-items:center;
-  justify-content:flex-start;
-  gap:10px;
+  gap:6px;
   font-size:14px;
-  cursor:pointer;
-  width:100%;
-  text-align:left;
 }
 #memberPanel .member-radio-option input{
   width:auto;
@@ -4015,6 +3905,7 @@ body.filters-active #filterBtn{
   height:35px;
   border-radius:8px;
   border:1px solid rgba(0,0,0,0.15);
+  box-shadow:none;
 }
 
 .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
@@ -4028,13 +3919,7 @@ body.filters-active #filterBtn{
   height:35px !important;
   border-radius:8px !important;
   border:1px solid rgba(0,0,0,0.15) !important;
-}
-
-.mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
-.map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
-.mapboxgl-ctrl-compass button,
-.map-control-row .mapboxgl-ctrl-compass button{
-  box-shadow:none;
+  box-shadow:none !important;
 }
 
 .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading){
@@ -10693,46 +10578,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     const categories = window.categories = initialFormbuilderSnapshot.categories;
-    (function ensureLiveGigsVenuesSessionsField(){
-      if(!Array.isArray(categories)) return;
-      const targetCategory = categories.find(cat => cat && typeof cat.name === 'string' && cat.name === "What's On");
-      if(!targetCategory) return;
-      if(!targetCategory.subFields || typeof targetCategory.subFields !== 'object' || Array.isArray(targetCategory.subFields)){
-        targetCategory.subFields = {};
-      }
-      const subName = 'Live Gigs';
-      if(!Array.isArray(targetCategory.subFields[subName])){
-        targetCategory.subFields[subName] = [];
-      }
-      const fields = targetCategory.subFields[subName];
-      const existingIndex = fields.findIndex(field => field && field.type === 'venue-session-version-tier-price');
-      let field = null;
-      if(existingIndex >= 0){
-        field = fields.splice(existingIndex, 1)[0] || null;
-      }
-      if(!field || typeof field !== 'object'){
-        field = {
-          name: 'Venues, Sessions and Pricing',
-          type: 'venue-session-version-tier-price',
-          placeholder: '',
-          required: false,
-          options: []
-        };
-      } else {
-        if(typeof field.name !== 'string' || !field.name.trim()){
-          field.name = 'Venues, Sessions and Pricing';
-        }
-        field.type = 'venue-session-version-tier-price';
-        if(typeof field.placeholder !== 'string') field.placeholder = '';
-        field.required = !!field.required;
-        if(!Array.isArray(field.options)){
-          field.options = [];
-        }
-      }
-      const imagesIndex = fields.findIndex(item => item && item.type === 'images');
-      const insertIndex = imagesIndex >= 0 ? imagesIndex + 1 : fields.length;
-      fields.splice(insertIndex, 0, field);
-    })();
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
       { value: 'title', label: 'Title' },
@@ -10968,8 +10813,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     const DEFAULT_SUBCATEGORY_FIELDS = [
-      { name: 'Title', type: 'title', placeholder: '', required: true },
-      { name: 'Description', type: 'description', placeholder: '', required: true },
+      { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
       { name: 'Images', type: 'images', placeholder: '', required: true }
     ];
       const ICON_BASE = window.ICON_BASE = {
@@ -22188,8 +22033,6 @@ if (!map.__pillHooksInstalled) {
             try{ hoverPopup.remove(); }catch(err){}
             hoverPopup = null;
           }
-          activePostId = null;
-          selectedVenueKey = null;
           updateSelectedMarkerRing();
           touchMarker = null;
         }
@@ -26069,13 +25912,11 @@ document.addEventListener('pointerdown', (e) => {
       const controlId = `memberCreateField-${fieldIdCounter}`;
       label.id = labelId;
       label.textContent = field.required ? `${labelText} *` : labelText;
-      label.setAttribute('for', controlId);
       wrapper.appendChild(label);
       let control = null;
       const placeholder = field.placeholder || '';
 
       if(field.type === 'description' || field.type === 'text-area'){
-        wrapper.classList.add('member-create-field--textarea');
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
@@ -26083,7 +25924,6 @@ document.addEventListener('pointerdown', (e) => {
         if(field.required) textarea.required = true;
         control = textarea;
       } else if(field.type === 'dropdown'){
-        wrapper.classList.add('member-create-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
         if(field.required) select.required = true;
@@ -26099,7 +25939,6 @@ document.addEventListener('pointerdown', (e) => {
         });
         control = select;
       } else if(field.type === 'radio-toggle'){
-        wrapper.classList.add('member-create-field--radio-toggle');
         const radioGroup = document.createElement('div');
         radioGroup.className = 'member-radio-group';
         radioGroup.setAttribute('role', 'radiogroup');
@@ -26119,43 +25958,20 @@ document.addEventListener('pointerdown', (e) => {
         control = radioGroup;
         label.removeAttribute('for');
       } else if(field.type === 'images'){
-        wrapper.classList.add('member-create-field--images');
-        const imageWrapper = document.createElement('div');
-        imageWrapper.className = 'form-preview-images';
         const fileInput = document.createElement('input');
         fileInput.id = controlId;
         fileInput.type = 'file';
         fileInput.multiple = true;
         fileInput.accept = 'image/*';
-        fileInput.dataset.imagesField = 'true';
-        fileInput.dataset.maxImages = '10';
-        const previewId = `${controlId}-previews`;
-        const messageId = `${controlId}-message`;
-        fileInput.dataset.imagePreviewTarget = previewId;
-        fileInput.dataset.imageMessageTarget = messageId;
         if(field.required) fileInput.required = true;
-        const hint = document.createElement('div');
-        hint.className = 'form-preview-image-hint';
-        hint.textContent = 'Upload up to 10 images.';
-        const message = document.createElement('div');
-        message.className = 'form-preview-image-message';
-        message.id = messageId;
-        message.hidden = true;
-        const previewGrid = document.createElement('div');
-        previewGrid.className = 'form-preview-image-previews';
-        previewGrid.id = previewId;
-        imageWrapper.append(fileInput, hint, message, previewGrid);
-        control = imageWrapper;
+        control = fileInput;
       } else if(field.type === 'version-price'){
-        wrapper.classList.add('member-create-field--version-price');
         control = buildVersionPriceEditor(field, labelId);
         label.removeAttribute('for');
       } else if(field.type === 'venue-session-version-tier-price'){
-        wrapper.classList.add('member-create-field--venue-session');
         control = buildVenueSessionEditor(field, labelId);
         label.removeAttribute('for');
       } else if(field.type === 'website-url' || field.type === 'tickets-url'){
-        wrapper.classList.add('member-create-field--url');
         const input = document.createElement('input');
         input.id = controlId;
         input.type = 'url';
