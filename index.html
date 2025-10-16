@@ -15340,9 +15340,9 @@ function makePosts(){
               newSession.times = [cloneVenueSessionTime(baseTime)];
               const newTime = newSession.times[0];
               newTime.time = '';
-              newTime.samePricingAsAbove = false;
+              newTime.samePricingAsAbove = true;
               newTime.samePricingSourceIndex = 0;
-              newTime.tierAutofillLocked = false;
+              newTime.tierAutofillLocked = true;
               newTime.displayOrder = Number.isFinite(Number(timeIndex)) ? Number(timeIndex) + 2 : 2;
               lockSessionMirror(venue);
               sessions.splice(sessionIndex + 1, 0, newSession);
@@ -18220,6 +18220,32 @@ function makePosts(){
                 }catch(err){
                   try{ fieldNameInput.focus(); }catch(e){}
                 }
+              },
+              focusTypePicker(){
+                const focusSelect = ()=>{
+                  try{
+                    fieldTypeSelect.focus({ preventScroll: true });
+                  }catch(err){
+                    try{ fieldTypeSelect.focus(); }catch(e){}
+                  }
+                };
+                focusSelect();
+                requestAnimationFrame(()=>{
+                  if(typeof fieldTypeSelect.showPicker === 'function'){
+                    try{
+                      fieldTypeSelect.showPicker();
+                      return;
+                    }catch(err){}
+                  }
+                  try{
+                    const openEvent = new MouseEvent('mousedown', {
+                      bubbles: true,
+                      cancelable: true,
+                      view: window
+                    });
+                    fieldTypeSelect.dispatchEvent(openEvent);
+                  }catch(err){}
+                });
               }
             };
           };
@@ -18239,7 +18265,13 @@ function makePosts(){
             fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
             notifyFormbuilderChange();
-            requestAnimationFrame(()=> fieldRow.focus());
+            requestAnimationFrame(()=>{
+              if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
+                fieldRow.focusTypePicker();
+              } else if(fieldRow && typeof fieldRow.focus === 'function'){
+                fieldRow.focus();
+              }
+            });
             renderFormPreview();
           });
 
