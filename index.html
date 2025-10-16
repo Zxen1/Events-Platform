@@ -20557,7 +20557,7 @@ function makePosts(){
               }catch(err){}
             }
             const currentZoom = (typeof map.getZoom === 'function') ? map.getZoom() : null;
-            const needsZoomAdjust = typeof currentZoom !== 'number' || currentZoom > targetZoom + 0.05;
+            const needsZoomAdjust = !Number.isFinite(currentZoom) || Math.abs(currentZoom - targetZoom) > 0.05;
             const center = [event.coords.longitude, event.coords.latitude];
             if(needsZoomAdjust){
               let currentPitch = null;
