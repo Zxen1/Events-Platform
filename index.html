@@ -1120,15 +1120,6 @@ button[aria-expanded="true"] .results-arrow{
   width:40px;
   text-align:right;
 }
-#adminPanel #balloonSize{
-  width:300px;
-}
-#adminPanel #balloonSizeValue{
-  display:inline-block;
-  width:40px;
-  text-align:right;
-  margin-left:8px;
-}
   #spinType{
     display:flex;
     gap:6px;
@@ -1733,7 +1724,6 @@ button[aria-expanded="true"] .results-arrow{
 }
 
 .map-theme-container,
-.map-balloon-container,
 .map-spin-container{
   background:#444444;
   width:100%;
@@ -1745,7 +1735,6 @@ button[aria-expanded="true"] .results-arrow{
   gap:8px;
 }
 .map-theme-container .panel-field,
-.map-balloon-container .panel-field,
 .map-spin-container .panel-field{
   width:100%;
 }
@@ -6388,39 +6377,6 @@ if (typeof slugify !== 'function') {
               </div>
           </div>
         </div>
-        <div id="map-balloon-container" class="map-balloon-container">
-          <style>
-              #map-balloon-container .t{font-size:16px;font-weight:bold;}
-              #map-balloon-container .shape-dropdown{position:relative;width:100%;max-width:100%;height:35px;margin-bottom:8px;}
-              #map-balloon-container .shape-dropdown > button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;padding:0;}
-              #map-balloon-container .shape-menu{position:absolute;top:calc(100% + 4px);left:0;width:100%;max-height:400px;overflow-y:auto;overflow-y:overlay;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:var(--dropdown-radius);padding:10px;display:flex;flex-direction:column;gap:6px;z-index:30;}
-              #map-balloon-container .shape-menu[hidden]{display:none;}
-              #map-balloon-container .shape-button{width:100%;height:35px;background:var(--btn);border:1px solid var(--btn);border-radius:var(--dropdown-radius);text-align:left;display:flex;align-items:center;gap:4px;padding:4px;cursor:pointer;}
-              #map-balloon-container .shape-button svg{width:24px;height:24px;vertical-align:middle;}
-              #map-balloon-container .shape-button.active{outline:2px solid var(--border);}
-              #map-balloon-container .panel-field{width:100%;max-width:100%;}
-              #map-balloon-container #copySvgCode{width:100%;height:35px;padding:0;margin-bottom:8px;}
-              #map-balloon-container #shapeMenuBtn{padding:0;}
-              #map-balloon-container #balloonGrid{display:grid;grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap:4px;overflow-x:auto;margin-bottom:8px;}
-              #map-balloon-container #balloonGrid svg{cursor:pointer;}
-              #map-balloon-container #balloonSvgCode{width:100%;max-width:100%;min-height:200px;}
-            </style>
-            <div class="t">Balloon Icon Generator</div>
-            <div class="shape-dropdown">
-              <button type="button" id="shapeMenuBtn" aria-expanded="false">Select Shape</button>
-              <div class="shape-menu" id="balloonShapeButtons" hidden></div>
-            </div>
-            <div class="panel-field size-control">
-              <label for="balloonSize">Balloon size</label>
-              <div class="range-wrap">
-                <input type="range" id="balloonSize" min="40" max="120" value="40" />
-                <span id="balloonSizeValue">40</span>px
-              </div>
-            </div>
-            <button type="button" id="copySvgCode">Copy SVG</button>
-            <div id="balloonGrid"></div>
-            <textarea id="balloonSvgCode"></textarea>
-          </div>
         </div>
         <div id="tab-settings" class="tab-panel">
         <div id="post-mode-background-field" class="panel-field">
@@ -26213,200 +26169,7 @@ document.addEventListener('pointerdown', (e) => {
   <div class="post-modal"></div>
 </div>
 
-<script>
-  (function(){
-    const ns = 'http://www.w3.org/2000/svg';
-    const SHAPES = {
-      circle(){ const c=document.createElementNS(ns,'circle'); c.setAttribute('cx','0'); c.setAttribute('cy','0'); c.setAttribute('r','50'); return c; },
-      tallEllipse(){ const e=document.createElementNS(ns,'ellipse'); e.setAttribute('cx','0'); e.setAttribute('cy','0'); e.setAttribute('rx','40'); e.setAttribute('ry','55'); return e; },
-      heart(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-30 C-30,-70 -70,-20 -35,15 Q0,55 35,15 C70,-20 30,-70 0,-30Z'); return p; },
-      star(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L14,-17 L47,-17 L23,5 L35,45 L0,25 L-35,45 L-23,5 L-47,-17 L-14,-17 Z'); return p; },
-      triangle(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,55 L50,-45 L-50,-45 Z'); return p; },
-      rectangle(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-35'); r.setAttribute('y','-55'); r.setAttribute('width','70'); r.setAttribute('height','110'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
-      square(){ const r=document.createElementNS(ns,'rect'); r.setAttribute('x','-45'); r.setAttribute('y','-45'); r.setAttribute('width','90'); r.setAttribute('height','90'); r.setAttribute('rx','20'); r.setAttribute('ry','20'); return r; },
-      diamond(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L45,0 0,55 -45,0 Z'); return p; },
-      pentagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L52,-17 L32,45 -32,45 -52,-17 Z'); return p; },
-      hexagon(){ const p=document.createElementNS(ns,'path'); p.setAttribute('d','M0,-55 L47,-27 L47,27 0,55 -47,27 -47,-27 Z'); return p; }
-    };
 
-    function hslToHex(h, s, l){
-      s/=100; l/=100;
-      const k = n => (n + h/30) % 12;
-      const a = s * Math.min(l, 1-l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
-      return '#' + [f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
-    }
-    const COLORS = Array.from({length:100}, (_,i)=>hslToHex(i*3.6,100,50));
-
-    function createBalloon(shapeName, color, size){
-      const svg = document.createElementNS(ns,'svg');
-      svg.setAttribute('viewBox','-60 -80 120 160');
-      svg.setAttribute('width', size);
-      svg.setAttribute('height', size);
-      svg.dataset.color = color;
-      svg.setAttribute('title', size + 'px ' + color);
-      const body = SHAPES[shapeName]();
-      body.setAttribute('fill', color);
-      body.setAttribute('stroke', '#000');
-      body.setAttribute('stroke-width', '1');
-      svg.appendChild(body);
-      const tie = document.createElementNS(ns,'path');
-      tie.setAttribute('d','M-8,55 L0,60 L8,55 Z');
-      tie.setAttribute('fill','#000');
-      tie.setAttribute('stroke','#000');
-      tie.setAttribute('stroke-width','1');
-      svg.appendChild(tie);
-      const string = document.createElementNS(ns,'line');
-      string.setAttribute('x1','0'); string.setAttribute('y1','60');
-      string.setAttribute('x2','0'); string.setAttribute('y2','80');
-      string.setAttribute('stroke','#fff');
-      string.setAttribute('stroke-width','2');
-      svg.appendChild(string);
-      const gleam = document.createElementNS(ns,'ellipse');
-      gleam.setAttribute('cx','-20'); gleam.setAttribute('cy','-20');
-      gleam.setAttribute('rx','10'); gleam.setAttribute('ry','6');
-      gleam.setAttribute('fill','#fff');
-      svg.appendChild(gleam);
-      return svg;
-    }
-
-    window.SHAPES = SHAPES;
-    window.COLORS = COLORS;
-    window.createBalloon = createBalloon;
-
-    const buttons = document.getElementById('balloonShapeButtons');
-    const shapeMenuBtn = document.getElementById('shapeMenuBtn');
-    const grid = document.getElementById('balloonGrid');
-    const sizeSlider = document.getElementById('balloonSize');
-    const sizeValue = document.getElementById('balloonSizeValue');
-    const svgCode = document.getElementById('balloonSvgCode');
-    const copyBtn = document.getElementById('copySvgCode');
-    let currentTemplate = '';
-
-    sizeValue.textContent = sizeSlider.value;
-    copyBtn.addEventListener('click', ()=>{ navigator.clipboard.writeText(svgCode.value); });
-
-    if(shapeMenuBtn){
-      shapeMenuBtn.addEventListener('click', ()=>{
-        const expanded = shapeMenuBtn.getAttribute('aria-expanded') === 'true';
-        shapeMenuBtn.setAttribute('aria-expanded', String(!expanded));
-        buttons.hidden = expanded;
-      });
-      document.addEventListener('click', e=>{
-        if(!shapeMenuBtn.contains(e.target) && !buttons.contains(e.target)){
-          buttons.hidden = true;
-          shapeMenuBtn.setAttribute('aria-expanded','false');
-        }
-      });
-    }
-
-    sizeSlider.addEventListener('input', ()=>{
-      sizeValue.textContent = sizeSlider.value;
-      renderFromSvg(currentTemplate);
-    });
-
-    function selectSvg(svg){
-      grid.querySelectorAll('svg').forEach(s=>s.classList.remove('selected'));
-      svg.classList.add('selected');
-      svgCode.value = svg.outerHTML;
-      currentTemplate = svg.outerHTML;
-      if(document.hasFocus()){
-        try{
-          navigator.clipboard.writeText(svg.outerHTML);
-        }catch(e){
-          console.error('clipboard write failed', e);
-        }
-      }
-    }
-
-    function renderFromSvg(template){
-      if(!template){ return; }
-      grid.innerHTML='';
-      COLORS.forEach(color=>{
-        const colored = template.replace(/fill="(?!#fff)[^"]*"/g, `fill="${color}"`);
-        const doc = new DOMParser().parseFromString(colored,'image/svg+xml');
-        let svg = doc && doc.documentElement ? doc.documentElement : null;
-        if(!svg || svg.nodeName.toLowerCase() !== 'svg'){
-          svg = doc.querySelector ? doc.querySelector('svg') : null;
-        }
-        if(!svg){
-          console.warn('Unable to render SVG preview for template', colored);
-          return;
-        }
-        svg = svg.cloneNode(true);
-        svg.setAttribute('width', sizeSlider.value);
-        svg.setAttribute('height', sizeSlider.value);
-        svg.dataset.color = color;
-        svg.setAttribute('title', sizeSlider.value + 'px ' + color);
-        svg.addEventListener('click', ()=> selectSvg(svg));
-        grid.appendChild(svg);
-      });
-      const first = grid.querySelector('svg');
-      if(first){
-        first.classList.add('selected');
-        svgCode.value = first.outerHTML;
-        currentTemplate = first.outerHTML;
-      }
-    }
-
-    function render(name){
-      grid.innerHTML='';
-      COLORS.forEach(color=>{
-        const svg = createBalloon(name, color, sizeSlider.value);
-        svg.addEventListener('click', ()=> selectSvg(svg));
-        grid.appendChild(svg);
-      });
-      const first = grid.querySelector('svg');
-      if(first){
-        first.classList.add('selected');
-        svgCode.value = first.outerHTML;
-        currentTemplate = first.outerHTML;
-      }
-    }
-
-    svgCode.addEventListener('input', ()=>{
-      currentTemplate = svgCode.value;
-      renderFromSvg(currentTemplate);
-    });
-
-    const LABELS = {
-      circle:'circle',
-      tallEllipse:'tall ellipse',
-      heart:'heart',
-      star:'soft star',
-      triangle:'soft triangle',
-      rectangle:'tall rectangle',
-      square:'square',
-      diamond:'diamond',
-      pentagon:'pentagon',
-      hexagon:'hexagon'
-    };
-
-    Object.keys(SHAPES).forEach((name,idx)=>{
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'shape-button';
-      btn.appendChild(createBalloon(name, '#000', 24));
-      btn.appendChild(document.createTextNode(LABELS[name] || name));
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#map-balloon-container .shape-button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        render(name);
-        if(shapeMenuBtn){
-          shapeMenuBtn.textContent = LABELS[name] || name;
-          shapeMenuBtn.setAttribute('aria-expanded','false');
-          buttons.hidden = true;
-        }
-      });
-      if(idx===0) btn.classList.add('active');
-      buttons.appendChild(btn);
-    });
-
-    const firstShape = Object.keys(SHAPES)[0];
-    render(firstShape);
-    if(shapeMenuBtn){ shapeMenuBtn.textContent = LABELS[firstShape] || firstShape; }
-  })();
-</script>
 <script>
 (function(){
   const ICON_BASE = window.ICON_BASE || {};
@@ -26414,12 +26177,12 @@ document.addEventListener('pointerdown', (e) => {
   const subcategoryMarkers = window.subcategoryMarkers || (window.subcategoryMarkers = {});
   const subcategoryMarkerIds = window.subcategoryMarkerIds || (window.subcategoryMarkerIds = {});
   const categoryShapes = window.categoryShapes || (window.categoryShapes = {});
-  const shapeList = Object.keys(window.SHAPES || {});
   let colorIdx = 0;
   const cats = window.categories || [];
-  cats.forEach((cat, idx) => {
-    const shape = shapeList[idx % shapeList.length];
-    categoryShapes[cat.name] = shape;
+  cats.forEach((cat) => {
+    if (cat && cat.name) {
+      categoryShapes[cat.name] = categoryShapes[cat.name] || null;
+    }
     cat.subs.forEach(sub => {
       const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
       colorIdx++;
