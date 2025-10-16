@@ -15326,6 +15326,7 @@ function makePosts(){
 
             const addTimeSlot = (venue, venueIndex, sessionIndex, timeIndex)=>{
               if(!venue || !Array.isArray(venue.sessions)) return;
+              const previouslyOpenSessions = new Set(openSessions);
               flattenSessionTimes(venue);
               const sessions = venue.sessions;
               if(sessionIndex < 0 || sessionIndex >= sessions.length) return;
@@ -15356,7 +15357,13 @@ function makePosts(){
               if(Array.isArray(state.slots) && state.slots.length > 1){
                 state.slots.length = 1;
               }
+              const sessionExistsInOptions = sessionObj => previewField.options.some(v => Array.isArray(v?.sessions) && v.sessions.includes(sessionObj));
               openSessions.clear();
+              previouslyOpenSessions.forEach(sessionObj => {
+                if(sessionExistsInOptions(sessionObj)){
+                  openSessions.add(sessionObj);
+                }
+              });
               openSessions.add(newSession);
               notifyFormbuilderChange();
               renderVenues({ type: 'session-time', venueIndex, sessionIndex: sessionIndex + 1, timeIndex: 0 });
