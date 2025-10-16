@@ -7736,9 +7736,14 @@ if (typeof slugify !== 'function') {
               max-height:none;
               overflow:visible;
               pointer-events:auto;
+              background:#000;
+              border-radius:8px;
+              padding:10px;
+              box-sizing:border-box;
             }
             .subcategory-field-overlay-content > .subcategory-field-row{
               margin:0;
+              width:100%;
             }
             .subcategory-field-placeholder{
               display:none !important;
@@ -14102,15 +14107,23 @@ function makePosts(){
           placeholder.style.width = storedWidth + 'px';
         }
       }
+      const parentContent = row.closest('.subcategory-form-content');
+      if(parentContent && typeof parentContent.getBoundingClientRect === 'function'){
+        const parentRect = parentContent.getBoundingClientRect();
+        const containerWidth = Math.round(parentRect?.width || 0);
+        if(containerWidth > 0){
+          placeholder.__overlayContainerWidth = containerWidth;
+        }
+      }
       row.__overlayPlaceholder = placeholder;
       row.__overlayParent = row.parentNode;
       row.__overlayOverlay = overlay;
       row.parentNode.insertBefore(placeholder, row);
       content.innerHTML = '';
       content.appendChild(row);
-      const placeholderWidth = placeholder.__overlayWidth;
-      if(placeholderWidth){
-        content.style.width = placeholderWidth + 'px';
+      const overlayWidth = placeholder.__overlayContainerWidth || placeholder.__overlayWidth;
+      if(overlayWidth){
+        content.style.width = overlayWidth + 'px';
       } else {
         content.style.width = '';
       }
