@@ -2059,6 +2059,47 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-create-field input[type="file"]{
   color:inherit;
 }
+#memberPanel .member-create-field--images .form-preview-images{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#memberPanel .member-create-field--images input[type="file"]{
+  color:inherit;
+}
+#memberPanel .member-create-field--images .form-preview-image-hint{
+  font-size:12px;
+  color:rgba(255,255,255,0.7);
+}
+#memberPanel .member-create-field--images .form-preview-image-message{
+  font-size:12px;
+  color:#ffb347;
+}
+#memberPanel .member-create-field--images .form-preview-image-previews{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
+  gap:8px;
+}
+#memberPanel .member-create-field--images .form-preview-image-thumb{
+  position:relative;
+  padding-top:100%;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.25);
+  cursor:grab;
+}
+#memberPanel .member-create-field--images .form-preview-image-thumb.is-dragging{
+  opacity:0.7;
+  cursor:grabbing;
+}
+#memberPanel .member-create-field--images .form-preview-image-thumb img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 #memberPanel .member-create-checkout{
   display:flex;
   flex-direction:column;
@@ -26032,13 +26073,32 @@ document.addEventListener('pointerdown', (e) => {
         label.removeAttribute('for');
       } else if(field.type === 'images'){
         wrapper.classList.add('member-create-field--images');
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'form-preview-images';
         const fileInput = document.createElement('input');
         fileInput.id = controlId;
         fileInput.type = 'file';
         fileInput.multiple = true;
         fileInput.accept = 'image/*';
+        fileInput.dataset.imagesField = 'true';
+        fileInput.dataset.maxImages = '10';
+        const previewId = `${controlId}-previews`;
+        const messageId = `${controlId}-message`;
+        fileInput.dataset.imagePreviewTarget = previewId;
+        fileInput.dataset.imageMessageTarget = messageId;
         if(field.required) fileInput.required = true;
-        control = fileInput;
+        const hint = document.createElement('div');
+        hint.className = 'form-preview-image-hint';
+        hint.textContent = 'Upload up to 10 images.';
+        const message = document.createElement('div');
+        message.className = 'form-preview-image-message';
+        message.id = messageId;
+        message.hidden = true;
+        const previewGrid = document.createElement('div');
+        previewGrid.className = 'form-preview-image-previews';
+        previewGrid.id = previewId;
+        imageWrapper.append(fileInput, hint, message, previewGrid);
+        control = imageWrapper;
       } else if(field.type === 'version-price'){
         wrapper.classList.add('member-create-field--version-price');
         control = buildVersionPriceEditor(field, labelId);
