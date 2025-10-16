@@ -21934,8 +21934,101 @@ if (!map.__pillHooksInstalled) {
       });
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
-        function createMapCardOverlay(){
-          return null;
+        function createMapCardOverlay(post, opts={}){
+          if(!map || !post || typeof mapboxgl === 'undefined' || typeof mapboxgl.Popup !== 'function'){
+            return null;
+          }
+          const options = opts || {};
+          const normalizeLngLat = (value)=>{
+            if(!value) return null;
+            const lng = Number(value.lng ?? value.lon ?? value.longitude);
+            const lat = Number(value.lat ?? value.latitude);
+            if(Number.isFinite(lng) && Number.isFinite(lat)){
+              return { lng, lat };
+            }
+            return null;
+          };
+          const lngLat = normalizeLngLat(options.targetLngLat)
+            || normalizeLngLat(options.fixedLngLat)
+            || normalizeLngLat(options.eventLngLat)
+            || (Number.isFinite(Number(post.lng)) && Number.isFinite(Number(post.lat))
+              ? { lng: Number(post.lng), lat: Number(post.lat) }
+              : null);
+          if(!lngLat){
+            return null;
+          }
+          const fixedLngLat = normalizeLngLat(options.fixedLngLat) || lngLat;
+          const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnMove: false,
+            className: 'big-map-card'
+          });
+          popup.__fixedLngLat = fixedLngLat;
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'mapmarker-overlay is-card-visible';
+          try{
+            wrapper.innerHTML = mapCardHTML(post, { venueKey: options.venueKey });
+          }catch(err){
+            console.error('mapCardHTML failed', err);
+            return null;
+          }
+
+          const normalizedId = post.id !== undefined && post.id !== null ? String(post.id) : '';
+          if(normalizedId){
+            wrapper.dataset.id = normalizedId;
+          }
+          if(options.venueKey){
+            wrapper.dataset.venueKey = String(options.venueKey);
+          }
+          const normalizedMultiIds = (() => {
+            const raw = Array.isArray(options.multiPostIds)
+              ? options.multiPostIds
+              : (Array.isArray(options.multiIds) ? options.multiIds : (Array.isArray(post.multiPostIds) ? post.multiPostIds : []));
+            return raw
+              .map(item => (item === undefined || item === null) ? '' : String(item))
+              .filter(Boolean);
+          })();
+          if(normalizedMultiIds.length){
+            const joined = normalizedMultiIds.join(',');
+            wrapper.dataset.multiIds = joined;
+          }
+
+          popup.setDOMContent(wrapper);
+          popup.setLngLat(lngLat).addTo(map);
+
+          const popupEl = popup.getElement();
+          if(popupEl){
+            popupEl.classList.add('mapmarker-overlay', 'is-card-visible', 'mapboxgl-popup-track-pointer');
+            if(normalizedId){
+              popupEl.dataset.id = normalizedId;
+            }
+            if(options.venueKey){
+              popupEl.dataset.venueKey = String(options.venueKey);
+            }
+            if(normalizedMultiIds.length){
+              popupEl.dataset.multiIds = normalizedMultiIds.join(',');
+            } else {
+              delete popupEl.dataset.multiIds;
+            }
+            const onPointerEnter = () => {
+              window.__overCard = true;
+            };
+            const onPointerLeave = () => {
+              window.__overCard = false;
+            };
+            popupEl.addEventListener('pointerenter', onPointerEnter);
+            popupEl.addEventListener('pointerleave', onPointerLeave);
+            registerOverlayCleanup(popupEl, () => {
+              popupEl.removeEventListener('pointerenter', onPointerEnter);
+              popupEl.removeEventListener('pointerleave', onPointerLeave);
+              if(window.__overCard){
+                window.__overCard = false;
+              }
+            });
+          }
+
+          return popup;
         }
 
         const handleMarkerClick = (e)=>{
@@ -21975,7 +22068,13 @@ if (!map.__pillHooksInstalled) {
               }
               const p = posts.find(x=>x.id===id);
               if(p){
-                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+                hoverPopup = createMapCardOverlay(p, {
+                  targetLngLat,
+                  fixedLngLat,
+                  eventLngLat: e && e.lngLat,
+                  venueKey,
+                  multiPostIds: normalizedMultiIds
+                });
                 updateSelectedMarkerRing();
               }
             }
@@ -22030,6 +22129,8 @@ if (!map.__pillHooksInstalled) {
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
+        const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+        const normalizedMultiIds = rawMultiIds.map(item => String(item)).filter(Boolean);
         const coords = f.geometry && f.geometry.coordinates;
         const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
@@ -22045,7 +22146,13 @@ if (!map.__pillHooksInstalled) {
           hoverPopup = null;
           updateSelectedMarkerRing();
         }
-        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
+        hoverPopup = createMapCardOverlay(p, {
+          targetLngLat,
+          fixedLngLat,
+          eventLngLat: e && e.lngLat,
+          venueKey,
+          multiPostIds: normalizedMultiIds
+        });
         updateSelectedMarkerRing();
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
