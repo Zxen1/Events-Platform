@@ -24,29 +24,29 @@ jobs:
           git config user.name "codex-bot"
           git config user.email "codex-bot@example.com"
 
-      - name: Backup index.html
+      # ⬇️ CHANGED: now backs up *all root files* instead of just index.html
+      - name: Backup all root files
         run: |
           set -e
           mkdir -p backups
           export TZ="Australia/Sydney"
           datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
 
-          # Get the full commit message from the push event
+          # Get the commit message
           msg="${{ github.event.head_commit.message }}"
 
-          # Use the FIRST non-empty line AFTER the first line (the merge header) — i.e. the PR "Extended description"
+          # Extract description
           desc="$(printf "%s" "$msg" | sed -n '2,$p' | sed -n '/./{p;q}')"
-
-          # Fallbacks if there was no extended description (e.g., direct commit)
           if [ -z "$desc" ]; then
             desc="$(printf "%s" "$msg" | head -n 1)"
           fi
-
-          # Sanitize for filenames
           safe_desc="$(printf "%s" "$desc" | tr ' ' '-' | tr -cd '[:alnum:]-')"
 
-          cp index.html "backups/index-${datetime}-${safe_desc}.html"
-          echo "📦 Backup saved: backups/index-${datetime}-${safe_desc}.html"
+          # ⬇️ This line copies ALL root-level files (not folders) into a timestamped folder
+          mkdir -p "backups/root-${datetime}-${safe_desc}"
+          find . -maxdepth 1 -type f ! -path "./.git*" -exec cp {} "backups/root-${datetime}-${safe_desc}/" \;
+
+          echo "📦 Backup saved: backups/root-${datetime}-${safe_desc}/"
 
       - name: Commit backup
         run: |
@@ -54,6 +54,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No new backup created"
           else
-            git commit -m "Backup index.html at $(date) for commit: ${{ github.sha }}"
+            git commit -m "Backup all root files at $(date) for commit: ${{ github.sha }}"
             git push origin main
           fi
