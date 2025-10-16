@@ -45,6 +45,19 @@
       .post-card, .post { position: relative; z-index: 2; }
     }
 
+    .mapboxgl-ctrl-group--passive-compass .mapboxgl-ctrl-compass {
+      touch-action: manipulation;
+    }
+
+    .mapboxgl-ctrl-compass.mapboxgl-ctrl-compass--inactive .mapboxgl-ctrl-compass-arrow {
+      opacity: 0.35;
+    }
+
+    .mapboxgl-ctrl-group--passive-compass .mapboxgl-ctrl-compass-arrow {
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      transform-origin: 50% 50%;
+    }
+
   </style>
 
   <style>
@@ -9465,6 +9478,123 @@ if (typeof slugify !== 'function') {
     const initialPitch = hasSavedPitch ? savedView.pitch : LEGACY_DEFAULT_PITCH;
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = 0;
+
+    class PassiveCompassControl {
+      constructor(options = {}){
+        this._visualizePitch = options.visualizePitch !== false;
+        this._map = null;
+        this._container = null;
+        this._button = null;
+        this._arrow = null;
+        this._onMapChange = this._onMapChange.bind(this);
+        this._handleReset = this._handleReset.bind(this);
+      }
+
+      onAdd(map){
+        this._map = map;
+        const container = document.createElement('div');
+        container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group mapboxgl-ctrl-group--passive-compass';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-compass mapboxgl-ctrl-compass--inactive';
+        button.setAttribute('aria-label', 'Reset bearing and pitch');
+        button.setAttribute('title', 'Reset bearing and pitch');
+
+        const arrow = document.createElement('span');
+        arrow.className = 'mapboxgl-ctrl-compass-arrow';
+        button.appendChild(arrow);
+        container.appendChild(button);
+
+        this._container = container;
+        this._button = button;
+        this._arrow = arrow;
+
+        button.addEventListener('click', this._handleReset, {passive: true});
+        button.addEventListener('keydown', (event) => {
+          if(!event) return;
+          const key = event.key || event.code;
+          if(key === 'Enter' || key === 'Space' || key === ' ' || key === 'Spacebar'){
+            event.preventDefault();
+            this._handleReset();
+          }
+        });
+
+        if(map && typeof map.on === 'function'){
+          map.on('load', this._onMapChange);
+          map.on('rotate', this._onMapChange);
+          map.on('pitch', this._onMapChange);
+        }
+
+        const scheduleUpdate = () => this._onMapChange();
+        if(typeof queueMicrotask === 'function'){
+          queueMicrotask(scheduleUpdate);
+        } else {
+          setTimeout(scheduleUpdate, 0);
+        }
+
+        return container;
+      }
+
+      onRemove(){
+        if(this._map && typeof this._map.off === 'function'){
+          this._map.off('load', this._onMapChange);
+          this._map.off('rotate', this._onMapChange);
+          this._map.off('pitch', this._onMapChange);
+        }
+        if(this._container && this._container.parentNode){
+          this._container.parentNode.removeChild(this._container);
+        }
+        this._map = null;
+        this._container = null;
+        this._button = null;
+        this._arrow = null;
+      }
+
+      _handleReset(){
+        if(!this._map) return;
+        const target = { bearing: 0, essential: true };
+        if(this._visualizePitch){
+          target.pitch = 0;
+        }
+        try{
+          if(typeof this._map.easeTo === 'function'){
+            this._map.easeTo({ ...target, duration: 300 });
+            return;
+          }
+          if(typeof this._map.setBearing === 'function'){
+            this._map.setBearing(0);
+          }
+          if(this._visualizePitch && typeof this._map.setPitch === 'function'){
+            this._map.setPitch(0);
+          }
+        }catch(err){}
+      }
+
+      _onMapChange(){
+        if(!this._map || !this._arrow) return;
+        let bearing = 0;
+        let pitch = 0;
+        try{
+          bearing = typeof this._map.getBearing === 'function' ? this._map.getBearing() : 0;
+        }catch(err){ bearing = 0; }
+        try{
+          pitch = typeof this._map.getPitch === 'function' ? this._map.getPitch() : 0;
+        }catch(err){ pitch = 0; }
+        const transforms = [`rotate(${bearing}deg)`];
+        if(this._visualizePitch){
+          const limitedPitch = Math.max(0, Math.min(85, Math.abs(pitch)));
+          const scaleY = 1 - (limitedPitch / 120);
+          const safeScale = Number.isFinite(scaleY) ? Math.min(Math.max(scaleY, 0.55), 1) : 1;
+          transforms.push(`scaleY(${safeScale.toFixed(3)})`);
+        }
+        this._arrow.style.transform = transforms.join(' ');
+        const isNeutral = Math.abs(bearing) < 0.01 && (!this._visualizePitch || Math.abs(pitch) < 0.01);
+        if(this._button){
+          this._button.classList.toggle('mapboxgl-ctrl-compass--inactive', isNeutral);
+        }
+      }
+    }
 
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
@@ -20959,7 +21089,7 @@ function makePosts(){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
         }
-        const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
+        const nav = new PassiveCompassControl({ visualizePitch:true });
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
