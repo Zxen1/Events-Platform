@@ -15351,6 +15351,7 @@ function makePosts(){
                 state.slots.length = 1;
               }
               openSessions.clear();
+              openSessions.add(newSession);
               notifyFormbuilderChange();
               renderVenues({ type: 'session-time', venueIndex, sessionIndex: sessionIndex + 1, timeIndex: 0 });
             };
