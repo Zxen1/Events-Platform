@@ -6375,7 +6375,7 @@ if (typeof slugify !== 'function') {
           <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile">Profile</button>
         </div>
       </div>
-      <form id="memberForm" class="panel-body" novalidate>
+      <div id="memberForm" class="panel-body" data-form-container>
         <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
           <p class="member-create-intro">Choose a category and subcategory to load the matching post form.</p>
           <div class="member-create-selects">
@@ -6408,7 +6408,7 @@ if (typeof slugify !== 'function') {
             </div>
             <div class="member-create-actions">
               <button type="button" id="memberCreatePaypalButton" class="member-create-paypal-btn">Check Out with PayPal</button>
-              <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
+              <button type="button" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
             </div>
           </div>
         </section>
@@ -6419,14 +6419,14 @@ if (typeof slugify !== 'function') {
               <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
               <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
             </div>
-            <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
+            <form id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin" novalidate>
               <label for="memberLoginEmail">Email</label>
               <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
               <label for="memberLoginPassword">Password</label>
               <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
               <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
-            </section>
-            <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
+            </form>
+            <form id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden novalidate>
               <label for="memberRegisterName">Display Name</label>
               <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
               <label for="memberRegisterEmail">Email</label>
@@ -6436,7 +6436,7 @@ if (typeof slugify !== 'function') {
               <label for="memberRegisterAvatar">Avatar URL</label>
               <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
               <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
-            </section>
+            </form>
             <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
               <div class="member-profile">
                 <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
@@ -6451,7 +6451,7 @@ if (typeof slugify !== 'function') {
             </section>
           </div>
         </section>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -7968,7 +7968,7 @@ if (typeof slugify !== 'function') {
 
   <div id="adminStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
 
-  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true">
+  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true" inert>
     <div class="member-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="memberUnsavedTitle">
       <h3 id="memberUnsavedTitle">Unsaved Changes</h3>
       <p>You have unsaved changes. Save before closing the member panel?</p>
@@ -10971,6 +10971,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
       return base;
     }
+    function ensureNormalizedVenueSessionOptions(options){
+      if(typeof window.normalizeVenueSessionOptions === 'function'){
+        return window.normalizeVenueSessionOptions(options);
+      }
+      const list = Array.isArray(options) ? options : [];
+      if(!list.length){
+        return [venueSessionCreateVenue()];
+      }
+      return list.map(cloneVenueSessionVenue);
+    }
+
     function getVenueAutofillState(field, venue){
       let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
       if(!fieldState){
@@ -14856,7 +14867,7 @@ function makePosts(){
               safeField.options = [];
             }
             if(safeField.type === 'venue-session-version-tier-price'){
-              safeField.options = normalizeVenueSessionOptions(safeField.options);
+              safeField.options = ensureNormalizedVenueSessionOptions(safeField.options);
             } else if(safeField.type === 'version-price'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
@@ -14899,7 +14910,7 @@ function makePosts(){
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
-              previewField.options = normalizeVenueSessionOptions(previewField.options);
+              previewField.options = ensureNormalizedVenueSessionOptions(previewField.options);
               if(!Array.isArray(previewField.options) || previewField.options.length === 0){
                 previewField.options = [venueSessionCreateVenue()];
               }
@@ -18450,7 +18461,7 @@ function makePosts(){
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               if(showVenueSession){
-                safeField.options = normalizeVenueSessionOptions(safeField.options);
+                safeField.options = ensureNormalizedVenueSessionOptions(safeField.options);
               } else if(showVersionPrice){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = [{ version: '', currency: '', price: '' }];
@@ -24222,8 +24233,20 @@ const memberPanelChangeManager = (()=>{
 
   function closePrompt(){
     if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        const fallback = (panel && panel.querySelector) ? panel.querySelector('.close-panel') : null;
+        if(fallback && typeof fallback.focus === 'function'){
+          try{ fallback.focus({ preventScroll: true }); }catch(err){
+            try{ fallback.focus(); }catch(e){}
+          }
+        } else if(active && typeof active.blur === 'function'){
+          active.blur();
+        }
+      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
     }
   }
 
@@ -24235,6 +24258,7 @@ const memberPanelChangeManager = (()=>{
   function openPrompt(target){
     pendingCloseTarget = target || panel;
     if(prompt){
+      prompt.removeAttribute('inert');
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
       setTimeout(()=>{
@@ -24272,6 +24296,10 @@ const memberPanelChangeManager = (()=>{
       } finally {
         applying = false;
       }
+    } else if(form){
+      form.querySelectorAll('input[type="file"]').forEach(input => {
+        try{ input.value = ''; }catch(err){}
+      });
     }
     applyState(savedState);
     setDirty(false);
@@ -25311,7 +25339,7 @@ document.addEventListener('pointerdown', (e) => {
             safe.options.push('');
           }
         } else if(type === 'venue-session-version-tier-price'){
-          const normalized = normalizeVenueSessionOptions(field.options);
+          const normalized = ensureNormalizedVenueSessionOptions(field.options);
           safe.options = normalized.map(cloneVenueSessionVenue);
         } else {
           safe.options = Array.isArray(field.options)
@@ -27895,23 +27923,20 @@ document.addEventListener('DOMContentLoaded', () => {
     loginInputs = loginPanel ? Array.from(loginPanel.querySelectorAll('input')) : [];
     registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
 
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      const submitter = event.submitter || null;
-      const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
-      if(action === 'register'){
-        handleRegister();
-      } else {
+    if(loginPanel){
+      loginPanel.addEventListener('submit', event => {
+        event.preventDefault();
+        lastAction = 'login';
         handleLogin();
-      }
-    });
-
-    const submitButtons = form.querySelectorAll('.member-auth-submit');
-    submitButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        lastAction = btn.dataset.action || 'login';
       });
-    });
+    }
+    if(registerPanel){
+      registerPanel.addEventListener('submit', event => {
+        event.preventDefault();
+        lastAction = 'register';
+        handleRegister();
+      });
+    }
 
     if(loginTab){
       loginTab.addEventListener('click', () => {
