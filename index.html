@@ -25469,7 +25469,16 @@ document.addEventListener('pointerdown', (e) => {
             safe.options.push('');
           }
         } else if(type === 'venue-session-version-tier-price'){
-          const normalized = ensureNormalizedVenueSessionOptions(field.options);
+          const normalizeOptions = typeof window.ensureNormalizedVenueSessionOptions === 'function'
+            ? window.ensureNormalizedVenueSessionOptions
+            : function(options){
+                const list = Array.isArray(options) ? options : [];
+                if(!list.length){
+                  return [venueSessionCreateVenue()];
+                }
+                return list.map(cloneVenueSessionVenue);
+              };
+          const normalized = normalizeOptions(field.options);
           safe.options = normalized.map(cloneVenueSessionVenue);
         } else {
           safe.options = Array.isArray(field.options)
