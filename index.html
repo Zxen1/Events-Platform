@@ -45,25 +45,6 @@
       .post-card, .post { position: relative; z-index: 2; }
     }
 
-    @media (max-width: 600px){
-      .open-post .post-body{
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .open-post .post-body > .main-post-column{
-        flex: 1 1 100%;
-        max-width: 100%;
-        width: 100%;
-      }
-      .open-post .post-images{
-        align-self: stretch;
-        width: 100%;
-      }
-      body.open-post-sticky-images .open-post .post-images{
-        position: static;
-        top: auto;
-      }
-    }
   </style>
 
   <style>
@@ -6059,6 +6040,31 @@ if (typeof slugify !== 'function') {
   ensureImage();
 })();
 </script>
+
+<style>
+  @media (max-width: 600px){
+    .open-post .post-body{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .open-post .post-body > .main-post-column{
+      flex: 1 1 100%;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .open-post .post-images{
+      align-self: stretch;
+      width: 100%;
+    }
+
+    body.open-post-sticky-images .open-post .post-images{
+      position: static;
+      top: auto;
+    }
+  }
+</style>
 </head>
 <body class="mode-map" style="padding-bottom:var(--footer-h);">
   <header class="header" role="banner">
