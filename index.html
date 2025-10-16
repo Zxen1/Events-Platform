@@ -22183,6 +22183,8 @@ if (!map.__pillHooksInstalled) {
             try{ hoverPopup.remove(); }catch(err){}
             hoverPopup = null;
           }
+          activePostId = null;
+          selectedVenueKey = null;
           updateSelectedMarkerRing();
           touchMarker = null;
         }
