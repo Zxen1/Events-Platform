@@ -20538,157 +20538,167 @@ function makePosts(){
             return null;
           };
 
-          const minZoom = Math.max(cityZoomLevel, MARKER_ZOOM_THRESHOLD + 0.01);
-          let maxZoom = 22;
-          if(typeof map.getMaxZoom === 'function'){
-            try{
-              const candidate = map.getMaxZoom();
-              if(Number.isFinite(candidate)){
-                maxZoom = candidate;
-              }
-            }catch(err){}
-          }
-
-          let cameraFromBounds = null;
-          if(Array.isArray(result?.bbox) && result.bbox.length === 4 && typeof map.cameraForBounds === 'function'){
-            const [minLng, minLat, maxLng, maxLat] = result.bbox.map(Number);
-            const hasBounds = [minLng, minLat, maxLng, maxLat].every(Number.isFinite);
-            if(hasBounds){
-              try{
-                cameraFromBounds = map.cameraForBounds([[minLng, minLat], [maxLng, maxLat]], {
-                  padding: { top: 60, bottom: 60, left: 60, right: 60 }
-                });
-              }catch(err){ cameraFromBounds = null; }
-            }
-          }
-
-          let targetCenter = null;
-          const geometry = result?.geometry;
-          if(geometry && String(geometry.type).toLowerCase() === 'point'){
-            targetCenter = toLngLatArray(geometry.coordinates);
-          }
-          if(!targetCenter){
-            targetCenter = toLngLatArray(result?.center);
-          }
-          if(!targetCenter && cameraFromBounds?.center){
-            targetCenter = toLngLatArray(cameraFromBounds.center);
-          }
-          if(!targetCenter && typeof map.getCenter === 'function'){
-            try{
-              targetCenter = toLngLatArray(map.getCenter());
-            }catch(err){ targetCenter = null; }
-          }
-
-          let zoomCandidate = cameraFromBounds && Number.isFinite(cameraFromBounds.zoom)
-            ? cameraFromBounds.zoom
-            : NaN;
-          if(!Number.isFinite(zoomCandidate) && Number.isFinite(result?.zoom)){
-            zoomCandidate = result.zoom;
-          }
-          if(!Number.isFinite(zoomCandidate) && Number.isFinite(result?.properties?.zoom)){
-            zoomCandidate = result.properties.zoom;
-          }
-
-          let targetZoom = Number.isFinite(zoomCandidate) ? zoomCandidate : minZoom;
-          if(targetZoom < minZoom){
-            targetZoom = minZoom;
-          }
-          if(Number.isFinite(maxZoom) && targetZoom > maxZoom){
-            targetZoom = maxZoom;
-          }
-
-          let targetBearing = cameraFromBounds && Number.isFinite(cameraFromBounds.bearing)
-            ? cameraFromBounds.bearing
-            : NaN;
-          if(!Number.isFinite(targetBearing) && Number.isFinite(result?.bearing)){
-            targetBearing = result.bearing;
-          }
-          if(!Number.isFinite(targetBearing) && Number.isFinite(result?.properties?.bearing)){
-            targetBearing = result.properties.bearing;
-          }
-          if(!Number.isFinite(targetBearing) && typeof map.getBearing === 'function'){
-            try{
-              const currentBearing = map.getBearing();
-              if(Number.isFinite(currentBearing)){
-                targetBearing = currentBearing;
-              }
-            }catch(err){ targetBearing = NaN; }
-          }
-
-          let targetPitch = cameraFromBounds && Number.isFinite(cameraFromBounds.pitch)
-            ? cameraFromBounds.pitch
-            : NaN;
-          if(!Number.isFinite(targetPitch) && Number.isFinite(result?.pitch)){
-            targetPitch = result.pitch;
-          }
-          if(!Number.isFinite(targetPitch) && Number.isFinite(result?.properties?.pitch)){
-            targetPitch = result.properties.pitch;
-          }
-          if(!Number.isFinite(targetPitch) && typeof map.getPitch === 'function'){
-            try{
-              const currentPitch = map.getPitch();
-              if(Number.isFinite(currentPitch)){
-                targetPitch = currentPitch;
-              }
-            }catch(err){ targetPitch = NaN; }
-          }
-
-          const flight = { essential: true };
-          if(targetCenter){
-            flight.center = targetCenter;
-          }
-          if(Number.isFinite(targetZoom)){
-            flight.zoom = targetZoom;
-          }
-          if(Number.isFinite(targetBearing)){
-            flight.bearing = targetBearing;
-          }
-          if(Number.isFinite(targetPitch)){
-            flight.pitch = targetPitch;
-          }
-
-          const startFlight = () => {
+          const waitForIdle = () => {
             if(!map) return;
+            if(typeof map.isMoving === 'function'){
+              let moving = false;
+              try{
+                moving = map.isMoving();
+              }catch(err){ moving = false; }
+              if(moving){
+                requestAnimationFrame(waitForIdle);
+                return;
+              }
+            }
+            applyFlight();
+          };
+
+          const applyFlight = () => {
+            if(!map) return;
+
+            const minZoom = Math.max(cityZoomLevel, MARKER_ZOOM_THRESHOLD + 0.01);
+            let maxZoom = 22;
+            if(typeof map.getMaxZoom === 'function'){
+              try{
+                const candidate = map.getMaxZoom();
+                if(Number.isFinite(candidate)){
+                  maxZoom = candidate;
+                }
+              }catch(err){}
+            }
+
+            let cameraFromBounds = null;
+            if(Array.isArray(result?.bbox) && result.bbox.length === 4 && typeof map.cameraForBounds === 'function'){
+              const [minLng, minLat, maxLng, maxLat] = result.bbox.map(Number);
+              const hasBounds = [minLng, minLat, maxLng, maxLat].every(Number.isFinite);
+              if(hasBounds){
+                try{
+                  cameraFromBounds = map.cameraForBounds([[minLng, minLat], [maxLng, maxLat]], {
+                    padding: { top: 60, bottom: 60, left: 60, right: 60 }
+                  });
+                }catch(err){ cameraFromBounds = null; }
+              }
+            }
+
+            const currentCenter = (() => {
+              if(typeof map.getCenter === 'function'){
+                try{
+                  const center = map.getCenter();
+                  return toLngLatArray(center);
+                }catch(err){ return null; }
+              }
+              return null;
+            })();
+
+            let targetCenter = null;
+            if(cameraFromBounds?.center){
+              targetCenter = toLngLatArray(cameraFromBounds.center);
+            }
+            if(!targetCenter){
+              const geometry = result?.geometry;
+              if(geometry && String(geometry.type).toLowerCase() === 'point'){
+                targetCenter = toLngLatArray(geometry.coordinates);
+              }
+            }
+            if(!targetCenter){
+              targetCenter = toLngLatArray(result?.center);
+            }
+            if(!targetCenter){
+              targetCenter = currentCenter;
+            }
+
+            let zoomCandidate = Number(cameraFromBounds?.zoom);
+            if(!Number.isFinite(zoomCandidate) && Number.isFinite(result?.zoom)){
+              zoomCandidate = result.zoom;
+            }
+            if(!Number.isFinite(zoomCandidate) && Number.isFinite(result?.properties?.zoom)){
+              zoomCandidate = result.properties.zoom;
+            }
+            if(!Number.isFinite(zoomCandidate)){
+              if(typeof map.getZoom === 'function'){
+                try{
+                  const currentZoom = map.getZoom();
+                  if(Number.isFinite(currentZoom)){
+                    zoomCandidate = currentZoom;
+                  }
+                }catch(err){}
+              }
+            }
+
+            let targetZoom = Number.isFinite(zoomCandidate) ? zoomCandidate : minZoom;
+            if(targetZoom < minZoom){
+              targetZoom = minZoom;
+            }
+            if(Number.isFinite(maxZoom) && targetZoom > maxZoom){
+              targetZoom = maxZoom;
+            }
+
+            const currentBearing = (() => {
+              if(typeof map.getBearing === 'function'){
+                try{
+                  const bearing = map.getBearing();
+                  return Number.isFinite(bearing) ? bearing : null;
+                }catch(err){ return null; }
+              }
+              return null;
+            })();
+
+            let targetBearing = Number(cameraFromBounds?.bearing);
+            if(!Number.isFinite(targetBearing) && Number.isFinite(result?.bearing)){
+              targetBearing = result.bearing;
+            }
+            if(!Number.isFinite(targetBearing) && Number.isFinite(result?.properties?.bearing)){
+              targetBearing = result.properties.bearing;
+            }
+            if(!Number.isFinite(targetBearing)){
+              targetBearing = currentBearing;
+            }
+
+            const currentPitch = (() => {
+              if(typeof map.getPitch === 'function'){
+                try{
+                  const pitch = map.getPitch();
+                  return Number.isFinite(pitch) ? pitch : null;
+                }catch(err){ return null; }
+              }
+              return null;
+            })();
+
+            let targetPitch = Number(cameraFromBounds?.pitch);
+            if(!Number.isFinite(targetPitch) && Number.isFinite(result?.pitch)){
+              targetPitch = result.pitch;
+            }
+            if(!Number.isFinite(targetPitch) && Number.isFinite(result?.properties?.pitch)){
+              targetPitch = result.properties.pitch;
+            }
+            if(!Number.isFinite(targetPitch)){
+              targetPitch = currentPitch;
+            }
+
+            const flight = {
+              essential: true,
+              center: targetCenter || currentCenter || undefined,
+              zoom: Number.isFinite(targetZoom) ? targetZoom : minZoom,
+              speed: 1.35,
+              curve: 1.5,
+              easing: t => 1 - Math.pow(1 - t, 3)
+            };
+
+            if(Number.isFinite(targetBearing)){
+              flight.bearing = targetBearing;
+            }
+            if(Number.isFinite(targetPitch)){
+              flight.pitch = targetPitch;
+            }
+
             try{
               if(typeof map.flyTo === 'function'){
-                map.flyTo(Object.assign({
-                  speed: 1.35,
-                  curve: 1.5,
-                  easing: t => 1 - Math.pow(1 - t, 3)
-                }, flight));
-              } else if(typeof map.easeTo === 'function'){
-                map.easeTo(Object.assign({
-                  duration: 650,
-                  easing: t => 1 - Math.pow(1 - t, 3)
-                }, flight));
-              } else if(typeof map.jumpTo === 'function'){
-                map.jumpTo(flight);
+                map.flyTo(flight);
               }
             }catch(err){}
           };
 
-          if(typeof map.isMoving === 'function'){
-            let moving = false;
-            try{
-              moving = map.isMoving();
-            }catch(err){ moving = false; }
-            if(!moving){
-              startFlight();
-              return;
-            }
-          } else {
-            startFlight();
-            return;
-          }
-
-          if(typeof map.once === 'function'){
-            try{
-              map.once('moveend', startFlight);
-              return;
-            }catch(err){}
-          }
-
-          startFlight();
+          waitForIdle();
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
