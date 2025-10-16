@@ -1984,17 +1984,80 @@ button[aria-expanded="true"] .results-arrow{
   opacity:0.8;
 }
 #memberPanel .member-create-form{
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:rgba(0,0,0,0.2);
+  padding:0;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:0;
 }
 #memberPanel .member-create-fields{
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:0;
 }
 #memberPanel .member-create-fields .panel-field{
   max-width:100%;
+}
+#memberPanel .member-create-field{
+  background:rgba(0,0,0,0.25);
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  max-width:none;
+}
+#memberPanel .member-create-field label{
+  font-weight:600;
+}
+#memberPanel .member-create-field input,
+#memberPanel .member-create-field select,
+#memberPanel .member-create-field textarea{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:rgba(0,0,0,0.35);
+  color:var(--button-text);
+  box-sizing:border-box;
+  width:100%;
+}
+#memberPanel .member-create-field input{
+  height:36px;
+  padding:0 12px;
+}
+#memberPanel .member-create-field input[readonly]{
+  cursor:default;
+}
+#memberPanel .member-create-field select{
+  appearance:none;
+  height:36px;
+  padding:0 12px;
+}
+#memberPanel .member-create-field textarea{
+  resize:vertical;
+  min-height:120px;
+  padding:8px 12px;
+}
+#memberPanel .member-create-field--dropdown{
+  position:relative;
+}
+#memberPanel .member-create-field--dropdown select{
+  padding-right:40px;
+}
+#memberPanel .member-create-field--dropdown::after{
+  content:'';
+  position:absolute;
+  top:50%;
+  right:18px;
+  width:8px;
+  height:8px;
+  border:2px solid var(--button-text);
+  border-top:0;
+  border-left:0;
+  transform:translateY(-50%) rotate(45deg);
+  pointer-events:none;
+}
+#memberPanel .member-create-field input[type="file"]{
+  color:inherit;
 }
 #memberPanel .member-create-checkout{
   display:flex;
@@ -2055,12 +2118,18 @@ button[aria-expanded="true"] .results-arrow{
   display:flex;
   flex-direction:column;
   gap:6px;
+  align-items:flex-start;
+  width:100%;
 }
 #memberPanel .member-radio-option{
   display:flex;
   align-items:center;
-  gap:6px;
+  justify-content:flex-start;
+  gap:10px;
   font-size:14px;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
 }
 #memberPanel .member-radio-option input{
   width:auto;
@@ -25912,11 +25981,13 @@ document.addEventListener('pointerdown', (e) => {
       const controlId = `memberCreateField-${fieldIdCounter}`;
       label.id = labelId;
       label.textContent = field.required ? `${labelText} *` : labelText;
+      label.setAttribute('for', controlId);
       wrapper.appendChild(label);
       let control = null;
       const placeholder = field.placeholder || '';
 
       if(field.type === 'description' || field.type === 'text-area'){
+        wrapper.classList.add('member-create-field--textarea');
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
@@ -25924,6 +25995,7 @@ document.addEventListener('pointerdown', (e) => {
         if(field.required) textarea.required = true;
         control = textarea;
       } else if(field.type === 'dropdown'){
+        wrapper.classList.add('member-create-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
         if(field.required) select.required = true;
@@ -25939,6 +26011,7 @@ document.addEventListener('pointerdown', (e) => {
         });
         control = select;
       } else if(field.type === 'radio-toggle'){
+        wrapper.classList.add('member-create-field--radio-toggle');
         const radioGroup = document.createElement('div');
         radioGroup.className = 'member-radio-group';
         radioGroup.setAttribute('role', 'radiogroup');
@@ -25958,6 +26031,7 @@ document.addEventListener('pointerdown', (e) => {
         control = radioGroup;
         label.removeAttribute('for');
       } else if(field.type === 'images'){
+        wrapper.classList.add('member-create-field--images');
         const fileInput = document.createElement('input');
         fileInput.id = controlId;
         fileInput.type = 'file';
@@ -25966,12 +26040,15 @@ document.addEventListener('pointerdown', (e) => {
         if(field.required) fileInput.required = true;
         control = fileInput;
       } else if(field.type === 'version-price'){
+        wrapper.classList.add('member-create-field--version-price');
         control = buildVersionPriceEditor(field, labelId);
         label.removeAttribute('for');
       } else if(field.type === 'venue-session-version-tier-price'){
+        wrapper.classList.add('member-create-field--venue-session');
         control = buildVenueSessionEditor(field, labelId);
         label.removeAttribute('for');
       } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+        wrapper.classList.add('member-create-field--url');
         const input = document.createElement('input');
         input.id = controlId;
         input.type = 'url';
