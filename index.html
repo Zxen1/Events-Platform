@@ -20512,6 +20512,53 @@ function makePosts(){
           geocoder = gc;
         }
 
+        const enforceResultZoom = (result) => {
+          if(!map) return;
+          const minZoom = Math.max(cityZoomLevel, MARKER_ZOOM_THRESHOLD + 0.01);
+          const center = Array.isArray(result?.center) && result.center.length >= 2
+            ? [result.center[0], result.center[1]]
+            : null;
+          const applyZoom = () => {
+            if(!map || typeof map.getZoom !== 'function') return;
+            let currentZoom;
+            try{
+              currentZoom = map.getZoom();
+            }catch(err){
+              currentZoom = NaN;
+            }
+            if(Number.isFinite(currentZoom) && currentZoom >= (minZoom - 0.05)){
+              return;
+            }
+            const target = { zoom: minZoom, essential: true };
+            if(center){
+              target.center = center;
+            }
+            let currentPitch = null;
+            try{
+              currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : null;
+            }catch(err){
+              currentPitch = null;
+            }
+            if(Number.isFinite(currentPitch)){
+              target.pitch = currentPitch;
+            }
+            try{
+              if(typeof map.easeTo === 'function'){
+                map.easeTo(Object.assign({}, target, { duration: 750 }));
+              } else if(typeof map.flyTo === 'function'){
+                map.flyTo(Object.assign({}, target, { duration: 750 }));
+              } else if(typeof map.jumpTo === 'function'){
+                map.jumpTo(target);
+              }
+            }catch(err){}
+          };
+          if(typeof map?.once === 'function'){
+            try{ map.once('moveend', applyZoom); }catch(err){}
+          }
+          setTimeout(applyZoom, 600);
+        };
+        gc.on('result', event => enforceResultZoom(event && event.result));
+
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
