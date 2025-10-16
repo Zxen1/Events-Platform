@@ -23364,17 +23364,29 @@ function openPostModal(id){
                 venueOptions.querySelectorAll('button').forEach(btn=>{
                   if(btn.dataset.index==='0') btn.classList.add('selected');
                   btn.addEventListener('click', ()=>{
+                    const targetIndex = parseInt(btn.dataset.index, 10);
+                    if(Number.isInteger(targetIndex) && targetIndex === currentVenueIndex){
+                      if(venueCloseTimer){
+                        clearTimeout(venueCloseTimer);
+                      }
+                      venueCloseTimer = setTimeout(()=>{
+                        hideMenu(venueMenu);
+                        venueBtn.setAttribute('aria-expanded','false');
+                        venueCloseTimer = null;
+                      }, 100);
+                      return;
+                    }
                     venueOptions.querySelectorAll('button').forEach(b=> b.classList.remove('selected'));
                     btn.classList.add('selected');
-                    updateVenue(parseInt(btn.dataset.index,10));
+                    updateVenue(targetIndex);
                     if(venueCloseTimer){
                       clearTimeout(venueCloseTimer);
                     }
                     venueCloseTimer = setTimeout(()=>{
-                    hideMenu(venueMenu);
-                    venueBtn.setAttribute('aria-expanded','false');
-                    venueCloseTimer = null;
-                  }, 100);
+                      hideMenu(venueMenu);
+                      venueBtn.setAttribute('aria-expanded','false');
+                      venueCloseTimer = null;
+                    }, 100);
                   });
                 });
                 venueBtn.addEventListener('click', ()=>{
