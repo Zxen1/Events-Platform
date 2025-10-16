@@ -14691,45 +14691,51 @@ function makePosts(){
               openPickers.clear();
             };
 
-            const currencyAlertMessage = 'Please select a currency before entering a price.';
-            let lastCurrencyAlertTimestamp = 0;
-            let activeCurrencyAlert = null;
-            let activeCurrencyAlertTimeout = 0;
-            const showCurrencyAlert = target => {
-              const candidate = (target && typeof target.getBoundingClientRect === 'function')
-                ? target
-                : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
-                  ? document.activeElement
-                  : null);
-              const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
-              if(!inputEl) return;
-              const now = Date.now();
-              if(now - lastCurrencyAlertTimestamp < 400){
-                if(activeCurrencyAlert && typeof activeCurrencyAlert.reposition === 'function'){
-                  activeCurrencyAlert.reposition();
+            const createTransientInputAlert = message => {
+              let lastTimestamp = 0;
+              let activeAlert = null;
+              let activeAlertTimeout = 0;
+              return target => {
+                const candidate = (target && typeof target.getBoundingClientRect === 'function')
+                  ? target
+                  : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+                    ? document.activeElement
+                    : null);
+                const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+                if(!inputEl) return;
+                const now = Date.now();
+                if(now - lastTimestamp < 400){
+                  if(activeAlert && typeof activeAlert.reposition === 'function'){
+                    activeAlert.reposition();
+                  }
+                  return;
                 }
-                return;
-              }
-              lastCurrencyAlertTimestamp = now;
-              if(activeCurrencyAlertTimeout){
-                clearTimeout(activeCurrencyAlertTimeout);
-                activeCurrencyAlertTimeout = 0;
-              }
-              if(activeCurrencyAlert && typeof activeCurrencyAlert.remove === 'function'){
-                activeCurrencyAlert.remove();
-                activeCurrencyAlert = null;
-              }
-              const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
-              if(!handle) return;
-              activeCurrencyAlert = handle;
-              activeCurrencyAlertTimeout = window.setTimeout(()=>{
-                handle.remove();
-                if(activeCurrencyAlert === handle){
-                  activeCurrencyAlert = null;
+                lastTimestamp = now;
+                if(activeAlertTimeout){
+                  clearTimeout(activeAlertTimeout);
+                  activeAlertTimeout = 0;
                 }
-                activeCurrencyAlertTimeout = 0;
-              }, 1500);
+                if(activeAlert && typeof activeAlert.remove === 'function'){
+                  activeAlert.remove();
+                  activeAlert = null;
+                }
+                const handle = showCopyStyleMessage(message, inputEl);
+                if(!handle) return;
+                activeAlert = handle;
+                activeAlertTimeout = window.setTimeout(()=>{
+                  handle.remove();
+                  if(activeAlert === handle){
+                    activeAlert = null;
+                  }
+                  activeAlertTimeout = 0;
+                }, 1500);
+              };
             };
+
+            const currencyAlertMessage = 'Please select a currency before entering a price.';
+            const showCurrencyAlert = createTransientInputAlert(currencyAlertMessage);
+            const sessionTimeAlertMessage = 'There is already a session for that time.';
+            const showSessionTimeAlert = createTransientInputAlert(sessionTimeAlertMessage);
 
             const sanitizeSessionPriceValue = value => {
               const raw = typeof value === 'string' ? value : String(value ?? '');
@@ -15657,14 +15663,19 @@ function makePosts(){
             };
 
             const commitTimeValue = ({ venue, venueIndex, sessionIndex, timeIndex, timeObj, input })=>{
+              const session = Array.isArray(venue.sessions) ? venue.sessions[sessionIndex] : null;
               const isMaster = sessionIndex === 0;
               if(!isMaster){
                 lockSessionMirror(venue);
               }
               const mirrorLocked = isSessionMirrorLocked(venue);
-              const raw = input.value.trim();
-              if(raw === ''){
-                if(timeObj.time){
+
+              const clearTimeValue = ()=>{
+                const previous = typeof timeObj.time === 'string' ? timeObj.time : '';
+                if(input.value !== ''){
+                  input.value = '';
+                }
+                if(previous){
                   timeObj.time = '';
                   notifyFormbuilderChange();
                 }
@@ -15696,6 +15707,12 @@ function makePosts(){
                 resetSlotIfEmpty(venue, timeIndex);
                 input.classList.remove('is-invalid');
                 updateSessionDateInputDisplay(venueIndex, sessionIndex);
+                return previous;
+              };
+
+              const raw = input.value.trim();
+              if(raw === ''){
+                clearTimeValue();
                 return;
               }
               if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(raw)){
@@ -15707,6 +15724,35 @@ function makePosts(){
               if(timeObj.time === raw){
                 return;
               }
+
+              let hasDuplicateTime = false;
+              const currentDate = typeof session?.date === 'string' ? session.date : '';
+              const sessionsToCheck = Array.isArray(venue.sessions) ? venue.sessions : [];
+              for(let idx = 0; idx < sessionsToCheck.length && !hasDuplicateTime; idx++){
+                const compareSession = sessionsToCheck[idx];
+                if(!compareSession) continue;
+                if(currentDate){
+                  if(typeof compareSession.date !== 'string' || compareSession.date !== currentDate) continue;
+                } else if(compareSession !== session){
+                  continue;
+                }
+                const compareTimes = Array.isArray(compareSession.times) ? compareSession.times : [];
+                for(let tIdx = 0; tIdx < compareTimes.length; tIdx++){
+                  const compareTime = compareTimes[tIdx];
+                  if(!compareTime || compareTime === timeObj) continue;
+                  if(typeof compareTime.time !== 'string') continue;
+                  if(compareTime.time === raw){
+                    hasDuplicateTime = true;
+                    break;
+                  }
+                }
+              }
+              if(hasDuplicateTime){
+                clearTimeValue();
+                showSessionTimeAlert(input);
+                return;
+              }
+
               const slot = ensureSlot(venue, timeIndex);
               timeObj.time = raw;
               updateSessionDateInputDisplay(venueIndex, sessionIndex);
