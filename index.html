@@ -5707,6 +5707,31 @@ img.thumb{
 }
 
 </style>
+  <style id="mobile-open-post-fixes">
+    @media (max-width: 600px){
+      .open-post .post-body{
+        flex-direction:column;
+        gap:var(--gap);
+      }
+      .open-post .post-body > .main-post-column,
+      .open-post .post-body{
+        flex:1 1 100%;
+        max-width:100%;
+        width:100%;
+      }
+      .open-post .post-images{
+        position:static;
+        top:auto;
+        align-self:stretch;
+        width:100%;
+      }
+      body.open-post-sticky-images .open-post .post-images{
+        position:static;
+        top:auto;
+        align-self:stretch;
+      }
+    }
+  </style>
   <style id="cursor-fixes">
     html, body { cursor: auto !important; }
     a, button, [role="button"], .clickable { cursor: pointer !important; }
