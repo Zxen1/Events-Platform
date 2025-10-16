@@ -20485,7 +20485,6 @@ function makePosts(){
         {geo:'#geocoder-filter', locate:'#geolocate-filter', compass:'#compass-filter'},
         {geo:'#geocoder-member', locate:'#geolocate-member', compass:'#compass-member'}
       ];
-      const logoLoader = (window.__logoLoading && typeof window.__logoLoading === 'object') ? window.__logoLoading : null;
       const cityZoomLevel = 12;
 
       sets.forEach((sel, idx)=>{
@@ -20517,30 +20516,7 @@ function makePosts(){
           trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
-        let geolocateLogoPending = 0;
-        const startGeolocateLoading = () => {
-          if(logoLoader && typeof logoLoader.begin === 'function' && geolocateLogoPending === 0){
-            try{ logoLoader.begin(); }catch(err){}
-            geolocateLogoPending = 1;
-          }
-        };
-        const stopGeolocateLoading = () => {
-          if(geolocateLogoPending > 0 && logoLoader && typeof logoLoader.end === 'function'){
-            geolocateLogoPending = 0;
-            try{ logoLoader.end(); }catch(err){}
-          }
-        };
-        if(geolocate && typeof geolocate.trigger === 'function' && !geolocate.__logoLoadingWrapped){
-          const originalTrigger = geolocate.trigger.bind(geolocate);
-          geolocate.trigger = function(...args){
-            try{ startGeolocateLoading(); }catch(err){}
-            return originalTrigger(...args);
-          };
-          geolocate.__logoLoadingWrapped = true;
-        }
-        geolocate.on('trackuserlocationstart', () => { startGeolocateLoading(); });
         geolocate.on('geolocate', (event)=>{
-          stopGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           if(mode!=='map') setMode('map');
           if(event && event.coords){
@@ -20576,31 +20552,10 @@ function makePosts(){
             }
           }
         });
-        geolocate.on('error', stopGeolocateLoading);
-        geolocate.on('trackuserlocationend', stopGeolocateLoading);
-        geolocate.on('outofmaxbounds', stopGeolocateLoading);
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
-          const geoButton = controlEl && controlEl.querySelector ? controlEl.querySelector('button') : null;
-          if(geoButton && !geoButton.dataset.logoSpinBound){
-            const triggerLoading = (ev) => {
-              if(ev && ev.type === 'keydown'){
-                const key = ev.key || ev.code;
-                if(key !== 'Enter' && key !== ' ' && key !== 'Space' && key !== 'Spacebar'){
-                  return;
-                }
-              }
-              startGeolocateLoading();
-            };
-            geoButton.addEventListener('pointerdown', triggerLoading);
-            geoButton.addEventListener('mousedown', triggerLoading);
-            geoButton.addEventListener('touchstart', triggerLoading);
-            geoButton.addEventListener('keydown', triggerLoading);
-            geoButton.addEventListener('click', triggerLoading);
-            geoButton.dataset.logoSpinBound = 'true';
-          }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
