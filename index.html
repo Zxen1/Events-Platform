@@ -4273,19 +4273,18 @@ body.mode-map .post-board{
 .open-post .post-body{
   padding:0 0 10px;
   display:flex;
-  flex-direction:row;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:var(--gap);
-  align-items:flex-start;
+  align-items:stretch;
   align-content:flex-start;
   flex:1 1 100%;
   max-width:100%;
   width:100%;
 }
 .open-post .post-body > .main-post-column{
-  flex:0 0 var(--post-board-max-w);
-  max-width:var(--post-board-max-w);
-  width:var(--post-board-max-w);
+  flex:1 1 100%;
+  max-width:100%;
+  width:100%;
 }
 
 .open-post .post-details{
@@ -4321,11 +4320,11 @@ body.mode-map .post-board{
   flex-direction:column;
   gap:5px;
   width:100%;
-  max-width:var(--post-board-max-w);
-  flex:0 0 100%;
+  max-width:100%;
+  flex:1 1 auto;
   box-sizing:border-box;
-  margin:0 auto;
-  align-self:center;
+  margin:0;
+  align-self:stretch;
 }
 
 .open-post.desc-expanded .post-images,
