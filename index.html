@@ -45,19 +45,6 @@
       .post-card, .post { position: relative; z-index: 2; }
     }
 
-    .mapboxgl-ctrl-group--passive-compass .mapboxgl-ctrl-compass {
-      touch-action: manipulation;
-    }
-
-    .mapboxgl-ctrl-compass.mapboxgl-ctrl-compass--inactive .mapboxgl-ctrl-compass-arrow {
-      opacity: 0.35;
-    }
-
-    .mapboxgl-ctrl-group--passive-compass .mapboxgl-ctrl-compass-arrow {
-      transition: transform 0.15s ease, opacity 0.15s ease;
-      transform-origin: 50% 50%;
-    }
-
   </style>
 
   <style>
@@ -6388,7 +6375,7 @@ if (typeof slugify !== 'function') {
           <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile">Profile</button>
         </div>
       </div>
-      <div id="memberForm" class="panel-body" data-form-container>
+      <form id="memberForm" class="panel-body" novalidate>
         <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
           <p class="member-create-intro">Choose a category and subcategory to load the matching post form.</p>
           <div class="member-create-selects">
@@ -6421,7 +6408,7 @@ if (typeof slugify !== 'function') {
             </div>
             <div class="member-create-actions">
               <button type="button" id="memberCreatePaypalButton" class="member-create-paypal-btn">Check Out with PayPal</button>
-              <button type="button" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
+              <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
             </div>
           </div>
         </section>
@@ -6432,14 +6419,14 @@ if (typeof slugify !== 'function') {
               <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
               <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
             </div>
-            <form id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin" novalidate>
+            <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
               <label for="memberLoginEmail">Email</label>
               <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
               <label for="memberLoginPassword">Password</label>
               <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
               <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
-            </form>
-            <form id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden novalidate>
+            </section>
+            <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
               <label for="memberRegisterName">Display Name</label>
               <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
               <label for="memberRegisterEmail">Email</label>
@@ -6449,7 +6436,7 @@ if (typeof slugify !== 'function') {
               <label for="memberRegisterAvatar">Avatar URL</label>
               <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
               <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
-            </form>
+            </section>
             <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
               <div class="member-profile">
                 <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
@@ -6464,7 +6451,7 @@ if (typeof slugify !== 'function') {
             </section>
           </div>
         </section>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -7981,7 +7968,7 @@ if (typeof slugify !== 'function') {
 
   <div id="adminStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
 
-  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true" inert>
+  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true">
     <div class="member-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="memberUnsavedTitle">
       <h3 id="memberUnsavedTitle">Unsaved Changes</h3>
       <p>You have unsaved changes. Save before closing the member panel?</p>
@@ -9479,123 +9466,6 @@ if (typeof slugify !== 'function') {
     startPitch = window.startPitch = initialPitch;
     startBearing = window.startBearing = 0;
 
-    class PassiveCompassControl {
-      constructor(options = {}){
-        this._visualizePitch = options.visualizePitch !== false;
-        this._map = null;
-        this._container = null;
-        this._button = null;
-        this._arrow = null;
-        this._onMapChange = this._onMapChange.bind(this);
-        this._handleReset = this._handleReset.bind(this);
-      }
-
-      onAdd(map){
-        this._map = map;
-        const container = document.createElement('div');
-        container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group mapboxgl-ctrl-group--passive-compass';
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'mapboxgl-ctrl-icon mapboxgl-ctrl-compass mapboxgl-ctrl-compass--inactive';
-        button.setAttribute('aria-label', 'Reset bearing and pitch');
-        button.setAttribute('title', 'Reset bearing and pitch');
-
-        const arrow = document.createElement('span');
-        arrow.className = 'mapboxgl-ctrl-compass-arrow';
-        button.appendChild(arrow);
-        container.appendChild(button);
-
-        this._container = container;
-        this._button = button;
-        this._arrow = arrow;
-
-        button.addEventListener('click', this._handleReset, {passive: true});
-        button.addEventListener('keydown', (event) => {
-          if(!event) return;
-          const key = event.key || event.code;
-          if(key === 'Enter' || key === 'Space' || key === ' ' || key === 'Spacebar'){
-            event.preventDefault();
-            this._handleReset();
-          }
-        });
-
-        if(map && typeof map.on === 'function'){
-          map.on('load', this._onMapChange);
-          map.on('rotate', this._onMapChange);
-          map.on('pitch', this._onMapChange);
-        }
-
-        const scheduleUpdate = () => this._onMapChange();
-        if(typeof queueMicrotask === 'function'){
-          queueMicrotask(scheduleUpdate);
-        } else {
-          setTimeout(scheduleUpdate, 0);
-        }
-
-        return container;
-      }
-
-      onRemove(){
-        if(this._map && typeof this._map.off === 'function'){
-          this._map.off('load', this._onMapChange);
-          this._map.off('rotate', this._onMapChange);
-          this._map.off('pitch', this._onMapChange);
-        }
-        if(this._container && this._container.parentNode){
-          this._container.parentNode.removeChild(this._container);
-        }
-        this._map = null;
-        this._container = null;
-        this._button = null;
-        this._arrow = null;
-      }
-
-      _handleReset(){
-        if(!this._map) return;
-        const target = { bearing: 0, essential: true };
-        if(this._visualizePitch){
-          target.pitch = 0;
-        }
-        try{
-          if(typeof this._map.easeTo === 'function'){
-            this._map.easeTo({ ...target, duration: 300 });
-            return;
-          }
-          if(typeof this._map.setBearing === 'function'){
-            this._map.setBearing(0);
-          }
-          if(this._visualizePitch && typeof this._map.setPitch === 'function'){
-            this._map.setPitch(0);
-          }
-        }catch(err){}
-      }
-
-      _onMapChange(){
-        if(!this._map || !this._arrow) return;
-        let bearing = 0;
-        let pitch = 0;
-        try{
-          bearing = typeof this._map.getBearing === 'function' ? this._map.getBearing() : 0;
-        }catch(err){ bearing = 0; }
-        try{
-          pitch = typeof this._map.getPitch === 'function' ? this._map.getPitch() : 0;
-        }catch(err){ pitch = 0; }
-        const transforms = [`rotate(${bearing}deg)`];
-        if(this._visualizePitch){
-          const limitedPitch = Math.max(0, Math.min(85, Math.abs(pitch)));
-          const scaleY = 1 - (limitedPitch / 120);
-          const safeScale = Number.isFinite(scaleY) ? Math.min(Math.max(scaleY, 0.55), 1) : 1;
-          transforms.push(`scaleY(${safeScale.toFixed(3)})`);
-        }
-        this._arrow.style.transform = transforms.join(' ');
-        const isNeutral = Math.abs(bearing) < 0.01 && (!this._visualizePitch || Math.abs(pitch) < 0.01);
-        if(this._button){
-          this._button.classList.toggle('mapboxgl-ctrl-compass--inactive', isNeutral);
-        }
-      }
-    }
-
       let map, spinning = false, historyWasActive = localStorage.getItem('historyActive') === 'true', expiredWasOn = false, dateStart = null, dateEnd = null,
           spinLoadStart = JSON.parse(localStorage.getItem('spinLoadStart') ?? 'true'),
           spinLoadType = localStorage.getItem('spinLoadType') || 'all',
@@ -10818,11 +10688,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     const categories = window.categories = initialFormbuilderSnapshot.categories;
-    const DEFAULT_SUBCATEGORY_FIELDS = [
-      { name: 'Title', type: 'title', placeholder: '', required: true },
-      { name: 'Description', type: 'description', placeholder: '', required: true },
-      { name: 'Images', type: 'images', placeholder: '', required: true }
-    ];
     (function ensureLiveGigsVenuesSessionsField(){
       if(!Array.isArray(categories)) return;
       const targetCategory = categories.find(cat => cat && typeof cat.name === 'string' && cat.name === "What's On");
@@ -10835,36 +10700,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         targetCategory.subFields[subName] = [];
       }
       const fields = targetCategory.subFields[subName];
-
-      let insertPosition = 0;
-      DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-        let existingField = null;
-        for(let i = fields.length - 1; i >= 0; i--){
-          const current = fields[i];
-          if(current && current.type === defaultField.type){
-            const removed = fields.splice(i, 1)[0];
-            if(!existingField && removed && typeof removed === 'object'){
-              existingField = removed;
-            }
-          }
-        }
-        let normalizedField = existingField && typeof existingField === 'object' ? existingField : cloneFieldValue(defaultField);
-        Object.keys(defaultField).forEach(key => {
-          normalizedField[key] = cloneFieldValue(defaultField[key]);
-        });
-        fields.splice(insertPosition, 0, normalizedField);
-        insertPosition++;
-      });
-
+      const existingIndex = fields.findIndex(field => field && field.type === 'venue-session-version-tier-price');
       let field = null;
-      for(let i = fields.length - 1; i >= 0; i--){
-        const current = fields[i];
-        if(current && current.type === 'venue-session-version-tier-price'){
-          const removed = fields.splice(i, 1)[0];
-          if(!field && removed && typeof removed === 'object'){
-            field = removed;
-          }
-        }
+      if(existingIndex >= 0){
+        field = fields.splice(existingIndex, 1)[0] || null;
       }
       if(!field || typeof field !== 'object'){
         field = {
@@ -11106,17 +10945,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
       return base;
     }
-    function ensureNormalizedVenueSessionOptions(options){
-      if(typeof window.normalizeVenueSessionOptions === 'function'){
-        return window.normalizeVenueSessionOptions(options);
-      }
-      const list = Array.isArray(options) ? options : [];
-      if(!list.length){
-        return [venueSessionCreateVenue()];
-      }
-      return list.map(cloneVenueSessionVenue);
-    }
-
     function getVenueAutofillState(field, venue){
       let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
       if(!fieldState){
@@ -11134,6 +10962,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
+    const DEFAULT_SUBCATEGORY_FIELDS = [
+      { name: 'Title', type: 'title', placeholder: '', required: true },
+      { name: 'Description', type: 'description', placeholder: '', required: true },
+      { name: 'Images', type: 'images', placeholder: '', required: true }
+    ];
       const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
         "Opportunities": "opportunities-category-icon",
@@ -14997,7 +14830,7 @@ function makePosts(){
               safeField.options = [];
             }
             if(safeField.type === 'venue-session-version-tier-price'){
-              safeField.options = ensureNormalizedVenueSessionOptions(safeField.options);
+              safeField.options = normalizeVenueSessionOptions(safeField.options);
             } else if(safeField.type === 'version-price'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
@@ -15040,7 +14873,7 @@ function makePosts(){
             editor.appendChild(venueList);
 
             const ensureOptions = ()=>{
-              previewField.options = ensureNormalizedVenueSessionOptions(previewField.options);
+              previewField.options = normalizeVenueSessionOptions(previewField.options);
               if(!Array.isArray(previewField.options) || previewField.options.length === 0){
                 previewField.options = [venueSessionCreateVenue()];
               }
@@ -18591,7 +18424,7 @@ function makePosts(){
               }
               dropdownOptionsContainer.hidden = !isOptionsType;
               if(showVenueSession){
-                safeField.options = ensureNormalizedVenueSessionOptions(safeField.options);
+                safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVersionPrice){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = [{ version: '', currency: '', price: '' }];
@@ -21089,7 +20922,7 @@ function makePosts(){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
         }
-        const nav = new PassiveCompassControl({ visualizePitch:true });
+        const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
         if(compassHolder) compassHolder.appendChild(nav.onAdd(map));
       });
@@ -21934,101 +21767,345 @@ if (!map.__pillHooksInstalled) {
       });
       refreshInViewMarkerLabelComposites(map);
       if(!postSourceEventsBound){
-        function createMapCardOverlay(post, opts={}){
-          if(!map || !post || typeof mapboxgl === 'undefined' || typeof mapboxgl.Popup !== 'function'){
-            return null;
+        function createMapCardOverlay(post, opts = {}){
+          const { targetLngLat, fixedLngLat, eventLngLat, venueKey: overlayVenueKey = null } = opts;
+          const previousKey = selectedVenueKey;
+          if(overlayVenueKey){
+            selectedVenueKey = overlayVenueKey;
           }
-          const options = opts || {};
-          const normalizeLngLat = (value)=>{
-            if(!value) return null;
-            const lng = Number(value.lng ?? value.lon ?? value.longitude);
-            const lat = Number(value.lat ?? value.latitude);
-            if(Number.isFinite(lng) && Number.isFinite(lat)){
-              return { lng, lat };
-            }
-            return null;
-          };
-          const lngLat = normalizeLngLat(options.targetLngLat)
-            || normalizeLngLat(options.fixedLngLat)
-            || normalizeLngLat(options.eventLngLat)
-            || (Number.isFinite(Number(post.lng)) && Number.isFinite(Number(post.lat))
-              ? { lng: Number(post.lng), lat: Number(post.lat) }
-              : null);
-          if(!lngLat){
-            return null;
-          }
-          const fixedLngLat = normalizeLngLat(options.fixedLngLat) || lngLat;
-          const popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnMove: false,
-            className: 'big-map-card'
-          });
-          popup.__fixedLngLat = fixedLngLat;
-
-          const wrapper = document.createElement('div');
-          wrapper.className = 'mapmarker-overlay is-card-visible';
           try{
-            wrapper.innerHTML = mapCardHTML(post, { venueKey: options.venueKey });
-          }catch(err){
-            console.error('mapCardHTML failed', err);
-            return null;
-          }
+            const overlayRoot = document.createElement('div');
+            overlayRoot.className = 'mapmarker-overlay';
+            overlayRoot.setAttribute('aria-hidden', 'true');
+            overlayRoot.style.pointerEvents = 'none';
+            overlayRoot.style.userSelect = 'none';
 
-          const normalizedId = post.id !== undefined && post.id !== null ? String(post.id) : '';
-          if(normalizedId){
-            wrapper.dataset.id = normalizedId;
-          }
-          if(options.venueKey){
-            wrapper.dataset.venueKey = String(options.venueKey);
-          }
-          const normalizedMultiIds = (() => {
-            const raw = Array.isArray(options.multiPostIds)
-              ? options.multiPostIds
-              : (Array.isArray(options.multiIds) ? options.multiIds : (Array.isArray(post.multiPostIds) ? post.multiPostIds : []));
-            return raw
-              .map(item => (item === undefined || item === null) ? '' : String(item))
-              .filter(Boolean);
-          })();
-          if(normalizedMultiIds.length){
-            const joined = normalizedMultiIds.join(',');
-            wrapper.dataset.multiIds = joined;
-          }
+            const parseVenueKey = (key)=>{
+              if(typeof key !== 'string') return null;
+              const parts = key.split(',');
+              if(parts.length !== 2) return null;
+              const lng = Number(parts[0]);
+              const lat = Number(parts[1]);
+              if(!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+              return { lng, lat };
+            };
 
-          popup.setDOMContent(wrapper);
-          popup.setLngLat(lngLat).addTo(map);
-
-          const popupEl = popup.getElement();
-          if(popupEl){
-            popupEl.classList.add('mapmarker-overlay', 'is-card-visible', 'mapboxgl-popup-track-pointer');
-            if(normalizedId){
-              popupEl.dataset.id = normalizedId;
+            let resolvedVenueKey = typeof overlayVenueKey === 'string' && overlayVenueKey ? overlayVenueKey : '';
+            let resolvedCoords = resolvedVenueKey ? parseVenueKey(resolvedVenueKey) : null;
+            const sourceCoord = targetLngLat || fixedLngLat || eventLngLat || (Number.isFinite(post?.lng) && Number.isFinite(post?.lat) ? { lng: post.lng, lat: post.lat } : null);
+            if(!resolvedCoords && sourceCoord && Number.isFinite(sourceCoord.lng) && Number.isFinite(sourceCoord.lat)){
+              resolvedCoords = { lng: Number(sourceCoord.lng), lat: Number(sourceCoord.lat) };
             }
-            if(options.venueKey){
-              popupEl.dataset.venueKey = String(options.venueKey);
+            if(!resolvedVenueKey && resolvedCoords){
+              resolvedVenueKey = toVenueCoordKey(resolvedCoords.lng, resolvedCoords.lat);
             }
-            if(normalizedMultiIds.length){
-              popupEl.dataset.multiIds = normalizedMultiIds.join(',');
+            if(resolvedVenueKey){
+              overlayRoot.dataset.venueKey = resolvedVenueKey;
+            } else if(overlayVenueKey){
+              overlayRoot.dataset.venueKey = overlayVenueKey;
             } else {
-              delete popupEl.dataset.multiIds;
+              delete overlayRoot.dataset.venueKey;
             }
-            const onPointerEnter = () => {
-              window.__overCard = true;
-            };
-            const onPointerLeave = () => {
-              window.__overCard = false;
-            };
-            popupEl.addEventListener('pointerenter', onPointerEnter);
-            popupEl.addEventListener('pointerleave', onPointerLeave);
-            registerOverlayCleanup(popupEl, () => {
-              popupEl.removeEventListener('pointerenter', onPointerEnter);
-              popupEl.removeEventListener('pointerleave', onPointerLeave);
-              if(window.__overCard){
-                window.__overCard = false;
+
+            const visibleList = (filtersInitialized && Array.isArray(filtered) && filtered.length) ? filtered : posts;
+            const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
+              if(!item || item.id === undefined || item.id === null) return '';
+              return String(item.id);
+            }).filter(Boolean) : []);
+            let venuePostsAll = [];
+            if(resolvedCoords && typeof getPostsAtVenueByCoords === 'function'){
+              venuePostsAll = getPostsAtVenueByCoords(resolvedCoords.lng, resolvedCoords.lat) || [];
+            } else if(resolvedVenueKey && typeof getPostsAtVenueByCoords === 'function'){
+              const coords = parseVenueKey(resolvedVenueKey);
+              if(coords){
+                venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
+              }
+            }
+            let venuePostsVisible = Array.isArray(venuePostsAll) ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id))) : [];
+            if(!venuePostsVisible.length){
+              const fallbackPost = Array.isArray(visibleList) ? visibleList.find(item => item && String(item.id) === String(post && post.id)) : null;
+              if(fallbackPost){
+                venuePostsVisible = [fallbackPost];
+              } else if(post){
+                venuePostsVisible = [post];
+              }
+            }
+            const uniqueVenuePosts = [];
+            const venuePostIds = new Set();
+            venuePostsVisible.forEach(item => {
+              if(!item || item.id === undefined || item.id === null) return;
+              const idStr = String(item.id);
+              if(!idStr || venuePostIds.has(idStr)) return;
+              venuePostIds.add(idStr);
+              uniqueVenuePosts.push(item);
+            });
+            if(!uniqueVenuePosts.length && post){
+              uniqueVenuePosts.push(post);
+              if(post.id !== undefined && post.id !== null){
+                venuePostIds.add(String(post.id));
+              }
+            }
+            const multiIds = Array.from(venuePostIds);
+            const multiCount = uniqueVenuePosts.length;
+            const isMultiVenue = multiCount > 1;
+            if(isMultiVenue){
+              overlayRoot.dataset.multiIds = multiIds.join(',');
+            } else {
+              delete overlayRoot.dataset.multiIds;
+            }
+            const sortedList = Array.isArray(sortedPostList) ? sortedPostList : [];
+            let primaryVenuePost = null;
+            if(isMultiVenue && sortedList.length){
+              primaryVenuePost = sortedList.find(entry => entry && venuePostIds.has(String(entry.id))) || null;
+            }
+            if(!primaryVenuePost){
+              primaryVenuePost = uniqueVenuePosts[0] || post;
+            }
+            const overlayId = primaryVenuePost && primaryVenuePost.id !== undefined && primaryVenuePost.id !== null
+              ? String(primaryVenuePost.id)
+              : String(post.id);
+            overlayRoot.dataset.id = overlayId;
+
+            const markerContainer = document.createElement('div');
+            markerContainer.className = 'small-map-card';
+            markerContainer.dataset.id = overlayId;
+            markerContainer.setAttribute('aria-hidden', 'true');
+            markerContainer.style.pointerEvents = 'none';
+            markerContainer.style.userSelect = 'none';
+
+            const markerIcon = new Image();
+            try{ markerIcon.decoding = 'async'; }catch(e){}
+            markerIcon.alt = '';
+            markerIcon.className = 'mapmarker';
+            markerIcon.draggable = false;
+            markerIcon.loading = 'eager';
+            markerIcon.referrerPolicy = 'no-referrer';
+            if(isMultiVenue){
+              markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
+              enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
+            } else {
+              const markerSources = window.subcategoryMarkers || {};
+              const markerIds = window.subcategoryMarkerIds || {};
+              const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
+              const markerIdCandidates = [];
+              if(post && post.subcategory){
+                const mappedId = markerIds[post.subcategory];
+                if(mappedId) markerIdCandidates.push(mappedId);
+                markerIdCandidates.push(slugifyFn(post.subcategory));
+              }
+              const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
+              const markerFallback = 'assets/icons-30/whats-on-category-icon-30.webp';
+              markerIcon.onerror = ()=>{
+                markerIcon.onerror = null;
+                markerIcon.src = markerFallback;
+              };
+              markerIcon.src = markerIconUrl || markerFallback;
+            }
+            requestAnimationFrame(() => {
+              if(typeof markerIcon.decode === 'function'){
+                markerIcon.decode().catch(()=>{});
               }
             });
-          }
 
-          return popup;
+            const markerPill = new Image();
+            try{ markerPill.decoding = 'async'; }catch(e){}
+            markerPill.alt = '';
+            markerPill.src = 'assets/icons-30/150x40-pill-70.webp';
+            markerPill.dataset.defaultSrc = 'assets/icons-30/150x40-pill-70.webp';
+            markerPill.dataset.highlightSrc = 'assets/icons-30/150x40-pill-2f3b73.webp';
+            markerPill.className = 'mapmarker-pill';
+            markerPill.loading = 'eager';
+            markerPill.style.opacity = '0.9';
+            markerPill.style.visibility = 'visible';
+            markerPill.draggable = false;
+            requestAnimationFrame(() => {
+              if(typeof markerPill.decode === 'function'){
+                markerPill.decode().catch(()=>{});
+              }
+            });
+
+            const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
+            const venueDisplayName = (()=>{
+              if(resolvedVenueKey){
+                const candidates = uniqueVenuePosts.length ? uniqueVenuePosts : (post ? [post] : []);
+                for(const candidate of candidates){
+                  const locs = Array.isArray(candidate?.locations) ? candidate.locations : [];
+                  const match = locs.find(loc => loc && toVenueCoordKey(loc.lng, loc.lat) === resolvedVenueKey && loc.venue);
+                  if(match && match.venue){
+                    return match.venue;
+                  }
+                }
+              }
+              const fallback = uniqueVenuePosts[0] || post;
+              return getPrimaryVenueName(fallback) || '';
+            })();
+            const multiSmallVenueText = shortenMarkerLabelText(venueDisplayName, markerLabelTextAreaWidthPx);
+            const multiBigVenueText = shortenMarkerLabelText(venueDisplayName, mapCardTitleWidthPx);
+            const multiCountLabel = `${multiCount} posts here`;
+            const markerLabel = document.createElement('div');
+            markerLabel.className = 'mapmarker-label';
+            if(isMultiVenue){
+              markerContainer.classList.add('small-multi-post-map-card');
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = multiCountLabel;
+              const markerLine2 = document.createElement('div');
+              markerLine2.className = 'mapmarker-label-line';
+              markerLine2.textContent = multiSmallVenueText || venueDisplayName || '';
+              markerLabel.append(markerLine1, markerLine2);
+            } else if(labelLines){
+              const markerLine1 = document.createElement('div');
+              markerLine1.className = 'mapmarker-label-line';
+              markerLine1.textContent = labelLines.line1;
+              markerLabel.appendChild(markerLine1);
+              if(labelLines.line2){
+                const markerLine2 = document.createElement('div');
+                markerLine2.className = 'mapmarker-label-line';
+                markerLine2.textContent = labelLines.line2;
+                markerLabel.appendChild(markerLine2);
+              }
+            }
+
+            markerContainer.append(markerPill, markerIcon, markerLabel);
+
+            const cardRoot = document.createElement('div');
+            cardRoot.className = 'big-map-card big-map-card--popup';
+            if(isMultiVenue){
+              cardRoot.classList.add('big-multi-post-map-card');
+            }
+            cardRoot.dataset.id = overlayId;
+            cardRoot.setAttribute('aria-hidden', 'true');
+            cardRoot.style.pointerEvents = 'auto';
+            cardRoot.style.userSelect = 'none';
+
+            const pillImg = new Image();
+            try{ pillImg.decoding = 'async'; }catch(e){}
+            pillImg.alt = '';
+            pillImg.src = 'assets/icons-30/225x60-pill-99.webp';
+            pillImg.className = 'map-card-pill';
+            pillImg.style.opacity = '0.9';
+            pillImg.draggable = false;
+
+            const thumbImg = new Image();
+            try{ thumbImg.decoding = 'async'; }catch(e){}
+            thumbImg.alt = '';
+            thumbImg.loading = 'eager';
+            thumbImg.draggable = false;
+            if(isMultiVenue){
+              thumbImg.src = 'assets/icons-30/multi-post-icon-50.webp';
+              thumbImg.className = 'map-card-thumb';
+            } else {
+              const thumbFallback = 'assets/funmap-logo-small.png';
+              thumbImg.onerror = ()=>{
+                thumbImg.onerror = null;
+                thumbImg.src = thumbFallback;
+              };
+              thumbImg.src = thumbUrl(post) || thumbFallback;
+              thumbImg.className = 'map-card-thumb';
+              thumbImg.referrerPolicy = 'no-referrer';
+            }
+            requestAnimationFrame(() => {
+              if(typeof thumbImg.decode === 'function'){
+                thumbImg.decode().catch(()=>{});
+              }
+            });
+
+            const labelEl = document.createElement('div');
+            labelEl.className = 'map-card-label';
+            const titleWrap = document.createElement('div');
+            titleWrap.className = 'map-card-title';
+            if(isMultiVenue){
+              [multiCountLabel, multiBigVenueText || venueDisplayName || ''].forEach(line => {
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            } else if(labelLines){
+              const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
+                ? labelLines.cardTitleLines.slice(0, 2)
+                : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
+              cardTitleLines.forEach(line => {
+                if(!line) return;
+                const lineEl = document.createElement('div');
+                lineEl.className = 'map-card-title-line';
+                lineEl.textContent = line;
+                titleWrap.appendChild(lineEl);
+              });
+            }
+            if(!titleWrap.childElementCount){
+              const lineEl = document.createElement('div');
+              lineEl.className = 'map-card-title-line';
+              lineEl.textContent = '';
+              titleWrap.appendChild(lineEl);
+            }
+            labelEl.appendChild(titleWrap);
+            if(!isMultiVenue && labelLines){
+              const venueLine = labelLines.venueLine || shortenMarkerLabelText(getPrimaryVenueName(post), mapCardTitleWidthPx);
+              if(venueLine){
+                const venueEl = document.createElement('div');
+                venueEl.className = 'map-card-venue';
+                venueEl.textContent = venueLine;
+                labelEl.appendChild(venueEl);
+              }
+            }
+
+            cardRoot.append(pillImg, thumbImg, labelEl);
+            overlayRoot.append(markerContainer, cardRoot);
+            overlayRoot.classList.add('is-card-visible');
+            overlayRoot.style.pointerEvents = '';
+            resetBigMapCardTransforms();
+
+            const handleOverlayClick = (ev)=>{
+              ev.preventDefault();
+              ev.stopPropagation();
+              const pid = overlayRoot.dataset.id;
+              if(!pid) return;
+              callWhenDefined('openPost', (fn)=>{
+                requestAnimationFrame(() => {
+                  try{
+                    touchMarker = null;
+                    stopSpin();
+                    if(typeof closePanel === 'function' && typeof filterPanel !== 'undefined' && filterPanel){
+                      try{ closePanel(filterPanel); }catch(err){}
+                    }
+                    fn(pid, false, true);
+                  }catch(err){ console.error(err); }
+                });
+              });
+            };
+            cardRoot.addEventListener('click', handleOverlayClick, { capture: true });
+            ['pointerdown','mousedown','touchstart'].forEach(type => {
+              cardRoot.addEventListener(type, (ev)=>{
+                const pointerType = typeof ev.pointerType === 'string' ? ev.pointerType.toLowerCase() : '';
+                const isTouchLike = pointerType === 'touch' || ev.type === 'touchstart';
+                if(!isTouchLike){
+                  try{ ev.preventDefault(); }catch(err){}
+                }
+                try{ ev.stopPropagation(); }catch(err){}
+              }, { capture: true });
+            });
+            const marker = new mapboxgl.Marker({ element: overlayRoot, anchor: 'center' });
+            if(typeof marker.setZIndexOffset === 'function'){
+              try{ marker.setZIndexOffset(20000); }catch(e){}
+            }
+            const markerElement = typeof marker.getElement === 'function' ? marker.getElement() : overlayRoot;
+            if(markerElement && markerElement.style){
+              markerElement.style.zIndex = '20000';
+            }
+            if(targetLngLat){ marker.setLngLat(targetLngLat); }
+            else if(fixedLngLat){ marker.setLngLat(fixedLngLat); }
+            else if(eventLngLat){ marker.setLngLat(eventLngLat); }
+            marker.addTo(map);
+            marker.__fixedLngLat = fixedLngLat;
+            window.__overCard = false;
+            registerPopup(marker);
+            return marker;
+          } finally {
+            if(overlayVenueKey){
+              selectedVenueKey = previousKey;
+            }
+          }
         }
 
         const handleMarkerClick = (e)=>{
@@ -22068,13 +22145,7 @@ if (!map.__pillHooksInstalled) {
               }
               const p = posts.find(x=>x.id===id);
               if(p){
-                hoverPopup = createMapCardOverlay(p, {
-                  targetLngLat,
-                  fixedLngLat,
-                  eventLngLat: e && e.lngLat,
-                  venueKey,
-                  multiPostIds: normalizedMultiIds
-                });
+                hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
                 updateSelectedMarkerRing();
               }
             }
@@ -22129,8 +22200,6 @@ if (!map.__pillHooksInstalled) {
         const props = f.properties || {};
         const id = props.id;
         const venueKey = props.venueKey || null;
-        const rawMultiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
-        const normalizedMultiIds = rawMultiIds.map(item => String(item)).filter(Boolean);
         const coords = f.geometry && f.geometry.coordinates;
         const hasCoords = Array.isArray(coords) && coords.length >= 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
         const baseLngLat = hasCoords ? { lng: coords[0], lat: coords[1] } : (e && e.lngLat ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : null);
@@ -22146,13 +22215,7 @@ if (!map.__pillHooksInstalled) {
           hoverPopup = null;
           updateSelectedMarkerRing();
         }
-        hoverPopup = createMapCardOverlay(p, {
-          targetLngLat,
-          fixedLngLat,
-          eventLngLat: e && e.lngLat,
-          venueKey,
-          multiPostIds: normalizedMultiIds
-        });
+        hoverPopup = createMapCardOverlay(p, { targetLngLat, fixedLngLat, eventLngLat: e && e.lngLat, venueKey });
         updateSelectedMarkerRing();
       };
       MARKER_INTERACTIVE_LAYERS.forEach(layer => map.on('mouseenter', layer, handleMarkerMouseEnter));
@@ -24470,20 +24533,8 @@ const memberPanelChangeManager = (()=>{
 
   function closePrompt(){
     if(prompt){
-      const active = document.activeElement;
-      if(active && prompt.contains(active)){
-        const fallback = (panel && panel.querySelector) ? panel.querySelector('.close-panel') : null;
-        if(fallback && typeof fallback.focus === 'function'){
-          try{ fallback.focus({ preventScroll: true }); }catch(err){
-            try{ fallback.focus(); }catch(e){}
-          }
-        } else if(active && typeof active.blur === 'function'){
-          active.blur();
-        }
-      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
-      prompt.setAttribute('inert','');
     }
   }
 
@@ -24495,7 +24546,6 @@ const memberPanelChangeManager = (()=>{
   function openPrompt(target){
     pendingCloseTarget = target || panel;
     if(prompt){
-      prompt.removeAttribute('inert');
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
       setTimeout(()=>{
@@ -24533,10 +24583,6 @@ const memberPanelChangeManager = (()=>{
       } finally {
         applying = false;
       }
-    } else if(form){
-      form.querySelectorAll('input[type="file"]').forEach(input => {
-        try{ input.value = ''; }catch(err){}
-      });
     }
     applyState(savedState);
     setDirty(false);
@@ -25576,16 +25622,7 @@ document.addEventListener('pointerdown', (e) => {
             safe.options.push('');
           }
         } else if(type === 'venue-session-version-tier-price'){
-          const normalizeOptions = typeof window.ensureNormalizedVenueSessionOptions === 'function'
-            ? window.ensureNormalizedVenueSessionOptions
-            : function(options){
-                const list = Array.isArray(options) ? options : [];
-                if(!list.length){
-                  return [venueSessionCreateVenue()];
-                }
-                return list.map(cloneVenueSessionVenue);
-              };
-          const normalized = normalizeOptions(field.options);
+          const normalized = normalizeVenueSessionOptions(field.options);
           safe.options = normalized.map(cloneVenueSessionVenue);
         } else {
           safe.options = Array.isArray(field.options)
@@ -26560,11 +26597,9 @@ document.addEventListener('pointerdown', (e) => {
   let colorIdx = 0;
   const cats = window.categories || [];
   cats.forEach((cat, idx) => {
-    if(!cat || typeof cat !== 'object') return;
-    const subs = Array.isArray(cat.subs) ? cat.subs : [];
     const shape = shapeList[idx % shapeList.length];
     categoryShapes[cat.name] = shape;
-    subs.forEach(sub => {
+    cat.subs.forEach(sub => {
       const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
       colorIdx++;
       const slug = slugify(sub);
@@ -28171,20 +28206,23 @@ document.addEventListener('DOMContentLoaded', () => {
     loginInputs = loginPanel ? Array.from(loginPanel.querySelectorAll('input')) : [];
     registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
 
-    if(loginPanel){
-      loginPanel.addEventListener('submit', event => {
-        event.preventDefault();
-        lastAction = 'login';
-        handleLogin();
-      });
-    }
-    if(registerPanel){
-      registerPanel.addEventListener('submit', event => {
-        event.preventDefault();
-        lastAction = 'register';
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const submitter = event.submitter || null;
+      const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
+      if(action === 'register'){
         handleRegister();
+      } else {
+        handleLogin();
+      }
+    });
+
+    const submitButtons = form.querySelectorAll('.member-auth-submit');
+    submitButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lastAction = btn.dataset.action || 'login';
       });
-    }
+    });
 
     if(loginTab){
       loginTab.addEventListener('click', () => {
