@@ -1,4 +1,4 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/funmapco/public_html/
-    - /bin/rsync -av --exclude='backups/' --exclude='.git/' ./ $DEPLOYPATH
+    - export DEPLOYPATH=/home/funmapco/public_html
+    - /bin/rsync -av --delete --exclude='backups/' --exclude='.git/' --exclude='.github/' ./ "$DEPLOYPATH"/
