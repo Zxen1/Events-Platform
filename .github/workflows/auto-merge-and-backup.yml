@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
@@ -26,7 +26,6 @@ jobs:
           git config user.name "codex-bot"
           git config user.email "codex-bot@example.com"
 
-      # Always proceed on pushes to main (including merges)
       - name: Mark as merge commit for backup
         id: merge_check
         run: echo "merge_commit=true" >> $GITHUB_OUTPUT
@@ -46,10 +45,10 @@ jobs:
             desc="$(printf "%s" "$msg" | head -n 1)"
           fi
           safe_desc="$(printf "%s" "$desc" | tr ' ' '-' | tr -cd '[:alnum:]-')"
-          safe_desc="${safe_desc:0:30}"  # Trim to 30 chars at creation only
+          safe_desc="${safe_desc:0:30}"
 
-          echo "🔍 Finding changed files (excluding renames)..."
-          CHANGED_FILES=$(git diff-tree --no-commit-id --diff-filter=AM -r ${{ github.sha }} --name-only)
+          echo "🔍 Comparing HEAD~1 to HEAD for changes..."
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD --diff-filter=AM)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new or modified files in this push."
