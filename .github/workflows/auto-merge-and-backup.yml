@@ -1,80 +1,52 @@
-name: Auto Merge & Backup
+name: Safe Backup on Merge
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths-ignore:
-      - 'backups/**'
-
-permissions:
-  contents: write   # allow pushing backups to the repo
 
 jobs:
-  merge-and-backup:
+  backup-merged-files:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configure Git
+      - name: Get changed files from PR
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+
+      - name: Create backup directory
+        run: mkdir -p backups
+
+      - name: Copy and rename files
+        env:
+          TIMESTAMP: $(date +"%Y-%m-%d-%H-%M-%S")
         run: |
-          git config user.name "codex-bot"
-          git config user.email "codex-bot@example.com"
-
-      # Always proceed on pushes to main (including merges)
-      - name: Mark as merge commit for backup
-        id: merge_check
-        run: echo "merge_commit=true" >> $GITHUB_OUTPUT
-
-      - name: Backup changed files (flat list, skip renames)
-        if: steps.merge_check.outputs.merge_commit == 'true'
-        run: |
-          set -e
-          mkdir -p backups
-          export TZ="Australia/Sydney"
-          datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
-
-          # Get commit message and make safe short description
-          msg="${{ github.event.head_commit.message }}"
-          desc="$(printf "%s" "$msg" | sed -n '2,$p' | sed -n '/./{p;q}')"
-          if [ -z "$desc" ]; then
-            desc="$(printf "%s" "$msg" | head -n 1)"
-          fi
-          safe_desc="$(printf "%s" "$desc" | tr ' ' '-' | tr -cd '[:alnum:]-')"
-          safe_desc="${safe_desc:0:30}"  # Trim to 30 chars at creation only
-
-          echo "🔍 Finding changed files (excluding renames)..."
-          CHANGED_FILES=$(git diff-tree --no-commit-id --diff-filter=AM -r ${{ github.sha }} --name-only)
-
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No new or modified files in this push."
-            exit 0
-          fi
-
-          for file in $CHANGED_FILES; do
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if [ -f "$file" ]; then
-              base_name=$(basename "$file")
-              ext="${base_name##*.}"
-              name="${base_name%.*}"
-              cp "$file" "backups/${name}-${datetime}-${safe_desc}.${ext}"
-              echo "📦 Backed up: $file → backups/${name}-${datetime}-${safe_desc}.${ext}"
+              filename=$(basename "$file")
+              cp "$file" "backups/${filename}-${TIMESTAMP}"
+              echo "Backed up: $file to backups/${filename}-${TIMESTAMP}"
             fi
           done
 
-          echo "✅ Backup completed. All files stored flat in backups/"
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Commit backup
-        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
           git add backups/
-          if git diff --cached --quiet; then
-            echo "No new backup created"
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Automated backup from PR #${{ github.event.pull_request.number }}"
+            git push
           else
-            git commit -m "Backup changed files at $(date) for commit: ${{ github.sha }}"
-            git push origin main
+            echo "No changes to commit for backup."
           fi
