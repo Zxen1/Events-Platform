@@ -24,29 +24,42 @@ jobs:
           git config user.name "codex-bot"
           git config user.email "codex-bot@example.com"
 
-      # ⬇️ CHANGED: now backs up *all root files* instead of just index.html
-      - name: Backup all root files
+      - name: Backup changed files (flat list, skip renames)
         run: |
           set -e
           mkdir -p backups
           export TZ="Australia/Sydney"
           datetime=$(date +"%Y-%m-%dT%H%M%S.%3N")
 
-          # Get the commit message
+          # Get commit message and make safe short description
           msg="${{ github.event.head_commit.message }}"
-
-          # Extract description
           desc="$(printf "%s" "$msg" | sed -n '2,$p' | sed -n '/./{p;q}')"
           if [ -z "$desc" ]; then
             desc="$(printf "%s" "$msg" | head -n 1)"
           fi
           safe_desc="$(printf "%s" "$desc" | tr ' ' '-' | tr -cd '[:alnum:]-')"
+          safe_desc="${safe_desc:0:30}"  # Trim to 30 chars at creation only
 
-          # ⬇️ This line copies ALL root-level files (not folders) into a timestamped folder
-          mkdir -p "backups/root-${datetime}-${safe_desc}"
-          find . -maxdepth 1 -type f ! -path "./.git*" -exec cp {} "backups/root-${datetime}-${safe_desc}/" \;
+          echo "🔍 Finding changed files (excluding renames)..."
+          # Get only modified or added files, skip renames (R) and deletions (D)
+          CHANGED_FILES=$(git diff-tree --no-commit-id --diff-filter=AM -r ${{ github.sha }} --name-only)
 
-          echo "📦 Backup saved: backups/root-${datetime}-${safe_desc}/"
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No new or modified files in this push."
+            exit 0
+          fi
+
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              base_name=$(basename "$file")
+              ext="${base_name##*.}"
+              name="${base_name%.*}"
+              cp "$file" "backups/${name}-${datetime}-${safe_desc}.${ext}"
+              echo "📦 Backed up: $file → backups/${name}-${datetime}-${safe_desc}.${ext}"
+            fi
+          done
+
+          echo "✅ Backup completed. All files stored flat in backups/"
 
       - name: Commit backup
         run: |
@@ -54,6 +67,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No new backup created"
           else
-            git commit -m "Backup all root files at $(date) for commit: ${{ github.sha }}"
+            git commit -m "Backup changed files at $(date) for commit: ${{ github.sha }}"
             git push origin main
           fi
