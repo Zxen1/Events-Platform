@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'backups/**'
 
 permissions:
   contents: write   # allow pushing backups to the repo
@@ -24,7 +26,13 @@ jobs:
           git config user.name "codex-bot"
           git config user.email "codex-bot@example.com"
 
-      - name: Backup changed files (flat list, skip renames)
+      # Always proceed on pushes to main (including merges)
+      - name: Mark as merge commit for backup
+        id: merge_check
+        run: echo "merge_commit=true" >> $GITHUB_OUTPUT
+
+      - name: Backup changed files (flat list, whitespace-sensitive, skip renames)
+        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
           set -e
           mkdir -p backups
@@ -40,9 +48,9 @@ jobs:
           safe_desc="$(printf "%s" "$desc" | tr ' ' '-' | tr -cd '[:alnum:]-')"
           safe_desc="${safe_desc:0:30}"  # Trim to 30 chars at creation only
 
-          echo "🔍 Finding changed files (excluding renames)..."
-          # Get only modified or added files, skip renames (R) and deletions (D)
-          CHANGED_FILES=$(git diff-tree --no-commit-id --diff-filter=AM -r ${{ github.sha }} --name-only)
+          echo "🔍 Finding changed files (including whitespace, skipping renames)..."
+          # -w=false ensures whitespace-only changes count as modifications
+          CHANGED_FILES=$(git diff-tree --no-commit-id --diff-filter=AM -r ${{ github.sha }} --name-only -w=false)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new or modified files in this push."
@@ -62,6 +70,7 @@ jobs:
           echo "✅ Backup completed. All files stored flat in backups/"
 
       - name: Commit backup
+        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
           git add backups/
           if git diff --cached --quiet; then
