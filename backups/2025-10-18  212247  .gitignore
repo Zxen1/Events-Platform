@@ -1,0 +1,3 @@
+db/database.json
+# keep backups folder for GitHub backups, but not for cPanel deploys
+!backups/
