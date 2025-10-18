@@ -1,0 +1,439 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Events Platform</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicons/android-chrome-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/favicons/android-chrome-512x512.png" />
+  <link rel="manifest" href="assets/favicons/site.webmanifest" />
+  <link rel="shortcut icon" href="assets/favicons/favicon.ico" />
+  <link id="mapbox-gl-css" rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" />
+
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
+    data-fallback="https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css"
+    onerror="if(this.dataset.fallback && this.href !== this.dataset.fallback){this.dataset.fallbackState='retry';this.href=this.dataset.fallback;}else{this.dataset.fallbackState='failed';}"
+  />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="mode-map" style="padding-bottom:var(--footer-h);">
+  <header class="header" role="banner">
+    <div class="logo" aria-label="Site logo">
+      <img src="assets/funmap-logo-small.png" alt="FunMap.com logo" />
+    </div>
+    <nav class="view-toggle" aria-label="Primary">
+      <!-- <button id="quickBtn" aria-pressed="false" aria-label="Toggle results list">Quick List</button> -->
+      <button id="filterBtn" aria-pressed="false" aria-label="Open filters panel">
+        <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span id="resultCount" aria-live="polite" style="display:none"></span>
+      </button>
+      <div class="mode-toggle">
+        <button id="recents-button" aria-pressed="false" aria-label="Recents">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </span>
+          <span class="mode-label">Recents</span>
+        </button>
+        <button id="posts-button" aria-pressed="false" aria-label="Posts">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="6" x2="19" y2="6"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <line x1="5" y1="18" x2="13" y2="18"></line>
+            </svg>
+          </span>
+          <span class="mode-label">Posts</span>
+        </button>
+        <button id="map-button" aria-pressed="true" aria-label="Map">
+          <span class="mode-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s-6-4.5-6-10a6 6 0 1112 0c0 5.5-6 10-6 10z"></path>
+              <circle cx="12" cy="11" r="2.5"></circle>
+            </svg>
+          </span>
+          <span class="mode-label">Map</span>
+        </button>
+      </div>
+    </nav>
+    <div class="header-buttons">
+      <button id="memberBtn" type="button" aria-pressed="false" aria-label="Open members area">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 18.75a6 6 0 00-7.5 0"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"/>
+        </svg>
+      </button>
+      <button id="adminBtn" type="button" aria-pressed="false" aria-label="Open admin area" hidden>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82 2 2 0 1 1-2.83 2.83 1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51 2 2 0 1 1-4 0 1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33 2 2 0 1 1-2.83-2.83 1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1A2 2 0 1 1 4 9a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82A2 2 0 1 1 8.01 3.35a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51A2 2 0 1 1 14 3a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33A2 2 0 1 1 19.65 8a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1A2 2 0 1 1 21 15a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <button id="fullscreenBtn" type="button" class="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
+    </div>
+  </header>
+  
+  <section class="map-area" aria-label="Map">
+    <div class="map-control-row map-controls-map">
+      <div id="geocoder-map" class="geocoder"></div>
+      <div id="geolocate-map" class="geolocate-btn"></div>
+      <div id="compass-map" class="compass-btn"></div>
+    </div>
+    <div class="map-zoom-indicator" id="mapZoomIndicator" aria-live="polite">Zoom -- • Pitch --</div>
+    <div id="map"></div>
+  </section>
+
+  <div class="post-mode-background"></div>
+  <div class="post-mode-boards">
+    <!-- <section class="quick-list-board" id="results" aria-label="Quick List Board"></section> -->
+    <section class="recents-board quick-list-board" id="recentsBoard" aria-label="Recents Board" data-side="left" aria-hidden="true" style="display:none;">
+    </section>
+    <section class="post-board" aria-label="Post Board" data-side="left" aria-hidden="true" style="display:none;">
+    </section>
+    <section class="ad-board" aria-label="Ad Board" data-side="right" aria-hidden="true" style="display:none;">
+      <div class="ad-panel">
+      </div>
+    </section>
+  </div>
+
+  <div id="filterPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));left:0;">
+      <div class="panel-header">
+        <div id="filterSummary" class="filter-summary"></div>
+      </div>
+      <div class="panel-body">
+        <div class="map-control-row map-controls-filter">
+          <div id="geocoder-filter" class="geocoder"></div>
+          <div id="geolocate-filter" class="geolocate-btn"></div>
+          <div id="compass-filter" class="compass-btn"></div>
+        </div>
+        <div class="reset-box">
+          <div id="resetBtn" class="btn" role="button" aria-label="Reset all filters">
+            Reset All Filters
+          </div>
+        </div>
+        <div class="reset-box">
+          <div id="resetCategoriesBtn" class="btn" role="button" aria-label="Reset all categories">
+            Reset All Categories
+          </div>
+        </div>
+        <div class="field sort-field">
+          <div class="options-dropdown">
+            <button id="optionsBtn" aria-haspopup="true" aria-expanded="false">Sort by Title A-Z</button>
+            <div id="optionsMenu" class="options-menu" hidden>
+              <button id="favToggle" aria-pressed="false">Favourites on top<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg></button>
+              <div class="sort-options" role="group" aria-label="Sort order" style="display:flex; flex-direction:column; gap:6px;">
+                <button class="sort-option" data-sort="az" aria-pressed="true">Sort by Title A-Z</button>
+                <button class="sort-option" data-sort="nearest" aria-pressed="false">Sort by Closest</button>
+                <button class="sort-option" data-sort="soon" aria-pressed="false">Sort by Soonest</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <section aria-label="Filters">
+          <div class="filter-basics-container">
+            <div class="field keyword-row">
+              <div class="input"><input id="keyword-textbox" type="text" placeholder="Keywords" aria-label="Keywords" />
+                <div class="keyword-clear-button" role="button" aria-label="Clear keywords">X</div>
+              </div>
+            </div>
+            <div class="field price-range-row">
+              <div class="input">
+                <input id="min-price-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price" />
+                <span class="price-separator" aria-hidden="true">-</span>
+                <input id="max-price-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price" />
+                <div class="price-clear-button" role="button" aria-label="Clear price range">X</div>
+              </div>
+            </div>
+            <div class="field daterange-row">
+              <div class="input"><input id="daterange-textbox" type="text" aria-label="Date range" placeholder="Date Range" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="datePickerContainer" />
+                <div class="daterange-clear-button" role="button" aria-label="Clear date">X</div>
+              </div>
+            </div>
+            <div class="field expired-row">
+              <span class="expired-text">Show Expired Events</span>
+              <label class="switch">
+                <input id="expiredToggle" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="datePickerContainer" class="calendar-container" aria-hidden="true">
+              <div id="datePicker"></div>
+            </div>
+          </div>
+          <div class="filter-category-container">
+            <div class="cats" id="cats" aria-label="Categories"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="memberPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="right:0;">
+      <div class="panel-header">
+        <div class="header-top">
+          <h2>Member Access</h2>
+          <div class="panel-actions">
+            <button type="button" class="close-panel">Close</button>
+          </div>
+        </div>
+        <div class="tab-bar" role="tablist" aria-label="Member sections">
+          <button type="button" class="tab-btn" data-tab="create" aria-selected="false" id="memberTabCreate" aria-controls="memberTab-create">Create Post</button>
+          <button type="button" class="tab-btn" data-tab="myposts" aria-selected="false" id="memberTabMyPosts" aria-controls="memberTab-myposts">My Posts</button>
+          <button type="button" class="tab-btn" data-tab="profile" aria-selected="true" id="memberTabProfile" aria-controls="memberTab-profile">Profile</button>
+        </div>
+      </div>
+      <form id="memberForm" class="panel-body" novalidate>
+        <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
+          <p class="member-create-intro">Choose a category and subcategory to load the matching post form.</p>
+          <div class="member-create-selects">
+            <div class="panel-field member-create-field member-create-select">
+              <label for="memberCreateCategory">Category</label>
+              <select id="memberCreateCategory" autocomplete="off"></select>
+            </div>
+            <div class="panel-field member-create-field member-create-select">
+              <label for="memberCreateSubcategory">Subcategory</label>
+              <select id="memberCreateSubcategory" autocomplete="off" disabled></select>
+            </div>
+          </div>
+          <p id="memberCreateEmpty" class="member-create-placeholder">Select a category and subcategory to begin.</p>
+          <div id="memberCreateFormWrapper" class="member-create-form" hidden>
+            <div id="memberCreateFormFields" class="member-create-fields" role="group" aria-live="polite"></div>
+          </div>
+          <div id="memberCreateCheckout" class="member-create-checkout" hidden>
+            <div class="panel-field member-create-field">
+              <label for="memberCreateListingPrice">Listing Price</label>
+              <div class="member-create-price-row">
+                <select id="memberCreateListingCurrency" autocomplete="off">
+                  <option value="">Currency</option>
+                </select>
+                <input type="text" id="memberCreateListingPrice" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+              </div>
+            </div>
+            <div class="panel-field member-create-field member-create-paypal">
+              <label>PayPal Checkout</label>
+              <div id="memberCreatePaypalContainer" class="member-paypal-container" aria-live="polite"></div>
+            </div>
+            <div class="member-create-actions">
+              <button type="button" id="memberCreatePaypalButton" class="member-create-paypal-btn">Check Out with PayPal</button>
+              <button type="submit" id="memberCreatePostBtn" class="primary-action" disabled>Post Listing</button>
+            </div>
+          </div>
+        </section>
+        <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
+        <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
+          <div class="member-auth" data-state="logged-out">
+            <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
+              <button type="button" class="member-auth-tab" data-target="login" role="tab" aria-selected="true" aria-controls="memberLoginPanel" id="memberAuthTabLogin">Login</button>
+              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="memberRegisterPanel" id="memberAuthTabRegister">Register</button>
+            </div>
+            <section id="memberLoginPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabLogin">
+              <label for="memberLoginEmail">Email</label>
+              <input type="email" id="memberLoginEmail" name="loginEmail" autocomplete="email" />
+              <label for="memberLoginPassword">Password</label>
+              <input type="password" id="memberLoginPassword" name="loginPassword" autocomplete="current-password" />
+              <button type="submit" class="primary-action member-auth-submit" data-action="login">Log In</button>
+            </section>
+            <section id="memberRegisterPanel" class="member-auth-panel" role="tabpanel" aria-labelledby="memberAuthTabRegister" hidden>
+              <label for="memberRegisterName">Display Name</label>
+              <input type="text" id="memberRegisterName" name="registerName" autocomplete="name" />
+              <label for="memberRegisterEmail">Email</label>
+              <input type="email" id="memberRegisterEmail" name="registerEmail" autocomplete="email" />
+              <label for="memberRegisterPassword">Password</label>
+              <input type="password" id="memberRegisterPassword" name="registerPassword" autocomplete="new-password" />
+              <label for="memberRegisterAvatar">Avatar URL</label>
+              <input type="url" id="memberRegisterAvatar" name="registerAvatar" placeholder="https://example.com/avatar.jpg" />
+              <button type="submit" class="primary-action member-auth-submit" data-action="register">Create Account</button>
+            </section>
+            <section id="memberProfilePanel" class="member-auth-panel member-auth-profile" role="region" aria-live="polite" hidden>
+              <div class="member-profile">
+                <img id="memberProfileAvatar" class="member-profile-avatar" src="" alt="" />
+                <div class="member-profile-details">
+                  <p id="memberProfileName" class="member-profile-name"></p>
+                  <p id="memberProfileEmail" class="member-profile-email"></p>
+                </div>
+              </div>
+              <div class="member-profile-actions">
+                <button type="button" class="tiny" id="memberLogoutBtn">Log Out</button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminPanel" class="panel" role="dialog" aria-panel="true" aria-hidden="true">
+    <div class="panel-content" style="top:calc(var(--header-h) + var(--safe-top));right:0;">
+      <div class="panel-header">
+        <div class="header-top">
+          <h2 class="title">Admin</h2>
+          <div class="panel-actions">
+            <button type="button" class="save-changes primary-action">Save</button>
+            <button type="button" class="discard-changes" disabled>Discard Changes</button>
+            <button type="button" class="close-panel">Close</button>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <button type="button" class="tab-btn" data-tab="forms" aria-selected="true">Forms</button>
+          <button type="button" class="tab-btn" data-tab="map" aria-selected="false">Map</button>
+          <button type="button" class="tab-btn" data-tab="settings" aria-selected="false">Settings</button>
+        </div>
+      </div>
+      <form id="adminForm" class="panel-body">
+        <div id="tab-map" class="tab-panel">
+          <div class="map-spin-container">
+            <div class="panel-field">
+              <div class="option-label">
+                <span>Spin on Load</span>
+                <label class="switch">
+                  <input type="checkbox" id="spinLoadStart" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div id="spinType" class="option-group">
+                <label class="option-label"><span>Everyone</span><input type="radio" name="spinType" value="all" /></label>
+                <label class="option-label"><span>New Users</span><input type="radio" name="spinType" value="new" /></label>
+              </div>
+            </div>
+            <div class="panel-field">
+              <div class="option-label">
+                <span>Spin on Logo</span>
+                <label class="switch">
+                  <input type="checkbox" id="spinLogoClick" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+          </div>
+        </div>
+        </div>
+        <div id="tab-settings" class="tab-panel">
+        <div id="post-mode-background-field" class="panel-field">
+          <label for="postModeBgColor">Post Mode Background</label>
+          <div class="settings-style-container">
+            <div id="post-mode-background-row">
+              <input type="color" id="postModeBgColor">
+              <input type="range" id="postModeBgOpacity" min="0" max="1" step="0.01">
+              <span id="postModeBgOpacityVal">0.00</span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-welcome-container">
+          <div id="welcome-message-panel" class="panel-field">
+            <label for="welcomeMessageEditor">Welcome Message</label>
+            <div class="wysiwyg-toolbar">
+              <button type="button" data-command="bold"><b>B</b></button>
+              <button type="button" data-command="italic"><i>I</i></button>
+              <button type="button" data-command="underline"><u>U</u></button>
+            </div>
+            <div id="welcomeMessageEditor" class="wysiwyg" contenteditable="true" data-placeholder='<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class="icon-search" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" role="img" aria-label="Filters"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> button to refine your search.</p>'></div>
+            <textarea id="welcomeMessage" hidden></textarea>
+          </div>
+        </div>
+        <div class="settings-paypal-container">
+          <div class="panel-field">
+            <label for="adminPaypalClientId">PayPal Client ID</label>
+            <input type="text" id="adminPaypalClientId" autocomplete="off" placeholder="Enter PayPal Client ID" />
+          </div>
+          <div class="panel-field">
+            <label for="adminPaypalClientSecret">PayPal Client Secret</label>
+            <input type="password" id="adminPaypalClientSecret" autocomplete="off" placeholder="Enter PayPal Client Secret" />
+          </div>
+          <div class="panel-field">
+            <label for="adminListingPrice">Default Listing Price</label>
+            <div class="admin-listing-price-row">
+              <select id="adminListingCurrency" autocomplete="off">
+                <option value="">Currency</option>
+              </select>
+              <input type="text" id="adminListingPrice" inputmode="decimal" autocomplete="off" placeholder="0.00" />
+            </div>
+          </div>
+        </div>
+        </div>
+        <div id="tab-forms" class="tab-panel active">
+          <div class="formbuilder-container">
+            <div class="formbuilder-actions">
+              <button type="button" id="formbuilderAddCategory" class="formbuilder-add-category-btn">Add Category</button>
+            </div>
+            <div class="cats" id="formbuilderCats" aria-label="Categories"></div>
+          </div>
+          
+          <div id="formsControls">
+            <div id="formsCategories"></div>
+          </div>
+        </div>
+      </form>
+  </div>
+  </div>
+
+  <div id="adminUnsavedPrompt" class="admin-unsaved-prompt" aria-hidden="true">
+    <div class="admin-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="adminUnsavedTitle">
+      <h3 id="adminUnsavedTitle">Unsaved Changes</h3>
+      <p>You have unsaved changes. Save before closing the admin panel?</p>
+      <div class="admin-unsaved-actions">
+        <button type="button" class="confirm-save primary-action">Save</button>
+        <button type="button" class="confirm-discard" disabled>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <div id="memberUnsavedPrompt" class="member-unsaved-prompt" aria-hidden="true">
+    <div class="member-unsaved-dialog" role="dialog" aria-modal="true" aria-labelledby="memberUnsavedTitle">
+      <h3 id="memberUnsavedTitle">Unsaved Changes</h3>
+      <p>You have unsaved changes. Save before closing the member panel?</p>
+      <div class="member-unsaved-actions">
+        <button type="button" class="confirm-save primary-action">Save</button>
+        <button type="button" class="confirm-discard" disabled>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="memberStatusMessage" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <div id="welcome-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <!-- Welcome modal content (not a panel) -->
+    <div class="modal-content">
+      <div class="panel-body" id="welcomeBody">
+        <img class="welcome-logo" src="https://raw.githubusercontent.com/Zxen1/Events-Platform/refs/heads/main/assets/funmap-logo-big.png" alt="FunMap logo" />
+        <div class="map-control-row map-controls-welcome">
+          <div id="geocoder-welcome" class="geocoder"></div>
+          <div id="geolocate-welcome" class="geolocate-btn"></div>
+          <div id="compass-welcome" class="compass-btn"></div>
+        </div>
+        <div id="welcomeMessageBox"></div>
+        <img class="welcome-illustration" src="assets/monkeys/Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png" alt="Friendly monkey mascot welcoming visitors" />
+      </div>
+    </div>
+  </div>
+
+<div class="image-modal-container hidden">
+  <div class="image-modal"></div>
+</div>
+
+<div id="post-modal-container" class="hidden">
+  <div class="post-modal"></div>
+</div>
+
+  <script src="index.js" defer></script>
+
+</body>
+</html>
+ 
+
+<!-- backup test -->
