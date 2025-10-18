@@ -12523,9 +12523,50 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'open-post';
       wrap.dataset.id = p.id;
-      const loc0 = p.locations[0];
-      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
-      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
+      const expiredToggle = document.getElementById('expiredToggle');
+      const includeExpired = !!(expiredToggle && expiredToggle.checked);
+      const cutoffDate = (()=>{
+        const base = new Date();
+        base.setHours(0,0,0,0);
+        base.setDate(base.getDate() - 1);
+        return base;
+      })();
+      const cloneLocation = (loc)=>{
+        if(!loc || typeof loc !== 'object') return null;
+        const copy = {...loc};
+        copy.dates = Array.isArray(loc.dates)
+          ? loc.dates.map(item => (item && typeof item === 'object') ? {...item} : item)
+          : [];
+        return copy;
+      };
+      const originalLocations = Array.isArray(p.locations) ? p.locations : [];
+      const detailLocations = originalLocations.reduce((acc, loc)=>{
+        const clone = cloneLocation(loc);
+        if(!clone) return acc;
+        if(!includeExpired){
+          clone.dates = clone.dates.filter(date => {
+            if(!date || typeof date.full !== 'string') return false;
+            const parts = date.full.split('-').map(Number);
+            if(parts.length !== 3) return false;
+            const [yy, mm, dd] = parts;
+            if(!Number.isFinite(yy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return false;
+            const value = new Date(yy, mm - 1, dd);
+            value.setHours(0,0,0,0);
+            return value >= cutoffDate;
+          });
+        }
+        if(Array.isArray(clone.dates) && clone.dates.length){
+          acc.push(clone);
+        }
+        return acc;
+      }, []);
+      const firstLocation = detailLocations[0] || null;
+      const sortedDates = firstLocation && Array.isArray(firstLocation.dates)
+        ? firstLocation.dates.slice().sort((a,b)=> a.full.localeCompare(b.full))
+        : [];
+      const defaultInfo = firstLocation && sortedDates.length
+        ? `💲 ${firstLocation.price} | 📅 ${sortedDates[0].date} - ${sortedDates[sortedDates.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`
+        : '';
       const thumbSrc = thumbUrl(p);
       const headerInner = `
           <div class="title-block">
@@ -12542,6 +12583,9 @@ function makePosts(){
       const posterName = p.member ? p.member.username : 'Anonymous';
       const postedTime = formatPostTimestamp(p.created);
       const postedMeta = postedTime ? `Posted by ${posterName} · ${postedTime}` : `Posted by ${posterName}`;
+      const venueButtonName = firstLocation ? firstLocation.venue : (p.city || '');
+      const venueButtonAddress = firstLocation ? firstLocation.address : (p.city || '');
+      const venueOptionsHtml = detailLocations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('');
       wrap.innerHTML = `
         <div class="post-header">
           ${headerInner}
@@ -12551,7 +12595,7 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${venueButtonName}</span><span class="venue-address">${venueButtonAddress}</span>${detailLocations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${venueOptionsHtml}</div></div></div>
               <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
             </div>
             <div class="post-details-info-container">
@@ -15653,7 +15697,7 @@ function openPostModal(id){
           }
         }
       function updateVenue(idx){
-        const locations = Array.isArray(p.locations) ? p.locations : [];
+        const locations = detailLocations;
         const hasLocations = locations.length > 0;
         let targetIndex = Number.isInteger(idx) ? idx : 0;
         if(hasLocations){
@@ -15681,7 +15725,7 @@ function openPostModal(id){
 
         if(venueBtn){
           if(loc){
-            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
           } else {
             venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="venue-address">${p.city || ''}</span>`;
           }
@@ -15700,6 +15744,16 @@ function openPostModal(id){
           sessionHasMultiple = false;
           if(sessionInfo){
             sessionInfo.innerHTML = '';
+          }
+          if(sessionOptions){
+            sessionOptions.innerHTML = '';
+          }
+          if(calendarEl){
+            calendarEl.innerHTML = '';
+          }
+          if(sessBtn){
+            sessBtn.textContent = 'Select Session';
+            sessBtn.setAttribute('aria-expanded','false');
           }
           ensureMapForVenue();
           return;
@@ -15721,7 +15775,7 @@ function openPostModal(id){
           venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         }
         if(venueBtn){
-          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
         sessionHasMultiple = loc.dates.length > 1;
@@ -15740,6 +15794,7 @@ function openPostModal(id){
         const maxDate = parseDate(dateStrings[dateStrings.length-1]);
         let cal = null;
         let selectedIndex = null;
+        let lastMonthScrollLeft = 0;
 
         const months = [];
         if(minDate && maxDate){
@@ -15769,17 +15824,12 @@ function openPostModal(id){
           if(!monthEl) return null;
           const currentLeft = calScroll.scrollLeft;
           let targetLeft = monthEl.offsetLeft;
-          if(typeof monthEl.getBoundingClientRect === 'function' && typeof calScroll.getBoundingClientRect === 'function'){
-            const monthRect = monthEl.getBoundingClientRect();
-            const scrollRect = calScroll.getBoundingClientRect();
-            const delta = monthRect.left - scrollRect.left;
-            const adjusted = currentLeft + delta;
-            if(Number.isFinite(adjusted)){
-              targetLeft = adjusted;
-            }
+          if(!Number.isFinite(targetLeft)){
+            targetLeft = 0;
           }
           const maxLeft = Math.max(0, calScroll.scrollWidth - calScroll.clientWidth);
           targetLeft = Math.min(Math.max(targetLeft, 0), maxLeft);
+          lastMonthScrollLeft = targetLeft;
           const distance = Math.abs(currentLeft - targetLeft);
           if(typeof calScroll.scrollTo === 'function'){
             if(smooth && distance > 1){
@@ -15945,12 +15995,22 @@ function openPostModal(id){
             sessBtn.setAttribute('aria-expanded', String(opening));
             if(opening){
               showMenu(sessMenu);
-              if(selectedIndex !== null){
-                const dt = loc.dates[selectedIndex];
-                if(dt){
-                  requestAnimationFrame(()=> scrollCalendarToMonth(dt));
+              const align = ()=>{
+                if(selectedIndex !== null){
+                  const dt = loc.dates[selectedIndex];
+                  if(dt){
+                    const result = scrollCalendarToMonth(dt, {smooth:false});
+                    if(result && calScroll){
+                      calScroll.scrollLeft = result.targetLeft;
+                    }
+                    return;
+                  }
                 }
-              }
+                if(calScroll){
+                  calScroll.scrollLeft = lastMonthScrollLeft;
+                }
+              };
+              requestAnimationFrame(align);
             } else {
               hideMenu(sessMenu);
             }
@@ -15965,7 +16025,7 @@ function openPostModal(id){
         ensureMapForVenue = async function(){
           if(!mapEl) return;
 
-          const allLocations = Array.isArray(p.locations) ? p.locations.filter(item => item && Number.isFinite(item.lng) && Number.isFinite(item.lat)) : [];
+          const allLocations = detailLocations.filter(item => item && Number.isFinite(item.lng) && Number.isFinite(item.lat));
           if(!allLocations.length){
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
