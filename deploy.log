@@ -1901,3 +1901,44 @@ No changes to commit.
 Sync complete at 2025-10-20_00-16-15
 [2025-10-20 00:16:15] Deployment finished.
 
+[2025-10-20 00:17:05] Webhook triggered.
+[2025-10-20 00:17:05] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:17:05] git reset: HEAD is now at 02603b9 Auto-sync_2025-10-20_00-17-02
+[2025-10-20 00:17:06] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:17:06] Deployment finished.
+
+[2025-10-20 00:17:12] Webhook triggered.
+[2025-10-20 00:17:13] Webhook triggered.
+[2025-10-20 00:17:13] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   02603b9..09df88b  main       -> origin/main
+[2025-10-20 00:17:13] git reset: HEAD is now at 09df88b Backup changed files at Sun Oct 19 13:17:11 UTC 2025 for commit: 02603b9353271139fab43420f6c024958df8a323
+[2025-10-20 00:17:14] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+error: cannot lock ref 'refs/remotes/origin/main': is at 09df88bcd43a8f5325e0d1f8eccf3d939e8dd393 but expected 02603b9353271139fab43420f6c024958df8a323
+ ! 02603b9..09df88b  main       -> origin/main  (unable to update local ref)
+[2025-10-20 00:17:14] git reset: HEAD is now at 09df88b Backup changed files at Sun Oct 19 13:17:11 UTC 2025 for commit: 02603b9353271139fab43420f6c024958df8a323
+[2025-10-20 00:17:14] auto-publish: 
+[2025-10-20 00:17:14] Deployment finished.
+
+[2025-10-20 00:17:14] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+No changes to commit.
+Sync complete at 2025-10-20_00-17-14
+[2025-10-20 00:17:14] Deployment finished.
+
