@@ -1,112 +1,80 @@
-name: Auto Deploy + Backups + Restore Tag
+name: Auto Merge & Backup
 
 on:
   push:
-    branches: [ "main" ]  # change if your default branch is different
-  workflow_dispatch:
+    branches:
+      - main
+    paths-ignore:
+      - 'backups/**'
+
+permissions:
+  contents: write
 
 jobs:
-  deploy:
-    # Ignore the follow-up commit made by this workflow (github-actions[bot])
-    if: github.actor != 'github-actions[bot]'
+  merge-and-backup:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine changed files in this push
-        id: diffs
+      - name: Configure Git
         run: |
-          BEFORE="${{ github.event.before }}"
-          AFTER="${{ github.sha }}"
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            # first push on a new branch etc — just diff the tree
-            git diff --name-only $AFTER^ $AFTER > /tmp/changed.txt || true
-          else
-            git diff --name-only "$BEFORE" "$AFTER" > /tmp/changed.txt || true
-          fi
-          echo "changed=$(paste -sd, /tmp/changed.txt)" >> $GITHUB_OUTPUT
+          git config user.name "codex-bot"
+          git config user.email "codex-bot@example.com"
 
-      - name: Make timestamped per-file backups under backups/
-        if: steps.diffs.outputs.changed != ''
-        env:
-          TS: ${{ github.event.head_commit.timestamp }}
+      - name: Mark as merge commit for backup
+        id: merge_check
+        run: echo "merge_commit=true" >> $GITHUB_OUTPUT
+
+      - name: Backup changed files (timestamp-first, compact time)
+        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
-          # Use Melbourne time formatting "YYYY-MM-DD HHMMSS"
-          stamp="$(date -u +"%Y-%m-%d %H%M%S")"
+          set -e
           mkdir -p backups
-          # Process each changed path; back up only regular existing files
-          while IFS= read -r f; do
-            [ -f "$f" ] || continue
-            base="$(basename "$f")"
-            cp -f "$f" "backups/${stamp} ${base}"
-            echo "Backed up: backups/${stamp} ${base}"
-          done < /tmp/changed.txt
+          export TZ="Australia/Sydney"
+          date_part=$(date +"%Y-%m-%d")
+          time_part=$(date +"%H%M%S")
 
-          # Commit backups with [skip ci] to avoid a loop
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain backups/)" ]; then
-            git add backups/
-            git commit -m "chore(backup): timestamped copies of changed files [skip ci]"
-            git push origin HEAD:${{ github.ref }}
+          echo "🔍 Comparing HEAD~1 to HEAD for changes..."
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD --diff-filter=AM)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No new or modified files in this push."
+            exit 0
           fi
 
-      - name: Wait 5s quiet period before tagging
-        run: |
-          sleep 5
-          # Ensure no new commits landed in the branch during the wait
-          git fetch origin "${{ github.ref }}"
-          if [ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]; then
-            echo "New commits arrived during quiet wait; skip tagging this run."
-            echo "skip_tagging=1" >> $GITHUB_ENV
-          fi
+          for file in $CHANGED_FILES; do
+            if [ -f "$file" ]; then
+              backup_name=$(echo "$file" | sed 's|/|  |g')
+              cp "$file" "backups/${date_part}  ${time_part}  ${backup_name}"
+              echo "📦 Backed up: $file → backups/${date_part}  ${time_part}  ${backup_name}"
+            fi
+          done
 
-      - name: Create restore tag on the current HEAD
-        if: env.skip_tagging != '1'
-        run: |
-          tag="restore-$(date -u +%Y%m%d-%H%M%S)"
-          git tag -a "$tag" -m "Full repo restore point after backups"
-          git push origin "$tag"
-          echo "Created restore tag: $tag"
+          echo "✅ Backup completed. All files stored flat in backups/"
 
-      - name: Skip deploy if this push originated from cPanel
-        id: origin_check
+      - name: Commit backup
+        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
-          msg="$(git log -1 --pretty=%B)"
-          if echo "$msg" | grep -qi '\[from:cpanel\]'; then
-            echo "from_cpanel=1" >> $GITHUB_OUTPUT
+          git add backups/
+          if git diff --cached --quiet; then
+            echo "No new backup created"
           else
-            echo "from_cpanel=0" >> $GITHUB_OUTPUT
+            git commit -m "Backup changed files at $(date) for commit: ${{ github.sha }}"
+            git push origin main
           fi
 
-      - name: Deploy to cPanel via SSH + rsync
-        if: steps.origin_check.outputs.from_cpanel == '0'
-        env:
-          SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
-          HOST:     ${{ secrets.CPANEL_HOST }}
-          USER:     ${{ secrets.CPANEL_USER }}
-          REMOTE:   ${{ secrets.CPANEL_PATH }}   # e.g. /home/USERNAME/public_html
+      - name: Tag restore point
+        if: steps.merge_check.outputs.merge_commit == 'true'
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no $USER@$HOST 'echo Connected to cPanel host'
-
-          # Build an rsync exclude list: respect .gitignore + typical hidden/sys folders
-          cat .gitignore > /tmp/rsync-excludes || true
-          {
-            echo "/.git/"
-            echo "/.github/"
-            echo "/backups/"
-            echo ".*"
-          } >> /tmp/rsync-excludes
-
-          # Push working tree to public_html (mirror of repo content, minus excludes)
-          rsync -az --delete \
-            --exclude-from=/tmp/rsync-excludes \
-            ./ $USER@$HOST:$REMOTE/
-
+          export TZ="Australia/Sydney"
+          tag_date=$(date +"%Y-%m-%d")
+          tag_time=$(date +"%H%M%S")
+          tag_name="restore-${tag_date}-${tag_time}"
+          git tag -a "$tag_name" -m "Restore point created automatically at ${tag_date} ${tag_time}"
+          git push origin "$tag_name"
+          echo "🏷 Created tag: $tag_name"
