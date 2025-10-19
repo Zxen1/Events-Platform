@@ -1629,3 +1629,38 @@ Omit --global to set the identity only in this repository.
 fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
 [2025-10-19 23:08:30] Deployment finished.
 
+[2025-10-19 23:15:23] Webhook triggered.
+[2025-10-19 23:15:23] git reset: HEAD is now at 232287a Auto-sync 2025-10-19 23:14:35
+[2025-10-19 23:15:23] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[2025-10-19 23:15:24] auto-publish: Syncing from Live (CPanel) → GitHub repo...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:15:24] Deployment finished.
+
+[2025-10-19 23:15:30] Webhook triggered.
+[2025-10-19 23:15:30] git reset: HEAD is now at 232287a Auto-sync 2025-10-19 23:14:35
+[2025-10-19 23:15:31] Webhook triggered.
+[2025-10-19 23:15:31] git reset: HEAD is now at 232287a Auto-sync 2025-10-19 23:14:35
+[2025-10-19 23:15:31] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   232287a..c846238  main       -> origin/main
+Updating 232287a..c846238
+Fast-forward
+ backups/2025-10-19  231529  660-900x1600.jpg |  Bin 0 -> 81407 bytes
+ backups/2025-10-19  231529  deploy.log       | 1631 ++++++++++++++++++++++++++
+ 2 files changed, 1631 insertions(+)
+ create mode 100644 backups/2025-10-19  231529  660-900x1600.jpg
+ create mode 100644 backups/2025-10-19  231529  deploy.log
