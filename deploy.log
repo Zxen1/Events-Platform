@@ -1862,3 +1862,42 @@ Omit --global to set the identity only in this repository.
 fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
 [2025-10-20 00:15:16] Deployment finished.
 
+[2025-10-20 00:16:05] Webhook triggered.
+[2025-10-20 00:16:05] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:16:05] git reset: HEAD is now at f3d9ffd Auto-sync_2025-10-20_00-16-02
+[2025-10-20 00:16:06] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:16:06] Deployment finished.
+
+[2025-10-20 00:16:13] Webhook triggered.
+[2025-10-20 00:16:14] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   f3d9ffd..4420819  main       -> origin/main
+[2025-10-20 00:16:14] git reset: HEAD is now at 4420819 Backup changed files at Sun Oct 19 13:16:12 UTC 2025 for commit: f3d9ffda3cfa5f945ee81fc147720949e596588f
+[2025-10-20 00:16:14] Webhook triggered.
+[2025-10-20 00:16:15] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:16:15] git reset: HEAD is now at 4420819 Backup changed files at Sun Oct 19 13:16:12 UTC 2025 for commit: f3d9ffda3cfa5f945ee81fc147720949e596588f
+[2025-10-20 00:16:15] auto-publish: 
+[2025-10-20 00:16:15] Deployment finished.
+
+[2025-10-20 00:16:15] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+No changes to commit.
+Sync complete at 2025-10-20_00-16-15
+[2025-10-20 00:16:15] Deployment finished.
+
