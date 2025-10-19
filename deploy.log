@@ -1810,3 +1810,55 @@ No changes to commit.
 Sync complete at 2025-10-19_23-56-00
 [2025-10-19 23:56:00] Deployment finished.
 
+[2025-10-20 00:15:05] Webhook triggered.
+[2025-10-20 00:15:05] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:15:05] git reset: HEAD is now at 94d6348 Auto-sync_2025-10-20_00-15-03
+[2025-10-20 00:15:06] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:15:06] Deployment finished.
+
+[2025-10-20 00:15:14] Webhook triggered.
+[2025-10-20 00:15:14] Webhook triggered.
+[2025-10-20 00:15:15] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   94d6348..d124979  main       -> origin/main
+[2025-10-20 00:15:15] git reset: HEAD is now at d124979 Backup changed files at Sun Oct 19 13:15:12 UTC 2025 for commit: 94d6348d982d48f4c55a9d31b038440e160b3190
+[2025-10-20 00:15:15] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+error: cannot lock ref 'refs/remotes/origin/main': is at d1249790825840eeeb5e00ed6cc07fa35bd63e31 but expected 94d6348d982d48f4c55a9d31b038440e160b3190
+ ! 94d6348..d124979  main       -> origin/main  (unable to update local ref)
+[2025-10-20 00:15:15] git reset: HEAD is now at d124979 Backup changed files at Sun Oct 19 13:15:12 UTC 2025 for commit: 94d6348d982d48f4c55a9d31b038440e160b3190
+[2025-10-20 00:15:15] auto-publish: 
+[2025-10-20 00:15:15] Deployment finished.
+
+[2025-10-20 00:15:16] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:15:16] Deployment finished.
+
