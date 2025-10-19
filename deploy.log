@@ -1699,3 +1699,75 @@ Omit --global to set the identity only in this repository.
 fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
 [2025-10-19 23:15:32] Deployment finished.
 
+[2025-10-19 23:39:47] Webhook triggered.
+[2025-10-19 23:39:47] git reset: HEAD is now at ed1a295 Auto-sync_2025-10-19_23-38-40
+[2025-10-19 23:39:48] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[2025-10-19 23:39:49] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:39:49] Deployment finished.
+
+[2025-10-19 23:39:55] Webhook triggered.
+[2025-10-19 23:39:55] git reset: HEAD is now at ed1a295 Auto-sync_2025-10-19_23-38-40
+[2025-10-19 23:39:56] Webhook triggered.
+[2025-10-19 23:39:56] git reset: HEAD is now at ed1a295 Auto-sync_2025-10-19_23-38-40
+[2025-10-19 23:39:56] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   ed1a295..1e0dd85  main       -> origin/main
+Updating ed1a295..1e0dd85
+Fast-forward
+ backups/2025-10-19  233954  deploy.log | 1701 ++++++++++++++++++++++++++++++++
+ backups/2025-10-19  233954  index.html |  441 +++++++++
+ 2 files changed, 2142 insertions(+)
+ create mode 100644 backups/2025-10-19  233954  deploy.log
+ create mode 100644 backups/2025-10-19  233954  index.html
+[2025-10-19 23:39:56] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+warning: fetch updated the current branch head.
+fast-forwarding your working tree from
+commit ed1a295554cc7660e2344ff4069f535b2ac2acce.
+error: The following untracked working tree files would be overwritten by merge:
+	backups/2025-10-19  233954  deploy.log
+	backups/2025-10-19  233954  index.html
+Please move or remove them before you merge.
+Aborting
+fatal: Cannot fast-forward your working tree.
+After making sure that you saved anything precious from
+$ git diff ed1a295554cc7660e2344ff4069f535b2ac2acce
+output, run
+$ git reset --hard
+to recover.
+[2025-10-19 23:39:56] auto-publish: 
+[2025-10-19 23:39:56] Deployment finished.
+
+[2025-10-19 23:39:57] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:39:57] Deployment finished.
+
