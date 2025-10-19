@@ -1942,3 +1942,67 @@ No changes to commit.
 Sync complete at 2025-10-20_00-17-14
 [2025-10-20 00:17:14] Deployment finished.
 
+[2025-10-20 00:18:04] Webhook triggered.
+[2025-10-20 00:18:04] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:18:04] git reset: HEAD is now at 6aafd70 Auto-sync_2025-10-20_00-18-02
+[2025-10-20 00:18:05] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:18:05] Deployment finished.
+
+[2025-10-20 00:18:13] Webhook triggered.
+[2025-10-20 00:18:14] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   6aafd70..e53a3b3  main       -> origin/main
+[2025-10-20 00:18:14] git reset: HEAD is now at e53a3b3 Backup changed files at Sun Oct 19 13:18:11 UTC 2025 for commit: 6aafd70ce801cdb88eec0489ddb93358a9fead60
+[2025-10-20 00:18:14] Webhook triggered.
+[2025-10-20 00:18:14] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:18:14] Deployment finished.
+
+[2025-10-20 00:18:15] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:18:15] git reset: HEAD is now at e53a3b3 Backup changed files at Sun Oct 19 13:18:11 UTC 2025 for commit: 6aafd70ce801cdb88eec0489ddb93358a9fead60
+[2025-10-20 00:18:16] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:18:16] Deployment finished.
+
