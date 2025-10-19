@@ -2421,3 +2421,50 @@ No changes to commit.
 Sync complete at 2025-10-20_00-28-14
 [2025-10-20 00:28:14] Deployment finished.
 
+[2025-10-20 00:29:04] Webhook triggered.
+[2025-10-20 00:29:05] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:29:05] git reset: HEAD is now at 9252e9c Auto-sync_2025-10-20_00-29-02
+[2025-10-20 00:29:06] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:29:06] Deployment finished.
+
+[2025-10-20 00:29:12] Webhook triggered.
+[2025-10-20 00:29:12] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   9252e9c..7e2a170  main       -> origin/main
+[2025-10-20 00:29:12] git reset: HEAD is now at 7e2a170 Backup changed files at Sun Oct 19 13:29:10 UTC 2025 for commit: 9252e9ca75db4ea41a2ab1a93aec94265a54d8c6
+[2025-10-20 00:29:13] Webhook triggered.
+[2025-10-20 00:29:13] auto-publish: Syncing from Live CPanel to GitHub repo...
+Applying .syncignore rules...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-20 00:29:13] Deployment finished.
+
+[2025-10-20 00:29:13] git fetch: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+[2025-10-20 00:29:13] git reset: HEAD is now at 7e2a170 Backup changed files at Sun Oct 19 13:29:10 UTC 2025 for commit: 9252e9ca75db4ea41a2ab1a93aec94265a54d8c6
