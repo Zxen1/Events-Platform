@@ -1664,3 +1664,38 @@ Fast-forward
  2 files changed, 1631 insertions(+)
  create mode 100644 backups/2025-10-19  231529  660-900x1600.jpg
  create mode 100644 backups/2025-10-19  231529  deploy.log
+[2025-10-19 23:15:31] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+warning: fetch updated the current branch head.
+fast-forwarding your working tree from
+commit 232287acbd47285265e0c5709dcaf8b960bbfe14.
+error: The following untracked working tree files would be overwritten by merge:
+	backups/2025-10-19  231529  660-900x1600.jpg
+	backups/2025-10-19  231529  deploy.log
+Please move or remove them before you merge.
+Aborting
+fatal: Cannot fast-forward your working tree.
+After making sure that you saved anything precious from
+$ git diff 232287acbd47285265e0c5709dcaf8b960bbfe14
+output, run
+$ git reset --hard
+to recover.
+[2025-10-19 23:15:31] auto-publish: 
+[2025-10-19 23:15:31] Deployment finished.
+
+[2025-10-19 23:15:32] auto-publish: Syncing from Live (CPanel) → GitHub repo...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:15:32] Deployment finished.
+
