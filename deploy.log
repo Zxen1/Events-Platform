@@ -1562,3 +1562,70 @@ to recover.
 [2025-10-19 22:46:11] auto-publish: sh: /home/funmapco/auto-publish.sh: /bin/bash^M: bad interpreter: No such file or directory
 [2025-10-19 22:46:11] Deployment finished.
 
+[2025-10-19 23:08:20] Webhook triggered.
+[2025-10-19 23:08:20] git reset: HEAD is now at c887502 Auto-sync 2025-10-19 23:01:53
+[2025-10-19 23:08:20] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[2025-10-19 23:08:21] auto-publish: Syncing from Live (CPanel) → GitHub repo...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:08:21] Deployment finished.
+
+[2025-10-19 23:08:28] Webhook triggered.
+[2025-10-19 23:08:28] git reset: HEAD is now at c887502 Auto-sync 2025-10-19 23:01:53
+[2025-10-19 23:08:29] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+   c887502..9ba2e96  main       -> origin/main
+Updating c887502..9ba2e96
+Fast-forward
+ backups/2025-10-19  230827  deploy.log |  1564 +++
+ backups/2025-10-19  230827  deploy.php |    21 +
+ backups/2025-10-19  230827  error_log  |    22 +
+ backups/2025-10-19  230827  index.html |   441 +
+ backups/2025-10-19  230827  index.js   | 20602 +++++++++++++++++++++++++++++++
+ backups/2025-10-19  230827  style.css  |  6891 +++++++++++
+ 6 files changed, 29541 insertions(+)
+ create mode 100644 backups/2025-10-19  230827  deploy.log
+ create mode 100644 backups/2025-10-19  230827  deploy.php
+ create mode 100644 backups/2025-10-19  230827  error_log
+ create mode 100644 backups/2025-10-19  230827  index.html
+ create mode 100644 backups/2025-10-19  230827  index.js
+ create mode 100644 backups/2025-10-19  230827  style.css
+[2025-10-19 23:08:29] Webhook triggered.
+[2025-10-19 23:08:29] git reset: HEAD is now at 9ba2e96 Backup changed files at Sun Oct 19 12:08:27 UTC 2025 for commit: c887502085966fbf80e4ebeccc3dc6b13fbbc4d2
+[2025-10-19 23:08:29] auto-publish: Syncing from Live (CPanel) → GitHub repo...
+No changes to commit.
+✅ One-way sync complete at 2025-10-19 23:08:29
+[2025-10-19 23:08:29] Deployment finished.
+
+[2025-10-19 23:08:29] git pull: From https://github.com/Zxen1/Events-Platform
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[2025-10-19 23:08:30] auto-publish: Syncing from Live (CPanel) → GitHub repo...
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <funmapco@s04me.syd7.hostingplatform.net.au>) not allowed
+[2025-10-19 23:08:30] Deployment finished.
+
