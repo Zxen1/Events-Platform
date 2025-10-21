@@ -1,5 +1,5 @@
-// === Admin login verifier ===
-async function verifyAdminLogin(username, password){
+// === Shared login verifier ===
+async function verifyUserLogin(username, password){
   try{
     const res = await fetch('/config/verify-login.php', {
       method: 'POST',
@@ -9,7 +9,7 @@ async function verifyAdminLogin(username, password){
     const data = await res.json();
     return data.success === true;
   }catch(e){
-    console.error('verifyAdminLogin failed', e);
+    console.error('verifyUserLogin failed', e);
     return false;
   }
 }
@@ -17582,28 +17582,14 @@ function closePanel(m){
 
 
 const adminAuthManager = (()=>{
-      const ADMIN_USER = Object.freeze({
-    name: 'Administrator',
-    email: 'admin',
-    emailNormalized: 'admin',
-    avatar: ''
-  });
   const STORAGE_KEY = 'admin-authenticated';
+  const IDENTITY_KEY = 'admin-identity';
   const adminBtn = document.getElementById('adminBtn');
   const adminPanel = document.getElementById('adminPanel');
   const memberPanel = document.getElementById('memberPanel');
 
   let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
-
-  function normalizeIdentifier(identifier){
-    const trimmed = String(identifier || '').trim().toLowerCase();
-    if(!trimmed) return '';
-    const atIndex = trimmed.indexOf('@');
-    if(atIndex > 0){
-      return trimmed.slice(0, atIndex);
-    }
-    return trimmed;
-  }
+  let adminIdentity = localStorage.getItem(IDENTITY_KEY) || '';
 
   function updateUI(){
     if(adminBtn){
@@ -17617,7 +17603,7 @@ const adminAuthManager = (()=>{
     }
   }
 
-  function setAuthenticatedState(value){
+  function setAuthenticatedState(value, identity){
     const next = !!value;
     if(next === authenticated){
       updateUI();
@@ -17625,6 +17611,16 @@ const adminAuthManager = (()=>{
     }
     authenticated = next;
     localStorage.setItem(STORAGE_KEY, authenticated ? 'true' : 'false');
+    if(authenticated){
+      const normalizedIdentity = typeof identity === 'string' ? identity.trim() : '';
+      adminIdentity = normalizedIdentity || adminIdentity;
+      if(adminIdentity){
+        localStorage.setItem(IDENTITY_KEY, adminIdentity);
+      }
+    } else {
+      adminIdentity = '';
+      localStorage.removeItem(IDENTITY_KEY);
+    }
     updateUI();
     if(!authenticated){
       localStorage.setItem('panel-open-adminPanel','false');
@@ -17659,17 +17655,21 @@ const adminAuthManager = (()=>{
       return authenticated;
     },
     ensureAuthenticated,
-    setAuthenticated(value){
-      setAuthenticatedState(value);
-    },
-    matchesCredentials(identifier, password){
-      return normalizeIdentifier(identifier) === '' && password === '';
-    },
-    isAdminIdentifier(identifier){
-      return normalizeIdentifier(identifier) === '';
+    setAuthenticated(value, identity){
+      setAuthenticatedState(value, identity);
     },
     getAdminUser(){
-      return { ...ADMIN_USER, isAdmin: true };
+      const identifier = adminIdentity || localStorage.getItem(IDENTITY_KEY) || 'admin';
+      const trimmed = identifier.trim();
+      const emailNormalized = trimmed ? trimmed.toLowerCase() : 'admin';
+      return {
+        name: 'Administrator',
+        email: trimmed || 'admin',
+        emailNormalized,
+        username: trimmed || 'admin',
+        avatar: '',
+        isAdmin: true
+      };
     }
   };
 })();
@@ -20088,10 +20088,13 @@ document.addEventListener('DOMContentLoaded', () => {
       ? user.emailNormalized.trim().toLowerCase()
       : emailRaw.toLowerCase();
     if(!normalized) return null;
+    const usernameRaw = typeof user.username === 'string' ? user.username.trim() : '';
+    const username = usernameRaw || normalized;
     return {
       name: typeof user.name === 'string' ? user.name.trim() : '',
       email: emailRaw,
       emailNormalized: normalized,
+      username,
       password: typeof user.password === 'string' ? user.password : '',
       avatar: typeof user.avatar === 'string' ? user.avatar.trim() : ''
     };
@@ -20119,11 +20122,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function storeCurrent(user){
     try{
       if(user){
-        if(user.isAdmin){
-          localStorage.setItem(CURRENT_KEY, JSON.stringify({ admin: true }));
-        } else {
-          localStorage.setItem(CURRENT_KEY, JSON.stringify({ emailNormalized: user.emailNormalized }));
-        }
+        const payload = {
+          type: user.isAdmin ? 'admin' : 'member',
+          username: typeof user.username === 'string' ? user.username : '',
+          email: typeof user.email === 'string' ? user.email : '',
+          name: typeof user.name === 'string' ? user.name : '',
+          avatar: typeof user.avatar === 'string' ? user.avatar : ''
+        };
+        localStorage.setItem(CURRENT_KEY, JSON.stringify(payload));
       } else {
         localStorage.removeItem(CURRENT_KEY);
       }
@@ -20135,16 +20141,41 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem(CURRENT_KEY);
       if(!raw) return null;
       const parsed = JSON.parse(raw);
-      if(parsed && parsed.admin){
-        if(window.adminAuthManager && window.adminAuthManager.isAuthenticated()){
-          return window.adminAuthManager.getAdminUser();
+      if(!parsed || typeof parsed !== 'object') return null;
+      const type = parsed.type === 'admin' ? 'admin' : 'member';
+      const username = typeof parsed.username === 'string' ? parsed.username : '';
+      const emailRaw = typeof parsed.email === 'string' ? parsed.email : username;
+      const normalized = typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '';
+      if(type === 'admin'){
+        if(window.adminAuthManager){
+          window.adminAuthManager.setAuthenticated(true, username || emailRaw || 'admin');
         }
+        return {
+          name: parsed.name || 'Administrator',
+          email: emailRaw,
+          emailNormalized: normalized || 'admin',
+          username: username || emailRaw || 'admin',
+          avatar: parsed.avatar || '',
+          isAdmin: true
+        };
+      }
+      if(normalized){
+        const existing = users.find(u => u.emailNormalized === normalized);
+        if(existing){
+          return { ...existing };
+        }
+      }
+      if(!emailRaw){
         return null;
       }
-      if(parsed && parsed.emailNormalized){
-        const normalized = String(parsed.emailNormalized).toLowerCase();
-        return users.find(u => u.emailNormalized === normalized) || null;
-      }
+      return {
+        name: parsed.name || '',
+        email: emailRaw,
+        emailNormalized: normalized || emailRaw.toLowerCase(),
+        username: username || normalized || emailRaw,
+        avatar: parsed.avatar || '',
+        isAdmin: false
+      };
     }catch(err){}
     return null;
   }
@@ -20311,7 +20342,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function render(){
     if(window.adminAuthManager){
       if(currentUser && currentUser.isAdmin){
-        window.adminAuthManager.setAuthenticated(true);
+        const identity = currentUser.username || currentUser.email || 'admin';
+        window.adminAuthManager.setAuthenticated(true, identity);
       } else {
         window.adminAuthManager.setAuthenticated(false);
       }
@@ -20376,55 +20408,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function handleLogin(){
+  async function handleLogin(){
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
-    const emailRaw = emailInput ? emailInput.value.trim() : '';
+    const usernameRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
-    if(!emailRaw || !password){
+    if(!usernameRaw || !password){
       showStatus('Enter your email and password.', { error: true });
-      if(!emailRaw && emailInput){
+      if(!usernameRaw && emailInput){
         emailInput.focus();
       } else if(passwordInput){
         passwordInput.focus();
       }
       return;
     }
-    const adminManager = window.adminAuthManager;
-    if(adminManager && adminManager.matchesCredentials(emailRaw, password)){
-      currentUser = { ...adminManager.getAdminUser() };
-      storeCurrent(currentUser);
-      render();
-      showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
+    let verified = false;
+    try{
+      verified = await verifyUserLogin(usernameRaw, password);
+    }catch(err){
+      console.error('Login verification failed', err);
+      showStatus('Unable to verify credentials. Please try again.', { error: true });
       return;
     }
-    if(adminManager && adminManager.isAdminIdentifier(emailRaw)){
-      showStatus('Incorrect password. Try again.', { error: true });
+    if(!verified){
+      showStatus('Incorrect email or password. Try again.', { error: true });
       if(passwordInput){
         passwordInput.focus();
         passwordInput.select();
       }
       return;
     }
-    const normalized = emailRaw.toLowerCase();
-    const user = users.find(u => u.emailNormalized === normalized);
-    if(!user){
-      showStatus('Account not found. Please register first.', { error: true });
-      if(emailInput) emailInput.focus();
-      return;
-    }
-    if(user.password !== password){
-      showStatus('Incorrect password. Try again.', { error: true });
-      if(passwordInput){
-        passwordInput.focus();
-        passwordInput.select();
-      }
-      return;
-    }
-    currentUser = { ...user };
+    const normalized = usernameRaw.toLowerCase();
+    currentUser = {
+      name: '',
+      email: usernameRaw,
+      emailNormalized: normalized,
+      username: usernameRaw,
+      avatar: '',
+      isAdmin: normalized === 'admin'
+    };
     storeCurrent(currentUser);
     render();
-    showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
+    const displayName = currentUser.name || currentUser.email || currentUser.username;
+    showStatus(`Welcome back, ${displayName}!`);
   }
 
   function handleRegister(){
@@ -20503,7 +20529,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if(action === 'register'){
         handleRegister();
       } else {
-        handleLogin();
+        Promise.resolve(handleLogin()).catch(err => {
+          console.error('Login handler failed', err);
+          showStatus('Unable to process login. Please try again.', { error: true });
+        });
       }
     });
 
