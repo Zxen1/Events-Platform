@@ -1,7 +1,7 @@
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
-    const res = await fetch('/config/verify-login.php', {
+    const res = await fetch('/gateway.php?action=verify-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
