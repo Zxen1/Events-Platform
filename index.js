@@ -17566,8 +17566,7 @@ function closePanel(m){
 
 
 const adminAuthManager = (()=>{
-  const ADMIN_USERNAME = 'admin';
-  const ADMIN_PASSWORD = '1234';
+
   const ADMIN_USER = Object.freeze({
     name: 'Administrator',
     email: 'admin',
