@@ -1,11 +1,3 @@
-function ensureCreateAccountEnabled(){
-  var btn = document.getElementById('createAccountBtn');
-  if(!btn) return;
-  btn.disabled = false;
-  if (btn.classList && btn.classList.remove) btn.classList.remove('disabled');
-  btn.setAttribute('aria-disabled','false');
-}
-
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -20487,97 +20479,57 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
     const displayName = currentUser.name || currentUser.email || currentUser.username;
     showStatus(`Welcome back, ${displayName}!`);
-    ensureCreateAccountEnabled();
   }
 
   function handleRegister(){
-  ensureCreateAccountEnabled();
-  var nameInput = document.getElementById('memberRegisterDisplayName');
-  var emailInput = document.getElementById('memberRegisterEmail');
-  var passwordInput = document.getElementById('memberRegisterPassword');
-  var confirmInput = document.getElementById('memberRegisterConfirmPassword');
-  var btn = document.getElementById('createAccountBtn');
-
-  var display_name = (nameInput && nameInput.value ? nameInput.value : '').trim();
-  var emailRaw = (emailInput && emailInput.value ? emailInput.value : '').trim();
-  var password = passwordInput ? passwordInput.value : '';
-  var confirmPassword = confirmInput ? confirmInput.value : '';
-
-  var emailValid = false;
-  try{
-    emailValid = emailInput && typeof emailInput.checkValidity === 'function' ? emailInput.checkValidity() : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw);
-  }catch(e){ emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw); }
-
-  if(!display_name){
-    showStatus('Enter a display name.', { error: true });
-    if(nameInput) nameInput.focus();
-    return;
-  }
-  if(!emailRaw || !emailValid){
-    showStatus('Enter a valid email address.', { error: true });
-    if(emailInput) emailInput.focus();
-    return;
-  }
-  if(!password){
-    showStatus('Enter a password.', { error: true });
-    if(passwordInput) passwordInput.focus();
-    return;
-  }
-  if(password !== confirmPassword){
-    showStatus('Passwords do not match.', { error: true });
-    if(confirmInput) confirmInput.focus();
-    return;
-  }
-
-  if(btn){ btn.disabled = true; btn.classList.add('disabled'); btn.setAttribute('aria-disabled','true'); }
-
-  var normalizedEmail = emailRaw.toLowerCase();
-  var payload = new URLSearchParams();
-  payload.set('display_name', display_name);
-  payload.set('email', normalizedEmail);
-  payload.set('password', password);
-  payload.set('confirm', confirmPassword);
-
-  fetch('/gateway.php?action=add-member', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: payload.toString()
-  }).then(function(res){ return res.text().then(function(text){ return { ok: res.ok, text: text }; }); })
-    .then(function(r){
-      var data = null;
-      try{ data = JSON.parse(r.text); }catch(e){}
-      if(!r.ok || !data || data.success === false){
-        var msg = (data && (data.error || data.message)) || 'Registration failed.';
-        throw new Error(msg);
+    const nameInput = document.getElementById('memberRegisterName');
+    const emailInput = document.getElementById('memberRegisterEmail');
+    const passwordInput = document.getElementById('memberRegisterPassword');
+    const avatarInput = document.getElementById('memberRegisterAvatar');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const emailRaw = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const avatar = avatarInput ? avatarInput.value.trim() : '';
+    if(!name || !emailRaw || !password){
+      showStatus('Please complete all required fields.', { error: true });
+      if(!name && nameInput){
+        nameInput.focus();
+        return;
       }
-      // Auto-login (same shape as login success)
-      currentUser = {
-        name: display_name,
-        email: emailRaw,
-        emailNormalized: normalizedEmail,
-        username: emailRaw,
-        avatar: '',
-        isAdmin: normalizedEmail === 'admin'
-      };
-      storeCurrent(currentUser);
-      render();
-      var displayName = currentUser.name || currentUser.email || currentUser.username;
-      showStatus('Welcome, ' + displayName + '!');
-    })
-    .catch(function(err){
-      showStatus(err && err.message ? err.message : 'Registration failed.', { error: true });
-    })
-    .finally(function(){
-      ensureCreateAccountEnabled();
-    });
-}
+      if(!emailRaw && emailInput){
+        emailInput.focus();
+        return;
+      }
+      if(!password && passwordInput){
+        passwordInput.focus();
+      }
+      return;
+    }
+    if(password.length < 4){
+      showStatus('Password must be at least 4 characters.', { error: true });
+      if(passwordInput) passwordInput.focus();
+      return;
+    }
+    const normalized = emailRaw.toLowerCase();
+    if(users.some(u => u.emailNormalized === normalized)){
+      showStatus('An account already exists for that email.', { error: true });
+      if(emailInput) emailInput.focus();
+      return;
+    }
+    const newUser = normalizeUser({ name, email: emailRaw, emailNormalized: normalized, password, avatar });
+    users.push(newUser);
+    saveUsers(users);
+    currentUser = { ...newUser };
+    storeCurrent(currentUser);
+    render();
+    showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
+  }
 
   function handleLogout(){
     currentUser = null;
     storeCurrent(null);
     render();
     showStatus('You have been logged out.');
-    ensureCreateAccountEnabled();
   }
 
   function setup(){
@@ -20711,105 +20663,12 @@ document.addEventListener('DOMContentLoaded', () => {
     applyWrapper(name);
   };
 })();
-
-// Single guarded hook to keep Create Account enabled when switching tabs (no duplicate declarations)
-(function(){
-  if (typeof window === 'undefined') return;
-  if (window.__registerTabHooked) return;
-  window.__registerTabHooked = true;
-  function hook(){
-    var el = document.getElementById('memberAuthTabRegister');
-    if (el && !el.__enableHook){
-      el.__enableHook = true;
-      el.addEventListener('click', ensureCreateAccountEnabled);
-    }
-  }
-  // Try now and after each render (if available)
-  try{ hook(); }catch(e){}
-  if (typeof render === 'function'){
-    var __origRender = render;
-    window.render = function(){
-      var r = __origRender.apply(this, arguments);
-      try{ hook(); }catch(e){}
-      return r;
-    };
-  }
-})();
+ 
+ 
 
 
-// Guard: keep Create Account button enabled even if other code tries to disable it
-(function(){
-  if (typeof window === 'undefined') return;
-  if (window.__createBtnObserverInstalled) return;
-  window.__createBtnObserverInstalled = true;
-
-  function hardEnable(){
-    try{
-      var btn = document.getElementById('createAccountBtn');
-      if(!btn) return;
-      if (btn.disabled || btn.classList.contains('disabled') || btn.getAttribute('aria-disabled') === 'true'){
-        btn.disabled = false;
-        btn.classList.remove('disabled');
-        btn.setAttribute('aria-disabled','false');
-      }
-    }catch(e){}
-  }
-
-  function installObserver(){
-    var btn = document.getElementById('createAccountBtn');
-    if(!btn) return;
-    try{
-      var obs = new MutationObserver(function(muts){
-        hardEnable();
-      });
-      obs.observe(btn, { attributes: true, attributeFilter: ['disabled', 'class', 'aria-disabled'] });
-      // Snapshot check
-      hardEnable();
-    }catch(e){}
-  }
-
-  // Install now and after each render()
-  try{ installObserver(); }catch(e){}
-  if (typeof render === 'function'){
-    var __origRender = render;
-    window.render = function(){
-      var r = __origRender.apply(this, arguments);
-      try{ installObserver(); }catch(e){}
-      return r;
-    };
-  }
-})();
 
 
-// Guard: interactions with login form must not gray out Create Account
-(function(){
-  if (typeof window === 'undefined') return;
-  if (window.__loginGuardInstalled) return;
-  window.__loginGuardInstalled = true;
 
-  function bind(){
-    var loginEmail = document.getElementById('memberLoginEmail');
-    var loginPass = document.getElementById('memberLoginPassword');
-    var loginForm = document.getElementById('memberLoginForm') || (loginEmail && loginEmail.form) || null;
-    var targets = [loginEmail, loginPass, loginForm];
-    targets.forEach(function(el){
-      if(!el) return;
-      if(el.__loginGuardBound) return;
-      ['input','change','focus','blur','keyup','click','submit'].forEach(function(evt){
-        el.addEventListener(evt, ensureCreateAccountEnabled);
-      });
-      el.__loginGuardBound = true;
-    });
-  }
 
-  // Try now and after render()
-  try{ bind(); }catch(e){}
-  if (typeof render === 'function'){
-    var __origRender2 = render;
-    window.render = function(){
-      var r = __origRender2.apply(this, arguments);
-      try{ bind(); }catch(e){}
-      return r;
-    };
-  }
-})();
+
