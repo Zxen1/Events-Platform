@@ -6,6 +6,7 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['ac
 
 $map = [
   'verify-login' => '/home/funmapco/config/verify-login.php',
+  'add-member' => '/home/funmapco/connectors/add-member.php',
   // add more routes later, e.g. 'register' => '/home/funmapco/config/register.php',
 ];
 

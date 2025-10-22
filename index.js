@@ -20482,48 +20482,63 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleRegister(){
-    const nameInput = document.getElementById('memberRegisterName');
-    const emailInput = document.getElementById('memberRegisterEmail');
-    const passwordInput = document.getElementById('memberRegisterPassword');
-    const avatarInput = document.getElementById('memberRegisterAvatar');
-    const name = nameInput ? nameInput.value.trim() : '';
-    const emailRaw = emailInput ? emailInput.value.trim() : '';
-    const password = passwordInput ? passwordInput.value : '';
-    const avatar = avatarInput ? avatarInput.value.trim() : '';
-    if(!name || !emailRaw || !password){
-      showStatus('Please complete all required fields.', { error: true });
-      if(!name && nameInput){
-        nameInput.focus();
-        return;
+  const nameInput = document.getElementById('memberRegisterDisplayName');
+  const emailInput = document.getElementById('memberRegisterEmail');
+  const passwordInput = document.getElementById('memberRegisterPassword');
+  const confirmInput = document.getElementById('memberRegisterConfirmPassword');
+  const btn = document.getElementById('createAccountBtn');
+  const display_name = nameInput ? nameInput.value.trim() : '';
+  const email = emailInput ? emailInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+  const confirmPassword = confirmInput ? confirmInput.value : '';
+
+  // basic validation
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!display_name){ showStatus('Enter a display name.', { error: true }); if(nameInput) nameInput.focus(); return; }
+  if(!emailOk){ showStatus('Enter a valid email address.', { error: true }); if(emailInput) emailInput.focus(); return; }
+  if(!password){ showStatus('Enter a password.', { error: true }); if(passwordInput) passwordInput.focus(); return; }
+  if(password !== confirmPassword){ showStatus('Passwords do not match.', { error: true }); if(confirmInput) confirmInput.focus(); return; }
+
+  if(btn){ btn.disabled = true; btn.classList.add('disabled'); }
+
+  const payload = new URLSearchParams();
+  payload.set('display_name', display_name);
+  payload.set('email', email);
+  payload.set('password', password);
+  payload.set('confirm', confirmPassword);
+
+  fetch('/gateway.php?action=add-member', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: payload.toString()
+  }).then(async (res) => {
+      const text = await res.text();
+      let data = null;
+      try{ data = JSON.parse(text); } catch(e){ data = null; }
+      if(!res.ok || !data || data.success === false){
+        const msg = (data && (data.error || data.message)) || 'Registration failed.';
+        throw new Error(msg);
       }
-      if(!emailRaw && emailInput){
-        emailInput.focus();
-        return;
-      }
-      if(!password && passwordInput){
-        passwordInput.focus();
-      }
-      return;
-    }
-    if(password.length < 4){
-      showStatus('Password must be at least 4 characters.', { error: true });
-      if(passwordInput) passwordInput.focus();
-      return;
-    }
-    const normalized = emailRaw.toLowerCase();
-    if(users.some(u => u.emailNormalized === normalized)){
-      showStatus('An account already exists for that email.', { error: true });
-      if(emailInput) emailInput.focus();
-      return;
-    }
-    const newUser = normalizeUser({ name, email: emailRaw, emailNormalized: normalized, password, avatar });
-    users.push(newUser);
-    saveUsers(users);
-    currentUser = { ...newUser };
-    storeCurrent(currentUser);
-    render();
-    showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
-  }
+      // success — create a local session consistent with login
+      const normalized = email.toLowerCase();
+      currentUser = {
+        name: display_name,
+        email: email,
+        emailNormalized: normalized,
+        username: email,
+        avatar: '',
+        isAdmin: normalized === 'admin'
+      };
+      storeCurrent(currentUser);
+      render();
+      const nameForWelcome = currentUser.name || currentUser.email || currentUser.username;
+      showStatus(`Welcome, ${nameForWelcome}!`);
+    }).catch((err) => {
+      showStatus(err.message || 'Registration failed.', { error: true });
+    }).finally(() => {
+      if(btn){ btn.disabled = false; btn.classList.remove('disabled'); }
+    });
+}
 
   function handleLogout(){
     currentUser = null;
