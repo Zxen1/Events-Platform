@@ -20436,6 +20436,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Ensure Register button is never stuck disabled when switching tabs/panels
+  const registerTab = document.getElementById('memberAuthTabRegister');
+  if(registerTab && !registerTab._ensureEnabledHooked){
+    registerTab.addEventListener('click', ensureCreateAccountEnabled, { once: false });
+    registerTab._ensureEnabledHooked = true;
+  }
+
+
+
   async function handleLogin(){
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
@@ -20479,31 +20488,60 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
     const displayName = currentUser.name || currentUser.email || currentUser.username;
     showStatus(`Welcome back, ${displayName}!`);
+    ensureCreateAccountEnabled();
   }
 
-  function handleRegister(){
+  function ensureCreateAccountEnabled(){
+  const btn = document.getElementById('createAccountBtn');
+  if(btn){
+    btn.disabled = false;
+    btn.classList.remove('disabled');
+    btn.setAttribute('aria-disabled','false');
+  }
+}
+
+function handleRegister(){
+  ensureCreateAccountEnabled();
   const nameInput = document.getElementById('memberRegisterDisplayName');
   const emailInput = document.getElementById('memberRegisterEmail');
   const passwordInput = document.getElementById('memberRegisterPassword');
   const confirmInput = document.getElementById('memberRegisterConfirmPassword');
   const btn = document.getElementById('createAccountBtn');
-  const display_name = nameInput ? nameInput.value.trim() : '';
-  const email = emailInput ? emailInput.value.trim() : '';
+
+  const display_name = (nameInput?.value || '').trim();
+  const emailRaw = (emailInput?.value || '').trim();
   const password = passwordInput ? passwordInput.value : '';
   const confirmPassword = confirmInput ? confirmInput.value : '';
 
-  // basic validation
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if(!display_name){ showStatus('Enter a display name.', { error: true }); if(nameInput) nameInput.focus(); return; }
-  if(!emailOk){ showStatus('Enter a valid email address.', { error: true }); if(emailInput) emailInput.focus(); return; }
-  if(!password){ showStatus('Enter a password.', { error: true }); if(passwordInput) passwordInput.focus(); return; }
-  if(password !== confirmPassword){ showStatus('Passwords do not match.', { error: true }); if(confirmInput) confirmInput.focus(); return; }
+  // Email validation: prefer HTML5 validity if available, fallback to robust regex
+  const emailValid = emailInput && emailInput.checkValidity ? emailInput.checkValidity() : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw);
+  if(!display_name){
+    showStatus('Enter a display name.', { error: true });
+    nameInput && nameInput.focus();
+    return;
+  }
+  if(!emailRaw || !emailValid){
+    showStatus('Enter a valid email address.', { error: true });
+    emailInput && emailInput.focus();
+    return;
+  }
+  if(!password){
+    showStatus('Enter a password.', { error: true });
+    passwordInput && passwordInput.focus();
+    return;
+  }
+  if(password !== confirmPassword){
+    showStatus('Passwords do not match.', { error: true });
+    confirmInput && confirmInput.focus();
+    return;
+  }
 
-  if(btn){ btn.disabled = true; btn.classList.add('disabled'); }
+  if(btn){ btn.disabled = true; btn.classList.add('disabled'); btn.setAttribute('aria-disabled','true'); }
 
+  const normalizedEmail = emailRaw.toLowerCase();
   const payload = new URLSearchParams();
   payload.set('display_name', display_name);
-  payload.set('email', email);
+  payload.set('email', normalizedEmail);
   payload.set('password', password);
   payload.set('confirm', confirmPassword);
 
@@ -20514,30 +20552,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }).then(async (res) => {
       const text = await res.text();
       let data = null;
-      try{ data = JSON.parse(text); } catch(e){ data = null; }
+      try{ data = JSON.parse(text); }catch(_){}
       if(!res.ok || !data || data.success === false){
         const msg = (data && (data.error || data.message)) || 'Registration failed.';
         throw new Error(msg);
       }
-      // success — create a local session consistent with login
-      const normalized = email.toLowerCase();
+      // Auto-login (session) in the same shape as login
       currentUser = {
         name: display_name,
-        email: email,
-        emailNormalized: normalized,
-        username: email,
+        email: emailRaw,
+        emailNormalized: normalizedEmail,
+        username: emailRaw,
         avatar: '',
-        isAdmin: normalized === 'admin'
+        isAdmin: normalizedEmail === 'admin'
       };
       storeCurrent(currentUser);
       render();
-      const nameForWelcome = currentUser.name || currentUser.email || currentUser.username;
-      showStatus(`Welcome, ${nameForWelcome}!`);
-    }).catch((err) => {
+      const displayName = currentUser.name || currentUser.email || currentUser.username;
+      showStatus(`Welcome, ${displayName}!`);
+  }).catch((err) => {
       showStatus(err.message || 'Registration failed.', { error: true });
-    }).finally(() => {
-      if(btn){ btn.disabled = false; btn.classList.remove('disabled'); }
-    });
+  }).finally(() => {
+      ensureCreateAccountEnabled();
+  });
 }
 
   function handleLogout(){
@@ -20545,6 +20582,7 @@ document.addEventListener('DOMContentLoaded', () => {
     storeCurrent(null);
     render();
     showStatus('You have been logged out.');
+  ensureCreateAccountEnabled();
   }
 
   function setup(){
