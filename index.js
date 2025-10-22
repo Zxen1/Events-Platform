@@ -20435,17 +20435,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-
-  // Ensure Register button is never stuck disabled when switching tabs/panels
-  const registerTab = document.getElementById('memberAuthTabRegister');
-  if(registerTab && !registerTab._ensureEnabledHooked){
-    registerTab.addEventListener('click', ensureCreateAccountEnabled, { once: false });
-    registerTab._ensureEnabledHooked = true;
-  }
-
-
-
-  async function handleLogin(){
+async function handleLogin(){
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
     const usernameRaw = emailInput ? emailInput.value.trim() : '';
@@ -20716,12 +20706,26 @@ function handleRegister(){
     applyWrapper(name);
   };
 })();
- 
- 
 
-
-
-
-
-
-
+// Ensure Register button is never stuck disabled when switching tabs/panels (single guarded hook)
+(function(){
+  if (typeof window !== 'undefined') {
+    if (!window.__registerTabHooked) {
+      window.__registerTabHooked = true;
+      const el = document.getElementById('memberAuthTabRegister');
+      if (el) {
+        el.addEventListener('click', ensureCreateAccountEnabled);
+      }
+      // Also re-check after render to catch dynamic DOM
+      const origRender = typeof render === 'function' ? render : null;
+      if (origRender) {
+        window.render = function(){
+          const result = origRender.apply(this, arguments);
+          const el2 = document.getElementById('memberAuthTabRegister');
+          if (el2) el2.addEventListener('click', ensureCreateAccountEnabled);
+          return result;
+        }
+      }
+    }
+  }
+})();
