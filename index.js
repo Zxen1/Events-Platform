@@ -1,13 +1,16 @@
-// === Shared login verifier ===
 function ensureCreateAccountEnabled(){
   try{
     var btn = document.getElementById('createAccountBtn');
-    if(btn){
-      btn.disabled = false;
-      btn.classList.remove('disabled');
-      btn.setAttribute('aria-disabled','false');
-    }
+    if(!btn) return;
+    // Force-enable state
+    btn.disabled = false;
+    btn.classList.remove('disabled');
+    btn.setAttribute('aria-disabled','false');
   }catch(e){}
+}
+
+// === Shared login verifier ===
+}catch(e){}
 }
 async function verifyUserLogin(username, password) {
   try {
@@ -20737,3 +20740,82 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 })();
+
+
+// Guard: keep Create Account button enabled even if other code tries to disable it
+(function(){
+  if (typeof window === 'undefined') return;
+  if (window.__createBtnObserverInstalled) return;
+  window.__createBtnObserverInstalled = true;
+
+  function hardEnable(){
+    try{
+      var btn = document.getElementById('createAccountBtn');
+      if(!btn) return;
+      if (btn.disabled || btn.classList.contains('disabled') || btn.getAttribute('aria-disabled') === 'true'){
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+        btn.setAttribute('aria-disabled','false');
+      }
+    }catch(e){}
+  }
+
+  function installObserver(){
+    var btn = document.getElementById('createAccountBtn');
+    if(!btn) return;
+    try{
+      var obs = new MutationObserver(function(muts){
+        hardEnable();
+      });
+      obs.observe(btn, { attributes: true, attributeFilter: ['disabled', 'class', 'aria-disabled'] });
+      // Snapshot check
+      hardEnable();
+    }catch(e){}
+  }
+
+  // Install now and after each render()
+  try{ installObserver(); }catch(e){}
+  if (typeof render === 'function'){
+    var __origRender = render;
+    window.render = function(){
+      var r = __origRender.apply(this, arguments);
+      try{ installObserver(); }catch(e){}
+      return r;
+    };
+  }
+})();
+
+
+// Guard: interactions with login form must not gray out Create Account
+(function(){
+  if (typeof window === 'undefined') return;
+  if (window.__loginGuardInstalled) return;
+  window.__loginGuardInstalled = true;
+
+  function bind(){
+    var loginEmail = document.getElementById('memberLoginEmail');
+    var loginPass = document.getElementById('memberLoginPassword');
+    var loginForm = document.getElementById('memberLoginForm') || (loginEmail && loginEmail.form) || null;
+    var targets = [loginEmail, loginPass, loginForm];
+    targets.forEach(function(el){
+      if(!el) return;
+      if(el.__loginGuardBound) return;
+      ['input','change','focus','blur','keyup','click','submit'].forEach(function(evt){
+        el.addEventListener(evt, ensureCreateAccountEnabled);
+      });
+      el.__loginGuardBound = true;
+    });
+  }
+
+  // Try now and after render()
+  try{ bind(); }catch(e){}
+  if (typeof render === 'function'){
+    var __origRender2 = render;
+    window.render = function(){
+      var r = __origRender2.apply(this, arguments);
+      try{ bind(); }catch(e){}
+      return r;
+    };
+  }
+})();
+
