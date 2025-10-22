@@ -1,15 +1,12 @@
 function ensureCreateAccountEnabled(){
-  try{
-    var btn = document.getElementById('createAccountBtn');
-    if(!btn) return;
-    // Force-enable state
-    btn.disabled = false;
-    btn.classList.remove('disabled');
-    btn.setAttribute('aria-disabled','false');
-  }catch(e){}
+  var btn = document.getElementById('createAccountBtn');
+  if(!btn) return;
+  btn.disabled = false;
+  if (btn.classList && btn.classList.remove) btn.classList.remove('disabled');
+  btn.setAttribute('aria-disabled','false');
+}
 
 // === Shared login verifier ===
-}catch(e){}
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
