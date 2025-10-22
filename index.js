@@ -7,11 +7,9 @@ function ensureCreateAccountEnabled(){
     btn.classList.remove('disabled');
     btn.setAttribute('aria-disabled','false');
   }catch(e){}
-}
 
 // === Shared login verifier ===
 }catch(e){}
-}
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -20818,4 +20816,3 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 })();
-
