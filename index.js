@@ -1,3 +1,25 @@
+(function(){
+  if (typeof window !== 'undefined') {
+    if (typeof window.ensureCreateAccountEnabled !== 'function') {
+      window.ensureCreateAccountEnabled = function(){
+        var btn = document.getElementById('createAccountBtn');
+        if (btn){
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+          btn.setAttribute('aria-disabled','false');
+        }
+      };
+    }
+    try {
+      // Create a local alias if not already declared
+      if (typeof ensureCreateAccountEnabled === 'undefined') {
+        // eslint-disable-next-line no-var
+        var ensureCreateAccountEnabled = window.ensureCreateAccountEnabled;
+      }
+    } catch(e){/* no-op */}
+  }
+})();
+
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -20481,13 +20503,7 @@ async function handleLogin(){
     ensureCreateAccountEnabled();
   }
 
-  function ensureCreateAccountEnabled(){
-  const btn = document.getElementById('createAccountBtn');
-  if(btn){
-    btn.disabled = false;
-    btn.classList.remove('disabled');
-    btn.setAttribute('aria-disabled','false');
-  }
+  
 }
 
 function handleRegister(){
