@@ -1,26 +1,14 @@
-(function(){
-  if (typeof window !== 'undefined') {
-    if (typeof window.ensureCreateAccountEnabled !== 'function') {
-      window.ensureCreateAccountEnabled = function(){
-        var btn = document.getElementById('createAccountBtn');
-        if (btn){
-          btn.disabled = false;
-          btn.classList.remove('disabled');
-          btn.setAttribute('aria-disabled','false');
-        }
-      };
-    }
-    try {
-      // Create a local alias if not already declared
-      if (typeof ensureCreateAccountEnabled === 'undefined') {
-        // eslint-disable-next-line no-var
-        var ensureCreateAccountEnabled = window.ensureCreateAccountEnabled;
-      }
-    } catch(e){/* no-op */}
-  }
-})();
-
 // === Shared login verifier ===
+function ensureCreateAccountEnabled(){
+  try{
+    var btn = document.getElementById('createAccountBtn');
+    if(btn){
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+      btn.setAttribute('aria-disabled','false');
+    }
+  }catch(e){}
+}
 async function verifyUserLogin(username, password) {
   try {
     const res = await fetch('/gateway.php?action=verify-login', {
@@ -20457,7 +20445,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-async function handleLogin(){
+
+  async function handleLogin(){
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
     const usernameRaw = emailInput ? emailInput.value.trim() : '';
@@ -20503,49 +20492,49 @@ async function handleLogin(){
     ensureCreateAccountEnabled();
   }
 
-  
-}
-
-function handleRegister(){
+  function handleRegister(){
   ensureCreateAccountEnabled();
-  const nameInput = document.getElementById('memberRegisterDisplayName');
-  const emailInput = document.getElementById('memberRegisterEmail');
-  const passwordInput = document.getElementById('memberRegisterPassword');
-  const confirmInput = document.getElementById('memberRegisterConfirmPassword');
-  const btn = document.getElementById('createAccountBtn');
+  var nameInput = document.getElementById('memberRegisterDisplayName');
+  var emailInput = document.getElementById('memberRegisterEmail');
+  var passwordInput = document.getElementById('memberRegisterPassword');
+  var confirmInput = document.getElementById('memberRegisterConfirmPassword');
+  var btn = document.getElementById('createAccountBtn');
 
-  const display_name = (nameInput?.value || '').trim();
-  const emailRaw = (emailInput?.value || '').trim();
-  const password = passwordInput ? passwordInput.value : '';
-  const confirmPassword = confirmInput ? confirmInput.value : '';
+  var display_name = (nameInput && nameInput.value ? nameInput.value : '').trim();
+  var emailRaw = (emailInput && emailInput.value ? emailInput.value : '').trim();
+  var password = passwordInput ? passwordInput.value : '';
+  var confirmPassword = confirmInput ? confirmInput.value : '';
 
-  // Email validation: prefer HTML5 validity if available, fallback to robust regex
-  const emailValid = emailInput && emailInput.checkValidity ? emailInput.checkValidity() : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw);
+  var emailValid = false;
+  try{
+    emailValid = emailInput && typeof emailInput.checkValidity === 'function' ? emailInput.checkValidity() : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw);
+  }catch(e){ emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw); }
+
   if(!display_name){
     showStatus('Enter a display name.', { error: true });
-    nameInput && nameInput.focus();
+    if(nameInput) nameInput.focus();
     return;
   }
   if(!emailRaw || !emailValid){
     showStatus('Enter a valid email address.', { error: true });
-    emailInput && emailInput.focus();
+    if(emailInput) emailInput.focus();
     return;
   }
   if(!password){
     showStatus('Enter a password.', { error: true });
-    passwordInput && passwordInput.focus();
+    if(passwordInput) passwordInput.focus();
     return;
   }
   if(password !== confirmPassword){
     showStatus('Passwords do not match.', { error: true });
-    confirmInput && confirmInput.focus();
+    if(confirmInput) confirmInput.focus();
     return;
   }
 
   if(btn){ btn.disabled = true; btn.classList.add('disabled'); btn.setAttribute('aria-disabled','true'); }
 
-  const normalizedEmail = emailRaw.toLowerCase();
-  const payload = new URLSearchParams();
+  var normalizedEmail = emailRaw.toLowerCase();
+  var payload = new URLSearchParams();
   payload.set('display_name', display_name);
   payload.set('email', normalizedEmail);
   payload.set('password', password);
@@ -20555,15 +20544,15 @@ function handleRegister(){
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: payload.toString()
-  }).then(async (res) => {
-      const text = await res.text();
-      let data = null;
-      try{ data = JSON.parse(text); }catch(_){}
-      if(!res.ok || !data || data.success === false){
-        const msg = (data && (data.error || data.message)) || 'Registration failed.';
+  }).then(function(res){ return res.text().then(function(text){ return { ok: res.ok, text: text }; }); })
+    .then(function(r){
+      var data = null;
+      try{ data = JSON.parse(r.text); }catch(e){}
+      if(!r.ok || !data || data.success === false){
+        var msg = (data && (data.error || data.message)) || 'Registration failed.';
         throw new Error(msg);
       }
-      // Auto-login (session) in the same shape as login
+      // Auto-login (same shape as login success)
       currentUser = {
         name: display_name,
         email: emailRaw,
@@ -20574,13 +20563,15 @@ function handleRegister(){
       };
       storeCurrent(currentUser);
       render();
-      const displayName = currentUser.name || currentUser.email || currentUser.username;
-      showStatus(`Welcome, ${displayName}!`);
-  }).catch((err) => {
-      showStatus(err.message || 'Registration failed.', { error: true });
-  }).finally(() => {
+      var displayName = currentUser.name || currentUser.email || currentUser.username;
+      showStatus('Welcome, ' + displayName + '!');
+    })
+    .catch(function(err){
+      showStatus(err && err.message ? err.message : 'Registration failed.', { error: true });
+    })
+    .finally(function(){
       ensureCreateAccountEnabled();
-  });
+    });
 }
 
   function handleLogout(){
@@ -20588,7 +20579,7 @@ function handleRegister(){
     storeCurrent(null);
     render();
     showStatus('You have been logged out.');
-  ensureCreateAccountEnabled();
+    ensureCreateAccountEnabled();
   }
 
   function setup(){
@@ -20723,25 +20714,26 @@ function handleRegister(){
   };
 })();
 
-// Ensure Register button is never stuck disabled when switching tabs/panels (single guarded hook)
+// Single guarded hook to keep Create Account enabled when switching tabs (no duplicate declarations)
 (function(){
-  if (typeof window !== 'undefined') {
-    if (!window.__registerTabHooked) {
-      window.__registerTabHooked = true;
-      const el = document.getElementById('memberAuthTabRegister');
-      if (el) {
-        el.addEventListener('click', ensureCreateAccountEnabled);
-      }
-      // Also re-check after render to catch dynamic DOM
-      const origRender = typeof render === 'function' ? render : null;
-      if (origRender) {
-        window.render = function(){
-          const result = origRender.apply(this, arguments);
-          const el2 = document.getElementById('memberAuthTabRegister');
-          if (el2) el2.addEventListener('click', ensureCreateAccountEnabled);
-          return result;
-        }
-      }
+  if (typeof window === 'undefined') return;
+  if (window.__registerTabHooked) return;
+  window.__registerTabHooked = true;
+  function hook(){
+    var el = document.getElementById('memberAuthTabRegister');
+    if (el && !el.__enableHook){
+      el.__enableHook = true;
+      el.addEventListener('click', ensureCreateAccountEnabled);
     }
+  }
+  // Try now and after each render (if available)
+  try{ hook(); }catch(e){}
+  if (typeof render === 'function'){
+    var __origRender = render;
+    window.render = function(){
+      var r = __origRender.apply(this, arguments);
+      try{ hook(); }catch(e){}
+      return r;
+    };
   }
 })();
