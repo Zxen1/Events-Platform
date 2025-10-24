@@ -16239,19 +16239,53 @@ function openPostModal(id){
 
         function updateSessionOptionsList(){
           if(sessionOptions){
-            sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+            const expiredToggle = document.getElementById('expiredToggle');
+            const showExpired = !!(expiredToggle && expiredToggle.checked);
+            const threshold = (()=>{
+              const base = new Date();
+              base.setHours(0,0,0,0);
+              base.setDate(base.getDate() - 1);
+              return base;
+            })();
+            const visibleDates = loc.dates
+              .map((d,i)=>({d,i}))
+              .filter(({d})=>{
+                if(showExpired) return true;
+                const parsed = parseDate(d.full);
+                return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
+              });
+
+            sessionOptions.innerHTML = visibleDates
+              .map(({d,i})=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`)
+              .join('');
+
             if(sessMenu){
               sessMenu.scrollTop = 0;
             }
+
+            const hasVisible = visibleDates.length > 0;
+            sessionHasMultiple = visibleDates.length > 1;
+
             if(sessionHasMultiple){
+              selectedIndex = null;
+              markSelected();
               if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
-            } else if(loc.dates.length){
-              selectSession(0);
+              if(sessBtn){
+                sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
+                sessBtn.setAttribute('aria-expanded','false');
+              }
+            } else if(hasVisible){
+              selectSession(visibleDates[0].i);
             } else {
+              selectedIndex = null;
+              markSelected();
               if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-              if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
+              if(sessBtn){
+                sessBtn.textContent = 'Select Session';
+                sessBtn.setAttribute('aria-expanded','false');
+              }
             }
+
             sessionOptions.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
