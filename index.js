@@ -13177,9 +13177,9 @@ function makePosts(){
         document.head.appendChild(s);
       }
     }
-    loadMapbox(initMap);
-
     let mapLoading = null;
+
+    loadMapbox(initMap);
 
     function addControls(){
       if(typeof MapboxGeocoder === 'undefined'){
