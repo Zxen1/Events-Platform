@@ -568,9 +568,36 @@ if (typeof slugify !== 'function') {
 
 
 // Extracted from <script>
+let __userInteractionObserved = false;
+let __notifyMapOnInteraction = null;
+
 // Remember where the user actually clicked/tapped
     document.addEventListener('pointerdown', (e) => {
       window.__lastPointerDown = e;
+      __userInteractionObserved = true;
+      if(typeof __notifyMapOnInteraction === 'function'){
+        const fn = __notifyMapOnInteraction;
+        __notifyMapOnInteraction = null;
+        try{ fn(); }catch(err){ console.error(err); }
+      }
+    }, { capture: true });
+
+    document.addEventListener('touchstart', () => {
+      __userInteractionObserved = true;
+      if(typeof __notifyMapOnInteraction === 'function'){
+        const fn = __notifyMapOnInteraction;
+        __notifyMapOnInteraction = null;
+        try{ fn(); }catch(err){ console.error(err); }
+      }
+    }, { capture: true, passive: true });
+
+    document.addEventListener('keydown', () => {
+      __userInteractionObserved = true;
+      if(typeof __notifyMapOnInteraction === 'function'){
+        const fn = __notifyMapOnInteraction;
+        __notifyMapOnInteraction = null;
+        try{ fn(); }catch(err){ console.error(err); }
+      }
     }, { capture: true });
 
 
@@ -12502,7 +12529,7 @@ function makePosts(){
         const historyActive = document.body.classList.contains('show-history');
         if(isPostsMode && historyActive){
           userClosedPostBoard = true;
-          setMode('map');
+          setModeFromUser('map');
           return;
         }
         setMode('posts');
@@ -12523,7 +12550,7 @@ function makePosts(){
         const isPostsMode = document.body.classList.contains('mode-posts');
         if(isPostsMode && !historyActive){
           userClosedPostBoard = true;
-          setMode('map');
+          setModeFromUser('map');
           return;
         }
         document.body.classList.remove('show-history');
@@ -12544,7 +12571,7 @@ function makePosts(){
         const isMapMode = document.body.classList.contains('mode-map');
         if(!isMapMode){
           userClosedPostBoard = true;
-          setMode('map');
+          setModeFromUser('map');
         } else if(document.body.classList.contains('show-history')){
           document.body.classList.remove('show-history');
           adjustBoards();
@@ -12947,7 +12974,7 @@ function makePosts(){
           }
           if(e.target === postsWide && postsWide.querySelector('.open-post')){
             userClosedPostBoard = true;
-            setTimeout(()=> setMode('map'), 0);
+            setTimeout(()=> setModeFromUser('map'), 0);
           }
         }, { capture:true });
       }
@@ -12955,7 +12982,7 @@ function makePosts(){
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
           userClosedPostBoard = true;
-          setMode('map');
+          setModeFromUser('map');
         }
       });
 
@@ -12965,6 +12992,13 @@ function makePosts(){
         document.body.classList.add('mode-'+m);
         if(m==='map'){
           document.body.classList.remove('show-history');
+        }
+        if(m === 'map'){
+          if(modeChangeWasUserInitiated){
+            startMainMapInit();
+          } else {
+            queueMainMapInitAfterInteraction();
+          }
         }
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
@@ -12997,187 +13031,282 @@ function makePosts(){
       }
     window.setMode = setMode;
 
-    // Mapbox
-    function loadMapbox(cb){
-      const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
-      const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
-      const mapboxVerNoV = mapboxVer.replace(/^v/, '');
-      const cssSources = [
-        {
-          selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-          primary: `https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.css`,
-          fallback: `https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.css`
-        },
-        {
-          selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
-          primary: 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
-          fallback: 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'
-        }
-      ];
-
-      const finalize = (()=>{
-        let called = false;
-        return ()=>{
-          if(called) return;
-          called = true;
-          Promise.resolve(ensureMapboxCssFor(document.body))
-            .catch(()=>{})
-            .finally(()=>{ try{ cb && cb(); }catch(err){ console.error(err); } });
-        };
-      })();
-
-      function monitorLink(link, onReady, fallbackUrl){
-        if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
-          onReady();
-          return;
-        }
-        if(fallbackUrl && link.dataset && !link.dataset.fallback){
-          link.dataset.fallback = fallbackUrl;
-        }
-
-        let settled = false;
-
-        function cleanup(){
-          link.removeEventListener('load', handleLoad);
-          link.removeEventListener('error', handleError);
-        }
-
-        function finalize(){
-          if(settled){
-            return;
-          }
-          settled = true;
-          cleanup();
-          onReady();
-        }
-
-        function handleLoad(){
-          finalize();
-        }
-
-        function handleError(){
-          const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
-          const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
-          if(link.dataset){
-            link.dataset.fallbackErrors = String(nextAttempts);
-          }
-          const fallback = link.dataset ? link.dataset.fallback : fallbackUrl;
-          if(fallback && link.href !== fallback){
-            link.href = fallback;
-            return;
-          }
-          if(fallback && nextAttempts === 1){
-            return;
-          }
-          finalize();
-        }
-
-        function needsListeners(){
-          if(!link.sheet){
-            return true;
-          }
-          try {
-            void link.sheet.cssRules;
-            return false;
-          } catch(err){
-            if(err && (err.name === 'SecurityError' || err.code === 18)){
-              return false;
-            }
-            return true;
-          }
-        }
-
-        if(needsListeners()){
-          link.addEventListener('load', handleLoad, {once:true});
-          link.addEventListener('error', handleError);
-        } else {
-          finalize();
+      function setModeFromUser(m, skipFilters = false){
+        const previous = modeChangeWasUserInitiated;
+        modeChangeWasUserInitiated = true;
+        try{
+          setMode(m, skipFilters);
+        } finally {
+          modeChangeWasUserInitiated = previous;
         }
       }
 
-      function ensureCss(index, onReady){
-        const {selector, primary, fallback} = cssSources[index];
-        const selectors = selector.split(',').map(s => s.trim());
-        for(const sel of selectors){
-          const candidate = document.querySelector(sel);
-          if(candidate){
-            if(candidate.tagName && candidate.tagName.toLowerCase() === 'style'){
+    // Mapbox
+    const MAP_INIT_INTERACTION_TIMEOUT = 6000;
+    let mapboxBundlePromise = null;
+    let mapboxBundleReady = false;
+    let mainMapInitPromise = null;
+    let mapInitTriggered = false;
+    let mapInitQueued = false;
+    let mapInitInteractionTimeout = null;
+    let modeChangeWasUserInitiated = false;
+
+    function loadMapbox(cb){
+      const invokeCallback = () => {
+        if(typeof cb === 'function'){
+          try{ cb(); }catch(err){ console.error(err); }
+        }
+      };
+
+      if(mapboxBundleReady){
+        return Promise.resolve().then(invokeCallback);
+      }
+
+      if(!mapboxBundlePromise){
+        mapboxBundlePromise = new Promise((resolve) => {
+          const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
+          const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
+          const mapboxVerNoV = mapboxVer.replace(/^v/, '');
+          const cssSources = [
+            {
+              selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
+              primary: `https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.css`,
+              fallback: `https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.css`
+            },
+            {
+              selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
+              primary: 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
+              fallback: 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'
+            }
+          ];
+
+          const finalize = (()=>{
+            let called = false;
+            return ()=>{
+              if(called) return;
+              called = true;
+              Promise.resolve(ensureMapboxCssFor(document.body))
+                .catch(()=>{})
+                .finally(()=>{
+                  mapboxBundleReady = true;
+                  resolve();
+                });
+            };
+          })();
+
+          function monitorLink(link, onReady, fallbackUrl){
+            if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
               onReady();
               return;
             }
-            monitorLink(candidate, onReady, fallback);
+            if(fallbackUrl && link.dataset && !link.dataset.fallback){
+              link.dataset.fallback = fallbackUrl;
+            }
+
+            let settled = false;
+
+            function cleanup(){
+              link.removeEventListener('load', handleLoad);
+              link.removeEventListener('error', handleError);
+            }
+
+            function complete(){
+              if(settled){
+                return;
+              }
+              settled = true;
+              cleanup();
+              onReady();
+            }
+
+            function handleLoad(){
+              complete();
+            }
+
+            function handleError(){
+              const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
+              const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
+              if(link.dataset){
+                link.dataset.fallbackErrors = String(nextAttempts);
+              }
+              const fallback = link.dataset ? link.dataset.fallback : fallbackUrl;
+              if(fallback && link.href !== fallback){
+                link.href = fallback;
+                return;
+              }
+              if(fallback && nextAttempts === 1){
+                return;
+              }
+              complete();
+            }
+
+            function needsListeners(){
+              if(!link.sheet){
+                return true;
+              }
+              try {
+                void link.sheet.cssRules;
+                return false;
+              } catch(err){
+                if(err && (err.name === 'SecurityError' || err.code === 18)){
+                  return false;
+                }
+                return true;
+              }
+            }
+
+            if(needsListeners()){
+              link.addEventListener('load', handleLoad, {once:true});
+              link.addEventListener('error', handleError);
+            } else {
+              complete();
+            }
+          }
+
+          function ensureCss(index, onReady){
+            const {selector, primary, fallback} = cssSources[index];
+            const selectors = selector.split(',').map(s => s.trim());
+            for(const sel of selectors){
+              const candidate = document.querySelector(sel);
+              if(candidate){
+                if(candidate.tagName && candidate.tagName.toLowerCase() === 'style'){
+                  onReady();
+                  return;
+                }
+                monitorLink(candidate, onReady, fallback);
+                return;
+              }
+            }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = primary;
+            monitorLink(link, onReady, fallback);
+            document.head.appendChild(link);
+          }
+
+          if(window.mapboxgl && window.MapboxGeocoder){
+            let pending = cssSources.length;
+            if(pending === 0){
+              finalize();
+              return;
+            }
+            const done = () => {
+              if(--pending === 0){
+                finalize();
+              }
+            };
+            cssSources.forEach((_, i) => ensureCss(i, done));
             return;
           }
-        }
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = primary;
-        monitorLink(link, onReady, fallback);
-        document.head.appendChild(link);
+
+          cssSources.forEach((_, i) => ensureCss(i, ()=>{}));
+          loadScripts();
+
+          function loadScripts(){
+            const done = (()=>{
+              let called = false;
+              return ()=>{
+                if(called) return;
+                called = true;
+                finalize();
+              };
+            })();
+
+            const loadGeocoder = ()=>{
+              const g = document.createElement('script');
+              g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+              g.async = true;
+              g.defer = true;
+              g.onload = done;
+              g.onerror = ()=>{
+                const gf = document.createElement('script');
+                gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
+                gf.async = true;
+                gf.defer = true;
+                gf.onload = done;
+                gf.onerror = done;
+                document.head.appendChild(gf);
+              };
+              document.head.appendChild(g);
+            };
+
+            const s = document.createElement('script');
+            s.src=`https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.js`;
+            s.async = true;
+            s.defer = true;
+            s.onload = loadGeocoder;
+            s.onerror = ()=>{
+              const sf = document.createElement('script');
+              sf.src=`https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.js`;
+              sf.async = true;
+              sf.defer = true;
+              sf.onload = loadGeocoder;
+              sf.onerror = done;
+              document.head.appendChild(sf);
+            };
+            document.head.appendChild(s);
+          }
+        });
       }
 
-      if(window.mapboxgl && window.MapboxGeocoder){
-        let pending = cssSources.length;
-        if(pending === 0){
-          finalize();
+      return mapboxBundlePromise.then(() => {
+        invokeCallback();
+      });
+    }
+
+    function startMainMapInit(){
+      if(mainMapInitPromise){
+        return mainMapInitPromise;
+      }
+      if(mapInitInteractionTimeout){
+        clearTimeout(mapInitInteractionTimeout);
+        mapInitInteractionTimeout = null;
+      }
+      mapInitQueued = false;
+      if(typeof __notifyMapOnInteraction === 'function'){
+        __notifyMapOnInteraction = null;
+      }
+      mainMapInitPromise = loadMapbox().then(() => {
+        if(mapInitTriggered){
           return;
         }
-        const done = () => {
-          if(--pending === 0){
-            finalize();
-          }
-        };
-        cssSources.forEach((_, i) => ensureCss(i, done));
+        mapInitTriggered = true;
+        return Promise.resolve(initMap()).catch(err => {
+          console.error(err);
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+      return mainMapInitPromise;
+    }
+
+    function queueMainMapInitAfterInteraction(){
+      if(mainMapInitPromise || mapInitTriggered){
         return;
       }
-
-      let cssLoaded = 0;
-      const onCss = () => {
-        cssLoaded++;
-        if(cssLoaded === cssSources.length){
-          loadScripts();
-        }
-      };
-      cssSources.forEach((_, i) => ensureCss(i, onCss));
-
-      function loadScripts(){
-        const done = (()=>{
-          let called = false;
-          return ()=>{
-            if(called) return;
-            called = true;
-            finalize();
-          };
-        })();
-
-        const loadGeocoder = ()=>{
-          const g = document.createElement('script');
-          g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
-          g.onload = done;
-          g.onerror = ()=>{
-            const gf = document.createElement('script');
-            gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
-            gf.onload = done;
-            gf.onerror = done;
-            document.head.appendChild(gf);
-          };
-          document.head.appendChild(g);
-        };
-
-        const s = document.createElement('script');
-        s.src=`https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.js`;
-        s.onload = loadGeocoder;
-        s.onerror = ()=>{
-          const sf = document.createElement('script');
-          sf.src=`https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.js`;
-          sf.onload = loadGeocoder;
-          sf.onerror = done;
-          document.head.appendChild(sf);
-        };
-        document.head.appendChild(s);
+      if(__userInteractionObserved){
+        startMainMapInit();
+        return;
       }
+      if(mapInitQueued){
+        return;
+      }
+      mapInitQueued = true;
+      const notify = () => {
+        mapInitQueued = false;
+        if(mapInitInteractionTimeout){
+          clearTimeout(mapInitInteractionTimeout);
+          mapInitInteractionTimeout = null;
+        }
+        startMainMapInit();
+      };
+      __notifyMapOnInteraction = notify;
+      mapInitInteractionTimeout = window.setTimeout(() => {
+        mapInitInteractionTimeout = null;
+        mapInitQueued = false;
+        startMainMapInit();
+      }, MAP_INIT_INTERACTION_TIMEOUT);
     }
-    loadMapbox(initMap);
 
     function addControls(){
       if(typeof MapboxGeocoder === 'undefined'){
@@ -13481,7 +13610,7 @@ function makePosts(){
           ensureGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           closeWelcomeModalIfOpen();
-          if(mode!=='map') setMode('map');
+          if(mode!=='map') setModeFromUser('map');
           if(event && event.coords){
             setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
           }
@@ -13920,7 +14049,7 @@ if (!map.__pillHooksInstalled) {
       }
 
     function startSpin(fromCurrent=false){
-      if(mode!=='map') setMode('map');
+      if(mode!=='map') setModeFromUser('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 3) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
@@ -16385,7 +16514,7 @@ function openPostModal(id){
 
         if(mapEl){
           setTimeout(()=>{
-            loadMapbox(()=>{
+            loadMapbox().then(()=>{
               updateVenue(0);
               if(venueMenu && venueBtn && venueOptions){
                 venueOptions.querySelectorAll('button').forEach(btn=>{
@@ -16452,7 +16581,7 @@ function openPostModal(id){
                 }
               }
               if(map && typeof map.resize === 'function') map.resize();
-            });
+            }).catch(err => console.error(err));
           },0);
         }
     }
