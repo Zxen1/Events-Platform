@@ -16853,9 +16853,9 @@ function openPostModal(id){
       filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
-      const today = new Date(); today.setHours(0,0,0,0);
-      const totalPosts = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today));
-      const totalMarkers = boundsForCount ? countMarkersForVenue(totalPosts, null, boundsForCount) : countMarkersForVenue(totalPosts);
+      const totalPosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
+      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(totalPosts, null, boundsForCount) : countMarkersForVenue(totalPosts);
+      const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
       updateResultCount(filteredMarkers);
