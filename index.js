@@ -13646,6 +13646,7 @@ if (!map.__pillHooksInstalled) {
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
           }
+          const overlay = document.getElementById('headerLoadingOverlay');
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
@@ -13664,13 +13665,23 @@ if (!map.__pillHooksInstalled) {
           const apply = (forceStop = false) => {
             const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
             if(busy){
+              if(overlay){
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+              }
               if(!active){
                 active = true;
                 try{ loader.begin('map'); }catch(err){}
               }
-            } else if(active){
-              active = false;
-              try{ loader.end('map'); }catch(err){}
+            } else {
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
             }
           };
 
@@ -13694,7 +13705,14 @@ if (!map.__pillHooksInstalled) {
             clearAll(){
               motionTokens.clear();
               tilesPending = false;
-              apply(true);
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
             }
           };
         })();
@@ -17774,25 +17792,6 @@ if(welcomeModalEl){
     });
   }
 }
-
-(function(){
-  const overlay = document.getElementById('headerLoadingOverlay');
-  if(!overlay) return;
-  const hideOverlay = () => {
-    overlay.classList.add('is-hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.addEventListener('transitionend', () => {
-      if(overlay && overlay.parentNode){
-        overlay.parentNode.removeChild(overlay);
-      }
-    }, { once: true });
-  };
-  if(document.readyState === 'complete'){
-    requestAnimationFrame(hideOverlay);
-  } else {
-    window.addEventListener('load', hideOverlay, { once: true });
-  }
-})();
 
 function requestClosePanel(m){
   if(m){
