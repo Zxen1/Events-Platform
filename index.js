@@ -2052,7 +2052,6 @@ async function ensureMapboxCssFor(container) {
           mapStyle = window.mapStyle = 'mapbox://styles/mapbox/standard';
       let markersLoaded = false;
       window.__markersLoaded = false;
-      let mapLoading = null;
       const MARKER_ZOOM_THRESHOLD = 8;
       const MARKER_SPRITE_ZOOM = MARKER_SPRITE_RETAIN_ZOOM;
       const ZOOM_VISIBILITY_PRECISION = 1000;
@@ -13178,6 +13177,8 @@ function makePosts(){
         document.head.appendChild(s);
       }
     }
+
+    let mapLoading = null;
 
     loadMapbox(initMap);
 
