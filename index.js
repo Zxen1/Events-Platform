@@ -16260,23 +16260,15 @@ function openPostModal(id){
           venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
-        sessionHasMultiple = loc.dates.length > 1;
-        let defaultInfoHTML = '';
-        if(sessionInfo){
-          const firstDate = loc.dates[0];
-          const lastDate = loc.dates[loc.dates.length-1];
-          const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
-          defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}<span style="display:inline-block;margin-left:10px;">(Select Session)</span></div>`;
-          sessionInfo.innerHTML = defaultInfoHTML;
-        }
-
         let cal = null;
         let selectedIndex = null;
+        let dateStrings = [];
         let allowedSet = new Set();
         let minDate = null;
         let maxDate = null;
         let months = [];
         let visibleDateEntries = [];
+        let defaultInfoHTML = '';
 
         function recomputeVisibleDateData(){
           const expiredToggle = document.getElementById('expiredToggle');
@@ -16306,7 +16298,8 @@ function openPostModal(id){
             uniqueEntries.push({ iso: d.full, date: parsed });
           });
 
-          allowedSet = new Set(uniqueEntries.map(entry => entry.iso));
+          dateStrings = uniqueEntries.map(entry => entry.iso);
+          allowedSet = new Set(dateStrings);
           if(uniqueEntries.length){
             minDate = new Date(uniqueEntries[0].date.getTime());
             maxDate = new Date(uniqueEntries[uniqueEntries.length - 1].date.getTime());
@@ -16324,6 +16317,27 @@ function openPostModal(id){
               cursor.setMonth(cursor.getMonth() + 1);
             }
           }
+        }
+
+        function refreshDefaultSessionInfo(){
+          const visible = visibleDateEntries;
+          sessionHasMultiple = visible.length > 1;
+          if(!sessionInfo){
+            defaultInfoHTML = '';
+            return;
+          }
+          const suffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
+          if(visible.length){
+            const firstDate = visible[0].d;
+            const lastDate = visible[visible.length - 1].d;
+            const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+            defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}${suffix}</div>`;
+          } else if(Array.isArray(loc.dates) && loc.dates.length){
+            defaultInfoHTML = `<div>💲 ${loc.price}${suffix}</div>`;
+          } else {
+            defaultInfoHTML = '';
+          }
+          sessionInfo.innerHTML = defaultInfoHTML;
         }
 
         function markSelected(){
@@ -16500,6 +16514,7 @@ function openPostModal(id){
 
         function updateSessionOptionsList(){
           recomputeVisibleDateData();
+          refreshDefaultSessionInfo();
           if(calContainer){
             const existingPopup = calContainer.querySelector('.time-popup');
             if(existingPopup) existingPopup.remove();
@@ -16522,7 +16537,6 @@ function openPostModal(id){
           }
 
           const hasVisible = visibleDates.length > 0;
-          sessionHasMultiple = visibleDates.length > 1;
 
           const selectedIsVisible = visibleDates.some(({i})=> i === selectedIndex);
           if(!selectedIsVisible){
@@ -17062,11 +17076,11 @@ function openPostModal(id){
         return;
       }
       if(!postsLoaded) return;
-      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
+      const basePosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
+      filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
-      const totalPosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
-      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(totalPosts, null, boundsForCount) : countMarkersForVenue(totalPosts);
+      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(basePosts, null, boundsForCount) : countMarkersForVenue(basePosts);
       const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
