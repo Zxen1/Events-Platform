@@ -1933,6 +1933,8 @@ async function ensureMapboxCssFor(container) {
   window.callWhenDefined = window.callWhenDefined || callWhenDefined;
 
   let startPitch, startBearing, logoEls = [], geocoder;
+  // Shared map loading state between control setup and map initialization.
+  let mapLoading = null;
   const LEGACY_DEFAULT_PITCH = 0;
   const geocoders = [];
   let lastGeocoderProximity = null;
@@ -13177,9 +13179,6 @@ function makePosts(){
         document.head.appendChild(s);
       }
     }
-
-    // Shared map loading state between control setup and map initialization.
-    let mapLoading = null;
 
     loadMapbox(initMap);
 
