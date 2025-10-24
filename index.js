@@ -13069,7 +13069,7 @@ function makePosts(){
       }
 
       if(!mapboxBundlePromise){
-        mapboxBundlePromise = new Promise((resolve) => {
+        mapboxBundlePromise = new Promise((resolve, reject) => {
           const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
           const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
           const mapboxVerNoV = mapboxVer.replace(/^v/, '');
@@ -13086,19 +13086,37 @@ function makePosts(){
             }
           ];
 
-          const finalize = (()=>{
-            let called = false;
-            return ()=>{
-              if(called) return;
-              called = true;
-              Promise.resolve(ensureMapboxCssFor(document.body))
-                .catch(()=>{})
-                .finally(()=>{
+          let settled = false;
+
+          function fail(error){
+            if(settled){
+              return;
+            }
+            settled = true;
+            mapboxBundleReady = false;
+            mapboxBundlePromise = null;
+            reject(error instanceof Error ? error : new Error(error || 'Mapbox bundle failed to load'));
+          }
+
+          function finalize(){
+            if(settled){
+              return;
+            }
+            Promise.resolve(ensureMapboxCssFor(document.body))
+              .catch(()=>{})
+              .then(() => {
+                if(settled){
+                  return;
+                }
+                if(window && window.mapboxgl){
+                  settled = true;
                   mapboxBundleReady = true;
                   resolve();
-                });
-            };
-          })();
+                } else {
+                  fail(new Error('Mapbox GL failed to load'));
+                }
+              });
+          }
 
           function monitorLink(link, onReady, fallbackUrl){
             if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
@@ -13209,14 +13227,15 @@ function makePosts(){
           loadScripts();
 
           function loadScripts(){
-            const done = (()=>{
-              let called = false;
-              return ()=>{
-                if(called) return;
-                called = true;
-                finalize();
-              };
-            })();
+            let successTriggered = false;
+
+            function done(){
+              if(successTriggered){
+                return;
+              }
+              successTriggered = true;
+              finalize();
+            }
 
             const loadGeocoder = ()=>{
               const g = document.createElement('script');
@@ -13230,7 +13249,9 @@ function makePosts(){
                 gf.async = true;
                 gf.defer = true;
                 gf.onload = done;
-                gf.onerror = done;
+                gf.onerror = ()=>{
+                  fail(new Error('Mapbox Geocoder failed to load'));
+                };
                 document.head.appendChild(gf);
               };
               document.head.appendChild(g);
@@ -13247,7 +13268,9 @@ function makePosts(){
               sf.async = true;
               sf.defer = true;
               sf.onload = loadGeocoder;
-              sf.onerror = done;
+              sf.onerror = ()=>{
+                fail(new Error('Mapbox GL failed to load from fallback source'));
+              };
               document.head.appendChild(sf);
             };
             document.head.appendChild(s);
