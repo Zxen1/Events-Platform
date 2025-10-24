@@ -13179,6 +13179,8 @@ function makePosts(){
     }
     loadMapbox(initMap);
 
+    let mapLoading = null;
+
     function addControls(){
       if(typeof MapboxGeocoder === 'undefined'){
         const script = document.createElement('script');
@@ -13719,7 +13721,7 @@ if (!map.__pillHooksInstalled) {
         };
         try{ map.on('styleimagemissing', handleStyleImageMissing); }
         catch(err){ console.error(err); }
-        const mapLoading = (() => {
+        mapLoading = (() => {
           const loader = window.__logoLoading;
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
