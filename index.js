@@ -13733,19 +13733,8 @@ if (!map.__pillHooksInstalled) {
           let tilesPending = false;
           let active = false;
 
-          const isMapMovingNow = () => {
-            if(!map) return false;
-            try{
-              if(typeof map.isMoving === 'function' && map.isMoving()) return true;
-              if(typeof map.isZooming === 'function' && map.isZooming()) return true;
-              if(typeof map.isRotating === 'function' && map.isRotating()) return true;
-              if(typeof map.isEasing === 'function' && map.isEasing()) return true;
-            }catch(err){}
-            return false;
-          };
-
           const apply = (forceStop = false) => {
-            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
+            const busy = !forceStop && (tilesPending || motionTokens.size > 0);
             if(busy){
               if(overlay){
                 overlay.classList.remove('is-hidden');
