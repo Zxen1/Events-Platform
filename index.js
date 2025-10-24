@@ -16082,16 +16082,33 @@ function openPostModal(id){
               const parsed = parseDate(d.full);
               return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
             });
-          const uniqueStrings = Array.from(new Set(visibleDateEntries.map(({d})=> d.full)));
-          allowedSet = new Set(uniqueStrings);
-          minDate = uniqueStrings.length ? parseDate(uniqueStrings[0]) : null;
-          maxDate = uniqueStrings.length ? parseDate(uniqueStrings[uniqueStrings.length-1]) : null;
+
+          const seen = new Set();
+          const uniqueEntries = [];
+          visibleDateEntries.forEach(({d}) => {
+            if(!d || typeof d.full !== 'string') return;
+            if(seen.has(d.full)) return;
+            const parsed = parseDate(d.full);
+            if(!(parsed instanceof Date) || Number.isNaN(parsed.getTime())) return;
+            seen.add(d.full);
+            uniqueEntries.push({ iso: d.full, date: parsed });
+          });
+
+          allowedSet = new Set(uniqueEntries.map(entry => entry.iso));
+          if(uniqueEntries.length){
+            minDate = new Date(uniqueEntries[0].date.getTime());
+            maxDate = new Date(uniqueEntries[uniqueEntries.length - 1].date.getTime());
+          } else {
+            minDate = null;
+            maxDate = null;
+          }
+
           months = [];
           if(minDate && maxDate){
             const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
             const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
             while(cursor <= limit){
-              months.push(new Date(cursor));
+              months.push(new Date(cursor.getTime()));
               cursor.setMonth(cursor.getMonth() + 1);
             }
           }
@@ -16231,7 +16248,7 @@ function openPostModal(id){
                 cell.classList.add('available-day');
                 cell.addEventListener('mousedown',()=>{ lastClickedCell = cell; });
                 cell.addEventListener('click',()=>{
-                  const matches = loc.dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
+                  const matches = visibleDateEntries.filter(entry => entry.d.full === iso);
                   if(matches.length===1){ selectSession(matches[0].i); }
                   else if(matches.length>1){ showTimePopup(matches); }
                 });
@@ -16271,6 +16288,11 @@ function openPostModal(id){
 
         function updateSessionOptionsList(){
           recomputeVisibleDateData();
+          if(calContainer){
+            const existingPopup = calContainer.querySelector('.time-popup');
+            if(existingPopup) existingPopup.remove();
+          }
+          lastClickedCell = null;
           if(calendarEl){
             renderCalendar();
           }
@@ -16557,6 +16579,19 @@ function openPostModal(id){
           }
           expiredToggle._detailExpiredHandler = handler;
           expiredToggle.addEventListener('change', handler);
+        }
+
+        if(sessMenu){
+          const filterHandler = ()=> updateSessionOptionsList();
+          if(sessMenu._detailSessionFilterHandler){
+            ['sessionfilterchange','sessionfilterreset'].forEach(evt => {
+              sessMenu.removeEventListener(evt, sessMenu._detailSessionFilterHandler);
+            });
+          }
+          sessMenu._detailSessionFilterHandler = filterHandler;
+          ['sessionfilterchange','sessionfilterreset'].forEach(evt => {
+            sessMenu.addEventListener(evt, filterHandler);
+          });
         }
 
         const tasks = [];
