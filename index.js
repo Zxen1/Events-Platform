@@ -14847,7 +14847,9 @@ if (!map.__pillHooksInstalled) {
               delete overlayRoot.dataset.venueKey;
             }
 
-            const visibleList = (filtersInitialized && Array.isArray(filtered) && filtered.length) ? filtered : posts;
+            const visibleList = filtersInitialized
+              ? (Array.isArray(filtered) ? filtered : [])
+              : posts;
             const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
               if(!item || item.id === undefined || item.id === null) return '';
               return String(item.id);
@@ -14861,15 +14863,18 @@ if (!map.__pillHooksInstalled) {
                 venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
               }
             }
-            let venuePostsVisible = Array.isArray(venuePostsAll) ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id))) : [];
-            if(!venuePostsVisible.length){
-              const fallbackPost = Array.isArray(visibleList) ? visibleList.find(item => item && String(item.id) === String(post && post.id)) : null;
-              if(fallbackPost){
-                venuePostsVisible = [fallbackPost];
-              } else if(post){
-                venuePostsVisible = [post];
-              }
+            const allVenuePostIds = new Set();
+            if(Array.isArray(venuePostsAll)){
+              venuePostsAll.forEach(item => {
+                if(!item || item.id === undefined || item.id === null) return;
+                const idStr = String(item.id);
+                if(!idStr) return;
+                allVenuePostIds.add(idStr);
+              });
             }
+            const venuePostsVisible = Array.isArray(venuePostsAll)
+              ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id)))
+              : [];
             const uniqueVenuePosts = [];
             const venuePostIds = new Set();
             venuePostsVisible.forEach(item => {
@@ -14879,15 +14884,10 @@ if (!map.__pillHooksInstalled) {
               venuePostIds.add(idStr);
               uniqueVenuePosts.push(item);
             });
-            if(!uniqueVenuePosts.length && post){
-              uniqueVenuePosts.push(post);
-              if(post.id !== undefined && post.id !== null){
-                venuePostIds.add(String(post.id));
-              }
-            }
-            const multiIds = Array.from(venuePostIds);
+            const multiIds = uniqueVenuePosts.map(item => String(item.id)).filter(Boolean);
             const multiCount = uniqueVenuePosts.length;
-            const isMultiVenue = multiCount > 1;
+            const hadMultipleVenuePosts = allVenuePostIds.size > 1;
+            const isMultiVenue = hadMultipleVenuePosts || multiCount > 1;
             if(isMultiVenue){
               overlayRoot.dataset.multiIds = multiIds.join(',');
             } else {
