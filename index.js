@@ -3856,6 +3856,30 @@ function uniqueTitle(seed, cityName, idx){
     });
   }
 
+  function derivePostDatesFromLocations(locations){
+    if(!Array.isArray(locations) || !locations.length){
+      return [];
+    }
+    const seen = new Set();
+    locations.forEach(loc => {
+      if(!loc) return;
+      const schedule = Array.isArray(loc.dates) ? loc.dates : [];
+      schedule.forEach(entry => {
+        if(!entry) return;
+        if(typeof entry === 'string'){
+          const trimmed = entry.trim();
+          if(trimmed) seen.add(trimmed);
+          return;
+        }
+        if(entry.full){
+          const normalized = String(entry.full).trim();
+          if(normalized) seen.add(normalized);
+        }
+      });
+    });
+    return Array.from(seen).sort();
+  }
+
   function normalizeLongitude(value){
     if(!Number.isFinite(value)) value = 0;
     const normalized = ((value + 180) % 360 + 360) % 360 - 180;
@@ -4574,6 +4598,7 @@ function makePosts(){
       address: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia',
       radius: 0.05
     });
+    const locations = [location];
     pushPost({
       id,
       title,
@@ -4583,12 +4608,12 @@ function makePosts(){
       lng: location.lng, lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: [location],
+      locations,
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -4607,6 +4632,13 @@ function makePosts(){
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
     const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.05 });
+    const isoDate = toISODate(date);
+    location.dates = [{
+      date: date.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,''),
+      time: '09:00',
+      full: isoDate
+    }];
+    const locations = [location];
     pushPost({
       id,
       title,
@@ -4617,12 +4649,12 @@ function makePosts(){
       lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: [toISODate(date)],
+      dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: [location],
+      locations,
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -4719,6 +4751,7 @@ function makePosts(){
       address: spec.city,
       radius: 0
     });
+    const locations = [location];
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = `WW${worldProduced}`;
@@ -4734,12 +4767,12 @@ function makePosts(){
       lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: [location],
+      locations,
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
     worldProduced++;
@@ -4765,6 +4798,7 @@ function makePosts(){
       dates: randomSchedule(),
       price: randomPriceRange()
     };
+    const locations = [location];
     pushPost({
       id,
       title,
@@ -4775,12 +4809,12 @@ function makePosts(){
       lat: operaLat,
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: [location],
+      locations,
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -5004,6 +5038,7 @@ function makePosts(){
       address: spec.city,
       radius: 0
     });
+    const locations = [locationDetail];
     const finalKey = coordKey(locationDetail.lng, locationDetail.lat);
     if(finalKey){
       existingCoordKeys.add(finalKey);
@@ -5023,12 +5058,12 @@ function makePosts(){
       lat: locationDetail.lat,
       category: cat.name,
       subcategory: sub,
-      dates: randomDates(),
+      dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations: [locationDetail],
+      locations,
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
     singleProduced++;
@@ -5416,6 +5451,7 @@ function makePosts(){
         };
       });
       post.locations = nextLocations;
+      post.dates = derivePostDatesFromLocations(nextLocations);
       const primary = nextLocations[0];
       if(primary){
         post.lng = primary.lng;

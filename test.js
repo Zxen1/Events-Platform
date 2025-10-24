@@ -2,38 +2,38 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
-const html = fs.readFileSync('index.html', 'utf8');
+const mainSource = fs.readFileSync('index.js', 'utf8');
 
 assert(
-  html.includes("types: 'poi,place,address'"),
+  mainSource.includes("types: 'poi,place,address'"),
   'Global geocoder must request supported Mapbox types.'
 );
 
 assert(
-  html.includes("normalizeMapboxVenueTypes(options.types, 'poi');"),
+  mainSource.includes("normalizeMapboxVenueTypes(options.types, 'poi');"),
   'Mapbox venue search must normalize unsupported types to poi.'
 );
 
 assert(
-  html.includes("const resolvedTypes = types || 'poi';"),
+  mainSource.includes("const resolvedTypes = types || 'poi';"),
   'Mapbox venue search must fall back to poi when no types are provided.'
 );
 
 assert(
-  !html.includes("'poi,venue'"),
+  !mainSource.includes("'poi,venue'"),
   'Mapbox integrations must not request deprecated venue types.'
 );
 
 assert(
-  html.includes("const MAPBOX_SUPPORTED_VENUE_TYPES = ['poi','place','address'];"),
+  mainSource.includes("const MAPBOX_SUPPORTED_VENUE_TYPES = ['poi','place','address'];"),
   'Supported Mapbox venue types must be declared.'
 );
 
-const start = html.indexOf('const LOCAL_GEOCODER_MAX_RESULTS = 10;');
-const end = html.indexOf('rebuildVenueIndex();');
-assert(start !== -1 && end !== -1 && end > start, 'Unable to locate local venue search source in index.html');
+const start = mainSource.indexOf('const LOCAL_GEOCODER_MAX_RESULTS = 10;');
+const end = mainSource.indexOf('rebuildVenueIndex();');
+assert(start !== -1 && end !== -1 && end > start, 'Unable to locate local venue search source in index.js');
 
-const code = html.slice(start, end);
+const code = mainSource.slice(start, end);
 const context = { window: {}, console };
 vm.createContext(context);
 vm.runInContext(code, context);
