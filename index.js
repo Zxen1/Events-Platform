@@ -3834,25 +3834,189 @@ function uniqueTitle(seed, cityName, idx){
     return new Date(yy, mm - 1, dd);
   }
 
-  function randomDates(){
-    const count = 1 + Math.floor(rnd()*30);
+  const DAY_MS = 86400000;
+
+  function generateEventBlocks(options={}){
+    const {
+      minBlocks = 1,
+      maxBlocks = 3,
+      allowPast = false,
+      maxFutureDays = 180,
+      upcomingBiasDays = 60,
+      pastWindowDays = 60,
+      maxSpanDays = 14
+    } = options;
     const now = new Date();
-    return Array.from({length:count}, ()=>{
-      const d = new Date(+now + Math.floor(rnd()*365)*86400000);
-      return toISODate(d);
-    }).sort();
+    now.setHours(0,0,0,0);
+    const normalizedMin = Math.max(1, Math.floor(minBlocks));
+    const normalizedMax = Math.max(normalizedMin, Math.floor(maxBlocks));
+    const blockTotal = normalizedMin + Math.floor(rnd() * (normalizedMax - normalizedMin + 1));
+    const futureRange = Math.max(1, Math.floor(maxFutureDays));
+    const biasRange = Math.max(1, Math.min(futureRange, Math.floor(upcomingBiasDays) || futureRange));
+    const pastRange = Math.max(0, Math.floor(pastWindowDays));
+    const blocks = [];
+    for(let i=0;i<blockTotal;i++){
+      let offsetDays = 0;
+      if(allowPast && pastRange > 0 && rnd() < 0.22){
+        offsetDays = -Math.floor(rnd() * pastRange);
+      } else {
+        const roll = rnd();
+        if(roll < 0.7){
+          offsetDays = Math.floor(rnd() * biasRange);
+        } else if(roll < 0.9){
+          const midRange = Math.max(biasRange, Math.floor(futureRange * 0.65));
+          offsetDays = Math.floor(rnd() * Math.min(futureRange, midRange));
+        } else {
+          offsetDays = Math.floor(rnd() * futureRange);
+        }
+      }
+      if(!allowPast && offsetDays < 0){
+        offsetDays = 0;
+      }
+      const span = 1 + Math.floor(rnd() * Math.max(1, Math.floor(maxSpanDays)));
+      const start = new Date(now.getTime() + offsetDays * DAY_MS);
+      start.setHours(0,0,0,0);
+      blocks.push({ start, spanDays: span });
+    }
+    blocks.sort((a,b)=> a.start - b.start);
+    return blocks;
+  }
+
+  function pickBlockOffsets(spanDays){
+    const totalDays = Math.max(1, Math.floor(spanDays));
+    const offsets = new Set();
+    if(totalDays <= 1){
+      offsets.add(0);
+      return Array.from(offsets);
+    }
+    const densityRoll = rnd();
+    let target;
+    if(densityRoll < 0.25){
+      target = 1 + Math.floor(rnd() * Math.min(2, totalDays));
+    } else if(densityRoll < 0.6){
+      target = Math.min(totalDays, 2 + Math.floor(rnd() * Math.min(3, totalDays - 1)));
+    } else if(densityRoll < 0.85){
+      target = Math.min(totalDays, Math.max(2, Math.round(totalDays * (0.5 + rnd() * 0.4))));
+    } else {
+      target = Math.min(totalDays, Math.max(3, Math.round(totalDays * (0.75 + rnd() * 0.6))));
+    }
+    target = Math.max(1, Math.min(totalDays, target));
+    while(offsets.size < target){
+      offsets.add(Math.floor(rnd() * totalDays));
+      if(offsets.size >= totalDays){
+        break;
+      }
+    }
+    return Array.from(offsets).sort((a,b)=> a - b);
+  }
+
+  function randomSessionTime(){
+    const slot = rnd();
+    let hour;
+    if(slot < 0.15){
+      hour = 10 + Math.floor(rnd() * 3); // late morning
+    } else if(slot < 0.8){
+      hour = 18 + Math.floor(rnd() * 4); // evening shows
+    } else if(slot < 0.9){
+      hour = 14 + Math.floor(rnd() * 4); // matinees
+    } else {
+      hour = 12 + Math.floor(rnd() * 6); // afternoon variety
+    }
+    const minute = Math.floor(rnd() * 4) * 15;
+    return `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+  }
+
+  function generateSessionsFromBlocks(blocks, options={}){
+    const allowEmptyBlocks = options.allowEmptyBlocks !== false;
+    const emptyBlockChance = typeof options.emptyBlockChance === 'number'
+      ? Math.min(Math.max(options.emptyBlockChance, 0), 1)
+      : 0.2;
+    const ensureAtLeastOne = options.ensureAtLeastOne === true;
+    const allowDoubleSessions = options.allowDoubleSessions !== false;
+    const generator = typeof options.timeGenerator === 'function' ? options.timeGenerator : randomSessionTime;
+    const sessions = [];
+    blocks.forEach((block, blockIndex) => {
+      if(!block || !(block.start instanceof Date)){
+        return;
+      }
+      if(allowEmptyBlocks && rnd() < emptyBlockChance && blockIndex !== 0){
+        return;
+      }
+      const offsets = pickBlockOffsets(block.spanDays);
+      offsets.forEach(offset => {
+        const sessionDate = new Date(block.start.getTime() + offset * DAY_MS);
+        sessionDate.setHours(0,0,0,0);
+        const full = toISODate(sessionDate);
+        const dateLabel = sessionDate
+          .toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})
+          .replace(/,/g,'');
+        const time = generator({ block, offset, date: sessionDate });
+        sessions.push({ date: dateLabel, time, full });
+        if(allowDoubleSessions && rnd() < 0.08){
+          let extraTime = generator({ block, offset, date: sessionDate, variant: 'double' });
+          if(extraTime === time){
+            extraTime = randomSessionTime();
+          }
+          sessions.push({ date: dateLabel, time: extraTime, full });
+        }
+      });
+    });
+    if(ensureAtLeastOne && !sessions.length){
+      const fallbackDate = new Date();
+      fallbackDate.setHours(0,0,0,0);
+      const full = toISODate(fallbackDate);
+      const dateLabel = fallbackDate
+        .toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})
+        .replace(/,/g,'');
+      const time = generator({ fallback: true, date: fallbackDate });
+      sessions.push({ date: dateLabel, time, full });
+    }
+    sessions.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+    return sessions;
+  }
+
+  function randomDates(){
+    const blocks = generateEventBlocks({
+      minBlocks: 1,
+      maxBlocks: 3,
+      allowPast: false,
+      maxFutureDays: 180,
+      upcomingBiasDays: 120,
+      maxSpanDays: 14
+    });
+    const sessions = generateSessionsFromBlocks(blocks, {
+      allowEmptyBlocks: false,
+      ensureAtLeastOne: true,
+      allowDoubleSessions: false
+    });
+    const isoSet = new Set();
+    sessions.forEach(entry => {
+      if(entry && entry.full){
+        isoSet.add(entry.full);
+      }
+    });
+    if(!isoSet.size){
+      isoSet.add(toISODate(new Date()));
+    }
+    return Array.from(isoSet).sort();
   }
 
   function randomSchedule(){
-    const count = 1 + Math.floor(rnd()*20);
-    const now = new Date();
-    return Array.from({length:count}, ()=>{
-      const offset = Math.floor(rnd()*730) - 365; // past and future
-      const d = new Date(+now + offset*86400000);
-      const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
-      const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
-      const full = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      return {date, time, full};
+    const blocks = generateEventBlocks({
+      minBlocks: 1,
+      maxBlocks: 3,
+      allowPast: true,
+      pastWindowDays: 75,
+      maxFutureDays: 180,
+      upcomingBiasDays: 60,
+      maxSpanDays: 14
+    });
+    return generateSessionsFromBlocks(blocks, {
+      allowEmptyBlocks: true,
+      emptyBlockChance: 0.25,
+      ensureAtLeastOne: true,
+      allowDoubleSessions: true,
+      timeGenerator: randomSessionTime
     });
   }
 
@@ -5464,6 +5628,18 @@ function makePosts(){
   }
 
   assignMultiVenues(out, 1000);
+
+  out.forEach(post => {
+    if(!post) return;
+    if(Array.isArray(post.locations) && post.locations.length){
+      post.dates = derivePostDatesFromLocations(post.locations);
+    } else if(Array.isArray(post.dates)){
+      post.dates = post.dates.slice().sort();
+    } else {
+      post.dates = [];
+    }
+  });
+
   return out;
 }
 
