@@ -13178,6 +13178,7 @@ function makePosts(){
       }
     }
 
+    // Shared map loading state between control setup and map initialization.
     let mapLoading = null;
 
     loadMapbox(initMap);
@@ -13722,6 +13723,7 @@ if (!map.__pillHooksInstalled) {
         };
         try{ map.on('styleimagemissing', handleStyleImageMissing); }
         catch(err){ console.error(err); }
+        // Populate the shared mapLoading helper once the map instance is ready.
         mapLoading = (() => {
           const loader = window.__logoLoading;
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
