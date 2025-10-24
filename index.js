@@ -13414,12 +13414,71 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
+        const geolocateToken = `geolocate:${idx}`;
+        let geolocateButton = null;
+        let geolocateFallbackTimeout = null;
+
+        const clearGeolocateLoading = () => {
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+            geolocateFallbackTimeout = null;
+          }
+          if(mapLoading){
+            mapLoading.removeMotion(geolocateToken);
+          }
+        };
+
+        const ensureGeolocateLoading = () => {
+          if(!mapLoading) return;
+          mapLoading.addMotion(geolocateToken);
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+          }
+          geolocateFallbackTimeout = setTimeout(() => {
+            geolocateFallbackTimeout = null;
+            if(mapLoading){
+              mapLoading.removeMotion(geolocateToken);
+            }
+          }, 15000);
+        };
+
+        const awaitGeolocateIdle = () => {
+          if(!mapLoading){
+            clearGeolocateLoading();
+            return;
+          }
+          const finalize = () => {
+            clearGeolocateLoading();
+          };
+          let bound = false;
+          if(map && typeof map.once === 'function'){
+            try{
+              map.once('idle', finalize);
+              bound = true;
+            }catch(err){
+              finalize();
+              return;
+            }
+          }
+          if(!bound){
+            finalize();
+          } else {
+            if(geolocateFallbackTimeout){
+              clearTimeout(geolocateFallbackTimeout);
+            }
+            geolocateFallbackTimeout = setTimeout(() => {
+              finalize();
+            }, 8000);
+          }
+        };
+
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{
+          ensureGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           closeWelcomeModalIfOpen();
           if(mode!=='map') setMode('map');
@@ -13455,11 +13514,30 @@ function makePosts(){
               }catch(err){}
             }
           }
+          awaitGeolocateIdle();
+        });
+        geolocate.on('error', () => {
+          clearGeolocateLoading();
         });
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
+          if(controlEl){
+            geolocateButton = controlEl.querySelector('button');
+            if(geolocateButton){
+              const handlePress = (evt) => {
+                if(evt && evt.type === 'keydown'){
+                  const key = evt.key || evt.code;
+                  if(!key) return;
+                  if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
+                }
+                ensureGeolocateLoading();
+              };
+              geolocateButton.addEventListener('click', handlePress, { passive: true });
+              geolocateButton.addEventListener('keydown', handlePress);
+            }
+          }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
@@ -13646,6 +13724,7 @@ if (!map.__pillHooksInstalled) {
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
           }
+          const overlay = document.getElementById('headerLoadingOverlay');
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
@@ -13664,13 +13743,23 @@ if (!map.__pillHooksInstalled) {
           const apply = (forceStop = false) => {
             const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
             if(busy){
+              if(overlay){
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
+              }
               if(!active){
                 active = true;
                 try{ loader.begin('map'); }catch(err){}
               }
-            } else if(active){
-              active = false;
-              try{ loader.end('map'); }catch(err){}
+            } else {
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
             }
           };
 
@@ -13694,7 +13783,14 @@ if (!map.__pillHooksInstalled) {
             clearAll(){
               motionTokens.clear();
               tilesPending = false;
-              apply(true);
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
             }
           };
         })();
@@ -17774,25 +17870,6 @@ if(welcomeModalEl){
     });
   }
 }
-
-(function(){
-  const overlay = document.getElementById('headerLoadingOverlay');
-  if(!overlay) return;
-  const hideOverlay = () => {
-    overlay.classList.add('is-hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.addEventListener('transitionend', () => {
-      if(overlay && overlay.parentNode){
-        overlay.parentNode.removeChild(overlay);
-      }
-    }, { once: true });
-  };
-  if(document.readyState === 'complete'){
-    requestAnimationFrame(hideOverlay);
-  } else {
-    window.addEventListener('load', hideOverlay, { once: true });
-  }
-})();
 
 function requestClosePanel(m){
   if(m){
