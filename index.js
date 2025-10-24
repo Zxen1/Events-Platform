@@ -3662,9 +3662,21 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
         try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
-        const preload = new Set([...KNOWN, ...Object.keys(markers)]);
-        for(const iconName of preload){
-          try{ await addIcon(iconName); }catch(err){}
+        const preloadList = Array.from(new Set([...KNOWN, ...Object.keys(markers)]));
+        if(!preloadList.length) return;
+        const BATCH_SIZE = 4;
+        const BATCH_DELAY = 60;
+        for(let i = 0; i < preloadList.length; i += BATCH_SIZE){
+          const slice = preloadList.slice(i, i + BATCH_SIZE);
+          const tasks = slice.map(iconName => (
+            addIcon(iconName).catch(() => false)
+          ));
+          try{
+            await Promise.allSettled(tasks);
+          }catch(err){}
+          if(BATCH_DELAY && i + BATCH_SIZE < preloadList.length){
+            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+          }
         }
       });
 
