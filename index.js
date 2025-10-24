@@ -13006,11 +13006,7 @@ function makePosts(){
           document.body.classList.remove('show-history');
         }
         if(m === 'map'){
-          if(modeChangeWasUserInitiated){
-            startMainMapInit();
-          } else {
-            queueMainMapInitAfterInteraction();
-          }
+          startMainMapInit();
         }
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
@@ -13054,13 +13050,11 @@ function makePosts(){
       }
 
     // Mapbox
-    const MAP_INIT_INTERACTION_TIMEOUT = 6000;
     let mapboxBundlePromise = null;
     let mapboxBundleReady = false;
     let mainMapInitPromise = null;
     let mapInitTriggered = false;
     let mapInitQueued = false;
-    let mapInitInteractionTimeout = null;
     let modeChangeWasUserInitiated = false;
 
     function loadMapbox(cb){
@@ -13270,10 +13264,6 @@ function makePosts(){
       if(mainMapInitPromise){
         return mainMapInitPromise;
       }
-      if(mapInitInteractionTimeout){
-        clearTimeout(mapInitInteractionTimeout);
-        mapInitInteractionTimeout = null;
-      }
       mapInitQueued = false;
       if(typeof __notifyMapOnInteraction === 'function'){
         __notifyMapOnInteraction = null;
@@ -13304,20 +13294,12 @@ function makePosts(){
         return;
       }
       mapInitQueued = true;
+      loadMapbox().catch(err => console.error(err));
       const notify = () => {
         mapInitQueued = false;
-        if(mapInitInteractionTimeout){
-          clearTimeout(mapInitInteractionTimeout);
-          mapInitInteractionTimeout = null;
-        }
         startMainMapInit();
       };
       __notifyMapOnInteraction = notify;
-      mapInitInteractionTimeout = window.setTimeout(() => {
-        mapInitInteractionTimeout = null;
-        mapInitQueued = false;
-        startMainMapInit();
-      }, MAP_INIT_INTERACTION_TIMEOUT);
     }
 
     function addControls(){
