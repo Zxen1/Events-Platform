@@ -13414,12 +13414,71 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
+        const geolocateToken = `geolocate:${idx}`;
+        let geolocateButton = null;
+        let geolocateFallbackTimeout = null;
+
+        const clearGeolocateLoading = () => {
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+            geolocateFallbackTimeout = null;
+          }
+          if(mapLoading){
+            mapLoading.removeMotion(geolocateToken);
+          }
+        };
+
+        const ensureGeolocateLoading = () => {
+          if(!mapLoading) return;
+          mapLoading.addMotion(geolocateToken);
+          if(geolocateFallbackTimeout){
+            clearTimeout(geolocateFallbackTimeout);
+          }
+          geolocateFallbackTimeout = setTimeout(() => {
+            geolocateFallbackTimeout = null;
+            if(mapLoading){
+              mapLoading.removeMotion(geolocateToken);
+            }
+          }, 15000);
+        };
+
+        const awaitGeolocateIdle = () => {
+          if(!mapLoading){
+            clearGeolocateLoading();
+            return;
+          }
+          const finalize = () => {
+            clearGeolocateLoading();
+          };
+          let bound = false;
+          if(map && typeof map.once === 'function'){
+            try{
+              map.once('idle', finalize);
+              bound = true;
+            }catch(err){
+              finalize();
+              return;
+            }
+          }
+          if(!bound){
+            finalize();
+          } else {
+            if(geolocateFallbackTimeout){
+              clearTimeout(geolocateFallbackTimeout);
+            }
+            geolocateFallbackTimeout = setTimeout(() => {
+              finalize();
+            }, 8000);
+          }
+        };
+
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{
+          ensureGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
           closeWelcomeModalIfOpen();
           if(mode!=='map') setMode('map');
@@ -13455,11 +13514,30 @@ function makePosts(){
               }catch(err){}
             }
           }
+          awaitGeolocateIdle();
+        });
+        geolocate.on('error', () => {
+          clearGeolocateLoading();
         });
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
+          if(controlEl){
+            geolocateButton = controlEl.querySelector('button');
+            if(geolocateButton){
+              const handlePress = (evt) => {
+                if(evt && evt.type === 'keydown'){
+                  const key = evt.key || evt.code;
+                  if(!key) return;
+                  if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
+                }
+                ensureGeolocateLoading();
+              };
+              geolocateButton.addEventListener('click', handlePress, { passive: true });
+              geolocateButton.addEventListener('keydown', handlePress);
+            }
+          }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
