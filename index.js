@@ -16058,20 +16058,42 @@ function openPostModal(id){
           sessionInfo.innerHTML = defaultInfoHTML;
         }
 
-        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
-        const allowedSet = new Set(dateStrings);
-        const minDate = parseDate(dateStrings[0]);
-        const maxDate = parseDate(dateStrings[dateStrings.length-1]);
         let cal = null;
         let selectedIndex = null;
+        let allowedSet = new Set();
+        let minDate = null;
+        let maxDate = null;
+        let months = [];
+        let visibleDateEntries = [];
 
-        const months = [];
-        if(minDate && maxDate){
-          const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-          const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
-          while(cursor <= limit){
-            months.push(new Date(cursor));
-            cursor.setMonth(cursor.getMonth() + 1);
+        function recomputeVisibleDateData(){
+          const expiredToggle = document.getElementById('expiredToggle');
+          const showExpired = !!(expiredToggle && expiredToggle.checked);
+          const threshold = (()=>{
+            const base = new Date();
+            base.setHours(0,0,0,0);
+            base.setDate(base.getDate() - 1);
+            return base;
+          })();
+          visibleDateEntries = loc.dates
+            .map((d,i)=>({d,i}))
+            .filter(({d})=>{
+              if(showExpired) return true;
+              const parsed = parseDate(d.full);
+              return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
+            });
+          const uniqueStrings = Array.from(new Set(visibleDateEntries.map(({d})=> d.full)));
+          allowedSet = new Set(uniqueStrings);
+          minDate = uniqueStrings.length ? parseDate(uniqueStrings[0]) : null;
+          maxDate = uniqueStrings.length ? parseDate(uniqueStrings[uniqueStrings.length-1]) : null;
+          months = [];
+          if(minDate && maxDate){
+            const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+            while(cursor <= limit){
+              months.push(new Date(cursor));
+              cursor.setMonth(cursor.getMonth() + 1);
+            }
           }
         }
 
@@ -16230,66 +16252,75 @@ function openPostModal(id){
           cal = document.createElement('div');
           cal.className='calendar';
           calendarEl.appendChild(cal);
-          calendarEl.addEventListener('click', e=> e.stopPropagation());
+          if(!calendarEl._calendarClickStopper){
+            calendarEl.addEventListener('click', e=> e.stopPropagation());
+            calendarEl._calendarClickStopper = true;
+          }
         }
 
         function finalizeCalendar(){
           markSelected();
         }
 
-        function updateSessionOptionsList(){
-          if(sessionOptions){
-            const expiredToggle = document.getElementById('expiredToggle');
-            const showExpired = !!(expiredToggle && expiredToggle.checked);
-            const threshold = (()=>{
-              const base = new Date();
-              base.setHours(0,0,0,0);
-              base.setDate(base.getDate() - 1);
-              return base;
-            })();
-            const visibleDates = loc.dates
-              .map((d,i)=>({d,i}))
-              .filter(({d})=>{
-                if(showExpired) return true;
-                const parsed = parseDate(d.full);
-                return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
-              });
+        function renderCalendar(){
+          if(!calendarEl) return;
+          buildCalendarShell();
+          months.forEach(monthDate => renderMonth(monthDate));
+          finalizeCalendar();
+        }
 
+        function updateSessionOptionsList(){
+          recomputeVisibleDateData();
+          if(calendarEl){
+            renderCalendar();
+          }
+
+          const visibleDates = visibleDateEntries;
+
+          if(sessionOptions){
             sessionOptions.innerHTML = visibleDates
               .map(({d,i})=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`)
               .join('');
+          }
 
-            if(sessMenu){
-              sessMenu.scrollTop = 0;
+          if(sessMenu){
+            sessMenu.scrollTop = 0;
+          }
+
+          const hasVisible = visibleDates.length > 0;
+          sessionHasMultiple = visibleDates.length > 1;
+
+          const selectedIsVisible = visibleDates.some(({i})=> i === selectedIndex);
+          if(!selectedIsVisible){
+            selectedIndex = null;
+          }
+
+          if(sessionHasMultiple){
+            selectedIndex = null;
+            markSelected();
+            if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
+            if(sessBtn){
+              sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
+              sessBtn.setAttribute('aria-expanded','false');
             }
-
-            const hasVisible = visibleDates.length > 0;
-            sessionHasMultiple = visibleDates.length > 1;
-
-            if(sessionHasMultiple){
-              selectedIndex = null;
-              markSelected();
-              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-              if(sessBtn){
-                sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
-                sessBtn.setAttribute('aria-expanded','false');
-              }
-            } else if(hasVisible){
-              selectSession(visibleDates[0].i);
-            } else {
-              selectedIndex = null;
-              markSelected();
-              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-              if(sessBtn){
-                sessBtn.textContent = 'Select Session';
-                sessBtn.setAttribute('aria-expanded','false');
-              }
+          } else if(hasVisible){
+            selectSession(visibleDates[0].i);
+          } else {
+            selectedIndex = null;
+            markSelected();
+            if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
+            if(sessBtn){
+              sessBtn.textContent = 'Select Session';
+              sessBtn.setAttribute('aria-expanded','false');
             }
+          }
 
+          if(sessionOptions){
             sessionOptions.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
           }
+
           setTimeout(()=>{
             if(map && typeof map.resize === 'function') map.resize();
           },0);
@@ -16518,6 +16549,16 @@ function openPostModal(id){
         };
         window.ensureMapForVenue = ensureMapForVenue;
 
+        const expiredToggle = document.getElementById('expiredToggle');
+        if(expiredToggle){
+          const handler = ()=> updateSessionOptionsList();
+          if(expiredToggle._detailExpiredHandler){
+            expiredToggle.removeEventListener('change', expiredToggle._detailExpiredHandler);
+          }
+          expiredToggle._detailExpiredHandler = handler;
+          expiredToggle.addEventListener('change', handler);
+        }
+
         const tasks = [];
         if(mapEl){
           tasks.push(()=> {
@@ -16533,11 +16574,6 @@ function openPostModal(id){
                 };
             ensure('ensureMapForVenue', fn => fn());
           });
-        }
-        if(calendarEl){
-          tasks.push(()=> buildCalendarShell());
-          months.forEach(monthDate => tasks.push(()=> renderMonth(monthDate)));
-          tasks.push(()=> finalizeCalendar());
         }
         tasks.push(()=> updateSessionOptionsList());
         tasks.push(()=> attachSessionButtonHandler());
