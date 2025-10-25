@@ -3562,12 +3562,15 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = [
-      { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-      { name: 'Images', type: 'images', placeholder: '', required: true }
-    ];
-      const ICON_BASE = window.ICON_BASE = {
+    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+    const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
         "Opportunities": "opportunities-category-icon",
         "Learning": "learning-category-icon",
@@ -18918,6 +18921,14 @@ document.addEventListener('pointerdown', (e) => {
     const listingCurrency = document.getElementById('memberCreateListingCurrency');
     const listingPrice = document.getElementById('memberCreateListingPrice');
 
+    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
@@ -19137,7 +19148,7 @@ document.addEventListener('pointerdown', (e) => {
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
       if(!fields || fields.length === 0){
-        fields = DEFAULT_SUBCATEGORY_FIELDS;
+        fields = sharedDefaultSubcategoryFields;
       }
       return fields.map(sanitizeCreateField);
     }
