@@ -20994,7 +20994,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function svgPlaceholder(letter){
     const palette = ['#2e3a72','#0ea5e9','#f97316','#14b8a6','#a855f7'];
     const color = palette[letter.charCodeAt(0) % palette.length];
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="52%" text-anchor="middle" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
     try{
       return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
     }catch(err){
