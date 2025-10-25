@@ -3202,6 +3202,38 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return null;
     }
 
+    async function fetchSavedFormbuilderSnapshot(){
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timeoutId = controller ? window.setTimeout(() => {
+        try{ controller.abort(); }catch(err){}
+      }, 15000) : 0;
+      try{
+        const response = await fetch('/gateway.php?action=get-formbuilder', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          signal: controller ? controller.signal : undefined
+        });
+        const text = await response.text();
+        let data;
+        try{
+          data = JSON.parse(text);
+        }catch(parseErr){
+          throw new Error('The server returned an unexpected response.');
+        }
+        if(!response.ok || !data || data.success !== true || !data.snapshot){
+          const message = data && typeof data.message === 'string' && data.message.trim()
+            ? data.message.trim()
+            : 'Unable to load form definitions.';
+          throw new Error(message);
+        }
+        return data.snapshot;
+      } finally {
+        if(timeoutId){
+          clearTimeout(timeoutId);
+        }
+      }
+    }
+
     function cloneFieldValue(value){
       if(Array.isArray(value)){
         return value.map(cloneFieldValue);
@@ -18932,10 +18964,37 @@ document.addEventListener('pointerdown', (e) => {
       return Array.from(codes);
     }
 
-    let memberSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
+    const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
+    const loadingMessage = 'Loading form fields…';
+    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
+
+    const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
+    let memberSnapshot = defaultMemberSnapshot;
     let memberCategories = memberSnapshot.categories;
     let currencyCodes = collectCurrencyCodes(memberSnapshot);
     let fieldIdCounter = 0;
+    let memberSnapshotErrorMessage = '';
+
+    function setEmptyStateMessage(message){
+      if(!emptyState) return;
+      if(typeof message === 'string' && message.trim()){
+        emptyState.textContent = message;
+      } else {
+        emptyState.textContent = defaultEmptyMessage;
+      }
+    }
+
+    function applyMemberSnapshot(snapshot, options = {}){
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      memberSnapshot = normalized;
+      memberCategories = memberSnapshot.categories;
+      currencyCodes = collectCurrencyCodes(memberSnapshot);
+      ensureCurrencyOptions(listingCurrency);
+      ensureCurrencyOptions(adminListingCurrency);
+      if(options.populate !== false){
+        populateCategoryOptions(options.preserveSelection === true);
+      }
+    }
 
     function ensureCurrencyOptions(select){
       if(!select) return;
@@ -18959,15 +19018,21 @@ document.addEventListener('pointerdown', (e) => {
       }
     }
 
-    function refreshMemberSnapshot(){
-      memberSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
-      memberCategories = memberSnapshot.categories;
-      currencyCodes = collectCurrencyCodes(memberSnapshot);
-      ensureCurrencyOptions(listingCurrency);
-      ensureCurrencyOptions(adminListingCurrency);
+    function refreshMemberSnapshotFromManager(){
+      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+        try{
+          const snapshot = window.formbuilderStateManager.capture();
+          memberSnapshotErrorMessage = '';
+          applyMemberSnapshot(snapshot, { preserveSelection: true });
+          return;
+        }catch(err){
+          console.warn('Failed to capture latest formbuilder snapshot', err);
+        }
+      }
+      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
     }
 
-    refreshMemberSnapshot();
+    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
 
     function formatPriceValue(value){
       const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
@@ -19073,8 +19138,18 @@ document.addEventListener('pointerdown', (e) => {
       return fields.map(sanitizeCreateField);
     }
 
-    function renderEmptyState(){
-      if(emptyState) emptyState.hidden = false;
+    function renderEmptyState(message){
+      if(emptyState){
+        if(typeof message === 'string'){
+          memberSnapshotErrorMessage = message;
+          setEmptyStateMessage(message);
+        } else if(memberSnapshotErrorMessage){
+          setEmptyStateMessage(memberSnapshotErrorMessage);
+        } else {
+          setEmptyStateMessage();
+        }
+        emptyState.hidden = false;
+      }
       if(formWrapper) formWrapper.hidden = true;
       if(checkoutContainer) checkoutContainer.hidden = true;
       if(postButton) postButton.disabled = true;
@@ -19082,23 +19157,45 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function buildVersionPriceEditor(field, labelId){
-      const options = Array.isArray(field.options) && field.options.length ? field.options.map(opt => ({ ...opt })) : [{ version: '', currency: '', price: '' }];
+      const options = Array.isArray(field.options) && field.options.length
+        ? field.options.map(opt => ({
+            version: typeof opt.version === 'string' ? opt.version : '',
+            currency: typeof opt.currency === 'string' ? opt.currency : '',
+            price: typeof opt.price === 'string' ? opt.price : ''
+          }))
+        : [{ version: '', currency: '', price: '' }];
+
+      const editor = document.createElement('div');
+      editor.className = 'form-preview-version-price version-price-options-editor';
+      editor.setAttribute('role', 'group');
+      editor.setAttribute('aria-labelledby', labelId);
+
       const list = document.createElement('div');
-      list.className = 'member-version-price-list';
-      list.setAttribute('role', 'group');
-      list.setAttribute('aria-labelledby', labelId);
+      list.className = 'version-price-options-list';
+      editor.appendChild(list);
 
       function addRow(option){
         const row = document.createElement('div');
-        row.className = 'member-version-price-row';
+        row.className = 'version-price-option';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'version-price-row version-price-row--top';
         const versionInput = document.createElement('input');
         versionInput.type = 'text';
+        versionInput.className = 'version-price-name form-preview-version-price-name';
         versionInput.placeholder = 'Version Name';
         versionInput.value = option.version || '';
         versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
+        topRow.appendChild(versionInput);
 
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'version-price-row version-price-row--bottom';
         const currencySelect = document.createElement('select');
-        currencySelect.innerHTML = '<option value="">Currency</option>';
+        currencySelect.className = 'version-price-currency';
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Currency';
+        currencySelect.appendChild(emptyOption);
         currencyCodes.forEach(code => {
           const opt = document.createElement('option');
           opt.value = code;
@@ -19110,6 +19207,7 @@ document.addEventListener('pointerdown', (e) => {
 
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
+        priceInput.className = 'version-price-price form-preview-version-price-price';
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
@@ -19117,8 +19215,13 @@ document.addEventListener('pointerdown', (e) => {
           priceInput.value = option.price;
         });
 
+        bottomRow.append(currencySelect, priceInput);
+
+        const actions = document.createElement('div');
+        actions.className = 'version-price-option-actions';
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
+        removeBtn.className = 'member-create-secondary-btn';
         removeBtn.textContent = 'Remove';
         removeBtn.addEventListener('click', ()=>{
           if(options.length <= 1){
@@ -19136,8 +19239,9 @@ document.addEventListener('pointerdown', (e) => {
           }
           row.remove();
         });
+        actions.appendChild(removeBtn);
 
-        row.append(versionInput, currencySelect, priceInput, removeBtn);
+        row.append(topRow, bottomRow, actions);
         list.appendChild(row);
       }
 
@@ -19153,26 +19257,27 @@ document.addEventListener('pointerdown', (e) => {
         addRow(option);
       });
 
-      const container = document.createElement('div');
-      container.appendChild(list);
-      container.appendChild(addBtn);
-      return container;
+      editor.appendChild(addBtn);
+      return editor;
     }
 
     function buildVenueSessionEditor(field, labelId){
       const venues = Array.isArray(field.options) && field.options.length ? field.options.map(cloneVenueSessionVenue) : [venueSessionCreateVenue()];
+      const editor = document.createElement('div');
+      editor.className = 'venue-session-editor';
+      editor.setAttribute('role', 'group');
+      editor.setAttribute('aria-labelledby', labelId);
       const venueList = document.createElement('div');
-      venueList.className = 'member-venue-session';
-      venueList.setAttribute('role', 'group');
-      venueList.setAttribute('aria-labelledby', labelId);
+      venueList.className = 'venue-session-venues';
+      editor.appendChild(venueList);
       let addVenueBtn = null;
 
       function addVenueCard(venue){
         const venueCard = document.createElement('div');
-        venueCard.className = 'member-venue-card';
+        venueCard.className = 'venue-card';
 
         const venueHeader = document.createElement('div');
-        venueHeader.className = 'member-venue-header';
+        venueHeader.className = 'venue-line address_line-line';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.placeholder = 'Venue Name';
@@ -19186,19 +19291,21 @@ document.addEventListener('pointerdown', (e) => {
         venueHeader.append(nameInput, addressInput);
 
         const sessionList = document.createElement('div');
-        sessionList.className = 'member-session-list';
+        sessionList.className = 'session-pricing-card-list';
 
         function addSessionCard(session){
           const sessionCard = document.createElement('div');
-          sessionCard.className = 'member-session-card';
+          sessionCard.className = 'session-pricing-card';
           const sessionTop = document.createElement('div');
-          sessionTop.className = 'member-session-top';
+          sessionTop.className = 'session-date-row';
           const dateInput = document.createElement('input');
           dateInput.type = 'date';
           dateInput.value = session.date || '';
           dateInput.addEventListener('change', ()=>{ session.date = dateInput.value; });
           sessionTop.appendChild(dateInput);
 
+          const sessionActions = document.createElement('div');
+          sessionActions.className = 'session-date-actions';
           const removeSessionBtn = document.createElement('button');
           removeSessionBtn.type = 'button';
           removeSessionBtn.className = 'member-create-secondary-btn';
@@ -19218,24 +19325,27 @@ document.addEventListener('pointerdown', (e) => {
             }
             sessionCard.remove();
           });
-          sessionTop.appendChild(removeSessionBtn);
+          sessionActions.appendChild(removeSessionBtn);
+          sessionTop.appendChild(sessionActions);
           sessionCard.appendChild(sessionTop);
 
           const timeList = document.createElement('div');
-          timeList.className = 'member-time-list';
+          timeList.className = 'session-time-list';
           sessionCard.appendChild(timeList);
 
           function addTimeCard(time){
             const timeCard = document.createElement('div');
-            timeCard.className = 'member-time-card';
+            timeCard.className = 'session-time-row';
             const timeHeader = document.createElement('div');
-            timeHeader.className = 'member-time-header';
+            timeHeader.className = 'session-time-input-wrapper';
             const timeInput = document.createElement('input');
             timeInput.type = 'time';
             timeInput.value = time.time || '';
             timeInput.addEventListener('change', ()=>{ time.time = timeInput.value; });
             timeHeader.appendChild(timeInput);
 
+            const timeActions = document.createElement('div');
+            timeActions.className = 'session-time-actions';
             const removeTimeBtn = document.createElement('button');
             removeTimeBtn.type = 'button';
             removeTimeBtn.className = 'member-create-secondary-btn';
@@ -19252,16 +19362,17 @@ document.addEventListener('pointerdown', (e) => {
               }
               timeCard.remove();
             });
-            timeHeader.appendChild(removeTimeBtn);
+            timeActions.appendChild(removeTimeBtn);
+            timeHeader.appendChild(timeActions);
             timeCard.appendChild(timeHeader);
 
             const versionList = document.createElement('div');
-            versionList.className = 'member-version-list';
+            versionList.className = 'session-version-list';
             timeCard.appendChild(versionList);
 
             function addVersionCard(version){
               const versionCard = document.createElement('div');
-              versionCard.className = 'member-version-card';
+              versionCard.className = 'session-pricing-card version-entry-card';
               const versionNameInput = document.createElement('input');
               versionNameInput.type = 'text';
               versionNameInput.placeholder = 'Version Name';
@@ -19270,12 +19381,12 @@ document.addEventListener('pointerdown', (e) => {
               versionCard.appendChild(versionNameInput);
 
               const tierList = document.createElement('div');
-              tierList.className = 'member-tier-list';
+              tierList.className = 'tier-list';
               versionCard.appendChild(tierList);
 
               function addTierRow(tier){
                 const tierRow = document.createElement('div');
-                tierRow.className = 'member-tier-row';
+                tierRow.className = 'tier-row';
                 const tierNameInput = document.createElement('input');
                 tierNameInput.type = 'text';
                 tierNameInput.placeholder = 'Tier Name';
@@ -19302,6 +19413,8 @@ document.addEventListener('pointerdown', (e) => {
                   tierPriceInput.value = tier.price;
                 });
 
+                const tierActions = document.createElement('div');
+                tierActions.className = 'tier-actions';
                 const removeTierBtn = document.createElement('button');
                 removeTierBtn.type = 'button';
                 removeTierBtn.className = 'member-create-secondary-btn';
@@ -19323,7 +19436,8 @@ document.addEventListener('pointerdown', (e) => {
                   tierRow.remove();
                 });
 
-                tierRow.append(tierNameInput, tierCurrencySelect, tierPriceInput, removeTierBtn);
+                tierActions.appendChild(removeTierBtn);
+                tierRow.append(tierNameInput, tierCurrencySelect, tierPriceInput, tierActions);
                 tierList.appendChild(tierRow);
               }
 
@@ -19333,7 +19447,7 @@ document.addEventListener('pointerdown', (e) => {
               version.tiers.forEach(addTierRow);
 
               const versionActions = document.createElement('div');
-              versionActions.className = 'member-version-actions';
+              versionActions.className = 'version-actions';
               const addTierBtn = document.createElement('button');
               addTierBtn.type = 'button';
               addTierBtn.className = 'member-create-secondary-btn';
@@ -19376,8 +19490,8 @@ document.addEventListener('pointerdown', (e) => {
             }
             time.versions.forEach(addVersionCard);
 
-            const timeActions = document.createElement('div');
-            timeActions.className = 'member-time-actions';
+            const timeFooter = document.createElement('div');
+            timeFooter.className = 'session-time-actions';
             const addVersionBtn = document.createElement('button');
             addVersionBtn.type = 'button';
             addVersionBtn.className = 'member-create-secondary-btn';
@@ -19387,8 +19501,8 @@ document.addEventListener('pointerdown', (e) => {
               time.versions.push(version);
               addVersionCard(version);
             });
-            timeActions.appendChild(addVersionBtn);
-            timeCard.appendChild(timeActions);
+            timeFooter.appendChild(addVersionBtn);
+            timeCard.appendChild(timeFooter);
             timeList.appendChild(timeCard);
           }
 
@@ -19398,7 +19512,7 @@ document.addEventListener('pointerdown', (e) => {
           session.times.forEach(addTimeCard);
 
           const sessionActions = document.createElement('div');
-          sessionActions.className = 'member-session-actions';
+          sessionActions.className = 'session-date-actions';
           const addTimeBtn = document.createElement('button');
           addTimeBtn.type = 'button';
           addTimeBtn.className = 'member-create-secondary-btn';
@@ -19419,7 +19533,7 @@ document.addEventListener('pointerdown', (e) => {
         venue.sessions.forEach(addSessionCard);
 
         const venueActions = document.createElement('div');
-        venueActions.className = 'member-venue-actions';
+        venueActions.className = 'venue-line-actions';
         const addSessionBtn = document.createElement('button');
         addSessionBtn.type = 'button';
         addSessionBtn.className = 'member-create-secondary-btn';
@@ -19470,85 +19584,171 @@ document.addEventListener('pointerdown', (e) => {
       });
       venueList.appendChild(addVenueBtn);
 
-      return venueList;
+      return editor;
+    }
+
+    async function initializeMemberFormbuilderSnapshot(){
+      if(categorySelect){
+        categorySelect.disabled = true;
+      }
+      if(subcategorySelect){
+        subcategorySelect.disabled = true;
+      }
+      renderEmptyState(loadingMessage);
+      try{
+        const snapshot = await fetchSavedFormbuilderSnapshot();
+        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
+          window.formbuilderStateManager.restore(snapshot);
+        }
+        applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
+        memberSnapshotErrorMessage = '';
+        setEmptyStateMessage(defaultEmptyMessage);
+      }catch(error){
+        console.error('Failed to load formbuilder snapshot for members', error);
+        memberSnapshotErrorMessage = fetchErrorMessage;
+        setEmptyStateMessage(fetchErrorMessage);
+        applyMemberSnapshot(memberSnapshot, { preserveSelection: false, populate: false });
+      } finally {
+        if(categorySelect){
+          categorySelect.disabled = false;
+        }
+        populateCategoryOptions(false);
+      }
     }
 
     function buildMemberCreateField(field, index){
       const wrapper = document.createElement('div');
-      wrapper.className = 'panel-field member-create-field';
-      const label = document.createElement('label');
+      wrapper.className = 'panel-field form-preview-field';
       const labelText = field.name && field.name.trim() ? field.name.trim() : `Field ${index + 1}`;
       const labelId = `memberCreateFieldLabel-${++fieldIdCounter}`;
       const controlId = `memberCreateField-${fieldIdCounter}`;
+      const label = document.createElement('label');
       label.id = labelId;
-      label.textContent = field.required ? `${labelText} *` : labelText;
+      label.className = 'form-preview-field-label';
+      label.setAttribute('for', controlId);
+      label.textContent = labelText;
+      if(field.required){
+        wrapper.classList.add('form-preview-field--required');
+        label.appendChild(document.createTextNode(' '));
+        const asterisk = document.createElement('span');
+        asterisk.className = 'required-asterisk';
+        asterisk.textContent = '*';
+        label.appendChild(asterisk);
+      }
       wrapper.appendChild(label);
-      let control = null;
+
       const placeholder = field.placeholder || '';
+      let control = null;
 
       if(field.type === 'description' || field.type === 'text-area'){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
         textarea.placeholder = placeholder;
+        textarea.className = 'form-preview-textarea';
+        if(field.type === 'description'){
+          textarea.classList.add('form-preview-description');
+        }
         if(field.required) textarea.required = true;
         control = textarea;
       } else if(field.type === 'dropdown'){
+        wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
+        select.className = 'form-preview-select';
         if(field.required) select.required = true;
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
         placeholderOption.textContent = placeholder || 'Select an option';
         select.appendChild(placeholderOption);
-        field.options.forEach(optionValue => {
+        field.options.forEach((optionValue, optionIndex) => {
           const option = document.createElement('option');
-          option.value = optionValue;
-          option.textContent = optionValue || 'Option';
+          const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+          option.value = stringValue;
+          option.textContent = stringValue.trim() ? stringValue : `Option ${optionIndex + 1}`;
           select.appendChild(option);
         });
         control = select;
       } else if(field.type === 'radio-toggle'){
+        wrapper.classList.add('form-preview-field--radio-toggle');
+        label.removeAttribute('for');
         const radioGroup = document.createElement('div');
-        radioGroup.className = 'member-radio-group';
+        radioGroup.className = 'form-preview-radio-group';
         radioGroup.setAttribute('role', 'radiogroup');
         radioGroup.setAttribute('aria-labelledby', labelId);
         const radioName = `member-create-radio-${fieldIdCounter}`;
-        field.options.forEach((optionValue, optionIndex)=>{
-          const radioLabel = document.createElement('label');
-          radioLabel.className = 'member-radio-option';
+        if(field.options.length){
+          field.options.forEach((optionValue, optionIndex)=>{
+            const radioLabel = document.createElement('label');
+            radioLabel.className = 'form-preview-radio-option';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = radioName;
+            radio.value = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+            if(field.required && optionIndex === 0) radio.required = true;
+            const displayValue = radio.value.trim() ? radio.value : `Option ${optionIndex + 1}`;
+            const radioText = document.createElement('span');
+            radioText.textContent = displayValue;
+            radioLabel.append(radio, radioText);
+            radioGroup.appendChild(radioLabel);
+          });
+        } else {
+          const placeholderOption = document.createElement('label');
+          placeholderOption.className = 'form-preview-radio-option';
           const radio = document.createElement('input');
           radio.type = 'radio';
-          radio.name = radioName;
-          radio.value = optionValue;
-          if(field.required && optionIndex === 0) radio.required = true;
-          radioLabel.append(radio, document.createTextNode(optionValue || `Option ${optionIndex + 1}`));
-          radioGroup.appendChild(radioLabel);
-        });
+          radio.disabled = true;
+          const radioText = document.createElement('span');
+          radioText.textContent = 'Option';
+          placeholderOption.append(radio, radioText);
+          radioGroup.appendChild(placeholderOption);
+        }
         control = radioGroup;
-        label.removeAttribute('for');
       } else if(field.type === 'images'){
+        wrapper.classList.add('form-preview-field--images');
+        label.removeAttribute('for');
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'form-preview-images';
         const fileInput = document.createElement('input');
         fileInput.id = controlId;
         fileInput.type = 'file';
         fileInput.multiple = true;
         fileInput.accept = 'image/*';
         if(field.required) fileInput.required = true;
-        control = fileInput;
+        const hint = document.createElement('p');
+        hint.className = 'form-preview-image-hint';
+        hint.textContent = placeholder || 'Upload images';
+        const message = document.createElement('p');
+        message.className = 'form-preview-image-message';
+        message.textContent = '';
+        const previewGrid = document.createElement('div');
+        previewGrid.className = 'form-preview-image-previews';
+        const previewId = `${controlId}-previews`;
+        previewGrid.id = previewId;
+        fileInput.dataset.imagePreviewTarget = previewId;
+        imageWrapper.append(fileInput, hint, message, previewGrid);
+        control = imageWrapper;
       } else if(field.type === 'version-price'){
+        wrapper.classList.add('form-preview-field--version-price');
+        label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
-        label.removeAttribute('for');
       } else if(field.type === 'venue-session-version-tier-price'){
-        control = buildVenueSessionEditor(field, labelId);
+        wrapper.classList.add('form-preview-field--venue-session');
         label.removeAttribute('for');
+        control = buildVenueSessionEditor(field, labelId);
       } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+        wrapper.classList.add('form-preview-field--url');
+        const urlWrapper = document.createElement('div');
+        urlWrapper.className = 'form-preview-url-wrapper';
         const input = document.createElement('input');
         input.id = controlId;
         input.type = 'url';
         input.placeholder = placeholder || 'https://example.com';
         input.autocomplete = 'url';
+        input.className = 'form-preview-url-input';
         if(field.required) input.required = true;
-        control = input;
+        urlWrapper.appendChild(input);
+        control = urlWrapper;
       } else {
         const input = document.createElement('input');
         input.id = controlId;
@@ -19567,6 +19767,11 @@ document.addEventListener('pointerdown', (e) => {
       }
 
       if(control){
+        if(control instanceof HTMLElement){
+          if(!control.id){
+            control.setAttribute('aria-labelledby', labelId);
+          }
+        }
         wrapper.appendChild(control);
       }
       return wrapper;
@@ -19588,6 +19793,7 @@ document.addEventListener('pointerdown', (e) => {
         placeholder.textContent = 'No fields configured for this subcategory yet.';
         formFields.appendChild(placeholder);
       } else {
+        memberSnapshotErrorMessage = '';
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl) formFields.appendChild(fieldEl);
@@ -19693,12 +19899,11 @@ document.addEventListener('pointerdown', (e) => {
 
     if(typeof formbuilderCats !== 'undefined' && formbuilderCats){
       formbuilderCats.addEventListener('change', ()=>{
-        refreshMemberSnapshot();
-        populateCategoryOptions(true);
+        refreshMemberSnapshotFromManager();
       });
     }
 
-    populateCategoryOptions(true);
+    initializeMemberFormbuilderSnapshot();
     updatePaypalContainer(false);
   }
 
