@@ -3234,6 +3234,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
     }
 
+    if(typeof window !== 'undefined'){
+      window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
+    }
+
     function cloneFieldValue(value){
       if(Array.isArray(value)){
         return value.map(cloneFieldValue);
@@ -19596,7 +19600,12 @@ document.addEventListener('pointerdown', (e) => {
       }
       renderEmptyState(loadingMessage);
       try{
-        const snapshot = await fetchSavedFormbuilderSnapshot();
+        const fetchSnapshot = typeof window !== 'undefined' && typeof window.fetchSavedFormbuilderSnapshot === 'function'
+          ? window.fetchSavedFormbuilderSnapshot
+          : null;
+        const snapshot = fetchSnapshot
+          ? await fetchSnapshot()
+          : (getSavedFormbuilderSnapshot() || memberSnapshot);
         if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
           window.formbuilderStateManager.restore(snapshot);
         }
