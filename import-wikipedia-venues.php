@@ -309,7 +309,7 @@ WHERE {
                    schema:isPartOf <https://en.wikipedia.org/> ;
                    schema:name ?enwiki .
   }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }
 }
 LIMIT 1200
 ");
@@ -411,7 +411,7 @@ foreach ($bindings as $row) {
     }
 
     $importCount++;
-    echo "[$idx] OK imported post_id=$post_id \\"$label\\" (total=$importCount)\n";
+    echo "[$idx] OK imported post_id=$post_id \"$label\" (total=$importCount)\n";
 
     if ($importCount >= $maxImport) {
         echo "Reached import cap ($maxImport).\n";
