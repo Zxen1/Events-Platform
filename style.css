@@ -4471,8 +4471,8 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:block;
 }
 
-.open-post .venue-dropdown > button .venue-address,
-.post-body .venue-dropdown > button .venue-address{
+.open-post .venue-dropdown > button .address_line,
+.post-body .venue-dropdown > button .address_line{
   display:block;
 }
 
@@ -4482,25 +4482,25 @@ body.open-post-sticky-images .open-post.desc-expanded .post-images{
   display:block;
 }
 
-.open-post .post-venue-menu .venue-options button .venue-address,
-.post-body .post-venue-menu .venue-options button .venue-address{
+.open-post .post-venue-menu .venue-options button .address_line,
+.post-body .post-venue-menu .venue-options button .address_line{
   display:block;
 }
 
 .open-post .venue-dropdown > button .venue-name,
 .post-body .venue-dropdown > button .venue-name,
-.open-post .venue-dropdown > button .venue-address,
-.post-body .venue-dropdown > button .venue-address,
+.open-post .venue-dropdown > button .address_line,
+.post-body .venue-dropdown > button .address_line,
 .open-post .post-venue-menu .venue-options button .venue-name,
 .post-body .post-venue-menu .venue-options button .venue-name,
-.open-post .post-venue-menu .venue-options button .venue-address,
-.post-body .post-venue-menu .venue-options button .venue-address{
+.open-post .post-venue-menu .venue-options button .address_line,
+.post-body .post-venue-menu .venue-options button .address_line{
   line-height:1.2;
 }
-.open-post .venue-dropdown > button .venue-address,
-.post-body .venue-dropdown > button .venue-address,
-.open-post .post-venue-menu .venue-options button .venue-address,
-.post-body .post-venue-menu .venue-options button .venue-address{
+.open-post .venue-dropdown > button .address_line,
+.post-body .venue-dropdown > button .address_line,
+.open-post .post-venue-menu .venue-options button .address_line,
+.post-body .post-venue-menu .venue-options button .address_line{
   white-space:normal;
   display:-webkit-box;
   -webkit-box-orient:vertical;
@@ -5912,12 +5912,12 @@ html, body { cursor: auto !important; }
               row-gap:12px;
               width:100%;
             }
-            #tab-forms .venue-address-line{
+            #tab-forms .address_line-line{
               grid-template-columns:1fr;
               justify-items:stretch;
               align-items:stretch;
             }
-            #tab-forms .venue-address-line > *{
+            #tab-forms .address_line-line > *{
               width:100%;
               min-width:0;
             }
@@ -5925,7 +5925,7 @@ html, body { cursor: auto !important; }
             #tab-forms .session-date-row{
               position:relative;
             }
-            #tab-forms .venue-address-geocoder-container.is-geocoder-active,
+            #tab-forms .address_line-geocoder-container.is-geocoder-active,
             #tab-forms .session-date-row.has-open-session-picker{
               z-index:var(--forms-layer-overlay);
             }
@@ -5943,8 +5943,8 @@ html, body { cursor: auto !important; }
               justify-content:flex-end;
             }
             #tab-forms .session-time-input,
-            #tab-forms .session-seating-input,
-            #tab-forms .session-tier-input,
+            #tab-forms .seating_area-input,
+            #tab-forms .pricing_tier-input,
             #tab-forms .session-price-input{
               width:100%;
               height:36px;
@@ -5994,19 +5994,19 @@ html, body { cursor: auto !important; }
               border-color:#b83030;
               box-shadow:0 0 0 1px #b83030;
             }
-            #tab-forms .venue-address-geocoder-container,
-            #tab-forms .venue-address-fallback{
+            #tab-forms .address_line-geocoder-container,
+            #tab-forms .address_line-fallback{
               position:relative;
             }
-            #tab-forms .venue-address-geocoder-container{
+            #tab-forms .address_line-geocoder-container{
               z-index:var(--forms-layer-stacked);
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder,
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder,
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl{
               width:100%;
               min-width:0;
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder{
               box-shadow:none;
               border-radius:8px;
               border:1px solid var(--border);
@@ -6015,7 +6015,7 @@ html, body { cursor: auto !important; }
               position:relative;
               z-index:var(--forms-layer-overlay);
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder input{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder input{
               height:36px;
               line-height:36px;
               padding:0 12px;
@@ -6023,17 +6023,17 @@ html, body { cursor: auto !important; }
               background:transparent;
               font-size:inherit;
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon,
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon,
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--icon-loading{
               display:none;
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder--button{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder--button{
               background:transparent;
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right{
               display:none;
             }
-            #tab-forms .venue-address-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
+            #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
               z-index:var(--forms-layer-popover);
             }
             #tab-forms .session-list{
@@ -6065,7 +6065,7 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.25);
               padding:0;
             }
-            #tab-forms .session-seating-list{
+            #tab-forms .seating_area-list{
               display:flex;
               flex-direction:column;
               gap:10px;
@@ -6077,7 +6077,7 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               padding:0;
             }
-            #tab-forms .session-tier-list{
+            #tab-forms .pricing_tier-list{
               display:flex;
               flex-direction:column;
               gap:8px;
@@ -6089,8 +6089,8 @@ html, body { cursor: auto !important; }
               align-items:center;
               gap:8px;
             }
-            #tab-forms .session-time-row .session-seating-list,
-            #tab-forms .session-pricing-card .session-tier-list,
+            #tab-forms .session-time-row .seating_area-list,
+            #tab-forms .session-pricing-card .pricing_tier-list,
             #tab-forms .tier-row .tier-price-row{
               grid-column:1 / -1;
             }
@@ -6140,18 +6140,18 @@ html, body { cursor: auto !important; }
               min-width:0;
               width:100%;
             }
-            #tab-forms .session-seating-label,
-            #tab-forms .session-tier-label{
+            #tab-forms .seating_area-label,
+            #tab-forms .pricing_tier-label{
               display:block;
               margin-bottom:4px;
               font-size:12px;
               font-weight:600;
             }
-            #tab-forms .session-pricing-card .session-seating-label,
-            #tab-forms .tier-row .session-tier-label{
+            #tab-forms .session-pricing-card .seating_area-label,
+            #tab-forms .tier-row .pricing_tier-label{
               grid-column:1 / -1;
             }
-            #tab-forms .session-pricing-card .session-seating-input{
+            #tab-forms .session-pricing-card .seating_area-input{
               grid-column:1 / 2;
               grid-row:2;
             }
@@ -6159,7 +6159,7 @@ html, body { cursor: auto !important; }
               grid-column:2 / 3;
               grid-row:2;
             }
-            #tab-forms .tier-row .session-tier-input{
+            #tab-forms .tier-row .pricing_tier-input{
               grid-column:1 / 2;
               grid-row:2;
             }
@@ -6181,7 +6181,7 @@ html, body { cursor: auto !important; }
             #tab-forms .session-details[hidden]{
               display:none;
             }
-            #tab-forms .session-time-row .session-seating-list,
+            #tab-forms .session-time-row .seating_area-list,
             #tab-forms .tier-row .tier-price-row{
               width:100%;
             }

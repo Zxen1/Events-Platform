@@ -8588,9 +8588,9 @@ function makePosts(){
               } else if(spec.type === 'session-time'){
                 selector = `.session-time-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"]`;
               } else if(spec.type === 'version'){
-                selector = `.session-seating-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
+                selector = `.seating_area-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
               } else if(spec.type === 'tier'){
-                selector = `.session-tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+                selector = `.pricing_tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
               } else if(spec.type === 'price'){
                 selector = `.session-price-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
               }
@@ -9373,9 +9373,9 @@ function makePosts(){
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
-                addressLine.className = 'venue-line venue-address-line';
+                addressLine.className = 'venue-line address_line-line';
                 const geocoderContainer = document.createElement('div');
-                geocoderContainer.className = 'venue-address-geocoder-container';
+                geocoderContainer.className = 'address_line-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
                 venueCard.appendChild(addressLine);
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
@@ -9384,7 +9384,7 @@ function makePosts(){
                   geocoderContainer.classList.remove('is-geocoder-active');
                   const fallback = document.createElement('input');
                   fallback.type = 'text';
-                  fallback.className = 'venue-address-fallback';
+                  fallback.className = 'address_line-fallback';
                   fallback.placeholder = addressPlaceholder;
                   fallback.setAttribute('aria-label', addressPlaceholder);
                   fallback.value = venue.address || '';
@@ -9706,7 +9706,7 @@ function makePosts(){
                     timeRow.appendChild(timeActions);
 
                     const versionList = document.createElement('div');
-                    versionList.className = 'session-seating-list';
+                    versionList.className = 'seating_area-list';
                     let samePricingRow = null;
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
@@ -9781,13 +9781,13 @@ function makePosts(){
                         const versionPlaceholder = 'eg. General, Stalls, Balcony';
                         const seatingLabelText = `Seating Area ${versionIndex + 1}`;
                         const seatingLabel = document.createElement('label');
-                        seatingLabel.className = 'session-seating-label';
+                        seatingLabel.className = 'seating_area-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `session-seating-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
-                        versionInput.className = 'session-seating-input';
+                        versionInput.className = 'seating_area-input';
                         versionInput.placeholder = versionPlaceholder;
                         versionInput.setAttribute('aria-label', seatingLabelText);
                         versionInput.id = seatingInputId;
@@ -9810,7 +9810,7 @@ function makePosts(){
                               const otherVersion = otherVersions[versionIndex];
                               if(otherVersion){
                                 otherVersion.name = nextValue;
-                                const selector = `.session-seating-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
+                                const selector = `.seating_area-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
                                 const peer = editor.querySelector(selector);
                                 if(peer){
                                   peer.value = nextValue;
@@ -9840,7 +9840,7 @@ function makePosts(){
                         versionCard.appendChild(versionActions);
 
                         const tierList = document.createElement('div');
-                        tierList.className = 'session-tier-list';
+                        tierList.className = 'pricing_tier-list';
                         version.tiers.forEach((tier, tierIndex)=>{
                           const tierRow = document.createElement('div');
                           tierRow.className = 'tier-row';
@@ -9848,13 +9848,13 @@ function makePosts(){
                           const tierPlaceholder = 'eg. Child, Student, Adult';
                           const tierLabelText = `Pricing Tier ${tierIndex + 1}`;
                           const tierLabel = document.createElement('label');
-                          tierLabel.className = 'session-tier-label';
+                          tierLabel.className = 'pricing_tier-label';
                           tierLabel.textContent = tierLabelText;
-                          const tierInputId = `session-tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const tierInputId = `pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
-                          tierInput.className = 'session-tier-input';
+                          tierInput.className = 'pricing_tier-input';
                           tierInput.placeholder = tierPlaceholder;
                           tierInput.setAttribute('aria-label', tierLabelText);
                           tierInput.id = tierInputId;
@@ -9875,7 +9875,7 @@ function makePosts(){
                               if(!timeObj.tierAutofillLocked){
                                 const versions = Array.isArray(timeObj.versions) ? timeObj.versions : [];
                                 for(let otherVersionIndex = 1; otherVersionIndex < versions.length; otherVersionIndex++){
-                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -9899,7 +9899,7 @@ function makePosts(){
                                 const otherTier = otherTiers[tierIndex];
                                 if(otherTier){
                                   otherTier.name = nextValue;
-                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -12843,7 +12843,7 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="venue-address">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
               <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
             </div>
             <div class="post-details-info-container">
@@ -16299,9 +16299,9 @@ function openPostModal(id){
 
         if(venueBtn){
           if(loc){
-            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
           } else {
-            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="venue-address">${p.city || ''}</span>`;
+            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="address_line">${p.city || ''}</span>`;
           }
         }
 
@@ -16344,7 +16344,7 @@ function openPostModal(id){
           venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         }
         if(venueBtn){
-          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
         let cal = null;
