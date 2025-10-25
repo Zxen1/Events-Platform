@@ -3218,7 +3218,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [
-        { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Other Events"], subFields:{} },
+        { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Venues","Other Events"], subFields:{} },
         { name:"Opportunities", subs:["Stage Auditions","Screen Auditions","Clubs","Jobs","Volunteers","Competitions","Other Opportunities"], subFields:{} },
         { name:"Learning", subs:["Tutors","Education Centres","Courses","Other Learning"], subFields:{} },
         { name:"Buy and Sell", subs:["Wanted","For Sale","Freebies"], subFields:{} },
@@ -3557,6 +3557,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
       });
     });
+    subcategoryColorMap["What's On::Venues"] = 'violet';
     subcategoryColorMap["What's On::Other Events"] = 'red';
     subcategoryColorMap['Opportunities::Other Opportunities'] = 'red';
     subcategoryColorMap['Learning::Other Learning'] = 'red';
@@ -19707,6 +19708,10 @@ document.addEventListener('pointerdown', (e) => {
     'Other Events': {
       icon20: 'assets/icons-20/whats-on-category-icon-red-20.webp',
       icon30: 'assets/icons-30/whats-on-category-icon-red-30.webp'
+    },
+    'Venues': {
+      icon20: 'assets/icons-20/whats-on-category-icon-violet-20.webp',
+      icon30: 'assets/icons-30/whats-on-category-icon-violet-30.webp'
     },
     'Other Opportunities': {
       icon20: 'assets/icons-20/opportunities-category-icon-red-20.webp',
