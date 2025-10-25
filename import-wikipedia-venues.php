@@ -291,15 +291,15 @@ function handle_image_thumbs($imageUrl, $venueTitle, $ASSET_DIR, $ASSET_URL_PREF
 // -----------------------------------------------------------------------------
 // 4. Build Wikidata query list of venues
 // -----------------------------------------------------------------------------
-$sparql = urlencode("
+$sparql = urlencode(<<<'SPARQL'
 SELECT DISTINCT ?item ?itemLabel ?coord ?image ?enwiki
 WHERE {
   VALUES ?class {
-    wd:Q483110
-    wd:Q173242
-    wd:Q41253
-    wd:Q157570
-    wd:Q16970
+    wd:Q483110   # stadium
+    wd:Q173242   # arena
+    wd:Q41253    # concert hall
+    wd:Q157570   # indoor arena
+    wd:Q16970    # amphitheatre
   }
   ?item wdt:P31/wdt:P279* ?class .
   ?item wdt:P625 ?coord .
@@ -309,10 +309,12 @@ WHERE {
                    schema:isPartOf <https://en.wikipedia.org/> ;
                    schema:name ?enwiki .
   }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 LIMIT 1200
-");
+SPARQL
+);
+;
 
 $sparqlUrl = "https://query.wikidata.org/sparql?format=json&query=" . $sparql;
 $results = http_get_json($sparqlUrl, [
