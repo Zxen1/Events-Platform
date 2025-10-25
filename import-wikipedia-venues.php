@@ -14,49 +14,43 @@
  *      - Inserts a post under member_id = 2
  *        member_name = "Wikidata / Wikipedia (CC BY-SA 4.0)"
  *      - Populates all 7 fields including Venues fieldset fields:
- *          title                (fields.id = 1)
- *          description          (fields.id = 2)
- *          images               (fields.id = 3)
- *          venue_name           (fields.id = 4)
- *          address_line         (fields.id = 5)
- *          latitude             (fields.id = 6)
- *          longitude            (fields.id = 7)
- *        Note: Sessions / Ticket Pricing are NOT populated for static venues.
- *      - Saves thumbnail images into /public_html/assets/venues/ as 80x80 and 40x40 PNG
- *        using ImageMagick (convert). File names are slugged to avoid collisions.
- *      - Avoids duplicates (case-insensitive title match in posts.title).
- *      - Sleeps 2 seconds between venue imports to avoid rate limiting.
- *      - Echoes progress counter.
+ *          1 title
+ *          2 description
+ *          3 images (CSV of stored images)
+ *          4 venue_name
+ *          5 address_line
+ *          6 latitude
+ *          7 longitude
+ * - Skips venue if:
+ *      - missing coords
+ *      - already exists in posts table with same title in subcategory 32
+ *      - Wikipedia extract doesn't look like a real place
  *
- * FINAL OUTPUT WHEN RUN:
- * - Prints running status and summary.
- * - Ends with:
- *   "⚠️ Move all new images from /public_html/assets/venues/ to GitHub immediately or they’ll be deleted on next sync."
+ * - Downloads first image to /public_html/assets/venues/
+ *   -> creates directory if missing
+ *   -> saves as {slugified-venue-name}-{wikidata_id}.jpg
+ *   -> DOES NOT OVERWRITE existing same filename
+ *
+ * SAFETY:
+ * - Hard cap of $maxImport per run (default 50)
+ * - Sleep(2) between inserts to avoid hammering DB or Wikipedia
+ * - CLI-only / localhost only execution guard
  *
  * REQUIREMENTS:
- * - PHP 8.2.29 compatible.
- * - cURL, PDO, ImageMagick `convert` available on server.
- * - This script should be run from CLI (php import-wikipedia-venues.php) or via browser by admin only.
+ * - MySQL schema already has:
+ *      posts(id, subcategory_id, member_id, member_name, title, created_at, updated_at, is_active, is_deleted)
+ *      field_values(id, post_id, field_id, value, created_at, updated_at)
  *
- * DATA MODEL CONTEXT:
- * Tables come from funmapco_db (9).sql which defines:
- *   posts(id, subcategory_id, member_id, title, ...)
- *   field_values(post_id, field_id, value, ...)
- *   members(id=2 name='Wikidata / Wikipedia (CC BY-SA 4.0)')
- *   subcategories(id=32, name='Venues', listing_type='standard', fieldset_ids='1')
- *   fieldsets( id=1 'Venues' -> field_ids 4,5,6,7 )
- *   fields:
- *     1=title
- *     2=description
- *     3=images
- *     4=venue_name
- *     5=address_line
- *     6=latitude
- *     7=longitude
+ * - "Venues" subcategory already exists, with subcategory_id = 32
+ *   and field_ids mapped as above
+ *
+ * - /public_html/assets/venues/ writable
+ *
+ * - cURL, PDO, ImageMagick `convert` available on server.
  */
 
 // -----------------------------------------------------------------------------
-// 1. Security / Runtime mode
+// 1. Runtime + security guard
 // -----------------------------------------------------------------------------
 @set_time_limit(0);
 @ini_set('memory_limit', '512M');
@@ -73,327 +67,379 @@ if (!$allowed) {
 }
 
 // -----------------------------------------------------------------------------
-// 2. DB Connection via existing site config
+// 2. DB Connection (rebuilt for PDO using config-db (2).php credentials)
 // -----------------------------------------------------------------------------
-$CONFIG_PATH = '/home/funmapco/config/config-db.php';
-if (!file_exists($CONFIG_PATH)) {
-    echo "FATAL: config-db.php not found at $CONFIG_PATH\n";
+
+$DB_HOST = 'localhost';
+$DB_USER = 'funmapco_admin';
+$DB_PASS = 'ZE4]G8wBFU6Lm03_P/,A';
+$DB_NAME = 'funmapco_db';
+
+try {
+    $dsn = "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4";
+    $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo "FATAL: Database connection failed.\n";
     exit;
 }
-
-// Expect config-db.php to either define $pdo OR constants to build PDO.
-require_once $CONFIG_PATH;
-
-function getDbHandle() {
-    if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
-        return $GLOBALS['pdo'];
-    }
-
-    // Fallback: assume constants DB_HOST, DB_NAME, DB_USER, DB_PASS exist.
-    if (
-        defined('DB_HOST') &&
-        defined('DB_NAME') &&
-        defined('DB_USER') &&
-        defined('DB_PASS')
-    ) {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        return $pdo;
-    }
-
-    echo "FATAL: No PDO and no DB_* constants.\n";
-    exit;
-}
-
-$pdo = getDbHandle();
 
 // -----------------------------------------------------------------------------
 // 3. Constants / helpers
 // -----------------------------------------------------------------------------
-$SUBCATEGORY_ID   = 32;
-$SUBCATEGORY_NAME = "Venues";
-$MEMBER_ID        = 2;
-$MEMBER_NAME      = "Wikidata / Wikipedia (CC BY-SA 4.0)";
-$ASSET_DIR        = '/public_html/assets/venues'; // absolute path on server
-$ASSET_URL_PREFIX = 'assets/venues';              // how site will reference it
 
-// Create output dir if missing
-if (!is_dir($ASSET_DIR)) {
-    if (!mkdir($ASSET_DIR, 0755, true) && !is_dir($ASSET_DIR)) {
-        echo "FATAL: Cannot create $ASSET_DIR\n";
-        exit;
+$subcategory_id   = 32;
+$subcategory_name = 'Venues';
+
+$member_id        = 2;
+$member_name      = 'Wikidata / Wikipedia (CC BY-SA 4.0)';
+
+$assetDir         = '/home/funmapco/public_html/assets/venues';
+$publicPathPrefix = '/assets/venues';
+
+if (!is_dir($assetDir)) {
+    mkdir($assetDir, 0755, true);
+}
+
+// import cap for safety
+$maxImport = 50;
+
+// -----------------------------------------------------------------------------
+// Helper: basic slug from name
+// -----------------------------------------------------------------------------
+function slugify_name($name) {
+    $slug = strtolower(trim($name));
+    $slug = preg_replace('/[^\w\s-]+/u', '', $slug);  // remove weird punctuation
+    $slug = preg_replace('/[\s_]+/', '-', $slug);     // spaces -> dashes
+    $slug = preg_replace('/-+/', '-', $slug);         // collapse --
+    $slug = trim($slug, '-');
+    if ($slug === '') {
+        $slug = 'venue';
     }
+    return $slug;
 }
 
-// Slugify for filenames
-function slugify($text) {
-    $text = strtolower($text);
-    $text = preg_replace('/[^a-z0-9]+/i', '-', $text);
-    $text = trim($text, '-');
-    if ($text === '') $text = 'venue';
-    return $text;
-}
-
-// Safe shell escape for exec()
-function sh($s) {
-    return escapeshellarg($s);
-}
-
-// Fetch URL helper
-function http_get_json($url, $headers = []) {
-    $ch = curl_init();
+// -----------------------------------------------------------------------------
+// Helper: fetch URL via curl and return body or null
+// -----------------------------------------------------------------------------
+function curl_get($url, $timeout = 10, $headers = []) {
+    $ch = curl_init($url);
     curl_setopt_array($ch, [
-        CURLOPT_URL            => $url,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_MAXREDIRS      => 5,
+        CURLOPT_TIMEOUT        => $timeout,
+        CURLOPT_USERAGENT      => 'FunMapImporter/1.0 (contact admin)',
         CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_USERAGENT      => 'FunMapVenueImporter/1.0 (CC BY-SA 4.0 attribution)'
     ]);
-    $body = curl_exec($ch);
+    $data = curl_exec($ch);
     $err  = curl_error($ch);
     $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     curl_close($ch);
 
-    if ($err || $code < 200 || $code >= 300) {
+    if ($err || $code >= 400 || !$data) {
         return null;
     }
-
-    $data = json_decode($body, true);
-    if (!is_array($data)) return null;
     return $data;
 }
 
-function http_get_raw($url, $headers = []) {
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT        => 20,
-        CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_USERAGENT      => 'FunMapVenueImporter/1.0 (CC BY-SA 4.0 attribution)'
-    ]);
-    $body = curl_exec($ch);
-    $err  = curl_error($ch);
-    $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    curl_close($ch);
-
-    if ($err || $code < 200 || $code >= 300) {
-        return null;
-    }
-    return $body;
-}
-
-// Extract first two paragraphs from Wikipedia lead HTML
-function extract_first_two_paragraphs($html) {
-    $paras = [];
-    if (preg_match_all('#<p\b[^>]*>(.*?)</p>#is', $html, $m)) {
-        foreach ($m[1] as $phtml) {
-            $clean = $phtml;
-            $clean = preg_replace('/<sup[^>]*>.*?<\/sup>/is', '', $clean);
-            $clean = strip_tags($clean);
-            $clean = trim($clean);
-            if ($clean !== '') {
-                $paras[] = $clean;
-            }
-            if (count($paras) >= 2) break;
-        }
-    }
-    $text = implode("\n\n", $paras);
-    return $text;
-}
-
-// Insert post row
+// -----------------------------------------------------------------------------
+// Helper: create post row, return new post_id
+// -----------------------------------------------------------------------------
 function create_post($pdo, $subcategory_id, $subcategory_name, $member_id, $member_name, $title) {
+    $now = date('Y-m-d H:i:s');
+
     $sql = "INSERT INTO posts
-        (subcategory_id, subcategory_name, member_id, member_name, title, status, moderation_status, created_at, updated_at)
-        VALUES (:sid, :sname, :mid, :mname, :title, 'active', 'clean', NOW(), NOW())";
+            (subcategory_id, subcategory_name, member_id, member_name, title,
+             created_at, updated_at, is_active, is_deleted)
+            VALUES
+            (:subcategory_id, :subcategory_name, :member_id, :member_name, :title,
+             :created_at, :updated_at, 1, 0)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        ':sid'   => $subcategory_id,
-        ':sname' => $subcategory_name,
-        ':mid'   => $member_id,
-        ':mname' => $member_name,
-        ':title' => $title,
+        ':subcategory_id'   => $subcategory_id,
+        ':subcategory_name' => $subcategory_name,
+        ':member_id'        => $member_id,
+        ':member_name'      => $member_name,
+        ':title'            => $title,
+        ':created_at'       => $now,
+        ':updated_at'       => $now,
     ]);
+
     return (int)$pdo->lastInsertId();
 }
 
-// Insert a field_value row
+// -----------------------------------------------------------------------------
+// Helper: insert field_values row
+// -----------------------------------------------------------------------------
 function create_field_value($pdo, $post_id, $post_title, $field_id, $field_label, $value) {
+    $now = date('Y-m-d H:i:s');
+
     $sql = "INSERT INTO field_values
-        (post_id, post_title, field_id, field_label, value)
-        VALUES (:pid, :ptitle, :fid, :flabel, :val)";
+            (post_id, field_id, field_label, value, created_at, updated_at)
+            VALUES
+            (:post_id, :field_id, :field_label, :value, :created_at, :updated_at)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        ':pid'    => $post_id,
-        ':ptitle' => $post_title,
-        ':fid'    => $field_id,
-        ':flabel' => $field_label,
-        ':val'    => $value,
+        ':post_id'      => $post_id,
+        ':field_id'     => $field_id,
+        ':field_label'  => $field_label,
+        ':value'        => $value,
+        ':created_at'   => $now,
+        ':updated_at'   => $now,
     ]);
 }
 
-// Check duplicate by title (case-insensitive)
+// -----------------------------------------------------------------------------
+// Helper: check for duplicate post title in this subcategory
+// -----------------------------------------------------------------------------
 function is_duplicate_title($pdo, $title) {
-    $sql = "SELECT id FROM posts WHERE LOWER(title)=LOWER(:t) LIMIT 1";
+    $sql = "SELECT id
+            FROM posts
+            WHERE subcategory_id = 32
+              AND title = :title
+              AND is_deleted = 0
+            LIMIT 1";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':t' => $title]);
-    return $stmt->fetchColumn() ? true : false;
-}
-
-// Download main image, create thumbnails 80x80 and 40x40, return comma-separated file paths
-function handle_image_thumbs($imageUrl, $venueTitle, $ASSET_DIR, $ASSET_URL_PREFIX) {
-    if (!$imageUrl) {
-        return '';
-    }
-
-    $raw = http_get_raw($imageUrl);
-    if (!$raw) {
-        return '';
-    }
-
-    $slug = slugify($venueTitle);
-    $uniq = substr(sha1($venueTitle . microtime(true)), 0, 8);
-    $base = $slug . '-' . $uniq;
-    $origPath = rtrim($ASSET_DIR,'/')."/".$base."-orig.png";
-    file_put_contents($origPath, $raw);
-
-    $sizes = [
-        '80x80' => $base . '-80.png',
-        '40x40' => $base . '-40.png',
-    ];
-    foreach ($sizes as $dim => $fname) {
-        $outPath = rtrim($ASSET_DIR,'/')."/".$fname;
-        $cmd = "convert " . escapeshellarg($origPath) .
-               " -resize " . escapeshellarg($dim."^") .
-               " -gravity center -extent " . escapeshellarg($dim) .
-               " " . escapeshellarg($outPath);
-        @exec($cmd, $o, $ret);
-        if ($ret !== 0) {
-            $cmd2 = "convert " . escapeshellarg($origPath) .
-                    " -resize " . escapeshellarg($dim) .
-                    " " . escapeshellarg($outPath);
-            @exec($cmd2);
-        }
-    }
-
-    $img80 = $ASSET_URL_PREFIX . '/' . $sizes['80x80'];
-    $img40 = $ASSET_URL_PREFIX . '/' . $sizes['40x40'];
-
-    return $img80 . ',' . $img40;
+    $stmt->execute([':title' => $title]);
+    $row = $stmt->fetch();
+    return !!$row;
 }
 
 // -----------------------------------------------------------------------------
-// 4. Build Wikidata query list of venues
+// Helper: very rough "is this extract describing a venue/place?"
 // -----------------------------------------------------------------------------
-$sparql = urlencode(<<<'SPARQL'
-SELECT DISTINCT ?item ?itemLabel ?coord ?image ?enwiki
-WHERE {
-  VALUES ?class {
-    wd:Q483110   # stadium
-    wd:Q173242   # arena
-    wd:Q41253    # concert hall
-    wd:Q157570   # indoor arena
-    wd:Q16970    # amphitheatre
-  }
+function looks_like_real_venue($extractText) {
+    if (!$extractText) return false;
+    $lc = strtolower($extractText);
+
+    // discard obvious disambiguation / stub-like junk
+    if (strpos($lc, 'may refer to') !== false) return false;
+    if (strpos($lc, 'list of') !== false) return false;
+
+    // discard if it's clearly about a sports team, not stadium
+    if (strpos($lc, 'is a professional') !== false &&
+        (strpos($lc, 'football team') !== false || strpos($lc, 'basketball team') !== false)) {
+        return false;
+    }
+
+    // require at least 100 chars of content
+    if (strlen($extractText) < 100) return false;
+
+    return true;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: download first image and convert to jpg
+// returns relative path (/assets/venues/filename.jpg) or '' if fail
+// -----------------------------------------------------------------------------
+function download_first_image($imageUrl, $venueLabel, $wikidataId, $assetDir, $publicPathPrefix) {
+    if (!$imageUrl) return '';
+
+    $slug     = slugify_name($venueLabel);
+    $basename = $slug . '-' . $wikidataId . '.jpg';
+    $destAbs  = rtrim($assetDir, '/') . '/' . $basename;
+    $destRel  = rtrim($publicPathPrefix, '/') . '/' . $basename;
+
+    if (file_exists($destAbs)) {
+        return $destRel;
+    }
+
+    $tmpFile = $destAbs . '.tmpdl';
+    $imgData = curl_get($imageUrl, 15);
+    if (!$imgData) {
+        echo "   [img] failed download $imageUrl\n";
+        return '';
+    }
+    file_put_contents($tmpFile, $imgData);
+
+    // use ImageMagick convert to ensure it's jpg and reasonable size
+    // we'll just resize width down to max 1600px (keeping aspect)
+    $cmd = sprintf(
+        'convert %s -resize 1600x1600\> -auto-orient %s 2>&1',
+        escapeshellarg($tmpFile),
+        escapeshellarg($destAbs)
+    );
+    exec($cmd, $outLines, $rc);
+    unlink($tmpFile);
+
+    if ($rc !== 0 || !file_exists($destAbs)) {
+        echo "   [img] convert failed rc=$rc\n";
+        return '';
+    }
+
+    return $destRel;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: fetch best summary paragraphs from Wikipedia
+// -----------------------------------------------------------------------------
+function get_wikipedia_extract($pageTitle) {
+    if (!$pageTitle) return '';
+
+    // use REST API summary
+    $url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' . rawurlencode($pageTitle);
+    $json = curl_get($url, 10, ['Accept: application/json']);
+    if (!$json) return '';
+
+    $data = json_decode($json, true);
+    if (!is_array($data) || empty($data['extract'])) {
+        return '';
+    }
+
+    $extract = trim($data['extract']);
+
+    // We might want only first 2 paragraphs:
+    // split by double newline as a crude paragraph split
+    $paras = preg_split("/\n\s*\n/", $extract);
+    $paras = array_slice($paras, 0, 2);
+
+    $short = implode("\n\n", array_map('trim', $paras));
+    return $short;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: build address_line from coordinate and label? (stub placeholder)
+// In practice we'd reverse geocode or parse Wikidata address claims,
+// but for MVP we store just the label for now.
+// -----------------------------------------------------------------------------
+function build_address_line($label) {
+    return $label;
+}
+
+// -----------------------------------------------------------------------------
+// 4. Fetch candidate venues from Wikidata SPARQL
+// -----------------------------------------------------------------------------
+
+// Instances of arenas, stadiums, concert halls...
+// We'll query some well-known venue classes (Q ids are Wikidata entity IDs):
+// Q522195 = stadium
+// Q13219666 = arena
+// Q2085381 = concert hall
+// Q10871550 = indoor arena
+// Q1774898 = amphitheatre
+$query = <<<SPARQL
+SELECT ?item ?itemLabel ?coord ?coordLat ?coordLon ?image ?enwikiTitle WHERE {
+  VALUES ?class { wd:Q522195 wd:Q13219666 wd:Q2085381 wd:Q10871550 wd:Q1774898 }
   ?item wdt:P31/wdt:P279* ?class .
   ?item wdt:P625 ?coord .
+  BIND(geof:latitude(?coord)  AS ?coordLat)
+  BIND(geof:longitude(?coord) AS ?coordLon)
+
   OPTIONAL { ?item wdt:P18 ?image . }
+
   OPTIONAL {
-    ?enwikiArticle schema:about ?item ;
-                   schema:isPartOf <https://en.wikipedia.org/> ;
-                   schema:name ?enwiki .
+    ?sitelink schema:about ?item ;
+              schema:isPartOf <https://en.wikipedia.org/> ;
+              schema:name ?enwikiTitle .
   }
+
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
-LIMIT 1200
-SPARQL
-);
-;
+LIMIT 1000
+SPARQL;
 
-$sparqlUrl = "https://query.wikidata.org/sparql?format=json&query=" . $sparql;
-$results = http_get_json($sparqlUrl, [
-    "Accept: application/sparql-results+json"
-]);
-
-if (!$results || !isset($results['results']['bindings'])) {
-    echo "FATAL: SPARQL fetch failed.\n";
+$wikidataUrl = 'https://query.wikidata.org/sparql?format=json&query=' . urlencode($query);
+$wikidataJson = curl_get($wikidataUrl, 20, ['Accept: application/sparql-results+json']);
+if (!$wikidataJson) {
+    echo "FATAL: Wikidata SPARQL fetch failed.\n";
     exit;
 }
 
-$bindings = $results['results']['bindings'];
-$totalCandidates = count($bindings);
-echo "Fetched $totalCandidates candidate venues from Wikidata.\n";
+$wikidata = json_decode($wikidataJson, true);
+if (!is_array($wikidata) || empty($wikidata['results']['bindings'])) {
+    echo "FATAL: Wikidata response bad/empty.\n";
+    exit;
+}
+
+$rows = $wikidata['results']['bindings'];
+echo "Fetched " . count($rows) . " candidate venues.\n\n";
 
 // -----------------------------------------------------------------------------
-// 5. Import loop
+// 5. Iterate, enrich with Wikipedia, insert
 // -----------------------------------------------------------------------------
 $importCount = 0;
 $skipCount   = 0;
-$maxImport   = 1000;
-$idx         = 0;
 
-foreach ($bindings as $row) {
-    $idx++;
+foreach ($rows as $idx => $r) {
+    $label = $r['itemLabel']['value'] ?? '';
+    $lat   = $r['coordLat']['value'] ?? '';
+    $lon   = $r['coordLon']['value'] ?? '';
+    $img   = $r['image']['value'] ?? '';
+    $wp    = $r['enwikiTitle']['value'] ?? '';
 
-    $label = $row['itemLabel']['value'] ?? null;
-    $wikiTitle = $row['enwiki']['value'] ?? null;
-    $coord = $row['coord']['value'] ?? null;
-    $image = $row['image']['value'] ?? null;
+    // Q-ID from URI
+    $qid = '';
+    if (!empty($r['item']['value'])) {
+        // e.g. "http://www.wikidata.org/entity/Q12345"
+        if (preg_match('~/entity/(Q\d+)$~', $r['item']['value'], $m)) {
+            $qid = $m[1];
+        }
+    }
 
-    if (!$label || !$coord || !$wikiTitle) {
+    echo "[$idx] $label (Q:$qid)\n";
+
+    // must have coords
+    if ($lat === '' || $lon === '') {
+        echo "   skip: missing coords\n";
         $skipCount++;
-        echo "[$idx] SKIP missing data\n";
         continue;
     }
 
+    // duplicate?
     if (is_duplicate_title($pdo, $label)) {
+        echo "   skip: already exists in posts\n";
         $skipCount++;
-        echo "[$idx] SKIP duplicate: $label\n";
         continue;
     }
 
-    $lat = null;
-    $lon = null;
-    if (preg_match('/Point\(([-0-9\.]+)\s+([-0-9\.]+)\)/', $coord, $m)) {
-        $lon = $m[1];
-        $lat = $m[2];
+    // fetch summary
+    $summary = get_wikipedia_extract($wp);
+    if (!looks_like_real_venue($summary)) {
+        echo "   skip: summary looks wrong/too short/not a venue\n";
+        $skipCount++;
+        continue;
     }
 
-    $wikiApiUrl = "https://en.wikipedia.org/api/rest_v1/page/mobile-sections-lead/" . rawurlencode($wikiTitle);
-    $wikiJson   = http_get_json($wikiApiUrl);
-    $leadHtml   = $wikiJson['lead']['sections'][0]['text'] ?? '';
-    $extract2   = extract_first_two_paragraphs($leadHtml);
+    // build address_line
+    $addressLine = build_address_line($label);
 
-    $moreUrl = "https://en.wikipedia.org/wiki/" . rawurlencode($wikiTitle);
-    $descForSite = $extract2;
-    if ($descForSite !== '') {
-        $descForSite .= "\n\n... Read more → " . $moreUrl;
-    } else {
-        $descForSite = "Read more → " . $moreUrl;
-    }
-
-    $addressLine = $label;
-
+    // try image
     $imagesCsv = '';
-    if ($image) {
-        $commonsUrl = "https://commons.wikimedia.org/wiki/Special:FilePath/" . rawurlencode(basename($image));
-        $imagesCsv = handle_image_thumbs($commonsUrl, $label, $ASSET_DIR, $ASSET_URL_PREFIX);
+    if ($img) {
+        $rel = download_first_image($img, $label, $qid, $assetDir, $publicPathPrefix);
+        if ($rel) {
+            $imagesCsv = $rel;
+            echo "   image saved: $rel\n";
+        } else {
+            echo "   no image saved\n";
+        }
+    } else {
+        echo "   no wikidata image\n";
     }
 
+    // create post
     $post_id = create_post(
         $pdo,
-        $SUBCATEGORY_ID,
-        $SUBCATEGORY_NAME,
-        $MEMBER_ID,
-        $MEMBER_NAME,
+        $subcategory_id,
+        $subcategory_name,
+        $member_id,
+        $member_name,
         $label
     );
+
+    // create field values
+    // 1. title
+    // 2. description
+    // 3. images
+    // 4. venue_name
+    // 5. address_line
+    // 6. latitude
+    // 7. longitude
+    $descForSite = $summary;
 
     create_field_value($pdo, $post_id, $label, 1, 'title', $label);
     create_field_value($pdo, $post_id, $label, 2, 'description', $descForSite);
@@ -405,10 +451,10 @@ foreach ($bindings as $row) {
     create_field_value($pdo, $post_id, $label, 4, 'venue_name', $label);
     create_field_value($pdo, $post_id, $label, 5, 'address_line', $addressLine);
 
-    if ($lat !== null) {
+    if ($lat !== '') {
         create_field_value($pdo, $post_id, $label, 6, 'latitude', $lat);
     }
-    if ($lon !== null) {
+    if ($lon !== '') {
         create_field_value($pdo, $post_id, $label, 7, 'longitude', $lon);
     }
 
