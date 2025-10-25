@@ -6860,6 +6860,233 @@ html, body { cursor: auto !important; }
               height:100%;
               object-fit:cover;
             }
+            #memberPanel .member-create-fields{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .form-preview-field{
+              background:rgba(0,0,0,0.25);
+              padding:12px;
+              border-radius:10px;
+              border:none;
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .form-preview-field label{
+              font-weight:600;
+            }
+            #memberPanel .member-create-fields .form-preview-field input,
+            #memberPanel .member-create-fields .form-preview-field select,
+            #memberPanel .member-create-fields .form-preview-field textarea{
+              border:1px solid var(--border);
+              border-radius:8px;
+              background:rgba(0,0,0,0.35);
+              color:var(--button-text);
+              box-sizing:border-box;
+              width:100%;
+            }
+            #memberPanel .member-create-fields .form-preview-field textarea{
+              resize:vertical;
+              min-height:120px;
+              padding:8px 12px;
+            }
+            #memberPanel .member-create-fields .form-preview-field select{
+              appearance:none;
+              height:36px;
+              padding:0 12px;
+            }
+            #memberPanel .member-create-fields .form-preview-field--dropdown{
+              position:relative;
+            }
+            #memberPanel .member-create-fields .form-preview-field--dropdown::after{
+              content:'';
+              position:absolute;
+              top:50%;
+              right:18px;
+              width:8px;
+              height:8px;
+              border:2px solid var(--button-text);
+              border-top:0;
+              border-left:0;
+              transform:translateY(-50%) rotate(45deg);
+              pointer-events:none;
+            }
+            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
+              padding-right:40px;
+            }
+            #memberPanel .member-create-fields .form-preview-radio-group{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+              align-items:flex-start;
+            }
+            #memberPanel .member-create-fields .form-preview-radio-option{
+              display:flex;
+              align-items:center;
+              gap:10px;
+            }
+            #memberPanel .member-create-fields .form-preview-field--url .form-preview-url-wrapper{
+              display:flex;
+              flex-direction:column;
+              gap:6px;
+            }
+            #memberPanel .member-create-fields .form-preview-field--images .form-preview-images{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .form-preview-image-previews{
+              display:grid;
+              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .form-preview-image-thumb{
+              position:relative;
+              padding-top:100%;
+              border-radius:8px;
+              overflow:hidden;
+              border:1px solid var(--border);
+              background:rgba(0,0,0,0.25);
+            }
+            #memberPanel .member-create-fields .form-preview-image-thumb img{
+              position:absolute;
+              inset:0;
+              width:100%;
+              height:100%;
+              object-fit:cover;
+            }
+            #memberPanel .member-create-fields .form-preview-version-price{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .version-price-options-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .version-price-option{
+              border:1px solid var(--border);
+              border-radius:8px;
+              padding:10px 12px;
+              background:rgba(0,0,0,0.25);
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .version-price-row{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .version-price-row--bottom{
+              flex-direction:row;
+              align-items:center;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .version-price-option-actions{
+              display:flex;
+              justify-content:flex-end;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .venue-session-editor{
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+            }
+            #memberPanel .member-create-fields .venue-session-venues{
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+            }
+            #memberPanel .member-create-fields .venue-card{
+              border:none;
+              border-radius:10px;
+              background:rgba(0,0,0,0.2);
+              padding:16px;
+              display:flex;
+              flex-direction:column;
+              gap:16px;
+            }
+            #memberPanel .member-create-fields .venue-line{
+              display:grid;
+              grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+              gap:12px;
+              align-items:center;
+            }
+            #memberPanel .member-create-fields .venue-line-actions,
+            #memberPanel .member-create-fields .session-date-actions,
+            #memberPanel .member-create-fields .session-time-actions,
+            #memberPanel .member-create-fields .version-actions,
+            #memberPanel .member-create-fields .tier-actions{
+              display:flex;
+              justify-content:flex-end;
+              gap:8px;
+              flex-wrap:wrap;
+            }
+            #memberPanel .member-create-fields .session-pricing-card-list{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .session-pricing-card{
+              border:none;
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              padding:12px;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .session-time-list{
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #memberPanel .member-create-fields .session-time-row{
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              padding:12px;
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .session-time-input-wrapper{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .session-version-list{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .version-entry-card{
+              border-radius:8px;
+              background:rgba(0,0,0,0.2);
+              padding:12px;
+              display:flex;
+              flex-direction:column;
+              gap:10px;
+            }
+            #memberPanel .member-create-fields .tier-list{
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+            #memberPanel .member-create-fields .tier-row{
+              display:grid;
+              grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+              gap:8px;
+              align-items:center;
+            }
+            #memberPanel .member-create-fields .tier-row input,
+            #memberPanel .member-create-fields .tier-row select{
+              width:100%;
+            }
             #tab-forms .form-preview-field--version-price .form-preview-version-price{
               display:flex;
               flex-direction:column;
