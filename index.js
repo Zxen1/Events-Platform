@@ -21264,14 +21264,16 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus(`Welcome back, ${displayName}!`);
   }
 
-  function handleRegister(){
+  async function handleRegister(){
     const nameInput = document.getElementById('memberRegisterName');
     const emailInput = document.getElementById('memberRegisterEmail');
     const passwordInput = document.getElementById('memberRegisterPassword');
+    const passwordConfirmInput = document.getElementById('memberRegisterPasswordConfirm');
     const avatarInput = document.getElementById('memberRegisterAvatar');
     const name = nameInput ? nameInput.value.trim() : '';
     const emailRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
+    const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
     const avatar = avatarInput ? avatarInput.value.trim() : '';
     if(!name || !emailRaw || !password){
       showStatus('Please complete all required fields.', { error: true });
@@ -21293,17 +21295,103 @@ document.addEventListener('DOMContentLoaded', () => {
       if(passwordInput) passwordInput.focus();
       return;
     }
-    const normalized = emailRaw.toLowerCase();
-    if(users.some(u => u.emailNormalized === normalized)){
-      showStatus('An account already exists for that email.', { error: true });
-      if(emailInput) emailInput.focus();
+    if(!passwordConfirm){
+      showStatus('Please complete all required fields.', { error: true });
+      if(passwordConfirmInput) passwordConfirmInput.focus();
       return;
     }
-    const newUser = normalizeUser({ name, email: emailRaw, emailNormalized: normalized, password, avatar });
-    users.push(newUser);
-    saveUsers(users);
-    currentUser = { ...newUser };
+    if(password !== passwordConfirm){
+      showStatus('Passwords do not match.', { error: true });
+      if(passwordConfirmInput){
+        passwordConfirmInput.focus();
+        if(typeof passwordConfirmInput.select === 'function'){
+          passwordConfirmInput.select();
+        }
+      }
+      return;
+    }
+    const normalized = emailRaw.toLowerCase();
+    const formData = new FormData();
+    formData.set('display_name', name);
+    formData.set('email', emailRaw);
+    formData.set('password', password);
+    formData.set('confirm', passwordConfirm);
+    formData.set('avatar_url', avatar);
+    let response;
+    try{
+      response = await fetch('/gateway.php?action=add-member', {
+        method: 'POST',
+        body: formData
+      });
+    }catch(err){
+      console.error('Registration request failed', err);
+      showStatus('Registration failed.', { error: true });
+      return;
+    }
+    let responseText = '';
+    try{
+      responseText = await response.text();
+    }catch(err){
+      console.error('Failed to read registration response', err);
+      showStatus('Registration failed.', { error: true });
+      return;
+    }
+    let payload = null;
+    if(responseText){
+      try{
+        payload = JSON.parse(responseText);
+      }catch(err){
+        payload = null;
+      }
+    }
+    if(!response.ok || !payload || payload.success === false){
+      let errorMessage = 'Registration failed.';
+      if(payload && typeof payload === 'object'){
+        const possible = payload.error || payload.message;
+        if(typeof possible === 'string' && possible.trim()){
+          errorMessage = possible.trim();
+        }
+      } else if(responseText && responseText.trim()){
+        errorMessage = responseText.trim();
+      }
+      showStatus(errorMessage, { error: true });
+      return;
+    }
+    const memberData = payload && typeof payload === 'object'
+      ? (payload.member || payload.user || payload.data || payload.payload || null)
+      : null;
+    const resolvedMember = memberData && typeof memberData === 'object' ? memberData : {};
+    const memberNameRaw = typeof resolvedMember.display_name === 'string' && resolvedMember.display_name.trim()
+      ? resolvedMember.display_name.trim()
+      : (typeof resolvedMember.name === 'string' && resolvedMember.name.trim() ? resolvedMember.name.trim() : name);
+    const memberEmailRaw = typeof resolvedMember.email === 'string' && resolvedMember.email.trim()
+      ? resolvedMember.email.trim()
+      : emailRaw;
+    const memberAvatarRaw = typeof resolvedMember.avatar_url === 'string' && resolvedMember.avatar_url.trim()
+      ? resolvedMember.avatar_url.trim()
+      : (typeof resolvedMember.avatar === 'string' && resolvedMember.avatar.trim()
+        ? resolvedMember.avatar.trim()
+        : avatar);
+    const memberUsernameRaw = typeof resolvedMember.username === 'string' && resolvedMember.username.trim()
+      ? resolvedMember.username.trim()
+      : (memberEmailRaw || normalized);
+    const finalEmailRaw = memberEmailRaw || emailRaw;
+    const finalEmail = typeof finalEmailRaw === 'string' ? finalEmailRaw.trim() : '';
+    const finalNormalized = finalEmail ? finalEmail.toLowerCase() : normalized;
+    currentUser = {
+      name: memberNameRaw || name,
+      email: finalEmail,
+      emailNormalized: finalNormalized,
+      username: memberUsernameRaw || finalEmail || finalNormalized,
+      avatar: memberAvatarRaw || '',
+      isAdmin: finalNormalized === 'admin'
+    };
     storeCurrent(currentUser);
+    if(form && typeof form.reset === 'function'){
+      form.reset();
+    } else {
+      clearInputs(registerInputs);
+    }
     render();
     showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
   }
