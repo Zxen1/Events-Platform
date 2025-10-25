@@ -15792,6 +15792,7 @@ function openPostModal(id){
     }, { capture:true });
 
     function hookDetailActions(el, p){
+      const locationList = Array.isArray(p.locations) ? p.locations : [];
       el.querySelectorAll('.post-header').forEach(headerEl => {
         headerEl.addEventListener('click', evt=>{
           if(evt.target.closest('button')) return;
