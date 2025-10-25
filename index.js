@@ -11743,13 +11743,17 @@ function makePosts(){
         subcategoryIcons: cloneMapLike(subcategoryIcons),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes)
+        categoryShapes: cloneMapLike(categoryShapes),
+        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
+          ? VERSION_PRICE_CURRENCIES.slice()
+          : []
       };
     }
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
-      const nextCategories = cloneCategoryList(snapshot.categories);
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
       }
@@ -11768,6 +11772,9 @@ function makePosts(){
       assignMapLike(subcategoryMarkers, snapshot.subcategoryMarkers);
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
+      if(Array.isArray(normalized.versionPriceCurrencies)){
+        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
+      }
       renderFormbuilderCats();
       refreshSubcategoryLogos();
       refreshFormbuilderSubcategoryLogos();
@@ -18007,6 +18014,89 @@ form.addEventListener('input', formChanged, true);
   };
 })();
 
+// Extracted from <script>
+(function(){
+  const SAVE_ENDPOINT = '/gateway.php?action=save-formbuilder';
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
+  const ERROR_CLASS = 'error';
+  const ERROR_TIMEOUT = 5000;
+
+  function showErrorBanner(message){
+    const banner = document.getElementById('adminStatusMessage');
+    if(!banner) return;
+    const text = typeof message === 'string' && message.trim() ? message.trim() : 'Failed to save changes.';
+    banner.textContent = text;
+    banner.setAttribute('aria-hidden', 'false');
+    banner.classList.add('show');
+    banner.classList.add(ERROR_CLASS);
+    if(window[STATUS_TIMER_KEY]){
+      clearTimeout(window[STATUS_TIMER_KEY]);
+    }
+    window[STATUS_TIMER_KEY] = setTimeout(()=>{
+      banner.classList.remove('show');
+      banner.classList.remove(ERROR_CLASS);
+      banner.setAttribute('aria-hidden', 'true');
+      window[STATUS_TIMER_KEY] = null;
+    }, ERROR_TIMEOUT);
+  }
+
+  async function saveAdminChanges(){
+    let payload = null;
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+      try {
+        payload = window.formbuilderStateManager.capture();
+      } catch (err) {
+        console.error('formbuilderStateManager.capture failed', err);
+      }
+    }
+    if(!payload || typeof payload !== 'object'){
+      payload = {};
+    }
+
+    let response;
+    try {
+      response = await fetch(SAVE_ENDPOINT, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+    } catch (networkError) {
+      showErrorBanner('Unable to reach the server. Please try again.');
+      throw networkError;
+    }
+
+    const responseText = await response.text();
+    let data = {};
+    if(responseText){
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        showErrorBanner('Unexpected response while saving changes.');
+        const error = new Error('Invalid JSON response');
+        error.responseText = responseText;
+        throw error;
+      }
+    }
+
+    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
+      const message = data && typeof data.message === 'string' && data.message.trim()
+        ? data.message.trim()
+        : `Failed to save changes${response.ok ? '' : ` (HTTP ${response.status})`}.`;
+      showErrorBanner(message);
+      const error = new Error(message);
+      error.response = response;
+      error.payload = data;
+      throw error;
+    }
+
+    return data;
+  }
+
+  window.saveAdminChanges = saveAdminChanges;
+})();
+
 const adminPanelChangeManager = (()=>{
   let panel = null;
   let form = null;
@@ -18160,6 +18250,11 @@ const adminPanelChangeManager = (()=>{
     if(!statusMessage) return;
     statusMessage.textContent = message;
     statusMessage.setAttribute('aria-hidden','false');
+    statusMessage.classList.remove('error');
+    if(window.__adminStatusMessageTimer){
+      clearTimeout(window.__adminStatusMessageTimer);
+      window.__adminStatusMessageTimer = null;
+    }
     statusMessage.classList.add('show');
     clearTimeout(statusTimer);
     statusTimer = setTimeout(()=>{
@@ -19805,7 +19900,13 @@ document.addEventListener('DOMContentLoaded', () => {
     colorInput.addEventListener('input', () => { apply(); save(); });
     opacityInput.addEventListener('input', () => { apply(); save(); });
     const prev = window.saveAdminChanges;
-    window.saveAdminChanges = () => { save(); if(typeof prev === 'function') prev(); };
+    window.saveAdminChanges = () => {
+      save();
+      if(typeof prev === 'function'){
+        return prev();
+      }
+      return undefined;
+    };
   }
 });
 

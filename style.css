@@ -2202,6 +2202,10 @@ button[aria-expanded="true"] .results-arrow{
   z-index:13000;
   font-size:14px;
 }
+#adminStatusMessage.error{
+  background:#c62828;
+  color:#fff;
+}
 #adminStatusMessage.show{
   opacity:1;
   transform:translate(-50%, 0);
