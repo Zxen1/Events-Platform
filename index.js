@@ -19511,8 +19511,8 @@ document.addEventListener('pointerdown', (e) => {
           }
           session.times.forEach(addTimeCard);
 
-          const sessionActions = document.createElement('div');
-          sessionActions.className = 'session-date-actions';
+          const sessionFooterActions = document.createElement('div');
+          sessionFooterActions.className = 'session-date-actions';
           const addTimeBtn = document.createElement('button');
           addTimeBtn.type = 'button';
           addTimeBtn.className = 'member-create-secondary-btn';
@@ -19522,8 +19522,8 @@ document.addEventListener('pointerdown', (e) => {
             session.times.push(time);
             addTimeCard(time);
           });
-          sessionActions.appendChild(addTimeBtn);
-          sessionCard.appendChild(sessionActions);
+          sessionFooterActions.appendChild(addTimeBtn);
+          sessionCard.appendChild(sessionFooterActions);
           sessionList.appendChild(sessionCard);
         }
 
