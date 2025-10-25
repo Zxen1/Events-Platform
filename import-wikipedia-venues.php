@@ -309,7 +309,7 @@ WHERE {
                    schema:isPartOf <https://en.wikipedia.org/> ;
                    schema:name ?enwiki .
   }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 LIMIT 1200
 ");
@@ -371,16 +371,16 @@ foreach ($bindings as $row) {
     $moreUrl = "https://en.wikipedia.org/wiki/" . rawurlencode($wikiTitle);
     $descForSite = $extract2;
     if ($descForSite !== '') {
-        $descForSite .= \"\n\n... Read more → \" . $moreUrl;
+        $descForSite .= "\n\n... Read more → " . $moreUrl;
     } else {
-        $descForSite = \"Read more → \" . $moreUrl;
+        $descForSite = "Read more → " . $moreUrl;
     }
 
     $addressLine = $label;
 
     $imagesCsv = '';
     if ($image) {
-        $commonsUrl = \"https://commons.wikimedia.org/wiki/Special:FilePath/\" . rawurlencode(basename($image));
+        $commonsUrl = "https://commons.wikimedia.org/wiki/Special:FilePath/" . rawurlencode(basename($image));
         $imagesCsv = handle_image_thumbs($commonsUrl, $label, $ASSET_DIR, $ASSET_URL_PREFIX);
     }
 
@@ -411,16 +411,16 @@ foreach ($bindings as $row) {
     }
 
     $importCount++;
-    echo \"[$idx] OK imported post_id=$post_id \\\"$label\\\" (total=$importCount)\\n\";
+    echo "[$idx] OK imported post_id=$post_id \\"$label\\" (total=$importCount)\n";
 
     if ($importCount >= $maxImport) {
-        echo \"Reached import cap ($maxImport).\\n\";
+        echo "Reached import cap ($maxImport).\n";
         break;
     }
 
     sleep(2);
 }
 
-echo \"\\nDone.\\nImported: $importCount\\nSkipped: $skipCount\\n\";
-echo \"⚠️ Move all new images from /public_html/assets/venues/ to GitHub immediately or they’ll be deleted on next sync.\\n\";
+echo "\nDone.\nImported: $importCount\nSkipped: $skipCount\n";
+echo "⚠️ Move all new images from /public_html/assets/venues/ to GitHub immediately or they’ll be deleted on next sync.\n";
 ?>
