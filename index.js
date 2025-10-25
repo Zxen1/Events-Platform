@@ -12807,9 +12807,16 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'open-post';
       wrap.dataset.id = p.id;
-      const loc0 = p.locations[0];
-      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
-      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
+      const locationList = Array.isArray(p.locations) ? p.locations : [];
+      const loc0 = locationList[0] || {};
+      const selectSuffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
+      const loc0Dates = Array.isArray(loc0.dates)
+        ? loc0.dates.slice().sort((a,b)=> (a.full||'').localeCompare(b.full||''))
+        : [];
+      const basePrice = loc0 && loc0.price !== undefined ? loc0.price : '';
+      const defaultInfo = loc0Dates.length
+        ? `💲 ${basePrice} | 📅 ${loc0Dates[0].date} - ${loc0Dates[loc0Dates.length-1].date}${selectSuffix}`
+        : `💲 ${basePrice}${selectSuffix}`;
       const thumbSrc = thumbUrl(p);
       const headerInner = `
           <div class="title-block">
@@ -12835,7 +12842,7 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="venue-address">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
               <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
             </div>
             <div class="post-details-info-container">
@@ -14847,9 +14854,7 @@ if (!map.__pillHooksInstalled) {
               delete overlayRoot.dataset.venueKey;
             }
 
-            const visibleList = filtersInitialized
-              ? (Array.isArray(filtered) ? filtered : [])
-              : posts;
+            const visibleList = filtersInitialized ? filtered : posts;
             const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
               if(!item || item.id === undefined || item.id === null) return '';
               return String(item.id);
@@ -14862,15 +14867,6 @@ if (!map.__pillHooksInstalled) {
               if(coords){
                 venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
               }
-            }
-            const allVenuePostIds = new Set();
-            if(Array.isArray(venuePostsAll)){
-              venuePostsAll.forEach(item => {
-                if(!item || item.id === undefined || item.id === null) return;
-                const idStr = String(item.id);
-                if(!idStr) return;
-                allVenuePostIds.add(idStr);
-              });
             }
             const venuePostsVisible = Array.isArray(venuePostsAll)
               ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id)))
@@ -14886,8 +14882,7 @@ if (!map.__pillHooksInstalled) {
             });
             const multiIds = uniqueVenuePosts.map(item => String(item.id)).filter(Boolean);
             const multiCount = uniqueVenuePosts.length;
-            const hadMultipleVenuePosts = allVenuePostIds.size > 1;
-            const isMultiVenue = hadMultipleVenuePosts || multiCount > 1;
+            const isMultiVenue = multiCount > 1;
             if(isMultiVenue){
               overlayRoot.dataset.multiIds = multiIds.join(',');
             } else {
@@ -16148,6 +16143,82 @@ function openPostModal(id){
       }
       let sessionCloseTimer = null;
       let ensureMapForVenue = async ()=>{};
+      const shouldShowExpiredSessions = () => {
+        const expiredToggle = document.getElementById('expiredToggle');
+        return !!(expiredToggle && expiredToggle.checked);
+      };
+      const sessionThresholdDate = () => {
+        const base = new Date();
+        base.setHours(0,0,0,0);
+        base.setDate(base.getDate() - 1);
+        return base;
+      };
+      const parseSessionDate = (value) => {
+        if(typeof value !== 'string') return new Date(Number.NaN);
+        const parts = value.split('-').map(Number);
+        const yy = parts[0];
+        const mm = parts[1];
+        const dd = parts[2];
+        return new Date(yy, (mm || 1) - 1, dd || 1);
+      };
+      function computeVisibleSessionsForLocation(location){
+        if(!location || !Array.isArray(location.dates)) return [];
+        const showExpired = shouldShowExpiredSessions();
+        const threshold = sessionThresholdDate();
+        return location.dates
+          .map((d,i)=>({d,i}))
+          .filter(({d})=>{
+            if(!d || typeof d.full !== 'string') return false;
+            if(showExpired) return true;
+            const parsed = parseSessionDate(d.full);
+            return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
+          });
+      }
+      let visibleVenueState = { byIndex: new Map(), visibleIndices: [] };
+      function computeVenueVisibility(){
+        const byIndex = new Map();
+        const visibleIndices = [];
+        locationList.forEach((location, idx) => {
+          if(location && Array.isArray(location.dates)){
+            location.dates.sort((a,b)=>{
+              const fullA = (a && a.full) || '';
+              const fullB = (b && b.full) || '';
+              const fullCompare = fullA.localeCompare(fullB);
+              if(fullCompare !== 0) return fullCompare;
+              const timeA = (a && a.time) || '';
+              const timeB = (b && b.time) || '';
+              return timeA.localeCompare(timeB);
+            });
+          }
+          const visibleSessions = computeVisibleSessionsForLocation(location);
+          const hasVisible = visibleSessions.length > 0;
+          byIndex.set(idx, { visibleSessions, hasVisible });
+          if(venueOptions){
+            const button = venueOptions.querySelector(`button[data-index="${idx}"]`);
+            if(button){
+              button.hidden = !hasVisible;
+              if(hasVisible){
+                button.removeAttribute('hidden');
+                button.disabled = false;
+                button.tabIndex = 0;
+                button.removeAttribute('aria-hidden');
+              } else {
+                button.setAttribute('hidden','');
+                button.disabled = true;
+                button.tabIndex = -1;
+                button.setAttribute('aria-hidden','true');
+                button.classList.remove('selected');
+              }
+            }
+          }
+          if(hasVisible){
+            visibleIndices.push(idx);
+          }
+        });
+        visibleVenueState = { byIndex, visibleIndices };
+        return visibleVenueState;
+      }
+      let syncingVenueFromSessions = false;
         function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
           if(!sessMenu) return;
           if(sessionCloseTimer){
@@ -16189,7 +16260,7 @@ function openPostModal(id){
           }
         }
       function updateVenue(idx){
-        const locations = Array.isArray(p.locations) ? p.locations : [];
+        const locations = locationList;
         const hasLocations = locations.length > 0;
         let targetIndex = Number.isInteger(idx) ? idx : 0;
         if(hasLocations){
@@ -16197,13 +16268,22 @@ function openPostModal(id){
         } else {
           targetIndex = 0;
         }
+        const visibility = computeVenueVisibility();
+        const visibleIndices = visibility.visibleIndices || [];
+        const multipleVisible = visibleIndices.length > 1;
+        if(visibleIndices.length){
+          if(!visibleIndices.includes(targetIndex)){
+            targetIndex = visibleIndices[0];
+          }
+        }
         currentVenueIndex = targetIndex;
         const loc = hasLocations ? locations[targetIndex] : null;
 
         if(venueOptions){
           const buttons = venueOptions.querySelectorAll('button');
           buttons.forEach((button, optionIndex) => {
-            button.classList.toggle('selected', optionIndex === targetIndex);
+            const isSelected = optionIndex === currentVenueIndex && !button.hidden && !button.disabled;
+            button.classList.toggle('selected', isSelected);
           });
         }
 
@@ -16217,7 +16297,7 @@ function openPostModal(id){
 
         if(venueBtn){
           if(loc){
-            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
           } else {
             venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="venue-address">${p.city || ''}</span>`;
           }
@@ -16241,13 +16321,18 @@ function openPostModal(id){
           return;
         }
 
-        loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
+        loc.dates.sort((a,b)=>{
+          const fullA = (a && a.full) || '';
+          const fullB = (b && b.full) || '';
+          const fullCompare = fullA.localeCompare(fullB);
+          if(fullCompare !== 0) return fullCompare;
+          const timeA = (a && a.time) || '';
+          const timeB = (b && b.time) || '';
+          return timeA.localeCompare(timeB);
+        });
 
         const currentYear = new Date().getFullYear();
-        const parseDate = s => {
-          const [yy, mm, dd] = s.split('-').map(Number);
-          return new Date(yy, mm - 1, dd);
-        };
+        const parseDate = s => parseSessionDate(s);
         const formatDate = d => {
           const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
@@ -16257,7 +16342,7 @@ function openPostModal(id){
           venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         }
         if(venueBtn){
-          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
         let cal = null;
@@ -16270,22 +16355,21 @@ function openPostModal(id){
         let visibleDateEntries = [];
         let defaultInfoHTML = '';
 
-        function recomputeVisibleDateData(){
-          const expiredToggle = document.getElementById('expiredToggle');
-          const showExpired = !!(expiredToggle && expiredToggle.checked);
-          const threshold = (()=>{
-            const base = new Date();
-            base.setHours(0,0,0,0);
-            base.setDate(base.getDate() - 1);
-            return base;
-          })();
-          visibleDateEntries = loc.dates
-            .map((d,i)=>({d,i}))
-            .filter(({d})=>{
-              if(showExpired) return true;
-              const parsed = parseDate(d.full);
-              return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
-            });
+        function recomputeVisibleDateData(visibilityState){
+          if(!loc || !Array.isArray(loc.dates)){
+            visibleDateEntries = [];
+            dateStrings = [];
+            allowedSet = new Set();
+            minDate = null;
+            maxDate = null;
+            months = [];
+            return;
+          }
+          const snapshot = visibilityState || computeVenueVisibility();
+          const entry = snapshot && snapshot.byIndex ? snapshot.byIndex.get(currentVenueIndex) : null;
+          visibleDateEntries = entry && Array.isArray(entry.visibleSessions)
+            ? entry.visibleSessions.map(({ d, i }) => ({ d, i }))
+            : [];
 
           const seen = new Set();
           const uniqueEntries = [];
@@ -16513,7 +16597,35 @@ function openPostModal(id){
         }
 
         function updateSessionOptionsList(){
-          recomputeVisibleDateData();
+          if(!loc || !Array.isArray(loc.dates)){
+            visibleDateEntries = [];
+            if(sessionOptions){
+              sessionOptions.innerHTML = '';
+            }
+            if(sessBtn){
+              sessBtn.textContent = 'Select Session';
+              sessBtn.setAttribute('aria-expanded','false');
+            }
+            if(sessionInfo){
+              sessionInfo.innerHTML = defaultInfoHTML;
+            }
+            return;
+          }
+          const visibility = computeVenueVisibility();
+          const visibleIndices = visibility.visibleIndices || [];
+          if(!syncingVenueFromSessions && visibleIndices.length && !visibleIndices.includes(currentVenueIndex)){
+            const fallbackIndex = visibleIndices[0];
+            if(fallbackIndex !== undefined){
+              syncingVenueFromSessions = true;
+              try{
+                updateVenue(fallbackIndex);
+              } finally {
+                syncingVenueFromSessions = false;
+              }
+              return;
+            }
+          }
+          recomputeVisibleDateData(visibility);
           refreshDefaultSessionInfo();
           if(calContainer){
             const existingPopup = calContainer.querySelector('.time-popup');
@@ -16569,6 +16681,12 @@ function openPostModal(id){
             });
           }
 
+          try{
+            if(typeof ensureMapForVenue === 'function'){
+              ensureMapForVenue();
+            }
+          }catch(err){}
+
           setTimeout(()=>{
             if(map && typeof map.resize === 'function') map.resize();
           },0);
@@ -16602,15 +16720,32 @@ function openPostModal(id){
         ensureMapForVenue = async function(){
           if(!mapEl) return;
 
-          const allLocations = Array.isArray(p.locations) ? p.locations.filter(item => item && Number.isFinite(item.lng) && Number.isFinite(item.lat)) : [];
-          if(!allLocations.length){
+          const visibility = computeVenueVisibility();
+          const visibleIndices = Array.isArray(visibility.visibleIndices) ? visibility.visibleIndices : [];
+          const locationEntries = locationList
+            .map((location, idx) => ({ location, idx }))
+            .filter(entry => entry.location && Number.isFinite(entry.location.lng) && Number.isFinite(entry.location.lat));
+          const allIndicesVisible = visibleIndices.length > 0 && visibleIndices.length === locationEntries.length;
+          const allowedIndices = allIndicesVisible ? null : new Set(visibleIndices);
+          const effectiveEntries = allowedIndices
+            ? locationEntries.filter(entry => allowedIndices.has(entry.idx))
+            : locationEntries;
+
+          if(!effectiveEntries.length){
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
             return;
           }
 
-          const selectedIdx = Math.min(Math.max(currentVenueIndex, 0), allLocations.length - 1);
-          const selectedLoc = allLocations[selectedIdx];
+          const selectedEntry = effectiveEntries.find(entry => entry.idx === currentVenueIndex) || effectiveEntries[0];
+          if(!selectedEntry){
+            locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
+            locationMarkers = [];
+            return;
+          }
+
+          const selectedIdx = selectedEntry.idx;
+          const selectedLoc = selectedEntry.location;
           const center = [selectedLoc.lng, selectedLoc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
@@ -16635,7 +16770,7 @@ function openPostModal(id){
             if(!map) return;
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
-            allLocations.forEach((location, idx) => {
+            effectiveEntries.forEach(({ location, idx }) => {
               if(!Number.isFinite(location.lng) || !Number.isFinite(location.lat)){
                 return;
               }
@@ -16672,10 +16807,12 @@ function openPostModal(id){
           };
 
           const fitToLocations = () => {
-            if(!map || !allLocations.length){
+            if(!map || !effectiveEntries.length){
               return;
             }
-            const validPoints = allLocations.filter(location => Number.isFinite(location.lng) && Number.isFinite(location.lat));
+            const validPoints = effectiveEntries
+              .map(entry => entry.location)
+              .filter(location => Number.isFinite(location.lng) && Number.isFinite(location.lat));
             if(!validPoints.length){
               return;
             }
@@ -16866,10 +17003,20 @@ function openPostModal(id){
               updateVenue(0);
               if(venueMenu && venueBtn && venueOptions){
                 venueOptions.querySelectorAll('button').forEach(btn=>{
-                  if(btn.dataset.index==='0') btn.classList.add('selected');
+                  const btnIndex = parseInt(btn.dataset.index, 10);
+                  const isVisible = !btn.hidden && !btn.disabled;
+                  btn.classList.toggle('selected', isVisible && btnIndex === currentVenueIndex);
                   btn.addEventListener('click', ()=>{
+                    if(btn.hidden || btn.disabled){
+                      hideMenu(venueMenu);
+                      venueBtn.setAttribute('aria-expanded','false');
+                      return;
+                    }
                     const targetIndex = parseInt(btn.dataset.index, 10);
-                    if(Number.isInteger(targetIndex) && targetIndex === currentVenueIndex){
+                    if(!Number.isInteger(targetIndex)){
+                      return;
+                    }
+                    if(targetIndex === currentVenueIndex){
                       if(venueCloseTimer){
                         clearTimeout(venueCloseTimer);
                       }
