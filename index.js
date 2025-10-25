@@ -18333,7 +18333,12 @@ const adminPanelChangeManager = (()=>{
         result = window.saveAdminChanges();
       }
     }catch(err){
-      console.error('Failed to save admin changes', err);
+      const message = err && typeof err.message === 'string' ? err.message : '';
+      if(message && message.toLowerCase().includes('database connection not configured')){
+        console.warn('Skipped saving admin changes because the database connection is not configured.');
+      } else {
+        console.error('Failed to save admin changes', err);
+      }
       if(!closeAfter) cancelPrompt();
       return;
     }
@@ -18345,7 +18350,12 @@ const adminPanelChangeManager = (()=>{
       closePrompt();
       if(panelToClose) closePanel(panelToClose);
     }).catch(err => {
-      console.error('Failed to save admin changes', err);
+      const message = err && typeof err.message === 'string' ? err.message : '';
+      if(message && message.toLowerCase().includes('database connection not configured')){
+        console.warn('Skipped saving admin changes because the database connection is not configured.');
+      } else {
+        console.error('Failed to save admin changes', err);
+      }
     });
   }
 
@@ -19624,10 +19634,15 @@ document.addEventListener('pointerdown', (e) => {
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
       }catch(error){
-        console.error('Failed to load formbuilder snapshot for members', error);
+        const message = error && typeof error.message === 'string' ? error.message : '';
+        if(message && message.toLowerCase().includes('database connection not configured')){
+          console.warn('Formbuilder snapshot service unavailable; using defaults.');
+        } else {
+          console.error('Failed to load formbuilder snapshot for members', error);
+        }
         memberSnapshotErrorMessage = fetchErrorMessage;
         setEmptyStateMessage(fetchErrorMessage);
-        applyMemberSnapshot(memberSnapshot, { preserveSelection: false, populate: false });
+        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
       } finally {
         if(categorySelect){
           categorySelect.disabled = false;
