@@ -5746,12 +5746,13 @@ html, body { cursor: auto !important; }
               padding:0 12px;
             }
             #tab-forms .iconpicker-container{
+              position:relative;
               display:flex;
               align-items:center;
               gap:16px;
               flex-wrap:wrap;
             }
-            #tab-forms .iconpicker-upload{
+            #tab-forms .iconpicker-button{
               position:relative;
               display:inline-flex;
               align-items:center;
@@ -5759,22 +5760,35 @@ html, body { cursor: auto !important; }
               gap:8px;
               padding:8px 16px;
               border-radius:8px;
-              background:var(--btn);
               border:1px solid var(--btn);
+              background:var(--btn);
               color:var(--button-text);
               font-weight:600;
               cursor:pointer;
-              transition:background .2s,border-color .2s,color .2s;
+              transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
             }
-            #tab-forms .iconpicker-upload:hover{
+            #tab-forms .iconpicker-button:hover,
+            #tab-forms .iconpicker-button:focus-visible{
               background:var(--btn-hover, #2e3a72);
               border-color:var(--btn-hover, #2e3a72);
+              color:var(--button-text);
+              outline:none;
             }
-            #tab-forms .iconpicker-upload input[type="file"]{
-              position:absolute;
-              inset:0;
-              opacity:0;
-              cursor:pointer;
+            #tab-forms .iconpicker-button:focus-visible{
+              box-shadow:0 0 0 3px rgba(46,58,114,0.45);
+            }
+            #tab-forms .iconpicker-button[disabled],
+            #tab-forms .iconpicker-button[aria-disabled='true']{
+              cursor:not-allowed;
+              opacity:0.65;
+              background:rgba(255,255,255,0.08);
+              border-color:rgba(255,255,255,0.14);
+              color:var(--muted);
+              box-shadow:none;
+            }
+            #tab-forms .iconpicker-container.iconpicker-open .iconpicker-button{
+              background:var(--btn-hover, #2e3a72);
+              border-color:var(--btn-hover, #2e3a72);
             }
             #tab-forms .iconpicker-preview{
               width:64px;
@@ -5790,6 +5804,7 @@ html, body { cursor: auto !important; }
               text-align:center;
               padding:6px;
               box-sizing:border-box;
+              overflow:hidden;
             }
             #tab-forms .iconpicker-preview img{
               max-width:100%;
@@ -5801,6 +5816,66 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .iconpicker-preview.has-image img{
               display:block;
+            }
+            #tab-forms .icon-picker-popup{
+              position:absolute;
+              top:100%;
+              left:0;
+              margin-top:8px;
+              border-radius:10px;
+              border:1px solid var(--border);
+              background:rgba(10,10,20,0.95);
+              box-shadow:0 18px 40px rgba(0,0,0,0.45);
+              padding:12px;
+              min-width:240px;
+              max-width:320px;
+              max-height:240px;
+              overflow:auto;
+              z-index:var(--forms-layer-popover, 80);
+            }
+            #tab-forms .icon-picker-grid{
+              display:grid;
+              grid-template-columns:repeat(auto-fill,minmax(52px,1fr));
+              gap:10px;
+            }
+            #tab-forms .icon-picker-option{
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              width:52px;
+              height:52px;
+              border-radius:10px;
+              border:1px solid rgba(255,255,255,0.15);
+              background:rgba(255,255,255,0.05);
+              color:var(--button-text);
+              cursor:pointer;
+              transition:border-color .2s,background .2s,box-shadow .2s,transform .1s;
+            }
+            #tab-forms .icon-picker-option img{
+              max-width:80%;
+              max-height:80%;
+              object-fit:contain;
+            }
+            #tab-forms .icon-picker-option:hover,
+            #tab-forms .icon-picker-option:focus-visible{
+              border-color:var(--btn-hover, #2e3a72);
+              background:rgba(46,58,114,0.25);
+              outline:none;
+            }
+            #tab-forms .icon-picker-option.selected{
+              border-color:var(--btn-hover, #2e3a72);
+              box-shadow:0 0 0 2px rgba(46,58,114,0.4);
+            }
+            #tab-forms .icon-picker-option--clear{
+              grid-column:span 2;
+              font-size:12px;
+              padding:0 6px;
+              background:rgba(255,255,255,0.08);
+              color:var(--button-text);
+            }
+            #tab-forms .icon-picker-option--clear:hover,
+            #tab-forms .icon-picker-option--clear:focus-visible{
+              background:rgba(46,58,114,0.35);
             }
             #tab-forms .subcategory-form-menus{
               display:flex;

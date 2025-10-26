@@ -293,14 +293,18 @@ function buildSnapshot(array $categories, array $subcategories): array
 {
     $categoriesMap = [];
     $categoryIcons = [];
+    $categoryIconPaths = [];
     $categoryMarkers = [];
+    $subcategoryIconPaths = [];
     foreach ($categories as $category) {
         $categoryName = $category['name'];
         $categoriesMap[$categoryName] = [
+            'id' => $category['id'] ?? null,
             'name' => $categoryName,
             'subs' => [],
             'subFields' => [],
             'sort_order' => $category['sort_order'] ?? null,
+            'subIds' => [],
         ];
 
         $metadata = [];
@@ -309,6 +313,7 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
 
         $iconHtml = '';
+        $iconPath = '';
         if (isset($category['icon_path']) && is_string($category['icon_path'])) {
             $iconPath = trim($category['icon_path']);
             if ($iconPath !== '') {
@@ -321,6 +326,12 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
         if ($iconHtml !== '') {
             $categoryIcons[$categoryName] = $iconHtml;
+        }
+        if ($iconPath === '' && $iconHtml !== '') {
+            $iconPath = extract_icon_src($iconHtml);
+        }
+        if ($iconPath !== '') {
+            $categoryIconPaths[$categoryName] = $iconPath;
         }
 
         $markerPath = '';
@@ -348,10 +359,12 @@ function buildSnapshot(array $categories, array $subcategories): array
         $categoryName = $sub['category'];
         if (!isset($categoriesMap[$categoryName])) {
             $categoriesMap[$categoryName] = [
+                'id' => null,
                 'name' => $categoryName,
                 'subs' => [],
                 'subFields' => [],
                 'sort_order' => null,
+                'subIds' => [],
             ];
         }
 
@@ -359,6 +372,7 @@ function buildSnapshot(array $categories, array $subcategories): array
             'name' => $sub['name'],
             'sort_order' => $sub['sort_order'],
         ];
+        $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
 
         $fields = [];
         $metadata = $sub['metadata'];
@@ -368,6 +382,7 @@ function buildSnapshot(array $categories, array $subcategories): array
         $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
 
         $iconHtml = '';
+        $iconPath = '';
         if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
             $iconPath = trim($sub['icon_path']);
             if ($iconPath !== '') {
@@ -380,6 +395,12 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
         if ($iconHtml !== '') {
             $subcategoryIcons[$sub['name']] = $iconHtml;
+        }
+        if ($iconPath === '' && $iconHtml !== '') {
+            $iconPath = extract_icon_src($iconHtml);
+        }
+        if ($iconPath !== '') {
+            $subcategoryIconPaths[$sub['name']] = $iconPath;
         }
 
         $markerPath = '';
@@ -474,13 +495,54 @@ function buildSnapshot(array $categories, array $subcategories): array
     return [
         'categories' => $categoriesList,
         'categoryIcons' => $categoryIcons,
+        'categoryIconPaths' => $categoryIconPaths,
         'categoryMarkers' => sanitizeSubcategoryMarkers($categoryMarkers),
         'subcategoryIcons' => $subcategoryIcons,
+        'subcategoryIconPaths' => $subcategoryIconPaths,
         'subcategoryMarkers' => sanitizeSubcategoryMarkers($subcategoryMarkers),
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
+        'iconLibrary' => list_icon_library(),
     ];
+}
+
+function extract_icon_src(string $html): string
+{
+    $trimmed = trim($html);
+    if ($trimmed === '') {
+        return '';
+    }
+    if (preg_match('/src\s*=\s*"([^"]+)"/i', $trimmed, $matches)) {
+        return trim($matches[1]);
+    }
+    if (preg_match("/src\s*=\s*'([^']+)'/i", $trimmed, $matches)) {
+        return trim($matches[1]);
+    }
+    return '';
+}
+
+function list_icon_library(): array
+{
+    $baseDir = dirname(__DIR__, 3) . '/assets/icons-30';
+    if (!is_dir($baseDir)) {
+        return [];
+    }
+    $paths = [];
+    $iterator = new \FilesystemIterator($baseDir, \FilesystemIterator::SKIP_DOTS);
+    foreach ($iterator as $file) {
+        if (!$file->isFile()) {
+            continue;
+        }
+        $extension = strtolower($file->getExtension());
+        if (!in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'], true)) {
+            continue;
+        }
+        $relative = 'assets/icons-30/' . $file->getFilename();
+        $paths[] = $relative;
+    }
+    sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+    return $paths;
 }
 
 function sanitizeSubcategoryMarkers(array $markers): array
