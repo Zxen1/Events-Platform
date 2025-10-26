@@ -119,6 +119,9 @@ try {
     $updated = [];
     $pdo->beginTransaction();
 
+    $categorySortSupported = in_array('sort_order', $categoryColumns, true);
+    $categorySortUpdates = [];
+    $categoryOrder = 0;
     foreach ($decoded['categories'] as $categoryPayload) {
         if (!is_array($categoryPayload)) {
             continue;
@@ -132,6 +135,14 @@ try {
             throw new RuntimeException(sprintf('Unknown category "%s".', $categoryName));
         }
         $categoryRow = $categoriesByName[$categoryKey];
+
+        if ($categorySortSupported) {
+            $categorySortUpdates[] = [
+                'id' => $categoryRow['id'],
+                'sort_order' => $categoryOrder,
+            ];
+        }
+        $categoryOrder++;
 
         $subs = $categoryPayload['subs'] ?? [];
         if (!is_array($subs)) {
@@ -215,6 +226,16 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $updated[] = (int) $subcategoryRow['id'];
+        }
+    }
+
+    if ($categorySortSupported && $categorySortUpdates) {
+        $categorySortStmt = $pdo->prepare('UPDATE categories SET sort_order = :sort_order WHERE id = :id');
+        foreach ($categorySortUpdates as $update) {
+            $categorySortStmt->execute([
+                ':sort_order' => $update['sort_order'],
+                ':id' => $update['id'],
+            ]);
         }
     }
 
