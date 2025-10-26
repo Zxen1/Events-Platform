@@ -1,4 +1,4 @@
-<?php
+rs<?php
 // gateway.php — public bridge to backend scripts outside web root
 // DO NOT place secrets here.
 
@@ -7,7 +7,7 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['ac
 $baseDir = __DIR__;
 
 $map = [
-  'verify-login' => $baseDir . '/config/verify-login.php',
+  'verify-login' => $baseDir . '/connectors/verify-login.php',
   'add-member' => $baseDir . '/connectors/add-member.php',
   'save-formbuilder' => $baseDir . '/connectors/save-formbuilder.php',
   'get-formbuilder' => $baseDir . '/connectors/get-formbuilder.php',
