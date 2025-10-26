@@ -4,11 +4,13 @@
 
 $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['action']) : '';
 
+$baseDir = __DIR__;
+
 $map = [
-  'verify-login' => '/home/funmapco/config/verify-login.php',
-  'add-member' => '/home/funmapco/connectors/add-member.php',
-  'save-formbuilder' => '/home/funmapco/connectors/save-formbuilder.php',
-  'get-formbuilder' => '/home/funmapco/connectors/get-formbuilder.php',
+  'verify-login' => $baseDir . '/config/verify-login.php',
+  'add-member' => $baseDir . '/connectors/add-member.php',
+  'save-formbuilder' => $baseDir . '/connectors/save-formbuilder.php',
+  'get-formbuilder' => $baseDir . '/connectors/get-formbuilder.php',
   // add more routes later, e.g. 'register' => '/home/funmapco/config/register.php',
 ];
 
