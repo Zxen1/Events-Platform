@@ -11851,8 +11851,8 @@ function makePosts(){
       if(Array.isArray(normalized.versionPriceCurrencies)){
         VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
       }
+      renderFilterCategories();
       renderFormbuilderCats();
-      refreshSubcategoryLogos();
       refreshFormbuilderSubcategoryLogos();
       if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
         try{
@@ -11888,8 +11888,14 @@ function makePosts(){
         }
       });
     }
-    if(catsEl){
-      const seedSubs = selection.subs.size === 0;
+    function renderFilterCategories(){
+      if(!catsEl) return;
+      catsEl.textContent = '';
+      Object.keys(categoryControllers).forEach(key=>{ delete categoryControllers[key]; });
+      allSubcategoryKeys.length = 0;
+      selection.cats = new Set();
+      selection.subs = new Set();
+      const seedSubs = true;
       categories.forEach(c=>{
         const el = document.createElement('div');
         el.className='filter-category-menu';
@@ -12084,6 +12090,11 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
+      updateCategoryResetBtn();
+      updateResetBtn();
+    }
+    if(catsEl){
+      renderFilterCategories();
       renderFormbuilderCats();
       updateFormbuilderSnapshot();
       const handleIconsReady = ()=>{
@@ -12091,8 +12102,6 @@ function makePosts(){
         refreshFormbuilderSubcategoryLogos();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
-      updateCategoryResetBtn();
-      updateResetBtn();
     }
 
     if(resetCategoriesBtn){
