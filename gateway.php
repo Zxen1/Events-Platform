@@ -1,4 +1,4 @@
-rs<?php
+<?php
 // gateway.php — public bridge to backend scripts outside web root
 // DO NOT place secrets here.
 
