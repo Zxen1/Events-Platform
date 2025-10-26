@@ -17989,8 +17989,31 @@ const memberPanelChangeManager = (()=>{
 
   function closePrompt(){
     if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        let focusTarget = null;
+        if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+          focusTarget = pendingCloseTarget.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        }
+        if(!focusTarget && panel && typeof panel.querySelector === 'function'){
+          focusTarget = panel.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        }
+        if(!focusTarget && panel){
+          const previousTabIndex = panel.getAttribute('tabindex');
+          panel.setAttribute('tabindex','-1');
+          panel.focus({ preventScroll: true });
+          if(previousTabIndex === null){
+            panel.removeAttribute('tabindex');
+          } else {
+            panel.setAttribute('tabindex', previousTabIndex);
+          }
+        } else if(focusTarget){
+          focusTarget.focus({ preventScroll: true });
+        }
+      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
     }
   }
 
@@ -18004,6 +18027,7 @@ const memberPanelChangeManager = (()=>{
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
+      prompt.removeAttribute('inert');
       setTimeout(()=>{
         if(promptSaveButton) promptSaveButton.focus();
       }, 0);
