@@ -11819,7 +11819,10 @@ function makePosts(){
         });
       });
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
-      assignMapLike(subcategoryMarkers, snapshot.subcategoryMarkers);
+      const markerOverrides = snapshot && snapshot.subcategoryMarkers;
+      if(markerOverrides && typeof markerOverrides === 'object' && Object.keys(markerOverrides).length){
+        assignMapLike(subcategoryMarkers, markerOverrides);
+      }
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
       if(Array.isArray(normalized.versionPriceCurrencies)){
