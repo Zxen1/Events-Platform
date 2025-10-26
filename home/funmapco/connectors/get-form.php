@@ -119,15 +119,29 @@ function fetchCategories(PDO $pdo, array $columns): array
     $selectColumns = [];
     $orderBy = '';
 
+    $hasSortOrder = in_array('sort_order', $columns, true);
+    $hasMetadata = in_array('metadata_json', $columns, true);
+    $hasIconPath = in_array('icon_path', $columns, true);
+    $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
+
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
     }
     if (in_array('name', $columns, true)) {
         $selectColumns[] = '`name`';
     }
-    if (in_array('sort_order', $columns, true)) {
+    if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
         $orderBy = ' ORDER BY `sort_order` ASC';
+    }
+    if ($hasIconPath) {
+        $selectColumns[] = '`icon_path`';
+    }
+    if ($hasMapmarkerPath) {
+        $selectColumns[] = '`mapmarker_path`';
+    }
+    if ($hasMetadata) {
+        $selectColumns[] = '`metadata_json`';
     }
     if (!$selectColumns) {
         $selectColumns[] = '*';
@@ -141,11 +155,27 @@ function fetchCategories(PDO $pdo, array $columns): array
         if (!isset($row['name'])) {
             continue;
         }
+
+        $metadata = [];
+        if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
+            $decoded = json_decode($row['metadata_json'], true);
+            if (is_array($decoded)) {
+                $metadata = $decoded;
+            }
+        }
+
         $categories[] = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
-            'sort_order' => isset($row['sort_order']) ? (int) $row['sort_order'] : null,
+            'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
             'subs' => [],
+            'metadata' => $metadata,
+            'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
+                ? trim($row['icon_path'])
+                : null,
+            'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
+                ? trim($row['mapmarker_path'])
+                : null,
         ];
     }
 
@@ -262,12 +292,49 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
 function buildSnapshot(array $categories, array $subcategories): array
 {
     $categoriesMap = [];
+    $categoryIcons = [];
+    $categoryMarkers = [];
     foreach ($categories as $category) {
-        $categoriesMap[$category['name']] = [
-            'name' => $category['name'],
+        $categoryName = $category['name'];
+        $categoriesMap[$categoryName] = [
+            'name' => $categoryName,
             'subs' => [],
             'subFields' => [],
         ];
+
+        $metadata = [];
+        if (isset($category['metadata']) && is_array($category['metadata'])) {
+            $metadata = $category['metadata'];
+        }
+
+        $iconHtml = '';
+        if (isset($metadata['icon']) && is_string($metadata['icon'])) {
+            $iconHtml = trim($metadata['icon']);
+        }
+        if ($iconHtml === '' && isset($category['icon_path']) && is_string($category['icon_path'])) {
+            $iconPath = trim($category['icon_path']);
+            if ($iconPath !== '') {
+                $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
+                $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+            }
+        }
+        if ($iconHtml !== '') {
+            $categoryIcons[$categoryName] = $iconHtml;
+        }
+
+        $markerPath = '';
+        if (isset($metadata['marker']) && is_string($metadata['marker'])) {
+            $markerPath = trim($metadata['marker']);
+        }
+        if ($markerPath === '' && isset($category['mapmarker_path']) && is_string($category['mapmarker_path'])) {
+            $candidate = trim($category['mapmarker_path']);
+            if ($candidate !== '') {
+                $markerPath = $candidate;
+            }
+        }
+        if ($markerPath !== '') {
+            $categoryMarkers[$categoryName] = $markerPath;
+        }
     }
 
     $categoryShapes = [];
@@ -393,6 +460,8 @@ function buildSnapshot(array $categories, array $subcategories): array
 
     return [
         'categories' => $categoriesList,
+        'categoryIcons' => $categoryIcons,
+        'categoryMarkers' => sanitizeSubcategoryMarkers($categoryMarkers),
         'subcategoryIcons' => $subcategoryIcons,
         'subcategoryMarkers' => sanitizeSubcategoryMarkers($subcategoryMarkers),
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
