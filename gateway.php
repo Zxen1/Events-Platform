@@ -6,12 +6,14 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['ac
 
 $baseDir = __DIR__;
 
+$connectorDir = $baseDir . '/home/funmapco/connectors';
+
 $map = [
-  'verify-login' => $baseDir . '/connectors/verify-login.php',
-  'add-member' => $baseDir . '/connectors/add-member.php',
-  'save-form' => $baseDir . '/connectors/save-form.php',
-  'get-form' => $baseDir . '/connectors/get-form.php',
-  // add more routes later, e.g. 'register' => '/home/funmapco/config/register.php',
+  'verify-login' => $connectorDir . '/verify-login.php',
+  'add-member' => $connectorDir . '/add-member.php',
+  'save-form' => $connectorDir . '/save-form.php',
+  'get-form' => $connectorDir . '/get-form.php',
+  // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
 if (!$action || !isset($map[$action])) {
