@@ -3,7 +3,28 @@
 header('Content-Type: application/json; charset=utf-8');
 error_reporting(0);
 ini_set('display_errors', 0);
-require_once __DIR__ . '/../config/config-db.php';
+$configCandidates = [
+  __DIR__ . '/../config/config-db.php',
+  dirname(__DIR__) . '/config/config-db.php',
+  dirname(__DIR__, 2) . '/config/config-db.php',
+  dirname(__DIR__) . '/../config/config-db.php',
+  __DIR__ . '/config-db.php',
+];
+
+$configPath = null;
+foreach ($configCandidates as $candidate) {
+  if (is_file($candidate)) {
+    $configPath = $candidate;
+    break;
+  }
+}
+
+if ($configPath === null) {
+  throw new RuntimeException('Database configuration file is missing.');
+}
+
+require_once $configPath;
+
 
 function fail($code, $msg){http_response_code($code);echo json_encode(['success'=>false,'error'=>$msg]);exit;}
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}

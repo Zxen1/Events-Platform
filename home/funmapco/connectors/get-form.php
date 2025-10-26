@@ -13,8 +13,23 @@ try {
         return;
     }
 
-    $configPath = __DIR__ . '/../config/config-db.php';
-    if (!is_file($configPath)) {
+    $configCandidates = [
+        __DIR__ . '/../config/config-db.php',
+        dirname(__DIR__) . '/config/config-db.php',
+        dirname(__DIR__, 2) . '/config/config-db.php',
+        dirname(__DIR__) . '/../config/config-db.php',
+        __DIR__ . '/config-db.php',
+    ];
+
+    $configPath = null;
+    foreach ($configCandidates as $candidate) {
+        if (is_file($candidate)) {
+            $configPath = $candidate;
+            break;
+        }
+    }
+
+    if ($configPath === null) {
         http_response_code(500);
         echo json_encode([
             'success' => false,
