@@ -3613,23 +3613,34 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
         'live-gigs','for-sale','education-centres','tutors'
       ];
-      const BASES = [
-        'assets/icons/subcategories/',
-        'assets/icons/',
-        'assets/images/icons/'
+      const FALLBACK_BASES = [
+        { base: 'assets/icons-30/', suffixes: ['-30.webp', '.webp'] },
+        { base: 'assets/icons-20/', suffixes: ['-20.webp', '.webp'] }
       ];
       const pending = new Map();
 
       const urlsFor = (name) => {
         const urls = [];
+        const seen = new Set();
+        const pushUrl = (url) => {
+          if(!url || seen.has(url)){
+            return;
+          }
+          seen.add(url);
+          urls.push(url);
+        };
         const markers = window.subcategoryMarkers || {};
         const manual = markers[name] || null;
-        const shouldLookupLocal = manual || KNOWN.includes(name);
-        if(manual) urls.push(manual);
+        const shouldLookupLocal = Boolean(manual || KNOWN.includes(name));
+        if(manual){
+          pushUrl(manual);
+        }
         if(shouldLookupLocal){
-          const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
-          BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`));
-          BASES.forEach(base => urls.push(`${base}${name}.png`));
+          FALLBACK_BASES.forEach(({ base, suffixes }) => {
+            suffixes.forEach(suffix => {
+              pushUrl(`${base}${name}${suffix}`);
+            });
+          });
         }
         return { urls, shouldLookupLocal };
       };
