@@ -8112,14 +8112,14 @@ function makePosts(){
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
-          const normalizedSubIconPath = normalizeIconPath(initialSubIconPath);
-          if(normalizedSubIconPath){
-            subPreviewImg.src = normalizedSubIconPath;
+          const initialNormalizedSubIconPath = normalizeIconPath(initialSubIconPath);
+          if(initialNormalizedSubIconPath){
+            subPreviewImg.src = initialNormalizedSubIconPath;
             subPreview.classList.add('has-image');
             subPreviewLabel.textContent = '';
             subIconButton.textContent = 'Change Icon';
             if(!subIconLookup.found){
-              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizedSubIconPath);
+              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, initialNormalizedSubIconPath);
             }
           }
 
@@ -12022,8 +12022,8 @@ function makePosts(){
           subMenu.append(subContent);
 
           applySubNameChange();
-          if(normalizedSubIconPath){
-            updateSubIconDisplay(normalizedSubIconPath);
+          if(initialNormalizedSubIconPath){
+            updateSubIconDisplay(initialNormalizedSubIconPath);
           }
 
           subBtn.addEventListener('click', ()=>{
