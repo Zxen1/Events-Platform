@@ -468,13 +468,6 @@ function buildSnapshot(array $categories, array $subcategories): array
         return strcasecmp($a['name'], $b['name']);
     });
 
-    foreach ($categoriesList as &$categoryEntry) {
-        if (array_key_exists('sort_order', $categoryEntry)) {
-            unset($categoryEntry['sort_order']);
-        }
-    }
-    unset($categoryEntry);
-
     $versionPriceCurrencies = array_keys($currencySet);
     sort($versionPriceCurrencies);
 
