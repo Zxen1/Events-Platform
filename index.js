@@ -16972,26 +16972,7 @@ function openPostModal(id){
 
               const pendingDetailStyleImageRequests = new Map();
 
-              map.on('mousemove', (e) => {
-                const has = !!(e.features && e.features.length);
-                map.getCanvas().style.cursor = has ? 'pointer' : '';
-              });
-
-              armPointerOnSymbolLayers(map);
-
-              const applyDetailStyleAdjustments = () => {
-                applyNightSky(map);
-                patchMapboxStyleArtifacts(map);
-              };
-              whenStyleReady(map, applyDetailStyleAdjustments);
-              map.on('style.load', applyDetailStyleAdjustments);
-              map.on('styledata', () => {
-                if(map.isStyleLoaded && map.isStyleLoaded()){
-                  patchMapboxStyleArtifacts(map);
-                }
-              });
-
-              map.on('styleimagemissing', (evt) => {
+              const handleDetailStyleImageMissing = (evt) => {
                 const imageId = evt && evt.id;
                 if(!imageId){
                   return;
@@ -17041,7 +17022,29 @@ function openPostModal(id){
                     console.error(error);
                   }
                 }
+              };
+
+              map.on('mousemove', (e) => {
+                const has = !!(e.features && e.features.length);
+                map.getCanvas().style.cursor = has ? 'pointer' : '';
               });
+
+              armPointerOnSymbolLayers(map);
+
+              const applyDetailStyleAdjustments = () => {
+                applyNightSky(map);
+                patchMapboxStyleArtifacts(map);
+              };
+              whenStyleReady(map, applyDetailStyleAdjustments);
+              map.on('style.load', applyDetailStyleAdjustments);
+              map.on('styledata', () => {
+                if(map.isStyleLoaded && map.isStyleLoaded()){
+                  patchMapboxStyleArtifacts(map);
+                }
+              });
+
+              try{ map.on('styleimagemissing', handleDetailStyleImageMissing); }
+              catch(err){ console.error(err); }
 
               if(resizeHandler){
                 window.removeEventListener('resize', resizeHandler);
