@@ -131,11 +131,20 @@ try {
             if ($subName === '') {
                 continue;
             }
-            $compositeKey = mb_strtolower($categoryName . '::' . $subName);
-            if (!isset($subcategoriesByKey[$compositeKey])) {
+            $canonicalSubName = normalizeSubcategoryCanonicalName($categoryName, $subName);
+            $compositeKey = mb_strtolower($categoryName . '::' . $canonicalSubName);
+            $subcategoryRow = $subcategoriesByKey[$compositeKey] ?? null;
+            if (!$subcategoryRow) {
+                $slugCategory = slugify_key($categoryName);
+                $slugSub = slugify_key($canonicalSubName);
+                if ($slugCategory !== '' && $slugSub !== '') {
+                    $slugKey = $slugCategory . '::' . $slugSub;
+                    $subcategoryRow = $subcategoriesByKey[$slugKey] ?? null;
+                }
+            }
+            if (!$subcategoryRow) {
                 throw new RuntimeException(sprintf('Unknown subcategory "%s" within "%s".', $subName, $categoryName));
             }
-            $subcategoryRow = $subcategoriesByKey[$compositeKey];
 
             $fieldsPayload = $subFieldsMap[$subName] ?? [];
             if (!is_array($fieldsPayload)) {
@@ -567,12 +576,30 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
         if (!isset($row['name'], $row['category_name'], $row['id'])) {
             continue;
         }
-        $key = mb_strtolower($row['category_name'] . '::' . $row['name']);
-        $map[$key] = [
+        $normalizedCategory = mb_strtolower($row['category_name']);
+        $normalizedSub = mb_strtolower($row['name']);
+        $rowData = [
             'id' => (int) $row['id'],
             'name' => $row['name'],
             'category_name' => $row['category_name'],
         ];
+        $primaryKey = $normalizedCategory . '::' . $normalizedSub;
+        $map[$primaryKey] = $rowData;
+
+        $slugCategory = slugify_key($row['category_name']);
+        $slugSub = slugify_key($row['name']);
+        if ($slugCategory !== '' && $slugSub !== '') {
+            $map[$slugCategory . '::' . $slugSub] = $rowData;
+        }
+
+        foreach (getSubcategoryAliasNames($row['category_name'], $row['name']) as $aliasName) {
+            $aliasNormalized = mb_strtolower($aliasName);
+            $map[$normalizedCategory . '::' . $aliasNormalized] = $rowData;
+            $aliasSlug = slugify_key($aliasName);
+            if ($slugCategory !== '' && $aliasSlug !== '') {
+                $map[$slugCategory . '::' . $aliasSlug] = $rowData;
+            }
+        }
     }
     return $map;
 }
@@ -636,4 +663,77 @@ function matchFieldId(array $catalog, array $field): ?int
         }
     }
     return null;
+}
+
+function getSubcategoryAliasDefinitions(): array
+{
+    return [
+        "what's on" => [
+            'Other' => ['Other Events'],
+        ],
+        'opportunities' => [
+            'Other' => ['Other Opportunities'],
+        ],
+        'learning' => [
+            'Other' => ['Other Learning'],
+        ],
+    ];
+}
+
+function getSubcategoryAliasNames(string $categoryName, string $canonicalName): array
+{
+    $definitions = getSubcategoryAliasDefinitions();
+    $categoryKey = mb_strtolower($categoryName);
+    $canonicalKey = mb_strtolower($canonicalName);
+    if (!isset($definitions[$categoryKey])) {
+        return [];
+    }
+    foreach ($definitions[$categoryKey] as $canonical => $aliases) {
+        if (mb_strtolower($canonical) === $canonicalKey) {
+            return $aliases;
+        }
+    }
+    return [];
+}
+
+function normalizeSubcategoryCanonicalName(string $categoryName, string $subName): string
+{
+    $definitions = getSubcategoryAliasDefinitions();
+    $categoryKey = mb_strtolower($categoryName);
+    $subKey = mb_strtolower($subName);
+    if (!isset($definitions[$categoryKey])) {
+        return $subName;
+    }
+    foreach ($definitions[$categoryKey] as $canonical => $aliases) {
+        if (mb_strtolower($canonical) === $subKey) {
+            return $canonical;
+        }
+        foreach ($aliases as $alias) {
+            if (mb_strtolower($alias) === $subKey) {
+                return $canonical;
+            }
+        }
+    }
+    return $subName;
+}
+
+function slugify_key(string $value): string
+{
+    $normalized = trim($value);
+    if ($normalized === '') {
+        return '';
+    }
+    if (class_exists('Normalizer')) {
+        $normalized = Normalizer::normalize($normalized, Normalizer::FORM_D);
+    }
+    $normalized = preg_replace('/\p{Mn}+/u', '', $normalized);
+    if (!class_exists('Normalizer')) {
+        $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $normalized);
+        if (is_string($ascii) && $ascii !== '') {
+            $normalized = $ascii;
+        }
+    }
+    $normalized = strtolower($normalized);
+    $normalized = preg_replace('/[^a-z0-9]+/', '-', $normalized);
+    return trim($normalized, '-');
 }
