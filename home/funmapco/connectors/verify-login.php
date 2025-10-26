@@ -4,6 +4,7 @@ $configCandidates = [
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',
   dirname(__DIR__, 2) . '/config/config-db.php',
+  dirname(__DIR__, 3) . '/../config/config-db.php',
   dirname(__DIR__) . '/../config/config-db.php',
   __DIR__ . '/config-db.php',
 ];
