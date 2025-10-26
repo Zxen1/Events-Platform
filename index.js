@@ -16968,7 +16968,9 @@ function openPostModal(id){
                 interactive: false
               });
 
-              attachIconLoader(map);
+              const ensureDetailIcon = attachIconLoader(map);
+
+              const pendingDetailStyleImageRequests = new Map();
 
               map.on('mousemove', (e) => {
                 const has = !!(e.features && e.features.length);
@@ -16989,26 +16991,56 @@ function openPostModal(id){
                 }
               });
 
-              map.on('styleimagemissing', (e) => {
-                if (map.hasImage(e.id)) return;
-
-                const base = document.baseURI || window.location.href;
-                const candidates = [
-                  `assets/icons/subcategories/${e.id}.png`,
-                  `assets/icons/${e.id}.png`,
-                  `assets/images/icons/${e.id}.png`,
-                  `assets/icons-30/${e.id}-30.webp`,
-                  `assets/icons/multi-category-icon-blue.png`,
-                  `assets/images/icons/multi-category-icon-blue.png`
-                ].map(p => new URL(p, base).href);
-
-                (function tryNext(i){
-                  if (i >= candidates.length) return;
-                  map.loadImage(candidates[i], (err, img) => {
-                    if (err || !img) { tryNext(i+1); return; }
-                    try { map.addImage(e.id, img, { sdf: true }); } catch {}
+              map.on('styleimagemissing', (evt) => {
+                const imageId = evt && evt.id;
+                if(!imageId){
+                  return;
+                }
+                try{
+                  if(map.hasImage?.(imageId)){
+                    return;
+                  }
+                }catch(err){
+                  console.error(err);
+                }
+                if(pendingDetailStyleImageRequests.has(imageId)){
+                  return;
+                }
+                const result = generateMarkerImageFromId(imageId, map, { ensureIcon: ensureDetailIcon });
+                if(result && typeof result.then === 'function'){
+                  const task = result.then(output => {
+                    if(!output){
+                      return;
+                    }
+                    const { image, options } = output;
+                    if(!image){
+                      return;
+                    }
+                    try{
+                      if(map.hasImage?.(imageId)){
+                        return;
+                      }
+                      map.addImage(imageId, image, options || {});
+                    }catch(error){
+                      console.error(error);
+                    }
+                  }).catch(error => {
+                    console.error(error);
+                  }).finally(() => {
+                    pendingDetailStyleImageRequests.delete(imageId);
                   });
-                })(0);
+                  pendingDetailStyleImageRequests.set(imageId, task);
+                  return;
+                }
+                if(result && result.image){
+                  try{
+                    if(!map.hasImage?.(imageId)){
+                      map.addImage(imageId, result.image, result.options || {});
+                    }
+                  }catch(error){
+                    console.error(error);
+                  }
+                }
               });
 
               if(resizeHandler){
