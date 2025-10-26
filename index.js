@@ -7950,14 +7950,20 @@ function makePosts(){
           }
           const displayName = getCategoryDisplayName();
           const datasetValue = displayName;
-          if(currentCategoryName !== datasetValue){
-            if(categoryIcons[currentCategoryName] !== undefined && categoryIcons[datasetValue] === undefined){
-              categoryIcons[datasetValue] = categoryIcons[currentCategoryName];
+          const previousName = currentCategoryName;
+          if(previousName !== datasetValue){
+            if(categoryIcons[previousName] !== undefined){
+              if(categoryIcons[datasetValue] === undefined){
+                categoryIcons[datasetValue] = categoryIcons[previousName];
+              }
+              delete categoryIcons[previousName];
             }
-            if(currentCategoryName !== datasetValue){
-              delete categoryIcons[currentCategoryName];
-              currentCategoryName = datasetValue;
-            }
+            renameIconNameKey(categoryIconPaths, previousName, datasetValue);
+            currentCategoryName = datasetValue;
+          }
+          c.name = datasetValue;
+          if(Array.isArray(categories) && categories[sourceIndex] && typeof categories[sourceIndex] === 'object'){
+            categories[sourceIndex].name = datasetValue;
           }
           menu.dataset.category = datasetValue;
           label.textContent = displayName;
@@ -7973,11 +7979,6 @@ function makePosts(){
             categoryLogo.classList.add('has-icon');
           } else {
             updateCategoryIconDisplay('');
-          }
-          const previousName = currentCategoryName;
-          if(previousName !== datasetValue){
-            renameIconNameKey(categoryIconPaths, previousName, datasetValue);
-            currentCategoryName = datasetValue;
           }
           subNameUpdaters.forEach(fn=>{
             try{ fn(); }catch(err){}
