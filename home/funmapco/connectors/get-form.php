@@ -308,29 +308,29 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
 
         $iconHtml = '';
-        if (isset($metadata['icon']) && is_string($metadata['icon'])) {
-            $iconHtml = trim($metadata['icon']);
-        }
-        if ($iconHtml === '' && isset($category['icon_path']) && is_string($category['icon_path'])) {
+        if (isset($category['icon_path']) && is_string($category['icon_path'])) {
             $iconPath = trim($category['icon_path']);
             if ($iconPath !== '') {
                 $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
                 $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
             }
         }
+        if ($iconHtml === '' && isset($metadata['icon']) && is_string($metadata['icon'])) {
+            $iconHtml = trim($metadata['icon']);
+        }
         if ($iconHtml !== '') {
             $categoryIcons[$categoryName] = $iconHtml;
         }
 
         $markerPath = '';
-        if (isset($metadata['marker']) && is_string($metadata['marker'])) {
-            $markerPath = trim($metadata['marker']);
-        }
-        if ($markerPath === '' && isset($category['mapmarker_path']) && is_string($category['mapmarker_path'])) {
+        if (isset($category['mapmarker_path']) && is_string($category['mapmarker_path'])) {
             $candidate = trim($category['mapmarker_path']);
             if ($candidate !== '') {
                 $markerPath = $candidate;
             }
+        }
+        if ($markerPath === '' && isset($metadata['marker']) && is_string($metadata['marker'])) {
+            $markerPath = trim($metadata['marker']);
         }
         if ($markerPath !== '') {
             $categoryMarkers[$categoryName] = $markerPath;
@@ -366,29 +366,29 @@ function buildSnapshot(array $categories, array $subcategories): array
         $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
 
         $iconHtml = '';
-        if (isset($metadata['icon']) && is_string($metadata['icon'])) {
-            $iconHtml = trim($metadata['icon']);
-        }
-        if ($iconHtml === '' && isset($sub['icon_path']) && is_string($sub['icon_path'])) {
+        if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
             $iconPath = trim($sub['icon_path']);
             if ($iconPath !== '') {
                 $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
                 $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
             }
         }
+        if ($iconHtml === '' && isset($metadata['icon']) && is_string($metadata['icon'])) {
+            $iconHtml = trim($metadata['icon']);
+        }
         if ($iconHtml !== '') {
             $subcategoryIcons[$sub['name']] = $iconHtml;
         }
 
         $markerPath = '';
-        if (isset($metadata['marker']) && is_string($metadata['marker'])) {
-            $markerPath = trim($metadata['marker']);
-        }
-        if ($markerPath === '' && isset($sub['mapmarker_path']) && is_string($sub['mapmarker_path'])) {
+        if (isset($sub['mapmarker_path']) && is_string($sub['mapmarker_path'])) {
             $candidate = trim($sub['mapmarker_path']);
             if ($candidate !== '') {
                 $markerPath = $candidate;
             }
+        }
+        if ($markerPath === '' && isset($metadata['marker']) && is_string($metadata['marker'])) {
+            $markerPath = trim($metadata['marker']);
         }
         if ($markerPath !== '') {
             $subcategoryMarkers[$sub['name']] = $markerPath;
