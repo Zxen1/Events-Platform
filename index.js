@@ -7959,8 +7959,8 @@ function makePosts(){
               delete categoryIcons[previousName];
             }
             renameIconNameKey(categoryIconPaths, previousName, datasetValue);
-            currentCategoryName = datasetValue;
           }
+          currentCategoryName = datasetValue;
           c.name = datasetValue;
           if(Array.isArray(categories) && categories[sourceIndex] && typeof categories[sourceIndex] === 'object'){
             categories[sourceIndex].name = datasetValue;
