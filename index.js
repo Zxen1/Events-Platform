@@ -11820,8 +11820,24 @@ function makePosts(){
       });
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
       const markerOverrides = snapshot && snapshot.subcategoryMarkers;
-      if(markerOverrides && typeof markerOverrides === 'object' && Object.keys(markerOverrides).length){
-        assignMapLike(subcategoryMarkers, markerOverrides);
+      if(markerOverrides && typeof markerOverrides === 'object'){
+        Object.keys(markerOverrides).forEach(name => {
+          const url = markerOverrides[name];
+          if(typeof url !== 'string'){
+            return;
+          }
+          const trimmedUrl = url.trim();
+          if(!trimmedUrl){
+            return;
+          }
+          const slugKey = slugify(typeof name === 'string' ? name : '');
+          if(slugKey){
+            subcategoryMarkers[slugKey] = trimmedUrl;
+          }
+          if(typeof name === 'string' && name){
+            subcategoryMarkers[name] = trimmedUrl;
+          }
+        });
       }
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
