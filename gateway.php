@@ -9,8 +9,8 @@ $baseDir = __DIR__;
 $map = [
   'verify-login' => $baseDir . '/connectors/verify-login.php',
   'add-member' => $baseDir . '/connectors/add-member.php',
-  'save-formbuilder' => $baseDir . '/connectors/save-formbuilder.php',
-  'get-formbuilder' => $baseDir . '/connectors/get-formbuilder.php',
+  'save-form' => $baseDir . '/connectors/save-form.php',
+  'get-form' => $baseDir . '/connectors/get-form.php',
   // add more routes later, e.g. 'register' => '/home/funmapco/config/register.php',
 ];
 

@@ -3208,7 +3208,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
       try{
-        const response = await fetch('/gateway.php?action=get-formbuilder', {
+        const response = await fetch('/gateway.php?action=get-form', {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
           signal: controller ? controller.signal : undefined
@@ -18085,7 +18085,7 @@ form.addEventListener('input', formChanged, true);
 
 // Extracted from <script>
 (function(){
-  const SAVE_ENDPOINT = '/gateway.php?action=save-formbuilder';
+  const SAVE_ENDPOINT = '/gateway.php?action=save-form';
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
   const ERROR_CLASS = 'error';
