@@ -121,7 +121,7 @@ try {
 
     $categorySortSupported = in_array('sort_order', $categoryColumns, true);
     $categorySortUpdates = [];
-    $categoryOrder = 0;
+    $categoryOrder = 1;
     foreach ($decoded['categories'] as $categoryPayload) {
         if (!is_array($categoryPayload)) {
             continue;
