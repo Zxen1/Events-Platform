@@ -1,0 +1,6 @@
+# Block direct access unless API key provided
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP:X-API-KEY} !^YOUR_SECRET_KEY$
+RewriteRule ^ - [F,L]
+</IfModule>
