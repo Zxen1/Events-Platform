@@ -12012,8 +12012,6 @@ function makePosts(){
             notifyFormbuilderChange();
           });
 
-          const normalizedSubIconPath = normalizeIconPath(initialSubIconPath) || '';
-
           subContent.append(subNameInput, subIconPicker, subPlaceholder, fieldsSection, deleteSubBtn);
 
           subMenu.append(subContent);
