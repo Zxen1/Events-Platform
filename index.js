@@ -24,6 +24,70 @@ async function verifyUserLogin(username, password) {
   }
 }
 
+function normalizeCategorySortOrderValue(raw) {
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (trimmed !== '') {
+      const parsed = Number(trimmed);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
+
+function compareCategoriesForDisplay(a, b) {
+  if (a === b) {
+    return 0;
+  }
+  if (!a || typeof a !== 'object') {
+    return !b || typeof b !== 'object' ? 0 : 1;
+  }
+  if (!b || typeof b !== 'object') {
+    return -1;
+  }
+  const orderA = normalizeCategorySortOrderValue(a.sort_order ?? a.sortOrder);
+  const orderB = normalizeCategorySortOrderValue(b.sort_order ?? b.sortOrder);
+  if (orderA !== null && orderB !== null && orderA !== orderB) {
+    return orderA - orderB;
+  }
+  if (orderA !== null && orderB === null) {
+    return -1;
+  }
+  if (orderA === null && orderB !== null) {
+    return 1;
+  }
+  const nameA = typeof a.name === 'string' ? a.name : '';
+  const nameB = typeof b.name === 'string' ? b.name : '';
+  const nameCompare = nameA.localeCompare(nameB, undefined, { sensitivity: 'accent', numeric: true });
+  if (nameCompare !== 0) {
+    return nameCompare;
+  }
+  return 0;
+}
+
+function getSortedCategoryEntries(list) {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  return list.map((category, index) => ({ category, index }))
+    .sort((a, b) => {
+      const cmp = compareCategoriesForDisplay(a.category, b.category);
+      if (cmp !== 0) {
+        return cmp;
+      }
+      return a.index - b.index;
+    });
+}
+
+function getSortedCategories(list) {
+  return getSortedCategoryEntries(list).map(entry => entry.category);
+}
+
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -3270,7 +3334,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
-        return { name, subs, subFields };
+        const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
+        return { name, subs, subFields, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         name: cat.name,
@@ -3278,7 +3343,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         subFields: cat.subs.reduce((acc, sub) => {
           acc[sub] = [];
           return acc;
-        }, {})
+        }, {}),
+        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -3289,6 +3355,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             cat.subFields[sub] = [];
           }
         });
+        cat.sort_order = normalizeCategorySortOrderValue(cat.sort_order ?? cat.sortOrder);
       });
       return base;
     }
@@ -7308,15 +7375,16 @@ function makePosts(){
         return next;
       };
       const frag = document.createDocumentFragment();
-      categories.forEach((c, index)=>{
-        const baseId = slugify(c.name) || `category-${index + 1}`;
-        const contentId = `category-form-content-${baseId}-${index}`;
-        const editPanelId = `category-edit-panel-${baseId}-${index}`;
+      const sortedCategoryEntries = getSortedCategoryEntries(categories);
+      sortedCategoryEntries.forEach(({ category: c, index: sourceIndex }, viewIndex)=>{
+        const baseId = slugify(c.name) || `category-${viewIndex + 1}`;
+        const contentId = `category-form-content-${baseId}-${viewIndex}`;
+        const editPanelId = `category-edit-panel-${baseId}-${viewIndex}`;
 
         const menu = document.createElement('div');
         menu.className = 'category-form-menu filter-category-menu';
         menu.dataset.category = c.name;
-        menu.dataset.categoryIndex = String(index);
+        menu.dataset.categoryIndex = String(sourceIndex);
         menu.setAttribute('role','group');
         menu.setAttribute('aria-expanded','false');
 
@@ -11693,7 +11761,7 @@ function makePosts(){
         while(existing.has(candidate)){
           candidate = `${baseName} ${counter++}`;
         }
-        categories.unshift({ name: candidate, subs: [], subFields: {} });
+        categories.unshift({ name: candidate, subs: [], subFields: {}, sort_order: null });
         renderFormbuilderCats();
         notifyFormbuilderChange();
         const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:first-of-type') : null;
@@ -11761,11 +11829,15 @@ function makePosts(){
       return out;
     }
     function cloneCategoryList(list){
-      return Array.isArray(list) ? list.map(item => ({
-        name: item && typeof item.name === 'string' ? item.name : '',
-        subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
-        subFields: cloneFieldsMap(item && item.subFields)
-      })) : [];
+      return Array.isArray(list) ? list.map(item => {
+        const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
+        return {
+          name: item && typeof item.name === 'string' ? item.name : '',
+          subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
+          subFields: cloneFieldsMap(item && item.subFields),
+          sort_order: sortOrder
+        };
+      }) : [];
     }
     function cloneMapLike(source){
       const out = {};
@@ -11898,7 +11970,8 @@ function makePosts(){
       selection.cats = new Set();
       selection.subs = new Set();
       const seedSubs = true;
-      categories.forEach(c=>{
+      const sortedCategories = getSortedCategories(categories);
+      sortedCategories.forEach(c=>{
         const el = document.createElement('div');
         el.className='filter-category-menu';
         el.dataset.category = c.name;
@@ -20019,7 +20092,8 @@ document.addEventListener('pointerdown', (e) => {
       placeholder.value = '';
       placeholder.textContent = 'Select Category';
       categorySelect.appendChild(placeholder);
-      memberCategories.forEach(cat => {
+      const sortedMemberCategories = getSortedCategories(memberCategories);
+      sortedMemberCategories.forEach(cat => {
         if(!cat || typeof cat.name !== 'string') return;
         const option = document.createElement('option');
         option.value = cat.name;
