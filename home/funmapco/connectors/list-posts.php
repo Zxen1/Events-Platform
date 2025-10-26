@@ -1,5 +1,25 @@
 <?php
-require '../config/config-db.php';
+$configCandidates = [
+  __DIR__ . '/../config/config-db.php',
+  dirname(__DIR__) . '/config/config-db.php',
+  dirname(__DIR__, 2) . '/config/config-db.php',
+  dirname(__DIR__) . '/../config/config-db.php',
+  __DIR__ . '/config-db.php',
+];
+
+$configPath = null;
+foreach ($configCandidates as $candidate) {
+  if (is_file($candidate)) {
+    $configPath = $candidate;
+    break;
+  }
+}
+
+if ($configPath === null) {
+  throw new RuntimeException('Database configuration file is missing.');
+}
+
+require_once $configPath;
 require '../config/config-auth.php';
 header('Content-Type: application/json');
 
