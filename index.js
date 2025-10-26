@@ -11957,15 +11957,29 @@ function makePosts(){
               subLogo.classList.add('has-icon');
             }
             if(previousSubName !== datasetValue){
+              const updateSubNameInList = (list, primaryIndex)=>{
+                if(!Array.isArray(list)) return false;
+                if(Number.isInteger(primaryIndex) && primaryIndex >= 0 && primaryIndex < list.length){
+                  list[primaryIndex] = datasetValue;
+                  return true;
+                }
+                const mirrorIndex = list.indexOf(previousSubName);
+                if(mirrorIndex !== -1){
+                  list[mirrorIndex] = datasetValue;
+                  return true;
+                }
+                return false;
+              };
+              const datasetIndex = Number.parseInt(subMenu.dataset.subIndex, 10);
               if(Array.isArray(c.subs)){
-                const indexFromDataset = Number.parseInt(subMenu.dataset.subIndex, 10);
-                if(Number.isInteger(indexFromDataset) && indexFromDataset >= 0 && indexFromDataset < c.subs.length){
-                  c.subs[indexFromDataset] = datasetValue;
-                } else {
-                  const fallbackIndex = c.subs.indexOf(previousSubName);
-                  if(fallbackIndex !== -1){
-                    c.subs[fallbackIndex] = datasetValue;
-                  }
+                if(!updateSubNameInList(c.subs, datasetIndex)){
+                  updateSubNameInList(c.subs, subIndex);
+                }
+              }
+              if(Array.isArray(categories) && categories[sourceIndex] && Array.isArray(categories[sourceIndex].subs)){
+                const mirrorSubs = categories[sourceIndex].subs;
+                if(!updateSubNameInList(mirrorSubs, datasetIndex)){
+                  updateSubNameInList(mirrorSubs, subIndex);
                 }
               }
               if(subcategoryIcons[previousSubName] !== undefined){
