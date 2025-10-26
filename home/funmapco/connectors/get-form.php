@@ -300,6 +300,7 @@ function buildSnapshot(array $categories, array $subcategories): array
             'name' => $categoryName,
             'subs' => [],
             'subFields' => [],
+            'sort_order' => $category['sort_order'] ?? null,
         ];
 
         $metadata = [];
@@ -350,6 +351,7 @@ function buildSnapshot(array $categories, array $subcategories): array
                 'name' => $categoryName,
                 'subs' => [],
                 'subFields' => [],
+                'sort_order' => null,
             ];
         }
 
@@ -452,8 +454,26 @@ function buildSnapshot(array $categories, array $subcategories): array
     $categoriesList = array_values($categoriesMap);
 
     usort($categoriesList, static function (array $a, array $b): int {
+        $orderA = $a['sort_order'] ?? null;
+        $orderB = $b['sort_order'] ?? null;
+
+        if ($orderA !== null && $orderB !== null) {
+            if ($orderA === $orderB) {
+                return strcasecmp($a['name'], $b['name']);
+            }
+
+            return $orderA <=> $orderB;
+        }
+
         return strcasecmp($a['name'], $b['name']);
     });
+
+    foreach ($categoriesList as &$categoryEntry) {
+        if (array_key_exists('sort_order', $categoryEntry)) {
+            unset($categoryEntry['sort_order']);
+        }
+    }
+    unset($categoryEntry);
 
     $versionPriceCurrencies = array_keys($currencySet);
     sort($versionPriceCurrencies);
