@@ -11956,31 +11956,35 @@ function makePosts(){
             } else {
               subLogo.classList.add('has-icon');
             }
-            if(currentSubName !== datasetValue){
-              if(subcategoryIcons[currentSubName] !== undefined && subcategoryIcons[datasetValue] === undefined){
-                subcategoryIcons[datasetValue] = subcategoryIcons[currentSubName];
+            if(previousSubName !== datasetValue){
+              if(Array.isArray(c.subs)){
+                const indexFromDataset = Number.parseInt(subMenu.dataset.subIndex, 10);
+                if(Number.isInteger(indexFromDataset) && indexFromDataset >= 0 && indexFromDataset < c.subs.length){
+                  c.subs[indexFromDataset] = datasetValue;
+                } else {
+                  const fallbackIndex = c.subs.indexOf(previousSubName);
+                  if(fallbackIndex !== -1){
+                    c.subs[fallbackIndex] = datasetValue;
+                  }
+                }
               }
-              if(subFieldsMap[currentSubName] !== undefined && subFieldsMap[datasetValue] === undefined){
-                subFieldsMap[datasetValue] = subFieldsMap[currentSubName];
+              if(subcategoryIcons[previousSubName] !== undefined){
+                subcategoryIcons[datasetValue] = subcategoryIcons[previousSubName];
+                delete subcategoryIcons[previousSubName];
               }
-              delete subcategoryIcons[currentSubName];
-              if(subFieldsMap[currentSubName] !== undefined){
-                delete subFieldsMap[currentSubName];
+              if(subFieldsMap[previousSubName] !== undefined){
+                subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
+                delete subFieldsMap[previousSubName];
               }
               if(c.subIds && typeof c.subIds === 'object'){
-                if(Object.prototype.hasOwnProperty.call(c.subIds, currentSubName) && !Object.prototype.hasOwnProperty.call(c.subIds, datasetValue)){
-                  c.subIds[datasetValue] = c.subIds[currentSubName];
-                }
-                if(Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
-                  const preservedId = c.subIds[currentSubName];
-                  delete c.subIds[currentSubName];
-                  if(!Object.prototype.hasOwnProperty.call(c.subIds, datasetValue)){
-                    c.subIds[datasetValue] = preservedId;
-                  }
+                if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
+                  const preservedId = c.subIds[previousSubName];
+                  delete c.subIds[previousSubName];
+                  c.subIds[datasetValue] = preservedId;
                   currentSubId = preservedId;
                 }
               }
-              renameIconNameKey(subcategoryIconPaths, currentSubName, datasetValue);
+              renameIconNameKey(subcategoryIconPaths, previousSubName, datasetValue);
               currentSubName = datasetValue;
             }
             if(c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
