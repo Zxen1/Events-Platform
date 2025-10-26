@@ -3530,6 +3530,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
       return base;
     }
+    window.normalizeVenueSessionOptions = normalizeVenueSessionOptions;
+    window.cloneVenueSessionVenue = cloneVenueSessionVenue;
     function getVenueAutofillState(field, venue){
       let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
       if(!fieldState){
@@ -19041,6 +19043,13 @@ document.addEventListener('pointerdown', (e) => {
           { name: 'Images', type: 'images', placeholder: '', required: true }
         ];
 
+    const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
+      ? window.normalizeVenueSessionOptions
+      : normalizeVenueSessionOptions;
+    const cloneVenueSessionVenueFromWindow = typeof window.cloneVenueSessionVenue === 'function'
+      ? window.cloneVenueSessionVenue
+      : cloneVenueSessionVenue;
+
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
@@ -19232,8 +19241,8 @@ document.addEventListener('pointerdown', (e) => {
             safe.options.push('');
           }
         } else if(type === 'venue-session-version-tier-price'){
-          const normalized = normalizeVenueSessionOptions(field.options);
-          safe.options = normalized.map(cloneVenueSessionVenue);
+          const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
+          safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
         } else {
           safe.options = Array.isArray(field.options)
             ? field.options.map(opt => {
