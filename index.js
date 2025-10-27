@@ -4989,6 +4989,14 @@ function makePosts(){
   const cityCounts = Object.create(null);
   const MAX_POSTS_PER_CITY = 200;
   const neighborhoodCache = new Map();
+  const eligibleCategories = Array.isArray(categories)
+    ? categories.filter(cat => cat && Array.isArray(cat.subs) && cat.subs.length)
+    : [];
+
+  const pickCategory = ()=> eligibleCategories.length ? pick(eligibleCategories) : null;
+  const pickSubcategory = (cat)=> (cat && Array.isArray(cat.subs) && cat.subs.length)
+    ? pick(cat.subs)
+    : null;
 
   function pushPost(post){
     if(post && post.city){
@@ -5043,8 +5051,9 @@ function makePosts(){
   const fsLng = 144.9695, fsLat = -37.8178;
   const fsCity = "Federation Square, Melbourne";
   for(let i=0;i<100;i++){
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
+    const cat = pickCategory();
+    const sub = pickSubcategory(cat);
+    if(!cat || !sub) continue;
     const id = 'FS'+i;
     const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5078,8 +5087,9 @@ function makePosts(){
   const tasCity = "Hobart, Tasmania";
   const todayTas = new Date(); todayTas.setHours(0,0,0,0);
   for(let i=0;i<100;i++){
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
+    const cat = pickCategory();
+    const sub = pickSubcategory(cat);
+    if(!cat || !sub) continue;
     const id = 'TAS'+i;
     const title = `${id} ${uniqueTitle(i*5311+23, tasCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5207,8 +5217,9 @@ function makePosts(){
       radius: 0
     });
     const locations = [location];
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
+    const cat = pickCategory();
+    const sub = pickSubcategory(cat);
+    if(!cat || !sub) continue;
     const id = `WW${worldProduced}`;
     const title = `${id} ${uniqueTitle(worldProduced*9343+19, spec.city, worldProduced)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5240,8 +5251,9 @@ function makePosts(){
   const operaLng = 151.2153;
   const operaLat = -33.8568;
   for(let i=0;i<10;i++){
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
+    const cat = pickCategory();
+    const sub = pickSubcategory(cat);
+    if(!cat || !sub) continue;
     const id = 'SOH'+i;
     const title = `${id} ${uniqueTitle(i*12007+7, operaCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5498,8 +5510,9 @@ function makePosts(){
     if(finalKey){
       existingCoordKeys.add(finalKey);
     }
-    const cat = pick(categories);
-    const sub = pick(cat.subs);
+    const cat = pickCategory();
+    const sub = pickSubcategory(cat);
+    if(!cat || !sub) continue;
     const id = `SV${singleProduced}`;
     const title = `${id} ${uniqueTitle(singleProduced*48271+131, spec.city, singleProduced)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
