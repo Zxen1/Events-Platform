@@ -19088,6 +19088,41 @@ const adminPanelChangeManager = (()=>{
     setDirty(false);
   }
 
+  async function hydrateAdminFormbuilderSnapshot(){
+    if(typeof window === 'undefined') return;
+    const manager = window.formbuilderStateManager;
+    if(!manager || typeof manager.restore !== 'function') return;
+    let snapshot = null;
+    const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
+      ? window.fetchSavedFormbuilderSnapshot
+      : null;
+    if(fetchSnapshot){
+      try{
+        snapshot = await fetchSnapshot();
+      }catch(err){
+        console.warn('Failed to fetch admin formbuilder snapshot from server', err);
+      }
+    }
+    if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
+      try{
+        snapshot = window.getSavedFormbuilderSnapshot();
+      }catch(err){
+        console.warn('Failed to load saved admin formbuilder snapshot', err);
+      }
+    }
+    if(!snapshot) return;
+    try{
+      manager.restore(snapshot);
+      if(typeof manager.save === 'function'){
+        manager.save();
+      } else {
+        refreshSavedState();
+      }
+    }catch(err){
+      console.warn('Failed to hydrate admin formbuilder snapshot', err);
+    }
+  }
+
   function showStatus(message){
     if(!statusMessage) statusMessage = document.getElementById('adminStatusMessage');
     if(!statusMessage) return;
@@ -19240,10 +19275,16 @@ const adminPanelChangeManager = (()=>{
 
   ensureElements();
   attachListeners();
+  hydrateAdminFormbuilderSnapshot().then(()=>{
+    refreshSavedState();
+  });
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(()=>{
       ensureElements();
       attachListeners();
+      hydrateAdminFormbuilderSnapshot().then(()=>{
+        refreshSavedState();
+      });
       refreshSavedState();
     }, 0);
   });
