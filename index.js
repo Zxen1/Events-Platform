@@ -3440,17 +3440,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
-    var ICON_LIBRARY = window.ICON_LIBRARY;
-    if(!Array.isArray(ICON_LIBRARY)){
-      ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
+    let iconLibraryRef = window.ICON_LIBRARY;
+    if(!Array.isArray(iconLibraryRef)){
+      iconLibraryRef = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
     }
-    window.ICON_LIBRARY = ICON_LIBRARY;
+    window.ICON_LIBRARY = iconLibraryRef;
+    const ICON_LIBRARY = iconLibraryRef;
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
       window.iconLibrary = initialFormbuilderSnapshot.iconLibrary.slice();
-      ICON_LIBRARY.length = 0;
-      ICON_LIBRARY.push(...window.iconLibrary);
+      iconLibraryRef.length = 0;
+      iconLibraryRef.push(...window.iconLibrary);
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
