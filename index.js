@@ -3853,10 +3853,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
         'live-gigs','for-sale','education-centres','tutors'
       ];
-      const FALLBACK_BASES = [
-        { base: 'assets/icons-30/', suffixes: ['-30.webp', '.webp'] },
-        { base: 'assets/icons-20/', suffixes: ['-20.webp', '.webp'] }
-      ];
       const pending = new Map();
 
       const urlsFor = (name) => {
@@ -3871,16 +3867,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         };
         const markers = window.subcategoryMarkers || {};
         const manual = markers[name] || null;
-        const shouldLookupLocal = Boolean(manual || KNOWN.includes(name));
+        const shouldLookupLocal = Boolean(manual);
         if(manual){
           pushUrl(manual);
-        }
-        if(shouldLookupLocal){
-          FALLBACK_BASES.forEach(({ base, suffixes }) => {
-            suffixes.forEach(suffix => {
-              pushUrl(`${base}${name}${suffix}`);
-            });
-          });
         }
         return { urls, shouldLookupLocal };
       };
