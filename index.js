@@ -3252,6 +3252,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
+    let persistedFormbuilderSnapshotFetchPromise = null;
+    if(typeof window !== 'undefined'){
+      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
+    }
+
     function getSavedFormbuilderSnapshot(){
       if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
         try{
@@ -3267,35 +3272,55 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     async function fetchSavedFormbuilderSnapshot(){
+      if(persistedFormbuilderSnapshotFetchPromise){
+        return persistedFormbuilderSnapshotFetchPromise;
+      }
+
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timeoutId = controller ? window.setTimeout(() => {
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
-      try{
-        const response = await fetch('/gateway.php?action=get-form', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller ? controller.signal : undefined
-        });
-        const text = await response.text();
-        let data;
+
+      const fetchPromise = (async () => {
         try{
-          data = JSON.parse(text);
-        }catch(parseErr){
-          throw new Error('The server returned an unexpected response.');
+          const response = await fetch('/gateway.php?action=get-form', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: controller ? controller.signal : undefined
+          });
+          const text = await response.text();
+          let data;
+          try{
+            data = JSON.parse(text);
+          }catch(parseErr){
+            throw new Error('The server returned an unexpected response.');
+          }
+          if(!response.ok || !data || data.success !== true || !data.snapshot){
+            const message = data && typeof data.message === 'string' && data.message.trim()
+              ? data.message.trim()
+              : 'Unable to load form definitions.';
+            throw new Error(message);
+          }
+          return data.snapshot;
+        } finally {
+          if(timeoutId){
+            clearTimeout(timeoutId);
+          }
         }
-        if(!response.ok || !data || data.success !== true || !data.snapshot){
-          const message = data && typeof data.message === 'string' && data.message.trim()
-            ? data.message.trim()
-            : 'Unable to load form definitions.';
-          throw new Error(message);
+      })();
+
+      persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
+        persistedFormbuilderSnapshotFetchPromise = null;
+        if(typeof window !== 'undefined'){
+          window.persistedFormbuilderSnapshotPromise = null;
         }
-        return data.snapshot;
-      } finally {
-        if(timeoutId){
-          clearTimeout(timeoutId);
-        }
+      });
+
+      if(typeof window !== 'undefined'){
+        window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
       }
+
+      return persistedFormbuilderSnapshotFetchPromise;
     }
 
     if(typeof window !== 'undefined'){
