@@ -3440,6 +3440,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
+    const ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
+
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
       window.iconLibrary = initialFormbuilderSnapshot.iconLibrary.slice();
@@ -3697,8 +3699,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
-
-    const ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
 
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
