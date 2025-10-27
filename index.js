@@ -3430,7 +3430,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
         ? snapshot.iconLibrary.filter(item => typeof item === 'string')
         : [];
-      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource);
+      const seededIconPaths = [
+        ...Object.values(normalizedCategoryIconPaths),
+        ...Object.values(normalizedSubcategoryIconPaths)
+      ].filter(path => typeof path === 'string' && path);
+      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource.concat(seededIconPaths));
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
@@ -8029,6 +8033,9 @@ function makePosts(){
         if(!ICON_LIBRARY.length){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
+        } else {
+          trigger.disabled = false;
+          trigger.removeAttribute('aria-disabled');
         }
         return { open: openPicker, close: closePicker };
       };
