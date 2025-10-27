@@ -3440,20 +3440,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
-    let iconLibraryRef = window.ICON_LIBRARY;
-    if(!Array.isArray(iconLibraryRef) && Array.isArray(window.iconLibrary)){
-      iconLibraryRef = window.iconLibrary;
-    }
-    if(!Array.isArray(iconLibraryRef)){
-      iconLibraryRef = [];
-    }
-    window.ICON_LIBRARY = iconLibraryRef;
-
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
       window.iconLibrary = initialFormbuilderSnapshot.iconLibrary.slice();
-      iconLibraryRef.length = 0;
-      iconLibraryRef.push(...window.iconLibrary);
+      ICON_LIBRARY.length = 0;
+      ICON_LIBRARY.push(...window.iconLibrary);
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
@@ -3706,6 +3697,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
+
+    const ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
 
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
@@ -7676,7 +7669,7 @@ function makePosts(){
         const handleResize = ()=> scheduleAlign();
 
         const openPicker = ()=>{
-          if(popup || !iconLibraryRef.length) return;
+          if(popup || !ICON_LIBRARY.length) return;
           closeAllIconPickers();
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
@@ -7688,7 +7681,7 @@ function makePosts(){
           grid.className = 'icon-picker-grid';
           const currentPath = normalizeIconPath(getCurrentPath());
           const optionsList = [{ value: '', label: 'No Icon' }];
-          iconLibraryRef.forEach(path => {
+          ICON_LIBRARY.forEach(path => {
             if(typeof path === 'string' && path.trim()){
               optionsList.push({ value: normalizeIconPath(path) });
             }
@@ -7747,7 +7740,7 @@ function makePosts(){
             openPicker();
           }
         });
-        if(!iconLibraryRef.length){
+        if(!ICON_LIBRARY.length){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
         }
@@ -7957,20 +7950,14 @@ function makePosts(){
           }
           const displayName = getCategoryDisplayName();
           const datasetValue = displayName;
-          const previousName = currentCategoryName;
-          if(previousName !== datasetValue){
-            if(categoryIcons[previousName] !== undefined){
-              if(categoryIcons[datasetValue] === undefined){
-                categoryIcons[datasetValue] = categoryIcons[previousName];
-              }
-              delete categoryIcons[previousName];
+          if(currentCategoryName !== datasetValue){
+            if(categoryIcons[currentCategoryName] !== undefined && categoryIcons[datasetValue] === undefined){
+              categoryIcons[datasetValue] = categoryIcons[currentCategoryName];
             }
-            renameIconNameKey(categoryIconPaths, previousName, datasetValue);
-          }
-          currentCategoryName = datasetValue;
-          c.name = datasetValue;
-          if(Array.isArray(categories) && categories[sourceIndex] && typeof categories[sourceIndex] === 'object'){
-            categories[sourceIndex].name = datasetValue;
+            if(currentCategoryName !== datasetValue){
+              delete categoryIcons[currentCategoryName];
+              currentCategoryName = datasetValue;
+            }
           }
           menu.dataset.category = datasetValue;
           label.textContent = displayName;
@@ -7986,6 +7973,11 @@ function makePosts(){
             categoryLogo.classList.add('has-icon');
           } else {
             updateCategoryIconDisplay('');
+          }
+          const previousName = currentCategoryName;
+          if(previousName !== datasetValue){
+            renameIconNameKey(categoryIconPaths, previousName, datasetValue);
+            currentCategoryName = datasetValue;
           }
           subNameUpdaters.forEach(fn=>{
             try{ fn(); }catch(err){}
@@ -8043,21 +8035,22 @@ function makePosts(){
           const subIconHtml = subcategoryIcons[sub] || '';
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
-          const normalizedInitialSubIconPath = normalizeIconPath(initialSubIconPath);
-          const initialSubIconSource = normalizedInitialSubIconPath || initialSubIconPath || '';
-          if(normalizedInitialSubIconPath){
-            subcategoryIcons[sub] = `<img src="${normalizedInitialSubIconPath}" width="20" height="20" alt="">`;
+          if(initialSubIconPath){
+            const normalizedInitialSub = normalizeIconPath(initialSubIconPath);
+            if(normalizedInitialSub){
+              subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
+            }
           }
-          if(initialSubIconSource){
+          if(initialSubIconPath){
             const img = document.createElement('img');
-            img.src = initialSubIconSource;
+            img.src = normalizeIconPath(initialSubIconPath);
             img.width = 20;
             img.height = 20;
             img.alt = '';
             subLogo.appendChild(img);
             subLogo.classList.add('has-icon');
             if(!subIconLookup.found){
-              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizedInitialSubIconPath || '');
+              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizeIconPath(initialSubIconPath));
             }
           } else if(subIconHtml){
             subLogo.innerHTML = subIconHtml;
@@ -8118,7 +8111,16 @@ function makePosts(){
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
-    
+          const normalizedSubIconPath = normalizeIconPath(initialSubIconPath);
+          if(normalizedSubIconPath){
+            subPreviewImg.src = normalizedSubIconPath;
+            subPreview.classList.add('has-image');
+            subPreviewLabel.textContent = '';
+            subIconButton.textContent = 'Change Icon';
+            if(!subIconLookup.found){
+              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizedSubIconPath);
+            }
+          }
 
           subIconPicker.append(subIconButton, subPreview);
           attachIconPicker(subIconButton, subIconPicker, {
@@ -11953,49 +11955,31 @@ function makePosts(){
             } else {
               subLogo.classList.add('has-icon');
             }
-            if(previousSubName !== datasetValue){
-              const updateSubNameInList = (list, primaryIndex)=>{
-                if(!Array.isArray(list)) return false;
-                if(Number.isInteger(primaryIndex) && primaryIndex >= 0 && primaryIndex < list.length){
-                  list[primaryIndex] = datasetValue;
-                  return true;
-                }
-                const mirrorIndex = list.indexOf(previousSubName);
-                if(mirrorIndex !== -1){
-                  list[mirrorIndex] = datasetValue;
-                  return true;
-                }
-                return false;
-              };
-              const datasetIndex = Number.parseInt(subMenu.dataset.subIndex, 10);
-              if(Array.isArray(c.subs)){
-                if(!updateSubNameInList(c.subs, datasetIndex)){
-                  updateSubNameInList(c.subs, subIndex);
-                }
+            if(currentSubName !== datasetValue){
+              if(subcategoryIcons[currentSubName] !== undefined && subcategoryIcons[datasetValue] === undefined){
+                subcategoryIcons[datasetValue] = subcategoryIcons[currentSubName];
               }
-              if(Array.isArray(categories) && categories[sourceIndex] && Array.isArray(categories[sourceIndex].subs)){
-                const mirrorSubs = categories[sourceIndex].subs;
-                if(!updateSubNameInList(mirrorSubs, datasetIndex)){
-                  updateSubNameInList(mirrorSubs, subIndex);
-                }
+              if(subFieldsMap[currentSubName] !== undefined && subFieldsMap[datasetValue] === undefined){
+                subFieldsMap[datasetValue] = subFieldsMap[currentSubName];
               }
-              if(subcategoryIcons[previousSubName] !== undefined){
-                subcategoryIcons[datasetValue] = subcategoryIcons[previousSubName];
-                delete subcategoryIcons[previousSubName];
-              }
-              if(subFieldsMap[previousSubName] !== undefined){
-                subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
-                delete subFieldsMap[previousSubName];
+              delete subcategoryIcons[currentSubName];
+              if(subFieldsMap[currentSubName] !== undefined){
+                delete subFieldsMap[currentSubName];
               }
               if(c.subIds && typeof c.subIds === 'object'){
-                if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
-                  const preservedId = c.subIds[previousSubName];
-                  delete c.subIds[previousSubName];
-                  c.subIds[datasetValue] = preservedId;
+                if(Object.prototype.hasOwnProperty.call(c.subIds, currentSubName) && !Object.prototype.hasOwnProperty.call(c.subIds, datasetValue)){
+                  c.subIds[datasetValue] = c.subIds[currentSubName];
+                }
+                if(Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
+                  const preservedId = c.subIds[currentSubName];
+                  delete c.subIds[currentSubName];
+                  if(!Object.prototype.hasOwnProperty.call(c.subIds, datasetValue)){
+                    c.subIds[datasetValue] = preservedId;
+                  }
                   currentSubId = preservedId;
                 }
               }
-              renameIconNameKey(subcategoryIconPaths, previousSubName, datasetValue);
+              renameIconNameKey(subcategoryIconPaths, currentSubName, datasetValue);
               currentSubName = datasetValue;
             }
             if(c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
@@ -12028,13 +12012,15 @@ function makePosts(){
             notifyFormbuilderChange();
           });
 
+          const normalizedSubIconPath = normalizeIconPath(initialSubIconPath) || '';
+
           subContent.append(subNameInput, subIconPicker, subPlaceholder, fieldsSection, deleteSubBtn);
 
           subMenu.append(subContent);
 
           applySubNameChange();
-          if(initialSubIconSource){
-            updateSubIconDisplay(initialSubIconSource);
+          if(normalizedSubIconPath){
+            updateSubIconDisplay(normalizedSubIconPath);
           }
 
           subBtn.addEventListener('click', ()=>{
