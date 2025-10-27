@@ -3448,7 +3448,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       iconLibraryRef = [];
     }
     window.ICON_LIBRARY = iconLibraryRef;
-    var ICON_LIBRARY = iconLibraryRef;
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
@@ -7677,7 +7676,7 @@ function makePosts(){
         const handleResize = ()=> scheduleAlign();
 
         const openPicker = ()=>{
-          if(popup || !ICON_LIBRARY.length) return;
+          if(popup || !iconLibraryRef.length) return;
           closeAllIconPickers();
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
@@ -7689,7 +7688,7 @@ function makePosts(){
           grid.className = 'icon-picker-grid';
           const currentPath = normalizeIconPath(getCurrentPath());
           const optionsList = [{ value: '', label: 'No Icon' }];
-          ICON_LIBRARY.forEach(path => {
+          iconLibraryRef.forEach(path => {
             if(typeof path === 'string' && path.trim()){
               optionsList.push({ value: normalizeIconPath(path) });
             }
@@ -7748,7 +7747,7 @@ function makePosts(){
             openPicker();
           }
         });
-        if(!ICON_LIBRARY.length){
+        if(!iconLibraryRef.length){
           trigger.disabled = true;
           trigger.setAttribute('aria-disabled','true');
         }
