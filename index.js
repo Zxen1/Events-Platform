@@ -3430,14 +3430,33 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
         ? snapshot.iconLibrary.filter(item => typeof item === 'string')
         : [];
-      const seededIconPathValues = [
+      const sanitizedIconLibraryEntries = normalizeIconLibraryEntries(iconLibrarySource);
+      const seededIconCandidates = [
         ...Object.values(normalizedCategoryIconPaths),
         ...Object.values(normalizedSubcategoryIconPaths)
-      ];
-      const normalizedSeededIconPaths = seededIconPathValues
-        .map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
-        .filter(Boolean);
-      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource.concat(normalizedSeededIconPaths));
+      ].filter(path => typeof path === 'string' && path.trim() !== '');
+      const sanitizedSeededIconPaths = normalizeIconLibraryEntries(seededIconCandidates);
+      const mergedIconSet = new Set();
+      const mergedIconLibrary = [];
+      const mergeIcons = icons => {
+        if(!Array.isArray(icons)){
+          return;
+        }
+        icons.forEach(icon => {
+          if(typeof icon !== 'string' || !icon){
+            return;
+          }
+          const key = icon.toLowerCase();
+          if(mergedIconSet.has(key)){
+            return;
+          }
+          mergedIconSet.add(key);
+          mergedIconLibrary.push(icon);
+        });
+      };
+      mergeIcons(sanitizedIconLibraryEntries);
+      mergeIcons(sanitizedSeededIconPaths);
+      const iconLibrary = mergedIconLibrary;
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
@@ -3499,25 +3518,45 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
-    if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
-      const bootstrapIconLibrary = normalizeIconLibraryEntries([
-        ...initialFormbuilderSnapshot.iconLibrary,
-        ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
-        ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-      ]);
-      ICON_LIBRARY.length = 0;
-      ICON_LIBRARY.push(...bootstrapIconLibrary);
-      window.iconLibrary = ICON_LIBRARY;
-    } else if(Array.isArray(window.iconLibrary) && window.iconLibrary.length){
-      const sanitizedLibrary = normalizeIconLibraryEntries([
-        ...window.iconLibrary,
-        ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
-        ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-      ]);
-      ICON_LIBRARY.length = 0;
-      ICON_LIBRARY.push(...sanitizedLibrary);
-      window.iconLibrary = ICON_LIBRARY;
+    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
+      ? initialFormbuilderSnapshot.iconLibrary
+      : [];
+    const existingWindowIcons = Array.isArray(window.iconLibrary)
+      ? window.iconLibrary.slice()
+      : [];
+    const mapIconValues = [
+      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
+      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
+    ];
+    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
+    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
+    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
+    const mergedIconSet = new Set();
+    const mergedIconLibrary = [];
+    const mergeIcons = icons => {
+      if(!Array.isArray(icons)){
+        return;
+      }
+      icons.forEach(icon => {
+        if(typeof icon !== 'string' || !icon){
+          return;
+        }
+        const key = icon.toLowerCase();
+        if(mergedIconSet.has(key)){
+          return;
+        }
+        mergedIconSet.add(key);
+        mergedIconLibrary.push(icon);
+      });
+    };
+    mergeIcons(sanitizedSnapshotIcons);
+    mergeIcons(sanitizedMapIcons);
+    mergeIcons(sanitizedWindowIcons);
+    ICON_LIBRARY.length = 0;
+    if(mergedIconLibrary.length){
+      ICON_LIBRARY.push(...mergedIconLibrary);
     }
+    window.iconLibrary = ICON_LIBRARY;
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
