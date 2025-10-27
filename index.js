@@ -8036,22 +8036,21 @@ function makePosts(){
           const subIconHtml = subcategoryIcons[sub] || '';
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
-          if(initialSubIconPath){
-            const normalizedInitialSub = normalizeIconPath(initialSubIconPath);
-            if(normalizedInitialSub){
-              subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
-            }
+          const normalizedInitialSubIconPath = normalizeIconPath(initialSubIconPath);
+          const initialSubIconSource = normalizedInitialSubIconPath || initialSubIconPath || '';
+          if(normalizedInitialSubIconPath){
+            subcategoryIcons[sub] = `<img src="${normalizedInitialSubIconPath}" width="20" height="20" alt="">`;
           }
-          if(initialSubIconPath){
+          if(initialSubIconSource){
             const img = document.createElement('img');
-            img.src = normalizeIconPath(initialSubIconPath);
+            img.src = initialSubIconSource;
             img.width = 20;
             img.height = 20;
             img.alt = '';
             subLogo.appendChild(img);
             subLogo.classList.add('has-icon');
             if(!subIconLookup.found){
-              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizeIconPath(initialSubIconPath));
+              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizedInitialSubIconPath || '');
             }
           } else if(subIconHtml){
             subLogo.innerHTML = subIconHtml;
@@ -12027,9 +12026,8 @@ function makePosts(){
           subMenu.append(subContent);
 
           applySubNameChange();
-      const initialIconSource = normalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
-          if(initialIconSource){
-            updateSubIconDisplay(initialIconSource);
+          if(initialSubIconSource){
+            updateSubIconDisplay(initialSubIconSource);
           }
 
           subBtn.addEventListener('click', ()=>{
