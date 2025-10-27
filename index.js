@@ -3794,22 +3794,22 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ close(); }catch(err){}
       });
     }
-    function normalizeIconPath(path){
+    function baseNormalizeIconPath(path){
       if(typeof path !== 'string') return '';
       const trimmed = path.trim();
       if(!trimmed) return '';
       return trimmed.replace(/^\/+/, '');
     }
     function applyNormalizeIconPath(path){
-      if(typeof normalizeIconPath === 'function'){
+      if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
         try{
-          return normalizeIconPath(path);
+          const overridden = window.normalizeIconPath(path);
+          if(typeof overridden !== 'undefined'){
+            return baseNormalizeIconPath(overridden);
+          }
         }catch(err){}
       }
-      if(typeof path !== 'string') return '';
-      const fallbackTrimmed = path.trim();
-      if(!fallbackTrimmed) return '';
-      return fallbackTrimmed.replace(/^\/+/, '');
+      return baseNormalizeIconPath(path);
     }
     function getCategoryIconPath(category){
       if(!category) return '';
