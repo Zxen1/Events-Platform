@@ -3440,7 +3440,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
-    const ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
+    var ICON_LIBRARY = window.ICON_LIBRARY;
+    if(!Array.isArray(ICON_LIBRARY)){
+      ICON_LIBRARY = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
+    }
+    window.ICON_LIBRARY = ICON_LIBRARY;
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
