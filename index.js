@@ -3794,6 +3794,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ close(); }catch(err){}
       });
     }
+    function normalizeIconPath(path){
+      if(typeof path !== 'string') return '';
+      const trimmed = path.trim();
+      if(!trimmed) return '';
+      return trimmed.replace(/^\/+/, '');
+    }
     function getCategoryIconPath(category){
       if(!category) return '';
       const lookup = lookupIconPath(categoryIconPaths, category.id, category.name);
@@ -7727,12 +7733,6 @@ function makePosts(){
         closeSubcategoryFieldOverlay();
       }
       closeAllIconPickers();
-      const normalizeIconPath = (path)=> {
-        if(typeof path !== 'string') return '';
-        const trimmed = path.trim();
-        if(!trimmed) return '';
-        return trimmed.replace(/^\/+/,'');
-      };
       const attachIconPicker = (trigger, container, options = {})=>{
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
