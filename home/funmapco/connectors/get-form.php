@@ -495,10 +495,10 @@ function buildSnapshot(array $categories, array $subcategories): array
     $sanitizedCategoryMarkers = sanitizeSubcategoryMarkers($categoryMarkers);
     $sanitizedSubcategoryMarkers = sanitizeSubcategoryMarkers($subcategoryMarkers);
     $iconLibrary = collectSnapshotIconLibrary(
-        $categoryIconPaths,
-        $subcategoryIconPaths,
-        $sanitizedCategoryMarkers,
-        $sanitizedSubcategoryMarkers
+        array_values($categoryIconPaths),
+        array_values($subcategoryIconPaths),
+        array_values($sanitizedCategoryMarkers),
+        array_values($sanitizedSubcategoryMarkers)
     );
 
     return [
@@ -512,7 +512,7 @@ function buildSnapshot(array $categories, array $subcategories): array
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
-        'iconLibrary' => $iconLibrary,
+        'iconLibrary' => array_values($iconLibrary),
     ];
 }
 
@@ -613,18 +613,14 @@ function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
 
     $markerPath = $sanitizedPath;
 
-    if (stripos($markerPath, 'icons-20/') !== false) {
-        $replaced = preg_replace('#icons-20/#i', 'icons-30/', $markerPath, 1);
-        if (is_string($replaced) && $replaced !== '') {
-            $markerPath = $replaced;
-        }
+    $directoryNormalized = preg_replace('#^assets/icons-\d+/#i', 'assets/icons-30/', $markerPath, 1);
+    if (is_string($directoryNormalized) && $directoryNormalized !== '') {
+        $markerPath = $directoryNormalized;
     }
 
-    if (stripos($markerPath, 'icons-30/') !== false) {
-        $adjusted = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $markerPath, 1);
-        if (is_string($adjusted) && $adjusted !== '') {
-            $markerPath = $adjusted;
-        }
+    $sizeAdjusted = preg_replace('/-(\d{2,3})(\.[a-z0-9]+)$/i', '-30$2', $markerPath, 1);
+    if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
+        $markerPath = $sizeAdjusted;
     }
 
     return snapshotSanitizeString($markerPath, 255);
