@@ -3441,14 +3441,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
     let iconLibraryRef = window.ICON_LIBRARY;
-    if(!Array.isArray(iconLibraryRef)){
-      iconLibraryRef = Array.isArray(window.iconLibrary) ? window.iconLibrary : [];
+    if(!Array.isArray(iconLibraryRef) && Array.isArray(window.iconLibrary)){
+      iconLibraryRef = window.iconLibrary;
     }
     if(!Array.isArray(iconLibraryRef)){
       iconLibraryRef = [];
     }
     window.ICON_LIBRARY = iconLibraryRef;
-    var ICON_LIBRARY = iconLibraryRef;
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
