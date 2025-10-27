@@ -3448,6 +3448,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       iconLibraryRef = [];
     }
     window.ICON_LIBRARY = iconLibraryRef;
+    var ICON_LIBRARY = iconLibraryRef;
 
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
