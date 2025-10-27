@@ -12515,6 +12515,7 @@ function makePosts(){
       if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
         try{ addPostSource(); }catch(err){ console.error('addPostSource failed after snapshot restore', err); }
       }
+      updateFormbuilderSnapshot();
     }
     function updateFormbuilderSnapshot(){
       savedFormbuilderSnapshot = captureFormbuilderSnapshot();
