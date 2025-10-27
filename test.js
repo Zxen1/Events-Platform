@@ -84,4 +84,101 @@ venues.forEach(venue => {
   );
 });
 
+const formbuilderStart = mainSource.indexOf('function getSavedFormbuilderSnapshot(){');
+assert(formbuilderStart !== -1, 'Unable to locate saved formbuilder snapshot helper.');
+const baseFnStart = mainSource.indexOf('function baseNormalizeIconPath(path){');
+const baseFnEnd = mainSource.indexOf('function applyNormalizeIconPath', baseFnStart);
+assert(baseFnStart !== -1 && baseFnEnd !== -1, 'Unable to locate base icon normalization helper.');
+
+const formbuilderWindow = {};
+const formbuilderSlices = [
+  mainSource.slice(
+    mainSource.indexOf('function normalizeCategorySortOrderValue('),
+    mainSource.indexOf('function compareCategoriesForDisplay', mainSource.indexOf('function normalizeCategorySortOrderValue('))
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function cloneFieldValue('),
+    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT'),
+    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE'),
+    mainSource.indexOf('function normalizeCategoriesSnapshot(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeCategoriesSnapshot('),
+    mainSource.indexOf('function normalizeFormbuilderSnapshot(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeFormbuilderSnapshot('),
+    mainSource.indexOf('    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconLibraryEntries('),
+    mainSource.indexOf('function normalizeIconAssetPath(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconAssetPath('),
+    mainSource.indexOf('    const existingNormalizeIconPath', mainSource.indexOf('function normalizeIconAssetPath('))
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconPathMap('),
+    mainSource.indexOf('    function lookupIconPath', mainSource.indexOf('function normalizeIconPathMap('))
+  ),
+  mainSource.slice(baseFnStart, baseFnEnd)
+];
+
+const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot };');
+const { normalizeFormbuilderSnapshot } = formbuilderFactory(formbuilderWindow);
+
+const seededSnapshot = normalizeFormbuilderSnapshot({
+  categories: [],
+  categoryIconPaths: {
+    'id:101': 'icons-20/music.png',
+    'name:Rock': 'assets/icons-30/guitar.svg',
+    skip: '',
+    custom: 'assets/icons-30/music.png',
+    invalid: 'assets/icons-30/file.txt'
+  },
+  subcategoryIconPaths: {
+    'name:Pop': 'assets/icons-30/music.png',
+    'id:202': 'https://cdn.example.com/library/icon.webp',
+    empty: ''
+  },
+  iconLibrary: ['assets/icons-30/existing.png', 'assets/icons-30/music.png']
+});
+
+const expectedSeededIcons = new Set([
+  'assets/icons-30/existing.png',
+  'assets/icons-30/music.png',
+  'assets/icons-30/guitar.svg',
+  'https://cdn.example.com/library/icon.webp'
+]);
+
+assert.strictEqual(
+  seededSnapshot.iconLibrary.length,
+  expectedSeededIcons.size,
+  'Seeded icon library should deduplicate and retain all allowed icons.'
+);
+
+expectedSeededIcons.forEach(icon => {
+  assert(
+    seededSnapshot.iconLibrary.includes(icon),
+    `Expected seeded icon library to include ${icon}.`
+  );
+});
+
+assert(
+  !seededSnapshot.iconLibrary.some(icon => /file\.txt$/.test(icon)),
+  'Seeded icon library should exclude disallowed file types.'
+);
+
+assert(
+  mainSource.includes("trigger.removeAttribute('aria-disabled');"),
+  'Icon picker triggers should remove aria-disabled when icons are available.'
+);
+
 console.log('All tests passed');
