@@ -1,29 +1,3 @@
-// === Shared login verifier ===
-async function verifyUserLogin(username, password) {
-  try {
-    const res = await fetch('/gateway.php?action=verify-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    const text = await res.text();
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error('verifyUserLogin failed: invalid JSON response', text);
-      return false;
-    }
-
-    return data.success === true;
-  } catch (e) {
-    console.error('verifyUserLogin failed', e);
-    return false;
-  }
-}
-
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -568,36 +542,9 @@ if (typeof slugify !== 'function') {
 
 
 // Extracted from <script>
-let __userInteractionObserved = false;
-let __notifyMapOnInteraction = null;
-
 // Remember where the user actually clicked/tapped
     document.addEventListener('pointerdown', (e) => {
       window.__lastPointerDown = e;
-      __userInteractionObserved = true;
-      if(typeof __notifyMapOnInteraction === 'function'){
-        const fn = __notifyMapOnInteraction;
-        __notifyMapOnInteraction = null;
-        try{ fn(); }catch(err){ console.error(err); }
-      }
-    }, { capture: true });
-
-    document.addEventListener('touchstart', () => {
-      __userInteractionObserved = true;
-      if(typeof __notifyMapOnInteraction === 'function'){
-        const fn = __notifyMapOnInteraction;
-        __notifyMapOnInteraction = null;
-        try{ fn(); }catch(err){ console.error(err); }
-      }
-    }, { capture: true, passive: true });
-
-    document.addEventListener('keydown', () => {
-      __userInteractionObserved = true;
-      if(typeof __notifyMapOnInteraction === 'function'){
-        const fn = __notifyMapOnInteraction;
-        __notifyMapOnInteraction = null;
-        try{ fn(); }catch(err){ console.error(err); }
-      }
     }, { capture: true });
 
 
@@ -2032,13 +1979,6 @@ async function ensureMapboxCssFor(container) {
     });
   }
 
-  function closeWelcomeModalIfOpen(){
-    const welcome = document.getElementById('welcome-modal');
-    if(welcome && welcome.classList.contains('show')){
-      closePanel(welcome);
-    }
-  }
-
   (function(){
     const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
 
@@ -3202,42 +3142,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return null;
     }
 
-    async function fetchSavedFormbuilderSnapshot(){
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller ? window.setTimeout(() => {
-        try{ controller.abort(); }catch(err){}
-      }, 15000) : 0;
-      try{
-        const response = await fetch('/gateway.php?action=get-formbuilder', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller ? controller.signal : undefined
-        });
-        const text = await response.text();
-        let data;
-        try{
-          data = JSON.parse(text);
-        }catch(parseErr){
-          throw new Error('The server returned an unexpected response.');
-        }
-        if(!response.ok || !data || data.success !== true || !data.snapshot){
-          const message = data && typeof data.message === 'string' && data.message.trim()
-            ? data.message.trim()
-            : 'Unable to load form definitions.';
-          throw new Error(message);
-        }
-        return data.snapshot;
-      } finally {
-        if(timeoutId){
-          clearTimeout(timeoutId);
-        }
-      }
-    }
-
-    if(typeof window !== 'undefined'){
-      window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
-    }
-
     function cloneFieldValue(value){
       if(Array.isArray(value)){
         return value.map(cloneFieldValue);
@@ -3254,7 +3158,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [
-        { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Venues","Other Events"], subFields:{} },
+        { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Other Events"], subFields:{} },
         { name:"Opportunities", subs:["Stage Auditions","Screen Auditions","Clubs","Jobs","Volunteers","Competitions","Other Opportunities"], subFields:{} },
         { name:"Learning", subs:["Tutors","Education Centres","Courses","Other Learning"], subFields:{} },
         { name:"Buy and Sell", subs:["Wanted","For Sale","Freebies"], subFields:{} },
@@ -3562,15 +3466,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-    const ICON_BASE = window.ICON_BASE = {
+    const DEFAULT_SUBCATEGORY_FIELDS = [
+      { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+      { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+      { name: 'Images', type: 'images', placeholder: '', required: true }
+    ];
+      const ICON_BASE = window.ICON_BASE = {
         "What's On": "whats-on-category-icon",
         "Opportunities": "opportunities-category-icon",
         "Learning": "learning-category-icon",
@@ -3596,7 +3497,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
       });
     });
-    subcategoryColorMap["What's On::Venues"] = 'violet';
     subcategoryColorMap["What's On::Other Events"] = 'red';
     subcategoryColorMap['Opportunities::Other Opportunities'] = 'red';
     subcategoryColorMap['Learning::Other Learning'] = 'red';
@@ -3702,21 +3602,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ ensureMarkerLabelBackground(mapInstance); }catch(err){}
         try{ reapplyMarkerLabelComposites(mapInstance); }catch(err){}
         const markers = window.subcategoryMarkers || {};
-        const preloadList = Array.from(new Set([...KNOWN, ...Object.keys(markers)]));
-        if(!preloadList.length) return;
-        const BATCH_SIZE = 4;
-        const BATCH_DELAY = 60;
-        for(let i = 0; i < preloadList.length; i += BATCH_SIZE){
-          const slice = preloadList.slice(i, i + BATCH_SIZE);
-          const tasks = slice.map(iconName => (
-            addIcon(iconName).catch(() => false)
-          ));
-          try{
-            await Promise.allSettled(tasks);
-          }catch(err){}
-          if(BATCH_DELAY && i + BATCH_SIZE < preloadList.length){
-            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
-          }
+        const preload = new Set([...KNOWN, ...Object.keys(markers)]);
+        for(const iconName of preload){
+          try{ await addIcon(iconName); }catch(err){}
         }
       });
 
@@ -3874,214 +3762,26 @@ function uniqueTitle(seed, cityName, idx){
     return new Date(yy, mm - 1, dd);
   }
 
-  const DAY_MS = 86400000;
-
-  function generateEventBlocks(options={}){
-    const {
-      minBlocks = 1,
-      maxBlocks = 3,
-      allowPast = false,
-      maxFutureDays = 180,
-      upcomingBiasDays = 60,
-      pastWindowDays = 60,
-      maxSpanDays = 14
-    } = options;
-    const now = new Date();
-    now.setHours(0,0,0,0);
-    const normalizedMin = Math.max(1, Math.floor(minBlocks));
-    const normalizedMax = Math.max(normalizedMin, Math.floor(maxBlocks));
-    const blockTotal = normalizedMin + Math.floor(rnd() * (normalizedMax - normalizedMin + 1));
-    const futureRange = Math.max(1, Math.floor(maxFutureDays));
-    const biasRange = Math.max(1, Math.min(futureRange, Math.floor(upcomingBiasDays) || futureRange));
-    const pastRange = Math.max(0, Math.floor(pastWindowDays));
-    const blocks = [];
-    for(let i=0;i<blockTotal;i++){
-      let offsetDays = 0;
-      if(allowPast && pastRange > 0 && rnd() < 0.22){
-        offsetDays = -Math.floor(rnd() * pastRange);
-      } else {
-        const roll = rnd();
-        if(roll < 0.7){
-          offsetDays = Math.floor(rnd() * biasRange);
-        } else if(roll < 0.9){
-          const midRange = Math.max(biasRange, Math.floor(futureRange * 0.65));
-          offsetDays = Math.floor(rnd() * Math.min(futureRange, midRange));
-        } else {
-          offsetDays = Math.floor(rnd() * futureRange);
-        }
-      }
-      if(!allowPast && offsetDays < 0){
-        offsetDays = 0;
-      }
-      const span = 1 + Math.floor(rnd() * Math.max(1, Math.floor(maxSpanDays)));
-      const start = new Date(now.getTime() + offsetDays * DAY_MS);
-      start.setHours(0,0,0,0);
-      blocks.push({ start, spanDays: span });
-    }
-    blocks.sort((a,b)=> a.start - b.start);
-    return blocks;
-  }
-
-  function pickBlockOffsets(spanDays){
-    const totalDays = Math.max(1, Math.floor(spanDays));
-    const offsets = new Set();
-    if(totalDays <= 1){
-      offsets.add(0);
-      return Array.from(offsets);
-    }
-    const densityRoll = rnd();
-    let target;
-    if(densityRoll < 0.25){
-      target = 1 + Math.floor(rnd() * Math.min(2, totalDays));
-    } else if(densityRoll < 0.6){
-      target = Math.min(totalDays, 2 + Math.floor(rnd() * Math.min(3, totalDays - 1)));
-    } else if(densityRoll < 0.85){
-      target = Math.min(totalDays, Math.max(2, Math.round(totalDays * (0.5 + rnd() * 0.4))));
-    } else {
-      target = Math.min(totalDays, Math.max(3, Math.round(totalDays * (0.75 + rnd() * 0.6))));
-    }
-    target = Math.max(1, Math.min(totalDays, target));
-    while(offsets.size < target){
-      offsets.add(Math.floor(rnd() * totalDays));
-      if(offsets.size >= totalDays){
-        break;
-      }
-    }
-    return Array.from(offsets).sort((a,b)=> a - b);
-  }
-
-  function randomSessionTime(){
-    const slot = rnd();
-    let hour;
-    if(slot < 0.15){
-      hour = 10 + Math.floor(rnd() * 3); // late morning
-    } else if(slot < 0.8){
-      hour = 18 + Math.floor(rnd() * 4); // evening shows
-    } else if(slot < 0.9){
-      hour = 14 + Math.floor(rnd() * 4); // matinees
-    } else {
-      hour = 12 + Math.floor(rnd() * 6); // afternoon variety
-    }
-    const minute = Math.floor(rnd() * 4) * 15;
-    return `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-  }
-
-  function generateSessionsFromBlocks(blocks, options={}){
-    const allowEmptyBlocks = options.allowEmptyBlocks !== false;
-    const emptyBlockChance = typeof options.emptyBlockChance === 'number'
-      ? Math.min(Math.max(options.emptyBlockChance, 0), 1)
-      : 0.2;
-    const ensureAtLeastOne = options.ensureAtLeastOne === true;
-    const allowDoubleSessions = options.allowDoubleSessions !== false;
-    const generator = typeof options.timeGenerator === 'function' ? options.timeGenerator : randomSessionTime;
-    const sessions = [];
-    blocks.forEach((block, blockIndex) => {
-      if(!block || !(block.start instanceof Date)){
-        return;
-      }
-      if(allowEmptyBlocks && rnd() < emptyBlockChance && blockIndex !== 0){
-        return;
-      }
-      const offsets = pickBlockOffsets(block.spanDays);
-      offsets.forEach(offset => {
-        const sessionDate = new Date(block.start.getTime() + offset * DAY_MS);
-        sessionDate.setHours(0,0,0,0);
-        const full = toISODate(sessionDate);
-        const dateLabel = sessionDate
-          .toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})
-          .replace(/,/g,'');
-        const time = generator({ block, offset, date: sessionDate });
-        sessions.push({ date: dateLabel, time, full });
-        if(allowDoubleSessions && rnd() < 0.08){
-          let extraTime = generator({ block, offset, date: sessionDate, variant: 'double' });
-          if(extraTime === time){
-            extraTime = randomSessionTime();
-          }
-          sessions.push({ date: dateLabel, time: extraTime, full });
-        }
-      });
-    });
-    if(ensureAtLeastOne && !sessions.length){
-      const fallbackDate = new Date();
-      fallbackDate.setHours(0,0,0,0);
-      const full = toISODate(fallbackDate);
-      const dateLabel = fallbackDate
-        .toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'})
-        .replace(/,/g,'');
-      const time = generator({ fallback: true, date: fallbackDate });
-      sessions.push({ date: dateLabel, time, full });
-    }
-    sessions.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
-    return sessions;
-  }
-
   function randomDates(){
-    const blocks = generateEventBlocks({
-      minBlocks: 1,
-      maxBlocks: 3,
-      allowPast: false,
-      maxFutureDays: 180,
-      upcomingBiasDays: 120,
-      maxSpanDays: 14
-    });
-    const sessions = generateSessionsFromBlocks(blocks, {
-      allowEmptyBlocks: false,
-      ensureAtLeastOne: true,
-      allowDoubleSessions: false
-    });
-    const isoSet = new Set();
-    sessions.forEach(entry => {
-      if(entry && entry.full){
-        isoSet.add(entry.full);
-      }
-    });
-    if(!isoSet.size){
-      isoSet.add(toISODate(new Date()));
-    }
-    return Array.from(isoSet).sort();
+    const count = 1 + Math.floor(rnd()*30);
+    const now = new Date();
+    return Array.from({length:count}, ()=>{
+      const d = new Date(+now + Math.floor(rnd()*365)*86400000);
+      return toISODate(d);
+    }).sort();
   }
 
   function randomSchedule(){
-    const blocks = generateEventBlocks({
-      minBlocks: 1,
-      maxBlocks: 3,
-      allowPast: true,
-      pastWindowDays: 75,
-      maxFutureDays: 180,
-      upcomingBiasDays: 60,
-      maxSpanDays: 14
+    const count = 1 + Math.floor(rnd()*20);
+    const now = new Date();
+    return Array.from({length:count}, ()=>{
+      const offset = Math.floor(rnd()*730) - 365; // past and future
+      const d = new Date(+now + offset*86400000);
+      const date = d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,'');
+      const time = `${String(Math.floor(rnd()*24)).padStart(2,'0')}:${String(Math.floor(rnd()*4)*15).padStart(2,'0')}`;
+      const full = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return {date, time, full};
     });
-    return generateSessionsFromBlocks(blocks, {
-      allowEmptyBlocks: true,
-      emptyBlockChance: 0.25,
-      ensureAtLeastOne: true,
-      allowDoubleSessions: true,
-      timeGenerator: randomSessionTime
-    });
-  }
-
-  function derivePostDatesFromLocations(locations){
-    if(!Array.isArray(locations) || !locations.length){
-      return [];
-    }
-    const seen = new Set();
-    locations.forEach(loc => {
-      if(!loc) return;
-      const schedule = Array.isArray(loc.dates) ? loc.dates : [];
-      schedule.forEach(entry => {
-        if(!entry) return;
-        if(typeof entry === 'string'){
-          const trimmed = entry.trim();
-          if(trimmed) seen.add(trimmed);
-          return;
-        }
-        if(entry.full){
-          const normalized = String(entry.full).trim();
-          if(normalized) seen.add(normalized);
-        }
-      });
-    });
-    return Array.from(seen).sort();
   }
 
   function normalizeLongitude(value){
@@ -4802,7 +4502,6 @@ function makePosts(){
       address: 'Swanston St & Flinders St, Melbourne VIC 3000, Australia',
       radius: 0.05
     });
-    const locations = [location];
     pushPost({
       id,
       title,
@@ -4812,12 +4511,12 @@ function makePosts(){
       lng: location.lng, lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
+      dates: randomDates(),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations,
+      locations: [location],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -4836,13 +4535,6 @@ function makePosts(){
     const date = new Date(todayTas);
     date.setDate(date.getDate() + (i<50 ? -offset : offset));
     const location = createRandomLocation(tasCity, tasLng, tasLat, { radius: 0.05 });
-    const isoDate = toISODate(date);
-    location.dates = [{
-      date: date.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}).replace(/,/g,''),
-      time: '09:00',
-      full: isoDate
-    }];
-    const locations = [location];
     pushPost({
       id,
       title,
@@ -4853,12 +4545,12 @@ function makePosts(){
       lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
+      dates: [toISODate(date)],
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations,
+      locations: [location],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -4955,7 +4647,6 @@ function makePosts(){
       address: spec.city,
       radius: 0
     });
-    const locations = [location];
     const cat = pick(categories);
     const sub = pick(cat.subs);
     const id = `WW${worldProduced}`;
@@ -4971,12 +4662,12 @@ function makePosts(){
       lat: location.lat,
       category: cat.name,
       subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
+      dates: randomDates(),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations,
+      locations: [location],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
     worldProduced++;
@@ -5002,7 +4693,6 @@ function makePosts(){
       dates: randomSchedule(),
       price: randomPriceRange()
     };
-    const locations = [location];
     pushPost({
       id,
       title,
@@ -5013,12 +4703,12 @@ function makePosts(){
       lat: operaLat,
       category: cat.name,
       subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
+      dates: randomDates(),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations,
+      locations: [location],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
   }
@@ -5242,7 +4932,6 @@ function makePosts(){
       address: spec.city,
       radius: 0
     });
-    const locations = [locationDetail];
     const finalKey = coordKey(locationDetail.lng, locationDetail.lat);
     if(finalKey){
       existingCoordKeys.add(finalKey);
@@ -5262,12 +4951,12 @@ function makePosts(){
       lat: locationDetail.lat,
       category: cat.name,
       subcategory: sub,
-      dates: derivePostDatesFromLocations(locations),
+      dates: randomDates(),
       sponsored: true, // All posts are sponsored for development
       fav:false,
       desc: randomText(),
       images: randomImages(id),
-      locations,
+      locations: [locationDetail],
       member: { username: randomUsername(id), avatar: randomAvatar(id) },
     });
     singleProduced++;
@@ -5655,7 +5344,6 @@ function makePosts(){
         };
       });
       post.locations = nextLocations;
-      post.dates = derivePostDatesFromLocations(nextLocations);
       const primary = nextLocations[0];
       if(primary){
         post.lng = primary.lng;
@@ -5668,18 +5356,6 @@ function makePosts(){
   }
 
   assignMultiVenues(out, 1000);
-
-  out.forEach(post => {
-    if(!post) return;
-    if(Array.isArray(post.locations) && post.locations.length){
-      post.dates = derivePostDatesFromLocations(post.locations);
-    } else if(Array.isArray(post.dates)){
-      post.dates = post.dates.slice().sort();
-    } else {
-      post.dates = [];
-    }
-  });
-
   return out;
 }
 
@@ -8627,9 +8303,9 @@ function makePosts(){
               } else if(spec.type === 'session-time'){
                 selector = `.session-time-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"]`;
               } else if(spec.type === 'version'){
-                selector = `.seating_area-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
+                selector = `.session-seating-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"]`;
               } else if(spec.type === 'tier'){
-                selector = `.pricing_tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
+                selector = `.session-tier-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
               } else if(spec.type === 'price'){
                 selector = `.session-price-input[data-venue-index="${spec.venueIndex}"][data-session-index="${spec.sessionIndex}"][data-time-index="${spec.timeIndex}"][data-version-index="${spec.versionIndex}"][data-tier-index="${spec.tierIndex}"]`;
               }
@@ -9412,9 +9088,9 @@ function makePosts(){
                 venueCard.appendChild(venueLine);
 
                 const addressLine = document.createElement('div');
-                addressLine.className = 'venue-line address_line-line';
+                addressLine.className = 'venue-line venue-address-line';
                 const geocoderContainer = document.createElement('div');
-                geocoderContainer.className = 'address_line-geocoder-container';
+                geocoderContainer.className = 'venue-address-geocoder-container';
                 addressLine.appendChild(geocoderContainer);
                 venueCard.appendChild(addressLine);
                 const addressPlaceholder = `Venue Address ${venueIndex + 1}`;
@@ -9423,7 +9099,7 @@ function makePosts(){
                   geocoderContainer.classList.remove('is-geocoder-active');
                   const fallback = document.createElement('input');
                   fallback.type = 'text';
-                  fallback.className = 'address_line-fallback';
+                  fallback.className = 'venue-address-fallback';
                   fallback.placeholder = addressPlaceholder;
                   fallback.setAttribute('aria-label', addressPlaceholder);
                   fallback.value = venue.address || '';
@@ -9745,7 +9421,7 @@ function makePosts(){
                     timeRow.appendChild(timeActions);
 
                     const versionList = document.createElement('div');
-                    versionList.className = 'seating_area-list';
+                    versionList.className = 'session-seating-list';
                     let samePricingRow = null;
                     let samePricingYesInput = null;
                     let samePricingNoInput = null;
@@ -9820,13 +9496,13 @@ function makePosts(){
                         const versionPlaceholder = 'eg. General, Stalls, Balcony';
                         const seatingLabelText = `Seating Area ${versionIndex + 1}`;
                         const seatingLabel = document.createElement('label');
-                        seatingLabel.className = 'seating_area-label';
+                        seatingLabel.className = 'session-seating-label';
                         seatingLabel.textContent = seatingLabelText;
-                        const seatingInputId = `seating_area-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
+                        const seatingInputId = `session-seating-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}`;
                         seatingLabel.setAttribute('for', seatingInputId);
                         const versionInput = document.createElement('input');
                         versionInput.type = 'text';
-                        versionInput.className = 'seating_area-input';
+                        versionInput.className = 'session-seating-input';
                         versionInput.placeholder = versionPlaceholder;
                         versionInput.setAttribute('aria-label', seatingLabelText);
                         versionInput.id = seatingInputId;
@@ -9849,7 +9525,7 @@ function makePosts(){
                               const otherVersion = otherVersions[versionIndex];
                               if(otherVersion){
                                 otherVersion.name = nextValue;
-                                const selector = `.seating_area-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
+                                const selector = `.session-seating-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"]`;
                                 const peer = editor.querySelector(selector);
                                 if(peer){
                                   peer.value = nextValue;
@@ -9879,7 +9555,7 @@ function makePosts(){
                         versionCard.appendChild(versionActions);
 
                         const tierList = document.createElement('div');
-                        tierList.className = 'pricing_tier-list';
+                        tierList.className = 'session-tier-list';
                         version.tiers.forEach((tier, tierIndex)=>{
                           const tierRow = document.createElement('div');
                           tierRow.className = 'tier-row';
@@ -9887,13 +9563,13 @@ function makePosts(){
                           const tierPlaceholder = 'eg. Child, Student, Adult';
                           const tierLabelText = `Pricing Tier ${tierIndex + 1}`;
                           const tierLabel = document.createElement('label');
-                          tierLabel.className = 'pricing_tier-label';
+                          tierLabel.className = 'session-tier-label';
                           tierLabel.textContent = tierLabelText;
-                          const tierInputId = `pricing_tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
+                          const tierInputId = `session-tier-${venueIndex}-${sessionIndex}-${timeIndex}-${versionIndex}-${tierIndex}`;
                           tierLabel.setAttribute('for', tierInputId);
                           const tierInput = document.createElement('input');
                           tierInput.type = 'text';
-                          tierInput.className = 'pricing_tier-input';
+                          tierInput.className = 'session-tier-input';
                           tierInput.placeholder = tierPlaceholder;
                           tierInput.setAttribute('aria-label', tierLabelText);
                           tierInput.id = tierInputId;
@@ -9914,7 +9590,7 @@ function makePosts(){
                               if(!timeObj.tierAutofillLocked){
                                 const versions = Array.isArray(timeObj.versions) ? timeObj.versions : [];
                                 for(let otherVersionIndex = 1; otherVersionIndex < versions.length; otherVersionIndex++){
-                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${sessionIndex}"][data-time-index="${timeIndex}"][data-version-index="${otherVersionIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -9938,7 +9614,7 @@ function makePosts(){
                                 const otherTier = otherTiers[tierIndex];
                                 if(otherTier){
                                   otherTier.name = nextValue;
-                                  const selector = `.pricing_tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
+                                  const selector = `.session-tier-input[data-venue-index="${venueIndex}"][data-session-index="${otherIndex}"][data-time-index="${timeIndex}"][data-version-index="${versionIndex}"][data-tier-index="${tierIndex}"]`;
                                   const peer = editor.querySelector(selector);
                                   if(peer){
                                     peer.value = nextValue;
@@ -11782,17 +11458,13 @@ function makePosts(){
         subcategoryIcons: cloneMapLike(subcategoryIcons),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes),
-        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
-          ? VERSION_PRICE_CURRENCIES.slice()
-          : []
+        categoryShapes: cloneMapLike(categoryShapes)
       };
     }
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
-      const normalized = normalizeFormbuilderSnapshot(snapshot);
-      const nextCategories = cloneCategoryList(normalized.categories);
+      const nextCategories = cloneCategoryList(snapshot.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
       }
@@ -11811,9 +11483,6 @@ function makePosts(){
       assignMapLike(subcategoryMarkers, snapshot.subcategoryMarkers);
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
-      if(Array.isArray(normalized.versionPriceCurrencies)){
-        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
-      }
       renderFormbuilderCats();
       refreshSubcategoryLogos();
       refreshFormbuilderSubcategoryLogos();
@@ -12800,7 +12469,7 @@ function makePosts(){
         const historyActive = document.body.classList.contains('show-history');
         if(isPostsMode && historyActive){
           userClosedPostBoard = true;
-          setModeFromUser('map');
+          setMode('map');
           return;
         }
         setMode('posts');
@@ -12821,7 +12490,7 @@ function makePosts(){
         const isPostsMode = document.body.classList.contains('mode-posts');
         if(isPostsMode && !historyActive){
           userClosedPostBoard = true;
-          setModeFromUser('map');
+          setMode('map');
           return;
         }
         document.body.classList.remove('show-history');
@@ -12842,7 +12511,7 @@ function makePosts(){
         const isMapMode = document.body.classList.contains('mode-map');
         if(!isMapMode){
           userClosedPostBoard = true;
-          setModeFromUser('map');
+          setMode('map');
         } else if(document.body.classList.contains('show-history')){
           document.body.classList.remove('show-history');
           adjustBoards();
@@ -12854,16 +12523,9 @@ function makePosts(){
       const wrap = document.createElement('div');
       wrap.className = 'open-post';
       wrap.dataset.id = p.id;
-      const locationList = Array.isArray(p.locations) ? p.locations : [];
-      const loc0 = locationList[0] || {};
-      const selectSuffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
-      const loc0Dates = Array.isArray(loc0.dates)
-        ? loc0.dates.slice().sort((a,b)=> (a.full||'').localeCompare(b.full||''))
-        : [];
-      const basePrice = loc0 && loc0.price !== undefined ? loc0.price : '';
-      const defaultInfo = loc0Dates.length
-        ? `💲 ${basePrice} | 📅 ${loc0Dates[0].date} - ${loc0Dates[loc0Dates.length-1].date}${selectSuffix}`
-        : `💲 ${basePrice}${selectSuffix}`;
+      const loc0 = p.locations[0];
+      const dsorted = loc0.dates.slice().sort((a,b)=> a.full.localeCompare(b.full));
+      const defaultInfo = `💲 ${loc0.price} | 📅 ${dsorted[0].date} - ${dsorted[dsorted.length-1].date}<span style="display:inline-block;margin-left:10px;">(Select Session)</span>`;
       const thumbSrc = thumbUrl(p);
       const headerInner = `
           <div class="title-block">
@@ -12889,7 +12551,7 @@ function makePosts(){
             <div class="post-venue-selection-container"></div>
             <div class="post-session-selection-container"></div>
             <div class="location-section">
-              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${loc0.venue||''}</span><span class="address_line">${loc0.address||''}</span>${locationList.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}</button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${locationList.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span></button>`).join('')}</div></div></div>
+              <div id="venue-${p.id}" class="venue-dropdown options-dropdown"><button class="venue-btn" aria-haspopup="true" aria-expanded="false"><span class="venue-name">${p.locations[0].venue}</span><span class="venue-address">${p.locations[0].address}</span></button><div class="venue-menu post-venue-menu" hidden><div class="map-container"><div id="map-${p.id}" class="post-map"></div></div><div class="venue-options">${p.locations.map((loc,i)=>`<button data-index="${i}"><span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span></button>`).join('')}</div></div></div>
               <div id="sess-${p.id}" class="session-dropdown options-dropdown"><button class="sess-btn" aria-haspopup="true" aria-expanded="false">Select Session</button><div class="session-menu options-menu" hidden><div class="calendar-container"><div class="calendar-scroll"><div id="cal-${p.id}" class="post-calendar"></div></div></div><div class="session-options"></div></div></div>
             </div>
             <div class="post-details-info-container">
@@ -13252,7 +12914,7 @@ function makePosts(){
           }
           if(e.target === postsWide && postsWide.querySelector('.open-post')){
             userClosedPostBoard = true;
-            setTimeout(()=> setModeFromUser('map'), 0);
+            setTimeout(()=> setMode('map'), 0);
           }
         }, { capture:true });
       }
@@ -13260,7 +12922,7 @@ function makePosts(){
       recentsBoard && recentsBoard.addEventListener('click', e=>{
         if(e.target === recentsBoard){
           userClosedPostBoard = true;
-          setModeFromUser('map');
+          setMode('map');
         }
       });
 
@@ -13270,9 +12932,6 @@ function makePosts(){
         document.body.classList.add('mode-'+m);
         if(m==='map'){
           document.body.classList.remove('show-history');
-        }
-        if(m === 'map'){
-          startMainMapInit();
         }
         const shouldAdjustListHeight = m === 'posts' && typeof window.adjustListHeight === 'function';
         adjustBoards();
@@ -13305,291 +12964,187 @@ function makePosts(){
       }
     window.setMode = setMode;
 
-      function setModeFromUser(m, skipFilters = false){
-        const previous = modeChangeWasUserInitiated;
-        modeChangeWasUserInitiated = true;
-        try{
-          setMode(m, skipFilters);
-        } finally {
-          modeChangeWasUserInitiated = previous;
-        }
-      }
-
     // Mapbox
-    let mapboxBundlePromise = null;
-    let mapboxBundleReady = false;
-    let mainMapInitPromise = null;
-    let mapInitTriggered = false;
-    let mapInitQueued = false;
-    let modeChangeWasUserInitiated = false;
-
     function loadMapbox(cb){
-      const invokeCallback = () => {
-        if(typeof cb === 'function'){
-          try{ cb(); }catch(err){ console.error(err); }
+      const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
+      const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
+      const mapboxVerNoV = mapboxVer.replace(/^v/, '');
+      const cssSources = [
+        {
+          selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
+          primary: `https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.css`,
+          fallback: `https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.css`
+        },
+        {
+          selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
+          primary: 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
+          fallback: 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'
         }
-      };
+      ];
 
-      if(mapboxBundleReady){
-        return Promise.resolve().then(invokeCallback);
-      }
+      const finalize = (()=>{
+        let called = false;
+        return ()=>{
+          if(called) return;
+          called = true;
+          Promise.resolve(ensureMapboxCssFor(document.body))
+            .catch(()=>{})
+            .finally(()=>{ try{ cb && cb(); }catch(err){ console.error(err); } });
+        };
+      })();
 
-      if(!mapboxBundlePromise){
-        mapboxBundlePromise = new Promise((resolve, reject) => {
-          const mapboxVerRaw = window.MAPBOX_VERSION || 'v3.15.0';
-          const mapboxVer = mapboxVerRaw.startsWith('v') ? mapboxVerRaw : `v${mapboxVerRaw}`;
-          const mapboxVerNoV = mapboxVer.replace(/^v/, '');
-          const cssSources = [
-            {
-              selector: 'link[href*="mapbox-gl.css"], link[href*="mapbox-gl@"], style[data-mapbox]',
-              primary: `https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.css`,
-              fallback: `https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.css`
-            },
-            {
-              selector: 'link[href*="mapbox-gl-geocoder.css"], link[href*="mapbox-gl-geocoder@"]',
-              primary: 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
-              fallback: 'https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.css'
-            }
-          ];
-
-          let settled = false;
-
-          function fail(error){
-            if(settled){
-              return;
-            }
-            settled = true;
-            mapboxBundleReady = false;
-            mapboxBundlePromise = null;
-            reject(error instanceof Error ? error : new Error(error || 'Mapbox bundle failed to load'));
-          }
-
-          function finalize(){
-            if(settled){
-              return;
-            }
-            Promise.resolve(ensureMapboxCssFor(document.body))
-              .catch(()=>{})
-              .then(() => {
-                if(settled){
-                  return;
-                }
-                if(window && window.mapboxgl){
-                  settled = true;
-                  mapboxBundleReady = true;
-                  resolve();
-                } else {
-                  fail(new Error('Mapbox GL failed to load'));
-                }
-              });
-          }
-
-          function monitorLink(link, onReady, fallbackUrl){
-            if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
-              onReady();
-              return;
-            }
-            if(fallbackUrl && link.dataset && !link.dataset.fallback){
-              link.dataset.fallback = fallbackUrl;
-            }
-
-            let settled = false;
-
-            function cleanup(){
-              link.removeEventListener('load', handleLoad);
-              link.removeEventListener('error', handleError);
-            }
-
-            function complete(){
-              if(settled){
-                return;
-              }
-              settled = true;
-              cleanup();
-              onReady();
-            }
-
-            function handleLoad(){
-              complete();
-            }
-
-            function handleError(){
-              const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
-              const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
-              if(link.dataset){
-                link.dataset.fallbackErrors = String(nextAttempts);
-              }
-              const fallback = link.dataset ? link.dataset.fallback : fallbackUrl;
-              if(fallback && link.href !== fallback){
-                link.href = fallback;
-                return;
-              }
-              if(fallback && nextAttempts === 1){
-                return;
-              }
-              complete();
-            }
-
-            function needsListeners(){
-              if(!link.sheet){
-                return true;
-              }
-              try {
-                void link.sheet.cssRules;
-                return false;
-              } catch(err){
-                if(err && (err.name === 'SecurityError' || err.code === 18)){
-                  return false;
-                }
-                return true;
-              }
-            }
-
-            if(needsListeners()){
-              link.addEventListener('load', handleLoad, {once:true});
-              link.addEventListener('error', handleError);
-            } else {
-              complete();
-            }
-          }
-
-          function ensureCss(index, onReady){
-            const {selector, primary, fallback} = cssSources[index];
-            const selectors = selector.split(',').map(s => s.trim());
-            for(const sel of selectors){
-              const candidate = document.querySelector(sel);
-              if(candidate){
-                if(candidate.tagName && candidate.tagName.toLowerCase() === 'style'){
-                  onReady();
-                  return;
-                }
-                monitorLink(candidate, onReady, fallback);
-                return;
-              }
-            }
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = primary;
-            monitorLink(link, onReady, fallback);
-            document.head.appendChild(link);
-          }
-
-          if(window.mapboxgl && window.MapboxGeocoder){
-            let pending = cssSources.length;
-            if(pending === 0){
-              finalize();
-              return;
-            }
-            const done = () => {
-              if(--pending === 0){
-                finalize();
-              }
-            };
-            cssSources.forEach((_, i) => ensureCss(i, done));
-            return;
-          }
-
-          cssSources.forEach((_, i) => ensureCss(i, ()=>{}));
-          loadScripts();
-
-          function loadScripts(){
-            let successTriggered = false;
-
-            function done(){
-              if(successTriggered){
-                return;
-              }
-              successTriggered = true;
-              finalize();
-            }
-
-            const loadGeocoder = ()=>{
-              const g = document.createElement('script');
-              g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
-              g.async = true;
-              g.defer = true;
-              g.onload = done;
-              g.onerror = ()=>{
-                const gf = document.createElement('script');
-                gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
-                gf.async = true;
-                gf.defer = true;
-                gf.onload = done;
-                gf.onerror = ()=>{
-                  fail(new Error('Mapbox Geocoder failed to load'));
-                };
-                document.head.appendChild(gf);
-              };
-              document.head.appendChild(g);
-            };
-
-            const s = document.createElement('script');
-            s.src=`https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.js`;
-            s.async = true;
-            s.defer = true;
-            s.onload = loadGeocoder;
-            s.onerror = ()=>{
-              const sf = document.createElement('script');
-              sf.src=`https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.js`;
-              sf.async = true;
-              sf.defer = true;
-              sf.onload = loadGeocoder;
-              sf.onerror = ()=>{
-                fail(new Error('Mapbox GL failed to load from fallback source'));
-              };
-              document.head.appendChild(sf);
-            };
-            document.head.appendChild(s);
-          }
-        });
-      }
-
-      return mapboxBundlePromise.then(() => {
-        invokeCallback();
-      });
-    }
-
-    function startMainMapInit(){
-      if(mainMapInitPromise){
-        return mainMapInitPromise;
-      }
-      mapInitQueued = false;
-      if(typeof __notifyMapOnInteraction === 'function'){
-        __notifyMapOnInteraction = null;
-      }
-      mainMapInitPromise = loadMapbox().then(() => {
-        if(mapInitTriggered){
+      function monitorLink(link, onReady, fallbackUrl){
+        if(!link || (link.tagName && link.tagName.toLowerCase() === 'style')){
+          onReady();
           return;
         }
-        mapInitTriggered = true;
-        return Promise.resolve(initMap()).catch(err => {
-          console.error(err);
-        });
-      }).catch(err => {
-        console.error(err);
-      });
-      return mainMapInitPromise;
-    }
+        if(fallbackUrl && link.dataset && !link.dataset.fallback){
+          link.dataset.fallback = fallbackUrl;
+        }
 
-    function queueMainMapInitAfterInteraction(){
-      if(mainMapInitPromise || mapInitTriggered){
+        let settled = false;
+
+        function cleanup(){
+          link.removeEventListener('load', handleLoad);
+          link.removeEventListener('error', handleError);
+        }
+
+        function finalize(){
+          if(settled){
+            return;
+          }
+          settled = true;
+          cleanup();
+          onReady();
+        }
+
+        function handleLoad(){
+          finalize();
+        }
+
+        function handleError(){
+          const attempts = link.dataset && link.dataset.fallbackErrors ? Number(link.dataset.fallbackErrors) : 0;
+          const nextAttempts = (Number.isNaN(attempts) ? 0 : attempts) + 1;
+          if(link.dataset){
+            link.dataset.fallbackErrors = String(nextAttempts);
+          }
+          const fallback = link.dataset ? link.dataset.fallback : fallbackUrl;
+          if(fallback && link.href !== fallback){
+            link.href = fallback;
+            return;
+          }
+          if(fallback && nextAttempts === 1){
+            return;
+          }
+          finalize();
+        }
+
+        function needsListeners(){
+          if(!link.sheet){
+            return true;
+          }
+          try {
+            void link.sheet.cssRules;
+            return false;
+          } catch(err){
+            if(err && (err.name === 'SecurityError' || err.code === 18)){
+              return false;
+            }
+            return true;
+          }
+        }
+
+        if(needsListeners()){
+          link.addEventListener('load', handleLoad, {once:true});
+          link.addEventListener('error', handleError);
+        } else {
+          finalize();
+        }
+      }
+
+      function ensureCss(index, onReady){
+        const {selector, primary, fallback} = cssSources[index];
+        const selectors = selector.split(',').map(s => s.trim());
+        for(const sel of selectors){
+          const candidate = document.querySelector(sel);
+          if(candidate){
+            if(candidate.tagName && candidate.tagName.toLowerCase() === 'style'){
+              onReady();
+              return;
+            }
+            monitorLink(candidate, onReady, fallback);
+            return;
+          }
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = primary;
+        monitorLink(link, onReady, fallback);
+        document.head.appendChild(link);
+      }
+
+      if(window.mapboxgl && window.MapboxGeocoder){
+        let pending = cssSources.length;
+        if(pending === 0){
+          finalize();
+          return;
+        }
+        const done = () => {
+          if(--pending === 0){
+            finalize();
+          }
+        };
+        cssSources.forEach((_, i) => ensureCss(i, done));
         return;
       }
-      if(__userInteractionObserved){
-        startMainMapInit();
-        return;
-      }
-      if(mapInitQueued){
-        return;
-      }
-      mapInitQueued = true;
-      loadMapbox().catch(err => console.error(err));
-      const notify = () => {
-        mapInitQueued = false;
-        startMainMapInit();
+
+      let cssLoaded = 0;
+      const onCss = () => {
+        cssLoaded++;
+        if(cssLoaded === cssSources.length){
+          loadScripts();
+        }
       };
-      __notifyMapOnInteraction = notify;
+      cssSources.forEach((_, i) => ensureCss(i, onCss));
+
+      function loadScripts(){
+        const done = (()=>{
+          let called = false;
+          return ()=>{
+            if(called) return;
+            called = true;
+            finalize();
+          };
+        })();
+
+        const loadGeocoder = ()=>{
+          const g = document.createElement('script');
+          g.src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js';
+          g.onload = done;
+          g.onerror = ()=>{
+            const gf = document.createElement('script');
+            gf.src='https://unpkg.com/@mapbox/mapbox-gl-geocoder@5.0.0/dist/mapbox-gl-geocoder.min.js';
+            gf.onload = done;
+            gf.onerror = done;
+            document.head.appendChild(gf);
+          };
+          document.head.appendChild(g);
+        };
+
+        const s = document.createElement('script');
+        s.src=`https://api.mapbox.com/mapbox-gl-js/${mapboxVer}/mapbox-gl.js`;
+        s.onload = loadGeocoder;
+        s.onerror = ()=>{
+          const sf = document.createElement('script');
+          sf.src=`https://unpkg.com/mapbox-gl@${mapboxVerNoV}/dist/mapbox-gl.js`;
+          sf.onload = loadGeocoder;
+          sf.onerror = done;
+          document.head.appendChild(sf);
+        };
+        document.head.appendChild(s);
+      }
     }
+    loadMapbox(initMap);
 
     function addControls(){
       if(typeof MapboxGeocoder === 'undefined'){
@@ -13643,7 +13198,6 @@ function makePosts(){
 
         const handleGeocoderResult = (result) => {
           if(!map || !result) return;
-          closeWelcomeModalIfOpen();
 
           const toLngLatArray = (value) => {
             if(Array.isArray(value) && value.length >= 2){
@@ -13826,74 +13380,14 @@ function makePosts(){
         };
         gc.on('result', event => handleGeocoderResult(event && event.result));
 
-        const geolocateToken = `geolocate:${idx}`;
-        let geolocateButton = null;
-        let geolocateFallbackTimeout = null;
-
-        const clearGeolocateLoading = () => {
-          if(geolocateFallbackTimeout){
-            clearTimeout(geolocateFallbackTimeout);
-            geolocateFallbackTimeout = null;
-          }
-          if(mapLoading){
-            mapLoading.removeMotion(geolocateToken);
-          }
-        };
-
-        const ensureGeolocateLoading = () => {
-          if(!mapLoading) return;
-          mapLoading.addMotion(geolocateToken);
-          if(geolocateFallbackTimeout){
-            clearTimeout(geolocateFallbackTimeout);
-          }
-          geolocateFallbackTimeout = setTimeout(() => {
-            geolocateFallbackTimeout = null;
-            if(mapLoading){
-              mapLoading.removeMotion(geolocateToken);
-            }
-          }, 15000);
-        };
-
-        const awaitGeolocateIdle = () => {
-          if(!mapLoading){
-            clearGeolocateLoading();
-            return;
-          }
-          const finalize = () => {
-            clearGeolocateLoading();
-          };
-          let bound = false;
-          if(map && typeof map.once === 'function'){
-            try{
-              map.once('idle', finalize);
-              bound = true;
-            }catch(err){
-              finalize();
-              return;
-            }
-          }
-          if(!bound){
-            finalize();
-          } else {
-            if(geolocateFallbackTimeout){
-              clearTimeout(geolocateFallbackTimeout);
-            }
-            geolocateFallbackTimeout = setTimeout(() => {
-              finalize();
-            }, 8000);
-          }
-        };
-
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions:{ enableHighAccuracy:true },
           trackUserLocation:false,
           fitBoundsOptions:{ maxZoom: cityZoomLevel }
         });
         geolocate.on('geolocate', (event)=>{
-          ensureGeolocateLoading();
           spinEnabled = false; localStorage.setItem('spinGlobe','false'); stopSpin();
-          closeWelcomeModalIfOpen();
-          if(mode!=='map') setModeFromUser('map');
+          if(mode!=='map') setMode('map');
           if(event && event.coords){
             setAllGeocoderProximity(event.coords.longitude, event.coords.latitude);
           }
@@ -13926,30 +13420,11 @@ function makePosts(){
               }catch(err){}
             }
           }
-          awaitGeolocateIdle();
-        });
-        geolocate.on('error', () => {
-          clearGeolocateLoading();
         });
         const geoHolder = sel && sel.locate ? document.querySelector(sel.locate) : null;
         if(geoHolder){
           const controlEl = geolocate.onAdd(map);
           geoHolder.appendChild(controlEl);
-          if(controlEl){
-            geolocateButton = controlEl.querySelector('button');
-            if(geolocateButton){
-              const handlePress = (evt) => {
-                if(evt && evt.type === 'keydown'){
-                  const key = evt.key || evt.code;
-                  if(!key) return;
-                  if(key !== 'Enter' && key !== ' ' && key !== 'Spacebar'){ return; }
-                }
-                ensureGeolocateLoading();
-              };
-              geolocateButton.addEventListener('click', handlePress, { passive: true });
-              geolocateButton.addEventListener('keydown', handlePress);
-            }
-          }
         }
         const nav = new mapboxgl.NavigationControl({showZoom:false, visualizePitch:true});
         const compassHolder = sel && sel.compass ? document.querySelector(sel.compass) : null;
@@ -14007,53 +13482,6 @@ function makePosts(){
           map.once('load', updateZoomIndicator);
           updateZoomIndicator();
         }
-
-        let recentMapInteraction = false;
-        let recentInteractionTimeout = null;
-        const markRecentInteraction = () => {
-          recentMapInteraction = true;
-          if(recentInteractionTimeout){
-            clearTimeout(recentInteractionTimeout);
-          }
-          recentInteractionTimeout = setTimeout(() => {
-            recentMapInteraction = false;
-            recentInteractionTimeout = null;
-          }, 1200);
-        };
-
-        const mapCanvasContainer = (typeof map.getCanvasContainer === 'function') ? map.getCanvasContainer() : null;
-        if(mapCanvasContainer){
-          ['mousedown','touchstart','wheel','pointerdown'].forEach(evtName => {
-            try{
-              mapCanvasContainer.addEventListener(evtName, markRecentInteraction, { passive: true });
-            }catch(err){}
-          });
-          try{
-            map.on('remove', () => {
-              if(recentInteractionTimeout){
-                clearTimeout(recentInteractionTimeout);
-                recentInteractionTimeout = null;
-              }
-              ['mousedown','touchstart','wheel','pointerdown'].forEach(evtName => {
-                try{ mapCanvasContainer.removeEventListener(evtName, markRecentInteraction, false); }catch(err){}
-              });
-            });
-          }catch(err){}
-        }
-
-        const handleWelcomeOnMapMotion = (evt) => {
-          if(evt && evt.originalEvent){
-            closeWelcomeModalIfOpen();
-            return;
-          }
-          if(recentMapInteraction){
-            closeWelcomeModalIfOpen();
-          }
-        };
-
-        ['movestart','dragstart','zoomstart','rotatestart','pitchstart','boxzoomstart'].forEach(evtName => {
-          try{ map.on(evtName, handleWelcomeOnMapMotion); }catch(err){}
-        });
 // === Pill hooks (safe) ===
 try { if (typeof __addOrReplacePill150x40 === 'function') __addOrReplacePill150x40(map); } catch(e){}
 if (!map.__pillHooksInstalled) {
@@ -14136,7 +13564,6 @@ if (!map.__pillHooksInstalled) {
           if(!loader || typeof loader.begin !== 'function' || typeof loader.end !== 'function'){
             return null;
           }
-          const overlay = document.getElementById('headerLoadingOverlay');
           const motionTokens = new Set();
           let tilesPending = false;
           let active = false;
@@ -14155,23 +13582,13 @@ if (!map.__pillHooksInstalled) {
           const apply = (forceStop = false) => {
             const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
             if(busy){
-              if(overlay){
-                overlay.classList.remove('is-hidden');
-                overlay.setAttribute('aria-hidden', 'false');
-              }
               if(!active){
                 active = true;
                 try{ loader.begin('map'); }catch(err){}
               }
-            } else {
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
-              }
+            } else if(active){
+              active = false;
+              try{ loader.end('map'); }catch(err){}
             }
           };
 
@@ -14195,14 +13612,7 @@ if (!map.__pillHooksInstalled) {
             clearAll(){
               motionTokens.clear();
               tilesPending = false;
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
-              }
+              apply(true);
             }
           };
         })();
@@ -14332,7 +13742,7 @@ if (!map.__pillHooksInstalled) {
       }
 
     function startSpin(fromCurrent=false){
-      if(mode!=='map') setModeFromUser('map');
+      if(mode!=='map') setMode('map');
       if(!spinEnabled || spinning || !map) return;
       if(map.getZoom() >= 3) return;
       if(typeof filterPanel !== 'undefined' && filterPanel) closePanel(filterPanel);
@@ -14901,7 +14311,7 @@ if (!map.__pillHooksInstalled) {
               delete overlayRoot.dataset.venueKey;
             }
 
-            const visibleList = filtersInitialized ? filtered : posts;
+            const visibleList = (filtersInitialized && Array.isArray(filtered) && filtered.length) ? filtered : posts;
             const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
               if(!item || item.id === undefined || item.id === null) return '';
               return String(item.id);
@@ -14915,9 +14325,15 @@ if (!map.__pillHooksInstalled) {
                 venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
               }
             }
-            const venuePostsVisible = Array.isArray(venuePostsAll)
-              ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id)))
-              : [];
+            let venuePostsVisible = Array.isArray(venuePostsAll) ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id))) : [];
+            if(!venuePostsVisible.length){
+              const fallbackPost = Array.isArray(visibleList) ? visibleList.find(item => item && String(item.id) === String(post && post.id)) : null;
+              if(fallbackPost){
+                venuePostsVisible = [fallbackPost];
+              } else if(post){
+                venuePostsVisible = [post];
+              }
+            }
             const uniqueVenuePosts = [];
             const venuePostIds = new Set();
             venuePostsVisible.forEach(item => {
@@ -14927,7 +14343,13 @@ if (!map.__pillHooksInstalled) {
               venuePostIds.add(idStr);
               uniqueVenuePosts.push(item);
             });
-            const multiIds = uniqueVenuePosts.map(item => String(item.id)).filter(Boolean);
+            if(!uniqueVenuePosts.length && post){
+              uniqueVenuePosts.push(post);
+              if(post.id !== undefined && post.id !== null){
+                venuePostIds.add(String(post.id));
+              }
+            }
+            const multiIds = Array.from(venuePostIds);
             const multiCount = uniqueVenuePosts.length;
             const isMultiVenue = multiCount > 1;
             if(isMultiVenue){
@@ -15838,7 +15260,6 @@ function openPostModal(id){
     }, { capture:true });
 
     function hookDetailActions(el, p){
-      const locationList = Array.isArray(p.locations) ? p.locations : [];
       el.querySelectorAll('.post-header').forEach(headerEl => {
         headerEl.addEventListener('click', evt=>{
           if(evt.target.closest('button')) return;
@@ -16191,82 +15612,6 @@ function openPostModal(id){
       }
       let sessionCloseTimer = null;
       let ensureMapForVenue = async ()=>{};
-      const shouldShowExpiredSessions = () => {
-        const expiredToggle = document.getElementById('expiredToggle');
-        return !!(expiredToggle && expiredToggle.checked);
-      };
-      const sessionThresholdDate = () => {
-        const base = new Date();
-        base.setHours(0,0,0,0);
-        base.setDate(base.getDate() - 1);
-        return base;
-      };
-      const parseSessionDate = (value) => {
-        if(typeof value !== 'string') return new Date(Number.NaN);
-        const parts = value.split('-').map(Number);
-        const yy = parts[0];
-        const mm = parts[1];
-        const dd = parts[2];
-        return new Date(yy, (mm || 1) - 1, dd || 1);
-      };
-      function computeVisibleSessionsForLocation(location){
-        if(!location || !Array.isArray(location.dates)) return [];
-        const showExpired = shouldShowExpiredSessions();
-        const threshold = sessionThresholdDate();
-        return location.dates
-          .map((d,i)=>({d,i}))
-          .filter(({d})=>{
-            if(!d || typeof d.full !== 'string') return false;
-            if(showExpired) return true;
-            const parsed = parseSessionDate(d.full);
-            return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
-          });
-      }
-      let visibleVenueState = { byIndex: new Map(), visibleIndices: [] };
-      function computeVenueVisibility(){
-        const byIndex = new Map();
-        const visibleIndices = [];
-        locationList.forEach((location, idx) => {
-          if(location && Array.isArray(location.dates)){
-            location.dates.sort((a,b)=>{
-              const fullA = (a && a.full) || '';
-              const fullB = (b && b.full) || '';
-              const fullCompare = fullA.localeCompare(fullB);
-              if(fullCompare !== 0) return fullCompare;
-              const timeA = (a && a.time) || '';
-              const timeB = (b && b.time) || '';
-              return timeA.localeCompare(timeB);
-            });
-          }
-          const visibleSessions = computeVisibleSessionsForLocation(location);
-          const hasVisible = visibleSessions.length > 0;
-          byIndex.set(idx, { visibleSessions, hasVisible });
-          if(venueOptions){
-            const button = venueOptions.querySelector(`button[data-index="${idx}"]`);
-            if(button){
-              button.hidden = !hasVisible;
-              if(hasVisible){
-                button.removeAttribute('hidden');
-                button.disabled = false;
-                button.tabIndex = 0;
-                button.removeAttribute('aria-hidden');
-              } else {
-                button.setAttribute('hidden','');
-                button.disabled = true;
-                button.tabIndex = -1;
-                button.setAttribute('aria-hidden','true');
-                button.classList.remove('selected');
-              }
-            }
-          }
-          if(hasVisible){
-            visibleIndices.push(idx);
-          }
-        });
-        visibleVenueState = { byIndex, visibleIndices };
-        return visibleVenueState;
-      }
-      let syncingVenueFromSessions = false;
         function scheduleSessionMenuClose({waitForScroll=false, targetLeft=null}={}){
           if(!sessMenu) return;
           if(sessionCloseTimer){
@@ -16308,7 +15653,7 @@ function openPostModal(id){
           }
         }
       function updateVenue(idx){
-        const locations = locationList;
+        const locations = Array.isArray(p.locations) ? p.locations : [];
         const hasLocations = locations.length > 0;
         let targetIndex = Number.isInteger(idx) ? idx : 0;
         if(hasLocations){
@@ -16316,22 +15661,13 @@ function openPostModal(id){
         } else {
           targetIndex = 0;
         }
-        const visibility = computeVenueVisibility();
-        const visibleIndices = visibility.visibleIndices || [];
-        const multipleVisible = visibleIndices.length > 1;
-        if(visibleIndices.length){
-          if(!visibleIndices.includes(targetIndex)){
-            targetIndex = visibleIndices[0];
-          }
-        }
         currentVenueIndex = targetIndex;
         const loc = hasLocations ? locations[targetIndex] : null;
 
         if(venueOptions){
           const buttons = venueOptions.querySelectorAll('button');
           buttons.forEach((button, optionIndex) => {
-            const isSelected = optionIndex === currentVenueIndex && !button.hidden && !button.disabled;
-            button.classList.toggle('selected', isSelected);
+            button.classList.toggle('selected', optionIndex === targetIndex);
           });
         }
 
@@ -16345,9 +15681,9 @@ function openPostModal(id){
 
         if(venueBtn){
           if(loc){
-            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+            venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
           } else {
-            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="address_line">${p.city || ''}</span>`;
+            venueBtn.innerHTML = `<span class="venue-name">${p.city || ''}</span><span class="venue-address">${p.city || ''}</span>`;
           }
         }
 
@@ -16369,18 +15705,13 @@ function openPostModal(id){
           return;
         }
 
-        loc.dates.sort((a,b)=>{
-          const fullA = (a && a.full) || '';
-          const fullB = (b && b.full) || '';
-          const fullCompare = fullA.localeCompare(fullB);
-          if(fullCompare !== 0) return fullCompare;
-          const timeA = (a && a.time) || '';
-          const timeB = (b && b.time) || '';
-          return timeA.localeCompare(timeB);
-        });
+        loc.dates.sort((a,b)=> a.full.localeCompare(b.full) || a.time.localeCompare(b.time));
 
         const currentYear = new Date().getFullYear();
-        const parseDate = s => parseSessionDate(s);
+        const parseDate = s => {
+          const [yy, mm, dd] = s.split('-').map(Number);
+          return new Date(yy, mm - 1, dd);
+        };
         const formatDate = d => {
           const y = parseDate(d.full).getFullYear();
           return y !== currentYear ? `${d.date}, ${y}` : d.date;
@@ -16390,86 +15721,34 @@ function openPostModal(id){
           venueInfo.innerHTML = `<strong>${loc.venue}</strong><br>${loc.address}`;
         }
         if(venueBtn){
-          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="address_line">${loc.address}</span>${multipleVisible?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
+          venueBtn.innerHTML = `<span class="venue-name">${loc.venue}</span><span class="venue-address">${loc.address}</span>${p.locations.length>1?'<span class="results-arrow" aria-hidden="true"></span>':''}`;
         }
 
+        sessionHasMultiple = loc.dates.length > 1;
+        let defaultInfoHTML = '';
+        if(sessionInfo){
+          const firstDate = loc.dates[0];
+          const lastDate = loc.dates[loc.dates.length-1];
+          const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+          defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}<span style="display:inline-block;margin-left:10px;">(Select Session)</span></div>`;
+          sessionInfo.innerHTML = defaultInfoHTML;
+        }
+
+        const dateStrings = Array.from(new Set(loc.dates.map(d=>d.full)));
+        const allowedSet = new Set(dateStrings);
+        const minDate = parseDate(dateStrings[0]);
+        const maxDate = parseDate(dateStrings[dateStrings.length-1]);
         let cal = null;
         let selectedIndex = null;
-        let dateStrings = [];
-        let allowedSet = new Set();
-        let minDate = null;
-        let maxDate = null;
-        let months = [];
-        let visibleDateEntries = [];
-        let defaultInfoHTML = '';
 
-        function recomputeVisibleDateData(visibilityState){
-          if(!loc || !Array.isArray(loc.dates)){
-            visibleDateEntries = [];
-            dateStrings = [];
-            allowedSet = new Set();
-            minDate = null;
-            maxDate = null;
-            months = [];
-            return;
+        const months = [];
+        if(minDate && maxDate){
+          const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+          const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+          while(cursor <= limit){
+            months.push(new Date(cursor));
+            cursor.setMonth(cursor.getMonth() + 1);
           }
-          const snapshot = visibilityState || computeVenueVisibility();
-          const entry = snapshot && snapshot.byIndex ? snapshot.byIndex.get(currentVenueIndex) : null;
-          visibleDateEntries = entry && Array.isArray(entry.visibleSessions)
-            ? entry.visibleSessions.map(({ d, i }) => ({ d, i }))
-            : [];
-
-          const seen = new Set();
-          const uniqueEntries = [];
-          visibleDateEntries.forEach(({d}) => {
-            if(!d || typeof d.full !== 'string') return;
-            if(seen.has(d.full)) return;
-            const parsed = parseDate(d.full);
-            if(!(parsed instanceof Date) || Number.isNaN(parsed.getTime())) return;
-            seen.add(d.full);
-            uniqueEntries.push({ iso: d.full, date: parsed });
-          });
-
-          dateStrings = uniqueEntries.map(entry => entry.iso);
-          allowedSet = new Set(dateStrings);
-          if(uniqueEntries.length){
-            minDate = new Date(uniqueEntries[0].date.getTime());
-            maxDate = new Date(uniqueEntries[uniqueEntries.length - 1].date.getTime());
-          } else {
-            minDate = null;
-            maxDate = null;
-          }
-
-          months = [];
-          if(minDate && maxDate){
-            const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-            const limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
-            while(cursor <= limit){
-              months.push(new Date(cursor.getTime()));
-              cursor.setMonth(cursor.getMonth() + 1);
-            }
-          }
-        }
-
-        function refreshDefaultSessionInfo(){
-          const visible = visibleDateEntries;
-          sessionHasMultiple = visible.length > 1;
-          if(!sessionInfo){
-            defaultInfoHTML = '';
-            return;
-          }
-          const suffix = '<span style="display:inline-block;margin-left:10px;">(Select Session)</span>';
-          if(visible.length){
-            const firstDate = visible[0].d;
-            const lastDate = visible[visible.length - 1].d;
-            const rangeText = `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
-            defaultInfoHTML = `<div>💲 ${loc.price} | 📅 ${rangeText}${suffix}</div>`;
-          } else if(Array.isArray(loc.dates) && loc.dates.length){
-            defaultInfoHTML = `<div>💲 ${loc.price}${suffix}</div>`;
-          } else {
-            defaultInfoHTML = '';
-          }
-          sessionInfo.innerHTML = defaultInfoHTML;
         }
 
         function markSelected(){
@@ -16606,7 +15885,7 @@ function openPostModal(id){
                 cell.classList.add('available-day');
                 cell.addEventListener('mousedown',()=>{ lastClickedCell = cell; });
                 cell.addEventListener('click',()=>{
-                  const matches = visibleDateEntries.filter(entry => entry.d.full === iso);
+                  const matches = loc.dates.map((dd,i)=>({i,d:dd})).filter(o=> o.d.full===iso);
                   if(matches.length===1){ selectSession(matches[0].i); }
                   else if(matches.length>1){ showTimePopup(matches); }
                 });
@@ -16627,114 +15906,32 @@ function openPostModal(id){
           cal = document.createElement('div');
           cal.className='calendar';
           calendarEl.appendChild(cal);
-          if(!calendarEl._calendarClickStopper){
-            calendarEl.addEventListener('click', e=> e.stopPropagation());
-            calendarEl._calendarClickStopper = true;
-          }
+          calendarEl.addEventListener('click', e=> e.stopPropagation());
         }
 
         function finalizeCalendar(){
           markSelected();
         }
 
-        function renderCalendar(){
-          if(!calendarEl) return;
-          buildCalendarShell();
-          months.forEach(monthDate => renderMonth(monthDate));
-          finalizeCalendar();
-        }
-
         function updateSessionOptionsList(){
-          if(!loc || !Array.isArray(loc.dates)){
-            visibleDateEntries = [];
-            if(sessionOptions){
-              sessionOptions.innerHTML = '';
-            }
-            if(sessBtn){
-              sessBtn.textContent = 'Select Session';
-              sessBtn.setAttribute('aria-expanded','false');
-            }
-            if(sessionInfo){
-              sessionInfo.innerHTML = defaultInfoHTML;
-            }
-            return;
-          }
-          const visibility = computeVenueVisibility();
-          const visibleIndices = visibility.visibleIndices || [];
-          if(!syncingVenueFromSessions && visibleIndices.length && !visibleIndices.includes(currentVenueIndex)){
-            const fallbackIndex = visibleIndices[0];
-            if(fallbackIndex !== undefined){
-              syncingVenueFromSessions = true;
-              try{
-                updateVenue(fallbackIndex);
-              } finally {
-                syncingVenueFromSessions = false;
-              }
-              return;
-            }
-          }
-          recomputeVisibleDateData(visibility);
-          refreshDefaultSessionInfo();
-          if(calContainer){
-            const existingPopup = calContainer.querySelector('.time-popup');
-            if(existingPopup) existingPopup.remove();
-          }
-          lastClickedCell = null;
-          if(calendarEl){
-            renderCalendar();
-          }
-
-          const visibleDates = visibleDateEntries;
-
           if(sessionOptions){
-            sessionOptions.innerHTML = visibleDates
-              .map(({d,i})=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`)
-              .join('');
-          }
-
-          if(sessMenu){
-            sessMenu.scrollTop = 0;
-          }
-
-          const hasVisible = visibleDates.length > 0;
-
-          const selectedIsVisible = visibleDates.some(({i})=> i === selectedIndex);
-          if(!selectedIsVisible){
-            selectedIndex = null;
-          }
-
-          if(sessionHasMultiple){
-            selectedIndex = null;
-            markSelected();
-            if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-            if(sessBtn){
-              sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>';
-              sessBtn.setAttribute('aria-expanded','false');
+            sessionOptions.innerHTML = loc.dates.map((d,i)=> `<button data-index="${i}"><span class="session-date">${formatDate(d)}</span><span class="session-time">${d.time}</span></button>`).join('');
+            if(sessMenu){
+              sessMenu.scrollTop = 0;
             }
-          } else if(hasVisible){
-            selectSession(visibleDates[0].i);
-          } else {
-            selectedIndex = null;
-            markSelected();
-            if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
-            if(sessBtn){
-              sessBtn.textContent = 'Select Session';
-              sessBtn.setAttribute('aria-expanded','false');
+            if(sessionHasMultiple){
+              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessBtn){ sessBtn.innerHTML = 'Select Session<span class="results-arrow" aria-hidden="true"></span>'; sessBtn.setAttribute('aria-expanded','false'); }
+            } else if(loc.dates.length){
+              selectSession(0);
+            } else {
+              if(sessionInfo) sessionInfo.innerHTML = defaultInfoHTML;
+              if(sessBtn){ sessBtn.textContent = 'Select Session'; sessBtn.setAttribute('aria-expanded','false'); }
             }
-          }
-
-          if(sessionOptions){
             sessionOptions.querySelectorAll('button').forEach(btn=>{
               btn.addEventListener('click', ()=> selectSession(parseInt(btn.dataset.index,10)));
             });
           }
-
-          try{
-            if(typeof ensureMapForVenue === 'function'){
-              ensureMapForVenue();
-            }
-          }catch(err){}
-
           setTimeout(()=>{
             if(map && typeof map.resize === 'function') map.resize();
           },0);
@@ -16768,32 +15965,15 @@ function openPostModal(id){
         ensureMapForVenue = async function(){
           if(!mapEl) return;
 
-          const visibility = computeVenueVisibility();
-          const visibleIndices = Array.isArray(visibility.visibleIndices) ? visibility.visibleIndices : [];
-          const locationEntries = locationList
-            .map((location, idx) => ({ location, idx }))
-            .filter(entry => entry.location && Number.isFinite(entry.location.lng) && Number.isFinite(entry.location.lat));
-          const allIndicesVisible = visibleIndices.length > 0 && visibleIndices.length === locationEntries.length;
-          const allowedIndices = allIndicesVisible ? null : new Set(visibleIndices);
-          const effectiveEntries = allowedIndices
-            ? locationEntries.filter(entry => allowedIndices.has(entry.idx))
-            : locationEntries;
-
-          if(!effectiveEntries.length){
+          const allLocations = Array.isArray(p.locations) ? p.locations.filter(item => item && Number.isFinite(item.lng) && Number.isFinite(item.lat)) : [];
+          if(!allLocations.length){
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
             return;
           }
 
-          const selectedEntry = effectiveEntries.find(entry => entry.idx === currentVenueIndex) || effectiveEntries[0];
-          if(!selectedEntry){
-            locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
-            locationMarkers = [];
-            return;
-          }
-
-          const selectedIdx = selectedEntry.idx;
-          const selectedLoc = selectedEntry.location;
+          const selectedIdx = Math.min(Math.max(currentVenueIndex, 0), allLocations.length - 1);
+          const selectedLoc = allLocations[selectedIdx];
           const center = [selectedLoc.lng, selectedLoc.lat];
           const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
@@ -16818,7 +15998,7 @@ function openPostModal(id){
             if(!map) return;
             locationMarkers.forEach(({ marker }) => { try{ marker.remove(); }catch(e){} });
             locationMarkers = [];
-            effectiveEntries.forEach(({ location, idx }) => {
+            allLocations.forEach((location, idx) => {
               if(!Number.isFinite(location.lng) || !Number.isFinite(location.lat)){
                 return;
               }
@@ -16855,12 +16035,10 @@ function openPostModal(id){
           };
 
           const fitToLocations = () => {
-            if(!map || !effectiveEntries.length){
+            if(!map || !allLocations.length){
               return;
             }
-            const validPoints = effectiveEntries
-              .map(entry => entry.location)
-              .filter(location => Number.isFinite(location.lng) && Number.isFinite(location.lat));
+            const validPoints = allLocations.filter(location => Number.isFinite(location.lng) && Number.isFinite(location.lat));
             if(!validPoints.length){
               return;
             }
@@ -16982,29 +16160,6 @@ function openPostModal(id){
         };
         window.ensureMapForVenue = ensureMapForVenue;
 
-        const expiredToggle = document.getElementById('expiredToggle');
-        if(expiredToggle){
-          const handler = ()=> updateSessionOptionsList();
-          if(expiredToggle._detailExpiredHandler){
-            expiredToggle.removeEventListener('change', expiredToggle._detailExpiredHandler);
-          }
-          expiredToggle._detailExpiredHandler = handler;
-          expiredToggle.addEventListener('change', handler);
-        }
-
-        if(sessMenu){
-          const filterHandler = ()=> updateSessionOptionsList();
-          if(sessMenu._detailSessionFilterHandler){
-            ['sessionfilterchange','sessionfilterreset'].forEach(evt => {
-              sessMenu.removeEventListener(evt, sessMenu._detailSessionFilterHandler);
-            });
-          }
-          sessMenu._detailSessionFilterHandler = filterHandler;
-          ['sessionfilterchange','sessionfilterreset'].forEach(evt => {
-            sessMenu.addEventListener(evt, filterHandler);
-          });
-        }
-
         const tasks = [];
         if(mapEl){
           tasks.push(()=> {
@@ -17020,6 +16175,11 @@ function openPostModal(id){
                 };
             ensure('ensureMapForVenue', fn => fn());
           });
+        }
+        if(calendarEl){
+          tasks.push(()=> buildCalendarShell());
+          months.forEach(monthDate => tasks.push(()=> renderMonth(monthDate)));
+          tasks.push(()=> finalizeCalendar());
         }
         tasks.push(()=> updateSessionOptionsList());
         tasks.push(()=> attachSessionButtonHandler());
@@ -17047,24 +16207,14 @@ function openPostModal(id){
 
         if(mapEl){
           setTimeout(()=>{
-            loadMapbox().then(()=>{
+            loadMapbox(()=>{
               updateVenue(0);
               if(venueMenu && venueBtn && venueOptions){
                 venueOptions.querySelectorAll('button').forEach(btn=>{
-                  const btnIndex = parseInt(btn.dataset.index, 10);
-                  const isVisible = !btn.hidden && !btn.disabled;
-                  btn.classList.toggle('selected', isVisible && btnIndex === currentVenueIndex);
+                  if(btn.dataset.index==='0') btn.classList.add('selected');
                   btn.addEventListener('click', ()=>{
-                    if(btn.hidden || btn.disabled){
-                      hideMenu(venueMenu);
-                      venueBtn.setAttribute('aria-expanded','false');
-                      return;
-                    }
                     const targetIndex = parseInt(btn.dataset.index, 10);
-                    if(!Number.isInteger(targetIndex)){
-                      return;
-                    }
-                    if(targetIndex === currentVenueIndex){
+                    if(Number.isInteger(targetIndex) && targetIndex === currentVenueIndex){
                       if(venueCloseTimer){
                         clearTimeout(venueCloseTimer);
                       }
@@ -17124,7 +16274,7 @@ function openPostModal(id){
                 }
               }
               if(map && typeof map.resize === 'function') map.resize();
-            }).catch(err => console.error(err));
+            });
           },0);
         }
     }
@@ -17271,12 +16421,12 @@ function openPostModal(id){
         return;
       }
       if(!postsLoaded) return;
-      const basePosts = posts.filter(p => (spinning || inBounds(p)) && dateMatch(p));
-      filtered = basePosts.filter(p => kwMatch(p) && catMatch(p) && priceMatch(p));
+      filtered = posts.filter(p => (spinning || inBounds(p)) && kwMatch(p) && dateMatch(p) && catMatch(p) && priceMatch(p));
       const boundsForCount = getVisibleMarkerBoundsForCount();
       const filteredMarkers = boundsForCount ? countMarkersForVenue(filtered, null, boundsForCount) : countMarkersForVenue(filtered);
-      const rawTotalMarkers = boundsForCount ? countMarkersForVenue(basePosts, null, boundsForCount) : countMarkersForVenue(basePosts);
-      const totalMarkers = Math.max(filteredMarkers, rawTotalMarkers);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const totalPosts = posts.filter(p => (spinning || inBounds(p)) && p.dates.some(d => parseISODate(d) >= today));
+      const totalMarkers = boundsForCount ? countMarkersForVenue(totalPosts, null, boundsForCount) : countMarkersForVenue(totalPosts);
       const summary = $('#filterSummary');
       if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
       updateResultCount(filteredMarkers);
@@ -17960,25 +17110,7 @@ const memberPanelChangeManager = (()=>{
     if(initialized) return;
     ensureElements();
     if(!panel || !form) return;
-    
-// === Added Confirm Password Field ===
-(function ensureConfirmPasswordField(){
-  const registerPanel = document.getElementById('memberRegisterPanel');
-  if(!registerPanel) return;
-  const pwd = registerPanel.querySelector('input[type="password"]');
-  if(!pwd) return;
-  if(registerPanel.querySelector('#memberRegisterPasswordConfirm')) return;
-  const confirm = document.createElement('input');
-  confirm.type = 'password';
-  confirm.id = 'memberRegisterPasswordConfirm';
-  confirm.placeholder = 'Confirm Password';
-  if(pwd.className) confirm.className = pwd.className;
-  confirm.required = true;
-  pwd.insertAdjacentElement('afterend', confirm);
-})();
-// === End Added Confirm Password Field ===
-
-form.addEventListener('input', formChanged, true);
+    form.addEventListener('input', formChanged, true);
     form.addEventListener('change', formChanged, true);
     if(saveButton){
       saveButton.addEventListener('click', e=>{
@@ -18051,89 +17183,6 @@ form.addEventListener('input', formChanged, true);
       return false;
     }
   };
-})();
-
-// Extracted from <script>
-(function(){
-  const SAVE_ENDPOINT = '/gateway.php?action=save-formbuilder';
-  const JSON_HEADERS = { 'Content-Type': 'application/json' };
-  const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
-  const ERROR_CLASS = 'error';
-  const ERROR_TIMEOUT = 5000;
-
-  function showErrorBanner(message){
-    const banner = document.getElementById('adminStatusMessage');
-    if(!banner) return;
-    const text = typeof message === 'string' && message.trim() ? message.trim() : 'Failed to save changes.';
-    banner.textContent = text;
-    banner.setAttribute('aria-hidden', 'false');
-    banner.classList.add('show');
-    banner.classList.add(ERROR_CLASS);
-    if(window[STATUS_TIMER_KEY]){
-      clearTimeout(window[STATUS_TIMER_KEY]);
-    }
-    window[STATUS_TIMER_KEY] = setTimeout(()=>{
-      banner.classList.remove('show');
-      banner.classList.remove(ERROR_CLASS);
-      banner.setAttribute('aria-hidden', 'true');
-      window[STATUS_TIMER_KEY] = null;
-    }, ERROR_TIMEOUT);
-  }
-
-  async function saveAdminChanges(){
-    let payload = null;
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
-      try {
-        payload = window.formbuilderStateManager.capture();
-      } catch (err) {
-        console.error('formbuilderStateManager.capture failed', err);
-      }
-    }
-    if(!payload || typeof payload !== 'object'){
-      payload = {};
-    }
-
-    let response;
-    try {
-      response = await fetch(SAVE_ENDPOINT, {
-        method: 'POST',
-        headers: JSON_HEADERS,
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
-    } catch (networkError) {
-      showErrorBanner('Unable to reach the server. Please try again.');
-      throw networkError;
-    }
-
-    const responseText = await response.text();
-    let data = {};
-    if(responseText){
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        showErrorBanner('Unexpected response while saving changes.');
-        const error = new Error('Invalid JSON response');
-        error.responseText = responseText;
-        throw error;
-      }
-    }
-
-    if(!response.ok || typeof data !== 'object' || data === null || data.success !== true){
-      const message = data && typeof data.message === 'string' && data.message.trim()
-        ? data.message.trim()
-        : `Failed to save changes${response.ok ? '' : ` (HTTP ${response.status})`}.`;
-      showErrorBanner(message);
-      const error = new Error(message);
-      error.response = response;
-      error.payload = data;
-      throw error;
-    }
-
-    return data;
-  }
-
-  window.saveAdminChanges = saveAdminChanges;
 })();
 
 const adminPanelChangeManager = (()=>{
@@ -18289,11 +17338,6 @@ const adminPanelChangeManager = (()=>{
     if(!statusMessage) return;
     statusMessage.textContent = message;
     statusMessage.setAttribute('aria-hidden','false');
-    statusMessage.classList.remove('error');
-    if(window.__adminStatusMessageTimer){
-      clearTimeout(window.__adminStatusMessageTimer);
-      window.__adminStatusMessageTimer = null;
-    }
     statusMessage.classList.add('show');
     clearTimeout(statusTimer);
     statusTimer = setTimeout(()=>{
@@ -18333,12 +17377,7 @@ const adminPanelChangeManager = (()=>{
         result = window.saveAdminChanges();
       }
     }catch(err){
-      const message = err && typeof err.message === 'string' ? err.message : '';
-      if(message && message.toLowerCase().includes('database connection not configured')){
-        console.warn('Skipped saving admin changes because the database connection is not configured.');
-      } else {
-        console.error('Failed to save admin changes', err);
-      }
+      console.error('Failed to save admin changes', err);
       if(!closeAfter) cancelPrompt();
       return;
     }
@@ -18350,12 +17389,7 @@ const adminPanelChangeManager = (()=>{
       closePrompt();
       if(panelToClose) closePanel(panelToClose);
     }).catch(err => {
-      const message = err && typeof err.message === 'string' ? err.message : '';
-      if(message && message.toLowerCase().includes('database connection not configured')){
-        console.warn('Skipped saving admin changes because the database connection is not configured.');
-      } else {
-        console.error('Failed to save admin changes', err);
-      }
+      console.error('Failed to save admin changes', err);
     });
   }
 
@@ -18532,14 +17566,30 @@ function closePanel(m){
 
 
 const adminAuthManager = (()=>{
+  const ADMIN_USERNAME = 'admin';
+  const ADMIN_PASSWORD = '1234';
+  const ADMIN_USER = Object.freeze({
+    name: 'Administrator',
+    email: 'admin',
+    emailNormalized: 'admin',
+    avatar: ''
+  });
   const STORAGE_KEY = 'admin-authenticated';
-  const IDENTITY_KEY = 'admin-identity';
   const adminBtn = document.getElementById('adminBtn');
   const adminPanel = document.getElementById('adminPanel');
   const memberPanel = document.getElementById('memberPanel');
 
   let authenticated = localStorage.getItem(STORAGE_KEY) === 'true';
-  let adminIdentity = localStorage.getItem(IDENTITY_KEY) || '';
+
+  function normalizeIdentifier(identifier){
+    const trimmed = String(identifier || '').trim().toLowerCase();
+    if(!trimmed) return '';
+    const atIndex = trimmed.indexOf('@');
+    if(atIndex > 0){
+      return trimmed.slice(0, atIndex);
+    }
+    return trimmed;
+  }
 
   function updateUI(){
     if(adminBtn){
@@ -18553,7 +17603,7 @@ const adminAuthManager = (()=>{
     }
   }
 
-  function setAuthenticatedState(value, identity){
+  function setAuthenticatedState(value){
     const next = !!value;
     if(next === authenticated){
       updateUI();
@@ -18561,16 +17611,6 @@ const adminAuthManager = (()=>{
     }
     authenticated = next;
     localStorage.setItem(STORAGE_KEY, authenticated ? 'true' : 'false');
-    if(authenticated){
-      const normalizedIdentity = typeof identity === 'string' ? identity.trim() : '';
-      adminIdentity = normalizedIdentity || adminIdentity;
-      if(adminIdentity){
-        localStorage.setItem(IDENTITY_KEY, adminIdentity);
-      }
-    } else {
-      adminIdentity = '';
-      localStorage.removeItem(IDENTITY_KEY);
-    }
     updateUI();
     if(!authenticated){
       localStorage.setItem('panel-open-adminPanel','false');
@@ -18605,21 +17645,17 @@ const adminAuthManager = (()=>{
       return authenticated;
     },
     ensureAuthenticated,
-    setAuthenticated(value, identity){
-      setAuthenticatedState(value, identity);
+    setAuthenticated(value){
+      setAuthenticatedState(value);
+    },
+    matchesCredentials(identifier, password){
+      return normalizeIdentifier(identifier) === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+    },
+    isAdminIdentifier(identifier){
+      return normalizeIdentifier(identifier) === ADMIN_USERNAME;
     },
     getAdminUser(){
-      const identifier = adminIdentity || localStorage.getItem(IDENTITY_KEY) || 'admin';
-      const trimmed = identifier.trim();
-      const emailNormalized = trimmed ? trimmed.toLowerCase() : 'admin';
-      return {
-        name: 'Administrator',
-        email: trimmed || 'admin',
-        emailNormalized,
-        username: trimmed || 'admin',
-        avatar: '',
-        isAdmin: true
-      };
+      return { ...ADMIN_USER, isAdmin: true };
     }
   };
 })();
@@ -18640,7 +17676,6 @@ if(welcomeModalEl){
     });
   }
 }
-
 function requestClosePanel(m){
   if(m){
     if(m.id === 'adminPanel' && adminPanelChangeManager.handlePanelClose(m)){
@@ -18931,14 +17966,6 @@ document.addEventListener('pointerdown', (e) => {
     const listingCurrency = document.getElementById('memberCreateListingCurrency');
     const listingPrice = document.getElementById('memberCreateListingPrice');
 
-    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
@@ -18989,37 +18016,10 @@ document.addEventListener('pointerdown', (e) => {
       return Array.from(codes);
     }
 
-    const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
-    const loadingMessage = 'Loading form fields…';
-    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
-
-    const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
-    let memberSnapshot = defaultMemberSnapshot;
+    let memberSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
     let memberCategories = memberSnapshot.categories;
     let currencyCodes = collectCurrencyCodes(memberSnapshot);
     let fieldIdCounter = 0;
-    let memberSnapshotErrorMessage = '';
-
-    function setEmptyStateMessage(message){
-      if(!emptyState) return;
-      if(typeof message === 'string' && message.trim()){
-        emptyState.textContent = message;
-      } else {
-        emptyState.textContent = defaultEmptyMessage;
-      }
-    }
-
-    function applyMemberSnapshot(snapshot, options = {}){
-      const normalized = normalizeFormbuilderSnapshot(snapshot);
-      memberSnapshot = normalized;
-      memberCategories = memberSnapshot.categories;
-      currencyCodes = collectCurrencyCodes(memberSnapshot);
-      ensureCurrencyOptions(listingCurrency);
-      ensureCurrencyOptions(adminListingCurrency);
-      if(options.populate !== false){
-        populateCategoryOptions(options.preserveSelection === true);
-      }
-    }
 
     function ensureCurrencyOptions(select){
       if(!select) return;
@@ -19043,21 +18043,15 @@ document.addEventListener('pointerdown', (e) => {
       }
     }
 
-    function refreshMemberSnapshotFromManager(){
-      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
-        try{
-          const snapshot = window.formbuilderStateManager.capture();
-          memberSnapshotErrorMessage = '';
-          applyMemberSnapshot(snapshot, { preserveSelection: true });
-          return;
-        }catch(err){
-          console.warn('Failed to capture latest formbuilder snapshot', err);
-        }
-      }
-      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
+    function refreshMemberSnapshot(){
+      memberSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
+      memberCategories = memberSnapshot.categories;
+      currencyCodes = collectCurrencyCodes(memberSnapshot);
+      ensureCurrencyOptions(listingCurrency);
+      ensureCurrencyOptions(adminListingCurrency);
     }
 
-    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
+    refreshMemberSnapshot();
 
     function formatPriceValue(value){
       const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
@@ -19158,23 +18152,13 @@ document.addEventListener('pointerdown', (e) => {
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
       if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
+        fields = DEFAULT_SUBCATEGORY_FIELDS;
       }
       return fields.map(sanitizeCreateField);
     }
 
-    function renderEmptyState(message){
-      if(emptyState){
-        if(typeof message === 'string'){
-          memberSnapshotErrorMessage = message;
-          setEmptyStateMessage(message);
-        } else if(memberSnapshotErrorMessage){
-          setEmptyStateMessage(memberSnapshotErrorMessage);
-        } else {
-          setEmptyStateMessage();
-        }
-        emptyState.hidden = false;
-      }
+    function renderEmptyState(){
+      if(emptyState) emptyState.hidden = false;
       if(formWrapper) formWrapper.hidden = true;
       if(checkoutContainer) checkoutContainer.hidden = true;
       if(postButton) postButton.disabled = true;
@@ -19182,45 +18166,23 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function buildVersionPriceEditor(field, labelId){
-      const options = Array.isArray(field.options) && field.options.length
-        ? field.options.map(opt => ({
-            version: typeof opt.version === 'string' ? opt.version : '',
-            currency: typeof opt.currency === 'string' ? opt.currency : '',
-            price: typeof opt.price === 'string' ? opt.price : ''
-          }))
-        : [{ version: '', currency: '', price: '' }];
-
-      const editor = document.createElement('div');
-      editor.className = 'form-preview-version-price version-price-options-editor';
-      editor.setAttribute('role', 'group');
-      editor.setAttribute('aria-labelledby', labelId);
-
+      const options = Array.isArray(field.options) && field.options.length ? field.options.map(opt => ({ ...opt })) : [{ version: '', currency: '', price: '' }];
       const list = document.createElement('div');
-      list.className = 'version-price-options-list';
-      editor.appendChild(list);
+      list.className = 'member-version-price-list';
+      list.setAttribute('role', 'group');
+      list.setAttribute('aria-labelledby', labelId);
 
       function addRow(option){
         const row = document.createElement('div');
-        row.className = 'version-price-option';
-
-        const topRow = document.createElement('div');
-        topRow.className = 'version-price-row version-price-row--top';
+        row.className = 'member-version-price-row';
         const versionInput = document.createElement('input');
         versionInput.type = 'text';
-        versionInput.className = 'version-price-name form-preview-version-price-name';
         versionInput.placeholder = 'Version Name';
         versionInput.value = option.version || '';
         versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
-        topRow.appendChild(versionInput);
 
-        const bottomRow = document.createElement('div');
-        bottomRow.className = 'version-price-row version-price-row--bottom';
         const currencySelect = document.createElement('select');
-        currencySelect.className = 'version-price-currency';
-        const emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = 'Currency';
-        currencySelect.appendChild(emptyOption);
+        currencySelect.innerHTML = '<option value="">Currency</option>';
         currencyCodes.forEach(code => {
           const opt = document.createElement('option');
           opt.value = code;
@@ -19232,7 +18194,6 @@ document.addEventListener('pointerdown', (e) => {
 
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
-        priceInput.className = 'version-price-price form-preview-version-price-price';
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
@@ -19240,13 +18201,8 @@ document.addEventListener('pointerdown', (e) => {
           priceInput.value = option.price;
         });
 
-        bottomRow.append(currencySelect, priceInput);
-
-        const actions = document.createElement('div');
-        actions.className = 'version-price-option-actions';
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'member-create-secondary-btn';
         removeBtn.textContent = 'Remove';
         removeBtn.addEventListener('click', ()=>{
           if(options.length <= 1){
@@ -19264,9 +18220,8 @@ document.addEventListener('pointerdown', (e) => {
           }
           row.remove();
         });
-        actions.appendChild(removeBtn);
 
-        row.append(topRow, bottomRow, actions);
+        row.append(versionInput, currencySelect, priceInput, removeBtn);
         list.appendChild(row);
       }
 
@@ -19282,27 +18237,26 @@ document.addEventListener('pointerdown', (e) => {
         addRow(option);
       });
 
-      editor.appendChild(addBtn);
-      return editor;
+      const container = document.createElement('div');
+      container.appendChild(list);
+      container.appendChild(addBtn);
+      return container;
     }
 
     function buildVenueSessionEditor(field, labelId){
       const venues = Array.isArray(field.options) && field.options.length ? field.options.map(cloneVenueSessionVenue) : [venueSessionCreateVenue()];
-      const editor = document.createElement('div');
-      editor.className = 'venue-session-editor';
-      editor.setAttribute('role', 'group');
-      editor.setAttribute('aria-labelledby', labelId);
       const venueList = document.createElement('div');
-      venueList.className = 'venue-session-venues';
-      editor.appendChild(venueList);
+      venueList.className = 'member-venue-session';
+      venueList.setAttribute('role', 'group');
+      venueList.setAttribute('aria-labelledby', labelId);
       let addVenueBtn = null;
 
       function addVenueCard(venue){
         const venueCard = document.createElement('div');
-        venueCard.className = 'venue-card';
+        venueCard.className = 'member-venue-card';
 
         const venueHeader = document.createElement('div');
-        venueHeader.className = 'venue-line address_line-line';
+        venueHeader.className = 'member-venue-header';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.placeholder = 'Venue Name';
@@ -19316,21 +18270,19 @@ document.addEventListener('pointerdown', (e) => {
         venueHeader.append(nameInput, addressInput);
 
         const sessionList = document.createElement('div');
-        sessionList.className = 'session-pricing-card-list';
+        sessionList.className = 'member-session-list';
 
         function addSessionCard(session){
           const sessionCard = document.createElement('div');
-          sessionCard.className = 'session-pricing-card';
+          sessionCard.className = 'member-session-card';
           const sessionTop = document.createElement('div');
-          sessionTop.className = 'session-date-row';
+          sessionTop.className = 'member-session-top';
           const dateInput = document.createElement('input');
           dateInput.type = 'date';
           dateInput.value = session.date || '';
           dateInput.addEventListener('change', ()=>{ session.date = dateInput.value; });
           sessionTop.appendChild(dateInput);
 
-          const sessionActions = document.createElement('div');
-          sessionActions.className = 'session-date-actions';
           const removeSessionBtn = document.createElement('button');
           removeSessionBtn.type = 'button';
           removeSessionBtn.className = 'member-create-secondary-btn';
@@ -19350,27 +18302,24 @@ document.addEventListener('pointerdown', (e) => {
             }
             sessionCard.remove();
           });
-          sessionActions.appendChild(removeSessionBtn);
-          sessionTop.appendChild(sessionActions);
+          sessionTop.appendChild(removeSessionBtn);
           sessionCard.appendChild(sessionTop);
 
           const timeList = document.createElement('div');
-          timeList.className = 'session-time-list';
+          timeList.className = 'member-time-list';
           sessionCard.appendChild(timeList);
 
           function addTimeCard(time){
             const timeCard = document.createElement('div');
-            timeCard.className = 'session-time-row';
+            timeCard.className = 'member-time-card';
             const timeHeader = document.createElement('div');
-            timeHeader.className = 'session-time-input-wrapper';
+            timeHeader.className = 'member-time-header';
             const timeInput = document.createElement('input');
             timeInput.type = 'time';
             timeInput.value = time.time || '';
             timeInput.addEventListener('change', ()=>{ time.time = timeInput.value; });
             timeHeader.appendChild(timeInput);
 
-            const timeActions = document.createElement('div');
-            timeActions.className = 'session-time-actions';
             const removeTimeBtn = document.createElement('button');
             removeTimeBtn.type = 'button';
             removeTimeBtn.className = 'member-create-secondary-btn';
@@ -19387,17 +18336,16 @@ document.addEventListener('pointerdown', (e) => {
               }
               timeCard.remove();
             });
-            timeActions.appendChild(removeTimeBtn);
-            timeHeader.appendChild(timeActions);
+            timeHeader.appendChild(removeTimeBtn);
             timeCard.appendChild(timeHeader);
 
             const versionList = document.createElement('div');
-            versionList.className = 'session-version-list';
+            versionList.className = 'member-version-list';
             timeCard.appendChild(versionList);
 
             function addVersionCard(version){
               const versionCard = document.createElement('div');
-              versionCard.className = 'session-pricing-card version-entry-card';
+              versionCard.className = 'member-version-card';
               const versionNameInput = document.createElement('input');
               versionNameInput.type = 'text';
               versionNameInput.placeholder = 'Version Name';
@@ -19406,12 +18354,12 @@ document.addEventListener('pointerdown', (e) => {
               versionCard.appendChild(versionNameInput);
 
               const tierList = document.createElement('div');
-              tierList.className = 'tier-list';
+              tierList.className = 'member-tier-list';
               versionCard.appendChild(tierList);
 
               function addTierRow(tier){
                 const tierRow = document.createElement('div');
-                tierRow.className = 'tier-row';
+                tierRow.className = 'member-tier-row';
                 const tierNameInput = document.createElement('input');
                 tierNameInput.type = 'text';
                 tierNameInput.placeholder = 'Tier Name';
@@ -19438,8 +18386,6 @@ document.addEventListener('pointerdown', (e) => {
                   tierPriceInput.value = tier.price;
                 });
 
-                const tierActions = document.createElement('div');
-                tierActions.className = 'tier-actions';
                 const removeTierBtn = document.createElement('button');
                 removeTierBtn.type = 'button';
                 removeTierBtn.className = 'member-create-secondary-btn';
@@ -19461,8 +18407,7 @@ document.addEventListener('pointerdown', (e) => {
                   tierRow.remove();
                 });
 
-                tierActions.appendChild(removeTierBtn);
-                tierRow.append(tierNameInput, tierCurrencySelect, tierPriceInput, tierActions);
+                tierRow.append(tierNameInput, tierCurrencySelect, tierPriceInput, removeTierBtn);
                 tierList.appendChild(tierRow);
               }
 
@@ -19472,7 +18417,7 @@ document.addEventListener('pointerdown', (e) => {
               version.tiers.forEach(addTierRow);
 
               const versionActions = document.createElement('div');
-              versionActions.className = 'version-actions';
+              versionActions.className = 'member-version-actions';
               const addTierBtn = document.createElement('button');
               addTierBtn.type = 'button';
               addTierBtn.className = 'member-create-secondary-btn';
@@ -19515,8 +18460,8 @@ document.addEventListener('pointerdown', (e) => {
             }
             time.versions.forEach(addVersionCard);
 
-            const timeFooter = document.createElement('div');
-            timeFooter.className = 'session-time-actions';
+            const timeActions = document.createElement('div');
+            timeActions.className = 'member-time-actions';
             const addVersionBtn = document.createElement('button');
             addVersionBtn.type = 'button';
             addVersionBtn.className = 'member-create-secondary-btn';
@@ -19526,8 +18471,8 @@ document.addEventListener('pointerdown', (e) => {
               time.versions.push(version);
               addVersionCard(version);
             });
-            timeFooter.appendChild(addVersionBtn);
-            timeCard.appendChild(timeFooter);
+            timeActions.appendChild(addVersionBtn);
+            timeCard.appendChild(timeActions);
             timeList.appendChild(timeCard);
           }
 
@@ -19536,8 +18481,8 @@ document.addEventListener('pointerdown', (e) => {
           }
           session.times.forEach(addTimeCard);
 
-          const sessionFooterActions = document.createElement('div');
-          sessionFooterActions.className = 'session-date-actions';
+          const sessionActions = document.createElement('div');
+          sessionActions.className = 'member-session-actions';
           const addTimeBtn = document.createElement('button');
           addTimeBtn.type = 'button';
           addTimeBtn.className = 'member-create-secondary-btn';
@@ -19547,8 +18492,8 @@ document.addEventListener('pointerdown', (e) => {
             session.times.push(time);
             addTimeCard(time);
           });
-          sessionFooterActions.appendChild(addTimeBtn);
-          sessionCard.appendChild(sessionFooterActions);
+          sessionActions.appendChild(addTimeBtn);
+          sessionCard.appendChild(sessionActions);
           sessionList.appendChild(sessionCard);
         }
 
@@ -19558,7 +18503,7 @@ document.addEventListener('pointerdown', (e) => {
         venue.sessions.forEach(addSessionCard);
 
         const venueActions = document.createElement('div');
-        venueActions.className = 'venue-line-actions';
+        venueActions.className = 'member-venue-actions';
         const addSessionBtn = document.createElement('button');
         addSessionBtn.type = 'button';
         addSessionBtn.className = 'member-create-secondary-btn';
@@ -19609,181 +18554,85 @@ document.addEventListener('pointerdown', (e) => {
       });
       venueList.appendChild(addVenueBtn);
 
-      return editor;
-    }
-
-    async function initializeMemberFormbuilderSnapshot(){
-      if(categorySelect){
-        categorySelect.disabled = true;
-      }
-      if(subcategorySelect){
-        subcategorySelect.disabled = true;
-      }
-      renderEmptyState(loadingMessage);
-      try{
-        const fetchSnapshot = typeof window !== 'undefined' && typeof window.fetchSavedFormbuilderSnapshot === 'function'
-          ? window.fetchSavedFormbuilderSnapshot
-          : null;
-        const snapshot = fetchSnapshot
-          ? await fetchSnapshot()
-          : (getSavedFormbuilderSnapshot() || memberSnapshot);
-        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
-          window.formbuilderStateManager.restore(snapshot);
-        }
-        applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
-        memberSnapshotErrorMessage = '';
-        setEmptyStateMessage(defaultEmptyMessage);
-      }catch(error){
-        const message = error && typeof error.message === 'string' ? error.message : '';
-        if(message && message.toLowerCase().includes('database connection not configured')){
-          console.warn('Formbuilder snapshot service unavailable; using defaults.');
-        } else {
-          console.error('Failed to load formbuilder snapshot for members', error);
-        }
-        memberSnapshotErrorMessage = fetchErrorMessage;
-        setEmptyStateMessage(fetchErrorMessage);
-        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
-      } finally {
-        if(categorySelect){
-          categorySelect.disabled = false;
-        }
-        populateCategoryOptions(false);
-      }
+      return venueList;
     }
 
     function buildMemberCreateField(field, index){
       const wrapper = document.createElement('div');
-      wrapper.className = 'panel-field form-preview-field';
+      wrapper.className = 'panel-field member-create-field';
+      const label = document.createElement('label');
       const labelText = field.name && field.name.trim() ? field.name.trim() : `Field ${index + 1}`;
       const labelId = `memberCreateFieldLabel-${++fieldIdCounter}`;
       const controlId = `memberCreateField-${fieldIdCounter}`;
-      const label = document.createElement('label');
       label.id = labelId;
-      label.className = 'form-preview-field-label';
-      label.setAttribute('for', controlId);
-      label.textContent = labelText;
-      if(field.required){
-        wrapper.classList.add('form-preview-field--required');
-        label.appendChild(document.createTextNode(' '));
-        const asterisk = document.createElement('span');
-        asterisk.className = 'required-asterisk';
-        asterisk.textContent = '*';
-        label.appendChild(asterisk);
-      }
+      label.textContent = field.required ? `${labelText} *` : labelText;
       wrapper.appendChild(label);
-
-      const placeholder = field.placeholder || '';
       let control = null;
+      const placeholder = field.placeholder || '';
 
       if(field.type === 'description' || field.type === 'text-area'){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
         textarea.placeholder = placeholder;
-        textarea.className = 'form-preview-textarea';
-        if(field.type === 'description'){
-          textarea.classList.add('form-preview-description');
-        }
         if(field.required) textarea.required = true;
         control = textarea;
       } else if(field.type === 'dropdown'){
-        wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
-        select.className = 'form-preview-select';
         if(field.required) select.required = true;
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
         placeholderOption.textContent = placeholder || 'Select an option';
         select.appendChild(placeholderOption);
-        field.options.forEach((optionValue, optionIndex) => {
+        field.options.forEach(optionValue => {
           const option = document.createElement('option');
-          const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-          option.value = stringValue;
-          option.textContent = stringValue.trim() ? stringValue : `Option ${optionIndex + 1}`;
+          option.value = optionValue;
+          option.textContent = optionValue || 'Option';
           select.appendChild(option);
         });
         control = select;
       } else if(field.type === 'radio-toggle'){
-        wrapper.classList.add('form-preview-field--radio-toggle');
-        label.removeAttribute('for');
         const radioGroup = document.createElement('div');
-        radioGroup.className = 'form-preview-radio-group';
+        radioGroup.className = 'member-radio-group';
         radioGroup.setAttribute('role', 'radiogroup');
         radioGroup.setAttribute('aria-labelledby', labelId);
         const radioName = `member-create-radio-${fieldIdCounter}`;
-        if(field.options.length){
-          field.options.forEach((optionValue, optionIndex)=>{
-            const radioLabel = document.createElement('label');
-            radioLabel.className = 'form-preview-radio-option';
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = radioName;
-            radio.value = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
-            if(field.required && optionIndex === 0) radio.required = true;
-            const displayValue = radio.value.trim() ? radio.value : `Option ${optionIndex + 1}`;
-            const radioText = document.createElement('span');
-            radioText.textContent = displayValue;
-            radioLabel.append(radio, radioText);
-            radioGroup.appendChild(radioLabel);
-          });
-        } else {
-          const placeholderOption = document.createElement('label');
-          placeholderOption.className = 'form-preview-radio-option';
+        field.options.forEach((optionValue, optionIndex)=>{
+          const radioLabel = document.createElement('label');
+          radioLabel.className = 'member-radio-option';
           const radio = document.createElement('input');
           radio.type = 'radio';
-          radio.disabled = true;
-          const radioText = document.createElement('span');
-          radioText.textContent = 'Option';
-          placeholderOption.append(radio, radioText);
-          radioGroup.appendChild(placeholderOption);
-        }
+          radio.name = radioName;
+          radio.value = optionValue;
+          if(field.required && optionIndex === 0) radio.required = true;
+          radioLabel.append(radio, document.createTextNode(optionValue || `Option ${optionIndex + 1}`));
+          radioGroup.appendChild(radioLabel);
+        });
         control = radioGroup;
-      } else if(field.type === 'images'){
-        wrapper.classList.add('form-preview-field--images');
         label.removeAttribute('for');
-        const imageWrapper = document.createElement('div');
-        imageWrapper.className = 'form-preview-images';
+      } else if(field.type === 'images'){
         const fileInput = document.createElement('input');
         fileInput.id = controlId;
         fileInput.type = 'file';
         fileInput.multiple = true;
         fileInput.accept = 'image/*';
         if(field.required) fileInput.required = true;
-        const hint = document.createElement('p');
-        hint.className = 'form-preview-image-hint';
-        hint.textContent = placeholder || 'Upload images';
-        const message = document.createElement('p');
-        message.className = 'form-preview-image-message';
-        message.textContent = '';
-        const previewGrid = document.createElement('div');
-        previewGrid.className = 'form-preview-image-previews';
-        const previewId = `${controlId}-previews`;
-        previewGrid.id = previewId;
-        fileInput.dataset.imagePreviewTarget = previewId;
-        imageWrapper.append(fileInput, hint, message, previewGrid);
-        control = imageWrapper;
+        control = fileInput;
       } else if(field.type === 'version-price'){
-        wrapper.classList.add('form-preview-field--version-price');
-        label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
-      } else if(field.type === 'venue-session-version-tier-price'){
-        wrapper.classList.add('form-preview-field--venue-session');
         label.removeAttribute('for');
+      } else if(field.type === 'venue-session-version-tier-price'){
         control = buildVenueSessionEditor(field, labelId);
+        label.removeAttribute('for');
       } else if(field.type === 'website-url' || field.type === 'tickets-url'){
-        wrapper.classList.add('form-preview-field--url');
-        const urlWrapper = document.createElement('div');
-        urlWrapper.className = 'form-preview-url-wrapper';
         const input = document.createElement('input');
         input.id = controlId;
         input.type = 'url';
         input.placeholder = placeholder || 'https://example.com';
         input.autocomplete = 'url';
-        input.className = 'form-preview-url-input';
         if(field.required) input.required = true;
-        urlWrapper.appendChild(input);
-        control = urlWrapper;
+        control = input;
       } else {
         const input = document.createElement('input');
         input.id = controlId;
@@ -19802,11 +18651,6 @@ document.addEventListener('pointerdown', (e) => {
       }
 
       if(control){
-        if(control instanceof HTMLElement){
-          if(!control.id){
-            control.setAttribute('aria-labelledby', labelId);
-          }
-        }
         wrapper.appendChild(control);
       }
       return wrapper;
@@ -19828,7 +18672,6 @@ document.addEventListener('pointerdown', (e) => {
         placeholder.textContent = 'No fields configured for this subcategory yet.';
         formFields.appendChild(placeholder);
       } else {
-        memberSnapshotErrorMessage = '';
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl) formFields.appendChild(fieldEl);
@@ -19934,11 +18777,12 @@ document.addEventListener('pointerdown', (e) => {
 
     if(typeof formbuilderCats !== 'undefined' && formbuilderCats){
       formbuilderCats.addEventListener('change', ()=>{
-        refreshMemberSnapshotFromManager();
+        refreshMemberSnapshot();
+        populateCategoryOptions(true);
       });
     }
 
-    initializeMemberFormbuilderSnapshot();
+    populateCategoryOptions(true);
     updatePaypalContainer(false);
   }
 
@@ -20045,10 +18889,6 @@ document.addEventListener('pointerdown', (e) => {
       icon20: 'assets/icons-20/whats-on-category-icon-red-20.webp',
       icon30: 'assets/icons-30/whats-on-category-icon-red-30.webp'
     },
-    'Venues': {
-      icon20: 'assets/icons-20/whats-on-category-icon-violet-20.webp',
-      icon30: 'assets/icons-30/whats-on-category-icon-violet-30.webp'
-    },
     'Other Opportunities': {
       icon20: 'assets/icons-20/opportunities-category-icon-red-20.webp',
       icon30: 'assets/icons-30/opportunities-category-icon-red-30.webp'
@@ -20140,13 +18980,7 @@ document.addEventListener('DOMContentLoaded', () => {
     colorInput.addEventListener('input', () => { apply(); save(); });
     opacityInput.addEventListener('input', () => { apply(); save(); });
     const prev = window.saveAdminChanges;
-    window.saveAdminChanges = () => {
-      save();
-      if(typeof prev === 'function'){
-        return prev();
-      }
-      return undefined;
-    };
+    window.saveAdminChanges = () => { save(); if(typeof prev === 'function') prev(); };
   }
 });
 
@@ -21240,13 +20074,10 @@ document.addEventListener('DOMContentLoaded', () => {
       ? user.emailNormalized.trim().toLowerCase()
       : emailRaw.toLowerCase();
     if(!normalized) return null;
-    const usernameRaw = typeof user.username === 'string' ? user.username.trim() : '';
-    const username = usernameRaw || normalized;
     return {
       name: typeof user.name === 'string' ? user.name.trim() : '',
       email: emailRaw,
       emailNormalized: normalized,
-      username,
       password: typeof user.password === 'string' ? user.password : '',
       avatar: typeof user.avatar === 'string' ? user.avatar.trim() : ''
     };
@@ -21274,14 +20105,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function storeCurrent(user){
     try{
       if(user){
-        const payload = {
-          type: user.isAdmin ? 'admin' : 'member',
-          username: typeof user.username === 'string' ? user.username : '',
-          email: typeof user.email === 'string' ? user.email : '',
-          name: typeof user.name === 'string' ? user.name : '',
-          avatar: typeof user.avatar === 'string' ? user.avatar : ''
-        };
-        localStorage.setItem(CURRENT_KEY, JSON.stringify(payload));
+        if(user.isAdmin){
+          localStorage.setItem(CURRENT_KEY, JSON.stringify({ admin: true }));
+        } else {
+          localStorage.setItem(CURRENT_KEY, JSON.stringify({ emailNormalized: user.emailNormalized }));
+        }
       } else {
         localStorage.removeItem(CURRENT_KEY);
       }
@@ -21293,41 +20121,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem(CURRENT_KEY);
       if(!raw) return null;
       const parsed = JSON.parse(raw);
-      if(!parsed || typeof parsed !== 'object') return null;
-      const type = parsed.type === 'admin' ? 'admin' : 'member';
-      const username = typeof parsed.username === 'string' ? parsed.username : '';
-      const emailRaw = typeof parsed.email === 'string' ? parsed.email : username;
-      const normalized = typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '';
-      if(type === 'admin'){
-        if(window.adminAuthManager){
-          window.adminAuthManager.setAuthenticated(true, username || emailRaw || 'admin');
+      if(parsed && parsed.admin){
+        if(window.adminAuthManager && window.adminAuthManager.isAuthenticated()){
+          return window.adminAuthManager.getAdminUser();
         }
-        return {
-          name: parsed.name || 'Administrator',
-          email: emailRaw,
-          emailNormalized: normalized || 'admin',
-          username: username || emailRaw || 'admin',
-          avatar: parsed.avatar || '',
-          isAdmin: true
-        };
-      }
-      if(normalized){
-        const existing = users.find(u => u.emailNormalized === normalized);
-        if(existing){
-          return { ...existing };
-        }
-      }
-      if(!emailRaw){
         return null;
       }
-      return {
-        name: parsed.name || '',
-        email: emailRaw,
-        emailNormalized: normalized || emailRaw.toLowerCase(),
-        username: username || normalized || emailRaw,
-        avatar: parsed.avatar || '',
-        isAdmin: false
-      };
+      if(parsed && parsed.emailNormalized){
+        const normalized = String(parsed.emailNormalized).toLowerCase();
+        return users.find(u => u.emailNormalized === normalized) || null;
+      }
     }catch(err){}
     return null;
   }
@@ -21335,7 +20138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function svgPlaceholder(letter){
     const palette = ['#2e3a72','#0ea5e9','#f97316','#14b8a6','#a855f7'];
     const color = palette[letter.charCodeAt(0) % palette.length];
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${color}"/><text x="50%" y="52%" text-anchor="middle" font-size="36" font-family="Inter, Arial, sans-serif" fill="#ffffff">${letter}</text></svg>`;
     try{
       return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
     }catch(err){
@@ -21494,8 +20297,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function render(){
     if(window.adminAuthManager){
       if(currentUser && currentUser.isAdmin){
-        const identity = currentUser.username || currentUser.email || 'admin';
-        window.adminAuthManager.setAuthenticated(true, identity);
+        window.adminAuthManager.setAuthenticated(true);
       } else {
         window.adminAuthManager.setAuthenticated(false);
       }
@@ -21560,61 +20362,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function handleLogin(){
+  function handleLogin(){
     const emailInput = document.getElementById('memberLoginEmail');
     const passwordInput = document.getElementById('memberLoginPassword');
-    const usernameRaw = emailInput ? emailInput.value.trim() : '';
+    const emailRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
-    if(!usernameRaw || !password){
+    if(!emailRaw || !password){
       showStatus('Enter your email and password.', { error: true });
-      if(!usernameRaw && emailInput){
+      if(!emailRaw && emailInput){
         emailInput.focus();
       } else if(passwordInput){
         passwordInput.focus();
       }
       return;
     }
-    let verified = false;
-    try{
-      verified = await verifyUserLogin(usernameRaw, password);
-    }catch(err){
-      console.error('Login verification failed', err);
-      showStatus('Unable to verify credentials. Please try again.', { error: true });
+    const adminManager = window.adminAuthManager;
+    if(adminManager && adminManager.matchesCredentials(emailRaw, password)){
+      currentUser = { ...adminManager.getAdminUser() };
+      storeCurrent(currentUser);
+      render();
+      showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
       return;
     }
-    if(!verified){
-      showStatus('Incorrect email or password. Try again.', { error: true });
+    if(adminManager && adminManager.isAdminIdentifier(emailRaw)){
+      showStatus('Incorrect password. Try again.', { error: true });
       if(passwordInput){
         passwordInput.focus();
         passwordInput.select();
       }
       return;
     }
-    const normalized = usernameRaw.toLowerCase();
-    currentUser = {
-      name: '',
-      email: usernameRaw,
-      emailNormalized: normalized,
-      username: usernameRaw,
-      avatar: '',
-      isAdmin: normalized === 'admin'
-    };
+    const normalized = emailRaw.toLowerCase();
+    const user = users.find(u => u.emailNormalized === normalized);
+    if(!user){
+      showStatus('Account not found. Please register first.', { error: true });
+      if(emailInput) emailInput.focus();
+      return;
+    }
+    if(user.password !== password){
+      showStatus('Incorrect password. Try again.', { error: true });
+      if(passwordInput){
+        passwordInput.focus();
+        passwordInput.select();
+      }
+      return;
+    }
+    currentUser = { ...user };
     storeCurrent(currentUser);
     render();
-    const displayName = currentUser.name || currentUser.email || currentUser.username;
-    showStatus(`Welcome back, ${displayName}!`);
+    showStatus(`Welcome back, ${currentUser.name || currentUser.email}!`);
   }
 
-  async function handleRegister(){
+  function handleRegister(){
     const nameInput = document.getElementById('memberRegisterName');
     const emailInput = document.getElementById('memberRegisterEmail');
     const passwordInput = document.getElementById('memberRegisterPassword');
-    const passwordConfirmInput = document.getElementById('memberRegisterPasswordConfirm');
     const avatarInput = document.getElementById('memberRegisterAvatar');
     const name = nameInput ? nameInput.value.trim() : '';
     const emailRaw = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
-    const passwordConfirm = passwordConfirmInput ? passwordConfirmInput.value : '';
     const avatar = avatarInput ? avatarInput.value.trim() : '';
     if(!name || !emailRaw || !password){
       showStatus('Please complete all required fields.', { error: true });
@@ -21636,103 +20442,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if(passwordInput) passwordInput.focus();
       return;
     }
-    if(!passwordConfirm){
-      showStatus('Please complete all required fields.', { error: true });
-      if(passwordConfirmInput) passwordConfirmInput.focus();
-      return;
-    }
-    if(password !== passwordConfirm){
-      showStatus('Passwords do not match.', { error: true });
-      if(passwordConfirmInput){
-        passwordConfirmInput.focus();
-        if(typeof passwordConfirmInput.select === 'function'){
-          passwordConfirmInput.select();
-        }
-      }
-      return;
-    }
     const normalized = emailRaw.toLowerCase();
-    const formData = new FormData();
-    formData.set('display_name', name);
-    formData.set('email', emailRaw);
-    formData.set('password', password);
-    formData.set('confirm', passwordConfirm);
-    formData.set('avatar_url', avatar);
-    let response;
-    try{
-      response = await fetch('/gateway.php?action=add-member', {
-        method: 'POST',
-        body: formData
-      });
-    }catch(err){
-      console.error('Registration request failed', err);
-      showStatus('Registration failed.', { error: true });
+    if(users.some(u => u.emailNormalized === normalized)){
+      showStatus('An account already exists for that email.', { error: true });
+      if(emailInput) emailInput.focus();
       return;
     }
-    let responseText = '';
-    try{
-      responseText = await response.text();
-    }catch(err){
-      console.error('Failed to read registration response', err);
-      showStatus('Registration failed.', { error: true });
-      return;
-    }
-    let payload = null;
-    if(responseText){
-      try{
-        payload = JSON.parse(responseText);
-      }catch(err){
-        payload = null;
-      }
-    }
-    if(!response.ok || !payload || payload.success === false){
-      let errorMessage = 'Registration failed.';
-      if(payload && typeof payload === 'object'){
-        const possible = payload.error || payload.message;
-        if(typeof possible === 'string' && possible.trim()){
-          errorMessage = possible.trim();
-        }
-      } else if(responseText && responseText.trim()){
-        errorMessage = responseText.trim();
-      }
-      showStatus(errorMessage, { error: true });
-      return;
-    }
-    const memberData = payload && typeof payload === 'object'
-      ? (payload.member || payload.user || payload.data || payload.payload || null)
-      : null;
-    const resolvedMember = memberData && typeof memberData === 'object' ? memberData : {};
-    const memberNameRaw = typeof resolvedMember.display_name === 'string' && resolvedMember.display_name.trim()
-      ? resolvedMember.display_name.trim()
-      : (typeof resolvedMember.name === 'string' && resolvedMember.name.trim() ? resolvedMember.name.trim() : name);
-    const memberEmailRaw = typeof resolvedMember.email === 'string' && resolvedMember.email.trim()
-      ? resolvedMember.email.trim()
-      : emailRaw;
-    const memberAvatarRaw = typeof resolvedMember.avatar_url === 'string' && resolvedMember.avatar_url.trim()
-      ? resolvedMember.avatar_url.trim()
-      : (typeof resolvedMember.avatar === 'string' && resolvedMember.avatar.trim()
-        ? resolvedMember.avatar.trim()
-        : avatar);
-    const memberUsernameRaw = typeof resolvedMember.username === 'string' && resolvedMember.username.trim()
-      ? resolvedMember.username.trim()
-      : (memberEmailRaw || normalized);
-    const finalEmailRaw = memberEmailRaw || emailRaw;
-    const finalEmail = typeof finalEmailRaw === 'string' ? finalEmailRaw.trim() : '';
-    const finalNormalized = finalEmail ? finalEmail.toLowerCase() : normalized;
-    currentUser = {
-      name: memberNameRaw || name,
-      email: finalEmail,
-      emailNormalized: finalNormalized,
-      username: memberUsernameRaw || finalEmail || finalNormalized,
-      avatar: memberAvatarRaw || '',
-      isAdmin: finalNormalized === 'admin'
-    };
+    const newUser = normalizeUser({ name, email: emailRaw, emailNormalized: normalized, password, avatar });
+    users.push(newUser);
+    saveUsers(users);
+    currentUser = { ...newUser };
     storeCurrent(currentUser);
-    if(form && typeof form.reset === 'function'){
-      form.reset();
-    } else {
-      clearInputs(registerInputs);
-    }
     render();
     showStatus(`Welcome, ${currentUser.name || currentUser.email}!`);
   }
@@ -21769,10 +20489,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(action === 'register'){
         handleRegister();
       } else {
-        Promise.resolve(handleLogin()).catch(err => {
-          console.error('Login handler failed', err);
-          showStatus('Unable to process login. Please try again.', { error: true });
-        });
+        handleLogin();
       }
     });
 
@@ -21877,9 +20594,6 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
  
  
-
-
-
 
 
 
