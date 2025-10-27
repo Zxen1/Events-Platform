@@ -3208,7 +3208,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
       try{
-        const response = await fetch('/gateway.php?action=get-form', {
+        const response = await fetch('/gateway.php?action=get-formbuilder', {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
           signal: controller ? controller.signal : undefined
@@ -3253,9 +3253,24 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
-      categories: [],
+      categories: [
+        { name:"What's On", subs:["Live Gigs","Live Theatre","Screenings","Artwork","Live Sport","Venues","Other Events"], subFields:{} },
+        { name:"Opportunities", subs:["Stage Auditions","Screen Auditions","Clubs","Jobs","Volunteers","Competitions","Other Opportunities"], subFields:{} },
+        { name:"Learning", subs:["Tutors","Education Centres","Courses","Other Learning"], subFields:{} },
+        { name:"Buy and Sell", subs:["Wanted","For Sale","Freebies"], subFields:{} },
+        { name:"For Hire", subs:["Performers","Staff","Goods and Services"], subFields:{} }
+      ],
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD']
     };
+
+    DEFAULT_FORMBUILDER_SNAPSHOT.categories = DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
+      name: cat.name,
+      subs: Array.isArray(cat.subs) ? cat.subs.slice() : [],
+      subFields: (Array.isArray(cat.subs) ? cat.subs : []).reduce((acc, sub) => {
+        acc[sub] = [];
+        return acc;
+      }, {})
+    }));
 
     function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
@@ -3555,15 +3570,22 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           { name: 'Images', type: 'images', placeholder: '', required: true }
         ];
     window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-    const categoryIcons = window.categoryIcons = window.categoryIcons || {};
-    const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
-    const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
-    if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
-      subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
-    }
-    const subcategoryMarkerIds = window.subcategoryMarkerIds = window.subcategoryMarkerIds || {};
-    const categoryShapes = window.categoryShapes = window.categoryShapes || {};
+    const ICON_BASE = window.ICON_BASE = {
+        "What's On": "whats-on-category-icon",
+        "Opportunities": "opportunities-category-icon",
+        "Learning": "learning-category-icon",
+        "Buy and Sell": "Buy-and-sell-category-icon",
+        "For Hire": "For-hire-category-icon"
+      };
+    const COLOR_NAMES = window.COLOR_NAMES = ['blue','dark-yellow','green','indigo','orange','red','violet'];
+    const subcategoryColorMap = window.subcategoryColorMap = {};
+    let subcategoryColorCursor = 0;
     categories.forEach(cat => {
+      (cat.subs || []).forEach(sub => {
+        const color = COLOR_NAMES[subcategoryColorCursor % COLOR_NAMES.length];
+        subcategoryColorMap[`${cat.name}::${sub}`] = color;
+        subcategoryColorCursor++;
+      });
       if(!cat || typeof cat !== 'object') return;
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
         cat.subFields = {};
@@ -3574,22 +3596,15 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
       });
     });
-
-    function extractIconSrc(html){
-      if(typeof html !== 'string'){ return ''; }
-      const trimmed = html.trim();
-      if(!trimmed){ return ''; }
-      if(typeof document === 'undefined'){ return ''; }
-      if(!extractIconSrc.__parser){
-        extractIconSrc.__parser = document.createElement('div');
-      }
-      const parser = extractIconSrc.__parser;
-      parser.innerHTML = trimmed;
-      const img = parser.querySelector('img');
-      const src = img ? (img.getAttribute('src') || '').trim() : '';
-      parser.innerHTML = '';
-      return src;
-    }
+    subcategoryColorMap["What's On::Venues"] = 'violet';
+    subcategoryColorMap["What's On::Other Events"] = 'red';
+    subcategoryColorMap['Opportunities::Other Opportunities'] = 'red';
+    subcategoryColorMap['Learning::Other Learning'] = 'red';
+    const subcategoryIcons = window.subcategoryIcons = {};
+    const subcategoryMarkers = window.subcategoryMarkers = {};
+    subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
+    const subcategoryMarkerIds = window.subcategoryMarkerIds = {};
+    const categoryShapes = window.categoryShapes = {};
 
     // --- Icon loader: ensures Mapbox images are available and quiets missing-image logs ---
     function attachIconLoader(mapInstance){
@@ -3598,34 +3613,23 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         'freebies','live-sport','volunteers','goods-and-services','clubs','artwork',
         'live-gigs','for-sale','education-centres','tutors'
       ];
-      const FALLBACK_BASES = [
-        { base: 'assets/icons-30/', suffixes: ['-30.webp', '.webp'] },
-        { base: 'assets/icons-20/', suffixes: ['-20.webp', '.webp'] }
+      const BASES = [
+        'assets/icons/subcategories/',
+        'assets/icons/',
+        'assets/images/icons/'
       ];
       const pending = new Map();
 
       const urlsFor = (name) => {
         const urls = [];
-        const seen = new Set();
-        const pushUrl = (url) => {
-          if(!url || seen.has(url)){
-            return;
-          }
-          seen.add(url);
-          urls.push(url);
-        };
         const markers = window.subcategoryMarkers || {};
         const manual = markers[name] || null;
-        const shouldLookupLocal = Boolean(manual || KNOWN.includes(name));
-        if(manual){
-          pushUrl(manual);
-        }
+        const shouldLookupLocal = manual || KNOWN.includes(name);
+        if(manual) urls.push(manual);
         if(shouldLookupLocal){
-          FALLBACK_BASES.forEach(({ base, suffixes }) => {
-            suffixes.forEach(suffix => {
-              pushUrl(`${base}${name}${suffix}`);
-            });
-          });
+          const ratio = (window.devicePixelRatio || 1) >= 2 ? '@2x' : '';
+          BASES.forEach(base => urls.push(`${base}${name}${ratio}.png`));
+          BASES.forEach(base => urls.push(`${base}${name}.png`));
         }
         return { urls, shouldLookupLocal };
       };
@@ -7333,9 +7337,14 @@ function makePosts(){
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className = 'category-logo';
-        const categoryIconHtml = categoryIcons[c.name] || '';
-        if(categoryIconHtml){
-          categoryLogo.innerHTML = categoryIconHtml;
+        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 20;
+          img.height = 20;
+          img.alt = '';
+          categoryLogo.appendChild(img);
           categoryLogo.classList.add('has-icon');
         } else {
           categoryLogo.textContent = c.name.charAt(0) || '';
@@ -7403,11 +7412,10 @@ function makePosts(){
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
         preview.append(previewLabel, previewImg);
-        const initialCategoryIconSrc = extractIconSrc(categoryIconHtml);
-        const baseIconPath20 = initialCategoryIconSrc || '';
-        const baseIconPath = initialCategoryIconSrc || '';
-        if(initialCategoryIconSrc){
-          previewImg.src = initialCategoryIconSrc;
+        const baseIconPath20 = iconPrefix ? `assets/icons-20/${iconPrefix}-20.webp` : '';
+        const baseIconPath = iconPrefix ? `assets/icons-30/${iconPrefix}-30.webp` : '';
+        if(baseIconPath){
+          previewImg.src = baseIconPath;
           preview.classList.add('has-image');
           previewLabel.textContent = '';
           uploadLabelText.textContent = 'Change Icon';
@@ -7442,10 +7450,8 @@ function makePosts(){
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
-        let currentCategoryName = c.name || 'Category';
         const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
         const updateCategoryIconDisplay = (src)=>{
-          const displayName = getCategoryDisplayName();
           categoryLogo.innerHTML = '';
           if(src){
             const img = document.createElement('img');
@@ -7455,11 +7461,9 @@ function makePosts(){
             img.alt = '';
             categoryLogo.appendChild(img);
             categoryLogo.classList.add('has-icon');
-            categoryIcons[currentCategoryName] = `<img src="${src}" width="20" height="20" alt="">`;
           } else {
-            categoryLogo.textContent = displayName.charAt(0) || '';
+            categoryLogo.textContent = getCategoryDisplayName().charAt(0) || '';
             categoryLogo.classList.remove('has-icon');
-            delete categoryIcons[currentCategoryName];
           }
         };
         const applyCategoryNameChange = ()=>{
@@ -7469,15 +7473,6 @@ function makePosts(){
           }
           const displayName = getCategoryDisplayName();
           const datasetValue = displayName;
-          if(currentCategoryName !== datasetValue){
-            if(categoryIcons[currentCategoryName] !== undefined && categoryIcons[datasetValue] === undefined){
-              categoryIcons[datasetValue] = categoryIcons[currentCategoryName];
-            }
-            if(currentCategoryName !== datasetValue){
-              delete categoryIcons[currentCategoryName];
-              currentCategoryName = datasetValue;
-            }
-          }
           menu.dataset.category = datasetValue;
           label.textContent = displayName;
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
@@ -7538,13 +7533,7 @@ function makePosts(){
 
           const subLogo = document.createElement('span');
           subLogo.className = 'subcategory-logo';
-          const subIconHtml = subcategoryIcons[sub] || '';
-          if(subIconHtml){
-            subLogo.innerHTML = subIconHtml;
-            subLogo.classList.add('has-icon');
-          } else {
-            subLogo.textContent = sub.charAt(0) || '';
-          }
+          subLogo.textContent = sub.charAt(0) || '';
 
           const subLabel = document.createElement('span');
           subLabel.className = 'subcategory-label';
@@ -7603,7 +7592,11 @@ function makePosts(){
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
-          const subIconPath = extractIconSrc(subIconHtml);
+          const subColorKey = (window.subcategoryColorMap || {})[`${c.name}::${sub}`] || '';
+          const subIconPrefix = iconPrefix || '';
+          const subIconPath = subIconPrefix
+            ? (subColorKey ? `assets/icons-30/${subIconPrefix}-${subColorKey}-30.webp` : `assets/icons-30/${subIconPrefix}-30.webp`)
+            : '';
           if(subIconPath){
             subPreviewImg.src = subIconPath;
             subPreview.classList.add('has-image');
@@ -11786,7 +11779,6 @@ function makePosts(){
     function captureFormbuilderSnapshot(){
       return {
         categories: cloneCategoryList(categories),
-        categoryIcons: cloneMapLike(categoryIcons),
         subcategoryIcons: cloneMapLike(subcategoryIcons),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
@@ -11815,37 +11807,8 @@ function makePosts(){
           }
         });
       });
-      assignMapLike(categoryIcons, snapshot.categoryIcons);
       assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
-      const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
-      Object.keys(subcategoryMarkers).forEach(key => {
-        if(key !== MULTI_POST_MARKER_ICON_ID){
-          delete subcategoryMarkers[key];
-        }
-      });
-      if(multiIconSrc){
-        subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
-      }
-      const markerOverrides = snapshot && snapshot.subcategoryMarkers;
-      if(markerOverrides && typeof markerOverrides === 'object'){
-        Object.keys(markerOverrides).forEach(name => {
-          const url = markerOverrides[name];
-          if(typeof url !== 'string'){
-            return;
-          }
-          const trimmedUrl = url.trim();
-          if(!trimmedUrl){
-            return;
-          }
-          const slugKey = slugify(typeof name === 'string' ? name : '');
-          if(slugKey){
-            subcategoryMarkers[slugKey] = trimmedUrl;
-          }
-          if(typeof name === 'string' && name){
-            subcategoryMarkers[name] = trimmedUrl;
-          }
-        });
-      }
+      assignMapLike(subcategoryMarkers, snapshot.subcategoryMarkers);
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
       if(Array.isArray(normalized.versionPriceCurrencies)){
@@ -11854,14 +11817,6 @@ function makePosts(){
       renderFormbuilderCats();
       refreshSubcategoryLogos();
       refreshFormbuilderSubcategoryLogos();
-      if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
-        try{
-          document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
-        }catch(err){}
-      }
-      if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
-        try{ addPostSource(); }catch(err){ console.error('addPostSource failed after snapshot restore', err); }
-      }
     }
     function updateFormbuilderSnapshot(){
       savedFormbuilderSnapshot = captureFormbuilderSnapshot();
@@ -11913,10 +11868,14 @@ function makePosts(){
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className='category-logo';
-        const categoryIconHtml = categoryIcons[c.name] || '';
-        if(categoryIconHtml){
-          categoryLogo.innerHTML = categoryIconHtml;
-          categoryLogo.classList.add('has-icon');
+        const iconPrefix = (window.ICON_BASE || {})[c.name];
+        if(iconPrefix){
+          const img = document.createElement('img');
+          img.src = `assets/icons-20/${iconPrefix}-20.webp`;
+          img.width = 20;
+          img.height = 20;
+          img.alt = '';
+          categoryLogo.appendChild(img);
         } else {
           categoryLogo.textContent = c.name.charAt(0) || '';
         }
@@ -12053,28 +12012,11 @@ function makePosts(){
             });
           },
           refreshLogos: ()=>{
-            if(categoryLogo){
-              const catIconHtml = categoryIcons[c.name] || '';
-              if(catIconHtml){
-                categoryLogo.innerHTML = catIconHtml;
-                categoryLogo.classList.add('has-icon');
-              } else {
-                categoryLogo.textContent = c.name.charAt(0) || '';
-                categoryLogo.classList.remove('has-icon');
-              }
-            }
             subButtons.forEach(btn=>{
               const logoSpan = btn.querySelector('.subcategory-logo');
               if(!logoSpan) return;
               const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
-              if(iconHtml){
-                logoSpan.innerHTML = iconHtml;
-                logoSpan.classList.add('has-icon');
-              } else {
-                const label = btn.dataset.subcategory || '';
-                logoSpan.textContent = label.charAt(0) || '';
-                logoSpan.classList.remove('has-icon');
-              }
+              logoSpan.innerHTML = iconHtml;
             });
           }
         };
@@ -18113,7 +18055,7 @@ form.addEventListener('input', formChanged, true);
 
 // Extracted from <script>
 (function(){
-  const SAVE_ENDPOINT = '/gateway.php?action=save-form';
+  const SAVE_ENDPOINT = '/gateway.php?action=save-formbuilder';
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
   const ERROR_CLASS = 'error';
@@ -20070,6 +20012,60 @@ document.addEventListener('pointerdown', (e) => {
   if(typeof window.__wrapForInputYield === 'function'){
     ['openPost','updateVenue','togglePanel','ensureMapForVenue'].forEach(name => window.__wrapForInputYield(name));
   }
+})();
+
+
+// Extracted from <script>
+(function(){
+  const ICON_BASE = window.ICON_BASE || {};
+  const subcategoryIcons = window.subcategoryIcons || (window.subcategoryIcons = {});
+  const subcategoryMarkers = window.subcategoryMarkers || (window.subcategoryMarkers = {});
+  const subcategoryMarkerIds = window.subcategoryMarkerIds || (window.subcategoryMarkerIds = {});
+  const categoryShapes = window.categoryShapes || (window.categoryShapes = {});
+  let colorIdx = 0;
+  const cats = window.categories || [];
+  cats.forEach((cat) => {
+    if (cat && cat.name) {
+      categoryShapes[cat.name] = categoryShapes[cat.name] || null;
+    }
+    cat.subs.forEach(sub => {
+      const color = window.COLOR_NAMES[colorIdx % window.COLOR_NAMES.length];
+      colorIdx++;
+      const slug = slugify(sub);
+      const iconPrefix = ICON_BASE[cat.name];
+      const icon20 = `assets/icons-20/${iconPrefix}-${color}-20.webp`;
+      const icon30 = `assets/icons-30/${iconPrefix}-${color}-30.webp`;
+      subcategoryIcons[sub] = `<img src="${icon20}" width="20" height="20" alt="">`;
+      subcategoryMarkerIds[sub] = slug;
+      subcategoryMarkers[slug] = icon30;
+    });
+  });
+  const specialSubIconPaths = {
+    'Other Events': {
+      icon20: 'assets/icons-20/whats-on-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/whats-on-category-icon-red-30.webp'
+    },
+    'Venues': {
+      icon20: 'assets/icons-20/whats-on-category-icon-violet-20.webp',
+      icon30: 'assets/icons-30/whats-on-category-icon-violet-30.webp'
+    },
+    'Other Opportunities': {
+      icon20: 'assets/icons-20/opportunities-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/opportunities-category-icon-red-30.webp'
+    },
+    'Other Learning': {
+      icon20: 'assets/icons-20/learning-category-icon-red-20.webp',
+      icon30: 'assets/icons-30/learning-category-icon-red-30.webp'
+    }
+  };
+  Object.entries(specialSubIconPaths).forEach(([name, paths]) => {
+    subcategoryIcons[name] = `<img src="${paths.icon20}" width="20" height="20" alt="">`;
+    const slug = subcategoryMarkerIds[name] || slugify(name);
+    subcategoryMarkers[slug] = paths.icon30;
+    subcategoryMarkers[name] = paths.icon30;
+  });
+  document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
+  if(window.postsLoaded && window.__markersLoaded){ addPostSource(); }
 })();
 
 
