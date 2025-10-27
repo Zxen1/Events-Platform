@@ -8112,16 +8112,7 @@ function makePosts(){
           const subPreviewImg = document.createElement('img');
           subPreviewImg.alt = `${sub} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
-          const initialNormalizedSubIconUrl = normalizeIconPath(initialSubIconPath);
-          if(initialNormalizedSubIconUrl){
-            subPreviewImg.src = initialNormalizedSubIconUrl;
-            subPreview.classList.add('has-image');
-            subPreviewLabel.textContent = '';
-            subIconButton.textContent = 'Change Icon';
-            if(!subIconLookup.found){
-              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, initialNormalizedSubIconUrl);
-            }
-          }
+    
 
           subIconPicker.append(subIconButton, subPreview);
           attachIconPicker(subIconButton, subIconPicker, {
@@ -12036,8 +12027,9 @@ function makePosts(){
           subMenu.append(subContent);
 
           applySubNameChange();
-          if(initialNormalizedSubIconUrl){
-            updateSubIconDisplay(initialNormalizedSubIconUrl);
+      const initialIconSource = normalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
+          if(initialIconSource){
+            updateSubIconDisplay(initialIconSource);
           }
 
           subBtn.addEventListener('click', ()=>{
