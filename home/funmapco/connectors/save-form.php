@@ -498,6 +498,26 @@ function sanitizeIconPath($value): string
     return sanitizeString($normalized, 255);
 }
 
+function upgradeIconBasePath(string $sanitizedPath): string
+{
+    if ($sanitizedPath === '') {
+        return '';
+    }
+
+    $upgraded = $sanitizedPath;
+
+    if (stripos($upgraded, 'assets/icons-20/') === 0) {
+        $upgraded = 'assets/icons-30/' . substr($upgraded, strlen('assets/icons-20/'));
+
+        $sizeAdjusted = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $upgraded, 1);
+        if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
+            $upgraded = $sizeAdjusted;
+        }
+    }
+
+    return sanitizeString($upgraded, 255);
+}
+
 function normalizeMarkerIconPath(string $sanitizedPath): string
 {
     if ($sanitizedPath === '') {
@@ -602,8 +622,9 @@ function deriveIconVariants(string $path): array
     if ($clean === '') {
         return ['icon' => '', 'marker' => ''];
     }
-    $marker = normalizeMarkerIconPath($clean);
-    $icon = $clean;
+    $base = upgradeIconBasePath($clean);
+    $marker = normalizeMarkerIconPath($base);
+    $icon = $base;
     if ($marker !== '' && stripos($marker, 'icons-30/') !== false) {
         $candidate = preg_replace('#icons-30/#i', 'icons-20/', $marker, 1);
         if (is_string($candidate) && $candidate !== '') {
