@@ -3440,11 +3440,55 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
+    function getPersistedFormbuilderSnapshotFromGlobals(){
+      if(typeof window === 'undefined'){
+        return null;
+      }
+      const candidates = [
+        window.__persistedFormbuilderSnapshot,
+        window.__PERSISTED_FORMBUILDER_SNAPSHOT__,
+        window.__FORMBUILDER_SNAPSHOT__,
+        window.persistedFormbuilderSnapshot,
+        window.formbuilderSnapshot,
+        window.formBuilderSnapshot,
+        window.initialFormbuilderSnapshot,
+        window.__initialFormbuilderSnapshot
+      ];
+      for(const candidate of candidates){
+        if(candidate && typeof candidate === 'object'){
+          return candidate;
+        }
+      }
+      return null;
+    }
+
+    const persistedFormbuilderSnapshotPromise = (()=>{
+      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
+        return window.__persistedFormbuilderSnapshotPromise;
+      }
+      const promise = (async ()=>{
+        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
+        if(inlineSnapshot){
+          return inlineSnapshot;
+        }
+        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
+          return await fetchSavedFormbuilderSnapshot();
+        }
+        return null;
+      })();
+      if(typeof window !== 'undefined'){
+        window.__persistedFormbuilderSnapshotPromise = promise;
+      }
+      return promise;
+    })();
+
     const ICON_LIBRARY = Array.isArray(window.iconLibrary)
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(getSavedFormbuilderSnapshot());
+    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
+      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
+    );
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
       ICON_LIBRARY.length = 0;
       ICON_LIBRARY.push(...initialFormbuilderSnapshot.iconLibrary);
@@ -12527,6 +12571,28 @@ function makePosts(){
       getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
       restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
     };
+    persistedFormbuilderSnapshotPromise.then(snapshot => {
+      if(!snapshot) return;
+      const manager = window.formbuilderStateManager;
+      if(!manager || typeof manager.restore !== 'function'){
+        return;
+      }
+      try{
+        manager.restore(snapshot);
+      }catch(err){
+        console.error('Failed to restore persisted formbuilder snapshot', err);
+        return;
+      }
+      if(typeof manager.save === 'function'){
+        try{
+          manager.save();
+        }catch(err){
+          console.error('Failed to update saved formbuilder snapshot after hydration', err);
+        }
+      }
+    }).catch(err => {
+      console.error('Failed to load persisted formbuilder snapshot from backend', err);
+    });
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -20299,12 +20365,8 @@ document.addEventListener('pointerdown', (e) => {
       }
       renderEmptyState(loadingMessage);
       try{
-        const fetchSnapshot = typeof window !== 'undefined' && typeof window.fetchSavedFormbuilderSnapshot === 'function'
-          ? window.fetchSavedFormbuilderSnapshot
-          : null;
-        const snapshot = fetchSnapshot
-          ? await fetchSnapshot()
-          : (getSavedFormbuilderSnapshot() || memberSnapshot);
+        const backendSnapshot = await persistedFormbuilderSnapshotPromise;
+        const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
         if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
           window.formbuilderStateManager.restore(snapshot);
         }
