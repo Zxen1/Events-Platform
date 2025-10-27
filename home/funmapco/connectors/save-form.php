@@ -479,6 +479,31 @@ function sanitizeIconPath($value): string
     return sanitizeString($normalized, 255);
 }
 
+function normalizeMarkerIconPath(string $sanitizedPath): string
+{
+    if ($sanitizedPath === '') {
+        return '';
+    }
+
+    $markerPath = $sanitizedPath;
+
+    if (stripos($markerPath, 'icons-20/') !== false) {
+        $replaced = preg_replace('#icons-20/#i', 'icons-30/', $markerPath, 1);
+        if (is_string($replaced) && $replaced !== '') {
+            $markerPath = $replaced;
+        }
+    }
+
+    if (stripos($markerPath, 'icons-30/') !== false) {
+        $adjusted = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $markerPath, 1);
+        if (is_string($adjusted) && $adjusted !== '') {
+            $markerPath = $adjusted;
+        }
+    }
+
+    return sanitizeString($markerPath, 255);
+}
+
 function extractIconSrcFromHtml($value): string
 {
     $html = (string) $value;
@@ -562,12 +587,16 @@ function deriveIconVariants(string $path): array
     if ($clean === '') {
         return ['icon' => '', 'marker' => ''];
     }
-    $marker = $clean;
+    $marker = normalizeMarkerIconPath($clean);
     $icon = $clean;
-    if (stripos($clean, 'icons-30/') !== false) {
-        $candidate = preg_replace('#icons-30/#i', 'icons-20/', $clean, 1);
-        if (is_string($candidate) && $candidate !== '' && iconFileExists($candidate)) {
-            $icon = $candidate;
+    if ($marker !== '' && stripos($marker, 'icons-30/') !== false) {
+        $candidate = preg_replace('#icons-30/#i', 'icons-20/', $marker, 1);
+        if (is_string($candidate) && $candidate !== '') {
+            $candidate = preg_replace('/-30(\.[a-z0-9]+)$/i', '-20$1', $candidate, 1) ?: $candidate;
+            $candidate = sanitizeString($candidate, 255);
+            if ($candidate !== '' && iconFileExists($candidate)) {
+                $icon = $candidate;
+            }
         }
     }
     return ['icon' => $icon, 'marker' => $marker];
