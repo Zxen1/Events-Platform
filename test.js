@@ -205,6 +205,39 @@ expectedStoredPathIcons.forEach(icon => {
   );
 });
 
+const seededFromPathsWithoutExplicitLibrary = normalizeFormbuilderSnapshot({
+  categories: [],
+  categoryIconPaths: {
+    'id:505': 'icons-20/comedy.png'
+  },
+  subcategoryIconPaths: {
+    'name:Standup': 'assets/icons-30/microphone.svg'
+  }
+});
+
+const expectedIconsWithoutExplicitLibrary = new Set([
+  'assets/icons-30/comedy.png',
+  'assets/icons-30/microphone.svg'
+]);
+
+assert.strictEqual(
+  seededFromPathsWithoutExplicitLibrary.iconLibrary.length,
+  expectedIconsWithoutExplicitLibrary.size,
+  'Snapshots without explicit icon libraries should still surface icons from stored paths.'
+);
+
+expectedIconsWithoutExplicitLibrary.forEach(icon => {
+  assert(
+    seededFromPathsWithoutExplicitLibrary.iconLibrary.includes(icon),
+    `Expected icon library seeding without explicit entries to retain ${icon}.`
+  );
+});
+
+assert(
+  seededFromPathsWithoutExplicitLibrary.iconLibrary.length > 0,
+  'Icon library should not be empty when category or subcategory icons are present.'
+);
+
 assert(
   mainSource.includes("trigger.removeAttribute('aria-disabled');"),
   'Icon picker triggers should remove aria-disabled when icons are available.'

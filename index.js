@@ -3428,34 +3428,28 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
       const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
-        ? snapshot.iconLibrary.filter(item => typeof item === 'string')
+        ? snapshot.iconLibrary
         : [];
-      const sanitizedIconLibraryEntries = normalizeIconLibraryEntries(iconLibrarySource);
-      const seededIconCandidates = [
-        ...Object.values(normalizedCategoryIconPaths),
-        ...Object.values(normalizedSubcategoryIconPaths)
-      ].filter(path => typeof path === 'string' && path.trim() !== '');
-      const sanitizedSeededIconPaths = normalizeIconLibraryEntries(seededIconCandidates);
       const mergedIconSet = new Set();
       const mergedIconLibrary = [];
-      const mergeIcons = icons => {
-        if(!Array.isArray(icons)){
+      const addIconToLibrary = (icon)=>{
+        if(typeof icon !== 'string'){
           return;
         }
-        icons.forEach(icon => {
-          if(typeof icon !== 'string' || !icon){
-            return;
-          }
-          const key = icon.toLowerCase();
-          if(mergedIconSet.has(key)){
-            return;
-          }
-          mergedIconSet.add(key);
-          mergedIconLibrary.push(icon);
-        });
+        const normalized = normalizeIconAssetPath(icon);
+        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
+          return;
+        }
+        const key = normalized.toLowerCase();
+        if(mergedIconSet.has(key)){
+          return;
+        }
+        mergedIconSet.add(key);
+        mergedIconLibrary.push(normalized);
       };
-      mergeIcons(sanitizedIconLibraryEntries);
-      mergeIcons(sanitizedSeededIconPaths);
+      iconLibrarySource.forEach(addIconToLibrary);
+      Object.values(normalizedCategoryIconPaths).forEach(addIconToLibrary);
+      Object.values(normalizedSubcategoryIconPaths).forEach(addIconToLibrary);
       const iconLibrary = mergedIconLibrary;
       return {
         categories: normalizedCategories,
