@@ -5905,6 +5905,139 @@ function makePosts(){
       return { postsData, signature, changed: true, featureIndex: markerDataCache.featureIndex };
     }
 
+    function prepareMarkerLabelCompositesForPosts(postsData){
+      const enforceBudget = () => {
+        if(typeof enforceMarkerLabelCompositeBudget === 'function' && map){
+          try{ enforceMarkerLabelCompositeBudget(map); }catch(err){}
+        }
+      };
+      if(!map || typeof ensureMarkerLabelComposite !== 'function'){
+        enforceBudget();
+        return Promise.resolve();
+      }
+      const features = Array.isArray(postsData?.features) ? postsData.features : [];
+      if(!features.length){
+        enforceBudget();
+        return Promise.resolve();
+      }
+      const spriteMeta = new Map();
+      const zoomLevel = typeof map.getZoom === 'function' ? Number(map.getZoom()) : NaN;
+      const zoomEligible = Number.isFinite(zoomLevel) && zoomLevel >= 8;
+      const rawBounds = zoomEligible && typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
+      const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
+      const highlightedPostIdSet = new Set();
+      (Array.isArray(lastHighlightedPostIds) ? lastHighlightedPostIds : []).forEach(entry => {
+        if(!entry) return;
+        const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
+        if(rawId === undefined || rawId === null) return;
+        const strId = String(rawId);
+        if(strId){
+          highlightedPostIdSet.add(strId);
+        }
+      });
+      const usageTimestamp = nowTimestamp();
+      features.forEach(feature => {
+        if(!feature || !feature.properties) return;
+        const props = feature.properties;
+        const spriteId = props.labelSpriteId;
+        if(!spriteId || spriteMeta.has(spriteId)) return;
+        const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
+          ? feature.geometry.coordinates
+          : null;
+        let inView = false;
+        if(zoomEligible && coords && coords.length >= 2 && priorityBounds){
+          const [lng, lat] = coords;
+          if(Number.isFinite(lng) && Number.isFinite(lat)){
+            inView = pointWithinBounds(lng, lat, priorityBounds);
+          }
+        }
+        const existing = markerLabelCompositeStore.get(spriteId) || {};
+        const iconId = props.sub || props.baseSub || '';
+        const labelLine1 = props.labelLine1 || '';
+        const labelLine2 = props.labelLine2 || '';
+        const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
+        const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
+        const isHighlighted = (() => {
+          const ownId = props.id !== undefined && props.id !== null ? String(props.id) : '';
+          if(ownId && highlightedPostIdSet.has(ownId)){
+            return true;
+          }
+          return multiIds.some(mid => {
+            if(mid === undefined || mid === null) return false;
+            return highlightedPostIdSet.has(String(mid));
+          });
+        })();
+        const priority = Boolean(inView || isHighlighted);
+        let lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
+        if(priority){
+          lastUsed = usageTimestamp;
+        }
+        const updatedMeta = Object.assign({}, existing, {
+          iconId,
+          labelLine1,
+          labelLine2,
+          isMulti,
+          priority,
+          lastUsed,
+          inView
+        });
+        markerLabelCompositeStore.set(spriteId, updatedMeta);
+        spriteMeta.set(spriteId, {
+          iconId,
+          labelLine1,
+          labelLine2,
+          isMulti,
+          priority,
+          lastUsed,
+          inView
+        });
+      });
+      const spriteEntries = Array.from(spriteMeta.entries());
+      const compareEntries = (a, b) => {
+        const aMeta = a[1] || {};
+        const bMeta = b[1] || {};
+        const aPriority = aMeta.priority ? 1 : 0;
+        const bPriority = bMeta.priority ? 1 : 0;
+        if(aPriority !== bPriority){
+          return bPriority - aPriority;
+        }
+        const aLast = Number.isFinite(aMeta.lastUsed) ? aMeta.lastUsed : 0;
+        const bLast = Number.isFinite(bMeta.lastUsed) ? bMeta.lastUsed : 0;
+        if(aLast !== bLast){
+          return bLast - aLast;
+        }
+        return String(a[0]).localeCompare(String(b[0]));
+      };
+      spriteEntries.sort(compareEntries);
+      const compositeSafetyBuffer = 25;
+      let eagerSpriteEntries = [];
+      if(zoomEligible){
+        eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
+        if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
+          const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
+          if(maxEager <= 0){
+            eagerSpriteEntries = [];
+          } else if(eagerSpriteEntries.length > maxEager){
+            eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
+          }
+        }
+      }
+      const tasks = eagerSpriteEntries.map(([spriteId, meta]) =>
+        ensureMarkerLabelComposite(
+          map,
+          spriteId,
+          meta.iconId,
+          meta.labelLine1,
+          meta.labelLine2,
+          meta.isMulti,
+          { priority: meta.priority }
+        ).catch(()=>{})
+      );
+      return Promise.all(tasks).then(() => {
+        enforceBudget();
+      });
+    }
+
     function syncMarkerSources(list, options = {}){
       const { force = false } = options;
       const collections = getMarkerCollections(list);
@@ -5920,6 +6053,7 @@ function makePosts(){
         }
       }
       if(updated || force){
+        prepareMarkerLabelCompositesForPosts(postsData);
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
@@ -14789,123 +14923,7 @@ if (!map.__pillHooksInstalled) {
       if(typeof ensureMapIcon === 'function'){
         await Promise.all(iconIds.map(id => ensureMapIcon(id).catch(()=>{})));
       }
-      if(typeof ensureMarkerLabelComposite === 'function'){
-        const spriteMeta = new Map();
-        const zoomLevel = typeof map.getZoom === 'function' ? Number(map.getZoom()) : NaN;
-        const zoomEligible = Number.isFinite(zoomLevel) && zoomLevel >= 8;
-        const rawBounds = zoomEligible && typeof map.getBounds === 'function' ? normalizeBounds(map.getBounds()) : null;
-        const priorityBounds = rawBounds ? expandBounds(rawBounds, { lat: 0.35, lng: 0.35 }) : null;
-        const highlightedPostIdSet = new Set();
-        lastHighlightedPostIds.forEach(entry => {
-          if(!entry) return;
-          const rawId = entry.id ?? entry.postId ?? entry.postID ?? entry.postid;
-          if(rawId === undefined || rawId === null) return;
-          const strId = String(rawId);
-          if(strId){
-            highlightedPostIdSet.add(strId);
-          }
-        });
-        const usageTimestamp = nowTimestamp();
-        postsData.features.forEach(feature => {
-          if(!feature || !feature.properties) return;
-          const props = feature.properties;
-          const spriteId = props.labelSpriteId;
-          if(!spriteId || spriteMeta.has(spriteId)) return;
-          const coords = Array.isArray(feature.geometry && feature.geometry.coordinates)
-            ? feature.geometry.coordinates
-            : null;
-          let inView = false;
-          if(zoomEligible && coords && coords.length >= 2 && priorityBounds){
-            const [lng, lat] = coords;
-            if(Number.isFinite(lng) && Number.isFinite(lat)){
-              inView = pointWithinBounds(lng, lat, priorityBounds);
-            }
-          }
-          const existing = markerLabelCompositeStore.get(spriteId) || {};
-          const stored = spriteMeta.get(spriteId);
-          const iconId = props.sub || props.baseSub || '';
-          const labelLine1 = props.labelLine1 || '';
-          const labelLine2 = props.labelLine2 || '';
-          const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
-          const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
-          const isHighlighted = (() => {
-            const ownId = props.id !== undefined && props.id !== null ? String(props.id) : '';
-            if(ownId && highlightedPostIdSet.has(ownId)){
-              return true;
-            }
-            return multiIds.some(mid => {
-              if(mid === undefined || mid === null) return false;
-              return highlightedPostIdSet.has(String(mid));
-            });
-          })();
-          const priority = Boolean(inView || isHighlighted);
-          let lastUsed = Number.isFinite(existing.lastUsed) ? existing.lastUsed : 0;
-          if(priority){
-            lastUsed = usageTimestamp;
-          }
-          const updatedMeta = Object.assign({}, existing, {
-            iconId,
-            labelLine1,
-            labelLine2,
-            isMulti,
-            priority,
-            lastUsed,
-            inView
-          });
-          markerLabelCompositeStore.set(spriteId, updatedMeta);
-          spriteMeta.set(spriteId, {
-            iconId,
-            labelLine1,
-            labelLine2,
-            isMulti,
-            priority,
-            lastUsed,
-            inView
-          });
-        });
-        const spriteEntries = Array.from(spriteMeta.entries());
-        const compareEntries = (a, b) => {
-          const aMeta = a[1] || {};
-          const bMeta = b[1] || {};
-          const aPriority = aMeta.priority ? 1 : 0;
-          const bPriority = bMeta.priority ? 1 : 0;
-          if(aPriority !== bPriority){
-            return bPriority - aPriority;
-          }
-          const aLast = Number.isFinite(aMeta.lastUsed) ? aMeta.lastUsed : 0;
-          const bLast = Number.isFinite(bMeta.lastUsed) ? bMeta.lastUsed : 0;
-          if(aLast !== bLast){
-            return bLast - aLast;
-          }
-          return String(a[0]).localeCompare(String(b[0]));
-        };
-        spriteEntries.sort(compareEntries);
-        const compositeSafetyBuffer = 25;
-        let eagerSpriteEntries = [];
-        if(zoomEligible){
-          eagerSpriteEntries = spriteEntries.filter(([, meta]) => meta && (meta.inView || meta.priority));
-          if(Number.isFinite(MARKER_LABEL_COMPOSITE_LIMIT) && MARKER_LABEL_COMPOSITE_LIMIT > 0){
-            const maxEager = Math.max(0, MARKER_LABEL_COMPOSITE_LIMIT - Math.max(0, compositeSafetyBuffer));
-            if(maxEager <= 0){
-              eagerSpriteEntries = [];
-            } else if(eagerSpriteEntries.length > maxEager){
-              eagerSpriteEntries = eagerSpriteEntries.slice(0, maxEager);
-            }
-          }
-        }
-        await Promise.all(eagerSpriteEntries.map(([spriteId, meta]) =>
-          ensureMarkerLabelComposite(
-            map,
-            spriteId,
-            meta.iconId,
-            meta.labelLine1,
-            meta.labelLine2,
-            meta.isMulti,
-            { priority: meta.priority }
-          ).catch(()=>{})
-        ));
-        enforceMarkerLabelCompositeBudget(map);
-      }
+      await prepareMarkerLabelCompositesForPosts(postsData);
       ensureMarkerLabelBackground(map);
       updateMapFeatureHighlights(lastHighlightedPostIds);
       const markerLabelBaseConditions = [
