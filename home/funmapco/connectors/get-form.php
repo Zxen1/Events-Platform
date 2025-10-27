@@ -503,7 +503,6 @@ function buildSnapshot(array $categories, array $subcategories): array
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
-        'iconLibrary' => list_icon_library(),
     ];
 }
 
@@ -520,29 +519,6 @@ function extract_icon_src(string $html): string
         return trim($matches[1]);
     }
     return '';
-}
-
-function list_icon_library(): array
-{
-    $baseDir = dirname(__DIR__, 3) . '/assets/icons-30';
-    if (!is_dir($baseDir)) {
-        return [];
-    }
-    $paths = [];
-    $iterator = new \FilesystemIterator($baseDir, \FilesystemIterator::SKIP_DOTS);
-    foreach ($iterator as $file) {
-        if (!$file->isFile()) {
-            continue;
-        }
-        $extension = strtolower($file->getExtension());
-        if (!in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'], true)) {
-            continue;
-        }
-        $relative = 'assets/icons-30/' . $file->getFilename();
-        $paths[] = $relative;
-    }
-    sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
-    return $paths;
 }
 
 function sanitizeSubcategoryMarkers(array $markers): array
