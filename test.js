@@ -131,8 +131,8 @@ const formbuilderSlices = [
   mainSource.slice(baseFnStart, baseFnEnd)
 ];
 
-const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot };');
-const { normalizeFormbuilderSnapshot } = formbuilderFactory(formbuilderWindow);
+const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap };');
+const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap } = formbuilderFactory(formbuilderWindow);
 
 const seededSnapshot = normalizeFormbuilderSnapshot({
   categories: [],
@@ -180,5 +180,95 @@ assert(
   mainSource.includes("trigger.removeAttribute('aria-disabled');"),
   'Icon picker triggers should remove aria-disabled when icons are available.'
 );
+
+const iconBootstrapStart = mainSource.indexOf('const ICON_LIBRARY = Array.isArray(window.iconLibrary)');
+const iconBootstrapEnd = mainSource.indexOf('const FORM_FIELD_TYPES =', iconBootstrapStart);
+assert(
+  iconBootstrapStart !== -1 && iconBootstrapEnd !== -1,
+  'Unable to locate icon library bootstrap block.'
+);
+
+const iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
+
+const persistedBootstrapSnapshot = {
+  categories: [],
+  categoryIconPaths: {
+    'id:101': 'icons-20/music.png',
+    'name:Rock': 'assets/icons-30/guitar.svg'
+  },
+  subcategoryIconPaths: {
+    'name:Pop': 'assets/icons-30/music.png',
+    'id:202': 'https://cdn.example.com/library/icon.webp'
+  },
+  iconLibrary: ['assets/icons-30/existing.png'],
+  versionPriceCurrencies: []
+};
+
+const bootstrapWindow = {
+  iconLibrary: [],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {},
+  categoryIcons: {},
+  subcategoryIcons: {}
+};
+
+const bootstrapContext = {
+  window: bootstrapWindow,
+  normalizeFormbuilderSnapshot,
+  normalizeIconPathMap,
+  normalizeIconLibraryEntries,
+  assignMapLike(target, source) {
+    if(!target || typeof target !== 'object'){
+      return;
+    }
+    Object.keys(target).forEach(key => { delete target[key]; });
+    if(source && typeof source === 'object'){
+      Object.keys(source).forEach(key => {
+        target[key] = source[key];
+      });
+    }
+  },
+  getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshot,
+  getSavedFormbuilderSnapshot: () => {
+    throw new Error('getSavedFormbuilderSnapshot should not be called when persisted snapshot exists.');
+  },
+  console
+};
+
+vm.createContext(bootstrapContext);
+vm.runInContext(iconBootstrapSource, bootstrapContext);
+
+const expectedBootstrapIcons = new Set([
+  'assets/icons-30/existing.png',
+  'assets/icons-30/music.png',
+  'assets/icons-30/guitar.svg',
+  'https://cdn.example.com/library/icon.webp'
+]);
+
+assert.strictEqual(
+  bootstrapWindow.iconLibrary.length,
+  expectedBootstrapIcons.size,
+  'Bootstrap icon library should include all unique seeded icons.'
+);
+
+expectedBootstrapIcons.forEach(icon => {
+  assert(
+    bootstrapWindow.iconLibrary.includes(icon),
+    `Expected bootstrap icon library to include ${icon}.`
+  );
+});
+
+assert(
+  new Set(bootstrapWindow.iconLibrary).size === bootstrapWindow.iconLibrary.length,
+  'Bootstrap icon library should not contain duplicate entries.'
+);
+
+if('ICON_LIBRARY' in bootstrapContext){
+  assert.strictEqual(
+    bootstrapContext.ICON_LIBRARY,
+    bootstrapWindow.iconLibrary,
+    'ICON_LIBRARY should reference the shared window icon library array.'
+  );
+}
 
 console.log('All tests passed');

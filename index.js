@@ -3430,11 +3430,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
         ? snapshot.iconLibrary.filter(item => typeof item === 'string')
         : [];
-      const seededIconPaths = [
+      const seededIconPathValues = [
         ...Object.values(normalizedCategoryIconPaths),
         ...Object.values(normalizedSubcategoryIconPaths)
-      ].filter(path => typeof path === 'string' && path);
-      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource.concat(seededIconPaths));
+      ];
+      const normalizedSeededIconPaths = seededIconPathValues
+        .map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
+        .filter(Boolean);
+      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource.concat(normalizedSeededIconPaths));
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
@@ -3497,11 +3500,20 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
+      const bootstrapIconLibrary = normalizeIconLibraryEntries([
+        ...initialFormbuilderSnapshot.iconLibrary,
+        ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
+        ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
+      ]);
       ICON_LIBRARY.length = 0;
-      ICON_LIBRARY.push(...initialFormbuilderSnapshot.iconLibrary);
+      ICON_LIBRARY.push(...bootstrapIconLibrary);
       window.iconLibrary = ICON_LIBRARY;
     } else if(Array.isArray(window.iconLibrary) && window.iconLibrary.length){
-      const sanitizedLibrary = normalizeIconLibraryEntries(window.iconLibrary);
+      const sanitizedLibrary = normalizeIconLibraryEntries([
+        ...window.iconLibrary,
+        ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
+        ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
+      ]);
       ICON_LIBRARY.length = 0;
       ICON_LIBRARY.push(...sanitizedLibrary);
       window.iconLibrary = ICON_LIBRARY;
