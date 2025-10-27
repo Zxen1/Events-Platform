@@ -6224,22 +6224,39 @@ function makePosts(){
       });
     }
 
-    function syncMarkerSources(list, options = {}){
+    async function syncMarkerSources(list, options = {}){
       const { force = false } = options;
       const collections = getMarkerCollections(list);
       const { postsData, signature, featureIndex } = collections;
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
+      let preparationPromise = null;
+      let preparationErrorLogged = false;
+      const awaitPreparation = async () => {
+        if(!preparationPromise){
+          preparationPromise = prepareMarkerLabelCompositesForPosts(postsData);
+        }
+        try{
+          await preparationPromise;
+        }catch(err){
+          if(!preparationErrorLogged){
+            preparationErrorLogged = true;
+            console.error(err);
+          }
+          throw err;
+        }
+      };
       let updated = false;
       if(map && typeof map.getSource === 'function'){
         const postsSource = map.getSource('posts');
         if(postsSource && (force || postsSource.__markerSignature !== signature)){
+          await awaitPreparation().catch(()=>{});
           try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
           postsSource.__markerSignature = signature;
           updated = true;
         }
       }
       if(updated || force){
-        prepareMarkerLabelCompositesForPosts(postsData);
+        await awaitPreparation().catch(()=>{});
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
