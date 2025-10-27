@@ -24,70 +24,6 @@ async function verifyUserLogin(username, password) {
   }
 }
 
-function normalizeCategorySortOrderValue(raw) {
-  if (typeof raw === 'number' && Number.isFinite(raw)) {
-    return raw;
-  }
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
-    if (trimmed !== '') {
-      const parsed = Number(trimmed);
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-    }
-  }
-  return null;
-}
-
-function compareCategoriesForDisplay(a, b) {
-  if (a === b) {
-    return 0;
-  }
-  if (!a || typeof a !== 'object') {
-    return !b || typeof b !== 'object' ? 0 : 1;
-  }
-  if (!b || typeof b !== 'object') {
-    return -1;
-  }
-  const orderA = normalizeCategorySortOrderValue(a.sort_order ?? a.sortOrder);
-  const orderB = normalizeCategorySortOrderValue(b.sort_order ?? b.sortOrder);
-  if (orderA !== null && orderB !== null && orderA !== orderB) {
-    return orderA - orderB;
-  }
-  if (orderA !== null && orderB === null) {
-    return -1;
-  }
-  if (orderA === null && orderB !== null) {
-    return 1;
-  }
-  const nameA = typeof a.name === 'string' ? a.name : '';
-  const nameB = typeof b.name === 'string' ? b.name : '';
-  const nameCompare = nameA.localeCompare(nameB, undefined, { sensitivity: 'accent', numeric: true });
-  if (nameCompare !== 0) {
-    return nameCompare;
-  }
-  return 0;
-}
-
-function getSortedCategoryEntries(list) {
-  if (!Array.isArray(list)) {
-    return [];
-  }
-  return list.map((category, index) => ({ category, index }))
-    .sort((a, b) => {
-      const cmp = compareCategoriesForDisplay(a.category, b.category);
-      if (cmp !== 0) {
-        return cmp;
-      }
-      return a.index - b.index;
-    });
-}
-
-function getSortedCategories(list) {
-  return getSortedCategoryEntries(list).map(entry => entry.category);
-}
-
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -3334,8 +3270,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
-        const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { name, subs, subFields, sort_order: sortOrder };
+        return { name, subs, subFields };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         name: cat.name,
@@ -3343,8 +3278,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         subFields: cat.subs.reduce((acc, sub) => {
           acc[sub] = [];
           return acc;
-        }, {}),
-        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
+        }, {})
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -3355,7 +3289,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             cat.subFields[sub] = [];
           }
         });
-        cat.sort_order = normalizeCategorySortOrderValue(cat.sort_order ?? cat.sortOrder);
       });
       return base;
     }
@@ -3597,8 +3530,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
       return base;
     }
-    window.normalizeVenueSessionOptions = normalizeVenueSessionOptions;
-    window.cloneVenueSessionVenue = cloneVenueSessionVenue;
     function getVenueAutofillState(field, venue){
       let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
       if(!fieldState){
@@ -7375,16 +7306,15 @@ function makePosts(){
         return next;
       };
       const frag = document.createDocumentFragment();
-      const sortedCategoryEntries = getSortedCategoryEntries(categories);
-      sortedCategoryEntries.forEach(({ category: c, index: sourceIndex }, viewIndex)=>{
-        const baseId = slugify(c.name) || `category-${viewIndex + 1}`;
-        const contentId = `category-form-content-${baseId}-${viewIndex}`;
-        const editPanelId = `category-edit-panel-${baseId}-${viewIndex}`;
+      categories.forEach((c, index)=>{
+        const baseId = slugify(c.name) || `category-${index + 1}`;
+        const contentId = `category-form-content-${baseId}-${index}`;
+        const editPanelId = `category-edit-panel-${baseId}-${index}`;
 
         const menu = document.createElement('div');
         menu.className = 'category-form-menu filter-category-menu';
         menu.dataset.category = c.name;
-        menu.dataset.categoryIndex = String(sourceIndex);
+        menu.dataset.categoryIndex = String(index);
         menu.setAttribute('role','group');
         menu.setAttribute('aria-expanded','false');
 
@@ -11761,7 +11691,7 @@ function makePosts(){
         while(existing.has(candidate)){
           candidate = `${baseName} ${counter++}`;
         }
-        categories.unshift({ name: candidate, subs: [], subFields: {}, sort_order: null });
+        categories.unshift({ name: candidate, subs: [], subFields: {} });
         renderFormbuilderCats();
         notifyFormbuilderChange();
         const newMenu = formbuilderCats ? formbuilderCats.querySelector('.category-form-menu:first-of-type') : null;
@@ -11829,15 +11759,11 @@ function makePosts(){
       return out;
     }
     function cloneCategoryList(list){
-      return Array.isArray(list) ? list.map(item => {
-        const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
-        return {
-          name: item && typeof item.name === 'string' ? item.name : '',
-          subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
-          subFields: cloneFieldsMap(item && item.subFields),
-          sort_order: sortOrder
-        };
-      }) : [];
+      return Array.isArray(list) ? list.map(item => ({
+        name: item && typeof item.name === 'string' ? item.name : '',
+        subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
+        subFields: cloneFieldsMap(item && item.subFields)
+      })) : [];
     }
     function cloneMapLike(source){
       const out = {};
@@ -11925,8 +11851,8 @@ function makePosts(){
       if(Array.isArray(normalized.versionPriceCurrencies)){
         VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
       }
-      renderFilterCategories();
       renderFormbuilderCats();
+      refreshSubcategoryLogos();
       refreshFormbuilderSubcategoryLogos();
       if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
         try{
@@ -11962,16 +11888,9 @@ function makePosts(){
         }
       });
     }
-    function renderFilterCategories(){
-      if(!catsEl) return;
-      catsEl.textContent = '';
-      Object.keys(categoryControllers).forEach(key=>{ delete categoryControllers[key]; });
-      allSubcategoryKeys.length = 0;
-      selection.cats = new Set();
-      selection.subs = new Set();
-      const seedSubs = true;
-      const sortedCategories = getSortedCategories(categories);
-      sortedCategories.forEach(c=>{
+    if(catsEl){
+      const seedSubs = selection.subs.size === 0;
+      categories.forEach(c=>{
         const el = document.createElement('div');
         el.className='filter-category-menu';
         el.dataset.category = c.name;
@@ -12165,11 +12084,6 @@ function makePosts(){
         syncExpanded();
       });
       refreshSubcategoryLogos();
-      updateCategoryResetBtn();
-      updateResetBtn();
-    }
-    if(catsEl){
-      renderFilterCategories();
       renderFormbuilderCats();
       updateFormbuilderSnapshot();
       const handleIconsReady = ()=>{
@@ -12177,6 +12091,8 @@ function makePosts(){
         refreshFormbuilderSubcategoryLogos();
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
+      updateCategoryResetBtn();
+      updateResetBtn();
     }
 
     if(resetCategoriesBtn){
@@ -17052,61 +16968,7 @@ function openPostModal(id){
                 interactive: false
               });
 
-              const ensureDetailIcon = attachIconLoader(map);
-
-              const pendingDetailStyleImageRequests = new Map();
-
-              const handleDetailStyleImageMissing = (evt) => {
-                const imageId = evt && evt.id;
-                if(!imageId){
-                  return;
-                }
-                try{
-                  if(map.hasImage?.(imageId)){
-                    return;
-                  }
-                }catch(err){
-                  console.error(err);
-                }
-                if(pendingDetailStyleImageRequests.has(imageId)){
-                  return;
-                }
-                const result = generateMarkerImageFromId(imageId, map, { ensureIcon: ensureDetailIcon });
-                if(result && typeof result.then === 'function'){
-                  const task = result.then(output => {
-                    if(!output){
-                      return;
-                    }
-                    const { image, options } = output;
-                    if(!image){
-                      return;
-                    }
-                    try{
-                      if(map.hasImage?.(imageId)){
-                        return;
-                      }
-                      map.addImage(imageId, image, options || {});
-                    }catch(error){
-                      console.error(error);
-                    }
-                  }).catch(error => {
-                    console.error(error);
-                  }).finally(() => {
-                    pendingDetailStyleImageRequests.delete(imageId);
-                  });
-                  pendingDetailStyleImageRequests.set(imageId, task);
-                  return;
-                }
-                if(result && result.image){
-                  try{
-                    if(!map.hasImage?.(imageId)){
-                      map.addImage(imageId, result.image, result.options || {});
-                    }
-                  }catch(error){
-                    console.error(error);
-                  }
-                }
-              };
+              attachIconLoader(map);
 
               map.on('mousemove', (e) => {
                 const has = !!(e.features && e.features.length);
@@ -17127,8 +16989,27 @@ function openPostModal(id){
                 }
               });
 
-              try{ map.on('styleimagemissing', handleDetailStyleImageMissing); }
-              catch(err){ console.error(err); }
+              map.on('styleimagemissing', (e) => {
+                if (map.hasImage(e.id)) return;
+
+                const base = document.baseURI || window.location.href;
+                const candidates = [
+                  `assets/icons/subcategories/${e.id}.png`,
+                  `assets/icons/${e.id}.png`,
+                  `assets/images/icons/${e.id}.png`,
+                  `assets/icons-30/${e.id}-30.webp`,
+                  `assets/icons/multi-category-icon-blue.png`,
+                  `assets/images/icons/multi-category-icon-blue.png`
+                ].map(p => new URL(p, base).href);
+
+                (function tryNext(i){
+                  if (i >= candidates.length) return;
+                  map.loadImage(candidates[i], (err, img) => {
+                    if (err || !img) { tryNext(i+1); return; }
+                    try { map.addImage(e.id, img, { sdf: true }); } catch {}
+                  });
+                })(0);
+              });
 
               if(resizeHandler){
                 window.removeEventListener('resize', resizeHandler);
@@ -18062,31 +17943,8 @@ const memberPanelChangeManager = (()=>{
 
   function closePrompt(){
     if(prompt){
-      const active = document.activeElement;
-      if(active && prompt.contains(active)){
-        let focusTarget = null;
-        if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
-          focusTarget = pendingCloseTarget.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
-        if(!focusTarget && panel && typeof panel.querySelector === 'function'){
-          focusTarget = panel.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
-        if(!focusTarget && panel){
-          const previousTabIndex = panel.getAttribute('tabindex');
-          panel.setAttribute('tabindex','-1');
-          panel.focus({ preventScroll: true });
-          if(previousTabIndex === null){
-            panel.removeAttribute('tabindex');
-          } else {
-            panel.setAttribute('tabindex', previousTabIndex);
-          }
-        } else if(focusTarget){
-          focusTarget.focus({ preventScroll: true });
-        }
-      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
-      prompt.setAttribute('inert','');
     }
   }
 
@@ -18100,7 +17958,6 @@ const memberPanelChangeManager = (()=>{
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
-      prompt.removeAttribute('inert');
       setTimeout(()=>{
         if(promptSaveButton) promptSaveButton.focus();
       }, 0);
@@ -19140,13 +18997,6 @@ document.addEventListener('pointerdown', (e) => {
           { name: 'Images', type: 'images', placeholder: '', required: true }
         ];
 
-    const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
-      ? window.normalizeVenueSessionOptions
-      : normalizeVenueSessionOptions;
-    const cloneVenueSessionVenueFromWindow = typeof window.cloneVenueSessionVenue === 'function'
-      ? window.cloneVenueSessionVenue
-      : cloneVenueSessionVenue;
-
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
       const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
@@ -19338,8 +19188,8 @@ document.addEventListener('pointerdown', (e) => {
             safe.options.push('');
           }
         } else if(type === 'venue-session-version-tier-price'){
-          const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
-          safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
+          const normalized = normalizeVenueSessionOptions(field.options);
+          safe.options = normalized.map(cloneVenueSessionVenue);
         } else {
           safe.options = Array.isArray(field.options)
             ? field.options.map(opt => {
@@ -20092,8 +19942,7 @@ document.addEventListener('pointerdown', (e) => {
       placeholder.value = '';
       placeholder.textContent = 'Select Category';
       categorySelect.appendChild(placeholder);
-      const sortedMemberCategories = getSortedCategories(memberCategories);
-      sortedMemberCategories.forEach(cat => {
+      memberCategories.forEach(cat => {
         if(!cat || typeof cat.name !== 'string') return;
         const option = document.createElement('option');
         option.value = cat.name;
