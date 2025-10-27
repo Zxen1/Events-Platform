@@ -6231,32 +6231,42 @@ function makePosts(){
       markerFeatureIndex = featureIndex instanceof Map ? featureIndex : new Map();
       let preparationPromise = null;
       let preparationErrorLogged = false;
-      const awaitPreparation = async () => {
+      const ensurePreparationPromise = () => {
         if(!preparationPromise){
           preparationPromise = prepareMarkerLabelCompositesForPosts(postsData);
         }
+        return preparationPromise;
+      };
+      const awaitPreparation = async () => {
         try{
-          await preparationPromise;
+          await ensurePreparationPromise();
+          return true;
         }catch(err){
           if(!preparationErrorLogged){
             preparationErrorLogged = true;
             console.error(err);
           }
-          throw err;
+          return false;
         }
       };
+      let preparationReady = false;
       let updated = false;
       if(map && typeof map.getSource === 'function'){
         const postsSource = map.getSource('posts');
         if(postsSource && (force || postsSource.__markerSignature !== signature)){
-          await awaitPreparation().catch(()=>{});
-          try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
-          postsSource.__markerSignature = signature;
-          updated = true;
+          preparationReady = await awaitPreparation();
+          if(preparationReady){
+            try{ postsSource.setData(postsData); }catch(err){ console.error(err); }
+            postsSource.__markerSignature = signature;
+            updated = true;
+          }
         }
       }
       if(updated || force){
-        await awaitPreparation().catch(()=>{});
+        if(!preparationReady){
+          preparationReady = await awaitPreparation();
+        }
+        ensurePreparationPromise().catch(()=>{});
         updateMapFeatureHighlights(lastHighlightedPostIds);
       }
       return { updated, signature };
