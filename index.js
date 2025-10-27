@@ -3452,6 +3452,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
+    const categoryIcons = window.categoryIcons = window.categoryIcons || {};
+    const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
+    const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
+    const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
     assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
     assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
@@ -3697,11 +3701,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           { name: 'Images', type: 'images', placeholder: '', required: true }
         ];
     window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-    const categoryIcons = window.categoryIcons = window.categoryIcons || {};
-    const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
-    const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
-    const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
-
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
