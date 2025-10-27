@@ -176,6 +176,35 @@ assert(
   'Seeded icon library should exclude disallowed file types.'
 );
 
+const seededFromStoredPaths = normalizeFormbuilderSnapshot({
+  categories: [],
+  categoryIconPaths: {
+    'id:303': 'icons-20/food.png'
+  },
+  subcategoryIconPaths: {
+    'id:404': 'https://cdn.example.com/library/icon.webp'
+  },
+  iconLibrary: []
+});
+
+const expectedStoredPathIcons = new Set([
+  'assets/icons-30/food.png',
+  'https://cdn.example.com/library/icon.webp'
+]);
+
+assert.strictEqual(
+  seededFromStoredPaths.iconLibrary.length,
+  expectedStoredPathIcons.size,
+  'Stored icon paths should seed the icon library when no explicit entries exist.'
+);
+
+expectedStoredPathIcons.forEach(icon => {
+  assert(
+    seededFromStoredPaths.iconLibrary.includes(icon),
+    `Expected stored icon path seeding to retain ${icon}.`
+  );
+});
+
 assert(
   mainSource.includes("trigger.removeAttribute('aria-disabled');"),
   'Icon picker triggers should remove aria-disabled when icons are available.'
@@ -189,6 +218,18 @@ assert(
 );
 
 const iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
+
+const assignMapLike = (target, source) => {
+  if(!target || typeof target !== 'object'){
+    return;
+  }
+  Object.keys(target).forEach(key => { delete target[key]; });
+  if(source && typeof source === 'object'){
+    Object.keys(source).forEach(key => {
+      target[key] = source[key];
+    });
+  }
+};
 
 const persistedBootstrapSnapshot = {
   categories: [],
@@ -217,17 +258,7 @@ const bootstrapContext = {
   normalizeFormbuilderSnapshot,
   normalizeIconPathMap,
   normalizeIconLibraryEntries,
-  assignMapLike(target, source) {
-    if(!target || typeof target !== 'object'){
-      return;
-    }
-    Object.keys(target).forEach(key => { delete target[key]; });
-    if(source && typeof source === 'object'){
-      Object.keys(source).forEach(key => {
-        target[key] = source[key];
-      });
-    }
-  },
+  assignMapLike,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshot,
   getSavedFormbuilderSnapshot: () => {
     throw new Error('getSavedFormbuilderSnapshot should not be called when persisted snapshot exists.');
@@ -270,5 +301,64 @@ if('ICON_LIBRARY' in bootstrapContext){
     'ICON_LIBRARY should reference the shared window icon library array.'
   );
 }
+
+const persistedBootstrapSnapshotFromPaths = {
+  categories: [],
+  categoryIconPaths: {
+    'id:303': 'icons-20/food.png'
+  },
+  subcategoryIconPaths: {
+    'id:404': 'https://cdn.example.com/library/icon.webp'
+  },
+  iconLibrary: [],
+  versionPriceCurrencies: []
+};
+
+const bootstrapWindowFromPaths = {
+  iconLibrary: [],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {},
+  categoryIcons: {},
+  subcategoryIcons: {}
+};
+
+const bootstrapContextFromPaths = {
+  window: bootstrapWindowFromPaths,
+  normalizeFormbuilderSnapshot,
+  normalizeIconPathMap,
+  normalizeIconLibraryEntries,
+  assignMapLike,
+  getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotFromPaths,
+  getSavedFormbuilderSnapshot: () => {
+    throw new Error('getSavedFormbuilderSnapshot should not be called when persisted snapshot exists.');
+  },
+  console
+};
+
+vm.createContext(bootstrapContextFromPaths);
+vm.runInContext(iconBootstrapSource, bootstrapContextFromPaths);
+
+const expectedBootstrapIconsFromPaths = new Set([
+  'assets/icons-30/food.png',
+  'https://cdn.example.com/library/icon.webp'
+]);
+
+assert.strictEqual(
+  bootstrapWindowFromPaths.iconLibrary.length,
+  expectedBootstrapIconsFromPaths.size,
+  'Bootstrap should seed icon picker assets from stored category and subcategory icons.'
+);
+
+expectedBootstrapIconsFromPaths.forEach(icon => {
+  assert(
+    bootstrapWindowFromPaths.iconLibrary.includes(icon),
+    `Expected bootstrap icon seeding to include ${icon}.`
+  );
+});
+
+assert(
+  bootstrapWindowFromPaths.iconLibrary.length > 0,
+  'Icon picker triggers should enable when stored icons are available even without explicit library entries.'
+);
 
 console.log('All tests passed');
