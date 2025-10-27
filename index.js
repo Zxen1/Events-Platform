@@ -3324,6 +3324,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       iconLibrary: []
     };
 
+    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
+
     function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
       const parseId = value => {
@@ -3425,9 +3427,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
-      const iconLibrary = Array.isArray(snapshot && snapshot.iconLibrary)
+      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
         ? snapshot.iconLibrary.filter(item => typeof item === 'string')
         : [];
+      const iconLibrary = normalizeIconLibraryEntries(iconLibrarySource);
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
@@ -3448,6 +3451,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     if(Array.isArray(initialFormbuilderSnapshot.iconLibrary)){
       ICON_LIBRARY.length = 0;
       ICON_LIBRARY.push(...initialFormbuilderSnapshot.iconLibrary);
+      window.iconLibrary = ICON_LIBRARY;
+    } else if(Array.isArray(window.iconLibrary) && window.iconLibrary.length){
+      const sanitizedLibrary = normalizeIconLibraryEntries(window.iconLibrary);
+      ICON_LIBRARY.length = 0;
+      ICON_LIBRARY.push(...sanitizedLibrary);
       window.iconLibrary = ICON_LIBRARY;
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
@@ -3710,6 +3718,65 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     function toIconNameKey(name){
       return typeof name === 'string' && name ? `name:${name.toLowerCase()}` : '';
     }
+
+    function normalizeIconLibraryEntries(entries){
+      const seen = new Set();
+      const normalized = [];
+      if(!Array.isArray(entries)){
+        return normalized;
+      }
+      entries.forEach(item => {
+        if(typeof item !== 'string'){
+          return;
+        }
+        const normalizedPath = normalizeIconAssetPath(item);
+        if(!normalizedPath){
+          return;
+        }
+        if(!ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalizedPath)){
+          return;
+        }
+        const key = normalizedPath.toLowerCase();
+        if(seen.has(key)){
+          return;
+        }
+        seen.add(key);
+        normalized.push(normalizedPath);
+      });
+      return normalized;
+    }
+    function normalizeIconAssetPath(path){
+      const normalized = baseNormalizeIconPath(path);
+      if(!normalized){
+        return '';
+      }
+      if(/^(?:https?:)?\/\//i.test(normalized) || normalized.startsWith('data:')){
+        return normalized;
+      }
+      const dividerIndex = normalized.search(/[?#]/);
+      const basePath = dividerIndex >= 0 ? normalized.slice(0, dividerIndex) : normalized;
+      const suffix = dividerIndex >= 0 ? normalized.slice(dividerIndex) : '';
+      let next = basePath.replace(/(^|\/)icons-20\//gi, '$1icons-30/');
+      next = next.replace(/^icons-30\//i, 'assets/icons-30/');
+      next = next.replace(/^assets\/icons-20\//i, 'assets/icons-30/');
+      const sourcePath = next;
+      next = sourcePath.replace(/-20(\.[^./]+)$/i, (match, ext, offset) => {
+        const prevChar = sourcePath.charAt(Math.max(0, offset - 1));
+        return /\d/.test(prevChar) ? match : `-30${ext}`;
+      });
+      return next + suffix;
+    }
+
+    const existingNormalizeIconPath = (typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function')
+      ? window.normalizeIconPath
+      : null;
+    if(typeof window !== 'undefined'){
+      window.normalizeIconPath = (path)=>{
+        const initial = existingNormalizeIconPath ? existingNormalizeIconPath(path) : path;
+        return normalizeIconAssetPath(initial);
+      };
+    }
+
     function normalizeIconPathMap(source){
       const normalized = {};
       if(!source || typeof source !== 'object'){
@@ -3717,7 +3784,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       Object.keys(source).forEach(key => {
         const rawValue = source[key];
-        const value = typeof rawValue === 'string' ? rawValue : '';
+        const value = typeof rawValue === 'string' ? normalizeIconAssetPath(rawValue) : '';
         if(typeof key !== 'string'){
           return;
         }
