@@ -3800,6 +3800,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(!trimmed) return '';
       return trimmed.replace(/^\/+/, '');
     }
+    function applyNormalizeIconPath(path){
+      if(typeof normalizeIconPath === 'function'){
+        try{
+          return normalizeIconPath(path);
+        }catch(err){}
+      }
+      if(typeof path !== 'string') return '';
+      const fallbackTrimmed = path.trim();
+      if(!fallbackTrimmed) return '';
+      return fallbackTrimmed.replace(/^\/+/, '');
+    }
     function getCategoryIconPath(category){
       if(!category) return '';
       const lookup = lookupIconPath(categoryIconPaths, category.id, category.name);
@@ -7708,7 +7719,7 @@ function makePosts(){
         const iconLookup = lookupIconPath(subcategoryIconPaths, null, subName);
         const path = iconLookup.found ? (iconLookup.path || '') : '';
         const iconHtml = subcategoryIcons[subName] || '';
-        const normalizedPath = normalizeIconPath(path);
+        const normalizedPath = applyNormalizeIconPath(path);
         logoSpan.innerHTML = '';
         if(normalizedPath){
           const img = document.createElement('img');
@@ -7843,11 +7854,11 @@ function makePosts(){
           popup.style.position = 'absolute';
           const grid = document.createElement('div');
           grid.className = 'icon-picker-grid';
-          const currentPath = normalizeIconPath(getCurrentPath());
+          const currentPath = applyNormalizeIconPath(getCurrentPath());
           const optionsList = [{ value: '', label: 'No Icon' }];
           ICON_LIBRARY.forEach(path => {
             if(typeof path === 'string' && path.trim()){
-              optionsList.push({ value: normalizeIconPath(path) });
+              optionsList.push({ value: applyNormalizeIconPath(path) });
             }
           });
           optionsList.forEach(entry => {
@@ -7945,7 +7956,7 @@ function makePosts(){
           ? (categoryIconLookup.path || '')
           : extractIconSrc(categoryIconHtml);
         if(initialCategoryIconSrc){
-          const normalizedInitial = normalizeIconPath(initialCategoryIconSrc);
+          const normalizedInitial = applyNormalizeIconPath(initialCategoryIconSrc);
           if(normalizedInitial){
             categoryIcons[c.name] = `<img src="${normalizedInitial}" width="20" height="20" alt="">`;
             if(!categoryIconLookup.found){
@@ -7953,7 +7964,7 @@ function makePosts(){
             }
           }
           const img = document.createElement('img');
-          img.src = normalizeIconPath(initialCategoryIconSrc);
+          img.src = applyNormalizeIconPath(initialCategoryIconSrc);
           img.width = 20;
           img.height = 20;
           img.alt = '';
@@ -8023,7 +8034,7 @@ function makePosts(){
         const previewImg = document.createElement('img');
         previewImg.alt = `${c.name} icon preview`;
         preview.append(previewLabel, previewImg);
-        const normalizedCategoryIconPath = normalizeIconPath(initialCategoryIconSrc);
+        const normalizedCategoryIconPath = applyNormalizeIconPath(initialCategoryIconSrc);
         if(normalizedCategoryIconPath){
           previewImg.src = normalizedCategoryIconPath;
           preview.classList.add('has-image');
@@ -8035,7 +8046,7 @@ function makePosts(){
         }
         iconPicker.append(iconPickerButton, preview);
         attachIconPicker(iconPickerButton, iconPicker, {
-          getCurrentPath: ()=> normalizeIconPath(getCategoryIconPath(c)),
+          getCurrentPath: ()=> applyNormalizeIconPath(getCategoryIconPath(c)),
           onSelect: value => {
             updateCategoryIconDisplay(value);
             notifyFormbuilderChange();
@@ -8078,7 +8089,7 @@ function makePosts(){
         const updateCategoryIconDisplay = (src)=>{
           const displayName = getCategoryDisplayName();
           categoryLogo.innerHTML = '';
-          const normalizedSrc = normalizeIconPath(src);
+          const normalizedSrc = applyNormalizeIconPath(src);
           if(normalizedSrc){
             const img = document.createElement('img');
             img.src = normalizedSrc;
@@ -8201,21 +8212,21 @@ function makePosts(){
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
           if(initialSubIconPath){
-            const normalizedInitialSub = normalizeIconPath(initialSubIconPath);
+            const normalizedInitialSub = applyNormalizeIconPath(initialSubIconPath);
             if(normalizedInitialSub){
               subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
             }
           }
           if(initialSubIconPath){
             const img = document.createElement('img');
-            img.src = normalizeIconPath(initialSubIconPath);
+            img.src = applyNormalizeIconPath(initialSubIconPath);
             img.width = 20;
             img.height = 20;
             img.alt = '';
             subLogo.appendChild(img);
             subLogo.classList.add('has-icon');
             if(!subIconLookup.found){
-              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, normalizeIconPath(initialSubIconPath));
+              writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, applyNormalizeIconPath(initialSubIconPath));
             }
           } else if(subIconHtml){
             subLogo.innerHTML = subIconHtml;
@@ -8280,7 +8291,7 @@ function makePosts(){
 
           subIconPicker.append(subIconButton, subPreview);
           attachIconPicker(subIconButton, subIconPicker, {
-            getCurrentPath: ()=> normalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
+            getCurrentPath: ()=> applyNormalizeIconPath(getSubcategoryIconPath(c, currentSubName)),
             onSelect: value => {
               updateSubIconDisplay(value);
               notifyFormbuilderChange();
@@ -12056,7 +12067,7 @@ function makePosts(){
             const updateSubIconDisplay = (src)=>{
               const displayName = getSubDisplayName();
               subLogo.innerHTML = '';
-              const normalizedSrc = normalizeIconPath(src);
+              const normalizedSrc = applyNormalizeIconPath(src);
               if(normalizedSrc){
                 const img = document.createElement('img');
                 img.src = normalizedSrc;
@@ -12191,7 +12202,7 @@ function makePosts(){
           subMenu.append(subContent);
 
           applySubNameChange();
-      const initialIconSource = normalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
+      const initialIconSource = applyNormalizeIconPath(initialSubIconPath) || initialSubIconPath || '';
           if(initialIconSource){
             updateSubIconDisplay(initialIconSource);
           }
