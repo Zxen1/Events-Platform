@@ -132,6 +132,24 @@ try {
     if (isset($decoded['categoryShapes']) && is_array($decoded['categoryShapes'])) {
         $categoryShapes = $decoded['categoryShapes'];
     }
+    $iconLibrary = [];
+    if (isset($decoded['iconLibrary']) && is_array($decoded['iconLibrary'])) {
+        foreach ($decoded['iconLibrary'] as $entry) {
+            if (!is_string($entry)) {
+                continue;
+            }
+            $clean = sanitizeIconPath($entry);
+            if ($clean === '') {
+                continue;
+            }
+            $normalized = normalizeMarkerIconPath($clean);
+            if ($normalized === '') {
+                $normalized = $clean;
+            }
+            $iconLibrary[$normalized] = true;
+        }
+    }
+    $iconLibrary = array_keys($iconLibrary);
 
     $updated = [];
     $pdo->beginTransaction();
@@ -392,6 +410,7 @@ try {
         'success' => true,
         'updated' => count($updated),
         'subcategory_ids' => $updated,
+        'iconLibrary' => $iconLibrary,
     ]);
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {

@@ -492,17 +492,27 @@ function buildSnapshot(array $categories, array $subcategories): array
     $versionPriceCurrencies = array_keys($currencySet);
     sort($versionPriceCurrencies);
 
+    $sanitizedCategoryMarkers = sanitizeSubcategoryMarkers($categoryMarkers);
+    $sanitizedSubcategoryMarkers = sanitizeSubcategoryMarkers($subcategoryMarkers);
+    $iconLibrary = collectSnapshotIconLibrary(
+        $categoryIconPaths,
+        $subcategoryIconPaths,
+        $sanitizedCategoryMarkers,
+        $sanitizedSubcategoryMarkers
+    );
+
     return [
         'categories' => $categoriesList,
         'categoryIcons' => $categoryIcons,
         'categoryIconPaths' => $categoryIconPaths,
-        'categoryMarkers' => sanitizeSubcategoryMarkers($categoryMarkers),
+        'categoryMarkers' => $sanitizedCategoryMarkers,
         'subcategoryIcons' => $subcategoryIcons,
         'subcategoryIconPaths' => $subcategoryIconPaths,
-        'subcategoryMarkers' => sanitizeSubcategoryMarkers($subcategoryMarkers),
+        'subcategoryMarkers' => $sanitizedSubcategoryMarkers,
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
+        'iconLibrary' => $iconLibrary,
     ];
 }
 
@@ -546,6 +556,80 @@ function sanitizeSubcategoryMarkers(array $markers): array
     return $clean;
 }
 
+function collectSnapshotIconLibrary(array ...$groups): array
+{
+    $unique = [];
+
+    foreach ($groups as $group) {
+        foreach ($group as $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $sanitizedPath = sanitizeSnapshotIconPath($value);
+            if ($sanitizedPath === '') {
+                continue;
+            }
+
+            $normalizedPath = normalizeSnapshotMarkerIconPath($sanitizedPath);
+            if ($normalizedPath === '') {
+                $normalizedPath = $sanitizedPath;
+            }
+
+            $unique[$normalizedPath] = true;
+        }
+    }
+
+    return array_keys($unique);
+}
+
+function sanitizeSnapshotIconPath(string $value): string
+{
+    $path = trim($value);
+    if ($path === '') {
+        return '';
+    }
+
+    $normalized = str_replace('\\', '/', $path);
+    $normalized = preg_replace('#/+#', '/', $normalized);
+    $normalized = ltrim($normalized, '/');
+
+    if ($normalized === '' || strpos($normalized, '..') !== false) {
+        return '';
+    }
+
+    if (stripos($normalized, 'assets/icons-') !== 0) {
+        return '';
+    }
+
+    return snapshotSanitizeString($normalized, 255);
+}
+
+function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
+{
+    if ($sanitizedPath === '') {
+        return '';
+    }
+
+    $markerPath = $sanitizedPath;
+
+    if (stripos($markerPath, 'icons-20/') !== false) {
+        $replaced = preg_replace('#icons-20/#i', 'icons-30/', $markerPath, 1);
+        if (is_string($replaced) && $replaced !== '') {
+            $markerPath = $replaced;
+        }
+    }
+
+    if (stripos($markerPath, 'icons-30/') !== false) {
+        $adjusted = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $markerPath, 1);
+        if (is_string($adjusted) && $adjusted !== '') {
+            $markerPath = $adjusted;
+        }
+    }
+
+    return snapshotSanitizeString($markerPath, 255);
+}
+
 function slugify_key(string $value): string
 {
     $normalized = trim($value);
@@ -572,4 +656,24 @@ function slugify_key(string $value): string
     $normalized = trim($normalized, '-');
 
     return $normalized;
+}
+
+function snapshotSanitizeString(string $value, int $maxLength = 255): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    if ($maxLength > 0) {
+        if (function_exists('mb_strlen')) {
+            if (mb_strlen($trimmed) > $maxLength) {
+                $trimmed = mb_substr($trimmed, 0, $maxLength);
+            }
+        } elseif (strlen($trimmed) > $maxLength) {
+            $trimmed = substr($trimmed, 0, $maxLength);
+        }
+    }
+
+    return $trimmed;
 }
