@@ -15493,7 +15493,10 @@ if (!map.__pillHooksInstalled) {
               delete overlayRoot.dataset.venueKey;
             }
 
-            const visibleList = filtersInitialized ? filtered : posts;
+            let visibleList = filtersInitialized ? filtered : posts;
+            if(!Array.isArray(visibleList) || visibleList.length === 0){
+              visibleList = Array.isArray(posts) ? posts : [];
+            }
             const allowedIdSet = new Set(Array.isArray(visibleList) ? visibleList.map(item => {
               if(!item || item.id === undefined || item.id === null) return '';
               return String(item.id);
@@ -15507,9 +15510,12 @@ if (!map.__pillHooksInstalled) {
                 venuePostsAll = getPostsAtVenueByCoords(coords.lng, coords.lat) || [];
               }
             }
-            const venuePostsVisible = Array.isArray(venuePostsAll)
+            let venuePostsVisible = Array.isArray(venuePostsAll)
               ? venuePostsAll.filter(item => allowedIdSet.has(String(item && item.id)))
               : [];
+            if((!Array.isArray(venuePostsVisible) || venuePostsVisible.length === 0) && post){
+              venuePostsVisible = [post];
+            }
             const uniqueVenuePosts = [];
             const venuePostIds = new Set();
             venuePostsVisible.forEach(item => {
