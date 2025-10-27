@@ -19086,48 +19086,71 @@ const adminPanelChangeManager = (()=>{
     }
   }
 
-  function refreshSavedState(){
+  function refreshSavedState({ skipManagerSave } = {}){
     if(!form) return;
     savedState = serializeState();
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+    if(!skipManagerSave && window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
       window.formbuilderStateManager.save();
     }
     setDirty(false);
   }
 
-  async function hydrateAdminFormbuilderSnapshot(){
-    if(typeof window === 'undefined') return;
-    const manager = window.formbuilderStateManager;
-    if(!manager || typeof manager.restore !== 'function') return;
-    let snapshot = null;
-    const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
-      ? window.fetchSavedFormbuilderSnapshot
-      : null;
-    if(fetchSnapshot){
-      try{
-        snapshot = await fetchSnapshot();
-      }catch(err){
-        console.warn('Failed to fetch admin formbuilder snapshot from server', err);
+  let savedStateInitializationPromise = null;
+  let savedStateInitialized = false;
+
+  async function initializeSavedState(){
+    if(savedStateInitialized) return Promise.resolve();
+    if(savedStateInitializationPromise) return savedStateInitializationPromise;
+    let formWasFound = false;
+    savedStateInitializationPromise = (async ()=>{
+      if(typeof window === 'undefined') return;
+      ensureElements();
+      formWasFound = !!form;
+      const manager = window.formbuilderStateManager;
+      let snapshot = null;
+      const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
+        ? window.fetchSavedFormbuilderSnapshot
+        : null;
+      if(fetchSnapshot){
+        try{
+          snapshot = await fetchSnapshot();
+        }catch(err){
+          console.warn('Failed to fetch admin formbuilder snapshot from server', err);
+        }
       }
-    }
-    if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
-      try{
-        snapshot = window.getSavedFormbuilderSnapshot();
-      }catch(err){
-        console.warn('Failed to load saved admin formbuilder snapshot', err);
+      if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
+        try{
+          snapshot = await Promise.resolve(window.getSavedFormbuilderSnapshot());
+        }catch(err){
+          console.warn('Failed to load saved admin formbuilder snapshot', err);
+        }
       }
-    }
-    if(!snapshot) return;
-    try{
-      manager.restore(snapshot);
-      if(typeof manager.save === 'function'){
-        manager.save();
-      } else {
-        refreshSavedState();
+      if(manager && typeof manager.restore === 'function' && snapshot){
+        try{
+          manager.restore(snapshot);
+        }catch(err){
+          console.warn('Failed to hydrate admin formbuilder snapshot', err);
+        }
       }
-    }catch(err){
-      console.warn('Failed to hydrate admin formbuilder snapshot', err);
-    }
+      refreshSavedState({ skipManagerSave: true });
+      if(manager && typeof manager.save === 'function'){
+        try{
+          manager.save();
+        }catch(err){
+          console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
+        }
+      }
+    })()
+    .catch(err => {
+      console.warn('Failed to initialize admin saved state', err);
+    })
+    .finally(()=>{
+      savedStateInitializationPromise = null;
+      if(formWasFound){
+        savedStateInitialized = true;
+      }
+    });
+    return savedStateInitializationPromise;
   }
 
   function showStatus(message){
@@ -19277,22 +19300,20 @@ const adminPanelChangeManager = (()=>{
       });
     }
     initialized = true;
-    refreshSavedState();
   }
 
   ensureElements();
   attachListeners();
-  hydrateAdminFormbuilderSnapshot().then(()=>{
+  initializeSavedState().then(()=>{
     refreshSavedState();
   });
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(()=>{
       ensureElements();
       attachListeners();
-      hydrateAdminFormbuilderSnapshot().then(()=>{
+      initializeSavedState().then(()=>{
         refreshSavedState();
       });
-      refreshSavedState();
     }, 0);
   });
 
