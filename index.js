@@ -2864,9 +2864,24 @@ async function ensureMapboxCssFor(container) {
 
     const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
     const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
-    const MULTI_POST_MARKER_ICON_ID = 'multi-post-icon';
-    const MULTI_POST_MARKER_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
-    const SMALL_MULTI_MAP_CARD_ICON_SRC = 'assets/icons-30/multi-post-icon-30.webp';
+    function getMultiPostMarkerIconId(){
+      const id = typeof window.MULTI_POST_MARKER_ICON_ID === 'string' && window.MULTI_POST_MARKER_ICON_ID
+        ? window.MULTI_POST_MARKER_ICON_ID
+        : 'multi-post-icon';
+      return id;
+    }
+    function getMultiPostMarkerIconSrc(){
+      const src = typeof window.MULTI_POST_MARKER_ICON_SRC === 'string' && window.MULTI_POST_MARKER_ICON_SRC
+        ? window.MULTI_POST_MARKER_ICON_SRC
+        : 'assets/icons-30/multi-post-icon-30.webp';
+      return src;
+    }
+    function getSmallMultiMapCardIconSrc(){
+      const src = typeof window.SMALL_MULTI_MAP_CARD_ICON_SRC === 'string' && window.SMALL_MULTI_MAP_CARD_ICON_SRC
+        ? window.SMALL_MULTI_MAP_CARD_ICON_SRC
+        : 'assets/icons-30/multi-post-icon-30.webp';
+      return src;
+    }
 
       function resetBigMapCardTransforms(){
         document.querySelectorAll('.big-map-card').forEach(card => {
@@ -2921,7 +2936,7 @@ async function ensureMapboxCssFor(container) {
 
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
-      const targetSrc = SMALL_MULTI_MAP_CARD_ICON_SRC;
+      const targetSrc = getSmallMultiMapCardIconSrc();
       const apply = ()=>{
         const currentSrc = img.getAttribute('src') || '';
         if(currentSrc !== targetSrc){
@@ -3327,8 +3342,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return src;
         };
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
-    if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
-      subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
+    const multiPostMarkerIconId = getMultiPostMarkerIconId();
+    const multiPostMarkerIconSrc = getMultiPostMarkerIconSrc();
+    if(!subcategoryMarkers[multiPostMarkerIconId]){
+      subcategoryMarkers[multiPostMarkerIconId] = multiPostMarkerIconSrc;
     }
     const subcategoryMarkerIds = window.subcategoryMarkerIds = window.subcategoryMarkerIds || {};
     const categoryShapes = window.categoryShapes = window.categoryShapes || {};
@@ -8930,7 +8947,7 @@ if (!map.__pillHooksInstalled) {
         if(!primary || !primary.post || !primary.entry) return null;
         const { post, entry } = primary;
         const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
-        const multiIconId = MULTI_POST_MARKER_ICON_ID;
+        const multiIconId = getMultiPostMarkerIconId();
         const venueName = (() => {
           for(const item of group.entries){
             const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
@@ -9246,7 +9263,7 @@ if (!map.__pillHooksInstalled) {
             markerIcon.loading = 'eager';
             markerIcon.referrerPolicy = 'no-referrer';
             if(isMultiVenue){
-              markerIcon.src = SMALL_MULTI_MAP_CARD_ICON_SRC;
+              markerIcon.src = getSmallMultiMapCardIconSrc();
               enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
               const markerSources = window.subcategoryMarkers || {};
