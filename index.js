@@ -7105,11 +7105,29 @@ function makePosts(){
     }
     if(catsEl){
       renderFilterCategories();
-      renderFormbuilderCats();
-      updateFormbuilderSnapshot();
+      if(typeof window.renderFormbuilderCats === 'function'){
+        try{
+          window.renderFormbuilderCats();
+        }catch(err){
+          console.error('renderFormbuilderCats failed', err);
+        }
+      }
+      if(typeof window.updateFormbuilderSnapshot === 'function'){
+        try{
+          window.updateFormbuilderSnapshot();
+        }catch(err){
+          console.error('updateFormbuilderSnapshot failed', err);
+        }
+      }
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
-        refreshFormbuilderSubcategoryLogos();
+        if(typeof window.refreshFormbuilderSubcategoryLogos === 'function'){
+          try{
+            window.refreshFormbuilderSubcategoryLogos();
+          }catch(err){
+            console.error('refreshFormbuilderSubcategoryLogos failed', err);
+          }
+        }
       };
       document.addEventListener('subcategory-icons-ready', handleIconsReady);
     }
