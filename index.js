@@ -2862,26 +2862,6 @@ async function ensureMapboxCssFor(container) {
       }, delay);
     }
 
-    const SMALL_MAP_CARD_PILL_DEFAULT_SRC = 'assets/icons-30/150x40-pill-70.webp';
-    const SMALL_MAP_CARD_PILL_HOVER_SRC = 'assets/icons-30/150x40-pill-2f3b73.webp';
-    function getMultiPostMarkerIconId(){
-      const id = typeof window.MULTI_POST_MARKER_ICON_ID === 'string' && window.MULTI_POST_MARKER_ICON_ID
-        ? window.MULTI_POST_MARKER_ICON_ID
-        : 'multi-post-icon';
-      return id;
-    }
-    function getMultiPostMarkerIconSrc(){
-      const src = typeof window.MULTI_POST_MARKER_ICON_SRC === 'string' && window.MULTI_POST_MARKER_ICON_SRC
-        ? window.MULTI_POST_MARKER_ICON_SRC
-        : 'assets/icons-30/multi-post-icon-30.webp';
-      return src;
-    }
-    function getSmallMultiMapCardIconSrc(){
-      const src = typeof window.SMALL_MULTI_MAP_CARD_ICON_SRC === 'string' && window.SMALL_MULTI_MAP_CARD_ICON_SRC
-        ? window.SMALL_MULTI_MAP_CARD_ICON_SRC
-        : 'assets/icons-30/multi-post-icon-30.webp';
-      return src;
-    }
 
       function resetBigMapCardTransforms(){
         document.querySelectorAll('.big-map-card').forEach(card => {
@@ -2913,19 +2893,25 @@ async function ensureMapboxCssFor(container) {
 
     function setSmallMapCardPillImage(cardEl, highlighted){
       if(!cardEl) return;
+      const defaultSrc = (typeof window !== 'undefined' && typeof window.SMALL_MAP_CARD_PILL_DEFAULT_SRC === 'string'
+        ? window.SMALL_MAP_CARD_PILL_DEFAULT_SRC
+        : 'assets/icons-30/150x40-pill-70.webp');
+      const hoverSrc = (typeof window !== 'undefined' && typeof window.SMALL_MAP_CARD_PILL_HOVER_SRC === 'string'
+        ? window.SMALL_MAP_CARD_PILL_HOVER_SRC
+        : 'assets/icons-30/150x40-pill-2f3b73.webp');
       const pillImg = cardEl.querySelector('.mapmarker-pill, .map-card-pill')
         || cardEl.querySelector('img[src*="150x40-pill" i]');
       if(!pillImg) return;
       if(!pillImg.dataset.defaultSrc){
         const currentSrc = pillImg.getAttribute('src') || '';
-        pillImg.dataset.defaultSrc = currentSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC;
+        pillImg.dataset.defaultSrc = currentSrc || defaultSrc;
       }
       if(!pillImg.dataset.highlightSrc){
-        pillImg.dataset.highlightSrc = SMALL_MAP_CARD_PILL_HOVER_SRC;
+        pillImg.dataset.highlightSrc = hoverSrc;
       }
       const targetSrc = highlighted
-        ? (pillImg.dataset.highlightSrc || SMALL_MAP_CARD_PILL_HOVER_SRC)
-        : (pillImg.dataset.defaultSrc || SMALL_MAP_CARD_PILL_DEFAULT_SRC);
+        ? (pillImg.dataset.highlightSrc || hoverSrc)
+        : (pillImg.dataset.defaultSrc || defaultSrc);
       if((pillImg.getAttribute('src') || '') !== targetSrc){
         pillImg.setAttribute('src', targetSrc);
       }
@@ -2936,7 +2922,11 @@ async function ensureMapboxCssFor(container) {
 
     function enforceSmallMultiMapCardIcon(img, overlayEl){
       if(!img) return;
-      const targetSrc = getSmallMultiMapCardIconSrc();
+      const targetSrc = (typeof window !== 'undefined' && typeof window.getSmallMultiMapCardIconSrc === 'function'
+        ? window.getSmallMultiMapCardIconSrc()
+        : ((typeof window !== 'undefined' && typeof window.SMALL_MULTI_MAP_CARD_ICON_SRC === 'string'
+            && window.SMALL_MULTI_MAP_CARD_ICON_SRC.trim())
+          || 'assets/icons-30/multi-post-icon-30.webp'));
       const apply = ()=>{
         const currentSrc = img.getAttribute('src') || '';
         if(currentSrc !== targetSrc){
@@ -3342,8 +3332,16 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return src;
         };
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
-    const multiPostMarkerIconId = getMultiPostMarkerIconId();
-    const multiPostMarkerIconSrc = getMultiPostMarkerIconSrc();
+    const multiPostMarkerIconId = (typeof window !== 'undefined' && typeof window.getMultiPostMarkerIconId === 'function'
+      ? window.getMultiPostMarkerIconId()
+      : ((typeof window !== 'undefined' && typeof window.MULTI_POST_MARKER_ICON_ID === 'string'
+          && window.MULTI_POST_MARKER_ICON_ID.trim())
+        || 'multi-post-icon'));
+    const multiPostMarkerIconSrc = (typeof window !== 'undefined' && typeof window.getMultiPostMarkerIconSrc === 'function'
+      ? window.getMultiPostMarkerIconSrc()
+      : ((typeof window !== 'undefined' && typeof window.MULTI_POST_MARKER_ICON_SRC === 'string'
+          && window.MULTI_POST_MARKER_ICON_SRC.trim())
+        || 'assets/icons-30/multi-post-icon-30.webp'));
     if(!subcategoryMarkers[multiPostMarkerIconId]){
       subcategoryMarkers[multiPostMarkerIconId] = multiPostMarkerIconSrc;
     }
@@ -8947,7 +8945,11 @@ if (!map.__pillHooksInstalled) {
         if(!primary || !primary.post || !primary.entry) return null;
         const { post, entry } = primary;
         const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
-        const multiIconId = getMultiPostMarkerIconId();
+        const multiIconId = (typeof window !== 'undefined' && typeof window.getMultiPostMarkerIconId === 'function'
+          ? window.getMultiPostMarkerIconId()
+          : ((typeof window !== 'undefined' && typeof window.MULTI_POST_MARKER_ICON_ID === 'string'
+              && window.MULTI_POST_MARKER_ICON_ID.trim())
+            || 'multi-post-icon'));
         const venueName = (() => {
           for(const item of group.entries){
             const candidate = item && item.entry && item.entry.loc && item.entry.loc.venue;
@@ -9263,7 +9265,11 @@ if (!map.__pillHooksInstalled) {
             markerIcon.loading = 'eager';
             markerIcon.referrerPolicy = 'no-referrer';
             if(isMultiVenue){
-              markerIcon.src = getSmallMultiMapCardIconSrc();
+              markerIcon.src = (typeof window !== 'undefined' && typeof window.getSmallMultiMapCardIconSrc === 'function'
+                ? window.getSmallMultiMapCardIconSrc()
+                : ((typeof window !== 'undefined' && typeof window.SMALL_MULTI_MAP_CARD_ICON_SRC === 'string'
+                    && window.SMALL_MULTI_MAP_CARD_ICON_SRC.trim())
+                  || 'assets/icons-30/multi-post-icon-30.webp'));
               enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
               const markerSources = window.subcategoryMarkers || {};
