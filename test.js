@@ -3,6 +3,7 @@ const fs = require('fs');
 const vm = require('vm');
 
 const mainSource = fs.readFileSync('index.js', 'utf8');
+const adminSource = fs.readFileSync('admin.js', 'utf8');
 
 assert(
   mainSource.includes("types: 'poi,place,address'"),
@@ -239,7 +240,8 @@ assert(
 );
 
 assert(
-  mainSource.includes("trigger.removeAttribute('aria-disabled');"),
+  mainSource.includes("trigger.removeAttribute('aria-disabled');")
+    || adminSource.includes("trigger.removeAttribute('aria-disabled');"),
   'Icon picker triggers should remove aria-disabled when icons are available.'
 );
 
@@ -470,15 +472,18 @@ const bootstrapContextSubcategoryOnly = {
 vm.createContext(bootstrapContextSubcategoryOnly);
 vm.runInContext(iconBootstrapSource, bootstrapContextSubcategoryOnly);
 
-const attachIconPickerStart = mainSource.indexOf('const attachIconPicker = (trigger, container, options = {})=>{');
-const attachIconPickerEnd = mainSource.indexOf('const frag = document.createDocumentFragment();', attachIconPickerStart);
+const iconPickerSource = mainSource.includes('const attachIconPicker = (trigger, container, options = {})=>{')
+  ? mainSource
+  : adminSource;
+const attachIconPickerStart = iconPickerSource.indexOf('const attachIconPicker = (trigger, container, options = {})=>{');
+const attachIconPickerEnd = iconPickerSource.indexOf('const frag = document.createDocumentFragment();', attachIconPickerStart);
 
 assert(
   attachIconPickerStart !== -1 && attachIconPickerEnd !== -1,
   'Unable to locate icon picker attachment helper.'
 );
 
-const attachIconPickerSource = mainSource.slice(attachIconPickerStart, attachIconPickerEnd);
+const attachIconPickerSource = iconPickerSource.slice(attachIconPickerStart, attachIconPickerEnd);
 
 const attachIconPickerFactory = new Function('context', `with(context){ ${attachIconPickerSource} return attachIconPicker; }`);
 
