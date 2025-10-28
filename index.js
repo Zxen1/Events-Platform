@@ -12587,7 +12587,6 @@ document.addEventListener('pointerdown', (e) => {
 // Panels and admin/member interactions
 (function(){
   const memberBtn = document.getElementById('memberBtn');
-  const adminBtn = document.getElementById('adminBtn');
   const filterBtn = document.getElementById('filterBtn');
   const memberPanel = document.getElementById('memberPanel');
   const adminPanel = document.getElementById('adminPanel');
@@ -12595,15 +12594,6 @@ document.addEventListener('pointerdown', (e) => {
 
   if(memberBtn && memberPanel){
     memberBtn.addEventListener('click', ()=> togglePanel(memberPanel));
-  }
-  if(adminBtn && adminPanel){
-    adminBtn.addEventListener('click', ()=>{
-      if(window.adminAuthManager && !window.adminAuthManager.isAuthenticated()){
-        window.adminAuthManager.ensureAuthenticated();
-        return;
-      }
-      togglePanel(adminPanel);
-    });
   }
   filterBtn && filterBtn.addEventListener('click', ()=> togglePanel(filterPanel));
   document.querySelectorAll('.panel .close-panel').forEach(btn=>{
@@ -12697,84 +12687,6 @@ document.addEventListener('pointerdown', (e) => {
       content.style.maxHeight = 'calc(100vh - var(--header-h) - var(--safe-top) - var(--footer-h))';
     }
   });
-
-  const adminTabs = document.querySelectorAll('#adminPanel .tab-bar button');
-  const adminPanels = document.querySelectorAll('#adminPanel .tab-panel');
-  adminTabs.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      adminTabs.forEach(b=>b.setAttribute('aria-selected','false'));
-      adminPanels.forEach(p=>p.classList.remove('active'));
-      btn.setAttribute('aria-selected','true');
-      const panel = document.getElementById(`tab-${btn.dataset.tab}`);
-      panel && panel.classList.add('active');
-    });
-  });
-
-  const memberTabs = document.querySelectorAll('#memberPanel .tab-bar .tab-btn');
-  const memberPanels = document.querySelectorAll('#memberPanel .member-tab-panel');
-  memberTabs.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      memberTabs.forEach(b=>b.setAttribute('aria-selected','false'));
-      memberPanels.forEach(p=>{
-        p.classList.remove('active');
-        p.setAttribute('hidden','');
-      });
-      btn.setAttribute('aria-selected','true');
-      const panel = document.getElementById(`memberTab-${btn.dataset.tab}`);
-      if(panel){
-        panel.classList.add('active');
-        panel.removeAttribute('hidden');
-      }
-    });
-  });
-
-  const adminPaypalClientId = document.getElementById('adminPaypalClientId');
-  const adminPaypalClientSecret = document.getElementById('adminPaypalClientSecret');
-  const adminListingCurrency = document.getElementById('adminListingCurrency');
-  const adminListingPrice = document.getElementById('adminListingPrice');
-
-  const memberCreateSection = document.getElementById('memberTab-create');
-  if(memberCreateSection){
-    const config = {
-      memberCreateSection,
-      categorySelect: document.getElementById('memberCreateCategory'),
-      subcategorySelect: document.getElementById('memberCreateSubcategory'),
-      emptyState: document.getElementById('memberCreateEmpty'),
-      formWrapper: document.getElementById('memberCreateFormWrapper'),
-      formFields: document.getElementById('memberCreateFormFields'),
-      checkoutContainer: document.getElementById('memberCreateCheckout'),
-      paypalContainer: document.getElementById('memberCreatePaypalContainer'),
-      paypalButton: document.getElementById('memberCreatePaypalButton'),
-      postButton: document.getElementById('memberCreatePostBtn'),
-      listingCurrency: document.getElementById('memberCreateListingCurrency'),
-      listingPrice: document.getElementById('memberCreateListingPrice'),
-      adminListingCurrency,
-      adminListingPrice,
-      adminPaypalClientId,
-      adminPaypalClientSecret,
-      sharedDefaultSubcategoryFields: Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-        ? window.DEFAULT_SUBCATEGORY_FIELDS
-        : [
-            { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-            { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-            { name: 'Images', type: 'images', placeholder: '', required: true }
-          ],
-      normalizeVenueSessionOptions: typeof window.normalizeVenueSessionOptions === 'function'
-        ? window.normalizeVenueSessionOptions
-        : normalizeVenueSessionOptions,
-      cloneVenueSessionVenue: typeof window.cloneVenueSessionVenue === 'function'
-        ? window.cloneVenueSessionVenue
-        : cloneVenueSessionVenue,
-      getSortedCategories: typeof window.getSortedCategories === 'function'
-        ? window.getSortedCategories
-        : getSortedCategories
-    };
-
-    window.__pendingMemberPanelInit = config;
-    if(window.adminMemberSnapshot && typeof window.adminMemberSnapshot.initialize === 'function'){
-      window.adminMemberSnapshot.initialize(config);
-    }
-  }
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},

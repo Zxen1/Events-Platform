@@ -8564,6 +8564,138 @@ const adminAuthManager = (()=>{
 })();
 window.adminAuthManager = adminAuthManager;
 
+(function(){
+  function guardAdminPanelButton(){
+    const adminBtn = document.getElementById('adminBtn');
+    const adminPanel = document.getElementById('adminPanel');
+    if(!adminBtn || !adminPanel) return;
+    if(adminBtn.__adminGuardAttached) return;
+    adminBtn.addEventListener('click', () => {
+      const auth = window.adminAuthManager;
+      if(auth && !auth.isAuthenticated()){
+        auth.ensureAuthenticated();
+        return;
+      }
+      const toggle = typeof togglePanel === 'function'
+        ? togglePanel
+        : (typeof window.togglePanel === 'function' ? window.togglePanel : null);
+      if(typeof toggle === 'function'){
+        toggle(adminPanel);
+      } else if(adminPanel){
+        adminPanel.classList.toggle('show');
+      }
+    });
+    adminBtn.__adminGuardAttached = true;
+  }
+
+  function wireAdminTabs(){
+    const adminTabs = document.querySelectorAll('#adminPanel .tab-bar button');
+    const adminPanels = document.querySelectorAll('#adminPanel .tab-panel');
+    if(!adminTabs.length || !adminPanels.length) return;
+    adminTabs.forEach(btn => {
+      if(btn.__adminTabHandlerAttached) return;
+      btn.addEventListener('click', () => {
+        adminTabs.forEach(tab => tab.setAttribute('aria-selected','false'));
+        adminPanels.forEach(panel => panel.classList.remove('active'));
+        btn.setAttribute('aria-selected','true');
+        const targetId = btn.dataset && btn.dataset.tab ? `tab-${btn.dataset.tab}` : '';
+        const panel = targetId ? document.getElementById(targetId) : null;
+        if(panel){
+          panel.classList.add('active');
+        }
+      });
+      btn.__adminTabHandlerAttached = true;
+    });
+  }
+
+  function wireMemberTabs(){
+    const memberTabs = document.querySelectorAll('#memberPanel .tab-bar .tab-btn');
+    const memberPanels = document.querySelectorAll('#memberPanel .member-tab-panel');
+    if(!memberTabs.length || !memberPanels.length) return;
+    memberTabs.forEach(btn => {
+      if(btn.__memberTabHandlerAttached) return;
+      btn.addEventListener('click', () => {
+        memberTabs.forEach(tab => tab.setAttribute('aria-selected','false'));
+        memberPanels.forEach(panel => {
+          panel.classList.remove('active');
+          panel.setAttribute('hidden','');
+        });
+        btn.setAttribute('aria-selected','true');
+        const targetId = btn.dataset && btn.dataset.tab ? `memberTab-${btn.dataset.tab}` : '';
+        const panel = targetId ? document.getElementById(targetId) : null;
+        if(panel){
+          panel.classList.add('active');
+          panel.removeAttribute('hidden');
+        }
+      });
+      btn.__memberTabHandlerAttached = true;
+    });
+  }
+
+  function buildMemberPanelConfig(){
+    const memberCreateSection = document.getElementById('memberTab-create');
+    if(!memberCreateSection) return null;
+    const sharedFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+        { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+        { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+        { name: 'Images', type: 'images', placeholder: '', required: true }
+      ];
+    return {
+      memberCreateSection,
+      categorySelect: document.getElementById('memberCreateCategory'),
+      subcategorySelect: document.getElementById('memberCreateSubcategory'),
+      emptyState: document.getElementById('memberCreateEmpty'),
+      formWrapper: document.getElementById('memberCreateFormWrapper'),
+      formFields: document.getElementById('memberCreateFormFields'),
+      checkoutContainer: document.getElementById('memberCreateCheckout'),
+      paypalContainer: document.getElementById('memberCreatePaypalContainer'),
+      paypalButton: document.getElementById('memberCreatePaypalButton'),
+      postButton: document.getElementById('memberCreatePostBtn'),
+      listingCurrency: document.getElementById('memberCreateListingCurrency'),
+      listingPrice: document.getElementById('memberCreateListingPrice'),
+      adminListingCurrency: document.getElementById('adminListingCurrency'),
+      adminListingPrice: document.getElementById('adminListingPrice'),
+      adminPaypalClientId: document.getElementById('adminPaypalClientId'),
+      adminPaypalClientSecret: document.getElementById('adminPaypalClientSecret'),
+      sharedDefaultSubcategoryFields: sharedFields,
+      normalizeVenueSessionOptions: typeof window.normalizeVenueSessionOptions === 'function'
+        ? window.normalizeVenueSessionOptions
+        : (typeof normalizeVenueSessionOptions === 'function' ? normalizeVenueSessionOptions : undefined),
+      cloneVenueSessionVenue: typeof window.cloneVenueSessionVenue === 'function'
+        ? window.cloneVenueSessionVenue
+        : (typeof cloneVenueSessionVenue === 'function' ? cloneVenueSessionVenue : undefined),
+      getSortedCategories: typeof window.getSortedCategories === 'function'
+        ? window.getSortedCategories
+        : (typeof getSortedCategories === 'function' ? getSortedCategories : undefined)
+    };
+  }
+
+  function initializeMemberPanel(){
+    const config = buildMemberPanelConfig();
+    if(!config) return;
+    window.__pendingMemberPanelInit = config;
+    const initializer = window.adminMemberSnapshot && window.adminMemberSnapshot.initialize;
+    if(typeof initializer === 'function'){
+      initializer(config);
+    }
+  }
+
+  function init(){
+    guardAdminPanelButton();
+    wireAdminTabs();
+    wireMemberTabs();
+    initializeMemberPanel();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+
 
 
 // Extracted from <script>
