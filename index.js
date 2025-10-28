@@ -3255,272 +3255,47 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
-    let persistedFormbuilderSnapshotFetchPromise = null;
-
-    function getSavedFormbuilderSnapshot(){
-      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
-        try{
-          const snapshot = window.formbuilderStateManager.getSaved();
-          if(snapshot && typeof snapshot === 'object'){
-            return snapshot;
+    const getPersistedFormbuilderSnapshotFromGlobals = typeof window.getPersistedFormbuilderSnapshotFromGlobals === 'function'
+      ? window.getPersistedFormbuilderSnapshotFromGlobals
+      : (()=>null);
+    const getSavedFormbuilderSnapshot = typeof window.getSavedFormbuilderSnapshot === 'function'
+      ? window.getSavedFormbuilderSnapshot
+      : (()=>null);
+    const normalizeFormbuilderSnapshot = typeof window.normalizeFormbuilderSnapshot === 'function'
+      ? window.normalizeFormbuilderSnapshot
+      : (snapshot => snapshot || { categories: [], versionPriceCurrencies: [], categoryIconPaths: {}, subcategoryIconPaths: {}, iconLibrary: [] });
+    const normalizeIconLibraryEntries = typeof window.normalizeIconLibraryEntries === 'function'
+      ? window.normalizeIconLibraryEntries
+      : (entries => Array.isArray(entries) ? entries.filter(item => typeof item === 'string' && item) : []);
+    const normalizeIconAssetPath = typeof window.normalizeIconAssetPath === 'function'
+      ? window.normalizeIconAssetPath
+      : (value => (typeof value === 'string' ? value.trim() : ''));
+    const normalizeIconPathMap = typeof window.normalizeIconPathMap === 'function'
+      ? window.normalizeIconPathMap
+      : (source => {
+          if(!source || typeof source !== 'object'){
+            return {};
           }
-        }catch(err){
-          console.warn('Failed to read saved formbuilder snapshot', err);
-        }
-      }
-      return null;
-    }
-
-    async function fetchSavedFormbuilderSnapshot(){
-      if(persistedFormbuilderSnapshotFetchPromise){
-        return persistedFormbuilderSnapshotFetchPromise;
-      }
-
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller ? window.setTimeout(() => {
-        try{ controller.abort(); }catch(err){}
-      }, 15000) : 0;
-
-      const fetchPromise = (async () => {
-        try{
-          const response = await fetch('/gateway.php?action=get-form', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: controller ? controller.signal : undefined
+          const result = {};
+          Object.keys(source).forEach(key => {
+            if(typeof key === 'string' && key.trim()){
+              result[key.trim()] = typeof source[key] === 'string' ? source[key] : '';
+            }
           });
-          const text = await response.text();
-          let data;
-          try{
-            data = JSON.parse(text);
-          }catch(parseErr){
-            throw new Error('The server returned an unexpected response.');
-          }
-          if(!response.ok || !data || data.success !== true || !data.snapshot){
-            const message = data && typeof data.message === 'string' && data.message.trim()
-              ? data.message.trim()
-              : 'Unable to load form definitions.';
-            throw new Error(message);
-          }
-          return data.snapshot;
-        } finally {
-          if(timeoutId){
-            clearTimeout(timeoutId);
-          }
-        }
-      })();
-
-      persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
-        persistedFormbuilderSnapshotFetchPromise = null;
-      });
-
-      return persistedFormbuilderSnapshotFetchPromise;
-    }
-
-    
-
-    function cloneFieldValue(value){
-      if(Array.isArray(value)){
-        return value.map(cloneFieldValue);
-      }
-      if(value && typeof value === 'object'){
-        try{
-          return JSON.parse(JSON.stringify(value));
-        }catch(err){
-          return { ...value };
-        }
-      }
-      return value;
-    }
-
-    const DEFAULT_FORMBUILDER_SNAPSHOT = {
-      categories: [],
-      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
-      categoryIconPaths: {},
-      subcategoryIconPaths: {},
-      iconLibrary: []
-    };
-
-    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
-
-    function normalizeCategoriesSnapshot(sourceCategories){
-      const list = Array.isArray(sourceCategories) ? sourceCategories : [];
-      const parseId = value => {
-        if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
-          return value;
-        }
-        if(typeof value === 'string' && value.trim() && /^\d+$/.test(value.trim())){
-          return parseInt(value.trim(), 10);
-        }
-        return null;
-      };
-      const normalized = list.map(item => {
-        if(!item || typeof item !== 'object') return null;
-        const name = typeof item.name === 'string' ? item.name : '';
-        if(!name) return null;
-        const subIdsSource = (item.subIds && typeof item.subIds === 'object' && !Array.isArray(item.subIds)) ? item.subIds : {};
-        const rawSubs = Array.isArray(item.subs) ? item.subs : [];
-        const subs = [];
-        const subIdMap = {};
-        rawSubs.forEach(entry => {
-          if(typeof entry === 'string'){
-            const subName = entry.trim();
-            if(!subName) return;
-            subs.push(subName);
-            if(Object.prototype.hasOwnProperty.call(subIdsSource, entry)){
-              const parsed = parseId(subIdsSource[entry]);
-              if(parsed !== null){
-                subIdMap[subName] = parsed;
-              }
-            }
-            return;
-          }
-          if(entry && typeof entry === 'object'){
-            const subName = typeof entry.name === 'string' ? entry.name.trim() : '';
-            if(!subName) return;
-            subs.push(subName);
-            const parsed = parseId(entry.id);
-            if(parsed !== null){
-              subIdMap[subName] = parsed;
-            } else if(Object.prototype.hasOwnProperty.call(subIdsSource, subName)){
-              const fromMap = parseId(subIdsSource[subName]);
-              if(fromMap !== null){
-                subIdMap[subName] = fromMap;
-              }
-            }
+          return result;
+        });
+    const assignMapLike = typeof window.assignMapLike === 'function'
+      ? window.assignMapLike
+      : ((target, source) => {
+          if(!target || typeof target !== 'object') return;
+          Object.keys(target).forEach(key => { delete target[key]; });
+          if(source && typeof source === 'object'){
+            Object.keys(source).forEach(key => {
+              target[key] = source[key];
+            });
           }
         });
-        const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
-        const subFields = {};
-        subs.forEach(sub => {
-          const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
-          subFields[sub] = fields;
-        });
-        const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
-      }).filter(Boolean);
-      const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
-        id: null,
-        name: cat.name,
-        subs: cat.subs.slice(),
-        subIds: cat.subs.reduce((acc, sub) => {
-          acc[sub] = null;
-          return acc;
-        }, {}),
-        subFields: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
-        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
-      }));
-      base.forEach(cat => {
-        if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-          cat.subFields = {};
-        }
-        if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
-          cat.subIds = {};
-        }
-        cat.subs.forEach(sub => {
-          if(!Array.isArray(cat.subFields[sub])){
-            cat.subFields[sub] = [];
-          }
-          if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
-            cat.subIds[sub] = null;
-          }
-        });
-        cat.sort_order = normalizeCategorySortOrderValue(cat.sort_order ?? cat.sortOrder);
-      });
-      return base;
-    }
-
-    function normalizeFormbuilderSnapshot(snapshot){
-      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
-      const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
-      const normalizedCurrencies = Array.from(new Set(rawCurrencies
-        .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
-        .filter(Boolean)));
-      if(!normalizedCurrencies.length){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
-      }
-      const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
-      const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
-      const normalizedIconPathsFromMaps = [
-        ...Object.values(normalizedCategoryIconPaths || {}),
-        ...Object.values(normalizedSubcategoryIconPaths || {})
-      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
-        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
-      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
-        ? snapshot.iconLibrary
-        : [];
-      const mergedIconSet = new Set();
-      const mergedIconLibrary = [];
-      const addIconToLibrary = (icon)=>{
-        if(typeof icon !== 'string'){
-          return;
-        }
-        const normalized = normalizeIconAssetPath(icon);
-        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
-          return;
-        }
-        const key = normalized.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(normalized);
-      };
-      iconLibrarySource.forEach(addIconToLibrary);
-      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
-      const iconLibrary = mergedIconLibrary;
-      return {
-        categories: normalizedCategories,
-        versionPriceCurrencies: normalizedCurrencies,
-        categoryIconPaths: normalizedCategoryIconPaths,
-        subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary
-      };
-    }
-
-    function getPersistedFormbuilderSnapshotFromGlobals(){
-      if(typeof window === 'undefined'){
-        return null;
-      }
-      const candidates = [
-        window.__persistedFormbuilderSnapshot,
-        window.__PERSISTED_FORMBUILDER_SNAPSHOT__,
-        window.__FORMBUILDER_SNAPSHOT__,
-        window.persistedFormbuilderSnapshot,
-        window.formbuilderSnapshot,
-        window.formBuilderSnapshot,
-        window.initialFormbuilderSnapshot,
-        window.__initialFormbuilderSnapshot
-      ];
-      for(const candidate of candidates){
-        if(candidate && typeof candidate === 'object'){
-          return candidate;
-        }
-      }
-      return null;
-    }
-
-    const persistedFormbuilderSnapshotPromise = (()=>{
-      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
-        return window.__persistedFormbuilderSnapshotPromise;
-      }
-      const promise = (async ()=>{
-        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
-        if(inlineSnapshot){
-          return inlineSnapshot;
-        }
-        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
-          return await fetchSavedFormbuilderSnapshot();
-        }
-        return null;
-      })();
-      if(typeof window !== 'undefined'){
-        window.__persistedFormbuilderSnapshotPromise = promise;
-      }
-      return promise;
-    })();
+    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = window.ICON_LIBRARY_ALLOWED_EXTENSION_RE || /\.(?:png|jpe?g|gif|svg|webp)$/i;
     const ICON_LIBRARY = Array.isArray(window.iconLibrary)
       ? window.iconLibrary
       : (window.iconLibrary = []);
@@ -3544,15 +3319,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
     const mergedIconSet = new Set();
     const mergedIconLibrary = [];
-    function assignMapLike(target, source){
-      if(!target || typeof target !== 'object') return;
-      Object.keys(target).forEach(key => { delete target[key]; });
-      if(source && typeof source === 'object'){
-        Object.keys(source).forEach(key => {
-          target[key] = source[key];
-        });
-      }
-    }
     const mergeIcons = icons => {
       if(!Array.isArray(icons)){
         return;
@@ -3586,6 +3352,21 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
     assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
     assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
+    if(typeof window !== 'undefined'){
+      window.__formbuilderInitialized = true;
+      if(typeof window.dispatchEvent === 'function'){
+        let dispatched = false;
+        try{
+          window.dispatchEvent(new Event('formbuilder:init'));
+          dispatched = true;
+        }catch(err){}
+        if(!dispatched && typeof CustomEvent === 'function'){
+          try{
+            window.dispatchEvent(new CustomEvent('formbuilder:init'));
+          }catch(err){}
+        }
+      }
+    }
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
       { value: 'title', label: 'Title' },
       { value: 'description', label: 'Description' },
