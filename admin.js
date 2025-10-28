@@ -93,15 +93,23 @@
       }
     })();
 
-    persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
-      persistedFormbuilderSnapshotFetchPromise = null;
+    const promiseWithCleanup = fetchPromise.finally(() => {
+      if(persistedFormbuilderSnapshotFetchPromise === promiseWithCleanup){
+        persistedFormbuilderSnapshotFetchPromise = null;
+      }
+      if(typeof window !== 'undefined'
+        && window.persistedFormbuilderSnapshotPromise === promiseWithCleanup){
+        window.persistedFormbuilderSnapshotPromise = null;
+      }
     });
 
+    persistedFormbuilderSnapshotFetchPromise = promiseWithCleanup;
+
     if(typeof window !== 'undefined'){
-      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
+      window.persistedFormbuilderSnapshotPromise = promiseWithCleanup;
     }
 
-    return persistedFormbuilderSnapshotFetchPromise;
+    return promiseWithCleanup;
   }
 
   function normalizeCategoriesSnapshot(sourceCategories){
