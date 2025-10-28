@@ -115,7 +115,7 @@ const formbuilderSlices = [
   ),
   mainSource.slice(
     mainSource.indexOf('function normalizeFormbuilderSnapshot('),
-    mainSource.indexOf('    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;')
+    mainSource.indexOf('function getPersistedFormbuilderSnapshotFromGlobals(')
   ),
   mainSource.slice(
     mainSource.indexOf('function normalizeIconLibraryEntries('),

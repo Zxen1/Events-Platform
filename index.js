@@ -3256,9 +3256,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     ];
 
     let persistedFormbuilderSnapshotFetchPromise = null;
-    if(typeof window !== 'undefined'){
-      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
-    }
 
     function getSavedFormbuilderSnapshot(){
       if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
@@ -3314,21 +3311,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
       persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
         persistedFormbuilderSnapshotFetchPromise = null;
-        if(typeof window !== 'undefined'){
-          window.persistedFormbuilderSnapshotPromise = null;
-        }
       });
-
-      if(typeof window !== 'undefined'){
-        window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
-      }
 
       return persistedFormbuilderSnapshotFetchPromise;
     }
 
-    if(typeof window !== 'undefined'){
-      window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
-    }
+    
 
     function cloneFieldValue(value){
       if(Array.isArray(value)){
@@ -3492,9 +3480,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       };
     }
 
-    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
-    window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
-
     function getPersistedFormbuilderSnapshotFromGlobals(){
       if(typeof window === 'undefined'){
         return null;
@@ -3536,10 +3521,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return promise;
     })();
-    if(typeof window !== 'undefined'){
-      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotPromise;
-    }
-
     const ICON_LIBRARY = Array.isArray(window.iconLibrary)
       ? window.iconLibrary
       : (window.iconLibrary = []);
@@ -3571,9 +3552,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           target[key] = source[key];
         });
       }
-    }
-    if(typeof window !== 'undefined'){
-      window.assignMapLike = assignMapLike;
     }
     const mergeIcons = icons => {
       if(!Array.isArray(icons)){
@@ -3908,10 +3886,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return next + suffix;
     }
-    if(typeof window !== 'undefined'){
-      window.normalizeIconAssetPath = normalizeIconAssetPath;
-    }
-
     const existingNormalizeIconPath = (typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function')
       ? window.normalizeIconPath
       : null;
@@ -3955,9 +3929,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         normalized[`name:${trimmed.toLowerCase()}`] = value;
       });
       return normalized;
-    }
-    if(typeof window !== 'undefined'){
-      window.normalizeIconPathMap = normalizeIconPathMap;
     }
     function lookupIconPath(map, id, name){
       const idKey = toIconIdKey(id);
