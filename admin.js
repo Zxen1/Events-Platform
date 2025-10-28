@@ -956,6 +956,12 @@
   const MULTI_POST_MARKER_ICON_SRC = typeof window.MULTI_POST_MARKER_ICON_SRC === 'string'
     ? window.MULTI_POST_MARKER_ICON_SRC
     : 'assets/icons-30/multi-post-icon-30.webp';
+  const SMALL_MULTI_MAP_CARD_ICON_SRC = typeof window.SMALL_MULTI_MAP_CARD_ICON_SRC === 'string'
+    ? window.SMALL_MULTI_MAP_CARD_ICON_SRC
+    : 'assets/icons-30/multi-post-icon-30.webp';
+  window.MULTI_POST_MARKER_ICON_ID = MULTI_POST_MARKER_ICON_ID;
+  window.MULTI_POST_MARKER_ICON_SRC = MULTI_POST_MARKER_ICON_SRC;
+  window.SMALL_MULTI_MAP_CARD_ICON_SRC = SMALL_MULTI_MAP_CARD_ICON_SRC;
   const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
   if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
     subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
