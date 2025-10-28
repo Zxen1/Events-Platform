@@ -6766,6 +6766,11 @@ window.adminPanelChangeManager = adminPanelChangeManager;
       function updateFormbuilderSnapshot(){
         savedFormbuilderSnapshot = captureFormbuilderSnapshot();
       }
+      if(typeof window !== 'undefined'){
+        window.renderFormbuilderCats = renderFormbuilderCats;
+        window.refreshFormbuilderSubcategoryLogos = refreshFormbuilderSubcategoryLogos;
+        window.updateFormbuilderSnapshot = updateFormbuilderSnapshot;
+      }
       window.formbuilderStateManager = {
         capture: captureFormbuilderSnapshot,
         restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
