@@ -397,6 +397,8 @@
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
     window.normalizeIconAssetPath = normalizeIconAssetPath;
     window.normalizeIconPathMap = normalizeIconPathMap;
+    window.normalizeIconLibraryEntries = normalizeIconLibraryEntries;
+    window.getPersistedFormbuilderSnapshotFromGlobals = getPersistedFormbuilderSnapshotFromGlobals;
     window.assignMapLike = assignMapLike;
     window.DEFAULT_FORMBUILDER_SNAPSHOT = DEFAULT_FORMBUILDER_SNAPSHOT;
     window.ICON_LIBRARY_ALLOWED_EXTENSION_RE = ICON_LIBRARY_ALLOWED_EXTENSION_RE;
@@ -1934,7 +1936,13 @@ window.adminPanelChangeManager = adminPanelChangeManager;
 
 
 (function(){
-  const categories = window.categories || [];
+  let formbuilderPanelInitialized = false;
+  const runAdminPanelSetup = ()=>{
+    if(formbuilderPanelInitialized){
+      return;
+    }
+    formbuilderPanelInitialized = true;
+    const categories = window.categories || [];
   const VERSION_PRICE_CURRENCIES = Array.isArray(window.VERSION_PRICE_CURRENCIES) ? window.VERSION_PRICE_CURRENCIES : [];
   const categoryIcons = window.categoryIcons = window.categoryIcons || {};
   const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
@@ -7852,7 +7860,12 @@ window.adminPanelChangeManager = adminPanelChangeManager;
       }).catch(err => {
         console.error('Failed to load persisted formbuilder snapshot from backend', err);
       });
-      
+  };
+  if(window.__formbuilderInitialized === true || Array.isArray(window.categories)){
+    runAdminPanelSetup();
+  } else {
+    window.addEventListener('formbuilder:init', runAdminPanelSetup, { once: true });
+  }
 })();
 
 const adminAuthManager = (()=>{

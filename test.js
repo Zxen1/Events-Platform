@@ -85,55 +85,33 @@ venues.forEach(venue => {
   );
 });
 
-const formbuilderStart = mainSource.indexOf('function getSavedFormbuilderSnapshot(){');
-assert(formbuilderStart !== -1, 'Unable to locate saved formbuilder snapshot helper.');
-const baseFnStart = mainSource.indexOf('function baseNormalizeIconPath(path){');
-const baseFnEnd = mainSource.indexOf('function applyNormalizeIconPath', baseFnStart);
-assert(baseFnStart !== -1 && baseFnEnd !== -1, 'Unable to locate base icon normalization helper.');
-
-const formbuilderWindow = {};
-const formbuilderSlices = [
-  mainSource.slice(
-    mainSource.indexOf('function normalizeCategorySortOrderValue('),
-    mainSource.indexOf('function compareCategoriesForDisplay', mainSource.indexOf('function normalizeCategorySortOrderValue('))
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function cloneFieldValue('),
-    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT'),
-    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE'),
-    mainSource.indexOf('function normalizeCategoriesSnapshot(')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function normalizeCategoriesSnapshot('),
-    mainSource.indexOf('function normalizeFormbuilderSnapshot(')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function normalizeFormbuilderSnapshot('),
-    mainSource.indexOf('function getPersistedFormbuilderSnapshotFromGlobals(')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function normalizeIconLibraryEntries('),
-    mainSource.indexOf('function normalizeIconAssetPath(')
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function normalizeIconAssetPath('),
-    mainSource.indexOf('    const existingNormalizeIconPath', mainSource.indexOf('function normalizeIconAssetPath('))
-  ),
-  mainSource.slice(
-    mainSource.indexOf('function normalizeIconPathMap('),
-    mainSource.indexOf('    function lookupIconPath', mainSource.indexOf('function normalizeIconPathMap('))
-  ),
-  mainSource.slice(baseFnStart, baseFnEnd)
-];
-
-const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE };');
-const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE } = formbuilderFactory(formbuilderWindow);
+const helperIIFEStart = adminSource.indexOf('(function(){');
+const helperIIFEEnd = adminSource.indexOf('})();\n\n(function(){', helperIIFEStart);
+assert(helperIIFEStart !== -1 && helperIIFEEnd !== -1, 'Unable to isolate admin formbuilder helpers.');
+const helperContext = { window: {}, console };
+helperContext.window.fetch = async () => ({
+  ok: true,
+  text: async () => JSON.stringify({ success: true, snapshot: { categories: [], iconLibrary: [] } })
+});
+helperContext.window.setTimeout = () => 0;
+helperContext.window.clearTimeout = () => {};
+helperContext.window.AbortController = class {
+  constructor(){ this.signal = {}; }
+  abort(){}
+};
+helperContext.fetch = helperContext.window.fetch;
+helperContext.setTimeout = helperContext.window.setTimeout;
+helperContext.clearTimeout = helperContext.window.clearTimeout;
+helperContext.AbortController = helperContext.window.AbortController;
+vm.createContext(helperContext);
+vm.runInContext(adminSource.slice(helperIIFEStart, helperIIFEEnd + 4), helperContext);
+const {
+  normalizeFormbuilderSnapshot,
+  normalizeIconLibraryEntries,
+  normalizeIconPathMap,
+  normalizeIconAssetPath
+} = helperContext.window;
+const ICON_LIBRARY_ALLOWED_EXTENSION_RE = helperContext.window.ICON_LIBRARY_ALLOWED_EXTENSION_RE;
 
 const seededSnapshot = normalizeFormbuilderSnapshot({
   categories: [],
