@@ -405,6 +405,1038 @@
 })();
 
 (function(){
+  const FALLBACK_SUBCATEGORY_FIELDS = [
+    { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+    { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+    { name: 'Images', type: 'images', placeholder: '', required: true }
+  ];
+
+  let integrationState = null;
+
+  function ensureArray(value){
+    return Array.isArray(value) ? value : [];
+  }
+
+  function initializeMemberPanel(config){
+    if(!config || integrationState){
+      if(integrationState && integrationState.api){
+        return integrationState.api;
+      }
+      return null;
+    }
+
+    const categorySelect = config.categorySelect || null;
+    const subcategorySelect = config.subcategorySelect || null;
+    const emptyState = config.emptyState || null;
+    const formWrapper = config.formWrapper || null;
+    const formFields = config.formFields || null;
+    const checkoutContainer = config.checkoutContainer || null;
+    const paypalContainer = config.paypalContainer || null;
+    const paypalButton = config.paypalButton || null;
+    const postButton = config.postButton || null;
+    const listingCurrency = config.listingCurrency || null;
+    const listingPrice = config.listingPrice || null;
+    const adminListingCurrency = config.adminListingCurrency || null;
+    const adminListingPrice = config.adminListingPrice || null;
+    const adminPaypalClientId = config.adminPaypalClientId || null;
+    const adminPaypalClientSecret = config.adminPaypalClientSecret || null;
+    const sharedDefaultSubcategoryFields = Array.isArray(config.sharedDefaultSubcategoryFields)
+      ? config.sharedDefaultSubcategoryFields
+      : FALLBACK_SUBCATEGORY_FIELDS;
+    const normalizeVenueSessionOptions = typeof config.normalizeVenueSessionOptions === 'function'
+      ? config.normalizeVenueSessionOptions
+      : (options => ensureArray(options));
+    const cloneVenueSessionVenue = typeof config.cloneVenueSessionVenue === 'function'
+      ? config.cloneVenueSessionVenue
+      : (value => {
+          if(!value || typeof value !== 'object') return { name: '', address: '', sessions: [] };
+          try{
+            return JSON.parse(JSON.stringify(value));
+          }catch(err){
+            return { ...value };
+          }
+        });
+    const getSortedCategories = typeof config.getSortedCategories === 'function'
+      ? config.getSortedCategories
+      : (list => ensureArray(list));
+
+    const normalizeFormbuilderSnapshot = typeof window.normalizeFormbuilderSnapshot === 'function'
+      ? window.normalizeFormbuilderSnapshot
+      : (snapshot => snapshot || {});
+    const getSavedFormbuilderSnapshot = typeof window.getSavedFormbuilderSnapshot === 'function'
+      ? window.getSavedFormbuilderSnapshot
+      : (() => null);
+    const persistedFormbuilderSnapshotPromise = window.persistedFormbuilderSnapshotPromise || Promise.resolve(null);
+    const defaultFormbuilderSnapshot = (typeof window.DEFAULT_FORMBUILDER_SNAPSHOT === 'object' && window.DEFAULT_FORMBUILDER_SNAPSHOT)
+      ? window.DEFAULT_FORMBUILDER_SNAPSHOT
+      : { categories: [], versionPriceCurrencies: [] };
+
+    const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
+    const loadingMessage = 'Loading form fields…';
+    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
+
+    let memberSnapshot = normalizeFormbuilderSnapshot(null);
+    const defaultMemberSnapshot = memberSnapshot;
+    let memberCategories = memberSnapshot.categories;
+    let currencyCodes = collectCurrencyCodes(memberSnapshot);
+    let fieldIdCounter = 0;
+    let memberSnapshotErrorMessage = '';
+
+    function collectCurrencyCodes(snapshot){
+      const codes = new Set();
+      const cats = snapshot && Array.isArray(snapshot.categories) ? snapshot.categories : [];
+      cats.forEach(cat => {
+        if(!cat || typeof cat !== 'object') return;
+        const subFields = cat.subFields && typeof cat.subFields === 'object' ? cat.subFields : {};
+        Object.values(subFields).forEach(fields => {
+          if(!Array.isArray(fields)) return;
+          fields.forEach(field => {
+            if(!field || typeof field !== 'object') return;
+            if(field.type === 'version-price'){
+              const options = Array.isArray(field.options) ? field.options : [];
+              options.forEach(opt => {
+                const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
+                if(code) codes.add(code);
+              });
+            } else if(field.type === 'venue-session-version-tier-price'){
+              const venues = Array.isArray(field.options) ? field.options : [];
+              venues.forEach(venue => {
+                const sessions = Array.isArray(venue && venue.sessions) ? venue.sessions : [];
+                sessions.forEach(session => {
+                  const times = Array.isArray(session && session.times) ? session.times : [];
+                  times.forEach(time => {
+                    const versions = Array.isArray(time && time.versions) ? time.versions : [];
+                    versions.forEach(version => {
+                      const tiers = Array.isArray(version && version.tiers) ? version.tiers : [];
+                      tiers.forEach(tier => {
+                        const code = tier && typeof tier.currency === 'string' ? tier.currency.trim().toUpperCase() : '';
+                        if(code) codes.add(code);
+                      });
+                    });
+                  });
+                });
+              });
+            }
+          });
+        });
+      });
+      if(!codes.size && snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
+        snapshot.versionPriceCurrencies.forEach(code => {
+          const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
+          if(normalized) codes.add(normalized);
+        });
+      }
+      if(!codes.size){
+        ensureArray(defaultFormbuilderSnapshot.versionPriceCurrencies).forEach(code => {
+          if(typeof code === 'string' && code.trim()){
+            codes.add(code.trim().toUpperCase());
+          }
+        });
+      }
+      return Array.from(codes);
+    }
+
+    function setEmptyStateMessage(message){
+      if(!emptyState) return;
+      if(typeof message === 'string' && message.trim()){
+        emptyState.textContent = message;
+      } else {
+        emptyState.textContent = defaultEmptyMessage;
+      }
+    }
+
+    function ensureCurrencyOptions(select){
+      if(!select) return;
+      const preserveValue = select.value;
+      Array.from(select.options || []).forEach(opt => {
+        if(opt.value){
+          select.removeChild(opt);
+        }
+      });
+      currencyCodes.forEach(code => {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = code;
+        select.appendChild(option);
+      });
+      if(preserveValue && currencyCodes.includes(preserveValue)){
+        select.value = preserveValue;
+      } else {
+        select.value = '';
+      }
+    }
+
+    function applyMemberSnapshot(snapshot, options = {}){
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      memberSnapshot = normalized;
+      memberCategories = memberSnapshot.categories;
+      currencyCodes = collectCurrencyCodes(memberSnapshot);
+      ensureCurrencyOptions(listingCurrency);
+      ensureCurrencyOptions(adminListingCurrency);
+      if(options.populate !== false){
+        populateCategoryOptions(options.preserveSelection === true);
+      }
+    }
+
+    function formatPriceValue(value){
+      const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+      if(!raw) return '';
+      const parts = raw.split('.');
+      let integer = parts[0] || '';
+      integer = integer.replace(/\./g, '');
+      if(!integer) integer = '0';
+      let fraction = parts[1] || '';
+      fraction = fraction.replace(/\./g, '').slice(0, 2);
+      if(fraction.length === 0){
+        fraction = '00';
+      } else if(fraction.length === 1){
+        fraction = `${fraction}0`;
+      }
+      return `${integer}.${fraction}`;
+    }
+
+    function renderEmptyState(message){
+      if(emptyState){
+        if(typeof message === 'string'){
+          memberSnapshotErrorMessage = message;
+          setEmptyStateMessage(message);
+        } else if(memberSnapshotErrorMessage){
+          setEmptyStateMessage(memberSnapshotErrorMessage);
+        } else {
+          setEmptyStateMessage();
+        }
+        emptyState.hidden = false;
+      }
+      if(formWrapper) formWrapper.hidden = true;
+      if(checkoutContainer) checkoutContainer.hidden = true;
+      if(postButton) postButton.disabled = true;
+      updatePaypalContainer(false);
+    }
+
+    function sanitizeCreateField(field){
+      if(!field || typeof field !== 'object') return null;
+      const type = typeof field.type === 'string' ? field.type : 'text';
+      const name = typeof field.name === 'string' ? field.name : '';
+      const placeholder = typeof field.placeholder === 'string' ? field.placeholder : '';
+      const required = field.required === true;
+      const options = Array.isArray(field.options) ? field.options : [];
+      const normalized = { type, name, placeholder, required, options };
+      if(type === 'version-price' || type === 'venue-session-version-tier-price'){
+        normalized.options = options;
+      } else if(type === 'dropdown' || type === 'radio-toggle'){
+        normalized.options = options.map(opt => (typeof opt === 'string' ? opt : String(opt ?? '')));
+      }
+      return normalized;
+    }
+
+    function getFieldsForSelection(categoryName, subcategoryName){
+      if(!categoryName || !subcategoryName) return [];
+      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
+      if(!category) return [];
+      const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
+      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        fields = sharedDefaultSubcategoryFields;
+      }
+      return fields.map(sanitizeCreateField).filter(Boolean);
+    }
+
+    function buildVersionPriceEditor(field, labelId){
+      const options = Array.isArray(field.options) && field.options.length
+        ? field.options.map(opt => ({
+            version: typeof opt.version === 'string' ? opt.version : '',
+            currency: typeof opt.currency === 'string' ? opt.currency : '',
+            price: typeof opt.price === 'string' ? opt.price : ''
+          }))
+        : [{ version: '', currency: '', price: '' }];
+
+      const editor = document.createElement('div');
+      editor.className = 'form-preview-version-price version-price-options-editor';
+      editor.setAttribute('role', 'group');
+      editor.setAttribute('aria-labelledby', labelId);
+
+      const list = document.createElement('div');
+      list.className = 'version-price-options-list';
+      editor.appendChild(list);
+
+      function addRow(option){
+        const row = document.createElement('div');
+        row.className = 'version-price-option';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'version-price-row version-price-row--top';
+        const versionInput = document.createElement('input');
+        versionInput.type = 'text';
+        versionInput.className = 'version-price-name form-preview-version-price-name';
+        versionInput.placeholder = 'Version Name';
+        versionInput.value = option.version || '';
+        versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
+        topRow.appendChild(versionInput);
+
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'version-price-row version-price-row--bottom';
+        const currencySelect = document.createElement('select');
+        currencySelect.className = 'version-price-currency';
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Currency';
+        currencySelect.appendChild(emptyOption);
+        currencyCodes.forEach(code => {
+          const opt = document.createElement('option');
+          opt.value = code;
+          opt.textContent = code;
+          currencySelect.appendChild(opt);
+        });
+        currencySelect.value = option.currency || '';
+        currencySelect.addEventListener('change', ()=>{ option.currency = currencySelect.value; });
+
+        const priceInput = document.createElement('input');
+        priceInput.type = 'text';
+        priceInput.className = 'version-price-price form-preview-version-price-price';
+        priceInput.placeholder = '0.00';
+        priceInput.value = option.price || '';
+        priceInput.addEventListener('blur', ()=>{
+          option.price = formatPriceValue(priceInput.value);
+          priceInput.value = option.price;
+        });
+
+        bottomRow.append(currencySelect, priceInput);
+
+        const actions = document.createElement('div');
+        actions.className = 'version-price-option-actions';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'member-create-secondary-btn';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', ()=>{
+          if(options.length <= 1){
+            option.version = '';
+            option.currency = '';
+            option.price = '';
+            versionInput.value = '';
+            currencySelect.value = '';
+            priceInput.value = '';
+            return;
+          }
+          const idx = options.indexOf(option);
+          if(idx !== -1){
+            options.splice(idx, 1);
+          }
+          row.remove();
+        });
+        actions.appendChild(removeBtn);
+
+        row.append(topRow, bottomRow, actions);
+        list.appendChild(row);
+      }
+
+      options.forEach(addRow);
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'member-create-secondary-btn';
+      addBtn.textContent = 'Add Version';
+      addBtn.addEventListener('click', ()=>{
+        const option = { version: '', currency: '', price: '' };
+        options.push(option);
+        addRow(option);
+      });
+      editor.appendChild(addBtn);
+
+      return editor;
+    }
+
+    function buildVenueSessionEditor(field, labelId){
+      const options = Array.isArray(field.options) ? field.options.map(opt => cloneVenueSessionVenue(opt)) : [];
+      const venues = normalizeVenueSessionOptions(options);
+
+      const editor = document.createElement('div');
+      editor.className = 'form-preview-venue-session';
+      editor.setAttribute('role', 'group');
+      editor.setAttribute('aria-labelledby', labelId);
+
+      const venueList = document.createElement('div');
+      venueList.className = 'venue-session-list';
+      editor.appendChild(venueList);
+
+      function venueSessionCreateVenue(){
+        return cloneVenueSessionVenue({
+          name: '',
+          address: '',
+          sessions: [venueSessionCreateSession()]
+        });
+      }
+
+      function venueSessionCreateSession(){
+        return {
+          name: '',
+          times: [venueSessionCreateTime()]
+        };
+      }
+
+      function venueSessionCreateTime(){
+        return {
+          time: '',
+          versions: [venueSessionCreateVersion()]
+        };
+      }
+
+      function venueSessionCreateVersion(){
+        return {
+          name: '',
+          tiers: [venueSessionCreateTier()]
+        };
+      }
+
+      function venueSessionCreateTier(){
+        return {
+          name: '',
+          currency: '',
+          price: ''
+        };
+      }
+
+      function createInput(type, placeholder, value, onChange){
+        const input = document.createElement('input');
+        input.type = type;
+        input.placeholder = placeholder;
+        input.value = value;
+        input.addEventListener('input', ()=> onChange(input.value));
+        return input;
+      }
+
+      function createButton(text, onClick){
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'member-create-secondary-btn';
+        button.textContent = text;
+        button.addEventListener('click', onClick);
+        return button;
+      }
+
+      function addTierRow(version, tier){
+        const tierRow = document.createElement('div');
+        tierRow.className = 'venue-session-tier-row';
+
+        const tierName = createInput('text', 'Tier Name', tier.name || '', value => { tier.name = value; });
+        const tierCurrency = document.createElement('select');
+        tierCurrency.className = 'venue-session-tier-currency';
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Currency';
+        tierCurrency.appendChild(emptyOption);
+        currencyCodes.forEach(code => {
+          const opt = document.createElement('option');
+          opt.value = code;
+          opt.textContent = code;
+          tierCurrency.appendChild(opt);
+        });
+        tierCurrency.value = tier.currency || '';
+        tierCurrency.addEventListener('change', ()=>{ tier.currency = tierCurrency.value; });
+
+        const tierPrice = createInput('text', 'Price', formatPriceValue(tier.price || ''), value => {
+          tier.price = formatPriceValue(value);
+          tierPrice.value = tier.price;
+        });
+
+        const removeTier = createButton('Remove Tier', ()=>{
+          if(version.tiers.length <= 1){
+            tier.name = '';
+            tier.currency = '';
+            tier.price = '';
+            tierName.value = '';
+            tierCurrency.value = '';
+            tierPrice.value = '';
+            return;
+          }
+          const idx = version.tiers.indexOf(tier);
+          if(idx !== -1){
+            version.tiers.splice(idx, 1);
+          }
+          tierRow.remove();
+        });
+
+        tierRow.append(tierName, tierCurrency, tierPrice, removeTier);
+        return tierRow;
+      }
+
+      function addVersionBlock(session, version){
+        const versionBlock = document.createElement('div');
+        versionBlock.className = 'venue-session-version-block';
+
+        const header = document.createElement('div');
+        header.className = 'venue-session-version-header';
+        const nameInput = createInput('text', 'Version Name', version.name || '', value => { version.name = value; });
+        const removeVersion = createButton('Remove Version', ()=>{
+          if(session.versions.length <= 1){
+            version.name = '';
+            version.tiers = [venueSessionCreateTier()];
+            versionBlock.querySelectorAll('.venue-session-tier-row').forEach(row => row.remove());
+            version.tiers.forEach(tier => {
+              versionBlock.querySelector('.venue-session-tier-list').appendChild(addTierRow(version, tier));
+            });
+            return;
+          }
+          const idx = session.versions.indexOf(version);
+          if(idx !== -1){
+            session.versions.splice(idx, 1);
+          }
+          versionBlock.remove();
+        });
+        header.append(nameInput, removeVersion);
+
+        const tierList = document.createElement('div');
+        tierList.className = 'venue-session-tier-list';
+        version.tiers.forEach(tier => {
+          tierList.appendChild(addTierRow(version, tier));
+        });
+
+        const addTier = createButton('Add Tier', ()=>{
+          const tier = venueSessionCreateTier();
+          version.tiers.push(tier);
+          tierList.appendChild(addTierRow(version, tier));
+        });
+
+        versionBlock.append(header, tierList, addTier);
+        return versionBlock;
+      }
+
+      function addTimeBlock(session, time){
+        const timeBlock = document.createElement('div');
+        timeBlock.className = 'venue-session-time-block';
+
+        const header = document.createElement('div');
+        header.className = 'venue-session-time-header';
+        const timeInput = createInput('text', 'Time', time.time || '', value => { time.time = value; });
+        const removeTime = createButton('Remove Time', ()=>{
+          if(session.times.length <= 1){
+            time.time = '';
+            time.versions = [venueSessionCreateVersion()];
+            timeBlock.querySelectorAll('.venue-session-version-block').forEach(block => block.remove());
+            time.versions.forEach(version => {
+              timeBlock.querySelector('.venue-session-version-list').appendChild(addVersionBlock(session, version));
+            });
+            return;
+          }
+          const idx = session.times.indexOf(time);
+          if(idx !== -1){
+            session.times.splice(idx, 1);
+          }
+          timeBlock.remove();
+        });
+        header.append(timeInput, removeTime);
+
+        const versionList = document.createElement('div');
+        versionList.className = 'venue-session-version-list';
+        time.versions.forEach(version => {
+          versionList.appendChild(addVersionBlock(session, version));
+        });
+
+        const addVersion = createButton('Add Version', ()=>{
+          const version = venueSessionCreateVersion();
+          time.versions.push(version);
+          versionList.appendChild(addVersionBlock(session, version));
+        });
+
+        timeBlock.append(header, versionList, addVersion);
+        return timeBlock;
+      }
+
+      function addSessionCard(session){
+        const sessionCard = document.createElement('div');
+        sessionCard.className = 'venue-session-card';
+
+        const header = document.createElement('div');
+        header.className = 'venue-session-header';
+        const nameInput = createInput('text', 'Session Name', session.name || '', value => { session.name = value; });
+        const removeSession = createButton('Remove Session', ()=>{
+          if(venue.sessions.length <= 1){
+            session.name = '';
+            session.times = [venueSessionCreateTime()];
+            sessionCard.querySelectorAll('.venue-session-time-block').forEach(block => block.remove());
+            session.times.forEach(time => {
+              sessionCard.querySelector('.venue-session-time-list').appendChild(addTimeBlock(session, time));
+            });
+            return;
+          }
+          const idx = venue.sessions.indexOf(session);
+          if(idx !== -1){
+            venue.sessions.splice(idx, 1);
+          }
+          sessionCard.remove();
+        });
+        header.append(nameInput, removeSession);
+
+        const timeList = document.createElement('div');
+        timeList.className = 'venue-session-time-list';
+        session.times.forEach(time => {
+          timeList.appendChild(addTimeBlock(session, time));
+        });
+
+        const addTimeBtn = createButton('Add Time', ()=>{
+          const time = venueSessionCreateTime();
+          session.times.push(time);
+          timeList.appendChild(addTimeBlock(session, time));
+        });
+
+        sessionCard.append(header, timeList, addTimeBtn);
+        return sessionCard;
+      }
+
+      let addVenueBtn = null;
+
+      function addVenueCard(venue){
+        const venueCard = document.createElement('div');
+        venueCard.className = 'venue-session-venue-card';
+
+        const venueHeader = document.createElement('div');
+        venueHeader.className = 'venue-session-venue-header';
+        const nameInput = createInput('text', 'Venue Name', venue.name || '', value => { venue.name = value; });
+        const addressInput = createInput('text', 'Venue Address', venue.address || '', value => { venue.address = value; });
+        const removeVenue = createButton('Remove Venue', ()=>{
+          if(venues.length <= 1){
+            venue.name = '';
+            venue.address = '';
+            venue.sessions = [venueSessionCreateSession()];
+            venueCard.querySelectorAll('.venue-session-card').forEach(card => card.remove());
+            venue.sessions.forEach(session => {
+              venueCard.querySelector('.venue-session-card-list').appendChild(addSessionCard(session));
+            });
+            return;
+          }
+          const idx = venues.indexOf(venue);
+          if(idx !== -1){
+            venues.splice(idx, 1);
+          }
+          venueCard.remove();
+        });
+        venueHeader.append(nameInput, addressInput, removeVenue);
+
+        const sessionList = document.createElement('div');
+        sessionList.className = 'venue-session-card-list';
+        venue.sessions.forEach(session => {
+          sessionList.appendChild(addSessionCard(session));
+        });
+
+        const venueActions = document.createElement('div');
+        venueActions.className = 'venue-line-actions';
+        const addSessionBtn = createButton('Add Session', ()=>{
+          const session = venueSessionCreateSession();
+          venue.sessions.push(session);
+          sessionList.appendChild(addSessionCard(session));
+        });
+        const removeVenueBtn = createButton('Remove Venue', ()=>{
+          if(venues.length <= 1){
+            venue.name = '';
+            venue.address = '';
+            nameInput.value = '';
+            addressInput.value = '';
+            return;
+          }
+          const idx = venues.indexOf(venue);
+          if(idx !== -1){
+            venues.splice(idx, 1);
+          }
+          venueCard.remove();
+        });
+        venueActions.append(addSessionBtn, removeVenueBtn);
+
+        venueCard.append(venueHeader, sessionList, venueActions);
+        if(addVenueBtn){
+          venueList.insertBefore(venueCard, addVenueBtn);
+        } else {
+          venueList.appendChild(venueCard);
+        }
+      }
+
+      venues.forEach(addVenueCard);
+
+      addVenueBtn = createButton('Add Venue', ()=>{
+        const venue = venueSessionCreateVenue();
+        venues.push(venue);
+        addVenueCard(venue);
+      });
+      venueList.appendChild(addVenueBtn);
+
+      return editor;
+    }
+
+    function buildMemberCreateField(field, index){
+      const wrapper = document.createElement('div');
+      wrapper.className = 'panel-field form-preview-field';
+      const labelText = field.name && field.name.trim() ? field.name.trim() : `Field ${index + 1}`;
+      const labelId = `memberCreateFieldLabel-${++fieldIdCounter}`;
+      const controlId = `memberCreateField-${fieldIdCounter}`;
+      const label = document.createElement('label');
+      label.id = labelId;
+      label.className = 'form-preview-field-label';
+      label.setAttribute('for', controlId);
+      label.textContent = labelText;
+      if(field.required){
+        wrapper.classList.add('form-preview-field--required');
+        label.appendChild(document.createTextNode(' '));
+        const asterisk = document.createElement('span');
+        asterisk.className = 'required-asterisk';
+        asterisk.textContent = '*';
+        label.appendChild(asterisk);
+      }
+      wrapper.appendChild(label);
+
+      const placeholder = field.placeholder || '';
+      let control = null;
+
+      if(field.type === 'description' || field.type === 'text-area'){
+        const textarea = document.createElement('textarea');
+        textarea.id = controlId;
+        textarea.rows = field.type === 'description' ? 6 : 4;
+        textarea.placeholder = placeholder;
+        textarea.className = 'form-preview-textarea';
+        if(field.type === 'description'){
+          textarea.classList.add('form-preview-description');
+        }
+        if(field.required) textarea.required = true;
+        control = textarea;
+      } else if(field.type === 'dropdown'){
+        wrapper.classList.add('form-preview-field--dropdown');
+        const select = document.createElement('select');
+        select.id = controlId;
+        select.className = 'form-preview-select';
+        if(field.required) select.required = true;
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = placeholder || 'Select an option';
+        select.appendChild(placeholderOption);
+        field.options.forEach((optionValue, optionIndex) => {
+          const option = document.createElement('option');
+          const stringValue = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+          option.value = stringValue;
+          option.textContent = stringValue.trim() ? stringValue : `Option ${optionIndex + 1}`;
+          select.appendChild(option);
+        });
+        control = select;
+      } else if(field.type === 'radio-toggle'){
+        wrapper.classList.add('form-preview-field--radio-toggle');
+        label.removeAttribute('for');
+        const radioGroup = document.createElement('div');
+        radioGroup.className = 'form-preview-radio-group';
+        radioGroup.setAttribute('role', 'radiogroup');
+        radioGroup.setAttribute('aria-labelledby', labelId);
+        const radioName = `member-create-radio-${fieldIdCounter}`;
+        if(field.options.length){
+          field.options.forEach((optionValue, optionIndex)=>{
+            const radioLabel = document.createElement('label');
+            radioLabel.className = 'form-preview-radio-option';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = radioName;
+            radio.value = typeof optionValue === 'string' ? optionValue : String(optionValue ?? '');
+            if(field.required && optionIndex === 0) radio.required = true;
+            const displayValue = radio.value.trim() ? radio.value : `Option ${optionIndex + 1}`;
+            const radioText = document.createElement('span');
+            radioText.textContent = displayValue;
+            radioLabel.append(radio, radioText);
+            radioGroup.appendChild(radioLabel);
+          });
+        } else {
+          const placeholderOption = document.createElement('label');
+          placeholderOption.className = 'form-preview-radio-option';
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.disabled = true;
+          const radioText = document.createElement('span');
+          radioText.textContent = 'Option';
+          placeholderOption.append(radio, radioText);
+          radioGroup.appendChild(placeholderOption);
+        }
+        control = radioGroup;
+      } else if(field.type === 'images'){
+        wrapper.classList.add('form-preview-field--images');
+        label.removeAttribute('for');
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'form-preview-images';
+        const fileInput = document.createElement('input');
+        fileInput.id = controlId;
+        fileInput.type = 'file';
+        fileInput.multiple = true;
+        fileInput.accept = 'image/*';
+        if(field.required) fileInput.required = true;
+        const hint = document.createElement('p');
+        hint.className = 'form-preview-image-hint';
+        hint.textContent = placeholder || 'Upload images';
+        const message = document.createElement('p');
+        message.className = 'form-preview-image-message';
+        message.textContent = '';
+        const previewGrid = document.createElement('div');
+        previewGrid.className = 'form-preview-image-previews';
+        const previewId = `${controlId}-previews`;
+        previewGrid.id = previewId;
+        fileInput.dataset.imagePreviewTarget = previewId;
+        imageWrapper.append(fileInput, hint, message, previewGrid);
+        control = imageWrapper;
+      } else if(field.type === 'version-price'){
+        wrapper.classList.add('form-preview-field--version-price');
+        label.removeAttribute('for');
+        control = buildVersionPriceEditor(field, labelId);
+      } else if(field.type === 'venue-session-version-tier-price'){
+        wrapper.classList.add('form-preview-field--venue-session');
+        label.removeAttribute('for');
+        control = buildVenueSessionEditor(field, labelId);
+      } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+        wrapper.classList.add('form-preview-field--url');
+        const urlWrapper = document.createElement('div');
+        urlWrapper.className = 'form-preview-url-wrapper';
+        const input = document.createElement('input');
+        input.id = controlId;
+        input.type = 'url';
+        input.placeholder = placeholder || 'https://example.com';
+        input.autocomplete = 'url';
+        input.className = 'form-preview-url-input';
+        if(field.required) input.required = true;
+        urlWrapper.appendChild(input);
+        control = urlWrapper;
+      } else {
+        const input = document.createElement('input');
+        input.id = controlId;
+        if(field.type === 'email'){
+          input.type = 'email';
+          input.autocomplete = 'email';
+        } else if(field.type === 'phone'){
+          input.type = 'tel';
+          input.autocomplete = 'tel';
+        } else {
+          input.type = 'text';
+        }
+        input.placeholder = placeholder;
+        if(field.required) input.required = true;
+        control = input;
+      }
+
+      if(control){
+        if(control instanceof HTMLElement && !control.id){
+          control.setAttribute('aria-labelledby', labelId);
+        }
+        wrapper.appendChild(control);
+      }
+      return wrapper;
+    }
+
+    function renderCreateFields(){
+      const categoryName = categorySelect ? categorySelect.value : '';
+      const subcategoryName = subcategorySelect ? subcategorySelect.value : '';
+      if(!categoryName || !subcategoryName){
+        renderEmptyState();
+        return;
+      }
+      const fields = getFieldsForSelection(categoryName, subcategoryName);
+      fieldIdCounter = 0;
+      if(formFields){
+        formFields.innerHTML = '';
+        if(fields.length === 0){
+          const placeholder = document.createElement('p');
+          placeholder.className = 'member-create-placeholder';
+          placeholder.textContent = 'No fields configured for this subcategory yet.';
+          formFields.appendChild(placeholder);
+        } else {
+          memberSnapshotErrorMessage = '';
+          fields.forEach((field, index)=>{
+            const fieldEl = buildMemberCreateField(field, index);
+            if(fieldEl) formFields.appendChild(fieldEl);
+          });
+        }
+      }
+      if(emptyState) emptyState.hidden = true;
+      if(formWrapper) formWrapper.hidden = false;
+      if(checkoutContainer) checkoutContainer.hidden = false;
+      if(postButton) postButton.disabled = false;
+      updatePaypalContainer(false);
+    }
+
+    function populateSubcategoryOptions(preserveValue){
+      if(!subcategorySelect) return;
+      const categoryName = categorySelect ? categorySelect.value : '';
+      subcategorySelect.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = categoryName ? 'Select Subcategory' : 'Select Category';
+      subcategorySelect.appendChild(placeholder);
+      if(!categoryName){
+        subcategorySelect.value = '';
+        subcategorySelect.disabled = true;
+        renderEmptyState();
+        return;
+      }
+      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
+      const subs = Array.isArray(category && category.subs) ? category.subs : [];
+      subcategorySelect.disabled = false;
+      subs.forEach(sub => {
+        if(typeof sub !== 'string') return;
+        const option = document.createElement('option');
+        option.value = sub;
+        option.textContent = sub;
+        subcategorySelect.appendChild(option);
+      });
+      if(preserveValue && subcategorySelect.dataset.lastSelected && subs.includes(subcategorySelect.dataset.lastSelected)){
+        subcategorySelect.value = subcategorySelect.dataset.lastSelected;
+      } else {
+        subcategorySelect.value = '';
+      }
+      renderCreateFields();
+    }
+
+    function populateCategoryOptions(preserveSelection){
+      if(!categorySelect) return;
+      const previous = preserveSelection ? categorySelect.value : '';
+      categorySelect.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Select Category';
+      categorySelect.appendChild(placeholder);
+      const sortedMemberCategories = getSortedCategories(memberCategories);
+      sortedMemberCategories.forEach(cat => {
+        if(!cat || typeof cat.name !== 'string') return;
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = cat.name;
+        categorySelect.appendChild(option);
+      });
+      if(previous && memberCategories.some(cat => cat && cat.name === previous)){
+        categorySelect.value = previous;
+      } else {
+        categorySelect.value = '';
+      }
+      populateSubcategoryOptions(preserveSelection && !!categorySelect.value);
+    }
+
+    function updatePaypalContainer(triggered){
+      if(!paypalContainer) return;
+      const hasCredentials = !!(adminPaypalClientId && adminPaypalClientSecret && adminPaypalClientId.value.trim() && adminPaypalClientSecret.value.trim());
+      paypalContainer.textContent = hasCredentials
+        ? (triggered ? 'PayPal checkout will open once integration is connected.' : 'PayPal checkout is ready once connected to your credentials.')
+        : 'Connect PayPal in Admin Settings to enable checkout.';
+      if(paypalButton){
+        paypalButton.disabled = !hasCredentials;
+      }
+    }
+
+    function refreshMemberSnapshotFromManager(){
+      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+        try{
+          const snapshot = window.formbuilderStateManager.capture();
+          memberSnapshotErrorMessage = '';
+          applyMemberSnapshot(snapshot, { preserveSelection: true });
+          return;
+        }catch(err){
+          console.warn('Failed to capture latest formbuilder snapshot', err);
+        }
+      }
+      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
+    }
+
+    async function initializeMemberFormbuilderSnapshot(){
+      if(categorySelect){
+        categorySelect.disabled = true;
+      }
+      if(subcategorySelect){
+        subcategorySelect.disabled = true;
+      }
+      renderEmptyState(loadingMessage);
+      try{
+        const backendSnapshot = await persistedFormbuilderSnapshotPromise;
+        const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
+        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
+          window.formbuilderStateManager.restore(snapshot);
+        }
+        applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
+        memberSnapshotErrorMessage = '';
+        setEmptyStateMessage(defaultEmptyMessage);
+      }catch(error){
+        const message = error && typeof error.message === 'string' ? error.message : '';
+        if(message && message.toLowerCase().includes('database connection not configured')){
+          console.warn('Formbuilder snapshot service unavailable; using defaults.');
+        } else {
+          console.error('Failed to load formbuilder snapshot for members', error);
+        }
+        memberSnapshotErrorMessage = fetchErrorMessage;
+        setEmptyStateMessage(fetchErrorMessage);
+        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
+      } finally {
+        if(categorySelect){
+          categorySelect.disabled = false;
+        }
+        populateCategoryOptions(false);
+      }
+    }
+
+    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
+
+    if(categorySelect){
+      categorySelect.addEventListener('change', ()=>{
+        populateSubcategoryOptions(false);
+      });
+    }
+    if(subcategorySelect){
+      subcategorySelect.addEventListener('change', ()=>{
+        subcategorySelect.dataset.lastSelected = subcategorySelect.value;
+        renderCreateFields();
+      });
+    }
+    if(listingPrice){
+      listingPrice.addEventListener('blur', ()=>{
+        listingPrice.value = formatPriceValue(listingPrice.value);
+      });
+    }
+    if(adminListingPrice){
+      adminListingPrice.addEventListener('blur', ()=>{
+        adminListingPrice.value = formatPriceValue(adminListingPrice.value);
+      });
+    }
+    if(paypalButton){
+      paypalButton.addEventListener('click', ()=>{
+        updatePaypalContainer(true);
+      });
+    }
+    if(adminPaypalClientId){
+      adminPaypalClientId.addEventListener('input', ()=> updatePaypalContainer(false));
+    }
+    if(adminPaypalClientSecret){
+      adminPaypalClientSecret.addEventListener('input', ()=> updatePaypalContainer(false));
+    }
+
+    initializeMemberFormbuilderSnapshot();
+    updatePaypalContainer(false);
+
+    const api = {
+      refreshMemberSnapshotFromManager,
+      initializeMemberFormbuilderSnapshot,
+      applyMemberSnapshot,
+      formatPriceValue,
+      renderCreateFields,
+      updatePaypalContainer
+    };
+
+    if(typeof window !== 'undefined'){
+      window.refreshMemberSnapshotFromManager = refreshMemberSnapshotFromManager;
+    }
+
+    integrationState = { config, api };
+    return api;
+  }
+
+  const adminMemberSnapshot = window.adminMemberSnapshot = window.adminMemberSnapshot || {};
+  adminMemberSnapshot.initialize = function(config){
+    return initializeMemberPanel(config);
+  };
+  adminMemberSnapshot.getApi = function(){
+    return integrationState ? integrationState.api : null;
+  };
+
+  if(window.__pendingMemberPanelInit){
+    adminMemberSnapshot.initialize(window.__pendingMemberPanelInit);
+    window.__pendingMemberPanelInit = null;
+  }
+})();
+
+(function(){
   const SAVE_ENDPOINT = '/gateway.php?action=save-form';
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const STATUS_TIMER_KEY = '__adminStatusMessageTimer';
@@ -928,13 +1960,33 @@ window.adminPanelChangeManager = adminPanelChangeManager;
   const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
   window.__openIconPickers = OPEN_ICON_PICKERS;
   const formbuilderCats = document.getElementById('formbuilderCats');
-  const refreshMemberSnapshotFromManager = typeof window.refreshMemberSnapshotFromManager === 'function'
-    ? window.refreshMemberSnapshotFromManager
-    : null;
-  if(formbuilderCats && refreshMemberSnapshotFromManager){
-    formbuilderCats.addEventListener('change', ()=>{
-      refreshMemberSnapshotFromManager();
-    });
+  function bindRefreshMemberSnapshot(){
+    const memberSnapshotApi = window.adminMemberSnapshot && typeof window.adminMemberSnapshot.getApi === 'function'
+      ? window.adminMemberSnapshot.getApi()
+      : null;
+    const refreshMemberSnapshotFromManager = memberSnapshotApi && typeof memberSnapshotApi.refreshMemberSnapshotFromManager === 'function'
+      ? memberSnapshotApi.refreshMemberSnapshotFromManager
+      : (typeof window.refreshMemberSnapshotFromManager === 'function'
+        ? window.refreshMemberSnapshotFromManager
+        : null);
+    if(!formbuilderCats || !refreshMemberSnapshotFromManager){
+      return false;
+    }
+    if(!formbuilderCats.__refreshBound){
+      formbuilderCats.addEventListener('change', refreshMemberSnapshotFromManager);
+      formbuilderCats.__refreshBound = true;
+      try{
+        refreshMemberSnapshotFromManager();
+      }catch(err){
+        console.warn('Failed to refresh member snapshot from admin manager', err);
+      }
+    }
+    return true;
+  }
+  if(formbuilderCats){
+    if(!bindRefreshMemberSnapshot()){
+      setTimeout(bindRefreshMemberSnapshot, 0);
+    }
   }
       const formbuilderAddCategoryBtn = document.getElementById('formbuilderAddCategory');
       let formbuilderConfirmOverlay = null;
