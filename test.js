@@ -131,8 +131,8 @@ const formbuilderSlices = [
   mainSource.slice(baseFnStart, baseFnEnd)
 ];
 
-const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap };');
-const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap } = formbuilderFactory(formbuilderWindow);
+const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE };');
+const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE } = formbuilderFactory(formbuilderWindow);
 
 const seededSnapshot = normalizeFormbuilderSnapshot({
   categories: [],
@@ -291,6 +291,8 @@ const bootstrapContext = {
   normalizeFormbuilderSnapshot,
   normalizeIconPathMap,
   normalizeIconLibraryEntries,
+  normalizeIconAssetPath,
+  ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshot,
   getSavedFormbuilderSnapshot: () => {
@@ -360,6 +362,8 @@ const bootstrapContextFromPaths = {
   normalizeFormbuilderSnapshot,
   normalizeIconPathMap,
   normalizeIconLibraryEntries,
+  normalizeIconAssetPath,
+  ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotFromPaths,
   getSavedFormbuilderSnapshot: () => {
@@ -392,6 +396,207 @@ expectedBootstrapIconsFromPaths.forEach(icon => {
 assert(
   bootstrapWindowFromPaths.iconLibrary.length > 0,
   'Icon picker triggers should enable when stored icons are available even without explicit library entries.'
+);
+
+const persistedBootstrapSnapshotCategoryOnly = {
+  categories: [],
+  categoryIconPaths: {
+    'id:505': 'icons-20/comedy.png'
+  },
+  subcategoryIconPaths: {},
+  iconLibrary: [],
+  versionPriceCurrencies: []
+};
+
+const bootstrapWindowCategoryOnly = {
+  iconLibrary: [],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {},
+  categoryIcons: {},
+  subcategoryIcons: {}
+};
+
+const bootstrapContextCategoryOnly = {
+  window: bootstrapWindowCategoryOnly,
+  normalizeFormbuilderSnapshot,
+  normalizeIconPathMap,
+  normalizeIconLibraryEntries,
+  normalizeIconAssetPath,
+  ICON_LIBRARY_ALLOWED_EXTENSION_RE,
+  assignMapLike,
+  getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotCategoryOnly,
+  getSavedFormbuilderSnapshot: () => {
+    throw new Error('Unexpected saved snapshot lookup for category-only bootstrap test.');
+  },
+  console
+};
+
+vm.createContext(bootstrapContextCategoryOnly);
+vm.runInContext(iconBootstrapSource, bootstrapContextCategoryOnly);
+
+const persistedBootstrapSnapshotSubcategoryOnly = {
+  categories: [],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {
+    'id:606': 'https://cdn.example.com/library/icon.webp'
+  },
+  iconLibrary: [],
+  versionPriceCurrencies: []
+};
+
+const bootstrapWindowSubcategoryOnly = {
+  iconLibrary: [],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {},
+  categoryIcons: {},
+  subcategoryIcons: {}
+};
+
+const bootstrapContextSubcategoryOnly = {
+  window: bootstrapWindowSubcategoryOnly,
+  normalizeFormbuilderSnapshot,
+  normalizeIconPathMap,
+  normalizeIconLibraryEntries,
+  normalizeIconAssetPath,
+  ICON_LIBRARY_ALLOWED_EXTENSION_RE,
+  assignMapLike,
+  getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotSubcategoryOnly,
+  getSavedFormbuilderSnapshot: () => {
+    throw new Error('Unexpected saved snapshot lookup for subcategory-only bootstrap test.');
+  },
+  console
+};
+
+vm.createContext(bootstrapContextSubcategoryOnly);
+vm.runInContext(iconBootstrapSource, bootstrapContextSubcategoryOnly);
+
+const attachIconPickerStart = mainSource.indexOf('const attachIconPicker = (trigger, container, options = {})=>{');
+const attachIconPickerEnd = mainSource.indexOf('const frag = document.createDocumentFragment();', attachIconPickerStart);
+
+assert(
+  attachIconPickerStart !== -1 && attachIconPickerEnd !== -1,
+  'Unable to locate icon picker attachment helper.'
+);
+
+const attachIconPickerSource = mainSource.slice(attachIconPickerStart, attachIconPickerEnd);
+
+const attachIconPickerFactory = new Function('context', `with(context){ ${attachIconPickerSource} return attachIconPicker; }`);
+
+const createIconPickerHarness = iconLibrary => {
+  const windowStub = {
+    __openIconPickers: new Set(),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    innerWidth: 1280,
+    innerHeight: 720
+  };
+  const createElementStub = () => ({
+    append: () => {},
+    appendChild: () => {},
+    remove: () => {},
+    setAttribute: () => {},
+    getBoundingClientRect: () => ({ left: 0, top: 0, bottom: 0, width: 0, height: 0 }),
+    contains: () => false,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    classList: {
+      add: () => {},
+      remove: () => {},
+      contains: () => false
+    },
+    style: {},
+    textContent: '',
+    innerHTML: '',
+    focus: () => {}
+  });
+  const documentStub = {
+    createElement: () => createElementStub(),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    documentElement: { clientWidth: 1280, clientHeight: 720 }
+  };
+  const context = {
+    ICON_LIBRARY: iconLibrary,
+    applyNormalizeIconPath: value => value,
+    closeAllIconPickers: () => {},
+    OPEN_ICON_PICKERS: windowStub.__openIconPickers,
+    document: documentStub,
+    window: windowStub,
+    requestAnimationFrame: fn => { context.__raf = fn; return 1; },
+    cancelAnimationFrame: () => {},
+    ResizeObserver: undefined,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval
+  };
+  return attachIconPickerFactory(context);
+};
+
+const createTriggerStub = () => {
+  const attributes = new Map();
+  const removedAttributes = [];
+  return {
+    disabled: true,
+    addEventListener: () => {},
+    setAttribute: (name, value) => { attributes.set(name, value); },
+    removeAttribute: name => {
+      attributes.delete(name);
+      removedAttributes.push(name);
+    },
+    getAttribute: name => attributes.get(name),
+    getBoundingClientRect: () => ({ left: 0, top: 0, bottom: 0, width: 0, height: 0 }),
+    classList: {
+      add: () => {},
+      remove: () => {},
+      contains: () => false
+    },
+    contains: () => false,
+    _removedAttributes: removedAttributes
+  };
+};
+
+const createContainerStub = () => ({
+  classList: {
+    add: () => {},
+    remove: () => {}
+  },
+  appendChild: () => {},
+  append: () => {},
+  getBoundingClientRect: () => ({ left: 0, top: 0, bottom: 0, width: 0, height: 0 }),
+  contains: () => false
+});
+
+const categoryIconPicker = createIconPickerHarness(bootstrapWindowCategoryOnly.iconLibrary);
+const categoryTrigger = createTriggerStub();
+categoryTrigger.setAttribute('aria-disabled', 'true');
+categoryIconPicker(categoryTrigger, createContainerStub());
+
+assert.strictEqual(
+  categoryTrigger.disabled,
+  false,
+  'Category icon picker buttons should enable when saved category icons exist.'
+);
+
+assert(
+  categoryTrigger._removedAttributes.includes('aria-disabled'),
+  'Category icon picker buttons should clear aria-disabled when icons are available.'
+);
+
+const subcategoryIconPicker = createIconPickerHarness(bootstrapWindowSubcategoryOnly.iconLibrary);
+const subcategoryTrigger = createTriggerStub();
+subcategoryTrigger.setAttribute('aria-disabled', 'true');
+subcategoryIconPicker(subcategoryTrigger, createContainerStub());
+
+assert.strictEqual(
+  subcategoryTrigger.disabled,
+  false,
+  'Subcategory icon picker buttons should enable when saved subcategory icons exist.'
+);
+
+assert(
+  subcategoryTrigger._removedAttributes.includes('aria-disabled'),
+  'Subcategory icon picker buttons should clear aria-disabled when icons are available.'
 );
 
 console.log('All tests passed');

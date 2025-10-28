@@ -3452,6 +3452,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
+      const normalizedIconPathsFromMaps = [
+        ...Object.values(normalizedCategoryIconPaths || {}),
+        ...Object.values(normalizedSubcategoryIconPaths || {})
+      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
+        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
       const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
         ? snapshot.iconLibrary
         : [];
@@ -3473,8 +3478,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         mergedIconLibrary.push(normalized);
       };
       iconLibrarySource.forEach(addIconToLibrary);
-      Object.values(normalizedCategoryIconPaths).forEach(addIconToLibrary);
-      Object.values(normalizedSubcategoryIconPaths).forEach(addIconToLibrary);
+      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
       const iconLibrary = mergedIconLibrary;
       return {
         categories: normalizedCategories,
@@ -3546,7 +3550,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const mapIconValues = [
       ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
       ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-    ];
+    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
+      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
     const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
     const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
     const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
@@ -3576,6 +3581,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ICON_LIBRARY.push(...mergedIconLibrary);
     }
     window.iconLibrary = ICON_LIBRARY;
+    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
