@@ -501,6 +501,11 @@ function buildSnapshot(array $categories, array $subcategories): array
         array_values($sanitizedSubcategoryMarkers)
     );
 
+    $filesystemIcons = collectFilesystemIconLibrary('assets/icons-30');
+    if ($filesystemIcons) {
+        $iconLibrary = mergeIconLibraries($iconLibrary, $filesystemIcons);
+    }
+
     return [
         'categories' => $categoriesList,
         'categoryIcons' => $categoryIcons,
@@ -581,6 +586,126 @@ function collectSnapshotIconLibrary(array ...$groups): array
     }
 
     return array_keys($unique);
+}
+
+function collectFilesystemIconLibrary(string $relativeDirectory): array
+{
+    $normalizedRelative = trim($relativeDirectory, '/');
+    if ($normalizedRelative === '') {
+        return [];
+    }
+
+    $extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'avif'];
+    $unique = [];
+
+    $baseCandidates = [
+        dirname(__DIR__, 3),
+        dirname(__DIR__, 2),
+        dirname(__DIR__),
+        __DIR__,
+    ];
+
+    foreach ($baseCandidates as $basePath) {
+        if (!is_string($basePath) || $basePath === '') {
+            continue;
+        }
+
+        $absolutePath = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $normalizedRelative;
+
+        if (!is_dir($absolutePath)) {
+            continue;
+        }
+
+        try {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(
+                    $absolutePath,
+                    FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS
+                ),
+                RecursiveIteratorIterator::SELF_FIRST
+            );
+        } catch (UnexpectedValueException $e) {
+            continue;
+        }
+
+        foreach ($iterator as $fileInfo) {
+            if (!$fileInfo instanceof SplFileInfo || !$fileInfo->isFile()) {
+                continue;
+            }
+
+            $extension = strtolower($fileInfo->getExtension());
+            if ($extension === '' || !in_array($extension, $extensions, true)) {
+                continue;
+            }
+
+            $relativePathPart = substr($fileInfo->getPathname(), strlen($absolutePath));
+            if (!is_string($relativePathPart)) {
+                continue;
+            }
+
+            $relativePathPart = str_replace('\\', '/', $relativePathPart);
+            $relativePathPart = ltrim($relativePathPart, '/');
+
+            $relativePath = $normalizedRelative;
+            if ($relativePathPart !== '') {
+                $relativePath .= '/' . $relativePathPart;
+            }
+
+            $sanitized = sanitizeSnapshotIconPath($relativePath);
+            if ($sanitized === '') {
+                continue;
+            }
+
+            $normalized = normalizeSnapshotMarkerIconPath($sanitized);
+            if ($normalized === '') {
+                $normalized = $sanitized;
+            }
+
+            $unique[$normalized] = true;
+        }
+
+        if ($unique) {
+            break;
+        }
+    }
+
+    return array_keys($unique);
+}
+
+function mergeIconLibraries(array $existing, array $additional): array
+{
+    $seen = [];
+    $merged = [];
+
+    foreach ($existing as $value) {
+        if (!is_string($value)) {
+            continue;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '' || isset($seen[$trimmed])) {
+            continue;
+        }
+
+        $seen[$trimmed] = true;
+        $merged[] = $trimmed;
+    }
+
+    foreach ($additional as $value) {
+        if (!is_string($value)) {
+            continue;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '' || isset($seen[$trimmed])) {
+            continue;
+        }
+
+        $seen[$trimmed] = true;
+        $merged[] = $trimmed;
+    }
+
+    return $merged;
 }
 
 function sanitizeSnapshotIconPath(string $value): string
