@@ -3255,353 +3255,25 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
-    const getPersistedFormbuilderSnapshotFromGlobals = typeof window.getPersistedFormbuilderSnapshotFromGlobals === 'function'
-      ? window.getPersistedFormbuilderSnapshotFromGlobals
-      : (()=>null);
-    const getSavedFormbuilderSnapshot = typeof window.getSavedFormbuilderSnapshot === 'function'
-      ? window.getSavedFormbuilderSnapshot
-      : (()=>null);
-    const normalizeFormbuilderSnapshot = typeof window.normalizeFormbuilderSnapshot === 'function'
-      ? window.normalizeFormbuilderSnapshot
-      : (snapshot => snapshot || { categories: [], versionPriceCurrencies: [], categoryIconPaths: {}, subcategoryIconPaths: {}, iconLibrary: [] });
-    const normalizeIconLibraryEntries = typeof window.normalizeIconLibraryEntries === 'function'
-      ? window.normalizeIconLibraryEntries
-      : (entries => Array.isArray(entries) ? entries.filter(item => typeof item === 'string' && item) : []);
-    const normalizeIconAssetPath = typeof window.normalizeIconAssetPath === 'function'
-      ? window.normalizeIconAssetPath
-      : (value => (typeof value === 'string' ? value.trim() : ''));
-    const normalizeIconPathMap = typeof window.normalizeIconPathMap === 'function'
-      ? window.normalizeIconPathMap
-      : (source => {
-          if(!source || typeof source !== 'object'){
-            return {};
-          }
-          const result = {};
-          Object.keys(source).forEach(key => {
-            if(typeof key === 'string' && key.trim()){
-              result[key.trim()] = typeof source[key] === 'string' ? source[key] : '';
-            }
-          });
-          return result;
-        });
-    const assignMapLike = typeof window.assignMapLike === 'function'
-      ? window.assignMapLike
-      : ((target, source) => {
-          if(!target || typeof target !== 'object') return;
-          Object.keys(target).forEach(key => { delete target[key]; });
-          if(source && typeof source === 'object'){
-            Object.keys(source).forEach(key => {
-              target[key] = source[key];
-            });
-          }
-        });
-    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = window.ICON_LIBRARY_ALLOWED_EXTENSION_RE || /\.(?:png|jpe?g|gif|svg|webp)$/i;
-    const ICON_LIBRARY = Array.isArray(window.iconLibrary)
-      ? window.iconLibrary
-      : (window.iconLibrary = []);
-
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
-      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
-    );
-    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
-      ? initialFormbuilderSnapshot.iconLibrary
-      : [];
-    const existingWindowIcons = Array.isArray(window.iconLibrary)
-      ? window.iconLibrary.slice()
-      : [];
-    const mapIconValues = [
-      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
-      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
-      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
-    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
-    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
-    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
-    const mergedIconSet = new Set();
-    const mergedIconLibrary = [];
-    const mergeIcons = icons => {
-      if(!Array.isArray(icons)){
-        return;
-      }
-      icons.forEach(icon => {
-        if(typeof icon !== 'string' || !icon){
-          return;
-        }
-        const key = icon.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(icon);
-      });
-    };
-    mergeIcons(sanitizedSnapshotIcons);
-    mergeIcons(sanitizedMapIcons);
-    mergeIcons(sanitizedWindowIcons);
-    ICON_LIBRARY.length = 0;
-    if(mergedIconLibrary.length){
-      ICON_LIBRARY.push(...mergedIconLibrary);
-    }
-    window.iconLibrary = ICON_LIBRARY;
-    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
-    const categories = window.categories = initialFormbuilderSnapshot.categories;
-    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
+    const categories = Array.isArray(window.categories) ? window.categories : [];
+    const VERSION_PRICE_CURRENCIES = Array.isArray(window.VERSION_PRICE_CURRENCIES) ? window.VERSION_PRICE_CURRENCIES : [];
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
-    assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
-    assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
-    if(typeof window !== 'undefined'){
-      window.__formbuilderInitialized = true;
-      if(typeof window.dispatchEvent === 'function'){
-        let dispatched = false;
-        try{
-          window.dispatchEvent(new Event('formbuilder:init'));
-          dispatched = true;
-        }catch(err){}
-        if(!dispatched && typeof CustomEvent === 'function'){
+    const normalizeVenueSessionOptions = typeof window.normalizeVenueSessionOptions === 'function'
+      ? window.normalizeVenueSessionOptions
+      : (options => Array.isArray(options) ? options : []);
+    const cloneVenueSessionVenue = typeof window.cloneVenueSessionVenue === 'function'
+      ? window.cloneVenueSessionVenue
+      : (value => {
+          if(!value || typeof value !== 'object') return { name: '', address: '', sessions: [] };
           try{
-            window.dispatchEvent(new CustomEvent('formbuilder:init'));
-          }catch(err){}
-        }
-      }
-    }
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
-      { value: 'title', label: 'Title' },
-      { value: 'description', label: 'Description' },
-      { value: 'text-box', label: 'Text Box' },
-      { value: 'text-area', label: 'Text Area' },
-      { value: 'dropdown', label: 'Dropdown' },
-      { value: 'radio-toggle', label: 'Radio Toggle' },
-      { value: 'email', label: 'Email' },
-      { value: 'phone', label: 'Phone' },
-      { value: 'website-url', label: 'Website (URL)' },
-      { value: 'tickets-url', label: 'Tickets (URL)' },
-      { value: 'images', label: 'Images' },
-      { value: 'coupon', label: 'Coupon' },
-      { value: 'version-price', label: 'Version/Price' },
-      { value: 'checkout', label: 'Checkout' },
-      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
-    ];
-    const getFormFieldTypeLabel = (value)=>{
-      const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
-      return match ? match.label : '';
-    };
-    const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
-    const VENUE_CURRENCY_STATE = new WeakMap();
-    let LAST_SELECTED_VENUE_CURRENCY = '';
-
-    function venueSessionCreateTier(){
-      return { name: '', currency: '', price: '' };
-    }
-    function venueSessionCreateVersion(){
-      return { name: '', tiers: [venueSessionCreateTier()] };
-    }
-    function venueSessionCreateTime(){
-      return {
-        time: '',
-        versions: [venueSessionCreateVersion()],
-        samePricingAsAbove: true,
-        samePricingSourceIndex: 0,
-        tierAutofillLocked: false
-      };
-    }
-    function venueSessionCreateSession(){
-      return { date: '', times: [venueSessionCreateTime()] };
-    }
-    function venueSessionCreateVenue(){
-      return { name: '', address: '', location: null, feature: null, sessions: [venueSessionCreateSession()] };
-    }
-    function normalizeVenueSessionTier(tier){
-      let obj = tier;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTier();
-      }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(typeof obj.currency !== 'string') obj.currency = '';
-      if(typeof obj.price !== 'string') obj.price = '';
-      return obj;
-    }
-    function normalizeVenueSessionVersion(version){
-      let obj = version;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateVersion();
-      }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(!Array.isArray(obj.tiers)){
-        obj.tiers = [venueSessionCreateTier()];
-      } else {
-        for(let i = 0; i < obj.tiers.length; i++){
-          obj.tiers[i] = normalizeVenueSessionTier(obj.tiers[i]);
-        }
-        if(obj.tiers.length === 0){
-          obj.tiers.push(venueSessionCreateTier());
-        }
-      }
-      return obj;
-    }
-    function normalizeVenueSessionTime(time){
-      let obj = time;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTime();
-      }
-      if(typeof obj.time !== 'string') obj.time = '';
-      if(!Array.isArray(obj.versions)){
-        obj.versions = [venueSessionCreateVersion()];
-      } else {
-        for(let i = 0; i < obj.versions.length; i++){
-          obj.versions[i] = normalizeVenueSessionVersion(obj.versions[i]);
-        }
-        if(obj.versions.length === 0){
-          obj.versions.push(venueSessionCreateVersion());
-        }
-      }
-      obj.samePricingAsAbove = obj.samePricingAsAbove !== false;
-      obj.tierAutofillLocked = obj && obj.tierAutofillLocked === true;
-      const sourceIndex = Number(obj.samePricingSourceIndex);
-      obj.samePricingSourceIndex = Number.isInteger(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0;
-      return obj;
-    }
-    function normalizeVenueSessionSession(session){
-      let obj = session;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateSession();
-      }
-      if(typeof obj.date !== 'string') obj.date = '';
-      if(!Array.isArray(obj.times)){
-        obj.times = [venueSessionCreateTime()];
-      } else {
-        for(let i = 0; i < obj.times.length; i++){
-          obj.times[i] = normalizeVenueSessionTime(obj.times[i]);
-        }
-        if(obj.times.length === 0){
-          obj.times.push(venueSessionCreateTime());
-        }
-      }
-      return obj;
-    }
-    function normalizeVenueSessionVenue(opt){
-      let obj = opt;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateVenue();
-      }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(typeof obj.address !== 'string') obj.address = '';
-      if(obj.location && typeof obj.location === 'object'){
-        const lng = Number(obj.location.lng);
-        const lat = Number(obj.location.lat);
-        obj.location = (Number.isFinite(lng) && Number.isFinite(lat)) ? { lng, lat } : null;
-      } else {
-        obj.location = null;
-      }
-      if(obj.feature && typeof obj.feature !== 'object'){
-        obj.feature = null;
-      }
-      if(!Array.isArray(obj.sessions)){
-        obj.sessions = [venueSessionCreateSession()];
-      } else {
-        for(let i = 0; i < obj.sessions.length; i++){
-          obj.sessions[i] = normalizeVenueSessionSession(obj.sessions[i]);
-        }
-        if(obj.sessions.length === 0){
-          obj.sessions.push(venueSessionCreateSession());
-        }
-      }
-      return obj;
-    }
-    function normalizeVenueSessionOptions(options){
-      let list = options;
-      if(!Array.isArray(list)){
-        list = [];
-      }
-      for(let i = 0; i < list.length; i++){
-        list[i] = normalizeVenueSessionVenue(list[i]);
-      }
-      if(list.length === 0){
-        list.push(venueSessionCreateVenue());
-      }
-      return list;
-    }
-    function cloneVenueSessionTier(tier){
-      const base = venueSessionCreateTier();
-      if(tier && typeof tier === 'object'){
-        if(typeof tier.name === 'string') base.name = tier.name;
-        if(typeof tier.currency === 'string') base.currency = tier.currency;
-        if(typeof tier.price === 'string') base.price = tier.price;
-      }
-      return base;
-    }
-    function cloneVenueSessionVersion(version){
-      const base = venueSessionCreateVersion();
-      base.name = (version && typeof version.name === 'string') ? version.name : '';
-      const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
-      base.tiers = tiers.length ? tiers.map(cloneVenueSessionTier) : [venueSessionCreateTier()];
-      return base;
-    }
-    function cloneVenueSessionTime(time){
-      const base = venueSessionCreateTime();
-      base.time = (time && typeof time.time === 'string') ? time.time : '';
-      const versions = time && Array.isArray(time.versions) ? time.versions : [];
-      base.versions = versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
-      base.samePricingAsAbove = !!(time && time.samePricingAsAbove);
-      const sourceIndex = Number(time && time.samePricingSourceIndex);
-      base.samePricingSourceIndex = Number.isInteger(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0;
-      base.tierAutofillLocked = !!(time && time.tierAutofillLocked);
-      return base;
-    }
-    function cloneVenueSessionSession(session){
-      const base = venueSessionCreateSession();
-      base.date = (session && typeof session.date === 'string') ? session.date : '';
-      const times = session && Array.isArray(session.times) ? session.times : [];
-      base.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
-      return base;
-    }
-    function cloneVenueSessionFeature(feature){
-      if(!feature || typeof feature !== 'object') return null;
-      try{
-        return JSON.parse(JSON.stringify(feature));
-      }catch(err){
-        return { ...feature };
-      }
-    }
-    function cloneVenueSessionVenue(venue){
-      const base = venueSessionCreateVenue();
-      base.name = (venue && typeof venue.name === 'string') ? venue.name : '';
-      base.address = (venue && typeof venue.address === 'string') ? venue.address : '';
-      if(venue && venue.location && typeof venue.location === 'object'){
-        const lng = Number(venue.location.lng);
-        const lat = Number(venue.location.lat);
-        if(Number.isFinite(lng) && Number.isFinite(lat)){
-          base.location = { lng, lat };
-        }
-      }
-      if(venue && venue.feature && typeof venue.feature === 'object'){
-        base.feature = cloneVenueSessionFeature(venue.feature);
-      }
-      const sessions = venue && Array.isArray(venue.sessions) ? venue.sessions : [];
-      base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
-      return base;
-    }
-    window.normalizeVenueSessionOptions = normalizeVenueSessionOptions;
-    window.cloneVenueSessionVenue = cloneVenueSessionVenue;
-    function getVenueAutofillState(field, venue){
-      let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
-      if(!fieldState){
-        fieldState = new WeakMap();
-        VENUE_TIME_AUTOFILL_STATE.set(field, fieldState);
-      }
-      let state = fieldState.get(venue);
-      if(!state){
-        state = { slots: [] };
-        fieldState.set(venue, state);
-      }
-      return state;
-    }
-    function resetVenueAutofillState(field){
-      VENUE_TIME_AUTOFILL_STATE.delete(field);
-    }
-
+            return JSON.parse(JSON.stringify(value));
+          }catch(err){
+            return { ...value };
+          }
+        });
     const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
       ? window.DEFAULT_SUBCATEGORY_FIELDS
       : [
@@ -3609,193 +3281,51 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
           { name: 'Images', type: 'images', placeholder: '', required: true }
         ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
-
-    function toIconIdKey(id){
-      return Number.isInteger(id) ? `id:${id}` : '';
-    }
-    function toIconNameKey(name){
-      return typeof name === 'string' && name ? `name:${name.toLowerCase()}` : '';
-    }
-
-    function normalizeIconLibraryEntries(entries){
-      const seen = new Set();
-      const normalized = [];
-      if(!Array.isArray(entries)){
-        return normalized;
-      }
-      entries.forEach(item => {
-        if(typeof item !== 'string'){
-          return;
-        }
-        const normalizedPath = normalizeIconAssetPath(item);
-        if(!normalizedPath){
-          return;
-        }
-        if(!ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalizedPath)){
-          return;
-        }
-        const key = normalizedPath.toLowerCase();
-        if(seen.has(key)){
-          return;
-        }
-        seen.add(key);
-        normalized.push(normalizedPath);
-      });
-      return normalized;
-    }
-    function normalizeIconAssetPath(path){
-      const normalized = baseNormalizeIconPath(path);
-      if(!normalized){
-        return '';
-      }
-      if(/^(?:https?:)?\/\//i.test(normalized) || normalized.startsWith('data:')){
-        return normalized;
-      }
-      const dividerIndex = normalized.search(/[?#]/);
-      const basePath = dividerIndex >= 0 ? normalized.slice(0, dividerIndex) : normalized;
-      const suffix = dividerIndex >= 0 ? normalized.slice(dividerIndex) : '';
-      let next = basePath.replace(/(^|\/)icons-20\//gi, '$1icons-30/');
-      next = next.replace(/^icons-30\//i, 'assets/icons-30/');
-      next = next.replace(/^assets\/icons-20\//i, 'assets/icons-30/');
-      const sourcePath = next;
-      next = sourcePath.replace(/-20(\.[^./]+)$/i, (match, ext, offset) => {
-        const prevChar = sourcePath.charAt(Math.max(0, offset - 1));
-        return /\d/.test(prevChar) ? match : `-30${ext}`;
-      });
-      return next + suffix;
-    }
-    const existingNormalizeIconPath = (typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function')
-      ? window.normalizeIconPath
-      : null;
-    if(typeof window !== 'undefined'){
-      window.normalizeIconPath = (path)=>{
-        const initial = existingNormalizeIconPath ? existingNormalizeIconPath(path) : path;
-        return normalizeIconAssetPath(initial);
-      };
-    }
-
-    function normalizeIconPathMap(source){
-      const normalized = {};
-      if(!source || typeof source !== 'object'){
-        return normalized;
-      }
-      Object.keys(source).forEach(key => {
-        const rawValue = source[key];
-        const value = typeof rawValue === 'string' ? normalizeIconAssetPath(rawValue) : '';
-        if(typeof key !== 'string'){
-          return;
-        }
-        const trimmed = key.trim();
-        if(!trimmed){
-          return;
-        }
-        if(/^id:\d+$/i.test(trimmed)){
-          normalized[trimmed.toLowerCase()] = value;
-          return;
-        }
-        if(/^[0-9]+$/.test(trimmed)){
-          normalized[`id:${trimmed}`] = value;
-          return;
-        }
-        if(/^name:/i.test(trimmed)){
-          const rest = trimmed.slice(5).toLowerCase();
-          if(rest){
-            normalized[`name:${rest}`] = value;
+    const lookupIconPath = typeof window.lookupIconPath === 'function'
+      ? window.lookupIconPath
+      : (() => ({ path: '', found: false }));
+    const writeIconPath = typeof window.writeIconPath === 'function'
+      ? window.writeIconPath
+      : (() => {});
+    const renameIconNameKey = typeof window.renameIconNameKey === 'function'
+      ? window.renameIconNameKey
+      : (() => {});
+    const deleteIconKeys = typeof window.deleteIconKeys === 'function'
+      ? window.deleteIconKeys
+      : (() => {});
+    const closeAllIconPickers = typeof window.closeAllIconPickers === 'function'
+      ? window.closeAllIconPickers
+      : (() => {});
+    const baseNormalizeIconPath = typeof window.baseNormalizeIconPath === 'function'
+      ? window.baseNormalizeIconPath
+      : (path => (typeof path === 'string' ? path.trim().replace(/^\/+/, '') : ''));
+    const applyNormalizeIconPath = typeof window.applyNormalizeIconPath === 'function'
+      ? window.applyNormalizeIconPath
+      : baseNormalizeIconPath;
+    const getCategoryIconPath = typeof window.getCategoryIconPath === 'function'
+      ? window.getCategoryIconPath
+      : (() => '');
+    const getSubcategoryIconPath = typeof window.getSubcategoryIconPath === 'function'
+      ? window.getSubcategoryIconPath
+      : (() => '');
+    const extractIconSrc = typeof window.extractIconSrc === 'function'
+      ? window.extractIconSrc
+      : function(html){
+          if(typeof html !== 'string'){ return ''; }
+          const trimmed = html.trim();
+          if(!trimmed || typeof document === 'undefined'){ return ''; }
+          if(!extractIconSrc.__parser){
+            extractIconSrc.__parser = document.createElement('div');
           }
-          return;
-        }
-        normalized[`name:${trimmed.toLowerCase()}`] = value;
-      });
-      return normalized;
-    }
-    function lookupIconPath(map, id, name){
-      const idKey = toIconIdKey(id);
-      if(idKey && Object.prototype.hasOwnProperty.call(map, idKey)){
-        return { path: map[idKey], found: true };
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey && Object.prototype.hasOwnProperty.call(map, nameKey)){
-        return { path: map[nameKey], found: true };
-      }
-      return { path: '', found: false };
-    }
-    function writeIconPath(map, id, name, path){
-      const idKey = toIconIdKey(id);
-      if(idKey){
-        map[idKey] = path;
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey){
-        map[nameKey] = path;
-      }
-    }
-    function renameIconNameKey(map, oldName, newName){
-      const oldKey = toIconNameKey(oldName);
-      const newKey = toIconNameKey(newName);
-      if(!oldKey || !newKey || oldKey === newKey){
-        if(oldKey && !newKey){
-          delete map[oldKey];
-        }
-        return;
-      }
-      if(Object.prototype.hasOwnProperty.call(map, oldKey) && !Object.prototype.hasOwnProperty.call(map, newKey)){
-        map[newKey] = map[oldKey];
-      }
-      delete map[oldKey];
-    }
-    function deleteIconKeys(map, id, name){
-      const idKey = toIconIdKey(id);
-      if(idKey){
-        delete map[idKey];
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey){
-        delete map[nameKey];
-      }
-    }
-    function closeAllIconPickers(){
-      Array.from(OPEN_ICON_PICKERS).forEach(close => {
-        try{ close(); }catch(err){}
-      });
-    }
-    function baseNormalizeIconPath(path){
-      if(typeof path !== 'string') return '';
-      const trimmed = path.trim();
-      if(!trimmed) return '';
-      return trimmed.replace(/^\/+/, '');
-    }
-    function applyNormalizeIconPath(path){
-      if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
-        try{
-          const overridden = window.normalizeIconPath(path);
-          if(typeof overridden !== 'undefined'){
-            return baseNormalizeIconPath(overridden);
-          }
-        }catch(err){}
-      }
-      return baseNormalizeIconPath(path);
-    }
-    function getCategoryIconPath(category){
-      if(!category) return '';
-      const lookup = lookupIconPath(categoryIconPaths, category.id, category.name);
-      if(lookup.found){
-        return lookup.path || '';
-      }
-      return '';
-    }
-    function getSubcategoryIconPath(category, subName){
-      const id = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subName)
-        ? category.subIds[subName]
-        : null;
-      const lookup = lookupIconPath(subcategoryIconPaths, id, subName);
-      if(lookup.found){
-        return lookup.path || '';
-      }
-      return '';
-    }
+          const parser = extractIconSrc.__parser;
+          parser.innerHTML = trimmed;
+          const img = parser.querySelector('img');
+          const src = img ? (img.getAttribute('src') || '').trim() : '';
+          parser.innerHTML = '';
+          return src;
+        };
     const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
     if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
       subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
@@ -3813,22 +3343,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
       });
     });
-
-    function extractIconSrc(html){
-      if(typeof html !== 'string'){ return ''; }
-      const trimmed = html.trim();
-      if(!trimmed){ return ''; }
-      if(typeof document === 'undefined'){ return ''; }
-      if(!extractIconSrc.__parser){
-        extractIconSrc.__parser = document.createElement('div');
-      }
-      const parser = extractIconSrc.__parser;
-      parser.innerHTML = trimmed;
-      const img = parser.querySelector('img');
-      const src = img ? (img.getAttribute('src') || '').trim() : '';
-      parser.innerHTML = '';
-      return src;
-    }
 
     // --- Icon loader: ensures Mapbox images are available and quiets missing-image logs ---
     function attachIconLoader(mapInstance){

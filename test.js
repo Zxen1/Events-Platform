@@ -223,14 +223,25 @@ assert(
   'Icon picker triggers should remove aria-disabled when icons are available.'
 );
 
+let iconBootstrapSource = '';
 const iconBootstrapStart = mainSource.indexOf('const ICON_LIBRARY = Array.isArray(window.iconLibrary)');
-const iconBootstrapEnd = mainSource.indexOf('const FORM_FIELD_TYPES =', iconBootstrapStart);
-assert(
-  iconBootstrapStart !== -1 && iconBootstrapEnd !== -1,
-  'Unable to locate icon library bootstrap block.'
-);
-
-const iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
+if(iconBootstrapStart !== -1){
+  const iconBootstrapEnd = mainSource.indexOf('const FORM_FIELD_TYPES =', iconBootstrapStart);
+  if(iconBootstrapEnd !== -1){
+    iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
+  }
+}
+if(!iconBootstrapSource){
+  const adminBootstrapStart = adminSource.indexOf('const ICON_LIBRARY = Array.isArray(window.iconLibrary)');
+  const adminBootstrapEnd = adminSource.indexOf('const categories = window.categories', adminBootstrapStart);
+  assert(
+    adminBootstrapStart !== -1 && adminBootstrapEnd !== -1,
+    'Unable to locate icon library bootstrap block.'
+  );
+  iconBootstrapSource = adminSource.slice(adminBootstrapStart, adminBootstrapEnd);
+} else {
+  assert(iconBootstrapSource, 'Unable to locate icon library bootstrap block.');
+}
 
 const assignMapLike = (target, source) => {
   if(!target || typeof target !== 'object'){
