@@ -11775,30 +11775,15 @@ function makePosts(){
                 geocoderContainer.id = `${baseId}-location-geocoder`;
                 addressRow.appendChild(geocoderContainer);
                 locationWrapper.appendChild(addressRow);
-                const coordinatesRow = document.createElement('div');
-                coordinatesRow.className = 'location-field-coordinates';
                 const latitudeInput = document.createElement('input');
-                latitudeInput.type = 'text';
-                latitudeInput.placeholder = 'Latitude';
-                latitudeInput.value = locationState.latitude || '';
+                latitudeInput.type = 'hidden';
                 latitudeInput.dataset.locationLatitude = 'true';
-                latitudeInput.inputMode = 'decimal';
-                latitudeInput.addEventListener('input', ()=>{
-                  locationState.latitude = latitudeInput.value.trim();
-                  notifyFormbuilderChange();
-                });
+                latitudeInput.value = locationState.latitude || '';
                 const longitudeInput = document.createElement('input');
-                longitudeInput.type = 'text';
-                longitudeInput.placeholder = 'Longitude';
-                longitudeInput.value = locationState.longitude || '';
+                longitudeInput.type = 'hidden';
                 longitudeInput.dataset.locationLongitude = 'true';
-                longitudeInput.inputMode = 'decimal';
-                longitudeInput.addEventListener('input', ()=>{
-                  locationState.longitude = longitudeInput.value.trim();
-                  notifyFormbuilderChange();
-                });
-                coordinatesRow.append(latitudeInput, longitudeInput);
-                locationWrapper.appendChild(coordinatesRow);
+                longitudeInput.value = locationState.longitude || '';
+                locationWrapper.append(latitudeInput, longitudeInput);
                 const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
                   ? previewField.placeholder
                   : 'Search for a location';
@@ -11806,6 +11791,7 @@ function makePosts(){
                   latitudeInput.value = locationState.latitude || '';
                   longitudeInput.value = locationState.longitude || '';
                 };
+                syncCoordinateInputs();
                 const formatCoord = value => {
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -21050,34 +21036,22 @@ document.addEventListener('pointerdown', (e) => {
         geocoderContainer.id = geocoderId;
         addressRow.appendChild(geocoderContainer);
         locationWrapper.appendChild(addressRow);
-        const coordinatesRow = document.createElement('div');
-        coordinatesRow.className = 'location-field-coordinates';
         const latitudeInput = document.createElement('input');
-        latitudeInput.type = 'text';
-        latitudeInput.placeholder = 'Latitude';
-        latitudeInput.value = locationState.latitude || '';
+        latitudeInput.type = 'hidden';
         latitudeInput.dataset.locationLatitude = 'true';
-        latitudeInput.inputMode = 'decimal';
-        latitudeInput.addEventListener('input', ()=>{
-          locationState.latitude = latitudeInput.value.trim();
-        });
+        latitudeInput.value = locationState.latitude || '';
         const longitudeInput = document.createElement('input');
-        longitudeInput.type = 'text';
-        longitudeInput.placeholder = 'Longitude';
-        longitudeInput.value = locationState.longitude || '';
+        longitudeInput.type = 'hidden';
         longitudeInput.dataset.locationLongitude = 'true';
-        longitudeInput.inputMode = 'decimal';
-        longitudeInput.addEventListener('input', ()=>{
-          locationState.longitude = longitudeInput.value.trim();
-        });
-        coordinatesRow.append(latitudeInput, longitudeInput);
-        locationWrapper.appendChild(coordinatesRow);
+        longitudeInput.value = locationState.longitude || '';
+        locationWrapper.append(latitudeInput, longitudeInput);
         const placeholderValue = placeholder || 'Search for a location';
         const addressInputId = `${controlId}-address`;
         const syncCoordinateInputs = ()=>{
           latitudeInput.value = locationState.latitude || '';
           longitudeInput.value = locationState.longitude || '';
         };
+        syncCoordinateInputs();
         const formatCoord = value => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -21215,10 +21189,6 @@ document.addEventListener('pointerdown', (e) => {
         if(addressInput){
           addressInput.setAttribute('aria-labelledby', labelId);
           label.setAttribute('for', addressInputId);
-        }
-        if(field.required){
-          latitudeInput.required = true;
-          longitudeInput.required = true;
         }
         control = locationWrapper;
       } else {
@@ -21483,8 +21453,8 @@ document.addEventListener('pointerdown', (e) => {
           value = trimmedLocation;
           if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
             invalid = {
-              message: `Enter an address and coordinates for ${label}.`,
-              focus: ()=> focusElement(addressInput || latitudeInput || longitudeInput)
+              message: `Select a location for ${label}.`,
+              focus: ()=> focusElement(addressInput)
             };
             break;
           }
