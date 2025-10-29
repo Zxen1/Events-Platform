@@ -22662,8 +22662,19 @@ document.addEventListener('DOMContentLoaded', () => {
     registerInputs = registerPanel ? Array.from(registerPanel.querySelectorAll('input')) : [];
 
     form.addEventListener('submit', event => {
+      let submitter = event.submitter || null;
+      if(!submitter){
+        const active = document.activeElement || null;
+        if(active && form.contains(active)){
+          submitter = active;
+        }
+      }
+      const origin = submitter && typeof submitter.closest === 'function' ? submitter : null;
+      const isMemberAuthEvent = origin && origin.closest('.member-auth');
+      if(!isMemberAuthEvent){
+        return;
+      }
       event.preventDefault();
-      const submitter = event.submitter || null;
       const action = submitter && submitter.dataset && submitter.dataset.action ? submitter.dataset.action : lastAction;
       if(action === 'register'){
         handleRegister();
