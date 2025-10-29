@@ -3,7 +3,6 @@ const fs = require('fs');
 const vm = require('vm');
 
 const mainSource = fs.readFileSync('index.js', 'utf8');
-const adminSource = fs.readFileSync('admin.js', 'utf8');
 
 assert(
   mainSource.includes("types: 'poi,place,address'"),
@@ -85,33 +84,55 @@ venues.forEach(venue => {
   );
 });
 
-const helperIIFEStart = adminSource.indexOf('(function(){');
-const helperIIFEEnd = adminSource.indexOf('})();\n\n(function(){', helperIIFEStart);
-assert(helperIIFEStart !== -1 && helperIIFEEnd !== -1, 'Unable to isolate admin formbuilder helpers.');
-const helperContext = { window: {}, console };
-helperContext.window.fetch = async () => ({
-  ok: true,
-  text: async () => JSON.stringify({ success: true, snapshot: { categories: [], iconLibrary: [] } })
-});
-helperContext.window.setTimeout = () => 0;
-helperContext.window.clearTimeout = () => {};
-helperContext.window.AbortController = class {
-  constructor(){ this.signal = {}; }
-  abort(){}
-};
-helperContext.fetch = helperContext.window.fetch;
-helperContext.setTimeout = helperContext.window.setTimeout;
-helperContext.clearTimeout = helperContext.window.clearTimeout;
-helperContext.AbortController = helperContext.window.AbortController;
-vm.createContext(helperContext);
-vm.runInContext(adminSource.slice(helperIIFEStart, helperIIFEEnd + 4), helperContext);
-const {
-  normalizeFormbuilderSnapshot,
-  normalizeIconLibraryEntries,
-  normalizeIconPathMap,
-  normalizeIconAssetPath
-} = helperContext.window;
-const ICON_LIBRARY_ALLOWED_EXTENSION_RE = helperContext.window.ICON_LIBRARY_ALLOWED_EXTENSION_RE;
+const formbuilderStart = mainSource.indexOf('function getSavedFormbuilderSnapshot(){');
+assert(formbuilderStart !== -1, 'Unable to locate saved formbuilder snapshot helper.');
+const baseFnStart = mainSource.indexOf('function baseNormalizeIconPath(path){');
+const baseFnEnd = mainSource.indexOf('function applyNormalizeIconPath', baseFnStart);
+assert(baseFnStart !== -1 && baseFnEnd !== -1, 'Unable to locate base icon normalization helper.');
+
+const formbuilderWindow = {};
+const formbuilderSlices = [
+  mainSource.slice(
+    mainSource.indexOf('function normalizeCategorySortOrderValue('),
+    mainSource.indexOf('function compareCategoriesForDisplay', mainSource.indexOf('function normalizeCategorySortOrderValue('))
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function cloneFieldValue('),
+    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('const DEFAULT_FORMBUILDER_SNAPSHOT'),
+    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('const ICON_LIBRARY_ALLOWED_EXTENSION_RE'),
+    mainSource.indexOf('function normalizeCategoriesSnapshot(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeCategoriesSnapshot('),
+    mainSource.indexOf('function normalizeFormbuilderSnapshot(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeFormbuilderSnapshot('),
+    mainSource.indexOf('    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconLibraryEntries('),
+    mainSource.indexOf('function normalizeIconAssetPath(')
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconAssetPath('),
+    mainSource.indexOf('    const existingNormalizeIconPath', mainSource.indexOf('function normalizeIconAssetPath('))
+  ),
+  mainSource.slice(
+    mainSource.indexOf('function normalizeIconPathMap('),
+    mainSource.indexOf('    function lookupIconPath', mainSource.indexOf('function normalizeIconPathMap('))
+  ),
+  mainSource.slice(baseFnStart, baseFnEnd)
+];
+
+const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE };');
+const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE } = formbuilderFactory(formbuilderWindow);
 
 const seededSnapshot = normalizeFormbuilderSnapshot({
   categories: [],
@@ -218,30 +239,18 @@ assert(
 );
 
 assert(
-  mainSource.includes("trigger.removeAttribute('aria-disabled');")
-    || adminSource.includes("trigger.removeAttribute('aria-disabled');"),
+  mainSource.includes("trigger.removeAttribute('aria-disabled');"),
   'Icon picker triggers should remove aria-disabled when icons are available.'
 );
 
-let iconBootstrapSource = '';
 const iconBootstrapStart = mainSource.indexOf('const ICON_LIBRARY = Array.isArray(window.iconLibrary)');
-if(iconBootstrapStart !== -1){
-  const iconBootstrapEnd = mainSource.indexOf('const FORM_FIELD_TYPES =', iconBootstrapStart);
-  if(iconBootstrapEnd !== -1){
-    iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
-  }
-}
-if(!iconBootstrapSource){
-  const adminBootstrapStart = adminSource.indexOf('const ICON_LIBRARY = Array.isArray(window.iconLibrary)');
-  const adminBootstrapEnd = adminSource.indexOf('const categories = window.categories', adminBootstrapStart);
-  assert(
-    adminBootstrapStart !== -1 && adminBootstrapEnd !== -1,
-    'Unable to locate icon library bootstrap block.'
-  );
-  iconBootstrapSource = adminSource.slice(adminBootstrapStart, adminBootstrapEnd);
-} else {
-  assert(iconBootstrapSource, 'Unable to locate icon library bootstrap block.');
-}
+const iconBootstrapEnd = mainSource.indexOf('const FORM_FIELD_TYPES =', iconBootstrapStart);
+assert(
+  iconBootstrapStart !== -1 && iconBootstrapEnd !== -1,
+  'Unable to locate icon library bootstrap block.'
+);
+
+const iconBootstrapSource = mainSource.slice(iconBootstrapStart, iconBootstrapEnd);
 
 const assignMapLike = (target, source) => {
   if(!target || typeof target !== 'object'){
@@ -461,18 +470,15 @@ const bootstrapContextSubcategoryOnly = {
 vm.createContext(bootstrapContextSubcategoryOnly);
 vm.runInContext(iconBootstrapSource, bootstrapContextSubcategoryOnly);
 
-const iconPickerSource = mainSource.includes('const attachIconPicker = (trigger, container, options = {})=>{')
-  ? mainSource
-  : adminSource;
-const attachIconPickerStart = iconPickerSource.indexOf('const attachIconPicker = (trigger, container, options = {})=>{');
-const attachIconPickerEnd = iconPickerSource.indexOf('const frag = document.createDocumentFragment();', attachIconPickerStart);
+const attachIconPickerStart = mainSource.indexOf('const attachIconPicker = (trigger, container, options = {})=>{');
+const attachIconPickerEnd = mainSource.indexOf('const frag = document.createDocumentFragment();', attachIconPickerStart);
 
 assert(
   attachIconPickerStart !== -1 && attachIconPickerEnd !== -1,
   'Unable to locate icon picker attachment helper.'
 );
 
-const attachIconPickerSource = iconPickerSource.slice(attachIconPickerStart, attachIconPickerEnd);
+const attachIconPickerSource = mainSource.slice(attachIconPickerStart, attachIconPickerEnd);
 
 const attachIconPickerFactory = new Function('context', `with(context){ ${attachIconPickerSource} return attachIconPicker; }`);
 
