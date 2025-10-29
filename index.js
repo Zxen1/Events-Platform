@@ -11775,37 +11775,10 @@ function makePosts(){
                 geocoderContainer.id = `${baseId}-location-geocoder`;
                 addressRow.appendChild(geocoderContainer);
                 locationWrapper.appendChild(addressRow);
-                const coordinatesRow = document.createElement('div');
-                coordinatesRow.className = 'location-field-coordinates';
-                const latitudeInput = document.createElement('input');
-                latitudeInput.type = 'text';
-                latitudeInput.placeholder = 'Latitude';
-                latitudeInput.value = locationState.latitude || '';
-                latitudeInput.dataset.locationLatitude = 'true';
-                latitudeInput.inputMode = 'decimal';
-                latitudeInput.addEventListener('input', ()=>{
-                  locationState.latitude = latitudeInput.value.trim();
-                  notifyFormbuilderChange();
-                });
-                const longitudeInput = document.createElement('input');
-                longitudeInput.type = 'text';
-                longitudeInput.placeholder = 'Longitude';
-                longitudeInput.value = locationState.longitude || '';
-                longitudeInput.dataset.locationLongitude = 'true';
-                longitudeInput.inputMode = 'decimal';
-                longitudeInput.addEventListener('input', ()=>{
-                  locationState.longitude = longitudeInput.value.trim();
-                  notifyFormbuilderChange();
-                });
-                coordinatesRow.append(latitudeInput, longitudeInput);
-                locationWrapper.appendChild(coordinatesRow);
                 const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
                   ? previewField.placeholder
                   : 'Search for a location';
-                const syncCoordinateInputs = ()=>{
-                  latitudeInput.value = locationState.latitude || '';
-                  longitudeInput.value = locationState.longitude || '';
-                };
+                const syncCoordinateInputs = ()=>{};
                 const formatCoord = value => {
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -11930,7 +11903,6 @@ function makePosts(){
                           locationState.longitude = formatCoord(lng);
                           locationState.latitude = formatCoord(lat);
                         }
-                        syncCoordinateInputs();
                         notifyFormbuilderChange();
                       }
                       setGeocoderActive(false);
@@ -11940,7 +11912,6 @@ function makePosts(){
                       locationState.latitude = '';
                       locationState.longitude = '';
                       geocoderInput.value = '';
-                      syncCoordinateInputs();
                       notifyFormbuilderChange();
                       setGeocoderActive(false);
                     });
