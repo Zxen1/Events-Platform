@@ -10375,6 +10375,15 @@ function makePosts(){
                       schedule(attachGeocoder);
                       return;
                     }
+                    const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
+                    if(existingFallback){
+                      if(existingFallback.parentNode === geocoderContainer){
+                        geocoderContainer.removeChild(existingFallback);
+                      }
+                      if(geocoderInputRef === existingFallback){
+                        geocoderInputRef = null;
+                      }
+                    }
                     try {
                       geocoder.addTo(geocoderContainer);
                     } catch(err){
@@ -11782,6 +11791,11 @@ function makePosts(){
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
                 };
+                let addressInput = null;
+                const syncAddressInputLabel = input => {
+                  if(!input) return;
+                  input.setAttribute('aria-labelledby', labelId);
+                };
                 const createFallbackAddressInput = ()=>{
                   geocoderContainer.innerHTML = '';
                   geocoderContainer.classList.remove('is-geocoder-active');
@@ -11799,10 +11813,11 @@ function makePosts(){
                     notifyFormbuilderChange();
                   });
                   geocoderContainer.appendChild(fallback);
+                  addressInput = fallback;
+                  syncAddressInputLabel(addressInput);
                   return fallback;
                 };
                 const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
-                let addressInput = null;
                 if(mapboxReady){
                   const geocoderOptions = {
                     accessToken: window.mapboxgl.accessToken,
@@ -11832,6 +11847,15 @@ function makePosts(){
                       }
                       schedule(attachGeocoder);
                       return null;
+                    }
+                    const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
+                    if(existingFallback){
+                      if(existingFallback.parentNode === geocoderContainer){
+                        geocoderContainer.removeChild(existingFallback);
+                      }
+                      if(addressInput === existingFallback){
+                        addressInput = null;
+                      }
                     }
                     try{
                       geocoder.addTo(geocoderContainer);
@@ -11884,6 +11908,8 @@ function makePosts(){
                         notifyFormbuilderChange();
                       }
                     });
+                    addressInput = geocoderInput;
+                    syncAddressInputLabel(addressInput);
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       const result = event && event.result;
@@ -11917,16 +11943,20 @@ function makePosts(){
                     geocoder.on('error', ()=> setGeocoderActive(false));
                     return geocoderInput;
                   };
-                  addressInput = attachGeocoder();
-                  if(!addressInput){
-                    addressInput = createFallbackAddressInput();
+                  const initialResult = attachGeocoder();
+                  if(initialResult instanceof HTMLElement){
+                    addressInput = initialResult;
+                  } else if(!addressInput){
+                    const fallbackNode = geocoderContainer.querySelector('.address_line-fallback');
+                    if(fallbackNode){
+                      addressInput = fallbackNode;
+                      syncAddressInputLabel(addressInput);
+                    }
                   }
                 } else {
                   addressInput = createFallbackAddressInput();
                 }
-                if(addressInput){
-                  addressInput.setAttribute('aria-labelledby', labelId);
-                }
+                syncAddressInputLabel(addressInput);
                 control = locationWrapper;
               } else {
                 const input = document.createElement('input');
@@ -21026,6 +21056,12 @@ document.addEventListener('pointerdown', (e) => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
         };
+        let addressInput = null;
+        const syncAddressInputLabel = input => {
+          if(!input) return;
+          input.setAttribute('aria-labelledby', labelId);
+          label.setAttribute('for', addressInputId);
+        };
         const createFallbackAddressInput = ()=>{
           geocoderContainer.innerHTML = '';
           geocoderContainer.classList.remove('is-geocoder-active');
@@ -21042,10 +21078,11 @@ document.addEventListener('pointerdown', (e) => {
             locationState.address = fallback.value;
           });
           geocoderContainer.appendChild(fallback);
+          addressInput = fallback;
+          syncAddressInputLabel(addressInput);
           return fallback;
         };
         const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
-        let addressInput = null;
         if(mapboxReady){
           const geocoderOptions = {
             accessToken: window.mapboxgl.accessToken,
@@ -21075,6 +21112,15 @@ document.addEventListener('pointerdown', (e) => {
               }
               schedule(attachGeocoder);
               return null;
+            }
+            const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
+            if(existingFallback){
+              if(existingFallback.parentNode === geocoderContainer){
+                geocoderContainer.removeChild(existingFallback);
+              }
+              if(addressInput === existingFallback){
+                addressInput = null;
+              }
             }
             try{
               geocoder.addTo(geocoderContainer);
@@ -21116,6 +21162,8 @@ document.addEventListener('pointerdown', (e) => {
                 locationState.address = nextValue;
               }
             });
+            addressInput = geocoderInput;
+            syncAddressInputLabel(addressInput);
             geocoder.on('results', ()=> setGeocoderActive(true));
             geocoder.on('result', event => {
               const result = event && event.result;
@@ -21147,17 +21195,20 @@ document.addEventListener('pointerdown', (e) => {
             geocoder.on('error', ()=> setGeocoderActive(false));
             return geocoderInput;
           };
-          addressInput = attachGeocoder();
-          if(!addressInput){
-            addressInput = createFallbackAddressInput();
+          const initialResult = attachGeocoder();
+          if(initialResult instanceof HTMLElement){
+            addressInput = initialResult;
+          } else if(!addressInput){
+            const fallbackNode = geocoderContainer.querySelector('.address_line-fallback');
+            if(fallbackNode){
+              addressInput = fallbackNode;
+              syncAddressInputLabel(addressInput);
+            }
           }
         } else {
           addressInput = createFallbackAddressInput();
         }
-        if(addressInput){
-          addressInput.setAttribute('aria-labelledby', labelId);
-          label.setAttribute('for', addressInputId);
-        }
+        syncAddressInputLabel(addressInput);
         control = locationWrapper;
       } else {
         const input = document.createElement('input');
