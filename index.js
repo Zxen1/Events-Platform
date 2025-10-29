@@ -11778,7 +11778,6 @@ function makePosts(){
                 const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
                   ? previewField.placeholder
                   : 'Search for a location';
-                const syncCoordinateInputs = ()=>{};
                 const formatCoord = value => {
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -21023,7 +21022,6 @@ document.addEventListener('pointerdown', (e) => {
         locationWrapper.appendChild(addressRow);
         const placeholderValue = placeholder || 'Search for a location';
         const addressInputId = `${controlId}-address`;
-        const syncCoordinateInputs = ()=>{};
         const formatCoord = value => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -21136,7 +21134,6 @@ document.addEventListener('pointerdown', (e) => {
                   locationState.longitude = formatCoord(lng);
                   locationState.latitude = formatCoord(lat);
                 }
-                syncCoordinateInputs();
               }
               setGeocoderActive(false);
             });
@@ -21145,7 +21142,6 @@ document.addEventListener('pointerdown', (e) => {
               locationState.latitude = '';
               locationState.longitude = '';
               geocoderInput.value = '';
-              syncCoordinateInputs();
               setGeocoderActive(false);
             });
             geocoder.on('error', ()=> setGeocoderActive(false));
