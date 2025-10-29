@@ -6,13 +6,32 @@ $action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['ac
 
 $baseDir = __DIR__;
 
-$connectorDir = $baseDir . '/home/funmapco/connectors';
+$candidateDirs = [
+  $baseDir . '/../connectors',
+  $baseDir . '/home/funmapco/connectors'
+];
+
+$connectorDir = null;
+foreach ($candidateDirs as $candidate) {
+  $resolved = realpath($candidate);
+  if ($resolved && is_dir($resolved)) {
+    $connectorDir = $resolved;
+    break;
+  }
+}
+
+if ($connectorDir === null) {
+  header('Content-Type: application/json');
+  echo json_encode(['success'=>false,'message'=>'Connector directory not found']);
+  exit;
+}
 
 $map = [
   'verify-login' => $connectorDir . '/verify-login.php',
   'add-member' => $connectorDir . '/add-member.php',
   'save-form' => $connectorDir . '/save-form.php',
   'get-form' => $connectorDir . '/get-form.php',
+  'add-post' => $connectorDir . '/add-post.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
