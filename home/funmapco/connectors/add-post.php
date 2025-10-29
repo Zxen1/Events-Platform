@@ -25,7 +25,9 @@ require_once $configPath;
 require '../config/config-auth.php';
 header('Content-Type: application/json');
 
-if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
+$trustedGateway = defined('FUNMAP_GATEWAY_ENTRY') && FUNMAP_GATEWAY_ENTRY === true;
+
+if (!$trustedGateway && !verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
   http_response_code(403);
   exit(json_encode(['error'=>'Forbidden']));
 }

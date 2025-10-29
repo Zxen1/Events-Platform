@@ -49,5 +49,9 @@ if (!file_exists($target)) {
   exit;
 }
 
+if (!defined('FUNMAP_GATEWAY_ENTRY')) {
+  define('FUNMAP_GATEWAY_ENTRY', true);
+}
+
 require_once $target;
 ?>
