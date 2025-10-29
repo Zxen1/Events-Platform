@@ -21021,34 +21021,9 @@ document.addEventListener('pointerdown', (e) => {
         geocoderContainer.id = geocoderId;
         addressRow.appendChild(geocoderContainer);
         locationWrapper.appendChild(addressRow);
-        const coordinatesRow = document.createElement('div');
-        coordinatesRow.className = 'location-field-coordinates';
-        const latitudeInput = document.createElement('input');
-        latitudeInput.type = 'text';
-        latitudeInput.placeholder = 'Latitude';
-        latitudeInput.value = locationState.latitude || '';
-        latitudeInput.dataset.locationLatitude = 'true';
-        latitudeInput.inputMode = 'decimal';
-        latitudeInput.addEventListener('input', ()=>{
-          locationState.latitude = latitudeInput.value.trim();
-        });
-        const longitudeInput = document.createElement('input');
-        longitudeInput.type = 'text';
-        longitudeInput.placeholder = 'Longitude';
-        longitudeInput.value = locationState.longitude || '';
-        longitudeInput.dataset.locationLongitude = 'true';
-        longitudeInput.inputMode = 'decimal';
-        longitudeInput.addEventListener('input', ()=>{
-          locationState.longitude = longitudeInput.value.trim();
-        });
-        coordinatesRow.append(latitudeInput, longitudeInput);
-        locationWrapper.appendChild(coordinatesRow);
         const placeholderValue = placeholder || 'Search for a location';
         const addressInputId = `${controlId}-address`;
-        const syncCoordinateInputs = ()=>{
-          latitudeInput.value = locationState.latitude || '';
-          longitudeInput.value = locationState.longitude || '';
-        };
+        const syncCoordinateInputs = ()=>{};
         const formatCoord = value => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
@@ -21186,10 +21161,6 @@ document.addEventListener('pointerdown', (e) => {
         if(addressInput){
           addressInput.setAttribute('aria-labelledby', labelId);
           label.setAttribute('for', addressInputId);
-        }
-        if(field.required){
-          latitudeInput.required = true;
-          longitudeInput.required = true;
         }
         control = locationWrapper;
       } else {
@@ -21436,15 +21407,14 @@ document.addEventListener('pointerdown', (e) => {
           }
         } else if(type === 'location'){
           const addressInput = element.querySelector('[data-location-address]');
-          const latitudeInput = element.querySelector('[data-location-latitude]');
-          const longitudeInput = element.querySelector('[data-location-longitude]');
-          const addressValue = addressInput ? addressInput.value : (field.location && field.location.address) || '';
-          const latitudeValue = latitudeInput ? latitudeInput.value : (field.location && field.location.latitude) || '';
-          const longitudeValue = longitudeInput ? longitudeInput.value : (field.location && field.location.longitude) || '';
+          const currentLocation = field.location && typeof field.location === 'object'
+            ? field.location
+            : { address: '', latitude: '', longitude: '' };
+          const addressValue = addressInput ? addressInput.value : currentLocation.address || '';
           const trimmedLocation = {
             address: (addressValue || '').trim(),
-            latitude: (latitudeValue || '').trim(),
-            longitude: (longitudeValue || '').trim()
+            latitude: typeof currentLocation.latitude === 'string' ? currentLocation.latitude.trim() : '',
+            longitude: typeof currentLocation.longitude === 'string' ? currentLocation.longitude.trim() : ''
           };
           field.location = {
             address: trimmedLocation.address,
@@ -21452,10 +21422,10 @@ document.addEventListener('pointerdown', (e) => {
             longitude: trimmedLocation.longitude
           };
           value = trimmedLocation;
-          if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
+          if(field.required && !trimmedLocation.address){
             invalid = {
-              message: `Enter an address and coordinates for ${label}.`,
-              focus: ()=> focusElement(addressInput || latitudeInput || longitudeInput)
+              message: `Enter an address for ${label}.`,
+              focus: ()=> focusElement(addressInput)
             };
             break;
           }
