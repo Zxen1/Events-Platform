@@ -19879,6 +19879,11 @@ document.addEventListener('pointerdown', (e) => {
     const postButton = document.getElementById('memberCreatePostBtn');
     const listingCurrency = document.getElementById('memberCreateListingCurrency');
     const listingPrice = document.getElementById('memberCreateListingPrice');
+    const memberForm = document.getElementById('memberForm');
+
+    let currentCreateFields = [];
+    let createStatusTimer = 0;
+    let isSubmittingCreatePost = false;
 
     const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
       ? window.DEFAULT_SUBCATEGORY_FIELDS
@@ -19894,6 +19899,44 @@ document.addEventListener('pointerdown', (e) => {
     const cloneVenueSessionVenueFromWindow = typeof window.cloneVenueSessionVenue === 'function'
       ? window.cloneVenueSessionVenue
       : cloneVenueSessionVenue;
+
+    function showCreateStatus(message, options = {}){
+      const statusEl = document.getElementById('memberStatusMessage');
+      if(!statusEl || typeof message !== 'string') return;
+      const isError = !!options.error;
+      statusEl.textContent = message;
+      statusEl.classList.remove('error','success','show');
+      statusEl.classList.add(isError ? 'error' : 'success');
+      statusEl.setAttribute('aria-hidden','false');
+      void statusEl.offsetWidth;
+      statusEl.classList.add('show');
+      if(createStatusTimer){
+        clearTimeout(createStatusTimer);
+      }
+      createStatusTimer = window.setTimeout(()=>{
+        statusEl.classList.remove('show');
+        statusEl.classList.remove('error','success');
+        statusEl.setAttribute('aria-hidden','true');
+      }, 2400);
+    }
+
+    function loadCurrentMember(){
+      try{
+        const raw = localStorage.getItem('member-auth-current');
+        if(!raw) return null;
+        const parsed = JSON.parse(raw);
+        if(!parsed || typeof parsed !== 'object') return null;
+        return {
+          id: typeof parsed.id === 'number' ? parsed.id : null,
+          username: typeof parsed.username === 'string' ? parsed.username : '',
+          email: typeof parsed.email === 'string' ? parsed.email : '',
+          name: typeof parsed.name === 'string' ? parsed.name : '',
+          type: parsed.type === 'admin' ? 'admin' : 'member'
+        };
+      }catch(err){
+        return null;
+      }
+    }
 
     function collectCurrencyCodes(snapshot){
       const codes = new Set();
@@ -20774,6 +20817,7 @@ document.addEventListener('pointerdown', (e) => {
       const fields = getFieldsForSelection(categoryName, subcategoryName);
       fieldIdCounter = 0;
       formFields.innerHTML = '';
+      currentCreateFields = [];
       if(fields.length === 0){
         const placeholder = document.createElement('p');
         placeholder.className = 'member-create-placeholder';
@@ -20783,7 +20827,10 @@ document.addEventListener('pointerdown', (e) => {
         memberSnapshotErrorMessage = '';
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
-          if(fieldEl) formFields.appendChild(fieldEl);
+          if(fieldEl){
+            formFields.appendChild(fieldEl);
+            currentCreateFields.push({ field, element: fieldEl });
+          }
         });
       }
       if(emptyState) emptyState.hidden = true;
@@ -20791,6 +20838,339 @@ document.addEventListener('pointerdown', (e) => {
       if(checkoutContainer) checkoutContainer.hidden = false;
       if(postButton) postButton.disabled = false;
       updatePaypalContainer(false);
+    }
+
+    async function handleMemberCreatePost(event){
+      if(event && typeof event.preventDefault === 'function'){
+        event.preventDefault();
+      }
+      if(isSubmittingCreatePost){
+        return;
+      }
+      isSubmittingCreatePost = true;
+      const restoreButtonState = ()=>{
+        if(postButton){
+          delete postButton.dataset.submitting;
+          postButton.disabled = false;
+        }
+      };
+      if(postButton){
+        postButton.dataset.submitting = 'true';
+        postButton.disabled = true;
+      }
+
+      const focusElement = el => {
+        if(el && typeof el.focus === 'function'){
+          if(typeof requestAnimationFrame === 'function'){
+            requestAnimationFrame(()=> el.focus());
+          } else {
+            el.focus();
+          }
+        }
+      };
+
+      const categoryName = categorySelect ? categorySelect.value.trim() : '';
+      const subcategoryName = subcategorySelect ? subcategorySelect.value.trim() : '';
+      if(!categoryName || !subcategoryName){
+        showCreateStatus('Select a category and subcategory before posting.', { error: true });
+        if(!categoryName && categorySelect){
+          focusElement(categorySelect);
+        } else if(subcategorySelect){
+          focusElement(subcategorySelect);
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName) || null;
+      const categoryId = category && Object.prototype.hasOwnProperty.call(category, 'id') ? category.id : null;
+      const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subcategoryName)
+        ? category.subIds[subcategoryName]
+        : null;
+
+      const listingCurrencyValue = listingCurrency ? listingCurrency.value.trim() : '';
+      const listingPriceRaw = listingPrice ? formatPriceValue(listingPrice.value) : '';
+      if(listingPrice){
+        listingPrice.value = listingPriceRaw;
+      }
+      if(listingPriceRaw && !listingCurrencyValue){
+        showCreateStatus('Choose a currency for the listing price.', { error: true });
+        if(listingCurrency){
+          focusElement(listingCurrency);
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+      if(listingCurrencyValue && !listingPriceRaw){
+        showCreateStatus('Enter a listing price amount.', { error: true });
+        if(listingPrice){
+          focusElement(listingPrice);
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      let postTitle = '';
+      const fieldPayload = [];
+      let invalid = null;
+
+      for(const entry of currentCreateFields){
+        if(!entry || typeof entry !== 'object'){
+          continue;
+        }
+        const { field, element } = entry;
+        if(!field || !element){
+          continue;
+        }
+        const type = typeof field.type === 'string' ? field.type : 'text-box';
+        const label = field.name && field.name.trim() ? field.name.trim() : 'This field';
+        let value;
+
+        const findFirstFocusable = (selectorList)=>{
+          if(!element) return null;
+          if(Array.isArray(selectorList)){
+            for(const selector of selectorList){
+              const candidate = element.querySelector(selector);
+              if(candidate) return candidate;
+            }
+            return null;
+          }
+          return element.querySelector('input, select, textarea');
+        };
+
+        if(type === 'radio-toggle'){
+          const checked = element.querySelector('input[type="radio"]:checked');
+          value = checked ? checked.value : '';
+          if(field.required && !value){
+            invalid = {
+              message: `Select an option for ${label}.`,
+              focus: ()=> focusElement(findFirstFocusable(['input[type="radio"]']))
+            };
+            break;
+          }
+        } else if(type === 'dropdown'){
+          const select = element.querySelector('select');
+          value = select ? select.value : '';
+          if(field.required && (!value || !value.trim())){
+            invalid = {
+              message: `Choose an option for ${label}.`,
+              focus: ()=> focusElement(select)
+            };
+            break;
+          }
+        } else if(type === 'images'){
+          const input = element.querySelector('input[type="file"]');
+          const files = input && input.files ? Array.from(input.files) : [];
+          value = files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }));
+          if(field.required && value.length === 0){
+            invalid = {
+              message: `Add at least one file for ${label}.`,
+              focus: ()=> focusElement(input)
+            };
+            break;
+          }
+        } else if(type === 'version-price'){
+          const options = Array.isArray(field.options) ? field.options : [];
+          value = options.map(opt => ({
+            version: typeof opt.version === 'string' ? opt.version.trim() : '',
+            currency: typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '',
+            price: formatPriceValue(opt.price || '')
+          })).filter(opt => opt.version || opt.currency || opt.price);
+          if(field.required){
+            const hasComplete = value.some(opt => opt.currency && opt.price);
+            if(!hasComplete){
+              invalid = {
+                message: `Provide pricing details for ${label}.`,
+                focus: ()=> focusElement(findFirstFocusable(['.version-price-option select','.version-price-option input']))
+              };
+              break;
+            }
+          }
+        } else if(type === 'venue-session-version-tier-price'){
+          const venues = Array.isArray(field.options) ? field.options : [];
+          value = venues.map(cloneVenueSessionVenueFromWindow);
+          if(field.required){
+            const hasTierPrice = value.some(venue => Array.isArray(venue.sessions) && venue.sessions.some(session => Array.isArray(session.times) && session.times.some(time => Array.isArray(time.versions) && time.versions.some(version => Array.isArray(version.tiers) && version.tiers.some(tier => {
+              const price = typeof tier.price === 'string' ? tier.price.trim() : '';
+              const currency = typeof tier.currency === 'string' ? tier.currency.trim() : '';
+              return price && currency;
+            })))));
+            if(!hasTierPrice){
+              invalid = {
+                message: `Add at least one price tier for ${label}.`,
+                focus: ()=> focusElement(findFirstFocusable(['.tier-row select','.tier-row input']))
+              };
+              break;
+            }
+          }
+        } else if(type === 'description' || type === 'text-area'){
+          const textarea = element.querySelector('textarea');
+          value = textarea ? textarea.value : '';
+          if(field.required && (!value || !value.trim())){
+            invalid = {
+              message: `Enter a value for ${label}.`,
+              focus: ()=> focusElement(textarea)
+            };
+            break;
+          }
+        } else {
+          const input = element.querySelector('input, textarea');
+          value = input ? input.value : '';
+          if(field.required && (!value || !String(value).trim())){
+            invalid = {
+              message: `Enter a value for ${label}.`,
+              focus: ()=> focusElement(input)
+            };
+            break;
+          }
+        }
+
+        if(typeof value === 'string'){
+          value = value.trim();
+        }
+        if(type === 'title' && typeof value === 'string' && value && !postTitle){
+          postTitle = value;
+        } else if(!postTitle && typeof value === 'string' && value && field.name && /title/i.test(field.name)){
+          postTitle = value;
+        }
+        fieldPayload.push({
+          name: field.name || '',
+          type,
+          required: !!field.required,
+          value
+        });
+      }
+
+      if(invalid){
+        showCreateStatus(invalid.message, { error: true });
+        if(invalid.focus){
+          invalid.focus();
+        }
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      if(!postTitle){
+        const fallback = fieldPayload.find(item => typeof item.value === 'string' && item.value);
+        if(fallback && typeof fallback.value === 'string'){
+          postTitle = fallback.value;
+        }
+      }
+      if(!postTitle){
+        showCreateStatus('Enter a title before posting your listing.', { error: true });
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      const currentMember = loadCurrentMember();
+      const payload = {
+        category_id: categoryId,
+        category_name: categoryName,
+        subcategory_id: subcategoryId,
+        subcategory_name: subcategoryName,
+        title: postTitle,
+        listing: {
+          currency: listingCurrencyValue,
+          price: listingPriceRaw
+        },
+        fields: fieldPayload,
+        member: currentMember
+      };
+      if(currentMember){
+        payload.member_id = typeof currentMember.id === 'number' ? currentMember.id : 0;
+        payload.member_name = currentMember.name || currentMember.username || currentMember.email || '';
+        payload.member_email = currentMember.email || '';
+        payload.member_username = currentMember.username || '';
+        payload.member_type = currentMember.type || 'member';
+      }
+
+      let response;
+      try{
+        response = await fetch('/gateway.php?action=add-post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }catch(err){
+        console.error('Failed to submit member post', err);
+        showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      let responseText = '';
+      try{
+        responseText = await response.text();
+      }catch(err){
+        console.error('Failed to read member post response', err);
+        showCreateStatus('Unable to confirm your listing submission.', { error: true });
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      let responseData = null;
+      if(responseText){
+        try{
+          responseData = JSON.parse(responseText);
+        }catch(err){
+          responseData = null;
+        }
+      }
+
+      if(!response.ok || (responseData && responseData.success === false)){
+        let errorMessage = 'Unable to post your listing.';
+        if(responseData && typeof responseData === 'object'){
+          const candidate = responseData.error || responseData.message;
+          if(typeof candidate === 'string' && candidate.trim()){
+            errorMessage = candidate.trim();
+          }
+        } else if(responseText && responseText.trim()){
+          errorMessage = responseText.trim();
+        }
+        showCreateStatus(errorMessage, { error: true });
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
+      }
+
+      const successMessage = 'Your listing has been posted!';
+      showCreateStatus(successMessage);
+      if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
+        window.memberPanelChangeManager.markSaved();
+      }
+
+      if(categorySelect){
+        categorySelect.value = '';
+      }
+      if(subcategorySelect){
+        subcategorySelect.dataset.lastSelected = '';
+      }
+      populateSubcategoryOptions(false);
+      if(listingCurrency){
+        listingCurrency.value = '';
+      }
+      if(listingPrice){
+        listingPrice.value = '';
+      }
+      currentCreateFields = [];
+      renderEmptyState();
+
+      if(postButton){
+        delete postButton.dataset.submitting;
+      }
+      isSubmittingCreatePost = false;
     }
 
     function populateSubcategoryOptions(preserveValue){
@@ -20876,6 +21256,51 @@ document.addEventListener('pointerdown', (e) => {
     if(paypalButton){
       paypalButton.addEventListener('click', ()=>{
         updatePaypalContainer(true);
+      });
+    }
+    if(memberForm){
+      memberForm.addEventListener('submit', event => {
+        let submitter = event.submitter || null;
+        if(!submitter){
+          const active = document.activeElement;
+          if(active && memberForm.contains(active) && active.type === 'submit' && (active.tagName === 'BUTTON' || active.tagName === 'INPUT')){
+            submitter = active;
+          }
+        }
+        const isCreateSubmit = submitter
+          ? submitter.id === 'memberCreatePostBtn'
+          : (!!memberCreateSection && !memberCreateSection.hidden);
+        if(!isCreateSubmit){
+          return;
+        }
+        if(isSubmittingCreatePost){
+          if(event && typeof event.preventDefault === 'function'){
+            event.preventDefault();
+          }
+          return;
+        }
+        Promise.resolve(handleMemberCreatePost(event)).catch(err => {
+          console.error('Member create submission failed', err);
+          showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+          isSubmittingCreatePost = false;
+          if(postButton){
+            delete postButton.dataset.submitting;
+            postButton.disabled = false;
+          }
+        });
+      });
+    }
+    if(postButton){
+      postButton.addEventListener('click', event => {
+        Promise.resolve(handleMemberCreatePost(event)).catch(err => {
+          console.error('Member create submission failed', err);
+          showCreateStatus('Unable to post your listing. Please try again.', { error: true });
+          isSubmittingCreatePost = false;
+          if(postButton){
+            delete postButton.dataset.submitting;
+            postButton.disabled = false;
+          }
+        });
       });
     }
     if(adminPaypalClientId){
