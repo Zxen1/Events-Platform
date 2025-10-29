@@ -49,5 +49,10 @@ if (!file_exists($target)) {
   exit;
 }
 
+if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
+  define('FUNMAP_GATEWAY_ACTIVE', true);
+}
+$GLOBALS['FUNMAP_GATEWAY_ACTION'] = $action;
+
 require_once $target;
 ?>
