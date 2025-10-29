@@ -6125,6 +6125,16 @@ html, body { cursor: auto !important; }
             #tab-forms .address_line-geocoder-container .mapboxgl-ctrl-geocoder .suggestions{
               z-index:var(--forms-layer-popover);
             }
+            #tab-forms .form-preview-field--location .location-field-wrapper{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #tab-forms .location-field-coordinates{
+              display:grid;
+              grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+              gap:8px;
+            }
             #tab-forms .session-list{
               display:flex;
               flex-direction:column;
@@ -6996,6 +7006,16 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:6px;
               align-items:flex-start;
+            }
+            #memberPanel .member-create-fields .form-preview-field--location .location-field-wrapper{
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            }
+            #memberPanel .member-create-fields .location-field-coordinates{
+              display:grid;
+              grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+              gap:12px;
             }
             #memberPanel .member-create-fields .form-preview-radio-option{
               display:flex;

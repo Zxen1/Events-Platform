@@ -3603,6 +3603,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       { value: 'radio-toggle', label: 'Radio Toggle' },
       { value: 'email', label: 'Email' },
       { value: 'phone', label: 'Phone' },
+      { value: 'location', label: 'Location' },
       { value: 'website-url', label: 'Website (URL)' },
       { value: 'tickets-url', label: 'Tickets (URL)' },
       { value: 'images', label: 'Images' },
@@ -8542,6 +8543,18 @@ function makePosts(){
               }
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
+            if(safeField.type === 'location'){
+              if(!safeField.placeholder || !safeField.placeholder.trim()){
+                safeField.placeholder = 'Search for a location';
+              }
+              const loc = safeField.location && typeof safeField.location === 'object' ? safeField.location : {};
+              const address = typeof loc.address === 'string' ? loc.address : '';
+              const latitude = typeof loc.latitude === 'string' ? loc.latitude : '';
+              const longitude = typeof loc.longitude === 'string' ? loc.longitude : '';
+              safeField.location = { address, latitude, longitude };
+            } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
+              delete safeField.location;
+            }
             const requiresByDefault = safeField.type === 'title'
               || safeField.type === 'description'
               || safeField.type === 'images';
@@ -11738,6 +11751,213 @@ function makePosts(){
                 previewGrid.id = previewId;
                 imageWrapper.append(fileInput, hint, message, previewGrid);
                 control = imageWrapper;
+              } else if(previewField.type === 'location'){
+                wrapper.classList.add('form-preview-field--location');
+                const ensureLocationState = ()=>{
+                  if(!previewField.location || typeof previewField.location !== 'object'){
+                    previewField.location = { address: '', latitude: '', longitude: '' };
+                  } else {
+                    if(typeof previewField.location.address !== 'string') previewField.location.address = '';
+                    if(typeof previewField.location.latitude !== 'string') previewField.location.latitude = '';
+                    if(typeof previewField.location.longitude !== 'string') previewField.location.longitude = '';
+                  }
+                  return previewField.location;
+                };
+                const locationState = ensureLocationState();
+                const locationWrapper = document.createElement('div');
+                locationWrapper.className = 'location-field-wrapper';
+                locationWrapper.setAttribute('role', 'group');
+                const addressRow = document.createElement('div');
+                addressRow.className = 'venue-line address_line-line';
+                const geocoderContainer = document.createElement('div');
+                geocoderContainer.className = 'address_line-geocoder-container';
+                const addressInputId = `${baseId}-location-address`;
+                geocoderContainer.id = `${baseId}-location-geocoder`;
+                addressRow.appendChild(geocoderContainer);
+                locationWrapper.appendChild(addressRow);
+                const coordinatesRow = document.createElement('div');
+                coordinatesRow.className = 'location-field-coordinates';
+                const latitudeInput = document.createElement('input');
+                latitudeInput.type = 'text';
+                latitudeInput.placeholder = 'Latitude';
+                latitudeInput.value = locationState.latitude || '';
+                latitudeInput.dataset.locationLatitude = 'true';
+                latitudeInput.inputMode = 'decimal';
+                latitudeInput.addEventListener('input', ()=>{
+                  locationState.latitude = latitudeInput.value.trim();
+                  notifyFormbuilderChange();
+                });
+                const longitudeInput = document.createElement('input');
+                longitudeInput.type = 'text';
+                longitudeInput.placeholder = 'Longitude';
+                longitudeInput.value = locationState.longitude || '';
+                longitudeInput.dataset.locationLongitude = 'true';
+                longitudeInput.inputMode = 'decimal';
+                longitudeInput.addEventListener('input', ()=>{
+                  locationState.longitude = longitudeInput.value.trim();
+                  notifyFormbuilderChange();
+                });
+                coordinatesRow.append(latitudeInput, longitudeInput);
+                locationWrapper.appendChild(coordinatesRow);
+                const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
+                  ? previewField.placeholder
+                  : 'Search for a location';
+                const syncCoordinateInputs = ()=>{
+                  latitudeInput.value = locationState.latitude || '';
+                  longitudeInput.value = locationState.longitude || '';
+                };
+                const formatCoord = value => {
+                  const num = Number(value);
+                  return Number.isFinite(num) ? num.toFixed(6) : '';
+                };
+                const createFallbackAddressInput = ()=>{
+                  geocoderContainer.innerHTML = '';
+                  geocoderContainer.classList.remove('is-geocoder-active');
+                  const fallback = document.createElement('input');
+                  fallback.type = 'text';
+                  fallback.id = addressInputId;
+                  fallback.className = 'address_line-fallback';
+                  fallback.placeholder = placeholderValue;
+                  fallback.setAttribute('aria-label', placeholderValue);
+                  fallback.dataset.locationAddress = 'true';
+                  fallback.value = locationState.address || '';
+                  if(previewField.required) fallback.required = true;
+                  fallback.addEventListener('input', ()=>{
+                    locationState.address = fallback.value;
+                    notifyFormbuilderChange();
+                  });
+                  geocoderContainer.appendChild(fallback);
+                  return fallback;
+                };
+                const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+                let addressInput = null;
+                if(mapboxReady){
+                  const geocoderOptions = {
+                    accessToken: window.mapboxgl.accessToken,
+                    mapboxgl: window.mapboxgl,
+                    marker: false,
+                    placeholder: placeholderValue,
+                    geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+                    types: 'address,poi',
+                    reverseGeocode: true,
+                    localGeocoder: localVenueGeocoder,
+                    externalGeocoder: externalMapboxVenueGeocoder,
+                    filter: majorVenueFilter,
+                    limit: 7,
+                    language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+                  };
+                  const geocoder = new MapboxGeocoder(geocoderOptions);
+                  const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+                    ? window.requestAnimationFrame.bind(window)
+                    : (cb)=> setTimeout(cb, 16);
+                  let attempts = 0;
+                  const maxAttempts = 20;
+                  const attachGeocoder = ()=>{
+                    if(!geocoderContainer.isConnected){
+                      attempts += 1;
+                      if(attempts > maxAttempts){
+                        return createFallbackAddressInput();
+                      }
+                      schedule(attachGeocoder);
+                      return null;
+                    }
+                    try{
+                      geocoder.addTo(geocoderContainer);
+                    }catch(err){
+                      return createFallbackAddressInput();
+                    }
+                    const setGeocoderActive = isActive => {
+                      const active = !!isActive;
+                      geocoderContainer.classList.toggle('is-geocoder-active', active);
+                      const subMenu = geocoderContainer.closest('.subcategory-form-menu');
+                      if(subMenu){
+                        subMenu.classList.toggle('has-floating-overlay', active);
+                      }
+                      const categoryMenu = subMenu
+                        ? subMenu.closest('.category-form-menu')
+                        : geocoderContainer.closest('.category-form-menu');
+                      if(categoryMenu){
+                        categoryMenu.classList.toggle('has-floating-overlay', active);
+                      }
+                    };
+                    setGeocoderActive(false);
+                    const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+                    if(geocoderRoot){
+                      const handleFocusIn = ()=> setGeocoderActive(true);
+                      const handleFocusOut = event => {
+                        const nextTarget = event && event.relatedTarget;
+                        if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                          setGeocoderActive(false);
+                        }
+                      };
+                      const handlePointerDown = ()=> setGeocoderActive(true);
+                      geocoderRoot.addEventListener('focusin', handleFocusIn);
+                      geocoderRoot.addEventListener('focusout', handleFocusOut);
+                      geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+                    }
+                    const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+                    if(!geocoderInput){
+                      return createFallbackAddressInput();
+                    }
+                    geocoderInput.placeholder = placeholderValue;
+                    geocoderInput.setAttribute('aria-label', placeholderValue);
+                    geocoderInput.id = addressInputId;
+                    geocoderInput.dataset.locationAddress = 'true';
+                    geocoderInput.value = locationState.address || '';
+                    if(previewField.required) geocoderInput.required = true;
+                    geocoderInput.addEventListener('blur', ()=>{
+                      const nextValue = geocoderInput.value || '';
+                      if(locationState.address !== nextValue){
+                        locationState.address = nextValue;
+                        notifyFormbuilderChange();
+                      }
+                    });
+                    geocoder.on('results', ()=> setGeocoderActive(true));
+                    geocoder.on('result', event => {
+                      const result = event && event.result;
+                      if(result){
+                        const clone = cloneGeocoderFeature(result);
+                        const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                        if(placeName){
+                          locationState.address = placeName;
+                          geocoderInput.value = placeName;
+                        } else {
+                          locationState.address = geocoderInput.value || '';
+                        }
+                        const center = getMapboxVenueFeatureCenter(clone);
+                        if(center && center.length >= 2){
+                          const [lng, lat] = center;
+                          locationState.longitude = formatCoord(lng);
+                          locationState.latitude = formatCoord(lat);
+                        }
+                        syncCoordinateInputs();
+                        notifyFormbuilderChange();
+                      }
+                      setGeocoderActive(false);
+                    });
+                    geocoder.on('clear', ()=>{
+                      locationState.address = '';
+                      locationState.latitude = '';
+                      locationState.longitude = '';
+                      geocoderInput.value = '';
+                      syncCoordinateInputs();
+                      notifyFormbuilderChange();
+                      setGeocoderActive(false);
+                    });
+                    geocoder.on('error', ()=> setGeocoderActive(false));
+                    return geocoderInput;
+                  };
+                  addressInput = attachGeocoder();
+                  if(!addressInput){
+                    addressInput = createFallbackAddressInput();
+                  }
+                } else {
+                  addressInput = createFallbackAddressInput();
+                }
+                if(addressInput){
+                  addressInput.setAttribute('aria-labelledby', labelId);
+                }
+                control = locationWrapper;
               } else {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -12181,6 +12401,22 @@ function makePosts(){
                 dropdownOptionsList.innerHTML = '';
               } else if(showVenueSession){
                 dropdownOptionsList.innerHTML = '';
+              }
+              if(type === 'location'){
+                if(!safeField.placeholder || !safeField.placeholder.trim()){
+                  const defaultPlaceholder = 'Search for a location';
+                  safeField.placeholder = defaultPlaceholder;
+                  if(!fieldPlaceholderInput.value){
+                    fieldPlaceholderInput.value = defaultPlaceholder;
+                  }
+                }
+                if(!safeField.location || typeof safeField.location !== 'object'){
+                  safeField.location = { address: '', latitude: '', longitude: '' };
+                } else {
+                  if(typeof safeField.location.address !== 'string') safeField.location.address = '';
+                  if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
+                  if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
+                }
               }
             };
 
@@ -20135,6 +20371,13 @@ document.addEventListener('pointerdown', (e) => {
         } else if(type === 'venue-session-version-tier-price'){
           const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
           safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
+        } else if(type === 'location'){
+          const loc = field && field.location && typeof field.location === 'object' ? field.location : {};
+          safe.location = {
+            address: typeof loc.address === 'string' ? loc.address : '',
+            latitude: typeof loc.latitude === 'string' ? loc.latitude : '',
+            longitude: typeof loc.longitude === 'string' ? loc.longitude : ''
+          };
         } else {
           safe.options = Array.isArray(field.options)
             ? field.options.map(opt => {
@@ -20783,6 +21026,201 @@ document.addEventListener('pointerdown', (e) => {
         if(field.required) input.required = true;
         urlWrapper.appendChild(input);
         control = urlWrapper;
+      } else if(field.type === 'location'){
+        wrapper.classList.add('form-preview-field--location');
+        const ensureLocationState = ()=>{
+          if(!field.location || typeof field.location !== 'object'){
+            field.location = { address: '', latitude: '', longitude: '' };
+          } else {
+            if(typeof field.location.address !== 'string') field.location.address = '';
+            if(typeof field.location.latitude !== 'string') field.location.latitude = '';
+            if(typeof field.location.longitude !== 'string') field.location.longitude = '';
+          }
+          return field.location;
+        };
+        const locationState = ensureLocationState();
+        const locationWrapper = document.createElement('div');
+        locationWrapper.className = 'location-field-wrapper';
+        locationWrapper.setAttribute('role', 'group');
+        const addressRow = document.createElement('div');
+        addressRow.className = 'venue-line address_line-line';
+        const geocoderContainer = document.createElement('div');
+        geocoderContainer.className = 'address_line-geocoder-container';
+        const geocoderId = `${controlId}-geocoder`;
+        geocoderContainer.id = geocoderId;
+        addressRow.appendChild(geocoderContainer);
+        locationWrapper.appendChild(addressRow);
+        const coordinatesRow = document.createElement('div');
+        coordinatesRow.className = 'location-field-coordinates';
+        const latitudeInput = document.createElement('input');
+        latitudeInput.type = 'text';
+        latitudeInput.placeholder = 'Latitude';
+        latitudeInput.value = locationState.latitude || '';
+        latitudeInput.dataset.locationLatitude = 'true';
+        latitudeInput.inputMode = 'decimal';
+        latitudeInput.addEventListener('input', ()=>{
+          locationState.latitude = latitudeInput.value.trim();
+        });
+        const longitudeInput = document.createElement('input');
+        longitudeInput.type = 'text';
+        longitudeInput.placeholder = 'Longitude';
+        longitudeInput.value = locationState.longitude || '';
+        longitudeInput.dataset.locationLongitude = 'true';
+        longitudeInput.inputMode = 'decimal';
+        longitudeInput.addEventListener('input', ()=>{
+          locationState.longitude = longitudeInput.value.trim();
+        });
+        coordinatesRow.append(latitudeInput, longitudeInput);
+        locationWrapper.appendChild(coordinatesRow);
+        const placeholderValue = placeholder || 'Search for a location';
+        const addressInputId = `${controlId}-address`;
+        const syncCoordinateInputs = ()=>{
+          latitudeInput.value = locationState.latitude || '';
+          longitudeInput.value = locationState.longitude || '';
+        };
+        const formatCoord = value => {
+          const num = Number(value);
+          return Number.isFinite(num) ? num.toFixed(6) : '';
+        };
+        const createFallbackAddressInput = ()=>{
+          geocoderContainer.innerHTML = '';
+          geocoderContainer.classList.remove('is-geocoder-active');
+          const fallback = document.createElement('input');
+          fallback.type = 'text';
+          fallback.id = addressInputId;
+          fallback.className = 'address_line-fallback';
+          fallback.placeholder = placeholderValue;
+          fallback.setAttribute('aria-label', placeholderValue);
+          fallback.dataset.locationAddress = 'true';
+          fallback.value = locationState.address || '';
+          if(field.required) fallback.required = true;
+          fallback.addEventListener('input', ()=>{
+            locationState.address = fallback.value;
+          });
+          geocoderContainer.appendChild(fallback);
+          return fallback;
+        };
+        const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+        let addressInput = null;
+        if(mapboxReady){
+          const geocoderOptions = {
+            accessToken: window.mapboxgl.accessToken,
+            mapboxgl: window.mapboxgl,
+            marker: false,
+            placeholder: placeholderValue,
+            geocodingUrl: MAPBOX_VENUE_ENDPOINT,
+            types: 'address,poi',
+            reverseGeocode: true,
+            localGeocoder: localVenueGeocoder,
+            externalGeocoder: externalMapboxVenueGeocoder,
+            filter: majorVenueFilter,
+            limit: 7,
+            language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : undefined
+          };
+          const geocoder = new MapboxGeocoder(geocoderOptions);
+          const schedule = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+            ? window.requestAnimationFrame.bind(window)
+            : (cb)=> setTimeout(cb, 16);
+          let attempts = 0;
+          const maxAttempts = 20;
+          const attachGeocoder = ()=>{
+            if(!geocoderContainer.isConnected){
+              attempts += 1;
+              if(attempts > maxAttempts){
+                return createFallbackAddressInput();
+              }
+              schedule(attachGeocoder);
+              return null;
+            }
+            try{
+              geocoder.addTo(geocoderContainer);
+            }catch(err){
+              return createFallbackAddressInput();
+            }
+            const setGeocoderActive = isActive => {
+              const active = !!isActive;
+              geocoderContainer.classList.toggle('is-geocoder-active', active);
+            };
+            setGeocoderActive(false);
+            const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
+            if(geocoderRoot){
+              const handleFocusIn = ()=> setGeocoderActive(true);
+              const handleFocusOut = event => {
+                const nextTarget = event && event.relatedTarget;
+                if(!nextTarget || !geocoderRoot.contains(nextTarget)){
+                  setGeocoderActive(false);
+                }
+              };
+              const handlePointerDown = ()=> setGeocoderActive(true);
+              geocoderRoot.addEventListener('focusin', handleFocusIn);
+              geocoderRoot.addEventListener('focusout', handleFocusOut);
+              geocoderRoot.addEventListener('pointerdown', handlePointerDown);
+            }
+            const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+            if(!geocoderInput){
+              return createFallbackAddressInput();
+            }
+            geocoderInput.placeholder = placeholderValue;
+            geocoderInput.setAttribute('aria-label', placeholderValue);
+            geocoderInput.id = addressInputId;
+            geocoderInput.dataset.locationAddress = 'true';
+            geocoderInput.value = locationState.address || '';
+            if(field.required) geocoderInput.required = true;
+            geocoderInput.addEventListener('blur', ()=>{
+              const nextValue = geocoderInput.value || '';
+              if(locationState.address !== nextValue){
+                locationState.address = nextValue;
+              }
+            });
+            geocoder.on('results', ()=> setGeocoderActive(true));
+            geocoder.on('result', event => {
+              const result = event && event.result;
+              if(result){
+                const clone = cloneGeocoderFeature(result);
+                const placeName = typeof clone.place_name === 'string' ? clone.place_name : '';
+                if(placeName){
+                  locationState.address = placeName;
+                  geocoderInput.value = placeName;
+                } else {
+                  locationState.address = geocoderInput.value || '';
+                }
+                const center = getMapboxVenueFeatureCenter(clone);
+                if(center && center.length >= 2){
+                  const [lng, lat] = center;
+                  locationState.longitude = formatCoord(lng);
+                  locationState.latitude = formatCoord(lat);
+                }
+                syncCoordinateInputs();
+              }
+              setGeocoderActive(false);
+            });
+            geocoder.on('clear', ()=>{
+              locationState.address = '';
+              locationState.latitude = '';
+              locationState.longitude = '';
+              geocoderInput.value = '';
+              syncCoordinateInputs();
+              setGeocoderActive(false);
+            });
+            geocoder.on('error', ()=> setGeocoderActive(false));
+            return geocoderInput;
+          };
+          addressInput = attachGeocoder();
+          if(!addressInput){
+            addressInput = createFallbackAddressInput();
+          }
+        } else {
+          addressInput = createFallbackAddressInput();
+        }
+        if(addressInput){
+          addressInput.setAttribute('aria-labelledby', labelId);
+          label.setAttribute('for', addressInputId);
+        }
+        if(field.required){
+          latitudeInput.required = true;
+          longitudeInput.required = true;
+        }
+        control = locationWrapper;
       } else {
         const input = document.createElement('input');
         input.id = controlId;
@@ -21022,6 +21460,31 @@ document.addEventListener('pointerdown', (e) => {
             invalid = {
               message: `Enter a value for ${label}.`,
               focus: ()=> focusElement(textarea)
+            };
+            break;
+          }
+        } else if(type === 'location'){
+          const addressInput = element.querySelector('[data-location-address]');
+          const latitudeInput = element.querySelector('[data-location-latitude]');
+          const longitudeInput = element.querySelector('[data-location-longitude]');
+          const addressValue = addressInput ? addressInput.value : (field.location && field.location.address) || '';
+          const latitudeValue = latitudeInput ? latitudeInput.value : (field.location && field.location.latitude) || '';
+          const longitudeValue = longitudeInput ? longitudeInput.value : (field.location && field.location.longitude) || '';
+          const trimmedLocation = {
+            address: (addressValue || '').trim(),
+            latitude: (latitudeValue || '').trim(),
+            longitude: (longitudeValue || '').trim()
+          };
+          field.location = {
+            address: trimmedLocation.address,
+            latitude: trimmedLocation.latitude,
+            longitude: trimmedLocation.longitude
+          };
+          value = trimmedLocation;
+          if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
+            invalid = {
+              message: `Enter an address and coordinates for ${label}.`,
+              focus: ()=> focusElement(addressInput || latitudeInput || longitudeInput)
             };
             break;
           }
