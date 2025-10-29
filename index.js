@@ -14,13 +14,17 @@ async function verifyUserLogin(username, password) {
       data = JSON.parse(text);
     } catch {
       console.error('verifyUserLogin failed: invalid JSON response', text);
-      return false;
+      return { success: false };
     }
 
-    return data.success === true;
+    if(!data || typeof data !== 'object'){
+      return { success: false };
+    }
+
+    return data;
   } catch (e) {
     console.error('verifyUserLogin failed', e);
-    return false;
+    return { success: false };
   }
 }
 
@@ -22595,16 +22599,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(err){}
   }
 
+  function extractRoleFlags(source){
+    if(!source || typeof source !== 'object') return {};
+    const flags = {};
+    Object.keys(source).forEach(key => {
+      if(typeof source[key] === 'boolean' && (key.startsWith('is') || key.startsWith('can'))){
+        flags[key] = source[key];
+      }
+    });
+    if(Array.isArray(source.roles)){
+      const cleaned = source.roles
+        .map(role => typeof role === 'string' ? role.trim() : '')
+        .filter(Boolean);
+      if(cleaned.length){
+        flags.roles = cleaned;
+      }
+    }
+    if(typeof source.role === 'string'){
+      const trimmedRole = source.role.trim();
+      if(trimmedRole){
+        flags.role = trimmedRole;
+      }
+    }
+    return flags;
+  }
+
   function storeCurrent(user){
     try{
       if(user){
+        const idValue = (()=>{
+          if(typeof user.id === 'number' && Number.isFinite(user.id)) return user.id;
+          if(typeof user.id === 'string'){
+            const trimmed = user.id.trim();
+            if(!trimmed) return null;
+            const numeric = Number(trimmed);
+            return Number.isFinite(numeric) ? numeric : trimmed;
+          }
+          return null;
+        })();
+        const storedType = (()=>{
+          if(user && user.isAdmin) return 'admin';
+          if(typeof user.type === 'string'){
+            const trimmedType = user.type.trim();
+            if(trimmedType){
+              return trimmedType.toLowerCase() === 'admin' ? 'admin' : trimmedType;
+            }
+          }
+          return 'member';
+        })();
         const payload = {
-          type: user.isAdmin ? 'admin' : 'member',
+          type: storedType,
           username: typeof user.username === 'string' ? user.username : '',
           email: typeof user.email === 'string' ? user.email : '',
           name: typeof user.name === 'string' ? user.name : '',
           avatar: typeof user.avatar === 'string' ? user.avatar : ''
         };
+        if(idValue !== null){
+          payload.id = idValue;
+        }
+        const roleData = extractRoleFlags(user);
+        Object.keys(roleData).forEach(key => {
+          payload[key] = roleData[key];
+        });
+        if(typeof user.emailNormalized === 'string' && user.emailNormalized){
+          payload.emailNormalized = user.emailNormalized;
+        }
         localStorage.setItem(CURRENT_KEY, JSON.stringify(payload));
       } else {
         localStorage.removeItem(CURRENT_KEY);
@@ -22618,39 +22677,61 @@ document.addEventListener('DOMContentLoaded', () => {
       if(!raw) return null;
       const parsed = JSON.parse(raw);
       if(!parsed || typeof parsed !== 'object') return null;
-      const type = parsed.type === 'admin' ? 'admin' : 'member';
+      const rawType = typeof parsed.type === 'string' ? parsed.type.trim() : '';
+      const typeLower = rawType.toLowerCase();
+      const type = typeLower === 'admin' ? 'admin' : (rawType || 'member');
       const username = typeof parsed.username === 'string' ? parsed.username : '';
       const emailRaw = typeof parsed.email === 'string' ? parsed.email : username;
-      const normalized = typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '';
+      const storedNormalizedEmail = typeof parsed.emailNormalized === 'string'
+        ? parsed.emailNormalized.trim().toLowerCase()
+        : '';
+      const normalized = storedNormalizedEmail || (typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '');
+      const storedId = (()=>{
+        if(typeof parsed.id === 'number' && Number.isFinite(parsed.id)) return parsed.id;
+        if(typeof parsed.id === 'string'){
+          const trimmed = parsed.id.trim();
+          if(!trimmed) return null;
+          const numeric = Number(trimmed);
+          return Number.isFinite(numeric) ? numeric : trimmed;
+        }
+        return null;
+      })();
+      const storedRoles = extractRoleFlags(parsed);
       if(type === 'admin'){
         if(window.adminAuthManager){
           window.adminAuthManager.setAuthenticated(true, username || emailRaw || 'admin');
         }
         return {
+          id: storedId,
           name: parsed.name || 'Administrator',
           email: emailRaw,
           emailNormalized: normalized || 'admin',
           username: username || emailRaw || 'admin',
           avatar: parsed.avatar || '',
+          type: 'admin',
+          ...storedRoles,
           isAdmin: true
         };
       }
       if(normalized){
         const existing = users.find(u => u.emailNormalized === normalized);
         if(existing){
-          return { ...existing };
+          return { ...existing, id: storedId, ...storedRoles, type };
         }
       }
       if(!emailRaw){
         return null;
       }
       return {
+        id: storedId,
         name: parsed.name || '',
         email: emailRaw,
         emailNormalized: normalized || emailRaw.toLowerCase(),
         username: username || normalized || emailRaw,
         avatar: parsed.avatar || '',
-        isAdmin: false
+        type,
+        ...storedRoles,
+        isAdmin: !!storedRoles.isAdmin && storedRoles.isAdmin === true
       };
     }catch(err){}
     return null;
@@ -22898,15 +22979,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return;
     }
-    let verified = false;
+    let verification = null;
     try{
-      verified = await verifyUserLogin(usernameRaw, password);
+      verification = await verifyUserLogin(usernameRaw, password);
     }catch(err){
       console.error('Login verification failed', err);
       showStatus('Unable to verify credentials. Please try again.', { error: true });
       return;
     }
-    if(!verified){
+    if(!verification || verification.success !== true){
       showStatus('Incorrect email or password. Try again.', { error: true });
       if(passwordInput){
         passwordInput.focus();
@@ -22914,15 +22995,82 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return;
     }
-    const normalized = usernameRaw.toLowerCase();
+    const payload = verification && verification.user && typeof verification.user === 'object'
+      ? verification.user
+      : {};
+    const payloadEmailRaw = typeof payload.email === 'string' ? payload.email.trim() : '';
+    const email = payloadEmailRaw || usernameRaw;
+    const normalizedEmail = typeof email === 'string' && email ? email.toLowerCase() : '';
+    const payloadUsername = typeof payload.username === 'string' ? payload.username.trim() : '';
+    const username = payloadUsername || email || usernameRaw;
+    const payloadName = typeof payload.name === 'string' ? payload.name.trim() : '';
+    const payloadAvatar = typeof payload.avatar === 'string' ? payload.avatar.trim() : '';
+    const payloadId = (()=>{
+      if(typeof payload.id === 'number' && Number.isFinite(payload.id)) return payload.id;
+      if(typeof payload.id === 'string'){
+        const trimmed = payload.id.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      if(typeof payload.user_id === 'number' && Number.isFinite(payload.user_id)) return payload.user_id;
+      if(typeof payload.user_id === 'string'){
+        const trimmed = payload.user_id.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      if(typeof payload.userId === 'number' && Number.isFinite(payload.userId)) return payload.userId;
+      if(typeof payload.userId === 'string'){
+        const trimmed = payload.userId.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        return Number.isFinite(numeric) ? numeric : trimmed;
+      }
+      return null;
+    })();
+    const roleFlags = extractRoleFlags(payload);
+    const { isAdmin: extractedIsAdmin, roles: extractedRoles, ...otherRoleFlags } = roleFlags;
+    const rolesList = Array.isArray(extractedRoles)
+      ? extractedRoles
+      : (Array.isArray(payload.roles)
+        ? payload.roles
+            .map(role => typeof role === 'string' ? role.trim() : '')
+            .filter(Boolean)
+        : []);
+    const usernameLower = typeof username === 'string' ? username.toLowerCase() : '';
+    let isAdmin = false;
+    if(typeof payload.isAdmin === 'boolean'){
+      isAdmin = payload.isAdmin;
+    } else if(typeof extractedIsAdmin === 'boolean'){
+      isAdmin = extractedIsAdmin;
+    } else if(rolesList.includes('admin')){
+      isAdmin = true;
+    } else if(normalizedEmail === 'admin' || usernameLower === 'admin'){
+      isAdmin = true;
+    }
     currentUser = {
-      name: '',
-      email: usernameRaw,
-      emailNormalized: normalized,
-      username: usernameRaw,
-      avatar: '',
-      isAdmin: normalized === 'admin'
+      id: payloadId,
+      name: payloadName,
+      email,
+      emailNormalized: normalizedEmail || usernameRaw.toLowerCase(),
+      username,
+      avatar: payloadAvatar,
+      type: isAdmin ? 'admin' : (typeof payload.type === 'string' && payload.type.trim() ? payload.type.trim() : 'member'),
+      ...otherRoleFlags,
+      ...(rolesList.length ? { roles: rolesList } : {}),
+      isAdmin
     };
+    if(!currentUser.emailNormalized){
+      if(typeof currentUser.email === 'string' && currentUser.email){
+        currentUser.emailNormalized = currentUser.email.toLowerCase();
+      } else {
+        currentUser.emailNormalized = usernameLower;
+      }
+    }
+    if(!currentUser.username){
+      currentUser.username = currentUser.email || usernameRaw;
+    }
     storeCurrent(currentUser);
     render();
     const displayName = currentUser.name || currentUser.email || currentUser.username;
