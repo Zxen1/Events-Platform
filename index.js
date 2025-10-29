@@ -10375,15 +10375,6 @@ function makePosts(){
                       schedule(attachGeocoder);
                       return;
                     }
-                    const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
-                    if(existingFallback){
-                      if(existingFallback.parentNode === geocoderContainer){
-                        geocoderContainer.removeChild(existingFallback);
-                      }
-                      if(geocoderInputRef === existingFallback){
-                        geocoderInputRef = null;
-                      }
-                    }
                     try {
                       geocoder.addTo(geocoderContainer);
                     } catch(err){
@@ -11784,17 +11775,40 @@ function makePosts(){
                 geocoderContainer.id = `${baseId}-location-geocoder`;
                 addressRow.appendChild(geocoderContainer);
                 locationWrapper.appendChild(addressRow);
+                const coordinatesRow = document.createElement('div');
+                coordinatesRow.className = 'location-field-coordinates';
+                const latitudeInput = document.createElement('input');
+                latitudeInput.type = 'text';
+                latitudeInput.placeholder = 'Latitude';
+                latitudeInput.value = locationState.latitude || '';
+                latitudeInput.dataset.locationLatitude = 'true';
+                latitudeInput.inputMode = 'decimal';
+                latitudeInput.addEventListener('input', ()=>{
+                  locationState.latitude = latitudeInput.value.trim();
+                  notifyFormbuilderChange();
+                });
+                const longitudeInput = document.createElement('input');
+                longitudeInput.type = 'text';
+                longitudeInput.placeholder = 'Longitude';
+                longitudeInput.value = locationState.longitude || '';
+                longitudeInput.dataset.locationLongitude = 'true';
+                longitudeInput.inputMode = 'decimal';
+                longitudeInput.addEventListener('input', ()=>{
+                  locationState.longitude = longitudeInput.value.trim();
+                  notifyFormbuilderChange();
+                });
+                coordinatesRow.append(latitudeInput, longitudeInput);
+                locationWrapper.appendChild(coordinatesRow);
                 const placeholderValue = (previewField.placeholder && previewField.placeholder.trim())
                   ? previewField.placeholder
                   : 'Search for a location';
+                const syncCoordinateInputs = ()=>{
+                  latitudeInput.value = locationState.latitude || '';
+                  longitudeInput.value = locationState.longitude || '';
+                };
                 const formatCoord = value => {
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
-                };
-                let addressInput = null;
-                const syncAddressInputLabel = input => {
-                  if(!input) return;
-                  input.setAttribute('aria-labelledby', labelId);
                 };
                 const createFallbackAddressInput = ()=>{
                   geocoderContainer.innerHTML = '';
@@ -11813,11 +11827,10 @@ function makePosts(){
                     notifyFormbuilderChange();
                   });
                   geocoderContainer.appendChild(fallback);
-                  addressInput = fallback;
-                  syncAddressInputLabel(addressInput);
                   return fallback;
                 };
                 const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+                let addressInput = null;
                 if(mapboxReady){
                   const geocoderOptions = {
                     accessToken: window.mapboxgl.accessToken,
@@ -11847,15 +11860,6 @@ function makePosts(){
                       }
                       schedule(attachGeocoder);
                       return null;
-                    }
-                    const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
-                    if(existingFallback){
-                      if(existingFallback.parentNode === geocoderContainer){
-                        geocoderContainer.removeChild(existingFallback);
-                      }
-                      if(addressInput === existingFallback){
-                        addressInput = null;
-                      }
                     }
                     try{
                       geocoder.addTo(geocoderContainer);
@@ -11908,8 +11912,6 @@ function makePosts(){
                         notifyFormbuilderChange();
                       }
                     });
-                    addressInput = geocoderInput;
-                    syncAddressInputLabel(addressInput);
                     geocoder.on('results', ()=> setGeocoderActive(true));
                     geocoder.on('result', event => {
                       const result = event && event.result;
@@ -11928,6 +11930,7 @@ function makePosts(){
                           locationState.longitude = formatCoord(lng);
                           locationState.latitude = formatCoord(lat);
                         }
+                        syncCoordinateInputs();
                         notifyFormbuilderChange();
                       }
                       setGeocoderActive(false);
@@ -11937,26 +11940,23 @@ function makePosts(){
                       locationState.latitude = '';
                       locationState.longitude = '';
                       geocoderInput.value = '';
+                      syncCoordinateInputs();
                       notifyFormbuilderChange();
                       setGeocoderActive(false);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
                     return geocoderInput;
                   };
-                  const initialResult = attachGeocoder();
-                  if(initialResult instanceof HTMLElement){
-                    addressInput = initialResult;
-                  } else if(!addressInput){
-                    const fallbackNode = geocoderContainer.querySelector('.address_line-fallback');
-                    if(fallbackNode){
-                      addressInput = fallbackNode;
-                      syncAddressInputLabel(addressInput);
-                    }
+                  addressInput = attachGeocoder();
+                  if(!addressInput){
+                    addressInput = createFallbackAddressInput();
                   }
                 } else {
                   addressInput = createFallbackAddressInput();
                 }
-                syncAddressInputLabel(addressInput);
+                if(addressInput){
+                  addressInput.setAttribute('aria-labelledby', labelId);
+                }
                 control = locationWrapper;
               } else {
                 const input = document.createElement('input');
@@ -21050,17 +21050,37 @@ document.addEventListener('pointerdown', (e) => {
         geocoderContainer.id = geocoderId;
         addressRow.appendChild(geocoderContainer);
         locationWrapper.appendChild(addressRow);
+        const coordinatesRow = document.createElement('div');
+        coordinatesRow.className = 'location-field-coordinates';
+        const latitudeInput = document.createElement('input');
+        latitudeInput.type = 'text';
+        latitudeInput.placeholder = 'Latitude';
+        latitudeInput.value = locationState.latitude || '';
+        latitudeInput.dataset.locationLatitude = 'true';
+        latitudeInput.inputMode = 'decimal';
+        latitudeInput.addEventListener('input', ()=>{
+          locationState.latitude = latitudeInput.value.trim();
+        });
+        const longitudeInput = document.createElement('input');
+        longitudeInput.type = 'text';
+        longitudeInput.placeholder = 'Longitude';
+        longitudeInput.value = locationState.longitude || '';
+        longitudeInput.dataset.locationLongitude = 'true';
+        longitudeInput.inputMode = 'decimal';
+        longitudeInput.addEventListener('input', ()=>{
+          locationState.longitude = longitudeInput.value.trim();
+        });
+        coordinatesRow.append(latitudeInput, longitudeInput);
+        locationWrapper.appendChild(coordinatesRow);
         const placeholderValue = placeholder || 'Search for a location';
         const addressInputId = `${controlId}-address`;
+        const syncCoordinateInputs = ()=>{
+          latitudeInput.value = locationState.latitude || '';
+          longitudeInput.value = locationState.longitude || '';
+        };
         const formatCoord = value => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
-        };
-        let addressInput = null;
-        const syncAddressInputLabel = input => {
-          if(!input) return;
-          input.setAttribute('aria-labelledby', labelId);
-          label.setAttribute('for', addressInputId);
         };
         const createFallbackAddressInput = ()=>{
           geocoderContainer.innerHTML = '';
@@ -21078,11 +21098,10 @@ document.addEventListener('pointerdown', (e) => {
             locationState.address = fallback.value;
           });
           geocoderContainer.appendChild(fallback);
-          addressInput = fallback;
-          syncAddressInputLabel(addressInput);
           return fallback;
         };
         const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
+        let addressInput = null;
         if(mapboxReady){
           const geocoderOptions = {
             accessToken: window.mapboxgl.accessToken,
@@ -21112,15 +21131,6 @@ document.addEventListener('pointerdown', (e) => {
               }
               schedule(attachGeocoder);
               return null;
-            }
-            const existingFallback = geocoderContainer.querySelector('.address_line-fallback');
-            if(existingFallback){
-              if(existingFallback.parentNode === geocoderContainer){
-                geocoderContainer.removeChild(existingFallback);
-              }
-              if(addressInput === existingFallback){
-                addressInput = null;
-              }
             }
             try{
               geocoder.addTo(geocoderContainer);
@@ -21162,8 +21172,6 @@ document.addEventListener('pointerdown', (e) => {
                 locationState.address = nextValue;
               }
             });
-            addressInput = geocoderInput;
-            syncAddressInputLabel(addressInput);
             geocoder.on('results', ()=> setGeocoderActive(true));
             geocoder.on('result', event => {
               const result = event && event.result;
@@ -21182,6 +21190,7 @@ document.addEventListener('pointerdown', (e) => {
                   locationState.longitude = formatCoord(lng);
                   locationState.latitude = formatCoord(lat);
                 }
+                syncCoordinateInputs();
               }
               setGeocoderActive(false);
             });
@@ -21190,25 +21199,27 @@ document.addEventListener('pointerdown', (e) => {
               locationState.latitude = '';
               locationState.longitude = '';
               geocoderInput.value = '';
+              syncCoordinateInputs();
               setGeocoderActive(false);
             });
             geocoder.on('error', ()=> setGeocoderActive(false));
             return geocoderInput;
           };
-          const initialResult = attachGeocoder();
-          if(initialResult instanceof HTMLElement){
-            addressInput = initialResult;
-          } else if(!addressInput){
-            const fallbackNode = geocoderContainer.querySelector('.address_line-fallback');
-            if(fallbackNode){
-              addressInput = fallbackNode;
-              syncAddressInputLabel(addressInput);
-            }
+          addressInput = attachGeocoder();
+          if(!addressInput){
+            addressInput = createFallbackAddressInput();
           }
         } else {
           addressInput = createFallbackAddressInput();
         }
-        syncAddressInputLabel(addressInput);
+        if(addressInput){
+          addressInput.setAttribute('aria-labelledby', labelId);
+          label.setAttribute('for', addressInputId);
+        }
+        if(field.required){
+          latitudeInput.required = true;
+          longitudeInput.required = true;
+        }
         control = locationWrapper;
       } else {
         const input = document.createElement('input');
@@ -21454,14 +21465,15 @@ document.addEventListener('pointerdown', (e) => {
           }
         } else if(type === 'location'){
           const addressInput = element.querySelector('[data-location-address]');
-          const currentLocation = field.location && typeof field.location === 'object'
-            ? field.location
-            : { address: '', latitude: '', longitude: '' };
-          const addressValue = addressInput ? addressInput.value : currentLocation.address || '';
+          const latitudeInput = element.querySelector('[data-location-latitude]');
+          const longitudeInput = element.querySelector('[data-location-longitude]');
+          const addressValue = addressInput ? addressInput.value : (field.location && field.location.address) || '';
+          const latitudeValue = latitudeInput ? latitudeInput.value : (field.location && field.location.latitude) || '';
+          const longitudeValue = longitudeInput ? longitudeInput.value : (field.location && field.location.longitude) || '';
           const trimmedLocation = {
             address: (addressValue || '').trim(),
-            latitude: typeof currentLocation.latitude === 'string' ? currentLocation.latitude.trim() : '',
-            longitude: typeof currentLocation.longitude === 'string' ? currentLocation.longitude.trim() : ''
+            latitude: (latitudeValue || '').trim(),
+            longitude: (longitudeValue || '').trim()
           };
           field.location = {
             address: trimmedLocation.address,
@@ -21469,10 +21481,10 @@ document.addEventListener('pointerdown', (e) => {
             longitude: trimmedLocation.longitude
           };
           value = trimmedLocation;
-          if(field.required && !trimmedLocation.address){
+          if(field.required && (!trimmedLocation.address || !trimmedLocation.latitude || !trimmedLocation.longitude)){
             invalid = {
-              message: `Enter an address for ${label}.`,
-              focus: ()=> focusElement(addressInput)
+              message: `Enter an address and coordinates for ${label}.`,
+              focus: ()=> focusElement(addressInput || latitudeInput || longitudeInput)
             };
             break;
           }
