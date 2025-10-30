@@ -20111,6 +20111,252 @@ document.addEventListener('pointerdown', (e) => {
     let createStatusTimer = 0;
     let isSubmittingCreatePost = false;
 
+    function normalizePositiveInteger(value){
+      if(typeof value === 'number' && Number.isFinite(value) && value > 0){
+        return Math.floor(value);
+      }
+      if(typeof value === 'string'){
+        const trimmed = value.trim();
+        if(!trimmed) return null;
+        const numeric = Number(trimmed);
+        if(Number.isFinite(numeric) && numeric > 0){
+          return Math.floor(numeric);
+        }
+      }
+      return null;
+    }
+
+    function getConnectorApiKey(memberCandidate){
+      const extractFromObject = source => {
+        if(!source || typeof source !== 'object') return '';
+        const keys = ['apiKey','api_key','connectorKey','connector_key','key','api'];
+        for(const key of keys){
+          const value = source[key];
+          if(typeof value === 'string'){
+            const trimmed = value.trim();
+            if(trimmed){
+              return trimmed;
+            }
+          }
+        }
+        return '';
+      };
+
+      const direct = extractFromObject(memberCandidate);
+      if(direct){
+        getConnectorApiKey.cached = direct;
+        return direct;
+      }
+
+      if(typeof getConnectorApiKey.cached === 'string'){
+        return getConnectorApiKey.cached;
+      }
+
+      const candidates = [];
+
+      if(typeof window !== 'undefined'){
+        candidates.push(
+          window.FUNMAP_CONNECTOR_API_KEY,
+          window.FUNMAP_API_KEY,
+          window.FUNMAP_CONNECTOR_KEY,
+          window.API_KEY
+        );
+        if(window.funmapConnector && typeof window.funmapConnector === 'object'){
+          const obj = window.funmapConnector;
+          ['apiKey','connectorKey','key'].forEach(prop => {
+            if(typeof obj[prop] === 'string'){
+              candidates.push(obj[prop]);
+            }
+          });
+        }
+        if(window.funmapConfig && typeof window.funmapConfig === 'object'){
+          const obj = window.funmapConfig;
+          ['apiKey','connectorKey','key'].forEach(prop => {
+            if(typeof obj[prop] === 'string'){
+              candidates.push(obj[prop]);
+            }
+          });
+        }
+      }
+
+      if(typeof document !== 'undefined'){
+        const htmlDataset = document.documentElement && document.documentElement.dataset
+          ? document.documentElement.dataset.funmapApiKey
+          : '';
+        const bodyDataset = document.body && document.body.dataset
+          ? document.body.dataset.funmapApiKey
+          : '';
+        candidates.push(htmlDataset, bodyDataset);
+        if(typeof document.querySelector === 'function'){
+          const meta = document.querySelector('meta[name="funmap-api-key"], meta[name="funmap-connector-key"], meta[name="x-api-key"]');
+          if(meta && typeof meta.content === 'string'){
+            candidates.push(meta.content);
+          }
+        }
+      }
+
+      const storageKeys = [
+        'funmap-api-key',
+        'FUNMAP_API_KEY',
+        'funmapConnectorApiKey',
+        'FUNMAP_CONNECTOR_API_KEY',
+        'connector-api-key',
+        'CONNECTOR_API_KEY'
+      ];
+
+      const storageProviders = [
+        () => {
+          try { return typeof localStorage !== 'undefined' ? localStorage : null; }
+          catch(err){ return null; }
+        },
+        () => {
+          try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; }
+          catch(err){ return null; }
+        }
+      ];
+
+      storageProviders.forEach(getter => {
+        const store = getter();
+        if(!store) return;
+        storageKeys.forEach(key => {
+          try {
+            const value = store.getItem(key);
+            if(typeof value === 'string'){
+              candidates.push(value);
+            }
+          } catch(err){}
+        });
+      });
+
+      for(const candidate of candidates){
+        if(typeof candidate === 'string'){
+          const trimmed = candidate.trim();
+          if(trimmed){
+            getConnectorApiKey.cached = trimmed;
+            return trimmed;
+          }
+        }
+      }
+
+      getConnectorApiKey.cached = '';
+      return '';
+    }
+
+    async function uploadMediaForPost(postId, memberId, uploadEntries, memberCandidate){
+      const normalizedPostId = normalizePositiveInteger(postId);
+      const normalizedMemberId = normalizePositiveInteger(memberId);
+      const result = { uploaded: [], errors: [] };
+
+      if(!Array.isArray(uploadEntries) || uploadEntries.length === 0){
+        return result;
+      }
+
+      if(!normalizedPostId){
+        result.errors.push({ message: 'Missing post ID for media uploads.' });
+        return result;
+      }
+
+      const filesWithContext = [];
+      uploadEntries.forEach(entry => {
+        if(!entry || typeof entry !== 'object') return;
+        const files = Array.isArray(entry.files) ? entry.files : [];
+        const label = typeof entry.label === 'string' ? entry.label : '';
+        files.forEach(file => {
+          if(!file) return;
+          const isFileInstance = typeof File !== 'undefined' ? file instanceof File : true;
+          if(isFileInstance || typeof file === 'object'){
+            filesWithContext.push({ file, label });
+          }
+        });
+      });
+
+      if(filesWithContext.length === 0){
+        return result;
+      }
+
+      const apiKey = getConnectorApiKey(memberCandidate);
+      const endpoint = '/gateway.php?action=upload-media';
+      const memberIdToSend = normalizedMemberId !== null ? normalizedMemberId : 0;
+
+      for(let index = 0; index < filesWithContext.length; index += 1){
+        const context = filesWithContext[index];
+        const { file, label } = context;
+        const formData = new FormData();
+        formData.set('post_id', String(normalizedPostId));
+        formData.set('member_id', String(memberIdToSend));
+        const explicitName = file && typeof file.name === 'string' && file.name.trim()
+          ? file.name
+          : `upload-${index + 1}`;
+        try {
+          formData.set('file', file, explicitName);
+        } catch(err){
+          try {
+            formData.set('file', file);
+          } catch(fallbackErr){
+            result.errors.push({ file, label, message: 'Unable to prepare image upload payload.', detail: fallbackErr });
+            continue;
+          }
+        }
+
+        const requestOptions = { method: 'POST', body: formData };
+        if(apiKey){
+          requestOptions.headers = { 'X-API-Key': apiKey };
+        }
+
+        let response;
+        try {
+          response = await fetch(endpoint, requestOptions);
+        } catch(networkError){
+          result.errors.push({ file, label, message: 'Network error during image upload.', detail: networkError });
+          continue;
+        }
+
+        let responseText = '';
+        try {
+          responseText = await response.text();
+        } catch(readError){
+          result.errors.push({ file, label, message: 'Unable to read upload response.', detail: readError });
+          continue;
+        }
+
+        let payload = null;
+        if(responseText){
+          try {
+            payload = JSON.parse(responseText);
+          } catch(parseError){
+            payload = null;
+          }
+        }
+
+        if(!response.ok || !payload || payload.success === false){
+          const fallbackMessage = payload && typeof payload === 'object'
+            ? (typeof payload.error === 'string' && payload.error.trim()
+              ? payload.error.trim()
+              : (typeof payload.message === 'string' && payload.message.trim()
+                ? payload.message.trim()
+                : 'Upload failed.'))
+            : (response.ok ? 'Upload failed.' : `Upload failed (HTTP ${response.status}).`);
+          result.errors.push({
+            file,
+            label,
+            message: fallbackMessage,
+            detail: payload,
+            status: response.status,
+            responseText
+          });
+          continue;
+        }
+
+        result.uploaded.push({ file, label, response: payload });
+      }
+
+      if(result.errors.length && !apiKey){
+        console.warn('Media uploads failed; no API key was available for verification.');
+      }
+
+      return result;
+    }
+
     const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
       ? window.DEFAULT_SUBCATEGORY_FIELDS
       : [
@@ -21327,6 +21573,7 @@ document.addEventListener('pointerdown', (e) => {
 
       let postTitle = '';
       const fieldPayload = [];
+      const imageUploadQueue = [];
       let invalid = null;
 
       for(const entry of currentCreateFields){
@@ -21375,13 +21622,23 @@ document.addEventListener('pointerdown', (e) => {
           }
         } else if(type === 'images'){
           const input = element.querySelector('input[type="file"]');
-          const files = input && input.files ? Array.from(input.files) : [];
+          let files = [];
+          if(input){
+            if(Array.isArray(input._imageFiles)){
+              files = input._imageFiles.slice();
+            } else if(input.files){
+              files = Array.from(input.files);
+            }
+          }
           value = files.map(file => ({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified
+            name: file && typeof file.name === 'string' ? file.name : '',
+            size: file && typeof file.size === 'number' ? file.size : 0,
+            type: file && typeof file.type === 'string' ? file.type : '',
+            lastModified: file && typeof file.lastModified === 'number' ? file.lastModified : 0
           }));
+          if(files.length){
+            imageUploadQueue.push({ files: files.slice(), label });
+          }
           if(field.required && value.length === 0){
             invalid = {
               message: `Add at least one file for ${label}.`,
@@ -21582,8 +21839,51 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
 
+      const postIdentifier = responseData && (Object.prototype.hasOwnProperty.call(responseData, 'insert_id')
+        ? responseData.insert_id
+        : (Object.prototype.hasOwnProperty.call(responseData, 'post_id')
+          ? responseData.post_id
+          : (Object.prototype.hasOwnProperty.call(responseData, 'id') ? responseData.id : null)));
+      const normalizedPostId = normalizePositiveInteger(postIdentifier);
+      const totalUploadCount = imageUploadQueue.reduce((sum, entry) => {
+        if(!entry || typeof entry !== 'object' || !Array.isArray(entry.files)){
+          return sum;
+        }
+        return sum + entry.files.length;
+      }, 0);
+      let uploadOutcome = { uploaded: [], errors: [] };
+      if(totalUploadCount > 0){
+        if(normalizedPostId){
+          const memberIdForUpload = Object.prototype.hasOwnProperty.call(payload, 'member_id')
+            ? payload.member_id
+            : (currentMember && Object.prototype.hasOwnProperty.call(currentMember, 'id') ? currentMember.id : null);
+          try{
+            uploadOutcome = await uploadMediaForPost(normalizedPostId, memberIdForUpload, imageUploadQueue, currentMember);
+          }catch(uploadError){
+            console.error('Failed to upload media for new post', uploadError);
+            uploadOutcome.errors.push({ message: 'Unexpected error during image upload.', detail: uploadError });
+          }
+        } else {
+          uploadOutcome.errors.push({ message: 'Unable to determine post ID for image uploads.' });
+        }
+      }
+
       const successMessage = 'Your listing has been posted!';
-      showCreateStatus(successMessage);
+      let finalMessage = successMessage;
+      const finalOptions = {};
+      if(Array.isArray(uploadOutcome.errors) && uploadOutcome.errors.length){
+        uploadOutcome.errors.forEach(error => {
+          if(error) console.error('Media upload failed', error);
+        });
+        finalMessage = totalUploadCount > 0 && uploadOutcome.errors.length >= totalUploadCount
+          ? 'Your listing was posted, but we could not upload your images. Please try again later.'
+          : 'Your listing was posted, but some images could not be uploaded.';
+        finalOptions.error = true;
+      } else if(Array.isArray(uploadOutcome.uploaded) && uploadOutcome.uploaded.length){
+        finalMessage = 'Your listing and images have been posted!';
+      }
+
+      showCreateStatus(finalMessage, finalOptions);
       if(window.memberPanelChangeManager && typeof window.memberPanelChangeManager.markSaved === 'function'){
         window.memberPanelChangeManager.markSaved();
       }
