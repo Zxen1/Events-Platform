@@ -129,6 +129,8 @@ function fetchCategories(PDO $pdo, array $columns): array
     }
     if (in_array('name', $columns, true)) {
         $selectColumns[] = '`name`';
+    } elseif (in_array('category_name', $columns, true)) {
+        $selectColumns[] = '`category_name` AS `name`';
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -194,7 +196,16 @@ function fetchCategories(PDO $pdo, array $columns): array
 
 function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
 {
-    $select = ['s.`id`', 's.`name`'];
+    $select = ['s.`id`'];
+
+    $nameColumn = null;
+    if (in_array('name', $columns, true)) {
+        $select[] = 's.`name`';
+        $nameColumn = 's.`name`';
+    } elseif (in_array('subcategory_name', $columns, true)) {
+        $select[] = 's.`subcategory_name` AS `name`';
+        $nameColumn = 's.`subcategory_name`';
+    }
 
     $hasCategoryName = in_array('category_name', $columns, true);
     $hasCategoryId = in_array('category_id', $columns, true);
@@ -208,9 +219,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     if ($hasCategoryId) {
         $select[] = 's.`category_id`';
-    }
-    if (!$hasCategoryName && $hasCategoryId) {
-        $select[] = 'c.`name` AS category_name';
     }
     if ($hasSortOrder) {
         $select[] = 's.`sort_order`';
@@ -235,13 +243,14 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($hasSortOrder) {
         $order[] = 's.`sort_order` ASC';
     }
-    $order[] = 's.`name` ASC';
+    if ($nameColumn !== null) {
+        $order[] = $nameColumn . ' ASC';
+    }
 
     $sql = 'SELECT ' . implode(', ', $select) . ' FROM subcategories s';
-    if (!$hasCategoryName && $hasCategoryId) {
-        $sql .= ' JOIN categories c ON c.id = s.category_id';
+    if ($order) {
+        $sql .= ' ORDER BY ' . implode(', ', $order);
     }
-    $sql .= ' ORDER BY ' . implode(', ', $order);
 
     $stmt = $pdo->query($sql);
 
