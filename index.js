@@ -3403,13 +3403,17 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           }
         });
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
+        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
         const subFields = {};
+        const subFieldTypes = {};
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
+          const fieldTypes = Array.isArray(rawSubFieldTypes[sub]) ? rawSubFieldTypes[sub].slice() : [];
+          subFieldTypes[sub] = fieldTypes;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3423,11 +3427,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
+        subFieldTypes: cat.subs.reduce((acc, sub) => {
+          acc[sub] = [];
+          return acc;
+        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
+        }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3435,6 +3446,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[sub])){
+            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -8281,6 +8295,7 @@ function makePosts(){
 
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
+        const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -12608,6 +12623,10 @@ function makePosts(){
                 subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
                 delete subFieldsMap[previousSubName];
               }
+              if(subFieldTypesMap[previousSubName] !== undefined){
+                subFieldTypesMap[datasetValue] = subFieldTypesMap[previousSubName];
+                delete subFieldTypesMap[previousSubName];
+              }
               if(c.subIds && typeof c.subIds === 'object'){
                 if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
                   const preservedId = c.subIds[previousSubName];
@@ -12646,6 +12665,7 @@ function makePosts(){
             }
             subMenu.remove();
             delete subFieldsMap[currentSubName];
+            delete subFieldTypesMap[currentSubName];
             notifyFormbuilderChange();
           });
 
@@ -12714,6 +12734,7 @@ function makePosts(){
           c.subs.unshift(candidate);
           c.subIds[candidate] = null;
           subFieldsMap[candidate] = [];
+          subFieldTypesMap[candidate] = [];
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
@@ -12856,11 +12877,20 @@ function makePosts(){
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
+        const subFieldTypesSource = item && item.subFieldTypes;
+        const subFieldTypes = {};
+        if(subFieldTypesSource && typeof subFieldTypesSource === 'object' && !Array.isArray(subFieldTypesSource)){
+          Object.keys(subFieldTypesSource).forEach(key => {
+            const value = subFieldTypesSource[key];
+            subFieldTypes[key] = Array.isArray(value) ? value.slice() : [];
+          });
+        }
         return {
           id: item && Number.isInteger(item.id) ? item.id : (typeof item.id === 'string' && /^\d+$/.test(item.id) ? parseInt(item.id, 10) : null),
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
+          subFieldTypes,
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -12912,9 +12942,15 @@ function makePosts(){
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
         }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
+        }
         (cat.subs || []).forEach(subName => {
           if(!Array.isArray(cat.subFields[subName])){
             cat.subFields[subName] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[subName])){
+            cat.subFieldTypes[subName] = [];
           }
         });
       });
