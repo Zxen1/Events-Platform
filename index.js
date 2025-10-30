@@ -10397,7 +10397,8 @@ function makePosts(){
                     };
                     setGeocoderActive(false);
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-                    if(geocoderRoot){
+                    if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
+                      geocoderRoot.__formPreviewGeocoderBound = true;
                       const handleFocusIn = ()=> setGeocoderActive(true);
                       const handleFocusOut = event => {
                         const nextTarget = event && event.relatedTarget;
@@ -11796,6 +11797,12 @@ function makePosts(){
                   const num = Number(value);
                   return Number.isFinite(num) ? num.toFixed(6) : '';
                 };
+                const applyAddressLabel = input => {
+                  if(input){
+                    input.setAttribute('aria-labelledby', labelId);
+                  }
+                  return input;
+                };
                 const createFallbackAddressInput = ()=>{
                   geocoderContainer.innerHTML = '';
                   geocoderContainer.classList.remove('is-geocoder-active');
@@ -11813,6 +11820,8 @@ function makePosts(){
                     notifyFormbuilderChange();
                   });
                   geocoderContainer.appendChild(fallback);
+                  addressInput = fallback;
+                  applyAddressLabel(fallback);
                   return fallback;
                 };
                 const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
@@ -11838,19 +11847,35 @@ function makePosts(){
                     : (cb)=> setTimeout(cb, 16);
                   let attempts = 0;
                   const maxAttempts = 20;
+                  let geocoderMounted = false;
+                  let fallbackActivated = false;
                   const attachGeocoder = ()=>{
-                    if(!geocoderContainer.isConnected){
+                    if(fallbackActivated){
+                      return;
+                    }
+                    const scheduleRetry = ()=>{
                       attempts += 1;
                       if(attempts > maxAttempts){
-                        return createFallbackAddressInput();
+                        addressInput = createFallbackAddressInput();
+                        fallbackActivated = true;
+                        return false;
                       }
                       schedule(attachGeocoder);
-                      return null;
+                      return true;
+                    };
+                    if(!geocoderContainer.isConnected){
+                      scheduleRetry();
+                      return;
                     }
-                    try{
-                      geocoder.addTo(geocoderContainer);
-                    }catch(err){
-                      return createFallbackAddressInput();
+                    if(!geocoderMounted){
+                      try{
+                        geocoder.addTo(geocoderContainer);
+                        geocoderMounted = true;
+                      }catch(err){
+                        addressInput = createFallbackAddressInput();
+                        fallbackActivated = true;
+                        return;
+                      }
                     }
                     const setGeocoderActive = isActive => {
                       const active = !!isActive;
@@ -11868,7 +11893,8 @@ function makePosts(){
                     };
                     setGeocoderActive(false);
                     const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-                    if(geocoderRoot){
+                    if(geocoderRoot && !geocoderRoot.__formPreviewGeocoderBound){
+                      geocoderRoot.__formPreviewGeocoderBound = true;
                       const handleFocusIn = ()=> setGeocoderActive(true);
                       const handleFocusOut = event => {
                         const nextTarget = event && event.relatedTarget;
@@ -11881,16 +11907,25 @@ function makePosts(){
                       geocoderRoot.addEventListener('focusout', handleFocusOut);
                       geocoderRoot.addEventListener('pointerdown', handlePointerDown);
                     }
-                    const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+                    const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
                     if(!geocoderInput){
-                      return createFallbackAddressInput();
+                      scheduleRetry();
+                      return;
                     }
+                    if(geocoderInput.__formPreviewLocationBound){
+                      addressInput = geocoderInput;
+                      applyAddressLabel(geocoderInput);
+                      return;
+                    }
+                    geocoderInput.__formPreviewLocationBound = true;
                     geocoderInput.placeholder = placeholderValue;
                     geocoderInput.setAttribute('aria-label', placeholderValue);
                     geocoderInput.id = addressInputId;
                     geocoderInput.dataset.locationAddress = 'true';
                     geocoderInput.value = locationState.address || '';
                     if(previewField.required) geocoderInput.required = true;
+                    addressInput = geocoderInput;
+                    applyAddressLabel(geocoderInput);
                     geocoderInput.addEventListener('blur', ()=>{
                       const nextValue = geocoderInput.value || '';
                       if(locationState.address !== nextValue){
@@ -11933,10 +11968,7 @@ function makePosts(){
                     geocoder.on('error', ()=> setGeocoderActive(false));
                     return geocoderInput;
                   };
-                  addressInput = attachGeocoder();
-                  if(!addressInput){
-                    addressInput = createFallbackAddressInput();
-                  }
+                  attachGeocoder();
                 } else {
                   addressInput = createFallbackAddressInput();
                 }
@@ -21302,6 +21334,12 @@ document.addEventListener('pointerdown', (e) => {
           const num = Number(value);
           return Number.isFinite(num) ? num.toFixed(6) : '';
         };
+        const applyAddressLabel = input => {
+          if(input){
+            input.setAttribute('aria-labelledby', labelId);
+          }
+          return input;
+        };
         const createFallbackAddressInput = ()=>{
           geocoderContainer.innerHTML = '';
           geocoderContainer.classList.remove('is-geocoder-active');
@@ -21318,10 +21356,13 @@ document.addEventListener('pointerdown', (e) => {
             locationState.address = fallback.value;
           });
           geocoderContainer.appendChild(fallback);
+          addressInput = fallback;
+          applyAddressLabel(fallback);
           return fallback;
         };
         const mapboxReady = window.mapboxgl && window.MapboxGeocoder && window.mapboxgl.accessToken;
         let addressInput = null;
+        label.setAttribute('for', addressInputId);
         if(mapboxReady){
           const geocoderOptions = {
             accessToken: window.mapboxgl.accessToken,
@@ -21343,19 +21384,35 @@ document.addEventListener('pointerdown', (e) => {
             : (cb)=> setTimeout(cb, 16);
           let attempts = 0;
           const maxAttempts = 20;
+          let geocoderMounted = false;
+          let fallbackActivated = false;
           const attachGeocoder = ()=>{
-            if(!geocoderContainer.isConnected){
+            if(fallbackActivated){
+              return;
+            }
+            const scheduleRetry = ()=>{
               attempts += 1;
               if(attempts > maxAttempts){
-                return createFallbackAddressInput();
+                createFallbackAddressInput();
+                fallbackActivated = true;
+                return false;
               }
               schedule(attachGeocoder);
-              return null;
+              return true;
+            };
+            if(!geocoderContainer.isConnected){
+              scheduleRetry();
+              return;
             }
-            try{
-              geocoder.addTo(geocoderContainer);
-            }catch(err){
-              return createFallbackAddressInput();
+            if(!geocoderMounted){
+              try{
+                geocoder.addTo(geocoderContainer);
+                geocoderMounted = true;
+              }catch(err){
+                createFallbackAddressInput();
+                fallbackActivated = true;
+                return;
+              }
             }
             const setGeocoderActive = isActive => {
               const active = !!isActive;
@@ -21363,7 +21420,8 @@ document.addEventListener('pointerdown', (e) => {
             };
             setGeocoderActive(false);
             const geocoderRoot = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder');
-            if(geocoderRoot){
+            if(geocoderRoot && !geocoderRoot.__memberCreateGeocoderBound){
+              geocoderRoot.__memberCreateGeocoderBound = true;
               const handleFocusIn = ()=> setGeocoderActive(true);
               const handleFocusOut = event => {
                 const nextTarget = event && event.relatedTarget;
@@ -21376,16 +21434,25 @@ document.addEventListener('pointerdown', (e) => {
               geocoderRoot.addEventListener('focusout', handleFocusOut);
               geocoderRoot.addEventListener('pointerdown', handlePointerDown);
             }
-            const geocoderInput = geocoderContainer.querySelector('input[type="text"]');
+            const geocoderInput = geocoderContainer.querySelector('.mapboxgl-ctrl-geocoder--input');
             if(!geocoderInput){
-              return createFallbackAddressInput();
+              scheduleRetry();
+              return;
             }
+            if(geocoderInput.__memberCreateLocationBound){
+              addressInput = geocoderInput;
+              applyAddressLabel(geocoderInput);
+              return;
+            }
+            geocoderInput.__memberCreateLocationBound = true;
             geocoderInput.placeholder = placeholderValue;
             geocoderInput.setAttribute('aria-label', placeholderValue);
             geocoderInput.id = addressInputId;
             geocoderInput.dataset.locationAddress = 'true';
             geocoderInput.value = locationState.address || '';
             if(field.required) geocoderInput.required = true;
+            addressInput = geocoderInput;
+            applyAddressLabel(geocoderInput);
             geocoderInput.addEventListener('blur', ()=>{
               const nextValue = geocoderInput.value || '';
               if(locationState.address !== nextValue){
@@ -21423,18 +21490,13 @@ document.addEventListener('pointerdown', (e) => {
               setGeocoderActive(false);
             });
             geocoder.on('error', ()=> setGeocoderActive(false));
-            return geocoderInput;
           };
-          addressInput = attachGeocoder();
-          if(!addressInput){
-            addressInput = createFallbackAddressInput();
-          }
+          attachGeocoder();
         } else {
           addressInput = createFallbackAddressInput();
         }
         if(addressInput){
           addressInput.setAttribute('aria-labelledby', labelId);
-          label.setAttribute('for', addressInputId);
         }
         control = locationWrapper;
       } else {
