@@ -492,10 +492,10 @@ try {
             $params = [':id' => $subId];
 
             $subNameColumn = null;
-            if (in_array('name', $subcategoryColumns, true)) {
-                $subNameColumn = 'name';
-            } elseif (in_array('subcategory_name', $subcategoryColumns, true)) {
+            if (in_array('subcategory_name', $subcategoryColumns, true)) {
                 $subNameColumn = 'subcategory_name';
+            } elseif (in_array('name', $subcategoryColumns, true)) {
+                $subNameColumn = 'name';
             }
             if ($subNameColumn !== null) {
                 $updateParts[] = $subNameColumn . ' = :name';
@@ -1151,7 +1151,7 @@ function fetchCategoriesByName(PDO $pdo, array $columns): array
     if (!$hasLegacyName && !$hasCategoryNameColumn) {
         return [];
     }
-    $column = $hasLegacyName ? 'name' : 'category_name';
+    $column = $hasCategoryNameColumn ? 'category_name' : 'name';
     $sql = 'SELECT id, `' . $column . '` AS name FROM categories';
     $stmt = $pdo->query($sql);
     $map = [];
@@ -1174,9 +1174,6 @@ function fetchCategoriesByKey(PDO $pdo, array $columns): array
     }
 
     $selectedColumns = ['id', 'category_key'];
-    if (in_array('name', $columns, true)) {
-        $selectedColumns[] = 'name';
-    }
     if (in_array('category_name', $columns, true)) {
         $selectedColumns[] = 'category_name';
     }
@@ -1232,13 +1229,11 @@ function fetchCategoriesById(PDO $pdo, array $columns): array
 
 function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
 {
-    $hasLegacyName = $columns && in_array('name', $columns, true);
-    $hasSubcategoryName = $columns && in_array('subcategory_name', $columns, true);
-    if (!$hasLegacyName && !$hasSubcategoryName) {
+    if (!$columns || !in_array('subcategory_name', $columns, true)) {
         return [];
     }
 
-    $nameColumn = $hasLegacyName ? 'name' : 'subcategory_name';
+    $nameColumn = 'subcategory_name';
     $hasCategoryName = $columns && in_array('category_name', $columns, true);
     $hasSubKey = $columns && in_array('subcategory_key', $columns, true);
     $hasCategoryKey = $columns && in_array('category_key', $columns, true);

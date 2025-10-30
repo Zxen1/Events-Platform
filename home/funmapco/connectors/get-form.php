@@ -127,9 +127,7 @@ function fetchCategories(PDO $pdo, array $columns): array
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
     }
-    if (in_array('name', $columns, true)) {
-        $selectColumns[] = '`name`';
-    } elseif (in_array('category_name', $columns, true)) {
+    if (in_array('category_name', $columns, true)) {
         $selectColumns[] = '`category_name` AS `name`';
     }
     if ($hasSortOrder) {
@@ -202,12 +200,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if (in_array('subcategory_name', $columns, true)) {
         $select[] = 's.`subcategory_name` AS `name`';
         $nameColumn = 's.`subcategory_name`';
-    } elseif (in_array('name', $columns, true)) {
-        $select[] = 's.`name`';
-        $nameColumn = 's.`name`';
     } else {
         http_response_code(500);
-        throw new RuntimeException('Subcategories table must include either `subcategory_name` or legacy `name`.');
+        throw new RuntimeException('Subcategories table must include `subcategory_name`.');
     }
 
     $hasCategoryName = in_array('category_name', $columns, true);
