@@ -199,12 +199,15 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $select = ['s.`id`'];
 
     $nameColumn = null;
-    if (in_array('name', $columns, true)) {
-        $select[] = 's.`name`';
-        $nameColumn = 's.`name`';
-    } elseif (in_array('subcategory_name', $columns, true)) {
+    if (in_array('subcategory_name', $columns, true)) {
         $select[] = 's.`subcategory_name` AS `name`';
         $nameColumn = 's.`subcategory_name`';
+    } elseif (in_array('name', $columns, true)) {
+        $select[] = 's.`name`';
+        $nameColumn = 's.`name`';
+    } else {
+        http_response_code(500);
+        throw new RuntimeException('Subcategories table must include either `subcategory_name` or legacy `name`.');
     }
 
     $hasCategoryName = in_array('category_name', $columns, true);
