@@ -208,8 +208,14 @@ try {
 
         $categoryUpdateParts = [];
         $categoryParams = [':id' => $categoryId];
-        if (in_array('name', $categoryColumns, true) && $categoryName !== '' && $categoryName !== $originalCategoryName) {
-            $categoryUpdateParts[] = 'name = :category_name';
+        $categoryNameColumn = null;
+        if (in_array('name', $categoryColumns, true)) {
+            $categoryNameColumn = 'name';
+        } elseif (in_array('category_name', $categoryColumns, true)) {
+            $categoryNameColumn = 'category_name';
+        }
+        if ($categoryNameColumn !== null && $categoryName !== '' && $categoryName !== $originalCategoryName) {
+            $categoryUpdateParts[] = $categoryNameColumn . ' = :category_name';
             $categoryParams[':category_name'] = $categoryName;
         }
         if (in_array('icon_path', $categoryColumns, true)) {
@@ -227,6 +233,7 @@ try {
         }
 
         $categoriesById[$categoryId]['name'] = $categoryName;
+        $categoriesById[$categoryId]['category_name'] = $categoryName;
         $categoriesByName[mb_strtolower($categoryName)] = ['id' => $categoryId, 'name' => $categoryName];
 
         $subs = $categoryPayload['subs'] ?? [];
@@ -350,8 +357,14 @@ try {
             $updateParts = [];
             $params = [':id' => $subId];
 
+            $subNameColumn = null;
             if (in_array('name', $subcategoryColumns, true)) {
-                $updateParts[] = 'name = :name';
+                $subNameColumn = 'name';
+            } elseif (in_array('subcategory_name', $subcategoryColumns, true)) {
+                $subNameColumn = 'subcategory_name';
+            }
+            if ($subNameColumn !== null) {
+                $updateParts[] = $subNameColumn . ' = :name';
                 $params[':name'] = $subName;
             }
             if (in_array('category_name', $subcategoryColumns, true)) {
@@ -914,10 +927,13 @@ function fetchTableColumns(PDO $pdo, string $table): array
 
 function fetchCategoriesByName(PDO $pdo, array $columns): array
 {
-    if (!$columns || !in_array('name', $columns, true)) {
+    $hasLegacyName = $columns && in_array('name', $columns, true);
+    $hasCategoryNameColumn = $columns && in_array('category_name', $columns, true);
+    if (!$hasLegacyName && !$hasCategoryNameColumn) {
         return [];
     }
-    $sql = 'SELECT id, name FROM categories';
+    $column = $hasLegacyName ? 'name' : 'category_name';
+    $sql = 'SELECT id, `' . $column . '` AS name FROM categories';
     $stmt = $pdo->query($sql);
     $map = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -943,6 +959,12 @@ function fetchCategoriesById(PDO $pdo, array $columns): array
         if (!isset($row['id'])) {
             continue;
         }
+        if (!isset($row['name']) && isset($row['category_name'])) {
+            $row['name'] = $row['category_name'];
+        }
+        if (!isset($row['category_name']) && isset($row['name'])) {
+            $row['category_name'] = $row['name'];
+        }
         $map[(int) $row['id']] = $row;
     }
     return $map;
@@ -950,10 +972,19 @@ function fetchCategoriesById(PDO $pdo, array $columns): array
 
 function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
 {
-    if (!$columns || !in_array('name', $columns, true) || !in_array('category_name', $columns, true)) {
-        $sql = 'SELECT s.id, s.name, c.name AS category_name FROM subcategories s JOIN categories c ON c.id = s.category_id';
+    $hasLegacyName = $columns && in_array('name', $columns, true);
+    $hasSubcategoryName = $columns && in_array('subcategory_name', $columns, true);
+    if (!$hasLegacyName && !$hasSubcategoryName) {
+        return [];
+    }
+
+    $nameColumn = $hasLegacyName ? 'name' : 'subcategory_name';
+    $hasCategoryName = $columns && in_array('category_name', $columns, true);
+
+    if ($hasCategoryName) {
+        $sql = 'SELECT id, `' . $nameColumn . '` AS name, `category_name` FROM subcategories';
     } else {
-        $sql = 'SELECT id, name, category_name FROM subcategories';
+        $sql = 'SELECT s.id, s.`' . $nameColumn . '` AS name, c.`category_name` AS category_name FROM subcategories s JOIN categories c ON c.id = s.category_id';
     }
 
     $stmt = $pdo->query($sql);
@@ -982,6 +1013,12 @@ function fetchSubcategoriesById(PDO $pdo, array $columns): array
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         if (!isset($row['id'])) {
             continue;
+        }
+        if (!isset($row['name']) && isset($row['subcategory_name'])) {
+            $row['name'] = $row['subcategory_name'];
+        }
+        if (!isset($row['subcategory_name']) && isset($row['name'])) {
+            $row['subcategory_name'] = $row['name'];
         }
         $map[(int) $row['id']] = $row;
     }
