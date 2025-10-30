@@ -1398,7 +1398,7 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
 
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
             return '`' . str_replace('`', '``', $col) . '`';
-        }, $select)) . ' FROM field_types';
+        }, $select)) . ' FROM field_types ORDER BY `id` ASC';
 
         $stmt = $pdo->query($sql);
         $map = [];
