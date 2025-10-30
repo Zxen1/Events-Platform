@@ -127,8 +127,12 @@ function fetchCategories(PDO $pdo, array $columns): array
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
     }
-    if (in_array('name', $columns, true)) {
+    $hasLegacyName = in_array('name', $columns, true);
+    $hasCategoryNameColumn = in_array('category_name', $columns, true);
+    if ($hasLegacyName) {
         $selectColumns[] = '`name`';
+    } elseif ($hasCategoryNameColumn) {
+        $selectColumns[] = '`category_name` AS `name`';
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -194,7 +198,15 @@ function fetchCategories(PDO $pdo, array $columns): array
 
 function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
 {
-    $select = ['s.`id`', 's.`name`'];
+    $hasLegacySubName = in_array('name', $columns, true);
+    $hasSubcategoryNameColumn = in_array('subcategory_name', $columns, true);
+
+    $select = ['s.`id`'];
+    if ($hasLegacySubName) {
+        $select[] = 's.`name`';
+    } elseif ($hasSubcategoryNameColumn) {
+        $select[] = 's.`subcategory_name` AS `name`';
+    }
 
     $hasCategoryName = in_array('category_name', $columns, true);
     $hasCategoryId = in_array('category_id', $columns, true);
@@ -210,7 +222,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         $select[] = 's.`category_id`';
     }
     if (!$hasCategoryName && $hasCategoryId) {
-        $select[] = 'c.`name` AS category_name';
+        $select[] = 'c.`category_name` AS category_name';
     }
     if ($hasSortOrder) {
         $select[] = 's.`sort_order`';
@@ -235,7 +247,11 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($hasSortOrder) {
         $order[] = 's.`sort_order` ASC';
     }
-    $order[] = 's.`name` ASC';
+    if ($hasLegacySubName) {
+        $order[] = 's.`name` ASC';
+    } elseif ($hasSubcategoryNameColumn) {
+        $order[] = 's.`subcategory_name` ASC';
+    }
 
     $sql = 'SELECT ' . implode(', ', $select) . ' FROM subcategories s';
     if (!$hasCategoryName && $hasCategoryId) {
