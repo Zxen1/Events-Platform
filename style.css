@@ -749,6 +749,7 @@ input[type="checkbox"]{
     letter-spacing: 0.04em;
     z-index: 2500;
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
