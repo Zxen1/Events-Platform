@@ -430,6 +430,18 @@ try {
 
             $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
 
+            $fieldTypeIdCsv = $fieldTypeIds ? implode(',', array_unique($fieldTypeIds)) : null;
+            $fieldTypeNameList = [];
+            if ($fieldTypeIds) {
+                foreach ($fieldTypeIds as $typeId) {
+                    if (isset($fieldTypeDefinitions[$typeId]['name']) && $fieldTypeDefinitions[$typeId]['name'] !== '') {
+                        $fieldTypeNameList[] = $fieldTypeDefinitions[$typeId]['name'];
+                    }
+                }
+            }
+            $fieldTypeNameList = array_values(array_unique($fieldTypeNameList));
+            $fieldTypeNameCsv = $fieldTypeNameList ? implode(', ', $fieldTypeNameList) : null;
+
             $fieldNames = [];
             $fieldIds = [];
             foreach ($sanitizedFields as $field) {
@@ -481,6 +493,7 @@ try {
                 'fields' => $sanitizedFields,
                 'versionPriceCurrencies' => $versionCurrencies,
                 'fieldTypeIds' => $fieldTypeIds,
+                'fieldTypeNames' => $fieldTypeNameList,
                 'icon' => $metaIcon,
                 'marker' => sanitizeString($subKey !== '' && isset($subcategoryMarkers[$subKey]) ? $subcategoryMarkers[$subKey] : ($subcategoryMarkers[$subName] ?? ''), 512),
                 'markerId' => sanitizeString($subKey !== '' && isset($subcategoryMarkerIds[$subKey]) ? $subcategoryMarkerIds[$subKey] : ($subcategoryMarkerIds[$subName] ?? ''), 128),
@@ -519,17 +532,11 @@ try {
             }
             if (in_array('field_type_id', $subcategoryColumns, true)) {
                 $updateParts[] = 'field_type_id = :field_type_id';
-                $params[':field_type_id'] = $fieldTypeIds ? implode(',', array_unique($fieldTypeIds)) : null;
+                $params[':field_type_id'] = $fieldTypeIdCsv;
             }
             if (in_array('field_type_name', $subcategoryColumns, true)) {
-                $typeNames = [];
-                foreach ($fieldTypeIds as $typeId) {
-                    if (isset($fieldTypeDefinitions[$typeId]['name']) && $fieldTypeDefinitions[$typeId]['name'] !== '') {
-                        $typeNames[] = $fieldTypeDefinitions[$typeId]['name'];
-                    }
-                }
                 $updateParts[] = 'field_type_name = :field_type_name';
-                $params[':field_type_name'] = $typeNames ? implode(', ', array_unique($typeNames)) : null;
+                $params[':field_type_name'] = $fieldTypeNameCsv;
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
@@ -562,6 +569,8 @@ try {
             $subcategoriesById[$subId]['subcategory_key'] = $subKey;
             $subcategoriesById[$subId]['category_name'] = $categoryName;
             $subcategoriesById[$subId]['category_key'] = $categoryKey;
+            $subcategoriesById[$subId]['field_type_id'] = $fieldTypeIdCsv;
+            $subcategoriesById[$subId]['field_type_name'] = $fieldTypeNameCsv;
 
             $compositeCandidates = [];
             if ($categoryKey !== '' && $subKey !== '') {
@@ -583,6 +592,8 @@ try {
                     'category_name' => $categoryName,
                     'subcategory_key' => $subKey,
                     'category_key' => $categoryKey,
+                    'field_type_id' => $fieldTypeIdCsv,
+                    'field_type_name' => $fieldTypeNameCsv,
                 ];
             }
         }
@@ -1237,6 +1248,8 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
     $hasCategoryName = $columns && in_array('category_name', $columns, true);
     $hasSubKey = $columns && in_array('subcategory_key', $columns, true);
     $hasCategoryKey = $columns && in_array('category_key', $columns, true);
+    $hasFieldTypeId = $columns && in_array('field_type_id', $columns, true);
+    $hasFieldTypeName = $columns && in_array('field_type_name', $columns, true);
 
     $selectParts = ['s.id', 's.`' . $nameColumn . '` AS name'];
     if ($hasSubKey) {
@@ -1247,6 +1260,12 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
     }
     if ($hasCategoryKey) {
         $selectParts[] = 's.`category_key`';
+    }
+    if ($hasFieldTypeId) {
+        $selectParts[] = 's.`field_type_id`';
+    }
+    if ($hasFieldTypeName) {
+        $selectParts[] = 's.`field_type_name`';
     }
 
     if (!$hasCategoryName || !$hasCategoryKey) {
@@ -1293,6 +1312,12 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
             'subcategory_key' => $subKey,
             'category_key' => $categoryKey,
         ];
+        if ($hasFieldTypeId && isset($row['field_type_id'])) {
+            $record['field_type_id'] = $row['field_type_id'];
+        }
+        if ($hasFieldTypeName && isset($row['field_type_name'])) {
+            $record['field_type_name'] = $row['field_type_name'];
+        }
 
         $candidates = [];
         if ($categoryKey !== '' && $subKey !== '') {

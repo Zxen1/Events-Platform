@@ -156,12 +156,59 @@ function fetchCategories(PDO $pdo, array $columns): array
             continue;
         }
 
+        $fieldTypeIds = [];
+        if ($hasFieldTypeId && isset($row['field_type_id']) && is_string($row['field_type_id'])) {
+            $fieldTypeIds = parseFieldTypeIdCsv($row['field_type_id']);
+        }
+
+        $fieldTypeNames = [];
+        if ($hasFieldTypeName && isset($row['field_type_name']) && is_string($row['field_type_name'])) {
+            $fieldTypeNames = parseFieldTypeNameCsv($row['field_type_name']);
+        }
+
         $metadata = [];
         if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
             $decoded = json_decode($row['metadata_json'], true);
             if (is_array($decoded)) {
                 $metadata = $decoded;
             }
+        }
+
+        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+            $metadataFieldTypeIds = [];
+            foreach ($metadata['fieldTypeIds'] as $value) {
+                if (is_int($value)) {
+                    $metadataFieldTypeIds[] = $value;
+                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
+                    $metadataFieldTypeIds[] = (int) $value;
+                }
+            }
+            $metadataFieldTypeIds = array_values(array_unique($metadataFieldTypeIds));
+            if ($metadataFieldTypeIds) {
+                $fieldTypeIds = $metadataFieldTypeIds;
+            }
+            $metadata['fieldTypeIds'] = $metadataFieldTypeIds;
+        } else {
+            $metadata['fieldTypeIds'] = $fieldTypeIds;
+        }
+
+        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+            $metadataFieldTypeNames = [];
+            foreach ($metadata['fieldTypeNames'] as $value) {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if ($trimmed !== '') {
+                        $metadataFieldTypeNames[] = $trimmed;
+                    }
+                }
+            }
+            $metadataFieldTypeNames = array_values(array_unique($metadataFieldTypeNames));
+            if ($metadataFieldTypeNames) {
+                $fieldTypeNames = $metadataFieldTypeNames;
+            }
+            $metadata['fieldTypeNames'] = $metadataFieldTypeNames;
+        } else {
+            $metadata['fieldTypeNames'] = $fieldTypeNames;
         }
 
         $categories[] = [
@@ -176,6 +223,8 @@ function fetchCategories(PDO $pdo, array $columns): array
             'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
                 ? trim($row['mapmarker_path'])
                 : null,
+            'field_type_ids' => $fieldTypeIds,
+            'field_type_names' => $fieldTypeNames,
         ];
     }
 
@@ -212,6 +261,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
 
+    $hasFieldTypeId = in_array('field_type_id', $columns, true);
+    $hasFieldTypeName = in_array('field_type_name', $columns, true);
+
     if ($hasCategoryName) {
         $select[] = 's.`category_name`';
     }
@@ -229,6 +281,13 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     if ($hasMapmarkerPath) {
         $select[] = 's.`mapmarker_path`';
+    }
+
+    if ($hasFieldTypeId) {
+        $select[] = 's.`field_type_id`';
+    }
+    if ($hasFieldTypeName) {
+        $select[] = 's.`field_type_name`';
     }
 
     $order = [];
@@ -271,6 +330,16 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (!$categoryName || !isset($row['name'])) {
             continue;
         }
+        $fieldTypeIds = [];
+        if ($hasFieldTypeId && isset($row['field_type_id']) && is_string($row['field_type_id'])) {
+            $fieldTypeIds = parseFieldTypeIdCsv($row['field_type_id']);
+        }
+
+        $fieldTypeNames = [];
+        if ($hasFieldTypeName && isset($row['field_type_name']) && is_string($row['field_type_name'])) {
+            $fieldTypeNames = parseFieldTypeNameCsv($row['field_type_name']);
+        }
+
         $metadata = [];
         if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
             $decoded = json_decode($row['metadata_json'], true);
@@ -278,6 +347,44 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
                 $metadata = $decoded;
             }
         }
+
+        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+            $metadataFieldTypeIds = [];
+            foreach ($metadata['fieldTypeIds'] as $value) {
+                if (is_int($value)) {
+                    $metadataFieldTypeIds[] = $value;
+                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
+                    $metadataFieldTypeIds[] = (int) $value;
+                }
+            }
+            $metadataFieldTypeIds = array_values(array_unique($metadataFieldTypeIds));
+            if ($metadataFieldTypeIds) {
+                $fieldTypeIds = $metadataFieldTypeIds;
+            }
+            $metadata['fieldTypeIds'] = $metadataFieldTypeIds;
+        } else {
+            $metadata['fieldTypeIds'] = $fieldTypeIds;
+        }
+
+        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+            $metadataFieldTypeNames = [];
+            foreach ($metadata['fieldTypeNames'] as $value) {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if ($trimmed !== '') {
+                        $metadataFieldTypeNames[] = $trimmed;
+                    }
+                }
+            }
+            $metadataFieldTypeNames = array_values(array_unique($metadataFieldTypeNames));
+            if ($metadataFieldTypeNames) {
+                $fieldTypeNames = $metadataFieldTypeNames;
+            }
+            $metadata['fieldTypeNames'] = $metadataFieldTypeNames;
+        } else {
+            $metadata['fieldTypeNames'] = $fieldTypeNames;
+        }
+
         $results[] = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
@@ -290,6 +397,8 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
                 ? trim($row['mapmarker_path'])
                 : null,
+            'field_type_ids' => $fieldTypeIds,
+            'field_type_names' => $fieldTypeNames,
         ];
     }
 
@@ -310,6 +419,7 @@ function buildSnapshot(array $categories, array $subcategories): array
             'name' => $categoryName,
             'subs' => [],
             'subFields' => [],
+            'subFieldTypes' => [],
             'sort_order' => $category['sort_order'] ?? null,
             'subIds' => [],
         ];
@@ -360,6 +470,8 @@ function buildSnapshot(array $categories, array $subcategories): array
     $subcategoryIcons = [];
     $subcategoryMarkers = [];
     $subcategoryMarkerIds = [];
+    $subcategoryFieldTypeIds = [];
+    $subcategoryFieldTypeNames = [];
     $currencySet = [];
 
     foreach ($subcategories as $sub) {
@@ -381,12 +493,66 @@ function buildSnapshot(array $categories, array $subcategories): array
         ];
         $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
 
-        $fields = [];
         $metadata = $sub['metadata'];
+        if (!is_array($metadata)) {
+            $metadata = [];
+        }
+
+        $fields = [];
         if (isset($metadata['fields']) && is_array($metadata['fields'])) {
             $fields = $metadata['fields'];
         }
+
+        $fieldTypeIds = [];
+        if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
+            foreach ($sub['field_type_ids'] as $value) {
+                if (is_int($value)) {
+                    $fieldTypeIds[] = $value;
+                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
+                    $fieldTypeIds[] = (int) $value;
+                }
+            }
+        } elseif (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+            foreach ($metadata['fieldTypeIds'] as $value) {
+                if (is_int($value)) {
+                    $fieldTypeIds[] = $value;
+                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
+                    $fieldTypeIds[] = (int) $value;
+                }
+            }
+        }
+        $fieldTypeIds = array_values(array_unique($fieldTypeIds));
+
+        $fieldTypeNames = [];
+        if (isset($sub['field_type_names']) && is_array($sub['field_type_names'])) {
+            foreach ($sub['field_type_names'] as $value) {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if ($trimmed !== '') {
+                        $fieldTypeNames[] = $trimmed;
+                    }
+                }
+            }
+        } elseif (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+            foreach ($metadata['fieldTypeNames'] as $value) {
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if ($trimmed !== '') {
+                        $fieldTypeNames[] = $trimmed;
+                    }
+                }
+            }
+        }
+        $fieldTypeNames = array_values(array_unique($fieldTypeNames));
+
+        $metadata['fieldTypeIds'] = $fieldTypeIds;
+        $metadata['fieldTypeNames'] = $fieldTypeNames;
+
         $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
+        $categoriesMap[$categoryName]['subFieldTypes'][$sub['name']] = $fieldTypeIds;
+
+        $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;
+        $subcategoryFieldTypeNames[$sub['name']] = $fieldTypeNames;
 
         $iconHtml = '';
         $iconPath = '';
@@ -453,6 +619,9 @@ function buildSnapshot(array $categories, array $subcategories): array
         if (!is_array($category['subFields'])) {
             $category['subFields'] = [];
         }
+        if (!is_array($category['subFieldTypes'])) {
+            $category['subFieldTypes'] = [];
+        }
         $subs = $category['subs'];
         usort($subs, static function (array $a, array $b): int {
             $orderA = $a['sort_order'] ?? null;
@@ -474,6 +643,9 @@ function buildSnapshot(array $categories, array $subcategories): array
         foreach ($category['subs'] as $subName) {
             if (!isset($category['subFields'][$subName]) || !is_array($category['subFields'][$subName])) {
                 $category['subFields'][$subName] = [];
+            }
+            if (!isset($category['subFieldTypes'][$subName]) || !is_array($category['subFieldTypes'][$subName])) {
+                $category['subFieldTypes'][$subName] = [];
             }
         }
     }
@@ -522,6 +694,8 @@ function buildSnapshot(array $categories, array $subcategories): array
         'subcategoryIconPaths' => $subcategoryIconPaths,
         'subcategoryMarkers' => $sanitizedSubcategoryMarkers,
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
+        'subcategoryFieldTypeIds' => $subcategoryFieldTypeIds,
+        'subcategoryFieldTypeNames' => $subcategoryFieldTypeNames,
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
         'iconLibrary' => array_values($iconLibrary),
@@ -756,6 +930,58 @@ function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
     }
 
     return snapshotSanitizeString($markerPath, 255);
+}
+
+function parseFieldTypeIdCsv(string $value): array
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return [];
+    }
+
+    $parts = preg_split('/\s*,\s*/', $trimmed);
+    if (!is_array($parts)) {
+        $parts = [$trimmed];
+    }
+
+    $ids = [];
+    foreach ($parts as $part) {
+        if (!is_string($part)) {
+            continue;
+        }
+        $candidate = trim($part);
+        if ($candidate === '') {
+            continue;
+        }
+        if (preg_match('/^\d+$/', $candidate)) {
+            $ids[] = (int) $candidate;
+        }
+    }
+
+    return array_values(array_unique($ids));
+}
+
+function parseFieldTypeNameCsv(string $value): array
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return [];
+    }
+
+    $parts = explode(',', $value);
+    $names = [];
+    foreach ($parts as $part) {
+        if (!is_string($part)) {
+            continue;
+        }
+        $candidate = trim($part);
+        if ($candidate === '') {
+            continue;
+        }
+        $names[] = $candidate;
+    }
+
+    return array_values(array_unique($names));
 }
 
 function slugify_key(string $value): string
