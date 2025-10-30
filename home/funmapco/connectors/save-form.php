@@ -442,16 +442,6 @@ try {
             $fieldTypeNameList = array_values(array_unique($fieldTypeNameList));
             $fieldTypeNameCsv = $fieldTypeNameList ? implode(', ', $fieldTypeNameList) : null;
 
-            $fieldNames = [];
-            $fieldIds = [];
-            foreach ($sanitizedFields as $field) {
-                $fieldNames[] = $field['name'] !== '' ? $field['name'] : $field['type'];
-                $matchedId = matchFieldId($fieldCatalog, $field);
-                if ($matchedId !== null) {
-                    $fieldIds[] = $matchedId;
-                }
-            }
-
             $resolvedSubIconPath = resolveIconPath($subcategoryIconPaths, $subId, $subName, $subKey);
             if ($resolvedSubIconPath === '' && $subKey !== '' && isset($subcategoryIcons[$subKey])) {
                 $resolvedSubIconPath = extractIconSrcFromHtml($subcategoryIcons[$subKey]);
@@ -521,14 +511,6 @@ try {
             if (in_array('subcategory_key', $subcategoryColumns, true)) {
                 $updateParts[] = 'subcategory_key = :subcategory_key';
                 $params[':subcategory_key'] = $subKey;
-            }
-            if (in_array('field_names', $subcategoryColumns, true)) {
-                $updateParts[] = 'field_names = :field_names';
-                $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
-            }
-            if (in_array('field_ids', $subcategoryColumns, true)) {
-                $updateParts[] = 'field_ids = :field_ids';
-                $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
             }
             if (in_array('field_type_id', $subcategoryColumns, true)) {
                 $updateParts[] = 'field_type_id = :field_type_id';
