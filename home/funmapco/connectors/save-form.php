@@ -86,10 +86,12 @@ try {
     }
 
     $categoriesByName = fetchCategoriesByName($pdo, $categoryColumns);
+    $categoriesByKey = fetchCategoriesByKey($pdo, $categoryColumns);
     $categoriesById = fetchCategoriesById($pdo, $categoryColumns);
     $subcategoriesByKey = fetchSubcategoriesByCompositeKey($pdo, $subcategoryColumns);
     $subcategoriesById = fetchSubcategoriesById($pdo, $subcategoryColumns);
     $fieldCatalog = fetchFieldCatalog($pdo);
+    $fieldTypeDefinitions = fetchFieldTypeDefinitions($pdo);
 
     $versionCurrencies = [];
     if (isset($decoded['versionPriceCurrencies']) && is_array($decoded['versionPriceCurrencies'])) {
@@ -164,19 +166,32 @@ try {
 
         $categoryId = filterPositiveInt($categoryPayload['id'] ?? null);
         $categoryName = sanitizeString($categoryPayload['name'] ?? '');
+        $categoryKey = sanitizeKey($categoryPayload['key'] ?? '');
 
         $categoryRow = null;
         $originalCategoryName = $categoryName;
+        $originalCategoryKey = $categoryKey;
 
         if ($categoryId !== null && isset($categoriesById[$categoryId])) {
             $categoryRow = $categoriesById[$categoryId];
             $originalCategoryName = isset($categoryRow['name']) ? (string) $categoryRow['name'] : $categoryName;
+            if (isset($categoryRow['category_key']) && is_string($categoryRow['category_key'])) {
+                $originalCategoryKey = sanitizeKey($categoryRow['category_key']);
+            }
+        } elseif ($categoryKey !== '' && isset($categoriesByKey[$categoryKey])) {
+            $categoryRow = $categoriesByKey[$categoryKey];
+            $categoryId = (int) $categoryRow['id'];
+            $originalCategoryName = isset($categoryRow['name']) ? (string) $categoryRow['name'] : $categoryName;
+            $originalCategoryKey = isset($categoryRow['category_key']) ? sanitizeKey((string) $categoryRow['category_key']) : $categoryKey;
         } elseif ($categoryName !== '') {
-            $categoryKey = mb_strtolower($categoryName);
-            if (isset($categoriesByName[$categoryKey])) {
-                $categoryRow = $categoriesByName[$categoryKey];
+            $categoryLookup = mb_strtolower($categoryName);
+            if (isset($categoriesByName[$categoryLookup])) {
+                $categoryRow = $categoriesByName[$categoryLookup];
                 $categoryId = (int) $categoryRow['id'];
                 $originalCategoryName = isset($categoryRow['name']) ? (string) $categoryRow['name'] : $categoryName;
+                if (isset($categoryRow['category_key'])) {
+                    $originalCategoryKey = sanitizeKey((string) $categoryRow['category_key']);
+                }
             }
         }
 
@@ -188,6 +203,9 @@ try {
         if ($categoryName === '') {
             $categoryName = $originalCategoryName;
         }
+        if ($categoryKey === '') {
+            $categoryKey = $originalCategoryKey !== '' ? $originalCategoryKey : sanitizeKey($categoryName);
+        }
 
         if ($categorySortSupported) {
             $categorySortUpdates[] = [
@@ -197,7 +215,10 @@ try {
         }
         $categoryOrder++;
 
-        $resolvedCategoryIconPath = resolveIconPath($categoryIconPaths, $categoryId, $categoryName);
+        $resolvedCategoryIconPath = resolveIconPath($categoryIconPaths, $categoryId, $categoryName, $categoryKey);
+        if ($resolvedCategoryIconPath === '' && $categoryKey !== '' && isset($categoryIconsPayload[$categoryKey])) {
+            $resolvedCategoryIconPath = extractIconSrcFromHtml($categoryIconsPayload[$categoryKey]);
+        }
         if ($resolvedCategoryIconPath === '' && $originalCategoryName !== '' && isset($categoryIconsPayload[$originalCategoryName])) {
             $resolvedCategoryIconPath = extractIconSrcFromHtml($categoryIconsPayload[$originalCategoryName]);
         }
@@ -226,6 +247,11 @@ try {
             $categoryUpdateParts[] = 'mapmarker_path = :category_marker_path';
             $categoryParams[':category_marker_path'] = $categoryIconVariants['marker'];
         }
+        if ($categoryKey !== '' && in_array('category_key', $categoryColumns, true)) {
+            $categoryUpdateParts[] = 'category_key = :category_key';
+            $categoryParams[':category_key'] = $categoryKey;
+        }
+
         if ($categoryUpdateParts) {
             $sql = 'UPDATE categories SET ' . implode(', ', $categoryUpdateParts) . ' WHERE id = :id';
             $stmt = $pdo->prepare($sql);
@@ -234,7 +260,11 @@ try {
 
         $categoriesById[$categoryId]['name'] = $categoryName;
         $categoriesById[$categoryId]['category_name'] = $categoryName;
-        $categoriesByName[mb_strtolower($categoryName)] = ['id' => $categoryId, 'name' => $categoryName];
+        $categoriesById[$categoryId]['category_key'] = $categoryKey;
+        $categoriesByName[mb_strtolower($categoryName)] = ['id' => $categoryId, 'name' => $categoryName, 'category_key' => $categoryKey];
+        if ($categoryKey !== '') {
+            $categoriesByKey[$categoryKey] = ['id' => $categoryId, 'name' => $categoryName, 'category_key' => $categoryKey];
+        }
 
         $subs = $categoryPayload['subs'] ?? [];
         if (!is_array($subs)) {
@@ -244,36 +274,67 @@ try {
         if (!is_array($subFieldsMap)) {
             $subFieldsMap = [];
         }
+        $subFieldTypesMap = $categoryPayload['subFieldTypes'] ?? [];
+        if (!is_array($subFieldTypesMap)) {
+            $subFieldTypesMap = [];
+        }
         $subIdMap = [];
         if (isset($categoryPayload['subIds']) && is_array($categoryPayload['subIds'])) {
             foreach ($categoryPayload['subIds'] as $key => $value) {
-                $nameKey = sanitizeString((string) $key);
-                if ($nameKey === '') {
+                $stringKey = is_string($key) || is_int($key) ? (string) $key : '';
+                if ($stringKey === '') {
                     continue;
                 }
                 $idValue = filterPositiveInt($value);
-                if ($idValue !== null) {
+                if ($idValue === null) {
+                    continue;
+                }
+                $nameKey = sanitizeString($stringKey);
+                if ($nameKey !== '') {
                     $subIdMap[$nameKey] = $idValue;
+                }
+                $normalizedKey = sanitizeKey($stringKey);
+                if ($normalizedKey !== '') {
+                    $subIdMap[$normalizedKey] = $idValue;
                 }
             }
         }
 
         foreach (array_values($subs) as $index => $subEntry) {
             $subName = '';
+            $subKey = '';
             $subId = null;
+            $fieldTypeIds = [];
 
             if (is_array($subEntry)) {
                 $subName = sanitizeString($subEntry['name'] ?? '');
+                $subKey = sanitizeKey($subEntry['key'] ?? '');
                 $subId = filterPositiveInt($subEntry['id'] ?? null);
+                if (isset($subEntry['fieldTypeIds']) && is_array($subEntry['fieldTypeIds'])) {
+                    foreach ($subEntry['fieldTypeIds'] as $typeId) {
+                        if (is_int($typeId)) {
+                            $fieldTypeIds[] = $typeId;
+                        } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
+                            $fieldTypeIds[] = (int) $typeId;
+                        }
+                    }
+                }
             } else {
                 $subName = sanitizeString($subEntry);
             }
 
+            if ($subKey === '' && $subName !== '') {
+                $subKey = sanitizeKey($subName);
+            }
+
+            if ($subId === null && $subKey !== '' && isset($subIdMap[$subKey])) {
+                $subId = $subIdMap[$subKey];
+            }
             if ($subId === null && $subName !== '' && isset($subIdMap[$subName])) {
                 $subId = $subIdMap[$subName];
             }
 
-            if ($subName === '' && $subId === null) {
+            if ($subName === '' && $subKey === '' && $subId === null) {
                 continue;
             }
 
@@ -283,26 +344,61 @@ try {
                 if ($subName === '' && isset($subcategoryRow['name'])) {
                     $subName = sanitizeString($subcategoryRow['name']);
                 }
+                if ($subKey === '' && isset($subcategoryRow['subcategory_key'])) {
+                    $subKey = sanitizeKey((string) $subcategoryRow['subcategory_key']);
+                }
             }
 
             if (!$subcategoryRow) {
-                if ($subName === '') {
-                    continue;
-                }
                 $lookupCategoryName = $originalCategoryName !== '' ? $originalCategoryName : $categoryName;
-                $compositeKey = mb_strtolower($lookupCategoryName . '::' . $subName);
-                if (!isset($subcategoriesByKey[$compositeKey])) {
-                    throw new RuntimeException(sprintf('Unknown subcategory "%s" within "%s".', $subName, $lookupCategoryName));
+                $lookupCategoryKey = $originalCategoryKey !== '' ? $originalCategoryKey : $categoryKey;
+                $compositeCandidates = [];
+                if ($lookupCategoryKey !== '' && $subKey !== '') {
+                    $compositeCandidates[] = mb_strtolower($lookupCategoryKey . '::' . $subKey);
                 }
-                $subcategoryRow = $subcategoriesByKey[$compositeKey];
-                $subId = (int) $subcategoryRow['id'];
+                if ($lookupCategoryKey !== '' && $subName !== '') {
+                    $compositeCandidates[] = mb_strtolower($lookupCategoryKey . '::' . sanitizeKey($subName));
+                }
+                if ($lookupCategoryName !== '' && $subKey !== '') {
+                    $compositeCandidates[] = mb_strtolower($lookupCategoryName . '::' . $subKey);
+                }
+                if ($lookupCategoryName !== '' && $subName !== '') {
+                    $compositeCandidates[] = mb_strtolower($lookupCategoryName . '::' . $subName);
+                }
+                $subcategoryRow = null;
+                foreach ($compositeCandidates as $compositeKey) {
+                    if (isset($subcategoriesByKey[$compositeKey])) {
+                        $subcategoryRow = $subcategoriesByKey[$compositeKey];
+                        $subId = (int) $subcategoryRow['id'];
+                        if ($subName === '' && isset($subcategoryRow['name'])) {
+                            $subName = sanitizeString($subcategoryRow['name']);
+                        }
+                        if ($subKey === '' && isset($subcategoryRow['subcategory_key'])) {
+                            $subKey = sanitizeKey((string) $subcategoryRow['subcategory_key']);
+                        }
+                        break;
+                    }
+                }
+                if (!$subcategoryRow) {
+                    $label = $subName !== '' ? $subName : ($subKey !== '' ? $subKey : ($subId !== null ? (string) $subId : ''));
+                    $categoryLabel = $lookupCategoryName !== '' ? $lookupCategoryName : ($lookupCategoryKey !== '' ? $lookupCategoryKey : $categoryName);
+                    throw new RuntimeException(sprintf('Unknown subcategory "%s" within "%s".', $label, $categoryLabel));
+                }
             }
 
             if ($subName === '') {
                 $subName = sanitizeString($subcategoryRow['name'] ?? '');
             }
+            if ($subKey === '') {
+                $subKey = sanitizeKey($subcategoryRow['subcategory_key'] ?? $subName);
+            }
 
-            $fieldsPayload = $subFieldsMap[$subName] ?? [];
+            $fieldsPayload = [];
+            if ($subKey !== '' && isset($subFieldsMap[$subKey])) {
+                $fieldsPayload = $subFieldsMap[$subKey];
+            } elseif ($subName !== '' && isset($subFieldsMap[$subName])) {
+                $fieldsPayload = $subFieldsMap[$subName];
+            }
             if (!is_array($fieldsPayload)) {
                 $fieldsPayload = [];
             }
@@ -314,6 +410,26 @@ try {
                 $sanitizedFields[] = sanitizeField($fieldPayload);
             }
 
+            if (!$fieldTypeIds) {
+                $fieldTypeSource = null;
+                if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
+                    $fieldTypeSource = $subFieldTypesMap[$subKey];
+                } elseif ($subName !== '' && isset($subFieldTypesMap[$subName])) {
+                    $fieldTypeSource = $subFieldTypesMap[$subName];
+                }
+                if (is_array($fieldTypeSource)) {
+                    foreach ($fieldTypeSource as $typeId) {
+                        if (is_int($typeId)) {
+                            $fieldTypeIds[] = $typeId;
+                        } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
+                            $fieldTypeIds[] = (int) $typeId;
+                        }
+                    }
+                }
+            }
+
+            $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
+
             $fieldNames = [];
             $fieldIds = [];
             foreach ($sanitizedFields as $field) {
@@ -324,7 +440,10 @@ try {
                 }
             }
 
-            $resolvedSubIconPath = resolveIconPath($subcategoryIconPaths, $subId, $subName);
+            $resolvedSubIconPath = resolveIconPath($subcategoryIconPaths, $subId, $subName, $subKey);
+            if ($resolvedSubIconPath === '' && $subKey !== '' && isset($subcategoryIcons[$subKey])) {
+                $resolvedSubIconPath = extractIconSrcFromHtml($subcategoryIcons[$subKey]);
+            }
             if ($resolvedSubIconPath === '' && isset($subcategoryIcons[$subName])) {
                 $resolvedSubIconPath = extractIconSrcFromHtml($subcategoryIcons[$subName]);
             }
@@ -337,19 +456,34 @@ try {
             if ($subIconVariants['icon'] !== '') {
                 $metaIcon = sprintf('<img src="%s" width="20" height="20" alt="">', htmlspecialchars($subIconVariants['icon'], ENT_QUOTES, 'UTF-8'));
             } else {
-                $metaIcon = sanitizeIcon($subcategoryIcons[$subName] ?? '');
+                $iconSource = $subKey !== '' && isset($subcategoryIcons[$subKey])
+                    ? $subcategoryIcons[$subKey]
+                    : ($subcategoryIcons[$subName] ?? '');
+                $metaIcon = sanitizeIcon($iconSource);
             }
 
-            $categoryShapeValue = $categoryShapes[$categoryName] ?? ($originalCategoryName !== $categoryName ? ($categoryShapes[$originalCategoryName] ?? null) : null);
+            $categoryShapeValue = null;
+            if ($categoryKey !== '' && isset($categoryShapes[$categoryKey])) {
+                $categoryShapeValue = $categoryShapes[$categoryKey];
+            } elseif ($categoryName !== '' && isset($categoryShapes[$categoryName])) {
+                $categoryShapeValue = $categoryShapes[$categoryName];
+            } elseif ($originalCategoryKey !== '' && isset($categoryShapes[$originalCategoryKey])) {
+                $categoryShapeValue = $categoryShapes[$originalCategoryKey];
+            } elseif ($originalCategoryName !== '' && isset($categoryShapes[$originalCategoryName])) {
+                $categoryShapeValue = $categoryShapes[$originalCategoryName];
+            }
 
             $meta = [
                 'category' => $categoryName,
                 'subcategory' => $subName,
+                'categoryKey' => $categoryKey,
+                'subcategoryKey' => $subKey,
                 'fields' => $sanitizedFields,
                 'versionPriceCurrencies' => $versionCurrencies,
+                'fieldTypeIds' => $fieldTypeIds,
                 'icon' => $metaIcon,
-                'marker' => sanitizeString($subcategoryMarkers[$subName] ?? '', 512),
-                'markerId' => sanitizeString($subcategoryMarkerIds[$subName] ?? '', 128),
+                'marker' => sanitizeString($subKey !== '' && isset($subcategoryMarkers[$subKey]) ? $subcategoryMarkers[$subKey] : ($subcategoryMarkers[$subName] ?? ''), 512),
+                'markerId' => sanitizeString($subKey !== '' && isset($subcategoryMarkerIds[$subKey]) ? $subcategoryMarkerIds[$subKey] : ($subcategoryMarkerIds[$subName] ?? ''), 128),
                 'categoryShape' => sanitizeMixed($categoryShapeValue),
                 'updatedAt' => gmdate('c'),
             ];
@@ -371,6 +505,10 @@ try {
                 $updateParts[] = 'category_name = :category_name';
                 $params[':category_name'] = $categoryName;
             }
+            if (in_array('subcategory_key', $subcategoryColumns, true)) {
+                $updateParts[] = 'subcategory_key = :subcategory_key';
+                $params[':subcategory_key'] = $subKey;
+            }
             if (in_array('field_names', $subcategoryColumns, true)) {
                 $updateParts[] = 'field_names = :field_names';
                 $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
@@ -378,6 +516,20 @@ try {
             if (in_array('field_ids', $subcategoryColumns, true)) {
                 $updateParts[] = 'field_ids = :field_ids';
                 $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
+            }
+            if (in_array('field_type_id', $subcategoryColumns, true)) {
+                $updateParts[] = 'field_type_id = :field_type_id';
+                $params[':field_type_id'] = $fieldTypeIds ? implode(',', array_unique($fieldTypeIds)) : null;
+            }
+            if (in_array('field_type_name', $subcategoryColumns, true)) {
+                $typeNames = [];
+                foreach ($fieldTypeIds as $typeId) {
+                    if (isset($fieldTypeDefinitions[$typeId]['name']) && $fieldTypeDefinitions[$typeId]['name'] !== '') {
+                        $typeNames[] = $fieldTypeDefinitions[$typeId]['name'];
+                    }
+                }
+                $updateParts[] = 'field_type_name = :field_type_name';
+                $params[':field_type_name'] = $typeNames ? implode(', ', array_unique($typeNames)) : null;
             }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
@@ -404,6 +556,35 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $updated[] = $subId;
+
+            $subcategoriesById[$subId]['name'] = $subName;
+            $subcategoriesById[$subId]['subcategory_name'] = $subName;
+            $subcategoriesById[$subId]['subcategory_key'] = $subKey;
+            $subcategoriesById[$subId]['category_name'] = $categoryName;
+            $subcategoriesById[$subId]['category_key'] = $categoryKey;
+
+            $compositeCandidates = [];
+            if ($categoryKey !== '' && $subKey !== '') {
+                $compositeCandidates[] = mb_strtolower($categoryKey . '::' . $subKey);
+            }
+            if ($categoryKey !== '' && $subName !== '') {
+                $compositeCandidates[] = mb_strtolower($categoryKey . '::' . sanitizeKey($subName));
+            }
+            if ($categoryName !== '' && $subKey !== '') {
+                $compositeCandidates[] = mb_strtolower($categoryName . '::' . $subKey);
+            }
+            if ($categoryName !== '' && $subName !== '') {
+                $compositeCandidates[] = mb_strtolower($categoryName . '::' . $subName);
+            }
+            foreach (array_unique($compositeCandidates) as $candidate) {
+                $subcategoriesByKey[$candidate] = [
+                    'id' => $subId,
+                    'name' => $subName,
+                    'category_name' => $categoryName,
+                    'subcategory_key' => $subKey,
+                    'category_key' => $categoryKey,
+                ];
+            }
         }
     }
 
@@ -442,6 +623,21 @@ function sanitizeString($value, int $maxLength = 255): string
     if ($maxLength > 0 && mb_strlen($string) > $maxLength) {
         $string = mb_substr($string, 0, $maxLength);
     }
+    return $string;
+}
+
+function sanitizeKey($value): string
+{
+    $string = strtolower(trim((string) $value));
+    if ($string === '') {
+        return '';
+    }
+    $string = preg_replace('/[^a-z0-9_-]+/', '-', $string);
+    if (!is_string($string)) {
+        return '';
+    }
+    $string = preg_replace('/-{2,}/', '-', $string);
+    $string = trim($string, '-_');
     return $string;
 }
 
@@ -593,15 +789,24 @@ function normalizeIconMap(array $input): array
             $name = trim(mb_strtolower(substr($trimmedKey, 5)));
             if ($name !== '') {
                 $normalized['name:' . $name] = $path;
+                $slug = sanitizeKey($name);
+                if ($slug !== '') {
+                    $normalized['slug:' . $slug] = $path;
+                }
             }
             continue;
         }
-        $normalized['name:' . mb_strtolower($trimmedKey)] = $path;
+        $lowerName = mb_strtolower($trimmedKey);
+        $normalized['name:' . $lowerName] = $path;
+        $slug = sanitizeKey($trimmedKey);
+        if ($slug !== '') {
+            $normalized['slug:' . $slug] = $path;
+        }
     }
     return $normalized;
 }
 
-function resolveIconPath(array $map, ?int $id, string $name): string
+function resolveIconPath(array $map, ?int $id, string $name, string $key = ''): string
 {
     if ($id !== null) {
         $idKey = 'id:' . $id;
@@ -614,6 +819,20 @@ function resolveIconPath(array $map, ?int $id, string $name): string
         $nameKey = 'name:' . $lower;
         if (array_key_exists($nameKey, $map)) {
             return $map[$nameKey];
+        }
+    }
+    $normalizedKey = sanitizeKey($key);
+    if ($normalizedKey !== '') {
+        $slugKey = 'slug:' . $normalizedKey;
+        if (array_key_exists($slugKey, $map)) {
+            return $map[$slugKey];
+        }
+    }
+    $slugFromName = sanitizeKey($name);
+    if ($slugFromName !== '') {
+        $slugKey = 'slug:' . $slugFromName;
+        if (array_key_exists($slugKey, $map)) {
+            return $map[$slugKey];
         }
     }
     return '';
@@ -948,6 +1167,47 @@ function fetchCategoriesByName(PDO $pdo, array $columns): array
     return $map;
 }
 
+function fetchCategoriesByKey(PDO $pdo, array $columns): array
+{
+    if (!$columns || !in_array('category_key', $columns, true)) {
+        return [];
+    }
+
+    $selectedColumns = ['id', 'category_key'];
+    if (in_array('name', $columns, true)) {
+        $selectedColumns[] = 'name';
+    }
+    if (in_array('category_name', $columns, true)) {
+        $selectedColumns[] = 'category_name';
+    }
+
+    $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
+        return '`' . str_replace('`', '``', $col) . '`';
+    }, array_unique($selectedColumns))) . ' FROM categories';
+
+    $stmt = $pdo->query($sql);
+    $map = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!isset($row['id'], $row['category_key']) || !is_string($row['category_key'])) {
+            continue;
+        }
+        $normalizedKey = sanitizeKey($row['category_key']);
+        if ($normalizedKey === '') {
+            continue;
+        }
+        if (!isset($row['name']) && isset($row['category_name'])) {
+            $row['name'] = $row['category_name'];
+        }
+        $map[$normalizedKey] = [
+            'id' => (int) $row['id'],
+            'name' => isset($row['name']) ? (string) $row['name'] : '',
+            'category_key' => $normalizedKey,
+        ];
+    }
+
+    return $map;
+}
+
 function fetchCategoriesById(PDO $pdo, array $columns): array
 {
     if (!$columns || !in_array('id', $columns, true)) {
@@ -980,26 +1240,84 @@ function fetchSubcategoriesByCompositeKey(PDO $pdo, array $columns): array
 
     $nameColumn = $hasLegacyName ? 'name' : 'subcategory_name';
     $hasCategoryName = $columns && in_array('category_name', $columns, true);
+    $hasSubKey = $columns && in_array('subcategory_key', $columns, true);
+    $hasCategoryKey = $columns && in_array('category_key', $columns, true);
 
+    $selectParts = ['s.id', 's.`' . $nameColumn . '` AS name'];
+    if ($hasSubKey) {
+        $selectParts[] = 's.`subcategory_key`';
+    }
     if ($hasCategoryName) {
-        $sql = 'SELECT id, `' . $nameColumn . '` AS name, `category_name` FROM subcategories';
-    } else {
-        $sql = 'SELECT s.id, s.`' . $nameColumn . '` AS name, c.`category_name` AS category_name FROM subcategories s JOIN categories c ON c.id = s.category_id';
+        $selectParts[] = 's.`category_name`';
+    }
+    if ($hasCategoryKey) {
+        $selectParts[] = 's.`category_key`';
+    }
+
+    if (!$hasCategoryName || !$hasCategoryKey) {
+        $selectParts[] = 'c.`category_name` AS joined_category_name';
+        $selectParts[] = 'c.`category_key` AS joined_category_key';
+    }
+
+    $sql = 'SELECT ' . implode(', ', $selectParts) . ' FROM subcategories s';
+    if (!$hasCategoryName || !$hasCategoryKey) {
+        $sql .= ' JOIN categories c ON c.id = s.category_id';
     }
 
     $stmt = $pdo->query($sql);
     $map = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if (!isset($row['name'], $row['category_name'], $row['id'])) {
+        if (!isset($row['id'], $row['name'])) {
             continue;
         }
-        $key = mb_strtolower($row['category_name'] . '::' . $row['name']);
-        $map[$key] = [
+
+        $categoryName = '';
+        if ($hasCategoryName && isset($row['category_name'])) {
+            $categoryName = (string) $row['category_name'];
+        } elseif (isset($row['joined_category_name'])) {
+            $categoryName = (string) $row['joined_category_name'];
+        }
+
+        $categoryKey = '';
+        if ($hasCategoryKey && isset($row['category_key'])) {
+            $categoryKey = sanitizeKey((string) $row['category_key']);
+        } elseif (isset($row['joined_category_key'])) {
+            $categoryKey = sanitizeKey((string) $row['joined_category_key']);
+        }
+
+        $subName = (string) $row['name'];
+        $subKey = '';
+        if ($hasSubKey && isset($row['subcategory_key'])) {
+            $subKey = sanitizeKey((string) $row['subcategory_key']);
+        }
+
+        $record = [
             'id' => (int) $row['id'],
-            'name' => $row['name'],
-            'category_name' => $row['category_name'],
+            'name' => $subName,
+            'category_name' => $categoryName,
+            'subcategory_key' => $subKey,
+            'category_key' => $categoryKey,
         ];
+
+        $candidates = [];
+        if ($categoryKey !== '' && $subKey !== '') {
+            $candidates[] = mb_strtolower($categoryKey . '::' . $subKey);
+        }
+        if ($categoryKey !== '' && $subName !== '') {
+            $candidates[] = mb_strtolower($categoryKey . '::' . sanitizeKey($subName));
+        }
+        if ($categoryName !== '' && $subKey !== '') {
+            $candidates[] = mb_strtolower($categoryName . '::' . $subKey);
+        }
+        if ($categoryName !== '' && $subName !== '') {
+            $candidates[] = mb_strtolower($categoryName . '::' . $subName);
+        }
+
+        foreach (array_unique($candidates) as $candidate) {
+            $map[$candidate] = $record;
+        }
     }
+
     return $map;
 }
 
@@ -1055,6 +1373,48 @@ function fetchFieldCatalog(PDO $pdo): array
             ];
         }
         return $catalog;
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+function fetchFieldTypeDefinitions(PDO $pdo): array
+{
+    try {
+        $columns = fetchTableColumns($pdo, 'field_types');
+        if (!$columns || !in_array('id', $columns, true)) {
+            return [];
+        }
+
+        $select = ['id'];
+        if (in_array('field_type_name', $columns, true)) {
+            $select[] = 'field_type_name';
+        }
+        if (in_array('field_type_key', $columns, true)) {
+            $select[] = 'field_type_key';
+        }
+
+        $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
+            return '`' . str_replace('`', '``', $col) . '`';
+        }, $select)) . ' FROM field_types';
+
+        $stmt = $pdo->query($sql);
+        $map = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!isset($row['id'])) {
+                continue;
+            }
+            $id = (int) $row['id'];
+            $name = isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '';
+            $key = isset($row['field_type_key']) ? sanitizeKey((string) $row['field_type_key']) : '';
+            $map[$id] = [
+                'id' => $id,
+                'name' => $name,
+                'key' => $key,
+            ];
+        }
+
+        return $map;
     } catch (PDOException $e) {
         return [];
     }
