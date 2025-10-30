@@ -3331,171 +3331,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
     }
 
-    function cloneFieldValue(value){
-      if(Array.isArray(value)){
-        return value.map(cloneFieldValue);
-      }
-      if(value && typeof value === 'object'){
-        try{
-          return JSON.parse(JSON.stringify(value));
-        }catch(err){
-          return { ...value };
-        }
-      }
-      return value;
-    }
-
-    const DEFAULT_FORMBUILDER_SNAPSHOT = {
-      categories: [],
-      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
-      categoryIconPaths: {},
-      subcategoryIconPaths: {},
-      iconLibrary: []
-    };
-
-    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
-
-    function normalizeCategoriesSnapshot(sourceCategories){
-      const list = Array.isArray(sourceCategories) ? sourceCategories : [];
-      const parseId = value => {
-        if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
-          return value;
-        }
-        if(typeof value === 'string' && value.trim() && /^\d+$/.test(value.trim())){
-          return parseInt(value.trim(), 10);
-        }
-        return null;
-      };
-      const normalized = list.map(item => {
-        if(!item || typeof item !== 'object') return null;
-        const name = typeof item.name === 'string' ? item.name : '';
-        if(!name) return null;
-        const subIdsSource = (item.subIds && typeof item.subIds === 'object' && !Array.isArray(item.subIds)) ? item.subIds : {};
-        const rawSubs = Array.isArray(item.subs) ? item.subs : [];
-        const subs = [];
-        const subIdMap = {};
-        rawSubs.forEach(entry => {
-          if(typeof entry === 'string'){
-            const subName = entry.trim();
-            if(!subName) return;
-            subs.push(subName);
-            if(Object.prototype.hasOwnProperty.call(subIdsSource, entry)){
-              const parsed = parseId(subIdsSource[entry]);
-              if(parsed !== null){
-                subIdMap[subName] = parsed;
-              }
-            }
-            return;
-          }
-          if(entry && typeof entry === 'object'){
-            const subName = typeof entry.name === 'string' ? entry.name.trim() : '';
-            if(!subName) return;
-            subs.push(subName);
-            const parsed = parseId(entry.id);
-            if(parsed !== null){
-              subIdMap[subName] = parsed;
-            } else if(Object.prototype.hasOwnProperty.call(subIdsSource, subName)){
-              const fromMap = parseId(subIdsSource[subName]);
-              if(fromMap !== null){
-                subIdMap[subName] = fromMap;
-              }
-            }
-          }
-        });
-        const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
-        const subFields = {};
-        subs.forEach(sub => {
-          const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
-          subFields[sub] = fields;
-        });
-        const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
-      }).filter(Boolean);
-      const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
-        id: null,
-        name: cat.name,
-        subs: cat.subs.slice(),
-        subIds: cat.subs.reduce((acc, sub) => {
-          acc[sub] = null;
-          return acc;
-        }, {}),
-        subFields: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
-        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
-      }));
-      base.forEach(cat => {
-        if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-          cat.subFields = {};
-        }
-        if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
-          cat.subIds = {};
-        }
-        cat.subs.forEach(sub => {
-          if(!Array.isArray(cat.subFields[sub])){
-            cat.subFields[sub] = [];
-          }
-          if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
-            cat.subIds[sub] = null;
-          }
-        });
-        cat.sort_order = normalizeCategorySortOrderValue(cat.sort_order ?? cat.sortOrder);
-      });
-      return base;
-    }
-
-    function normalizeFormbuilderSnapshot(snapshot){
-      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
-      const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
-      const normalizedCurrencies = Array.from(new Set(rawCurrencies
-        .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
-        .filter(Boolean)));
-      if(!normalizedCurrencies.length){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
-      }
-      const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
-      const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
-      const normalizedIconPathsFromMaps = [
-        ...Object.values(normalizedCategoryIconPaths || {}),
-        ...Object.values(normalizedSubcategoryIconPaths || {})
-      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
-        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
-      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
-        ? snapshot.iconLibrary
-        : [];
-      const mergedIconSet = new Set();
-      const mergedIconLibrary = [];
-      const addIconToLibrary = (icon)=>{
-        if(typeof icon !== 'string'){
-          return;
-        }
-        const normalized = normalizeIconAssetPath(icon);
-        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
-          return;
-        }
-        const key = normalized.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(normalized);
-      };
-      iconLibrarySource.forEach(addIconToLibrary);
-      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
-      const iconLibrary = mergedIconLibrary;
-      return {
-        categories: normalizedCategories,
-        versionPriceCurrencies: normalizedCurrencies,
-        categoryIconPaths: normalizedCategoryIconPaths,
-        subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary
-      };
-    }
-
-    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
-    window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
-
     function getPersistedFormbuilderSnapshotFromGlobals(){
       if(typeof window === 'undefined'){
         return null;
@@ -3516,6 +3351,763 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
       }
       return null;
+    }
+
+    function cloneFieldValue(value){
+      if(Array.isArray(value)){
+        return value.map(cloneFieldValue);
+      }
+      if(value && typeof value === 'object'){
+        try{
+          return JSON.parse(JSON.stringify(value));
+        }catch(err){
+          return { ...value };
+        }
+      }
+      return value;
+    }
+
+    const DEFAULT_FORMBUILDER_SNAPSHOT = {
+      categories: [],
+      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
+      categoryIconPaths: {},
+      subcategoryIconPaths: {},
+      iconLibrary: [],
+      fieldTypes: [],
+      fieldTypesById: {}
+    };
+
+    const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
+
+    const KEY_SANITIZE_RE = /[^a-z0-9]+/gi;
+
+    function sanitizeKeyValue(value){
+      if(typeof value !== 'string') return '';
+      const trimmed = value.trim();
+      if(!trimmed){
+        return '';
+      }
+      return trimmed
+        .replace(KEY_SANITIZE_RE, '-')
+        .replace(/-+/g, '-')
+        .replace(/^[-_]+|[-_]+$/g, '')
+        .toLowerCase();
+    }
+
+    function fallbackKeyFromName(name){
+      if(typeof name !== 'string'){
+        return '';
+      }
+      const normalized = sanitizeKeyValue(name);
+      if(normalized){
+        return normalized;
+      }
+      const trimmed = name.trim();
+      return trimmed || '';
+    }
+
+    function parseNumericId(value){
+      if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
+        return value;
+      }
+      if(typeof value === 'string'){
+        const trimmed = value.trim();
+        if(trimmed && /^\d+$/.test(trimmed)){
+          return parseInt(trimmed, 10);
+        }
+      }
+      return null;
+    }
+
+    function normalizeFieldTypeIdList(source){
+      const result = [];
+      const seen = new Set();
+      const queue = Array.isArray(source) ? source.slice() : [source];
+      while(queue.length){
+        const current = queue.shift();
+        if(current === null || typeof current === 'undefined'){
+          continue;
+        }
+        if(Array.isArray(current)){
+          queue.push(...current);
+          continue;
+        }
+        if(typeof current === 'string'){
+          const trimmed = current.trim();
+          if(!trimmed){
+            continue;
+          }
+          if(trimmed.includes(',')){
+            queue.push(...trimmed.split(','));
+            continue;
+          }
+          if(/^\d+$/.test(trimmed)){
+            const num = parseInt(trimmed, 10);
+            if(num > 0 && !seen.has(num)){
+              seen.add(num);
+              result.push(num);
+            }
+          }
+          continue;
+        }
+        if(typeof current === 'number' && Number.isInteger(current) && current > 0){
+          if(!seen.has(current)){
+            seen.add(current);
+            result.push(current);
+          }
+        }
+      }
+      return result;
+    }
+
+    function ensureFieldArray(source){
+      if(!Array.isArray(source)){
+        return [];
+      }
+      return source.map(cloneFieldValue);
+    }
+
+    function normalizeSubFieldsMap(source){
+      const map = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          map[key] = ensureFieldArray(source[key]);
+        });
+      }
+      return map;
+    }
+
+    function normalizeSubFieldTypeMap(source){
+      const map = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          map[key] = normalizeFieldTypeIdList(source[key]);
+        });
+      }
+      return map;
+    }
+
+    function normalizeSubIdMap(source){
+      const map = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          map[key] = parseNumericId(source[key]);
+        });
+      }
+      return map;
+    }
+
+    function normalizeSubAliasMap(source){
+      const map = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          const value = typeof source[key] === 'string' ? source[key].trim() : '';
+          if(value){
+            map[key] = fallbackKeyFromName(value);
+          }
+        });
+      }
+      return map;
+    }
+
+    function normalizeCategoriesSnapshot(sourceCategories){
+      const list = Array.isArray(sourceCategories) && sourceCategories.length
+        ? sourceCategories
+        : (Array.isArray(DEFAULT_FORMBUILDER_SNAPSHOT.categories) ? DEFAULT_FORMBUILDER_SNAPSHOT.categories : []);
+      const normalized = [];
+      list.forEach(item => {
+        if(!item || typeof item !== 'object') return;
+        const rawName = typeof item.name === 'string' ? item.name.trim() : '';
+        const rawKeyCandidate = typeof item.key === 'string' ? item.key : (typeof item.categoryKey === 'string' ? item.categoryKey : '');
+        const key = fallbackKeyFromName(rawKeyCandidate || rawName);
+        const name = rawName || key;
+        if(!name && !key){
+          return;
+        }
+
+        const subFieldsSource = normalizeSubFieldsMap(item.subFields);
+        const subFieldTypesSource = normalizeSubFieldTypeMap(item.subFieldTypes);
+        const subIdsSource = normalizeSubIdMap(item.subIds);
+        const subAliasesSource = normalizeSubAliasMap(item.subAliases);
+
+        const category = {
+          id: parseNumericId(item.id),
+          name,
+          key,
+          subs: [],
+          subsByKey: {},
+          subIds: {},
+          subFields: {},
+          subFieldTypes: {},
+          subAliases: {},
+          sort_order: normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder)
+        };
+
+        const rawSubs = Array.isArray(item.subs) ? item.subs : [];
+        rawSubs.forEach(entry => {
+          let subName = '';
+          let subKey = '';
+          let sortOrder = null;
+          let subId = null;
+          let fieldTypeIds = [];
+
+          if(typeof entry === 'string'){
+            subName = entry.trim();
+          } else if(entry && typeof entry === 'object'){
+            if(typeof entry.name === 'string'){
+              subName = entry.name.trim();
+            }
+            if(typeof entry.key === 'string'){
+              subKey = entry.key.trim();
+            }
+            sortOrder = normalizeCategorySortOrderValue(entry.sort_order ?? entry.sortOrder);
+            subId = parseNumericId(entry.id);
+            fieldTypeIds = normalizeFieldTypeIdList(entry.field_type_ids);
+          }
+
+          if(!subKey && subName){
+            subKey = fallbackKeyFromName(subName);
+          }
+          if(!subKey){
+            subKey = fallbackKeyFromName(subKey);
+          }
+          if(!subName){
+            subName = subKey;
+          }
+          if(!subName && !subKey){
+            return;
+          }
+
+          if(subId === null){
+            if(Object.prototype.hasOwnProperty.call(subIdsSource, subKey)){
+              subId = subIdsSource[subKey];
+            } else if(Object.prototype.hasOwnProperty.call(subIdsSource, subName)){
+              subId = subIdsSource[subName];
+            }
+          }
+          if(fieldTypeIds.length === 0){
+            if(Object.prototype.hasOwnProperty.call(subFieldTypesSource, subKey)){
+              fieldTypeIds = subFieldTypesSource[subKey];
+            } else if(Object.prototype.hasOwnProperty.call(subFieldTypesSource, subName)){
+              fieldTypeIds = subFieldTypesSource[subName];
+            }
+          }
+
+          const fieldsKey = Object.prototype.hasOwnProperty.call(subFieldsSource, subKey)
+            ? subKey
+            : (Object.prototype.hasOwnProperty.call(subFieldsSource, subName) ? subName : null);
+          const fields = fieldsKey !== null ? subFieldsSource[fieldsKey] : [];
+          const normalizedFields = ensureFieldArray(fields);
+
+          const canonicalKey = subKey || fallbackKeyFromName(subName);
+          const normalizedSub = {
+            id: subId,
+            name: subName || canonicalKey,
+            key: canonicalKey,
+            sort_order: sortOrder,
+            field_type_ids: fieldTypeIds.slice()
+          };
+
+          category.subs.push(normalizedSub);
+          category.subsByKey[canonicalKey] = normalizedSub;
+          if(normalizedSub.name){
+            category.subAliases[normalizedSub.name] = canonicalKey;
+          }
+          category.subAliases[canonicalKey] = canonicalKey;
+          category.subFields[canonicalKey] = normalizedFields;
+          category.subFieldTypes[canonicalKey] = normalizedSub.field_type_ids.slice();
+          category.subIds[canonicalKey] = subId;
+          if(normalizedSub.name && normalizedSub.name !== canonicalKey){
+            category.subFields[normalizedSub.name] = normalizedFields;
+            category.subFieldTypes[normalizedSub.name] = normalizedSub.field_type_ids.slice();
+            category.subIds[normalizedSub.name] = subId;
+          }
+        });
+
+        Object.keys(subAliasesSource).forEach(aliasName => {
+          const canonicalKey = subAliasesSource[aliasName];
+          if(!canonicalKey){
+            return;
+          }
+          category.subAliases[aliasName] = canonicalKey;
+        });
+
+        Object.keys(category.subAliases).forEach(alias => {
+          const canonicalKey = category.subAliases[alias];
+          if(!canonicalKey){
+            return;
+          }
+          if(!Object.prototype.hasOwnProperty.call(category.subFields, alias)){
+            if(Object.prototype.hasOwnProperty.call(subFieldsSource, alias)){
+              category.subFields[alias] = ensureFieldArray(subFieldsSource[alias]);
+            } else if(Object.prototype.hasOwnProperty.call(category.subFields, canonicalKey)){
+              category.subFields[alias] = category.subFields[canonicalKey];
+            } else {
+              category.subFields[alias] = [];
+            }
+          }
+          if(!Object.prototype.hasOwnProperty.call(category.subFieldTypes, alias)){
+            if(Object.prototype.hasOwnProperty.call(subFieldTypesSource, alias)){
+              category.subFieldTypes[alias] = subFieldTypesSource[alias].slice();
+            } else if(Object.prototype.hasOwnProperty.call(category.subFieldTypes, canonicalKey)){
+              category.subFieldTypes[alias] = category.subFieldTypes[canonicalKey];
+            } else {
+              category.subFieldTypes[alias] = [];
+            }
+          }
+          if(!Object.prototype.hasOwnProperty.call(category.subIds, alias)){
+            if(Object.prototype.hasOwnProperty.call(subIdsSource, alias)){
+              category.subIds[alias] = subIdsSource[alias];
+            } else if(Object.prototype.hasOwnProperty.call(category.subIds, canonicalKey)){
+              category.subIds[alias] = category.subIds[canonicalKey];
+            } else {
+              category.subIds[alias] = null;
+            }
+          }
+        });
+
+        category.subs.sort((a, b) => {
+          const orderA = normalizeCategorySortOrderValue(a.sort_order ?? a.sortOrder);
+          const orderB = normalizeCategorySortOrderValue(b.sort_order ?? b.sortOrder);
+          if(orderA !== null && orderB !== null && orderA !== orderB){
+            return orderA - orderB;
+          }
+          if(orderA !== null && orderB === null){
+            return -1;
+          }
+          if(orderA === null && orderB !== null){
+            return 1;
+          }
+          return (a.name || a.key || '').localeCompare(b.name || b.key || '', undefined, { sensitivity: 'accent', numeric: true });
+        });
+
+        normalized.push(category);
+      });
+
+      return normalized;
+    }
+
+    function normalizeFieldTypeEntry(entry){
+      if(!entry || typeof entry !== 'object'){
+        return null;
+      }
+      const id = parseNumericId(entry.id ?? entry.ID ?? entry.Id ?? entry);
+      if(id === null || id <= 0){
+        return null;
+      }
+      const keyCandidate = typeof entry.key === 'string' && entry.key.trim() ? entry.key : (typeof entry.field_type_key === 'string' ? entry.field_type_key : '');
+      const key = fallbackKeyFromName(keyCandidate || (typeof entry.value === 'string' ? entry.value : '')) || String(id);
+      const nameCandidate = typeof entry.name === 'string' ? entry.name : (typeof entry.label === 'string' ? entry.label : (typeof entry.field_type_name === 'string' ? entry.field_type_name : ''));
+      const name = nameCandidate && nameCandidate.trim() ? nameCandidate.trim() : key;
+      const fields = Array.isArray(entry.fields) ? entry.fields.map(cloneFieldValue) : [];
+      return {
+        id,
+        key,
+        name,
+        label: name,
+        value: key,
+        fields
+      };
+    }
+
+    function normalizeFieldTypeCatalog(fieldTypesList, fieldTypesById){
+      const normalizedList = [];
+      const byId = {};
+      const byKey = {};
+      const seenIds = new Set();
+      const addEntry = (entry)=>{
+        const normalized = normalizeFieldTypeEntry(entry);
+        if(!normalized){
+          return;
+        }
+        if(seenIds.has(normalized.id)){
+          if(!byId[normalized.id]){
+            byId[normalized.id] = normalized;
+          }
+          if(!byKey[normalized.key]){
+            byKey[normalized.key] = normalized;
+          }
+          return;
+        }
+        seenIds.add(normalized.id);
+        normalizedList.push(normalized);
+        byId[normalized.id] = normalized;
+        if(normalized.key){
+          byKey[normalized.key] = normalized;
+        }
+      };
+
+      if(Array.isArray(fieldTypesList)){
+        fieldTypesList.forEach(addEntry);
+      }
+      if(fieldTypesById && typeof fieldTypesById === 'object' && !Array.isArray(fieldTypesById)){
+        Object.keys(fieldTypesById).forEach(idKey => {
+          let entry = fieldTypesById[idKey];
+          if(entry && typeof entry === 'object' && !Object.prototype.hasOwnProperty.call(entry, 'id')){
+            entry = { ...entry, id: parseNumericId(idKey) };
+          }
+          addEntry(entry);
+        });
+      }
+
+      normalizedList.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'accent', numeric: true }));
+
+      return { list: normalizedList, byId, byKey };
+    }
+
+    function ensureCategoryInternals(category){
+      if(!category || typeof category !== 'object'){
+        return null;
+      }
+      if(!category.subAliases || typeof category.subAliases !== 'object' || Array.isArray(category.subAliases)){
+        category.subAliases = {};
+      }
+      if(!category.subFields || typeof category.subFields !== 'object' || Array.isArray(category.subFields)){
+        category.subFields = {};
+      }
+      if(!category.subFieldTypes || typeof category.subFieldTypes !== 'object' || Array.isArray(category.subFieldTypes)){
+        category.subFieldTypes = {};
+      }
+      if(!category.subIds || typeof category.subIds !== 'object' || Array.isArray(category.subIds)){
+        category.subIds = {};
+      }
+      if(!category.subsByKey || typeof category.subsByKey !== 'object' || Array.isArray(category.subsByKey)){
+        category.subsByKey = {};
+      }
+      const subs = Array.isArray(category.subs) ? category.subs : [];
+      for(let i = 0; i < subs.length; i++){
+        let sub = subs[i];
+        if(!sub || typeof sub !== 'object'){
+          const name = typeof sub === 'string' ? sub : '';
+          const keyLookup = category.subAliases && typeof category.subAliases[name] === 'string' ? category.subAliases[name] : '';
+          const key = keyLookup || fallbackKeyFromName(name);
+          sub = { id: null, name: name || key, key, sort_order: null, field_type_ids: [] };
+          subs[i] = sub;
+        } else {
+          if(typeof sub.name !== 'string'){
+            sub.name = typeof sub.key === 'string' ? sub.key : '';
+          }
+          if(typeof sub.key !== 'string' || !sub.key){
+            sub.key = fallbackKeyFromName(sub.name || '');
+          } else {
+            sub.key = fallbackKeyFromName(sub.key) || sub.key;
+          }
+          if(!Array.isArray(sub.field_type_ids)){
+            sub.field_type_ids = normalizeFieldTypeIdList(sub.field_type_ids);
+          }
+        }
+        const canonicalKey = sub.key || fallbackKeyFromName(sub.name || '');
+        if(!canonicalKey){
+          continue;
+        }
+        category.subsByKey[canonicalKey] = sub;
+        if(sub.name){
+          category.subAliases[sub.name] = canonicalKey;
+        }
+        category.subAliases[canonicalKey] = canonicalKey;
+        if(!Object.prototype.hasOwnProperty.call(category.subFields, canonicalKey)){
+          category.subFields[canonicalKey] = [];
+        }
+        if(!Object.prototype.hasOwnProperty.call(category.subFieldTypes, canonicalKey)){
+          category.subFieldTypes[canonicalKey] = Array.isArray(sub.field_type_ids) ? sub.field_type_ids.slice() : [];
+        }
+        if(!Object.prototype.hasOwnProperty.call(category.subIds, canonicalKey)){
+          category.subIds[canonicalKey] = Object.prototype.hasOwnProperty.call(sub, 'id') ? sub.id : null;
+        }
+        if(sub.name && sub.name !== canonicalKey){
+          if(!Object.prototype.hasOwnProperty.call(category.subFields, sub.name)){
+            category.subFields[sub.name] = category.subFields[canonicalKey];
+          }
+          if(!Object.prototype.hasOwnProperty.call(category.subFieldTypes, sub.name)){
+            category.subFieldTypes[sub.name] = category.subFieldTypes[canonicalKey];
+          }
+          if(!Object.prototype.hasOwnProperty.call(category.subIds, sub.name)){
+            category.subIds[sub.name] = category.subIds[canonicalKey];
+          }
+        }
+      }
+      category.subs = subs;
+      return category;
+    }
+
+    function getSubcategoryEntries(category){
+      const normalized = ensureCategoryInternals(category);
+      return normalized && Array.isArray(normalized.subs) ? normalized.subs : [];
+    }
+
+    function getElementCategoryKey(el){
+      if(!el || !el.dataset) return '';
+      const ds = el.dataset;
+      const key = typeof ds.categoryKey === 'string' ? ds.categoryKey.trim() : '';
+      if(key) return key;
+      const fallback = typeof ds.category === 'string' ? ds.category.trim() : '';
+      const name = typeof ds.categoryName === 'string' ? ds.categoryName.trim() : fallback;
+      return fallbackKeyFromName(key || name);
+    }
+
+    function getElementCategoryName(el){
+      if(!el || !el.dataset) return '';
+      const ds = el.dataset;
+      if(typeof ds.categoryName === 'string' && ds.categoryName.trim()){
+        return ds.categoryName.trim();
+      }
+      if(typeof ds.category === 'string' && ds.category.trim()){
+        return ds.category.trim();
+      }
+      return '';
+    }
+
+    function getElementSubcategoryKey(el){
+      if(!el || !el.dataset) return '';
+      const ds = el.dataset;
+      const key = typeof ds.subcategoryKey === 'string' ? ds.subcategoryKey.trim() : '';
+      if(key) return key;
+      const fallback = typeof ds.subcategory === 'string' ? ds.subcategory.trim() : '';
+      const name = typeof ds.subcategoryName === 'string' ? ds.subcategoryName.trim() : fallback;
+      return fallbackKeyFromName(key || name);
+    }
+
+    function getElementSubcategoryName(el){
+      if(!el || !el.dataset) return '';
+      const ds = el.dataset;
+      if(typeof ds.subcategoryName === 'string' && ds.subcategoryName.trim()){
+        return ds.subcategoryName.trim();
+      }
+      if(typeof ds.subcategory === 'string' && ds.subcategory.trim()){
+        return ds.subcategory.trim();
+      }
+      return '';
+    }
+
+    function getSubcategoryByKey(category, key){
+      const normalized = ensureCategoryInternals(category);
+      if(!normalized || !key){
+        return null;
+      }
+      const lookupKey = String(key).trim();
+      if(!lookupKey){
+        return null;
+      }
+      if(normalized.subsByKey && Object.prototype.hasOwnProperty.call(normalized.subsByKey, lookupKey)){
+        return normalized.subsByKey[lookupKey];
+      }
+      if(normalized.subAliases && Object.prototype.hasOwnProperty.call(normalized.subAliases, lookupKey)){
+        const alias = normalized.subAliases[lookupKey];
+        if(alias && normalized.subsByKey && Object.prototype.hasOwnProperty.call(normalized.subsByKey, alias)){
+          return normalized.subsByKey[alias];
+        }
+      }
+      return null;
+    }
+
+    const LEGACY_FORM_FIELD_TYPE_OPTIONS = [
+      { value: 'title', label: 'Title' },
+      { value: 'description', label: 'Description' },
+      { value: 'text-box', label: 'Text Box' },
+      { value: 'text-area', label: 'Text Area' },
+      { value: 'dropdown', label: 'Dropdown' },
+      { value: 'radio-toggle', label: 'Radio Toggle' },
+      { value: 'email', label: 'Email' },
+      { value: 'phone', label: 'Phone' },
+      { value: 'location', label: 'Location' },
+      { value: 'website-url', label: 'Website (URL)' },
+      { value: 'tickets-url', label: 'Tickets (URL)' },
+      { value: 'images', label: 'Images' },
+      { value: 'coupon', label: 'Coupon' },
+      { value: 'version-price', label: 'Version/Price' },
+      { value: 'checkout', label: 'Checkout' },
+      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
+    ];
+
+    function formatFieldTypeLabel(value){
+      if(typeof value !== 'string'){
+        return '';
+      }
+      const normalized = value.replace(/[-_]+/g, ' ').trim();
+      if(!normalized){
+        return '';
+      }
+      return normalized.split(/\s+/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+    }
+
+    function buildFormFieldTypeOptions(categoriesList, fieldTypeCatalog){
+      const labelMap = {};
+      LEGACY_FORM_FIELD_TYPE_OPTIONS.forEach(option => {
+        if(option && option.value){
+          labelMap[option.value] = option.label || formatFieldTypeLabel(option.value);
+        }
+      });
+      const optionsMap = new Map();
+      const addOption = (value, label)=>{
+        if(typeof value !== 'string'){
+          return;
+        }
+        const trimmedValue = value.trim();
+        if(!trimmedValue){
+          return;
+        }
+        const normalizedLabel = (typeof label === 'string' && label.trim())
+          ? label.trim()
+          : (labelMap[trimmedValue] || formatFieldTypeLabel(trimmedValue));
+        if(!optionsMap.has(trimmedValue)){
+          optionsMap.set(trimmedValue, { value: trimmedValue, label: normalizedLabel || trimmedValue });
+        }
+      };
+
+      LEGACY_FORM_FIELD_TYPE_OPTIONS.forEach(option => addOption(option.value, option.label));
+
+      if(Array.isArray(fieldTypeCatalog)){
+        fieldTypeCatalog.forEach(typeDef => {
+          if(!typeDef || typeof typeDef !== 'object'){
+            return;
+          }
+          if(Array.isArray(typeDef.fields)){
+            typeDef.fields.forEach(fieldDef => {
+              if(fieldDef && typeof fieldDef === 'object'){
+                addOption(fieldDef.type, fieldDef.label || fieldDef.name || formatFieldTypeLabel(fieldDef.type));
+              }
+            });
+          }
+        });
+      }
+
+      if(Array.isArray(categoriesList)){
+        categoriesList.forEach(category => {
+          const normalizedCategory = ensureCategoryInternals(category);
+          if(!normalizedCategory){
+            return;
+          }
+          const subs = getSubcategoryEntries(normalizedCategory);
+          subs.forEach(subEntry => {
+            if(!subEntry || typeof subEntry !== 'object'){
+              return;
+            }
+            const key = subEntry.key || fallbackKeyFromName(subEntry.name || '');
+            const name = subEntry.name || key;
+            const fieldsByKey = normalizedCategory.subFields && key && Array.isArray(normalizedCategory.subFields[key])
+              ? normalizedCategory.subFields[key]
+              : null;
+            const fieldsByName = normalizedCategory.subFields && name && Array.isArray(normalizedCategory.subFields[name])
+              ? normalizedCategory.subFields[name]
+              : null;
+            const fields = Array.isArray(fieldsByKey) && fieldsByKey.length
+              ? fieldsByKey
+              : (Array.isArray(fieldsByName) ? fieldsByName : []);
+            fields.forEach(field => {
+              if(field && typeof field === 'object'){
+                addOption(field.type, field.label || field.name || formatFieldTypeLabel(field.type));
+              }
+            });
+          });
+        });
+      }
+
+      return Array.from(optionsMap.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'accent', numeric: true }));
+    }
+
+    const LEGACY_FORM_FIELD_TYPE_OPTIONS = [
+      { value: 'title', label: 'Title' },
+      { value: 'description', label: 'Description' },
+      { value: 'text-box', label: 'Text Box' },
+      { value: 'text-area', label: 'Text Area' },
+      { value: 'dropdown', label: 'Dropdown' },
+      { value: 'radio-toggle', label: 'Radio Toggle' },
+      { value: 'email', label: 'Email' },
+      { value: 'phone', label: 'Phone' },
+      { value: 'location', label: 'Location' },
+      { value: 'website-url', label: 'Website (URL)' },
+      { value: 'tickets-url', label: 'Tickets (URL)' },
+      { value: 'images', label: 'Images' },
+      { value: 'coupon', label: 'Coupon' },
+      { value: 'version-price', label: 'Version/Price' },
+      { value: 'checkout', label: 'Checkout' },
+      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
+    ];
+
+    function formatFieldTypeLabel(value){
+      if(typeof value !== 'string'){
+        return '';
+      }
+      const normalized = value.replace(/[-_]+/g, ' ').trim();
+      if(!normalized){
+        return '';
+      }
+      return normalized.split(/\s+/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+    }
+
+    function buildFormFieldTypeOptions(categoriesList, fieldTypeCatalog){
+      const labelMap = {};
+      LEGACY_FORM_FIELD_TYPE_OPTIONS.forEach(option => {
+        if(option && option.value){
+          labelMap[option.value] = option.label || formatFieldTypeLabel(option.value);
+        }
+      });
+      const optionsMap = new Map();
+      const addOption = (value, label)=>{
+        if(typeof value !== 'string'){
+          return;
+        }
+        const trimmedValue = value.trim();
+        if(!trimmedValue){
+          return;
+        }
+        const normalizedLabel = (typeof label === 'string' && label.trim())
+          ? label.trim()
+          : (labelMap[trimmedValue] || formatFieldTypeLabel(trimmedValue));
+        if(!optionsMap.has(trimmedValue)){
+          optionsMap.set(trimmedValue, { value: trimmedValue, label: normalizedLabel || trimmedValue });
+        }
+      };
+
+      LEGACY_FORM_FIELD_TYPE_OPTIONS.forEach(option => addOption(option.value, option.label));
+
+      if(Array.isArray(fieldTypeCatalog)){
+        fieldTypeCatalog.forEach(typeDef => {
+          if(!typeDef || typeof typeDef !== 'object'){
+            return;
+          }
+          if(Array.isArray(typeDef.fields)){
+            typeDef.fields.forEach(fieldDef => {
+              if(fieldDef && typeof fieldDef === 'object'){
+                addOption(fieldDef.type, fieldDef.label || fieldDef.name || formatFieldTypeLabel(fieldDef.type));
+              }
+            });
+          }
+        });
+      }
+
+      if(Array.isArray(categoriesList)){
+        categoriesList.forEach(category => {
+          const normalizedCategory = ensureCategoryInternals(category);
+          if(!normalizedCategory){
+            return;
+          }
+          const subs = getSubcategoryEntries(normalizedCategory);
+          subs.forEach(subEntry => {
+            if(!subEntry || typeof subEntry !== 'object'){
+              return;
+            }
+            const key = subEntry.key || fallbackKeyFromName(subEntry.name || '');
+            const name = subEntry.name || key;
+            const fieldsByKey = normalizedCategory.subFields && key && Array.isArray(normalizedCategory.subFields[key])
+              ? normalizedCategory.subFields[key]
+              : null;
+            const fieldsByName = normalizedCategory.subFields && name && Array.isArray(normalizedCategory.subFields[name])
+              ? normalizedCategory.subFields[name]
+              : null;
+            const fields = Array.isArray(fieldsByKey) && fieldsByKey.length
+              ? fieldsByKey
+              : (Array.isArray(fieldsByName) ? fieldsByName : []);
+            fields.forEach(field => {
+              if(field && typeof field === 'object'){
+                addOption(field.type, field.label || field.name || formatFieldTypeLabel(field.type));
+              }
+            });
+          });
+        });
+      }
+
+      return Array.from(optionsMap.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'accent', numeric: true }));
     }
 
     const persistedFormbuilderSnapshotPromise = (()=>{
@@ -3545,6 +4137,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
+
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
@@ -3586,459 +4179,164 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     window.iconLibrary = ICON_LIBRARY;
     initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
-    const categories = window.categories = initialFormbuilderSnapshot.categories;
-    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
+
+    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
+
+    const categories = window.categories = Array.isArray(initialFormbuilderSnapshot.categories)
+      ? initialFormbuilderSnapshot.categories.map(ensureCategoryInternals)
+      : [];
+    categories.forEach(ensureCategoryInternals);
+
+    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = Array.isArray(initialFormbuilderSnapshot.versionPriceCurrencies)
+      ? initialFormbuilderSnapshot.versionPriceCurrencies.slice()
+      : [];
+    if(!VERSION_PRICE_CURRENCIES.length){
+      DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => VERSION_PRICE_CURRENCIES.push(code));
+    }
+
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
     assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
     assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
-      { value: 'title', label: 'Title' },
-      { value: 'description', label: 'Description' },
-      { value: 'text-box', label: 'Text Box' },
-      { value: 'text-area', label: 'Text Area' },
-      { value: 'dropdown', label: 'Dropdown' },
-      { value: 'radio-toggle', label: 'Radio Toggle' },
-      { value: 'email', label: 'Email' },
-      { value: 'phone', label: 'Phone' },
-      { value: 'location', label: 'Location' },
-      { value: 'website-url', label: 'Website (URL)' },
-      { value: 'tickets-url', label: 'Tickets (URL)' },
-      { value: 'images', label: 'Images' },
-      { value: 'coupon', label: 'Coupon' },
-      { value: 'version-price', label: 'Version/Price' },
-      { value: 'checkout', label: 'Checkout' },
-      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
-    ];
-    const getFormFieldTypeLabel = (value)=>{
-      const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
-      return match ? match.label : '';
-    };
-    const VENUE_TIME_AUTOFILL_STATE = new WeakMap();
-    const VENUE_CURRENCY_STATE = new WeakMap();
-    let LAST_SELECTED_VENUE_CURRENCY = '';
 
-    function venueSessionCreateTier(){
-      return { name: '', currency: '', price: '' };
-    }
-    function venueSessionCreateVersion(){
-      return { name: '', tiers: [venueSessionCreateTier()] };
-    }
-    function venueSessionCreateTime(){
-      return {
-        time: '',
-        versions: [venueSessionCreateVersion()],
-        samePricingAsAbove: true,
-        samePricingSourceIndex: 0,
-        tierAutofillLocked: false
-      };
-    }
-    function venueSessionCreateSession(){
-      return { date: '', times: [venueSessionCreateTime()] };
-    }
-    function venueSessionCreateVenue(){
-      return { name: '', address: '', location: null, feature: null, sessions: [venueSessionCreateSession()] };
-    }
-    function normalizeVenueSessionTier(tier){
-      let obj = tier;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTier();
+    const persistedFormbuilderSnapshotPromise = (()=>{
+      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
+        return window.__persistedFormbuilderSnapshotPromise;
       }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(typeof obj.currency !== 'string') obj.currency = '';
-      if(typeof obj.price !== 'string') obj.price = '';
-      return obj;
-    }
-    function normalizeVenueSessionVersion(version){
-      let obj = version;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateVersion();
-      }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(!Array.isArray(obj.tiers)){
-        obj.tiers = [venueSessionCreateTier()];
-      } else {
-        for(let i = 0; i < obj.tiers.length; i++){
-          obj.tiers[i] = normalizeVenueSessionTier(obj.tiers[i]);
+      const promise = (async ()=>{
+        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
+        if(inlineSnapshot){
+          return inlineSnapshot;
         }
-        if(obj.tiers.length === 0){
-          obj.tiers.push(venueSessionCreateTier());
+        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
+          return await fetchSavedFormbuilderSnapshot();
         }
+        return null;
+      })();
+      if(typeof window !== 'undefined'){
+        window.__persistedFormbuilderSnapshotPromise = promise;
       }
-      return obj;
-    }
-    function normalizeVenueSessionTime(time){
-      let obj = time;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateTime();
-      }
-      if(typeof obj.time !== 'string') obj.time = '';
-      if(!Array.isArray(obj.versions)){
-        obj.versions = [venueSessionCreateVersion()];
-      } else {
-        for(let i = 0; i < obj.versions.length; i++){
-          obj.versions[i] = normalizeVenueSessionVersion(obj.versions[i]);
-        }
-        if(obj.versions.length === 0){
-          obj.versions.push(venueSessionCreateVersion());
-        }
-      }
-      obj.samePricingAsAbove = obj.samePricingAsAbove !== false;
-      obj.tierAutofillLocked = obj && obj.tierAutofillLocked === true;
-      const sourceIndex = Number(obj.samePricingSourceIndex);
-      obj.samePricingSourceIndex = Number.isInteger(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0;
-      return obj;
-    }
-    function normalizeVenueSessionSession(session){
-      let obj = session;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateSession();
-      }
-      if(typeof obj.date !== 'string') obj.date = '';
-      if(!Array.isArray(obj.times)){
-        obj.times = [venueSessionCreateTime()];
-      } else {
-        for(let i = 0; i < obj.times.length; i++){
-          obj.times[i] = normalizeVenueSessionTime(obj.times[i]);
-        }
-        if(obj.times.length === 0){
-          obj.times.push(venueSessionCreateTime());
-        }
-      }
-      return obj;
-    }
-    function normalizeVenueSessionVenue(opt){
-      let obj = opt;
-      if(!obj || typeof obj !== 'object'){
-        obj = venueSessionCreateVenue();
-      }
-      if(typeof obj.name !== 'string') obj.name = '';
-      if(typeof obj.address !== 'string') obj.address = '';
-      if(obj.location && typeof obj.location === 'object'){
-        const lng = Number(obj.location.lng);
-        const lat = Number(obj.location.lat);
-        obj.location = (Number.isFinite(lng) && Number.isFinite(lat)) ? { lng, lat } : null;
-      } else {
-        obj.location = null;
-      }
-      if(obj.feature && typeof obj.feature !== 'object'){
-        obj.feature = null;
-      }
-      if(!Array.isArray(obj.sessions)){
-        obj.sessions = [venueSessionCreateSession()];
-      } else {
-        for(let i = 0; i < obj.sessions.length; i++){
-          obj.sessions[i] = normalizeVenueSessionSession(obj.sessions[i]);
-        }
-        if(obj.sessions.length === 0){
-          obj.sessions.push(venueSessionCreateSession());
-        }
-      }
-      return obj;
-    }
-    function normalizeVenueSessionOptions(options){
-      let list = options;
-      if(!Array.isArray(list)){
-        list = [];
-      }
-      for(let i = 0; i < list.length; i++){
-        list[i] = normalizeVenueSessionVenue(list[i]);
-      }
-      if(list.length === 0){
-        list.push(venueSessionCreateVenue());
-      }
-      return list;
-    }
-    function cloneVenueSessionTier(tier){
-      const base = venueSessionCreateTier();
-      if(tier && typeof tier === 'object'){
-        if(typeof tier.name === 'string') base.name = tier.name;
-        if(typeof tier.currency === 'string') base.currency = tier.currency;
-        if(typeof tier.price === 'string') base.price = tier.price;
-      }
-      return base;
-    }
-    function cloneVenueSessionVersion(version){
-      const base = venueSessionCreateVersion();
-      base.name = (version && typeof version.name === 'string') ? version.name : '';
-      const tiers = version && Array.isArray(version.tiers) ? version.tiers : [];
-      base.tiers = tiers.length ? tiers.map(cloneVenueSessionTier) : [venueSessionCreateTier()];
-      return base;
-    }
-    function cloneVenueSessionTime(time){
-      const base = venueSessionCreateTime();
-      base.time = (time && typeof time.time === 'string') ? time.time : '';
-      const versions = time && Array.isArray(time.versions) ? time.versions : [];
-      base.versions = versions.length ? versions.map(cloneVenueSessionVersion) : [venueSessionCreateVersion()];
-      base.samePricingAsAbove = !!(time && time.samePricingAsAbove);
-      const sourceIndex = Number(time && time.samePricingSourceIndex);
-      base.samePricingSourceIndex = Number.isInteger(sourceIndex) && sourceIndex >= 0 ? sourceIndex : 0;
-      base.tierAutofillLocked = !!(time && time.tierAutofillLocked);
-      return base;
-    }
-    function cloneVenueSessionSession(session){
-      const base = venueSessionCreateSession();
-      base.date = (session && typeof session.date === 'string') ? session.date : '';
-      const times = session && Array.isArray(session.times) ? session.times : [];
-      base.times = times.length ? times.map(cloneVenueSessionTime) : [venueSessionCreateTime()];
-      return base;
-    }
-    function cloneVenueSessionFeature(feature){
-      if(!feature || typeof feature !== 'object') return null;
-      try{
-        return JSON.parse(JSON.stringify(feature));
-      }catch(err){
-        return { ...feature };
-      }
-    }
-    function cloneVenueSessionVenue(venue){
-      const base = venueSessionCreateVenue();
-      base.name = (venue && typeof venue.name === 'string') ? venue.name : '';
-      base.address = (venue && typeof venue.address === 'string') ? venue.address : '';
-      if(venue && venue.location && typeof venue.location === 'object'){
-        const lng = Number(venue.location.lng);
-        const lat = Number(venue.location.lat);
-        if(Number.isFinite(lng) && Number.isFinite(lat)){
-          base.location = { lng, lat };
-        }
-      }
-      if(venue && venue.feature && typeof venue.feature === 'object'){
-        base.feature = cloneVenueSessionFeature(venue.feature);
-      }
-      const sessions = venue && Array.isArray(venue.sessions) ? venue.sessions : [];
-      base.sessions = sessions.length ? sessions.map(cloneVenueSessionSession) : [venueSessionCreateSession()];
-      return base;
-    }
-    window.normalizeVenueSessionOptions = normalizeVenueSessionOptions;
-    window.cloneVenueSessionVenue = cloneVenueSessionVenue;
-    function getVenueAutofillState(field, venue){
-      let fieldState = VENUE_TIME_AUTOFILL_STATE.get(field);
-      if(!fieldState){
-        fieldState = new WeakMap();
-        VENUE_TIME_AUTOFILL_STATE.set(field, fieldState);
-      }
-      let state = fieldState.get(venue);
-      if(!state){
-        state = { slots: [] };
-        fieldState.set(venue, state);
-      }
-      return state;
-    }
-    function resetVenueAutofillState(field){
-      VENUE_TIME_AUTOFILL_STATE.delete(field);
-    }
+      return promise;
+    })();
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-    const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
-    window.__openIconPickers = OPEN_ICON_PICKERS;
+    const ICON_LIBRARY = Array.isArray(window.iconLibrary)
+      ? window.iconLibrary
+      : (window.iconLibrary = []);
 
-    function toIconIdKey(id){
-      return Number.isInteger(id) ? `id:${id}` : '';
-    }
-    function toIconNameKey(name){
-      return typeof name === 'string' && name ? `name:${name.toLowerCase()}` : '';
-    }
+    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
+      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
+    );
 
-    function normalizeIconLibraryEntries(entries){
-      const seen = new Set();
-      const normalized = [];
-      if(!Array.isArray(entries)){
-        return normalized;
-      }
-      entries.forEach(item => {
-        if(typeof item !== 'string'){
-          return;
-        }
-        const normalizedPath = normalizeIconAssetPath(item);
-        if(!normalizedPath){
-          return;
-        }
-        if(!ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalizedPath)){
-          return;
-        }
-        const key = normalizedPath.toLowerCase();
-        if(seen.has(key)){
-          return;
-        }
-        seen.add(key);
-        normalized.push(normalizedPath);
-      });
-      return normalized;
-    }
-    function normalizeIconAssetPath(path){
-      const normalized = baseNormalizeIconPath(path);
-      if(!normalized){
-        return '';
-      }
-      if(/^(?:https?:)?\/\//i.test(normalized) || normalized.startsWith('data:')){
-        return normalized;
-      }
-      const dividerIndex = normalized.search(/[?#]/);
-      const basePath = dividerIndex >= 0 ? normalized.slice(0, dividerIndex) : normalized;
-      const suffix = dividerIndex >= 0 ? normalized.slice(dividerIndex) : '';
-      let next = basePath.replace(/(^|\/)icons-20\//gi, '$1icons-30/');
-      next = next.replace(/^icons-30\//i, 'assets/icons-30/');
-      next = next.replace(/^assets\/icons-20\//i, 'assets/icons-30/');
-      const sourcePath = next;
-      next = sourcePath.replace(/-20(\.[^./]+)$/i, (match, ext, offset) => {
-        const prevChar = sourcePath.charAt(Math.max(0, offset - 1));
-        return /\d/.test(prevChar) ? match : `-30${ext}`;
-      });
-      return next + suffix;
-    }
-
-    const existingNormalizeIconPath = (typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function')
-      ? window.normalizeIconPath
-      : null;
-    if(typeof window !== 'undefined'){
-      window.normalizeIconPath = (path)=>{
-        const initial = existingNormalizeIconPath ? existingNormalizeIconPath(path) : path;
-        return normalizeIconAssetPath(initial);
-      };
-    }
-
-    function normalizeIconPathMap(source){
-      const normalized = {};
-      if(!source || typeof source !== 'object'){
-        return normalized;
-      }
-      Object.keys(source).forEach(key => {
-        const rawValue = source[key];
-        const value = typeof rawValue === 'string' ? normalizeIconAssetPath(rawValue) : '';
-        if(typeof key !== 'string'){
-          return;
-        }
-        const trimmed = key.trim();
-        if(!trimmed){
-          return;
-        }
-        if(/^id:\d+$/i.test(trimmed)){
-          normalized[trimmed.toLowerCase()] = value;
-          return;
-        }
-        if(/^[0-9]+$/.test(trimmed)){
-          normalized[`id:${trimmed}`] = value;
-          return;
-        }
-        if(/^name:/i.test(trimmed)){
-          const rest = trimmed.slice(5).toLowerCase();
-          if(rest){
-            normalized[`name:${rest}`] = value;
-          }
-          return;
-        }
-        normalized[`name:${trimmed.toLowerCase()}`] = value;
-      });
-      return normalized;
-    }
-    function lookupIconPath(map, id, name){
-      const idKey = toIconIdKey(id);
-      if(idKey && Object.prototype.hasOwnProperty.call(map, idKey)){
-        return { path: map[idKey], found: true };
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey && Object.prototype.hasOwnProperty.call(map, nameKey)){
-        return { path: map[nameKey], found: true };
-      }
-      return { path: '', found: false };
-    }
-    function writeIconPath(map, id, name, path){
-      const idKey = toIconIdKey(id);
-      if(idKey){
-        map[idKey] = path;
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey){
-        map[nameKey] = path;
-      }
-    }
-    function renameIconNameKey(map, oldName, newName){
-      const oldKey = toIconNameKey(oldName);
-      const newKey = toIconNameKey(newName);
-      if(!oldKey || !newKey || oldKey === newKey){
-        if(oldKey && !newKey){
-          delete map[oldKey];
-        }
+    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
+      ? initialFormbuilderSnapshot.iconLibrary
+      : [];
+    const existingWindowIcons = Array.isArray(window.iconLibrary)
+      ? window.iconLibrary.slice()
+      : [];
+    const mapIconValues = [
+      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
+      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
+    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
+      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
+    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
+    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
+    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
+    const mergedIconSet = new Set();
+    const mergedIconLibrary = [];
+    const mergeIcons = icons => {
+      if(!Array.isArray(icons)){
         return;
       }
-      if(Object.prototype.hasOwnProperty.call(map, oldKey) && !Object.prototype.hasOwnProperty.call(map, newKey)){
-        map[newKey] = map[oldKey];
-      }
-      delete map[oldKey];
-    }
-    function deleteIconKeys(map, id, name){
-      const idKey = toIconIdKey(id);
-      if(idKey){
-        delete map[idKey];
-      }
-      const nameKey = toIconNameKey(name);
-      if(nameKey){
-        delete map[nameKey];
-      }
-    }
-    function closeAllIconPickers(){
-      Array.from(OPEN_ICON_PICKERS).forEach(close => {
-        try{ close(); }catch(err){}
+      icons.forEach(icon => {
+        if(typeof icon !== 'string' || !icon){
+          return;
+        }
+        const key = icon.toLowerCase();
+        if(mergedIconSet.has(key)){
+          return;
+        }
+        mergedIconSet.add(key);
+        mergedIconLibrary.push(icon);
       });
+    };
+    mergeIcons(sanitizedSnapshotIcons);
+    mergeIcons(sanitizedMapIcons);
+    mergeIcons(sanitizedWindowIcons);
+    ICON_LIBRARY.length = 0;
+    if(mergedIconLibrary.length){
+      ICON_LIBRARY.push(...mergedIconLibrary);
     }
-    function baseNormalizeIconPath(path){
-      if(typeof path !== 'string') return '';
-      const trimmed = path.trim();
-      if(!trimmed) return '';
-      return trimmed.replace(/^\/+/, '');
+    window.iconLibrary = ICON_LIBRARY;
+    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
+
+    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
+
+    const categories = window.categories = Array.isArray(initialFormbuilderSnapshot.categories)
+      ? initialFormbuilderSnapshot.categories.map(ensureCategoryInternals)
+      : [];
+    categories.forEach(ensureCategoryInternals);
+
+    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = Array.isArray(initialFormbuilderSnapshot.versionPriceCurrencies)
+      ? initialFormbuilderSnapshot.versionPriceCurrencies.slice()
+      : [];
+    if(!VERSION_PRICE_CURRENCIES.length){
+      DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => VERSION_PRICE_CURRENCIES.push(code));
     }
-    function applyNormalizeIconPath(path){
-      if(typeof window !== 'undefined' && typeof window.normalizeIconPath === 'function'){
-        try{
-          const overridden = window.normalizeIconPath(path);
-          if(typeof overridden !== 'undefined'){
-            return baseNormalizeIconPath(overridden);
-          }
-        }catch(err){}
+
+    const categoryIcons = window.categoryIcons = window.categoryIcons || {};
+    const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
+    const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
+    const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
+    assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
+    assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
+
+    const FIELD_TYPE_CATALOG = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
+      ? initialFormbuilderSnapshot.fieldTypes
+      : [];
+    const FIELD_TYPES_BY_ID = initialFormbuilderSnapshot.fieldTypesById && typeof initialFormbuilderSnapshot.fieldTypesById === 'object'
+      ? initialFormbuilderSnapshot.fieldTypesById
+      : {};
+    const FIELD_TYPES_BY_KEY = initialFormbuilderSnapshot.fieldTypesByKey && typeof initialFormbuilderSnapshot.fieldTypesByKey === 'object'
+      ? initialFormbuilderSnapshot.fieldTypesByKey
+      : {};
+    window.fieldTypesCatalog = FIELD_TYPE_CATALOG;
+    window.fieldTypesById = FIELD_TYPES_BY_ID;
+    window.fieldTypesByKey = FIELD_TYPES_BY_KEY;
+
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = buildFormFieldTypeOptions(categories, FIELD_TYPE_CATALOG);
+    const FORM_FIELD_TYPE_LABEL_LOOKUP = {};
+    FORM_FIELD_TYPES.forEach(option => {
+      if(option && typeof option.value === 'string'){
+        FORM_FIELD_TYPE_LABEL_LOOKUP[option.value] = option.label || formatFieldTypeLabel(option.value);
       }
-      return baseNormalizeIconPath(path);
-    }
-    function getCategoryIconPath(category){
-      if(!category) return '';
-      const lookup = lookupIconPath(categoryIconPaths, category.id, category.name);
-      if(lookup.found){
-        return lookup.path || '';
+    });
+
+    const getFormFieldTypeLabel = (value)=>{
+      if(typeof value !== 'string'){
+        return '';
       }
-      return '';
-    }
-    function getSubcategoryIconPath(category, subName){
-      const id = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subName)
-        ? category.subIds[subName]
-        : null;
-      const lookup = lookupIconPath(subcategoryIconPaths, id, subName);
-      if(lookup.found){
-        return lookup.path || '';
+      const trimmed = value.trim();
+      if(!trimmed){
+        return '';
       }
-      return '';
-    }
-    const subcategoryMarkers = window.subcategoryMarkers = window.subcategoryMarkers || {};
-    if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
-      subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
-    }
-    const subcategoryMarkerIds = window.subcategoryMarkerIds = window.subcategoryMarkerIds || {};
-    const categoryShapes = window.categoryShapes = window.categoryShapes || {};
+      return FORM_FIELD_TYPE_LABEL_LOOKUP[trimmed] || formatFieldTypeLabel(trimmed);
+    };
+
     categories.forEach(cat => {
-      if(!cat || typeof cat !== 'object') return;
-      if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-        cat.subFields = {};
-      }
-      (cat.subs || []).forEach(subName => {
-        if(!Array.isArray(cat.subFields[subName])){
-          cat.subFields[subName] = [];
+      const normalizedCategory = ensureCategoryInternals(cat);
+      if(!normalizedCategory) return;
+      const subs = getSubcategoryEntries(normalizedCategory);
+      subs.forEach(subEntry => {
+        if(!subEntry || typeof subEntry !== 'object') return;
+        const key = subEntry.key || fallbackKeyFromName(subEntry.name || '');
+        const name = subEntry.name || key;
+        if(key && !Array.isArray(normalizedCategory.subFields[key])){
+          normalizedCategory.subFields[key] = [];
+        }
+        if(name && !Array.isArray(normalizedCategory.subFields[name])){
+          normalizedCategory.subFields[name] = normalizedCategory.subFields[key] || [];
         }
       });
     });
@@ -5192,18 +5490,44 @@ function makePosts(){
   const MAX_POSTS_PER_CITY = 200;
   const neighborhoodCache = new Map();
   const eligibleCategories = Array.isArray(categories)
-    ? categories.filter(cat => cat && Array.isArray(cat.subs) && cat.subs.length)
+    ? categories.map(ensureCategoryInternals).filter(cat => cat && getSubcategoryEntries(cat).length)
     : [];
 
   const pickCategory = ()=> eligibleCategories.length ? pick(eligibleCategories) : null;
-  const pickSubcategory = (cat)=> (cat && Array.isArray(cat.subs) && cat.subs.length)
-    ? pick(cat.subs)
-    : null;
+  const pickSubcategory = (cat)=> {
+    const subs = getSubcategoryEntries(cat);
+    return subs.length ? pick(subs) : null;
+  };
+
+  const resolveCategorySelection = (cat, sub)=>{
+    if(!cat || !sub) return null;
+    const categoryName = (cat && typeof cat.name === 'string' && cat.name) ? cat.name : (cat && cat.key) ? cat.key : '';
+    const categoryKey = (cat && typeof cat.key === 'string' && cat.key) ? cat.key : fallbackKeyFromName(categoryName);
+    const subName = (sub && typeof sub.name === 'string' && sub.name) ? sub.name : (sub && sub.key) ? sub.key : '';
+    const subKey = (sub && typeof sub.key === 'string' && sub.key) ? sub.key : fallbackKeyFromName(subName);
+    return { categoryName: categoryName || categoryKey, categoryKey, subName: subName || subKey, subKey };
+  };
 
   function pushPost(post){
     if(post && post.city){
       const key = String(post.city);
       cityCounts[key] = (cityCounts[key] || 0) + 1;
+    }
+    if(post && typeof post === 'object'){
+      const rawCategoryName = typeof post.category === 'string' ? post.category : '';
+      const rawCategoryKey = typeof post.categoryKey === 'string' ? post.categoryKey : '';
+      const normalizedCategoryKey = rawCategoryKey || fallbackKeyFromName(rawCategoryName);
+      const normalizedCategoryName = rawCategoryName || normalizedCategoryKey;
+      post.categoryKey = normalizedCategoryKey;
+      post.category = normalizedCategoryName;
+      post.categoryName = normalizedCategoryName;
+      const rawSubName = typeof post.subcategory === 'string' ? post.subcategory : '';
+      const rawSubKey = typeof post.subcategoryKey === 'string' ? post.subcategoryKey : '';
+      const normalizedSubKey = rawSubKey || fallbackKeyFromName(rawSubName);
+      const normalizedSubName = rawSubName || normalizedSubKey;
+      post.subcategoryKey = normalizedSubKey;
+      post.subcategory = normalizedSubName;
+      post.subcategoryName = normalizedSubName;
     }
     out.push(post);
   }
@@ -5255,7 +5579,8 @@ function makePosts(){
   for(let i=0;i<100;i++){
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
+    const selection = resolveCategorySelection(cat, sub);
+    if(!selection) continue;
     const id = 'FS'+i;
     const title = `${id} ${uniqueTitle(i*7777+13, fsCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5272,8 +5597,10 @@ function makePosts(){
       created,
       city: fsCity,
       lng: location.lng, lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
+      category: selection.categoryName,
+      categoryKey: selection.categoryKey,
+      subcategory: selection.subName,
+      subcategoryKey: selection.subKey,
       dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
@@ -5291,7 +5618,8 @@ function makePosts(){
   for(let i=0;i<100;i++){
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
+    const selection = resolveCategorySelection(cat, sub);
+    if(!selection) continue;
     const id = 'TAS'+i;
     const title = `${id} ${uniqueTitle(i*5311+23, tasCity, i)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5314,8 +5642,10 @@ function makePosts(){
       city: tasCity,
       lng: location.lng,
       lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
+      category: selection.categoryName,
+      categoryKey: selection.categoryKey,
+      subcategory: selection.subName,
+      subcategoryKey: selection.subKey,
       dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
@@ -5421,7 +5751,10 @@ function makePosts(){
     const locations = [location];
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
+    const selection = resolveCategorySelection(cat, sub);
+    if(!selection) continue;
+    const selection = resolveCategorySelection(cat, sub);
+    if(!selection) continue;
     const id = `WW${worldProduced}`;
     const title = `${id} ${uniqueTitle(worldProduced*9343+19, spec.city, worldProduced)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5433,8 +5766,10 @@ function makePosts(){
       city: spec.city,
       lng: location.lng,
       lat: location.lat,
-      category: cat.name,
-      subcategory: sub,
+      category: selection.categoryName,
+      categoryKey: selection.categoryKey,
+      subcategory: selection.subName,
+      subcategoryKey: selection.subKey,
       dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
@@ -5476,8 +5811,10 @@ function makePosts(){
       city: operaCity,
       lng: operaLng,
       lat: operaLat,
-      category: cat.name,
-      subcategory: sub,
+      category: selection.categoryName,
+      categoryKey: selection.categoryKey,
+      subcategory: selection.subName,
+      subcategoryKey: selection.subKey,
       dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
@@ -5714,7 +6051,8 @@ function makePosts(){
     }
     const cat = pickCategory();
     const sub = pickSubcategory(cat);
-    if(!cat || !sub) continue;
+    const selection = resolveCategorySelection(cat, sub);
+    if(!selection) continue;
     const id = `SV${singleProduced}`;
     const title = `${id} ${uniqueTitle(singleProduced*48271+131, spec.city, singleProduced)}`;
     const created = new Date().toISOString().replace(/[:.]/g,'-');
@@ -5726,8 +6064,10 @@ function makePosts(){
       city: spec.city,
       lng: locationDetail.lng,
       lat: locationDetail.lat,
-      category: cat.name,
-      subcategory: sub,
+      category: selection.categoryName,
+      categoryKey: selection.categoryKey,
+      subcategory: selection.subName,
+      subcategoryKey: selection.subKey,
       dates: derivePostDatesFromLocations(locations),
       sponsored: true, // All posts are sponsored for development
       fav:false,
@@ -7041,18 +7381,39 @@ function makePosts(){
       if(menuEls.length !== categories.length) return;
       const used = new Set();
       const newOrder = [];
-      menuEls.forEach(menu=>{
+      const findCategoryIndexForMenu = (menu)=>{
+        if(!menu) return -1;
         const idx = Number.parseInt(menu.dataset.categoryIndex, 10);
         if(Number.isInteger(idx) && idx >= 0 && idx < categories.length && !used.has(idx)){
-          newOrder.push(categories[idx]);
-          used.add(idx);
-          return;
+          return idx;
         }
-        const name = menu.dataset.category || '';
-        const fallback = categories.findIndex((cat, index)=> cat && !used.has(index) && cat.name === name);
-        if(fallback !== -1){
-          newOrder.push(categories[fallback]);
-          used.add(fallback);
+        const datasetKey = getElementCategoryKey(menu);
+        const datasetName = getElementCategoryName(menu);
+        const fallbackKey = datasetKey || fallbackKeyFromName(datasetName || '');
+        for(let i = 0; i < categories.length; i++){
+          if(used.has(i)) continue;
+          const candidate = categories[i];
+          const normalized = ensureCategoryInternals(candidate);
+          if(!normalized) continue;
+          const candidateKey = normalized.key || fallbackKeyFromName(normalized.name || '');
+          if(datasetKey && candidateKey && datasetKey === candidateKey){
+            return i;
+          }
+          if(fallbackKey && candidateKey && fallbackKey === candidateKey){
+            return i;
+          }
+          if(datasetName && normalized.name === datasetName){
+            return i;
+          }
+        }
+        return -1;
+      };
+
+      menuEls.forEach(menu=>{
+        const matchIndex = findCategoryIndexForMenu(menu);
+        if(matchIndex !== -1){
+          newOrder.push(categories[matchIndex]);
+          used.add(matchIndex);
         }
       });
       let changed = false;
@@ -7186,8 +7547,23 @@ function makePosts(){
           used.add(idx);
           return;
         }
-        const name = subMenu.dataset.subcategory || '';
-        const fallback = original.findIndex((subName, index)=> subName === name && !used.has(index));
+        const datasetKey = getElementSubcategoryKey(subMenu);
+        const datasetName = getElementSubcategoryName(subMenu);
+        const fallback = original.findIndex((entry, index)=>{
+          if(used.has(index)) return false;
+          const subEntry = entry && typeof entry === 'object' ? entry : { name: entry };
+          const entryName = typeof subEntry.name === 'string' ? subEntry.name : '';
+          const entryKey = typeof subEntry.key === 'string' && subEntry.key
+            ? subEntry.key
+            : fallbackKeyFromName(entryName);
+          if(datasetKey && entryKey && datasetKey === entryKey){
+            return true;
+          }
+          if(datasetName && entryName && datasetName === entryName){
+            return true;
+          }
+          return false;
+        });
         if(fallback !== -1){
           reordered.push(original[fallback]);
           used.add(fallback);
@@ -7315,7 +7691,7 @@ function makePosts(){
         header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
+      try{ event.dataTransfer.setData('text/plain', getElementCategoryKey(menu) || menu.dataset.category || ''); }catch(err){}
           try{
             const rect = menu.getBoundingClientRect();
             event.dataTransfer.setDragImage(menu, rect.width / 2, rect.height / 2);
@@ -7356,7 +7732,7 @@ function makePosts(){
         header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          try{ event.dataTransfer.setData('text/plain', subMenu.dataset.subcategory || ''); }catch(err){}
+          try{ event.dataTransfer.setData('text/plain', getElementSubcategoryKey(subMenu) || subMenu.dataset.subcategory || ''); }catch(err){}
           try{
             const rect = subMenu.getBoundingClientRect();
             event.dataTransfer.setDragImage(subMenu, rect.width / 2, rect.height / 2);
@@ -7911,10 +8287,11 @@ function makePosts(){
       formbuilderCats.querySelectorAll('.subcategory-form-menu').forEach(menu=>{
         const logoSpan = menu.querySelector('.subcategory-logo');
         if(!logoSpan) return;
-        const subName = menu.dataset.subcategory || '';
-        const iconLookup = lookupIconPath(subcategoryIconPaths, null, subName);
+        const subKey = getElementSubcategoryKey(menu);
+        const subName = getElementSubcategoryName(menu);
+        const iconLookup = lookupIconPath(subcategoryIconPaths, null, subKey || subName);
         const path = iconLookup.found ? (iconLookup.path || '') : '';
-        const iconHtml = subcategoryIcons[subName] || '';
+        const iconHtml = subcategoryIcons[subKey] || subcategoryIcons[subName] || '';
         const normalizedPath = applyNormalizeIconPath(path);
         logoSpan.innerHTML = '';
         if(normalizedPath){
@@ -7929,7 +8306,8 @@ function makePosts(){
           logoSpan.innerHTML = iconHtml;
           logoSpan.classList.add('has-icon');
         } else {
-          logoSpan.textContent = subName ? subName.charAt(0) : '';
+          const label = subName || subKey;
+          logoSpan.textContent = label ? label.charAt(0) : '';
           logoSpan.classList.remove('has-icon');
         }
       });
@@ -8123,13 +8501,22 @@ function makePosts(){
       const frag = document.createDocumentFragment();
       const sortedCategoryEntries = getSortedCategoryEntries(categories);
       sortedCategoryEntries.forEach(({ category: c, index: sourceIndex }, viewIndex)=>{
-        const baseId = slugify(c.name) || `category-${viewIndex + 1}`;
+        const normalizedCategory = ensureCategoryInternals(c);
+        const categoryKey = normalizedCategory && typeof normalizedCategory.key === 'string' && normalizedCategory.key.trim()
+          ? normalizedCategory.key.trim()
+          : fallbackKeyFromName(normalizedCategory && normalizedCategory.name ? normalizedCategory.name : '');
+        const categoryName = normalizedCategory && typeof normalizedCategory.name === 'string' && normalizedCategory.name.trim()
+          ? normalizedCategory.name.trim()
+          : categoryKey || 'Category';
+        const baseId = slugify(categoryKey || categoryName) || `category-${viewIndex + 1}`;
         const contentId = `category-form-content-${baseId}-${viewIndex}`;
         const editPanelId = `category-edit-panel-${baseId}-${viewIndex}`;
 
         const menu = document.createElement('div');
         menu.className = 'category-form-menu filter-category-menu';
-        menu.dataset.category = c.name;
+        menu.dataset.category = categoryName;
+        menu.dataset.categoryName = categoryName;
+        menu.dataset.categoryKey = categoryKey;
         menu.dataset.categoryIndex = String(sourceIndex);
         menu.setAttribute('role','group');
         menu.setAttribute('aria-expanded','false');
@@ -8146,20 +8533,23 @@ function makePosts(){
         menuBtn.setAttribute('aria-haspopup','true');
         menuBtn.setAttribute('aria-expanded','false');
         menuBtn.setAttribute('aria-controls', contentId);
+        menuBtn.dataset.categoryKey = categoryKey;
+        menuBtn.dataset.categoryName = categoryName;
+        menuBtn.dataset.category = categoryName;
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className = 'category-logo';
-        const categoryIconHtml = categoryIcons[c.name] || '';
-        const categoryIconLookup = lookupIconPath(categoryIconPaths, c.id, c.name);
+        const categoryIconHtml = categoryIcons[categoryKey] || categoryIcons[categoryName] || '';
+        const categoryIconLookup = lookupIconPath(categoryIconPaths, c.id, categoryKey || categoryName);
         const initialCategoryIconSrc = categoryIconLookup.found
           ? (categoryIconLookup.path || '')
           : extractIconSrc(categoryIconHtml);
         if(initialCategoryIconSrc){
           const normalizedInitial = applyNormalizeIconPath(initialCategoryIconSrc);
           if(normalizedInitial){
-            categoryIcons[c.name] = `<img src="${normalizedInitial}" width="20" height="20" alt="">`;
+            categoryIcons[categoryKey || categoryName] = `<img src="${normalizedInitial}" width="20" height="20" alt="">`;
             if(!categoryIconLookup.found){
-              writeIconPath(categoryIconPaths, c.id, c.name, normalizedInitial);
+              writeIconPath(categoryIconPaths, c.id, categoryKey || categoryName, normalizedInitial);
             }
           }
           const img = document.createElement('img');
@@ -8178,7 +8568,7 @@ function makePosts(){
 
         const label = document.createElement('span');
         label.className = 'label';
-        label.textContent = c.name;
+        label.textContent = categoryName;
 
         const arrow = document.createElement('span');
         arrow.className = 'dropdown-arrow';
@@ -8192,7 +8582,7 @@ function makePosts(){
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
         toggleInput.checked = true;
-        toggleInput.setAttribute('aria-label', `Toggle ${c.name} category`);
+        toggleInput.setAttribute('aria-label', `Toggle ${categoryName} category`);
         const toggleSlider = document.createElement('span');
         toggleSlider.className = 'slider';
         toggle.append(toggleInput, toggleSlider);
@@ -8216,7 +8606,7 @@ function makePosts(){
         nameInput.type = 'text';
         nameInput.className = 'category-name-input';
         nameInput.placeholder = 'Category Name';
-        nameInput.value = c.name || '';
+        nameInput.value = categoryName || '';
 
         const iconPicker = document.createElement('div');
         iconPicker.className = 'iconpicker-container';
@@ -8231,7 +8621,7 @@ function makePosts(){
         const previewLabel = document.createElement('span');
         previewLabel.textContent = 'No Icon';
         const previewImg = document.createElement('img');
-        previewImg.alt = `${c.name} icon preview`;
+        previewImg.alt = `${categoryName} icon preview`;
         preview.append(previewLabel, previewImg);
         const normalizedCategoryIconPath = applyNormalizeIconPath(initialCategoryIconSrc);
         if(normalizedCategoryIconPath){
@@ -8240,7 +8630,7 @@ function makePosts(){
           previewLabel.textContent = '';
           iconPickerButton.textContent = 'Change Icon';
           if(!categoryIconLookup.found){
-            writeIconPath(categoryIconPaths, c.id, c.name, normalizedCategoryIconPath);
+            writeIconPath(categoryIconPaths, c.id, categoryKey || categoryName, normalizedCategoryIconPath);
           }
         }
         iconPicker.append(iconPickerButton, preview);
@@ -8250,7 +8640,7 @@ function makePosts(){
             updateCategoryIconDisplay(value);
             notifyFormbuilderChange();
           },
-          label: `Choose icon for ${c.name}`,
+          label: `Choose icon for ${categoryName}`,
           parentMenu: content,
           parentCategoryMenu: menu
         });
@@ -8259,13 +8649,13 @@ function makePosts(){
         addSubBtn.type = 'button';
         addSubBtn.className = 'add-subcategory-btn';
         addSubBtn.textContent = 'Add Subcategory';
-        addSubBtn.setAttribute('aria-label', `Add subcategory to ${c.name}`);
+        addSubBtn.setAttribute('aria-label', `Add subcategory to ${categoryName}`);
 
         const deleteCategoryBtn = document.createElement('button');
         deleteCategoryBtn.type = 'button';
         deleteCategoryBtn.className = 'delete-category-btn';
         deleteCategoryBtn.textContent = 'Delete Category';
-        deleteCategoryBtn.setAttribute('aria-label', `Delete ${c.name} category`);
+        deleteCategoryBtn.setAttribute('aria-label', `Delete ${categoryName} category`);
 
         editPanel.append(nameInput, iconPicker, addSubBtn);
         editMenu.append(editPanel);
@@ -8282,13 +8672,14 @@ function makePosts(){
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
-        let lastCategoryName = c.name || 'Category';
-        let currentCategoryName = c.name || 'Category';
+        let lastCategoryName = categoryName || 'Category';
+        let currentCategoryName = categoryName || 'Category';
         const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
         const updateCategoryIconDisplay = (src)=>{
           const displayName = getCategoryDisplayName();
           categoryLogo.innerHTML = '';
           const normalizedSrc = applyNormalizeIconPath(src);
+          const storageKeys = [categoryKey, currentCategoryName].filter(value => typeof value === 'string' && value);
           if(normalizedSrc){
             const img = document.createElement('img');
             img.src = normalizedSrc;
@@ -8297,13 +8688,17 @@ function makePosts(){
             img.alt = '';
             categoryLogo.appendChild(img);
             categoryLogo.classList.add('has-icon');
-            categoryIcons[currentCategoryName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
-            writeIconPath(categoryIconPaths, c.id, currentCategoryName, normalizedSrc);
+            storageKeys.forEach(key => {
+              categoryIcons[key] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
+              writeIconPath(categoryIconPaths, c.id, key, normalizedSrc);
+            });
           } else {
             categoryLogo.textContent = displayName.charAt(0) || '';
             categoryLogo.classList.remove('has-icon');
-            delete categoryIcons[currentCategoryName];
-            writeIconPath(categoryIconPaths, c.id, currentCategoryName, '');
+            storageKeys.forEach(key => {
+              delete categoryIcons[key];
+              writeIconPath(categoryIconPaths, c.id, key, '');
+            });
           }
           if(normalizedSrc){
             previewImg.src = normalizedSrc;
@@ -8325,6 +8720,7 @@ function makePosts(){
           const displayName = getCategoryDisplayName();
           const datasetValue = displayName;
           const previousName = currentCategoryName;
+          const iconKeysToPreserve = [categoryKey, previousName].filter(value => typeof value === 'string' && value);
           if(previousName !== datasetValue){
             if(categoryIcons[previousName] !== undefined){
               if(categoryIcons[datasetValue] === undefined){
@@ -8340,20 +8736,30 @@ function makePosts(){
             categories[sourceIndex].name = datasetValue;
           }
           menu.dataset.category = datasetValue;
+          menu.dataset.categoryName = datasetValue;
           label.textContent = displayName;
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
           iconPickerButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
           previewImg.alt = `${displayName} icon preview`;
           deleteCategoryBtn.setAttribute('aria-label', `Delete ${displayName} category`);
           addSubBtn.setAttribute('aria-label', `Add subcategory to ${displayName}`);
+          menuBtn.dataset.categoryName = datasetValue;
+          menuBtn.dataset.category = datasetValue;
           subMenusContainer.querySelectorAll('.subcategory-form-menu').forEach(subEl=>{
             subEl.dataset.category = datasetValue;
+            subEl.dataset.categoryName = datasetValue;
           });
           if(categoryLogo.querySelector('img')){
             categoryLogo.classList.add('has-icon');
           } else {
             updateCategoryIconDisplay('');
           }
+          ensureCategoryInternals(c);
+          iconKeysToPreserve.forEach(key => {
+            if(typeof key === 'string' && key && categoryIcons[key] !== undefined && categoryIcons[datasetValue] === undefined){
+              categoryIcons[datasetValue] = categoryIcons[key];
+            }
+          });
           subNameUpdaters.forEach(fn=>{
             try{ fn(); }catch(err){}
           });
@@ -8372,9 +8778,23 @@ function makePosts(){
           delete categoryIcons[currentCategoryName];
           deleteIconKeys(categoryIconPaths, c.id, currentCategoryName);
           if(c.subs && Array.isArray(c.subs)){
-            c.subs.forEach(subName => {
-              const subId = c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, subName) ? c.subIds[subName] : null;
-              deleteIconKeys(subcategoryIconPaths, subId, subName);
+            c.subs.forEach(subEntry => {
+              const subObj = subEntry && typeof subEntry === 'object' ? subEntry : { name: subEntry };
+              const subName = typeof subObj.name === 'string' && subObj.name ? subObj.name : '';
+              const subKey = typeof subObj.key === 'string' && subObj.key ? subObj.key : fallbackKeyFromName(subName);
+              const subId = (()=>{
+                if(c.subIds && typeof c.subIds === 'object'){
+                  if(subKey && Object.prototype.hasOwnProperty.call(c.subIds, subKey)){
+                    return c.subIds[subKey];
+                  }
+                  if(subName && Object.prototype.hasOwnProperty.call(c.subIds, subName)){
+                    return c.subIds[subName];
+                  }
+                }
+                return null;
+              })();
+              const iconKeys = [subName, subKey].filter(value => typeof value === 'string' && value);
+              iconKeys.forEach(key => deleteIconKeys(subcategoryIconPaths, subId, key));
             });
           }
           menu.remove();
@@ -8382,10 +8802,29 @@ function makePosts(){
         });
 
         c.subs.forEach((sub, subIndex)=>{
+          const subObj = (sub && typeof sub === 'object') ? sub : {
+            id: null,
+            name: typeof sub === 'string' ? sub : '',
+            key: fallbackKeyFromName(typeof sub === 'string' ? sub : ''),
+            sort_order: null,
+            field_type_ids: []
+          };
+          c.subs[subIndex] = subObj;
+          const subKey = (typeof subObj.key === 'string' && subObj.key.trim()) ? subObj.key.trim() : fallbackKeyFromName(subObj.name || '');
+          if(subKey){
+            subObj.key = subKey;
+          }
+          const subName = (typeof subObj.name === 'string' && subObj.name.trim()) ? subObj.name.trim() : (subKey || `Subcategory ${subIndex + 1}`);
+          subObj.name = subName;
+          ensureCategoryInternals(c);
           const subMenu = document.createElement('div');
           subMenu.className = 'subcategory-form-menu';
-          subMenu.dataset.category = c.name;
-          subMenu.dataset.subcategory = sub;
+          subMenu.dataset.category = categoryName;
+          subMenu.dataset.categoryName = categoryName;
+          subMenu.dataset.categoryKey = categoryKey;
+          subMenu.dataset.subcategory = subName;
+          subMenu.dataset.subcategoryName = subName;
+          subMenu.dataset.subcategoryKey = subObj.key || fallbackKeyFromName(subName);
           subMenu.dataset.subIndex = String(subIndex);
           subMenu.setAttribute('aria-expanded','false');
 
@@ -8407,13 +8846,32 @@ function makePosts(){
 
           const subLogo = document.createElement('span');
           subLogo.className = 'subcategory-logo';
-          const subIconHtml = subcategoryIcons[sub] || '';
-          const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
+          const iconLookupKey = subMenu.dataset.subcategoryKey;
+          const iconNameKey = subMenu.dataset.subcategory;
+          const subIconHtml = subcategoryIcons[iconLookupKey] || subcategoryIcons[iconNameKey] || '';
+          const subIdCandidate = (()=>{
+            if(c.subIds && typeof c.subIds === 'object'){
+              if(iconLookupKey && Object.prototype.hasOwnProperty.call(c.subIds, iconLookupKey)){
+                return c.subIds[iconLookupKey];
+              }
+              if(iconNameKey && Object.prototype.hasOwnProperty.call(c.subIds, iconNameKey)){
+                return c.subIds[iconNameKey];
+              }
+            }
+            return null;
+          })();
+          if(subIdCandidate !== null && typeof subIdCandidate !== 'undefined'){
+            subObj.id = subIdCandidate;
+          }
+          const subIconLookup = lookupIconPath(subcategoryIconPaths, subObj.id ?? null, iconLookupKey || iconNameKey);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
           if(initialSubIconPath){
             const normalizedInitialSub = applyNormalizeIconPath(initialSubIconPath);
             if(normalizedInitialSub){
-              subcategoryIcons[sub] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
+              const mapKeys = [iconLookupKey, iconNameKey].filter(value => typeof value === 'string' && value);
+              mapKeys.forEach(key => {
+                subcategoryIcons[key] = `<img src="${normalizedInitialSub}" width="20" height="20" alt="">`;
+              });
             }
           }
           if(initialSubIconPath){
@@ -8436,7 +8894,7 @@ function makePosts(){
 
           const subLabel = document.createElement('span');
           subLabel.className = 'subcategory-label';
-          subLabel.textContent = sub;
+          subLabel.textContent = subName;
 
           subLabelWrap.append(subLogo, subLabel);
 
@@ -8452,7 +8910,7 @@ function makePosts(){
           const subInput = document.createElement('input');
           subInput.type = 'checkbox';
           subInput.checked = true;
-          subInput.setAttribute('aria-label', `Toggle ${sub} subcategory`);
+          subInput.setAttribute('aria-label', `Toggle ${subName} subcategory`);
           const subSlider = document.createElement('span');
           subSlider.className = 'slider';
           subToggle.append(subInput, subSlider);
@@ -8469,7 +8927,7 @@ function makePosts(){
           subNameInput.type = 'text';
           subNameInput.className = 'subcategory-name-input';
           subNameInput.placeholder = 'Subcategory Name';
-          subNameInput.value = sub || '';
+          subNameInput.value = subName || '';
 
           const subIconPicker = document.createElement('div');
           subIconPicker.className = 'iconpicker-container';
@@ -8484,7 +8942,7 @@ function makePosts(){
           const subPreviewLabel = document.createElement('span');
           subPreviewLabel.textContent = 'No Icon';
           const subPreviewImg = document.createElement('img');
-          subPreviewImg.alt = `${sub} icon preview`;
+          subPreviewImg.alt = `${subName} icon preview`;
           subPreview.append(subPreviewLabel, subPreviewImg);
     
 
@@ -8495,7 +8953,7 @@ function makePosts(){
               updateSubIconDisplay(value);
               notifyFormbuilderChange();
             },
-            label: `Choose icon for ${sub}`,
+            label: `Choose icon for ${subName}`,
             parentMenu: subContent,
             parentCategoryMenu: menu
           });
@@ -8504,11 +8962,11 @@ function makePosts(){
           deleteSubBtn.type = 'button';
           deleteSubBtn.className = 'delete-subcategory-btn';
           deleteSubBtn.textContent = 'Delete Subcategory';
-          deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
+          deleteSubBtn.setAttribute('aria-label', `Delete ${subName} subcategory from ${categoryName}`);
 
           const subPlaceholder = document.createElement('p');
           subPlaceholder.className = 'subcategory-form-placeholder';
-          subPlaceholder.innerHTML = `Customize the <strong>${sub}</strong> subcategory.`;
+          subPlaceholder.innerHTML = `Customize the <strong>${subName}</strong> subcategory.`;
 
           const fieldsSection = document.createElement('div');
           fieldsSection.className = 'subcategory-fields-section';
@@ -8521,7 +8979,7 @@ function makePosts(){
           addFieldBtn.type = 'button';
           addFieldBtn.className = 'add-field-btn';
           addFieldBtn.textContent = 'Add Field';
-          addFieldBtn.setAttribute('aria-label', `Add field to ${sub}`);
+          addFieldBtn.setAttribute('aria-label', `Add field to ${subName}`);
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
@@ -11205,7 +11663,8 @@ function makePosts(){
             return fieldList.length > 0;
           };
 
-          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+          const fieldMapKey = subMenu.dataset.subcategoryKey || subName;
+          const fields = Array.isArray(subFieldsMap[fieldMapKey]) ? subFieldsMap[fieldMapKey] : (subFieldsMap[fieldMapKey] = []);
 
           if(ensureDefaultFieldSet(fields)){
             notifyFormbuilderChange();
@@ -11217,7 +11676,7 @@ function makePosts(){
           formPreviewBtn.type = 'button';
           formPreviewBtn.className = 'form-preview-btn';
           formPreviewBtn.setAttribute('aria-expanded', 'false');
-          formPreviewBtn.setAttribute('aria-label', `Preview ${sub} form`);
+          formPreviewBtn.setAttribute('aria-label', `Preview ${subName} form`);
           const formPreviewLabel = document.createElement('span');
           formPreviewLabel.textContent = 'Form Preview';
           const formPreviewArrow = document.createElement('span');
@@ -12510,44 +12969,58 @@ function makePosts(){
 
           renderFormPreview();
 
-          const defaultSubName = sub || 'Subcategory';
-          let currentSubName = defaultSubName;
-          let lastSubName = defaultSubName;
-          let currentSubId = c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null;
+          const defaultSubName = subName || 'Subcategory';
+          let currentSubName = subName || defaultSubName;
+          let lastSubName = currentSubName;
+          const defaultSubKey = subObj.key || fallbackKeyFromName(defaultSubName);
+          let currentSubKey = defaultSubKey;
+          let currentSubId = typeof subObj.id === 'number' ? subObj.id : null;
+          if(currentSubId === null && c.subIds && typeof c.subIds === 'object'){
+            if(currentSubKey && Object.prototype.hasOwnProperty.call(c.subIds, currentSubKey)){
+              currentSubId = c.subIds[currentSubKey];
+            } else if(currentSubName && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
+              currentSubId = c.subIds[currentSubName];
+            }
+          }
           const getSubNameValue = ()=> subNameInput.value.trim();
           const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
-            const updateSubIconDisplay = (src)=>{
-              const displayName = getSubDisplayName();
-              subLogo.innerHTML = '';
-              const normalizedSrc = applyNormalizeIconPath(src);
-              if(normalizedSrc){
-                const img = document.createElement('img');
-                img.src = normalizedSrc;
-                img.width = 20;
-                img.height = 20;
-                img.alt = '';
-                subLogo.appendChild(img);
-                subLogo.classList.add('has-icon');
-                subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
-                writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
-              } else {
-                subLogo.textContent = displayName.charAt(0) || '';
-                subLogo.classList.remove('has-icon');
-                delete subcategoryIcons[currentSubName];
-                writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
-              }
-              if(normalizedSrc){
-                subPreviewImg.src = normalizedSrc;
-                subPreview.classList.add('has-image');
-                subPreviewLabel.textContent = '';
-                subIconButton.textContent = 'Change Icon';
-              } else {
-                subPreviewImg.removeAttribute('src');
-                subPreview.classList.remove('has-image');
-                subPreviewLabel.textContent = 'No Icon';
-                subIconButton.textContent = 'Choose Icon';
-              }
-            };
+          const updateSubIconDisplay = (src)=>{
+            const displayName = getSubDisplayName();
+            subLogo.innerHTML = '';
+            const normalizedSrc = applyNormalizeIconPath(src);
+            const storageKeys = [currentSubKey, currentSubName].filter(value => typeof value === 'string' && value);
+            if(normalizedSrc){
+              const img = document.createElement('img');
+              img.src = normalizedSrc;
+              img.width = 20;
+              img.height = 20;
+              img.alt = '';
+              subLogo.appendChild(img);
+              subLogo.classList.add('has-icon');
+              storageKeys.forEach(key => {
+                subcategoryIcons[key] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
+                writeIconPath(subcategoryIconPaths, currentSubId, key, normalizedSrc);
+              });
+            } else {
+              subLogo.textContent = displayName.charAt(0) || '';
+              subLogo.classList.remove('has-icon');
+              storageKeys.forEach(key => {
+                delete subcategoryIcons[key];
+                writeIconPath(subcategoryIconPaths, currentSubId, key, '');
+              });
+            }
+            if(normalizedSrc){
+              subPreviewImg.src = normalizedSrc;
+              subPreview.classList.add('has-image');
+              subPreviewLabel.textContent = '';
+              subIconButton.textContent = 'Change Icon';
+            } else {
+              subPreviewImg.removeAttribute('src');
+              subPreview.classList.remove('has-image');
+              subPreviewLabel.textContent = 'No Icon';
+              subIconButton.textContent = 'Choose Icon';
+            }
+          };
           const applySubNameChange = ()=>{
             const rawValue = getSubNameValue();
             if(rawValue){
@@ -12559,7 +13032,9 @@ function makePosts(){
             const datasetValue = displayName;
             subLabel.textContent = displayName;
             subMenu.dataset.subcategory = datasetValue;
+            subMenu.dataset.subcategoryName = datasetValue;
             subBtn.dataset.subcategory = datasetValue;
+            subBtn.dataset.subcategoryKey = currentSubKey;
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
             subIconButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
             subPreviewImg.alt = `${displayName} icon preview`;
@@ -12575,54 +13050,27 @@ function makePosts(){
               subLogo.classList.add('has-icon');
             }
             if(previousSubName !== datasetValue){
-              const updateSubNameInList = (list, primaryIndex)=>{
-                if(!Array.isArray(list)) return false;
-                if(Number.isInteger(primaryIndex) && primaryIndex >= 0 && primaryIndex < list.length){
-                  list[primaryIndex] = datasetValue;
-                  return true;
+              currentSubName = datasetValue;
+              subObj.name = datasetValue;
+              ensureCategoryInternals(c);
+              const iconKeys = [previousSubName, datasetValue, currentSubKey].filter(value => typeof value === 'string' && value);
+              iconKeys.forEach(key => {
+                if(key === previousSubName){
+                  delete subcategoryIcons[key];
                 }
-                const mirrorIndex = list.indexOf(previousSubName);
-                if(mirrorIndex !== -1){
-                  list[mirrorIndex] = datasetValue;
-                  return true;
-                }
-                return false;
-              };
-              const datasetIndex = Number.parseInt(subMenu.dataset.subIndex, 10);
-              if(Array.isArray(c.subs)){
-                if(!updateSubNameInList(c.subs, datasetIndex)){
-                  updateSubNameInList(c.subs, subIndex);
-                }
-              }
-              if(Array.isArray(categories) && categories[sourceIndex] && Array.isArray(categories[sourceIndex].subs)){
-                const mirrorSubs = categories[sourceIndex].subs;
-                if(!updateSubNameInList(mirrorSubs, datasetIndex)){
-                  updateSubNameInList(mirrorSubs, subIndex);
-                }
-              }
-              if(subcategoryIcons[previousSubName] !== undefined){
-                subcategoryIcons[datasetValue] = subcategoryIcons[previousSubName];
-                delete subcategoryIcons[previousSubName];
-              }
-              if(subFieldsMap[previousSubName] !== undefined){
-                subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
-                delete subFieldsMap[previousSubName];
-              }
-              if(c.subIds && typeof c.subIds === 'object'){
-                if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
-                  const preservedId = c.subIds[previousSubName];
-                  delete c.subIds[previousSubName];
-                  c.subIds[datasetValue] = preservedId;
-                  currentSubId = preservedId;
-                }
+              });
+              if(typeof currentSubId === 'number' && c.subIds && typeof c.subIds === 'object'){
+                delete c.subIds[previousSubName];
+                c.subIds[currentSubKey] = currentSubId;
+                c.subIds[datasetValue] = currentSubId;
               }
               renameIconNameKey(subcategoryIconPaths, previousSubName, datasetValue);
-              currentSubName = datasetValue;
+            } else {
+              subObj.name = datasetValue;
             }
-            if(c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
-              currentSubId = c.subIds[currentSubName];
-            } else if(previousSubName === currentSubName){
-              currentSubId = previousSubId;
+            if(typeof currentSubId === 'number' && c.subIds && typeof c.subIds === 'object'){
+              c.subIds[currentSubKey] = currentSubId;
+              c.subIds[currentSubName] = currentSubId;
             }
           };
           subNameUpdaters.push(applySubNameChange);
@@ -12639,12 +13087,18 @@ function makePosts(){
                 closeSubcategoryFieldOverlay();
               }
             }
-            delete subcategoryIcons[currentSubName];
-            deleteIconKeys(subcategoryIconPaths, currentSubId, currentSubName);
+            [currentSubName, currentSubKey].filter(value => typeof value === 'string' && value).forEach(key => {
+              delete subcategoryIcons[key];
+              deleteIconKeys(subcategoryIconPaths, currentSubId, key);
+            });
             if(c.subIds && typeof c.subIds === 'object' && Object.prototype.hasOwnProperty.call(c.subIds, currentSubName)){
               delete c.subIds[currentSubName];
             }
+            if(c.subIds && typeof c.subIds === 'object' && Object.prototype.hasOwnProperty.call(c.subIds, currentSubKey)){
+              delete c.subIds[currentSubKey];
+            }
             subMenu.remove();
+            delete subFieldsMap[currentSubKey];
             delete subFieldsMap[currentSubName];
             notifyFormbuilderChange();
           });
@@ -12705,15 +13159,18 @@ function makePosts(){
             c.subIds = {};
           }
           const baseName = 'New Subcategory';
-          const existing = new Set(c.subs.map(sub => (sub && typeof sub === 'string') ? sub : ''));
+          const existing = new Set(getSubcategoryEntries(c).map(entry => (entry && typeof entry.name === 'string') ? entry.name : ''));
           let candidate = baseName;
           let counter = 2;
           while(existing.has(candidate)){
             candidate = `${baseName} ${counter++}`;
           }
-          c.subs.unshift(candidate);
+          const candidateKey = fallbackKeyFromName(candidate);
+          c.subs.unshift({ id: null, name: candidate, key: candidateKey, sort_order: null, field_type_ids: [] });
+          ensureCategoryInternals(c);
+          c.subIds[candidateKey] = null;
           c.subIds[candidate] = null;
-          subFieldsMap[candidate] = [];
+          subFieldsMap[candidateKey] = [];
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
@@ -12855,13 +13312,35 @@ function makePosts(){
     }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
-        const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
+        const normalized = ensureCategoryInternals(item);
+        const sortOrder = normalizeCategorySortOrderValue(normalized ? (normalized.sort_order ?? normalized.sortOrder) : null);
+        const subs = getSubcategoryEntries(normalized).map(sub => ({
+          id: sub && Number.isInteger(sub.id) ? sub.id : (sub && typeof sub.id === 'string' && /^\d+$/.test(sub.id) ? parseInt(sub.id, 10) : null),
+          name: sub && typeof sub.name === 'string' ? sub.name : '',
+          key: sub && typeof sub.key === 'string' ? sub.key : fallbackKeyFromName(sub && sub.name ? sub.name : ''),
+          sort_order: normalizeCategorySortOrderValue(sub ? (sub.sort_order ?? sub.sortOrder) : null),
+          field_type_ids: normalizeFieldTypeIdList(sub && sub.field_type_ids)
+        }));
+        const subsByKey = {};
+        subs.forEach(sub => {
+          if(sub && sub.key){
+            subsByKey[sub.key] = { ...sub };
+          }
+        });
+        const subFields = cloneFieldsMap(normalized && normalized.subFields);
+        const subIds = cloneMapLike(normalized && normalized.subIds);
+        const subFieldTypes = cloneMapLike(normalized && normalized.subFieldTypes);
+        const subAliases = cloneMapLike(normalized && normalized.subAliases);
         return {
-          id: item && Number.isInteger(item.id) ? item.id : (typeof item.id === 'string' && /^\d+$/.test(item.id) ? parseInt(item.id, 10) : null),
-          name: item && typeof item.name === 'string' ? item.name : '',
-          subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
-          subFields: cloneFieldsMap(item && item.subFields),
-          subIds: cloneMapLike(item && item.subIds),
+          id: normalized && Number.isInteger(normalized.id) ? normalized.id : (normalized && typeof normalized.id === 'string' && /^\d+$/.test(normalized.id) ? parseInt(normalized.id, 10) : null),
+          name: normalized && typeof normalized.name === 'string' ? normalized.name : '',
+          key: normalized && typeof normalized.key === 'string' ? normalized.key : fallbackKeyFromName(normalized && normalized.name ? normalized.name : ''),
+          subs,
+          subsByKey,
+          subAliases,
+          subFields,
+          subFieldTypes,
+          subIds,
           sort_order: sortOrder
         };
       }) : [];
@@ -12908,13 +13387,18 @@ function makePosts(){
         categories.splice(0, categories.length, ...nextCategories);
       }
       categories.forEach(cat => {
-        if(!cat || typeof cat !== 'object') return;
-        if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-          cat.subFields = {};
-        }
-        (cat.subs || []).forEach(subName => {
-          if(!Array.isArray(cat.subFields[subName])){
-            cat.subFields[subName] = [];
+        const normalizedCategory = ensureCategoryInternals(cat);
+        if(!normalizedCategory) return;
+        const subs = getSubcategoryEntries(normalizedCategory);
+        subs.forEach(subEntry => {
+          if(!subEntry || typeof subEntry !== 'object') return;
+          const key = subEntry.key || fallbackKeyFromName(subEntry.name || '');
+          const name = subEntry.name || key;
+          if(key && !Array.isArray(normalizedCategory.subFields[key])){
+            normalizedCategory.subFields[key] = [];
+          }
+          if(name && !Array.isArray(normalizedCategory.subFields[name])){
+            normalizedCategory.subFields[name] = normalizedCategory.subFields[key] || [];
           }
         });
       });
@@ -13026,9 +13510,21 @@ function makePosts(){
       const seedSubs = true;
       const sortedCategories = getSortedCategories(categories);
       sortedCategories.forEach(c=>{
+        const normalizedCategory = ensureCategoryInternals(c);
+        if(!normalizedCategory){
+          return;
+        }
+        const categoryKey = (typeof normalizedCategory.key === 'string' && normalizedCategory.key.trim())
+          ? normalizedCategory.key.trim()
+          : fallbackKeyFromName(normalizedCategory.name || '');
+        const categoryName = (typeof normalizedCategory.name === 'string' && normalizedCategory.name.trim())
+          ? normalizedCategory.name.trim()
+          : categoryKey;
         const el = document.createElement('div');
         el.className='filter-category-menu';
-        el.dataset.category = c.name;
+        el.dataset.category = categoryName;
+        el.dataset.categoryKey = categoryKey;
+        el.dataset.categoryName = categoryName;
         el.setAttribute('role','group');
         el.setAttribute('aria-expanded','false');
 
@@ -13043,22 +13539,25 @@ function makePosts(){
         menuBtn.className='filter-category-trigger';
         menuBtn.setAttribute('aria-haspopup','true');
         menuBtn.setAttribute('aria-expanded','false');
-        const menuId = `filter-category-menu-${slugify(c.name)}`;
+        const menuId = `filter-category-menu-${slugify(categoryKey || categoryName)}`;
         menuBtn.setAttribute('aria-controls', menuId);
+        menuBtn.dataset.categoryKey = categoryKey;
+        menuBtn.dataset.categoryName = categoryName;
+        menuBtn.dataset.category = categoryName;
 
         const categoryLogo = document.createElement('span');
         categoryLogo.className='category-logo';
-        const categoryIconHtml = categoryIcons[c.name] || '';
+        const categoryIconHtml = categoryIcons[categoryKey] || categoryIcons[categoryName] || '';
         if(categoryIconHtml){
           categoryLogo.innerHTML = categoryIconHtml;
           categoryLogo.classList.add('has-icon');
         } else {
-          categoryLogo.textContent = c.name.charAt(0) || '';
+          categoryLogo.textContent = categoryName.charAt(0) || '';
         }
 
         const label = document.createElement('span');
         label.className='label';
-        label.textContent=c.name;
+        label.textContent=categoryName;
 
         const arrow = document.createElement('span');
         arrow.className='dropdown-arrow';
@@ -13077,26 +13576,39 @@ function makePosts(){
         toggle.className='cat-switch';
         const input = document.createElement('input');
         input.type='checkbox';
-        input.setAttribute('aria-label',`Toggle ${c.name} category`);
+        input.setAttribute('aria-label',`Toggle ${categoryName} category`);
         const slider = document.createElement('span');
         slider.className='slider';
         toggle.append(input, slider);
 
         const subButtons = [];
-        c.subs.forEach(s=>{
+        const subEntries = getSubcategoryEntries(normalizedCategory);
+        subEntries.forEach(subEntry=>{
+          if(!subEntry || typeof subEntry !== 'object'){
+            return;
+          }
+          const subKey = (typeof subEntry.key === 'string' && subEntry.key.trim())
+            ? subEntry.key.trim()
+            : fallbackKeyFromName(subEntry.name || '');
+          const subName = (typeof subEntry.name === 'string' && subEntry.name.trim())
+            ? subEntry.name.trim()
+            : subKey;
+          const compoundKey = `${categoryKey}::${subKey}`;
+          if(!allSubcategoryKeys.includes(compoundKey)){
+            allSubcategoryKeys.push(compoundKey);
+          }
+          if(seedSubs){
+            selection.subs.add(compoundKey);
+          }
           const subBtn=document.createElement('button');
           subBtn.type='button';
           subBtn.className='subcategory-option';
-          subBtn.dataset.category = c.name;
-          subBtn.dataset.subcategory = s;
-          const key = c.name+'::'+s;
-          if(!allSubcategoryKeys.includes(key)){
-            allSubcategoryKeys.push(key);
-          }
-          if(seedSubs){
-            selection.subs.add(key);
-          }
-          const isSelected = selection.subs.has(key);
+          subBtn.dataset.category = categoryName;
+          subBtn.dataset.categoryKey = categoryKey;
+          subBtn.dataset.subcategory = subName;
+          subBtn.dataset.subcategoryName = subName;
+          subBtn.dataset.subcategoryKey = subKey;
+          const isSelected = selection.subs.has(compoundKey);
           subBtn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
           if(isSelected){
             subBtn.classList.add('on');
@@ -13104,7 +13616,7 @@ function makePosts(){
           subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
           const subLabel = subBtn.querySelector('.subcategory-label');
           if(subLabel){
-            subLabel.textContent = s;
+            subLabel.textContent = subName;
           }
           subBtn.addEventListener('click',()=>{
             if(!input.checked) return;
@@ -13112,11 +13624,11 @@ function makePosts(){
             if(isActive){
               subBtn.setAttribute('aria-pressed','false');
               subBtn.classList.remove('on');
-              selection.subs.delete(key);
+              selection.subs.delete(compoundKey);
             } else {
               subBtn.setAttribute('aria-pressed','true');
               subBtn.classList.add('on');
-              selection.subs.add(key);
+              selection.subs.add(compoundKey);
             }
             applyFilters();
             updateCategoryResetBtn();
@@ -13151,9 +13663,9 @@ function makePosts(){
             btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
           });
           if(enabled){
-            selection.cats.add(c.name);
+            selection.cats.add(categoryKey);
           } else {
-            selection.cats.delete(c.name);
+            selection.cats.delete(categoryKey);
             setOpenState(false);
           }
           syncExpanded();
@@ -13172,7 +13684,8 @@ function makePosts(){
         });
 
         const controller = {
-          name: c.name,
+          key: categoryKey,
+          name: categoryName,
           element: el,
           setActive: (active, opts={})=> setCategoryActive(active, opts),
           setOpen: (open)=> setOpenState(open),
@@ -13180,40 +13693,42 @@ function makePosts(){
           isActive: ()=> input.checked,
           syncSubs: ()=>{
             subButtons.forEach(btn=>{
-              const subName = btn.dataset.subcategory;
-              const key = c.name+'::'+subName;
-              const selected = selection.subs.has(key);
+              const subKey = getElementSubcategoryKey(btn);
+              const compoundKey = `${categoryKey}::${subKey}`;
+              const selected = selection.subs.has(compoundKey);
               btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
               btn.classList.toggle('on', selected);
             });
           },
           refreshLogos: ()=>{
             if(categoryLogo){
-              const catIconHtml = categoryIcons[c.name] || '';
+              const catIconHtml = categoryIcons[categoryKey] || categoryIcons[categoryName] || '';
               if(catIconHtml){
                 categoryLogo.innerHTML = catIconHtml;
                 categoryLogo.classList.add('has-icon');
               } else {
-                categoryLogo.textContent = c.name.charAt(0) || '';
+                categoryLogo.textContent = categoryName.charAt(0) || '';
                 categoryLogo.classList.remove('has-icon');
               }
             }
             subButtons.forEach(btn=>{
               const logoSpan = btn.querySelector('.subcategory-logo');
               if(!logoSpan) return;
-              const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
+              const subKey = getElementSubcategoryKey(btn);
+              const subName = getElementSubcategoryName(btn);
+              const iconHtml = subcategoryIcons[subKey] || subcategoryIcons[subName] || '';
               if(iconHtml){
                 logoSpan.innerHTML = iconHtml;
                 logoSpan.classList.add('has-icon');
               } else {
-                const label = btn.dataset.subcategory || '';
+                const label = subName || subKey;
                 logoSpan.textContent = label.charAt(0) || '';
                 logoSpan.classList.remove('has-icon');
               }
             });
           }
         };
-        categoryControllers[c.name] = controller;
+        categoryControllers[categoryKey] = controller;
         setCategoryActive(true, {silent:true});
         controller.syncSubs();
         syncExpanded();
@@ -14064,7 +14579,7 @@ function makePosts(){
       const headerInner = `
           <div class="title-block">
             <div class="title">${p.title}</div>
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategoryKey]||subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
           </div>
           <button class="share" aria-label="Share post">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
@@ -16611,7 +17126,7 @@ if (!map.__pillHooksInstalled) {
         <div class="meta">
           <div class="title">${p.title}</div>
           <div class="info">
-            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
+            <div class="cat-line"><span class="sub-icon">${subcategoryIcons[p.subcategoryKey]||subcategoryIcons[p.subcategory]||''}</span> ${p.category} &gt; ${p.subcategory}</div>
             <div class="loc-line"><span class="badge" title="Venue">📍</span><span>${p.city}</span></div>
             <div class="date-line"><span class="badge" title="Dates">📅</span><span>${formatDates(p.dates)}</span></div>
           </div>
@@ -16689,7 +17204,9 @@ if (!map.__pillHooksInstalled) {
 
     function captureState(){
       const {start,end} = orderedRange();
-      const openCats = Object.values(categoryControllers).filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState()).map(ctrl=>ctrl.name);
+      const openCats = Object.values(categoryControllers)
+        .filter(ctrl=>ctrl.getOpenState && ctrl.getOpenState())
+        .map(ctrl=> ctrl.key || ctrl.name);
       return {
         bounds: map ? map.getBounds().toArray() : null,
         kw: $('#keyword-textbox').value,
@@ -16745,7 +17262,12 @@ if (!map.__pillHooksInstalled) {
       expiredWasOn = $('#expiredToggle').checked;
       updateRangeClasses();
       updateInput();
-      const savedCatsArray = Array.isArray(st.cats) && st.cats.length ? st.cats : categories.map(cat=>cat.name);
+      const savedCatsArray = Array.isArray(st.cats) && st.cats.length
+        ? st.cats
+        : categories.map(cat => {
+            const normalized = ensureCategoryInternals(cat);
+            return (normalized && normalized.key) || (normalized && normalized.name) || '';
+          }).filter(Boolean);
       const savedCats = new Set(savedCatsArray);
       const savedSubsArray = Array.isArray(st.subs) ? st.subs : null;
       const subsToUse = savedSubsArray && savedSubsArray.length ? savedSubsArray : allSubcategoryKeys;
@@ -16755,9 +17277,10 @@ if (!map.__pillHooksInstalled) {
       const controllers = Object.values(categoryControllers);
       if(controllers.length){
         controllers.forEach(ctrl=>{
-          const active = savedCats.has(ctrl.name);
+          const identifiers = [ctrl.key, ctrl.name].filter(value => typeof value === 'string' && value);
+          const active = identifiers.some(id => savedCats.has(id));
           ctrl.setActive(active, {silent:true});
-          const shouldOpen = active && (openCats ? openCats.has(ctrl.name) : false);
+          const shouldOpen = active && (openCats ? identifiers.some(id => openCats.has(id)) : false);
           ctrl.setOpen(shouldOpen);
           ctrl.syncSubs();
         });
@@ -17881,7 +18404,7 @@ function openPostModal(id){
           const selectedIdx = selectedEntry.idx;
           const selectedLoc = selectedEntry.location;
           const center = [selectedLoc.lng, selectedLoc.lat];
-          const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
+          const subId = subcategoryMarkerIds[p.subcategoryKey] || subcategoryMarkerIds[p.subcategory] || slugify(p.subcategoryKey || p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
 
           const assignDetailRef = ()=>{
@@ -18348,12 +18871,37 @@ function openPostModal(id){
       if(selection.cats.size===0){
         return false;
       }
-      const cOk = selection.cats.has(p.category);
-      if(!cOk) return false;
+      const categoryCandidates = [
+        typeof p.categoryKey === 'string' ? p.categoryKey : '',
+        typeof p.category === 'string' ? p.category : '',
+        fallbackKeyFromName((typeof p.categoryKey === 'string' && p.categoryKey) || (typeof p.category === 'string' ? p.category : ''))
+      ].filter(value => typeof value === 'string' && value);
+      const matchedCategory = categoryCandidates.some(identifier => selection.cats.has(identifier));
+      if(!matchedCategory) return false;
       if(selection.subs.size===0){
         return false;
       }
-      return selection.subs.has(p.category+'::'+p.subcategory);
+      const subCandidates = [
+        typeof p.subcategoryKey === 'string' ? p.subcategoryKey : '',
+        typeof p.subcategory === 'string' ? p.subcategory : '',
+        fallbackKeyFromName((typeof p.subcategoryKey === 'string' && p.subcategoryKey) || (typeof p.subcategory === 'string' ? p.subcategory : ''))
+      ].filter(value => typeof value === 'string' && value);
+      const categoryKey = categoryCandidates.find(value => selection.cats.has(value)) || categoryCandidates[0] || '';
+      for(const subIdentifier of subCandidates){
+        const compound = `${categoryKey}::${subIdentifier}`;
+        if(selection.subs.has(compound)){
+          return true;
+        }
+      }
+      const legacyCategory = typeof p.category === 'string' ? p.category : '';
+      const legacySub = typeof p.subcategory === 'string' ? p.subcategory : '';
+      if(legacyCategory && legacySub){
+        const legacyCompound = `${legacyCategory}::${legacySub}`;
+        if(selection.subs.has(legacyCompound)){
+          return true;
+        }
+      }
+      return false;
     }
 
     function hideResultIndicators(){
@@ -20661,12 +21209,34 @@ document.addEventListener('pointerdown', (e) => {
       return safe;
     }
 
-    function getFieldsForSelection(categoryName, subcategoryName){
-      if(!categoryName || !subcategoryName) return [];
-      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
+    function findCategoryByIdentifier(identifier){
+      if(!identifier || !Array.isArray(memberCategories)) return null;
+      const keyCandidate = fallbackKeyFromName(identifier);
+      return memberCategories.find(cat => {
+        const normalized = ensureCategoryInternals(cat);
+        if(!normalized) return false;
+        const identifiers = [normalized.key, normalized.name].filter(value => typeof value === 'string' && value);
+        if(keyCandidate){
+          identifiers.push(keyCandidate);
+        }
+        return identifiers.some(id => id && (id === identifier || id === keyCandidate));
+      }) || null;
+    }
+
+    function getFieldsForSelection(categoryIdentifier, subcategoryIdentifier){
+      if(!categoryIdentifier || !subcategoryIdentifier) return [];
+      const category = findCategoryByIdentifier(categoryIdentifier);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      const subKeyCandidate = fallbackKeyFromName(subcategoryIdentifier);
+      const subIdentifiers = [subcategoryIdentifier, subKeyCandidate].filter(value => typeof value === 'string' && value);
+      let fields = [];
+      for(const key of subIdentifiers){
+        if(Array.isArray(subFieldsMap[key])){
+          fields = subFieldsMap[key];
+          break;
+        }
+      }
       if(!fields || fields.length === 0){
         fields = sharedDefaultSubcategoryFields;
       }
@@ -21603,11 +22173,18 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
 
-      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName) || null;
+      const category = findCategoryByIdentifier(categoryName);
       const categoryId = category && Object.prototype.hasOwnProperty.call(category, 'id') ? category.id : null;
-      const subcategoryId = category && category.subIds && Object.prototype.hasOwnProperty.call(category.subIds, subcategoryName)
-        ? category.subIds[subcategoryName]
-        : null;
+      const normalizedCategory = ensureCategoryInternals(category);
+      const subKeyCandidate = fallbackKeyFromName(subcategoryName);
+      let subcategoryId = null;
+      if(normalizedCategory && normalizedCategory.subIds && typeof normalizedCategory.subIds === 'object'){
+        if(subKeyCandidate && Object.prototype.hasOwnProperty.call(normalizedCategory.subIds, subKeyCandidate)){
+          subcategoryId = normalizedCategory.subIds[subKeyCandidate];
+        } else if(Object.prototype.hasOwnProperty.call(normalizedCategory.subIds, subcategoryName)){
+          subcategoryId = normalizedCategory.subIds[subcategoryName];
+        }
+      }
 
       const listingCurrencyValue = listingCurrency ? listingCurrency.value.trim() : '';
       const listingPriceRaw = listingPrice ? formatPriceValue(listingPrice.value) : '';
@@ -21985,7 +22562,7 @@ document.addEventListener('pointerdown', (e) => {
         renderEmptyState();
         return;
       }
-      const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
+      const category = findCategoryByIdentifier(categoryName);
       if(!category){
         subcategorySelect.disabled = true;
         renderEmptyState();
