@@ -81,8 +81,10 @@ try {
         return;
     }
 
+    $fieldBlueprints = loadFieldBlueprints($pdo);
+
     $categories = fetchCategories($pdo, $categoryColumns);
-    $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories);
+    $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories, $fieldBlueprints);
 
     $snapshot = buildSnapshot($categories, $subcategories);
 
@@ -123,12 +125,25 @@ function fetchCategories(PDO $pdo, array $columns): array
     $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
+    $hasCategoryName = in_array('category_name', $columns, true) || in_array('name', $columns, true);
+    $hasCategoryKey = in_array('category_key', $columns, true) || in_array('key', $columns, true);
 
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
     }
-    if (in_array('name', $columns, true)) {
-        $selectColumns[] = '`name`';
+    if ($hasCategoryName) {
+        if (in_array('category_name', $columns, true)) {
+            $selectColumns[] = '`category_name` AS `category_name`';
+        } elseif (in_array('name', $columns, true)) {
+            $selectColumns[] = '`name` AS `category_name`';
+        }
+    }
+    if ($hasCategoryKey) {
+        if (in_array('category_key', $columns, true)) {
+            $selectColumns[] = '`category_key` AS `category_key`';
+        } elseif (in_array('key', $columns, true)) {
+            $selectColumns[] = '`key` AS `category_key`';
+        }
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -152,8 +167,25 @@ function fetchCategories(PDO $pdo, array $columns): array
 
     $categories = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        if (!isset($row['name'])) {
+        $categoryName = '';
+        if (isset($row['category_name']) && is_string($row['category_name'])) {
+            $categoryName = trim($row['category_name']);
+        } elseif (isset($row['name']) && is_string($row['name'])) {
+            $categoryName = trim($row['name']);
+        }
+
+        if ($categoryName === '') {
             continue;
+        }
+
+        $categoryKey = '';
+        if (isset($row['category_key']) && is_string($row['category_key'])) {
+            $categoryKey = trim($row['category_key']);
+        } elseif (isset($row['key']) && is_string($row['key'])) {
+            $categoryKey = trim($row['key']);
+        }
+        if ($categoryKey === '') {
+            $categoryKey = slugify_key($categoryName);
         }
 
         $metadata = [];
@@ -166,7 +198,9 @@ function fetchCategories(PDO $pdo, array $columns): array
 
         $categories[] = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
-            'name' => (string) $row['name'],
+            'name' => $categoryName,
+            'key' => $categoryKey,
+            'label' => $categoryName,
             'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
             'subs' => [],
             'metadata' => $metadata,
@@ -192,28 +226,59 @@ function fetchCategories(PDO $pdo, array $columns): array
     return $categories;
 }
 
-function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
+function fetchSubcategories(PDO $pdo, array $columns, array $categories, array $fieldBlueprints): array
 {
-    $select = ['s.`id`', 's.`name`'];
+    $select = ['s.`id`'];
 
     $hasCategoryName = in_array('category_name', $columns, true);
+    $hasCategoryKey = in_array('category_key', $columns, true);
     $hasCategoryId = in_array('category_id', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
+    $hasSubcategoryName = in_array('subcategory_name', $columns, true) || in_array('name', $columns, true);
+    $hasSubcategoryKey = in_array('subcategory_key', $columns, true) || in_array('key', $columns, true);
+    $hasFieldTypeId = in_array('field_type_id', $columns, true);
+
+    if ($hasSubcategoryName) {
+        if (in_array('subcategory_name', $columns, true)) {
+            $select[] = 's.`subcategory_name` AS `subcategory_name`';
+        } elseif (in_array('name', $columns, true)) {
+            $select[] = 's.`name` AS `subcategory_name`';
+        }
+    } else {
+        $select[] = 's.`subcategory_name` AS `subcategory_name`';
+    }
+
+    if ($hasSubcategoryKey) {
+        if (in_array('subcategory_key', $columns, true)) {
+            $select[] = 's.`subcategory_key` AS `subcategory_key`';
+        } elseif (in_array('key', $columns, true)) {
+            $select[] = 's.`key` AS `subcategory_key`';
+        }
+    }
 
     if ($hasCategoryName) {
-        $select[] = 's.`category_name`';
+        $select[] = 's.`category_name` AS `category_name`';
+    }
+    if ($hasCategoryKey) {
+        $select[] = 's.`category_key` AS `category_key`';
     }
     if ($hasCategoryId) {
         $select[] = 's.`category_id`';
     }
     if (!$hasCategoryName && $hasCategoryId) {
-        $select[] = 'c.`name` AS category_name';
+        $select[] = 'c.`category_name` AS category_name';
+    }
+    if (!$hasCategoryKey && $hasCategoryId) {
+        $select[] = 'c.`category_key` AS category_key';
     }
     if ($hasSortOrder) {
         $select[] = 's.`sort_order`';
+    }
+    if ($hasFieldTypeId) {
+        $select[] = 's.`field_type_id`';
     }
     if ($hasMetadata) {
         $select[] = 's.`metadata_json`';
@@ -229,16 +294,16 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($hasCategoryId) {
         $order[] = 's.`category_id` ASC';
     }
-    if ($hasCategoryName) {
+    if ($hasCategoryName || !$hasCategoryId) {
         $order[] = 's.`category_name` ASC';
     }
     if ($hasSortOrder) {
         $order[] = 's.`sort_order` ASC';
     }
-    $order[] = 's.`name` ASC';
+    $order[] = 's.`subcategory_name` ASC';
 
     $sql = 'SELECT ' . implode(', ', $select) . ' FROM subcategories s';
-    if (!$hasCategoryName && $hasCategoryId) {
+    if ((!$hasCategoryName || !$hasCategoryKey) && $hasCategoryId) {
         $sql .= ' JOIN categories c ON c.id = s.category_id';
     }
     $sql .= ' ORDER BY ' . implode(', ', $order);
@@ -246,24 +311,63 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $stmt = $pdo->query($sql);
 
     $categoryById = [];
+    $categoryKeyById = [];
+    $categoryKeyByName = [];
     foreach ($categories as $category) {
+        if (isset($category['name']) && is_string($category['name'])) {
+            $categoryKeyByName[$category['name']] = $category['key'] ?? '';
+        }
         if ($category['id'] !== null) {
             $categoryById[$category['id']] = $category['name'];
+            $categoryKeyById[$category['id']] = $category['key'] ?? '';
         }
     }
 
+    $fieldTypes = $fieldBlueprints['field_types'] ?? [];
+    $fieldsets = $fieldBlueprints['fieldsets'] ?? [];
+    $fields = $fieldBlueprints['fields'] ?? [];
+
     $results = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $categoryName = null;
-        if (isset($row['category_name'])) {
-            $categoryName = (string) $row['category_name'];
-        } elseif ($hasCategoryId && isset($row['category_id'])) {
-            $id = (int) $row['category_id'];
-            $categoryName = $categoryById[$id] ?? null;
+        $categoryName = '';
+        if (isset($row['category_name']) && is_string($row['category_name'])) {
+            $categoryName = trim($row['category_name']);
         }
-        if (!$categoryName || !isset($row['name'])) {
+        if ($categoryName === '' && $hasCategoryId && isset($row['category_id'])) {
+            $id = (int) $row['category_id'];
+            $categoryName = $categoryById[$id] ?? '';
+        }
+
+        $subcategoryName = '';
+        if (isset($row['subcategory_name']) && is_string($row['subcategory_name'])) {
+            $subcategoryName = trim($row['subcategory_name']);
+        }
+
+        if ($categoryName === '' || $subcategoryName === '') {
             continue;
         }
+
+        $categoryKey = '';
+        if (isset($row['category_key']) && is_string($row['category_key'])) {
+            $categoryKey = trim($row['category_key']);
+        } elseif ($hasCategoryId && isset($row['category_id'])) {
+            $id = (int) $row['category_id'];
+            $categoryKey = $categoryKeyById[$id] ?? '';
+        } elseif (isset($categoryKeyByName[$categoryName])) {
+            $categoryKey = $categoryKeyByName[$categoryName];
+        }
+        if ($categoryKey === '') {
+            $categoryKey = slugify_key($categoryName);
+        }
+
+        $subcategoryKey = '';
+        if (isset($row['subcategory_key']) && is_string($row['subcategory_key'])) {
+            $subcategoryKey = trim($row['subcategory_key']);
+        }
+        if ($subcategoryKey === '') {
+            $subcategoryKey = slugify_key($subcategoryName);
+        }
+
         $metadata = [];
         if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
             $decoded = json_decode($row['metadata_json'], true);
@@ -271,12 +375,31 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
                 $metadata = $decoded;
             }
         }
+
+        $placeholderHints = collectPlaceholderHints($metadata);
+        $fieldTypeIds = [];
+        if ($hasFieldTypeId && isset($row['field_type_id'])) {
+            $fieldTypeIds = parseFieldTypeIds((string) $row['field_type_id']);
+        }
+
+        $expandedFields = [];
+        if ($fieldTypeIds) {
+            $expandedFields = expandFieldTypes($fieldTypeIds, $fieldTypes, $fieldsets, $fields, $placeholderHints, $subcategoryKey);
+        }
+        if (!$expandedFields && isset($metadata['fields']) && is_array($metadata['fields'])) {
+            $expandedFields = normalizeMetadataFields($metadata['fields']);
+        }
+
         $results[] = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
-            'name' => (string) $row['name'],
+            'name' => $subcategoryName,
+            'key' => $subcategoryKey,
             'category' => $categoryName,
+            'category_key' => $categoryKey,
             'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
             'metadata' => $metadata,
+            'fields' => $expandedFields,
+            'field_type_ids' => $fieldTypeIds,
             'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
                 ? trim($row['icon_path'])
                 : null,
@@ -292,20 +415,83 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
 function buildSnapshot(array $categories, array $subcategories): array
 {
     $categoriesMap = [];
+    $categoryAliasMap = [];
     $categoryIcons = [];
+    $categoryIconsByKey = [];
     $categoryIconPaths = [];
+    $categoryIconPathsByKey = [];
     $categoryMarkers = [];
+    $categoryMarkersByKey = [];
+    $categoryShapes = [];
+    $categoryShapesByKey = [];
+    $categoryLabelByKey = [];
+    $subcategoryIcons = [];
+    $subcategoryIconsByKey = [];
     $subcategoryIconPaths = [];
+    $subcategoryIconPathsByKey = [];
+    $subcategoryMarkers = [];
+    $subcategoryMarkersByKey = [];
+    $subcategoryMarkerIds = [];
+    $subcategoryMarkerIdsByKey = [];
+    $subcategoryLabelByKey = [];
+    $currencySet = [];
+
     foreach ($categories as $category) {
-        $categoryName = $category['name'];
-        $categoriesMap[$categoryName] = [
-            'id' => $category['id'] ?? null,
-            'name' => $categoryName,
-            'subs' => [],
-            'subFields' => [],
-            'sort_order' => $category['sort_order'] ?? null,
-            'subIds' => [],
-        ];
+        $categoryName = isset($category['name']) && is_string($category['name']) ? $category['name'] : '';
+        $categoryName = trim($categoryName);
+        if ($categoryName === '') {
+            continue;
+        }
+
+        $categoryKey = isset($category['key']) && is_string($category['key']) ? trim($category['key']) : '';
+        if ($categoryKey === '') {
+            $categoryKey = slugify_key($categoryName);
+        }
+
+        $primaryKey = $categoryKey !== '' ? $categoryKey : ($categoryName !== '' ? slugify_key($categoryName) : '');
+        if ($primaryKey === '') {
+            $primaryKey = 'category_' . md5($categoryName);
+        }
+
+        if (!isset($categoriesMap[$primaryKey])) {
+            $categoriesMap[$primaryKey] = [
+                'id' => $category['id'] ?? null,
+                'name' => $categoryName,
+                'label' => $category['label'] ?? $categoryName,
+                'key' => $categoryKey,
+                'sort_order' => $category['sort_order'] ?? null,
+                'subs' => [],
+                'subsDetailed' => [],
+                'subFields' => [],
+                'subFieldsByKey' => [],
+                'subIds' => [],
+                'subIdsByKey' => [],
+                'subKeyLookup' => [],
+                'subLabelByKey' => [],
+                'fieldTypeIds' => [],
+                'fieldTypeIdsByKey' => [],
+                'subsMeta' => [],
+            ];
+        } else {
+            if (!isset($categoriesMap[$primaryKey]['name']) || $categoriesMap[$primaryKey]['name'] === '') {
+                $categoriesMap[$primaryKey]['name'] = $categoryName;
+            }
+            if (!isset($categoriesMap[$primaryKey]['label']) || $categoriesMap[$primaryKey]['label'] === '') {
+                $categoriesMap[$primaryKey]['label'] = $category['label'] ?? $categoryName;
+            }
+            if ((!isset($categoriesMap[$primaryKey]['key']) || $categoriesMap[$primaryKey]['key'] === '') && $categoryKey !== '') {
+                $categoriesMap[$primaryKey]['key'] = $categoryKey;
+            }
+            if (!isset($categoriesMap[$primaryKey]['id']) || $categoriesMap[$primaryKey]['id'] === null) {
+                $categoriesMap[$primaryKey]['id'] = $category['id'] ?? null;
+            }
+        }
+
+        $categoryAliasMap[$categoryName] = $primaryKey;
+        if ($categoryKey !== '') {
+            $categoryAliasMap[$categoryKey] = $primaryKey;
+            $categoryLabelByKey[$categoryKey] = $categoryName;
+        }
 
         $metadata = [];
         if (isset($category['metadata']) && is_array($category['metadata'])) {
@@ -326,12 +512,18 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
         if ($iconHtml !== '') {
             $categoryIcons[$categoryName] = $iconHtml;
+            if ($categoryKey !== '') {
+                $categoryIconsByKey[$categoryKey] = $iconHtml;
+            }
         }
         if ($iconPath === '' && $iconHtml !== '') {
             $iconPath = extract_icon_src($iconHtml);
         }
         if ($iconPath !== '') {
             $categoryIconPaths[$categoryName] = $iconPath;
+            if ($categoryKey !== '') {
+                $categoryIconPathsByKey[$categoryKey] = $iconPath;
+            }
         }
 
         $markerPath = '';
@@ -346,40 +538,111 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
         if ($markerPath !== '') {
             $categoryMarkers[$categoryName] = $markerPath;
+            if ($categoryKey !== '') {
+                $categoryMarkersByKey[$categoryKey] = $markerPath;
+            }
+        }
+
+        if (isset($metadata['categoryShape']) && $metadata['categoryShape'] !== null) {
+            $categoryShapes[$categoryName] = $metadata['categoryShape'];
+            if ($categoryKey !== '') {
+                $categoryShapesByKey[$categoryKey] = $metadata['categoryShape'];
+            }
         }
     }
 
-    $categoryShapes = [];
-    $subcategoryIcons = [];
-    $subcategoryMarkers = [];
-    $subcategoryMarkerIds = [];
-    $currencySet = [];
-
     foreach ($subcategories as $sub) {
-        $categoryName = $sub['category'];
-        if (!isset($categoriesMap[$categoryName])) {
-            $categoriesMap[$categoryName] = [
-                'id' => null,
-                'name' => $categoryName,
-                'subs' => [],
-                'subFields' => [],
-                'sort_order' => null,
-                'subIds' => [],
-            ];
+        $categoryName = isset($sub['category']) && is_string($sub['category']) ? trim($sub['category']) : '';
+        $categoryKey = isset($sub['category_key']) && is_string($sub['category_key']) ? trim($sub['category_key']) : '';
+        $subcategoryName = isset($sub['name']) && is_string($sub['name']) ? trim($sub['name']) : '';
+        $subcategoryKey = isset($sub['key']) && is_string($sub['key']) ? trim($sub['key']) : '';
+
+        if ($categoryName === '' || $subcategoryName === '') {
+            continue;
         }
 
-        $categoriesMap[$categoryName]['subs'][] = [
-            'name' => $sub['name'],
-            'sort_order' => $sub['sort_order'],
+        if ($subcategoryKey === '') {
+            $subcategoryKey = slugify_key($subcategoryName);
+        }
+        if ($categoryKey === '') {
+            $categoryKey = slugify_key($categoryName);
+        }
+
+        $primaryKey = $categoryAliasMap[$categoryKey] ?? $categoryAliasMap[$categoryName] ?? $categoryKey;
+        if (!isset($categoriesMap[$primaryKey])) {
+            $categoriesMap[$primaryKey] = [
+                'id' => $sub['category_id'] ?? null,
+                'name' => $categoryName,
+                'label' => $categoryName,
+                'key' => $categoryKey,
+                'sort_order' => null,
+                'subs' => [],
+                'subsDetailed' => [],
+                'subFields' => [],
+                'subFieldsByKey' => [],
+                'subIds' => [],
+                'subIdsByKey' => [],
+                'subKeyLookup' => [],
+                'subLabelByKey' => [],
+                'fieldTypeIds' => [],
+                'fieldTypeIdsByKey' => [],
+                'subsMeta' => [],
+            ];
+            $categoryAliasMap[$categoryName] = $primaryKey;
+            if ($categoryKey !== '') {
+                $categoryAliasMap[$categoryKey] = $primaryKey;
+                $categoryLabelByKey[$categoryKey] = $categoryName;
+            }
+        } else {
+            if ($categoryKey !== '' && (!isset($categoriesMap[$primaryKey]['key']) || $categoriesMap[$primaryKey]['key'] === '')) {
+                $categoriesMap[$primaryKey]['key'] = $categoryKey;
+            }
+            if (!isset($categoriesMap[$primaryKey]['name']) || $categoriesMap[$primaryKey]['name'] === '') {
+                $categoriesMap[$primaryKey]['name'] = $categoryName;
+            }
+            if (!isset($categoriesMap[$primaryKey]['label']) || $categoriesMap[$primaryKey]['label'] === '') {
+                $categoriesMap[$primaryKey]['label'] = $categoryName;
+            }
+        }
+
+        if ($categoryKey !== '') {
+            $categoryLabelByKey[$categoryKey] = $categoryName;
+        }
+
+        $categoriesMap[$primaryKey]['subsMeta'][] = [
+            'name' => $subcategoryName,
+            'key' => $subcategoryKey,
+            'id' => $sub['id'] ?? null,
+            'sort_order' => $sub['sort_order'] ?? null,
         ];
-        $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
+        $categoriesMap[$primaryKey]['subIds'][$subcategoryName] = $sub['id'] ?? null;
+        $categoriesMap[$primaryKey]['fieldTypeIds'][$subcategoryName] = $sub['field_type_ids'] ?? [];
+
+        if ($subcategoryKey !== '') {
+            $categoriesMap[$primaryKey]['subIdsByKey'][$subcategoryKey] = $sub['id'] ?? null;
+            $categoriesMap[$primaryKey]['fieldTypeIdsByKey'][$subcategoryKey] = $sub['field_type_ids'] ?? [];
+            $categoriesMap[$primaryKey]['subKeyLookup'][$subcategoryName] = $subcategoryKey;
+            $categoriesMap[$primaryKey]['subLabelByKey'][$subcategoryKey] = $subcategoryName;
+            if ($categoryKey !== '') {
+                if (!isset($subcategoryLabelByKey[$categoryKey])) {
+                    $subcategoryLabelByKey[$categoryKey] = [];
+                }
+                $subcategoryLabelByKey[$categoryKey][$subcategoryKey] = $subcategoryName;
+            }
+        }
+
+        $metadata = isset($sub['metadata']) && is_array($sub['metadata']) ? $sub['metadata'] : [];
 
         $fields = [];
-        $metadata = $sub['metadata'];
-        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
-            $fields = $metadata['fields'];
+        if (isset($sub['fields']) && is_array($sub['fields'])) {
+            $fields = $sub['fields'];
+        } elseif (isset($metadata['fields']) && is_array($metadata['fields'])) {
+            $fields = normalizeMetadataFields($metadata['fields']);
         }
-        $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
+        $categoriesMap[$primaryKey]['subFields'][$subcategoryName] = $fields;
+        if ($subcategoryKey !== '') {
+            $categoriesMap[$primaryKey]['subFieldsByKey'][$subcategoryKey] = $fields;
+        }
 
         $iconHtml = '';
         $iconPath = '';
@@ -394,13 +657,19 @@ function buildSnapshot(array $categories, array $subcategories): array
             $iconHtml = trim($metadata['icon']);
         }
         if ($iconHtml !== '') {
-            $subcategoryIcons[$sub['name']] = $iconHtml;
+            $subcategoryIcons[$subcategoryName] = $iconHtml;
+            if ($subcategoryKey !== '') {
+                $subcategoryIconsByKey[$subcategoryKey] = $iconHtml;
+            }
         }
         if ($iconPath === '' && $iconHtml !== '') {
             $iconPath = extract_icon_src($iconHtml);
         }
         if ($iconPath !== '') {
-            $subcategoryIconPaths[$sub['name']] = $iconPath;
+            $subcategoryIconPaths[$subcategoryName] = $iconPath;
+            if ($subcategoryKey !== '') {
+                $subcategoryIconPathsByKey[$subcategoryKey] = $iconPath;
+            }
         }
 
         $markerPath = '';
@@ -414,20 +683,31 @@ function buildSnapshot(array $categories, array $subcategories): array
             $markerPath = trim($metadata['marker']);
         }
         if ($markerPath !== '') {
-            $subcategoryMarkers[$sub['name']] = $markerPath;
+            $subcategoryMarkers[$subcategoryName] = $markerPath;
+            if ($subcategoryKey !== '') {
+                $subcategoryMarkersByKey[$subcategoryKey] = $markerPath;
+            }
         }
 
+        $markerId = null;
         if (isset($metadata['markerId']) && is_string($metadata['markerId']) && $metadata['markerId'] !== '') {
-            $subcategoryMarkerIds[$sub['name']] = $metadata['markerId'];
-        } else {
-            $slugForId = slugify_key($sub['name']);
-            if ($slugForId !== '') {
-                $subcategoryMarkerIds[$sub['name']] = $slugForId;
+            $markerId = trim($metadata['markerId']);
+        }
+        if ($markerId === null) {
+            $markerId = slugify_key($subcategoryKey !== '' ? $subcategoryKey : $subcategoryName);
+        }
+        if ($markerId !== '') {
+            $subcategoryMarkerIds[$subcategoryName] = $markerId;
+            if ($subcategoryKey !== '') {
+                $subcategoryMarkerIdsByKey[$subcategoryKey] = $markerId;
             }
         }
 
         if (isset($metadata['categoryShape']) && $metadata['categoryShape'] !== null) {
             $categoryShapes[$categoryName] = $metadata['categoryShape'];
+            if ($categoryKey !== '') {
+                $categoryShapesByKey[$categoryKey] = $metadata['categoryShape'];
+            }
         }
         if (isset($metadata['versionPriceCurrencies']) && is_array($metadata['versionPriceCurrencies'])) {
             foreach ($metadata['versionPriceCurrencies'] as $code) {
@@ -439,15 +719,34 @@ function buildSnapshot(array $categories, array $subcategories): array
         }
     }
 
-    foreach ($categoriesMap as &$category) {
-        if (!is_array($category['subs'])) {
-            $category['subs'] = [];
-        }
-        if (!is_array($category['subFields'])) {
+    foreach ($categoriesMap as $primaryKey => &$category) {
+        if (!isset($category['subFields']) || !is_array($category['subFields'])) {
             $category['subFields'] = [];
         }
-        $subs = $category['subs'];
-        usort($subs, static function (array $a, array $b): int {
+        if (!isset($category['subFieldsByKey']) || !is_array($category['subFieldsByKey'])) {
+            $category['subFieldsByKey'] = [];
+        }
+        if (!isset($category['subIds']) || !is_array($category['subIds'])) {
+            $category['subIds'] = [];
+        }
+        if (!isset($category['subIdsByKey']) || !is_array($category['subIdsByKey'])) {
+            $category['subIdsByKey'] = [];
+        }
+        if (!isset($category['subKeyLookup']) || !is_array($category['subKeyLookup'])) {
+            $category['subKeyLookup'] = [];
+        }
+        if (!isset($category['subLabelByKey']) || !is_array($category['subLabelByKey'])) {
+            $category['subLabelByKey'] = [];
+        }
+        if (!isset($category['fieldTypeIds']) || !is_array($category['fieldTypeIds'])) {
+            $category['fieldTypeIds'] = [];
+        }
+        if (!isset($category['fieldTypeIdsByKey']) || !is_array($category['fieldTypeIdsByKey'])) {
+            $category['fieldTypeIdsByKey'] = [];
+        }
+
+        $subsMeta = isset($category['subsMeta']) && is_array($category['subsMeta']) ? $category['subsMeta'] : [];
+        usort($subsMeta, static function (array $a, array $b): int {
             $orderA = $a['sort_order'] ?? null;
             $orderB = $b['sort_order'] ?? null;
             if ($orderA !== null && $orderB !== null && $orderA !== $orderB) {
@@ -461,14 +760,34 @@ function buildSnapshot(array $categories, array $subcategories): array
             }
             return strcasecmp($a['name'], $b['name']);
         });
-        $category['subs'] = array_map(static function (array $entry): string {
-            return $entry['name'];
-        }, $subs);
-        foreach ($category['subs'] as $subName) {
-            if (!isset($category['subFields'][$subName]) || !is_array($category['subFields'][$subName])) {
-                $category['subFields'][$subName] = [];
+
+        $category['subs'] = [];
+        $category['subsDetailed'] = [];
+        foreach ($subsMeta as $entry) {
+            $name = $entry['name'];
+            $key = $entry['key'];
+            $category['subs'][] = $name;
+            $category['subsDetailed'][] = [
+                'name' => $name,
+                'key' => $key,
+                'id' => $entry['id'],
+            ];
+            if (!isset($category['subFields'][$name]) || !is_array($category['subFields'][$name])) {
+                $category['subFields'][$name] = [];
+            }
+            if ($key !== '') {
+                if (!isset($category['subFieldsByKey'][$key]) || !is_array($category['subFieldsByKey'][$key])) {
+                    $category['subFieldsByKey'][$key] = $category['subFields'][$name];
+                }
+                if (!isset($category['subIdsByKey'][$key])) {
+                    $category['subIdsByKey'][$key] = $category['subIds'][$name] ?? null;
+                }
+                $category['subKeyLookup'][$name] = $key;
+                $category['subLabelByKey'][$key] = $name;
             }
         }
+
+        unset($category['subsMeta']);
     }
     unset($category);
 
@@ -493,12 +812,19 @@ function buildSnapshot(array $categories, array $subcategories): array
     sort($versionPriceCurrencies);
 
     $sanitizedCategoryMarkers = sanitizeSubcategoryMarkers($categoryMarkers);
+    $sanitizedCategoryMarkersByKey = sanitizeSubcategoryMarkers($categoryMarkersByKey, true);
     $sanitizedSubcategoryMarkers = sanitizeSubcategoryMarkers($subcategoryMarkers);
+    $sanitizedSubcategoryMarkersByKey = sanitizeSubcategoryMarkers($subcategoryMarkersByKey, true);
+
     $iconLibrary = collectSnapshotIconLibrary(
         array_values($categoryIconPaths),
         array_values($subcategoryIconPaths),
+        array_values($categoryIconPathsByKey),
+        array_values($subcategoryIconPathsByKey),
         array_values($sanitizedCategoryMarkers),
-        array_values($sanitizedSubcategoryMarkers)
+        array_values($sanitizedSubcategoryMarkers),
+        array_values($sanitizedCategoryMarkersByKey),
+        array_values($sanitizedSubcategoryMarkersByKey)
     );
 
     $filesystemIcons = collectFilesystemIconLibrary('assets/icons-30');
@@ -509,15 +835,25 @@ function buildSnapshot(array $categories, array $subcategories): array
     return [
         'categories' => $categoriesList,
         'categoryIcons' => $categoryIcons,
+        'categoryIconsByKey' => $categoryIconsByKey,
         'categoryIconPaths' => $categoryIconPaths,
+        'categoryIconPathsByKey' => $categoryIconPathsByKey,
         'categoryMarkers' => $sanitizedCategoryMarkers,
+        'categoryMarkersByKey' => $sanitizedCategoryMarkersByKey,
         'subcategoryIcons' => $subcategoryIcons,
+        'subcategoryIconsByKey' => $subcategoryIconsByKey,
         'subcategoryIconPaths' => $subcategoryIconPaths,
+        'subcategoryIconPathsByKey' => $subcategoryIconPathsByKey,
         'subcategoryMarkers' => $sanitizedSubcategoryMarkers,
+        'subcategoryMarkersByKey' => $sanitizedSubcategoryMarkersByKey,
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
+        'subcategoryMarkerIdsByKey' => $subcategoryMarkerIdsByKey,
         'categoryShapes' => $categoryShapes,
+        'categoryShapesByKey' => $categoryShapesByKey,
         'versionPriceCurrencies' => $versionPriceCurrencies,
         'iconLibrary' => array_values($iconLibrary),
+        'categoryLabelByKey' => $categoryLabelByKey,
+        'subcategoryLabelByKey' => $subcategoryLabelByKey,
     ];
 }
 
@@ -536,7 +872,7 @@ function extract_icon_src(string $html): string
     return '';
 }
 
-function sanitizeSubcategoryMarkers(array $markers): array
+function sanitizeSubcategoryMarkers(array $markers, bool $allowRawKey = false): array
 {
     $clean = [];
 
@@ -550,15 +886,426 @@ function sanitizeSubcategoryMarkers(array $markers): array
             continue;
         }
 
-        $slug = slugify_key((string) $name);
-        if ($slug === '') {
+        $identifier = is_string($name) ? trim((string) $name) : '';
+        if ($identifier === '') {
             continue;
         }
 
-        $clean[$slug] = $trimmed;
+        if ($allowRawKey && preg_match('/^[a-z0-9_-]+$/i', $identifier)) {
+            $key = strtolower($identifier);
+        } else {
+            $key = slugify_key($identifier);
+        }
+
+        if ($key === '') {
+            continue;
+        }
+
+        $clean[$key] = $trimmed;
     }
 
     return $clean;
+}
+
+function loadFieldBlueprints(PDO $pdo): array
+{
+    $blueprints = [
+        'fields' => [],
+        'fieldsets' => [],
+        'field_types' => [],
+    ];
+
+    try {
+        $fieldsStmt = $pdo->query('SELECT id, field_key, type, required, options_json FROM fields');
+        while ($row = $fieldsStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!isset($row['id'])) {
+                continue;
+            }
+
+            $id = (int) $row['id'];
+            $fieldKey = isset($row['field_key']) ? trim((string) $row['field_key']) : '';
+            $blueprints['fields'][$id] = [
+                'id' => $id,
+                'field_key' => $fieldKey,
+                'type' => isset($row['type']) ? trim((string) $row['type']) : '',
+                'required' => isset($row['required']) ? ((int) $row['required'] === 1) : false,
+                'options' => normalizeFieldOptions($row['options_json'] ?? null),
+            ];
+        }
+    } catch (Throwable $e) {
+        logConnectorWarning('Unable to load fields metadata: ' . $e->getMessage());
+    }
+
+    try {
+        $fieldsetStmt = $pdo->query('SELECT id, fieldset_key, field_id FROM fieldsets');
+        while ($row = $fieldsetStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!isset($row['id'])) {
+                continue;
+            }
+
+            $id = (int) $row['id'];
+            $fieldIds = parseIntegerList($row['field_id'] ?? '', 'fieldsets.field_id', false);
+            $blueprints['fieldsets'][$id] = [
+                'id' => $id,
+                'fieldset_key' => isset($row['fieldset_key']) ? trim((string) $row['fieldset_key']) : '',
+                'field_ids' => $fieldIds,
+            ];
+        }
+    } catch (Throwable $e) {
+        logConnectorWarning('Unable to load fieldsets metadata: ' . $e->getMessage());
+    }
+
+    try {
+        $typeStmt = $pdo->query('SELECT id, field_type_name, field_type_key, field_type_item_1, field_type_item_2, field_type_item_3, field_type_item_4, field_type_item_5 FROM field_types');
+        while ($row = $typeStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!isset($row['id'])) {
+                continue;
+            }
+
+            $id = (int) $row['id'];
+            $items = [];
+            for ($i = 1; $i <= 5; $i++) {
+                $column = 'field_type_item_' . $i;
+                if (!array_key_exists($column, $row)) {
+                    continue;
+                }
+                $parsed = parseFieldTypeItem($row[$column]);
+                if ($parsed !== null) {
+                    $items[] = $parsed;
+                }
+            }
+
+            $blueprints['field_types'][$id] = [
+                'id' => $id,
+                'field_type_name' => isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '',
+                'field_type_key' => isset($row['field_type_key']) ? trim((string) $row['field_type_key']) : '',
+                'items' => $items,
+            ];
+        }
+    } catch (Throwable $e) {
+        logConnectorWarning('Unable to load field_types metadata: ' . $e->getMessage());
+    }
+
+    return $blueprints;
+}
+
+function parseFieldTypeIds(string $csv): array
+{
+    return parseIntegerList($csv, 'field_type_id');
+}
+
+function parseIntegerList($value, string $context, bool $logWarnings = true): array
+{
+    if (!is_string($value)) {
+        return [];
+    }
+
+    $cleaned = trim($value);
+    if ($cleaned === '') {
+        return [];
+    }
+
+    $cleaned = trim($cleaned, "[]");
+    $parts = preg_split('/[\s,]+/', $cleaned);
+    if (!is_array($parts)) {
+        return [];
+    }
+
+    $ids = [];
+    foreach ($parts as $part) {
+        $candidate = trim($part);
+        $candidate = trim($candidate, "'\"");
+        if ($candidate === '') {
+            continue;
+        }
+        if (!preg_match('/^-?\d+$/', $candidate)) {
+            if ($logWarnings) {
+                logConnectorWarning("Ignoring non-numeric {$context} value '{$candidate}'");
+            }
+            continue;
+        }
+
+        $ids[] = (int) $candidate;
+    }
+
+    return array_values(array_unique($ids));
+}
+
+function parseFieldTypeItem($value): ?array
+{
+    if (!is_string($value)) {
+        return null;
+    }
+
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return null;
+    }
+
+    if (!preg_match('/\[(field|fieldset)\s*=\s*(\d+)\]/i', $trimmed, $matches)) {
+        return null;
+    }
+
+    $kind = strtolower($matches[1]);
+    $id = (int) $matches[2];
+    $label = trim(preg_replace('/\[[^\]]+\]/', '', $trimmed));
+    if ($label === '') {
+        $label = $kind === 'fieldset' ? 'Fieldset ' . $id : 'Field ' . $id;
+    }
+
+    return [
+        'kind' => $kind,
+        'id' => $id,
+        'label' => $label,
+    ];
+}
+
+function expandFieldTypes(
+    array $fieldTypeIds,
+    array $fieldTypes,
+    array $fieldsets,
+    array $fields,
+    array $placeholderHints,
+    string $subcategoryKey
+): array {
+    $expanded = [];
+
+    foreach ($fieldTypeIds as $fieldTypeId) {
+        if (!isset($fieldTypes[$fieldTypeId])) {
+            logConnectorWarning("Unknown field_type_id {$fieldTypeId} encountered for subcategory '{$subcategoryKey}'");
+            continue;
+        }
+
+        $fieldType = $fieldTypes[$fieldTypeId];
+        $items = $fieldType['items'] ?? [];
+        if (!$items) {
+            logConnectorWarning("Field type {$fieldTypeId} has no items defined");
+            continue;
+        }
+
+        foreach ($items as $item) {
+            if (!is_array($item) || !isset($item['kind'], $item['id'])) {
+                continue;
+            }
+
+            if ($item['kind'] === 'field') {
+                $fieldId = (int) $item['id'];
+                if (!isset($fields[$fieldId])) {
+                    logConnectorWarning("Missing field {$fieldId} referenced by field type {$fieldTypeId}");
+                    continue;
+                }
+
+                $definition = normalizeFieldDefinition($fields[$fieldId], $fieldType, $item, $placeholderHints, null);
+                if ($definition !== null) {
+                    $expanded[] = $definition;
+                }
+                continue;
+            }
+
+            if ($item['kind'] === 'fieldset') {
+                $fieldsetId = (int) $item['id'];
+                if (!isset($fieldsets[$fieldsetId])) {
+                    logConnectorWarning("Missing fieldset {$fieldsetId} referenced by field type {$fieldTypeId}");
+                    continue;
+                }
+                $fieldset = $fieldsets[$fieldsetId];
+                $fieldIds = $fieldset['field_ids'] ?? [];
+                foreach ($fieldIds as $fieldId) {
+                    if (!isset($fields[$fieldId])) {
+                        logConnectorWarning("Missing field {$fieldId} inside fieldset {$fieldsetId} referenced by field type {$fieldTypeId}");
+                        continue;
+                    }
+
+                    $definition = normalizeFieldDefinition($fields[$fieldId], $fieldType, $item, $placeholderHints, $fieldset);
+                    if ($definition !== null) {
+                        $expanded[] = $definition;
+                    }
+                }
+            }
+        }
+    }
+
+    return $expanded;
+}
+
+function collectPlaceholderHints(array $metadata): array
+{
+    $hints = [];
+    if (!isset($metadata['fields']) || !is_array($metadata['fields'])) {
+        return $hints;
+    }
+
+    foreach ($metadata['fields'] as $field) {
+        if (!is_array($field)) {
+            continue;
+        }
+        $placeholder = isset($field['placeholder']) && is_string($field['placeholder'])
+            ? trim($field['placeholder'])
+            : '';
+        if ($placeholder === '') {
+            continue;
+        }
+
+        $candidates = [];
+        if (isset($field['type']) && is_string($field['type'])) {
+            $candidates[] = strtolower(trim($field['type']));
+        }
+        if (isset($field['key']) && is_string($field['key'])) {
+            $candidates[] = strtolower(trim($field['key']));
+        }
+        if (isset($field['name']) && is_string($field['name'])) {
+            $candidates[] = slugify_key($field['name']);
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+            if (!isset($hints[$candidate])) {
+                $hints[$candidate] = $placeholder;
+            }
+        }
+    }
+
+    return $hints;
+}
+
+function normalizeMetadataFields(array $fields): array
+{
+    $normalized = [];
+    foreach ($fields as $field) {
+        if (!is_array($field)) {
+            continue;
+        }
+
+        $options = [];
+        if (isset($field['options']) && is_array($field['options'])) {
+            $mapped = array_map(static function ($option) {
+                return is_string($option) ? trim($option) : null;
+            }, $field['options']);
+            $options = array_values(array_filter($mapped, static function ($value) {
+                return $value !== null && $value !== '';
+            }));
+        }
+
+        $normalized[] = [
+            'name' => isset($field['name']) ? (string) $field['name'] : '',
+            'type' => isset($field['type']) ? (string) $field['type'] : '',
+            'placeholder' => isset($field['placeholder']) ? (string) $field['placeholder'] : '',
+            'required' => isset($field['required']) ? (bool) $field['required'] : false,
+            'options' => $options,
+        ];
+    }
+
+    return $normalized;
+}
+
+function normalizeFieldDefinition(array $fieldRow, array $fieldType, array $item, array $placeholderHints, ?array $fieldset = null): ?array
+{
+    $fieldKey = isset($fieldRow['field_key']) ? trim((string) $fieldRow['field_key']) : '';
+    $fieldTypeKey = isset($fieldType['field_type_key']) ? trim((string) $fieldType['field_type_key']) : '';
+    $fieldTypeName = isset($fieldType['field_type_name']) ? trim((string) $fieldType['field_type_name']) : '';
+    $labelSource = isset($item['label']) ? (string) $item['label'] : ($fieldTypeName !== '' ? $fieldTypeName : $fieldKey);
+    $label = humanizeLabel($labelSource);
+
+    $placeholder = '';
+    $placeholderKeys = [];
+    if ($fieldTypeKey !== '') {
+        $placeholderKeys[] = strtolower($fieldTypeKey);
+    }
+    if ($fieldKey !== '') {
+        $placeholderKeys[] = strtolower($fieldKey);
+    }
+    if (isset($item['label']) && is_string($item['label'])) {
+        $placeholderKeys[] = slugify_key($item['label']);
+    }
+    if ($fieldset && isset($fieldset['fieldset_key'])) {
+        $placeholderKeys[] = strtolower(trim((string) $fieldset['fieldset_key']));
+    }
+
+    foreach ($placeholderKeys as $candidate) {
+        if ($candidate !== '' && isset($placeholderHints[$candidate])) {
+            $placeholder = $placeholderHints[$candidate];
+            break;
+        }
+    }
+
+    $options = $fieldRow['options'] ?? [];
+    if (!is_array($options)) {
+        $options = [];
+    }
+
+    return [
+        'id' => $fieldRow['id'] ?? null,
+        'fieldKey' => $fieldKey,
+        'fieldsetId' => $fieldset['id'] ?? null,
+        'fieldsetKey' => $fieldset['fieldset_key'] ?? null,
+        'fieldTypeId' => $fieldType['id'] ?? null,
+        'fieldTypeKey' => $fieldTypeKey,
+        'fieldTypeName' => $fieldTypeName,
+        'label' => $label,
+        'name' => $label,
+        'type' => $fieldTypeKey !== '' ? $fieldTypeKey : $fieldKey,
+        'inputType' => isset($fieldRow['type']) ? trim((string) $fieldRow['type']) : '',
+        'required' => (bool) ($fieldRow['required'] ?? false),
+        'options' => $options,
+        'placeholder' => $placeholder,
+    ];
+}
+
+function normalizeFieldOptions($raw): array
+{
+    if (is_string($raw)) {
+        $trimmed = trim($raw);
+        if ($trimmed === '') {
+            return [];
+        }
+
+        $decoded = json_decode($trimmed, true);
+        if (is_array($decoded)) {
+            if (isset($decoded['options']) && is_array($decoded['options'])) {
+                $decoded = $decoded['options'];
+            }
+            $mapped = array_map(static function ($value) {
+                return is_string($value) ? trim($value) : null;
+            }, $decoded);
+            return array_values(array_filter($mapped, static function ($value) {
+                return $value !== null && $value !== '';
+            }));
+        }
+    } elseif (is_array($raw)) {
+        $mapped = array_map(static function ($value) {
+            return is_string($value) ? trim($value) : null;
+        }, $raw);
+        return array_values(array_filter($mapped, static function ($value) {
+            return $value !== null && $value !== '';
+        }));
+    }
+
+    return [];
+}
+
+function humanizeLabel(string $value): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    $normalized = str_replace(['_', '-'], ' ', $trimmed);
+    $normalized = preg_replace('/\s+/', ' ', $normalized);
+
+    return ucwords(strtolower($normalized));
+}
+
+function logConnectorWarning(string $message): void
+{
+    static $logged = [];
+    if (isset($logged[$message])) {
+        return;
+    }
+    $logged[$message] = true;
+    error_log('[get-form] ' . $message);
 }
 
 function collectSnapshotIconLibrary(array ...$groups): array
