@@ -32,6 +32,7 @@ $map = [
   'save-form' => $connectorDir . '/save-form.php',
   'get-form' => $connectorDir . '/get-form.php',
   'add-post' => $connectorDir . '/add-post.php',
+  'upload-media' => $connectorDir . '/upload-media.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
