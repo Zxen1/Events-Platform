@@ -24444,3 +24444,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+// ========== NEW FIELD TYPES SUPPORT ==========
+function getDropdownOptionsFromFieldType(fieldTypeId) {
+    const fieldType = formSnapshot.field_types.find(ft => ft.field_type_id === fieldTypeId);
+    if (!fieldType) return [];
+    const options = [];
+    for (let i = 1; i <= 8; i++) {
+        const item = fieldType[`field_type_item_${i}`];
+        if (item && item.trim() !== '') options.push(item.trim());
+    }
+    return options;
+}
+
+function renderDropdownField(field, container) {
+    const select = document.createElement('select');
+    select.name = field.field_key;
+    select.classList.add('form-control');
+
+    const options = getDropdownOptionsFromFieldType(field.field_type_id);
+    for (const opt of options) {
+        const optionEl = document.createElement('option');
+        optionEl.value = opt;
+        optionEl.textContent = opt.replace(/\[.*?=|\]/g, ''); // clean label
+        select.appendChild(optionEl);
+    }
+
+    container.appendChild(select);
+}
+// ========== END FIELD TYPES SUPPORT ==========
