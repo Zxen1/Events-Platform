@@ -148,7 +148,7 @@ function fetchCategories(PDO $pdo, array $columns): array
         $selectColumns[] = '*';
     }
 
-    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' , field_types.field_type_item_1FROM categories' . $orderBy;
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM categories' . $orderBy;
     $stmt = $pdo->query($sql);
 
     $categories = [];
