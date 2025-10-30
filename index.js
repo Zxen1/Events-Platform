@@ -3345,6 +3345,53 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
+    function normalizeFieldTypeIdList(source){
+      const values = Array.isArray(source) ? source : (source === null || source === undefined ? [] : [source]);
+      const normalized = [];
+      const seen = new Set();
+      const processValue = entry => {
+        if(entry === null || entry === undefined) return;
+        if(Array.isArray(entry)){
+          entry.forEach(processValue);
+          return;
+        }
+        if(typeof entry === 'number' && Number.isInteger(entry) && entry > 0){
+          if(!seen.has(entry)){
+            seen.add(entry);
+            normalized.push(entry);
+          }
+          return;
+        }
+        if(typeof entry === 'string'){
+          entry.split(',').forEach(part => {
+            const trimmed = part.trim();
+            if(!trimmed) return;
+            if(/^\d+$/.test(trimmed)){
+              const parsed = parseInt(trimmed, 10);
+              if(parsed > 0 && !seen.has(parsed)){
+                seen.add(parsed);
+                normalized.push(parsed);
+              }
+            }
+          });
+        }
+      };
+      values.forEach(processValue);
+      return normalized;
+    }
+
+    function formatFieldsetLabel(key){
+      if(typeof key !== 'string') return '';
+      const trimmed = key.trim();
+      if(!trimmed) return '';
+      return trimmed
+        .replace(/[-_]+/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+    }
+
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
@@ -3409,7 +3456,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
-          const fieldTypes = Array.isArray(rawSubFieldTypes[sub]) ? rawSubFieldTypes[sub].slice() : [];
+          const fieldTypes = normalizeFieldTypeIdList(rawSubFieldTypes[sub]);
           subFieldTypes[sub] = fieldTypes;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
@@ -3447,9 +3494,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
           }
-          if(!Array.isArray(cat.subFieldTypes[sub])){
-            cat.subFieldTypes[sub] = [];
-          }
+          cat.subFieldTypes[sub] = normalizeFieldTypeIdList(cat.subFieldTypes[sub]);
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
           }
@@ -3457,6 +3502,61 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.sort_order = normalizeCategorySortOrderValue(cat.sort_order ?? cat.sortOrder);
       });
       return base;
+    }
+
+    function normalizeFieldTypesSnapshot(source){
+      const list = Array.isArray(source) ? source : [];
+      const normalized = [];
+      const seen = new Set();
+      list.forEach(entry => {
+        if(!entry || typeof entry !== 'object') return;
+        const idValue = entry.id;
+        const id = typeof idValue === 'number' && Number.isInteger(idValue) && idValue > 0
+          ? idValue
+          : (typeof idValue === 'string' && /^\d+$/.test(idValue.trim()) ? parseInt(idValue.trim(), 10) : null);
+        if(id === null || seen.has(id)) return;
+        seen.add(id);
+        const name = typeof entry.name === 'string' ? entry.name.trim() : '';
+        const key = typeof entry.key === 'string' ? entry.key.trim() : '';
+        const itemsSource = Array.isArray(entry.items) ? entry.items : [];
+        const itemSeen = new Set();
+        const items = [];
+        itemsSource.forEach(item => {
+          if(item && typeof item === 'object'){
+            const keyCandidate = typeof item.key === 'string' ? item.key.trim() : '';
+            if(!keyCandidate || itemSeen.has(keyCandidate)) return;
+            const label = typeof item.label === 'string' ? item.label.trim() : keyCandidate;
+            const type = typeof item.type === 'string' ? item.type.trim().toLowerCase() : 'unknown';
+            itemSeen.add(keyCandidate);
+            items.push({ key: keyCandidate, label, type: type || 'unknown' });
+            return;
+          }
+          if(typeof item === 'string'){
+            const trimmed = item.trim();
+            if(!trimmed) return;
+            let keySource = trimmed;
+            const bracketPos = keySource.indexOf('[');
+            if(bracketPos !== -1){
+              keySource = keySource.slice(0, bracketPos).trim();
+            }
+            keySource = keySource.split(/\s+/)[0] || keySource;
+            const normalizedKey = keySource
+              .toLowerCase()
+              .replace(/[^a-z0-9_\-]+/g, '-')
+              .replace(/-+/g, '-')
+              .replace(/_+/g, '_')
+              .replace(/^[-_]+|[-_]+$/g, '');
+            if(!normalizedKey || itemSeen.has(normalizedKey)) return;
+            const lower = trimmed.toLowerCase();
+            const type = lower.includes('[fieldset=') ? 'fieldset' : (lower.includes('[field=') ? 'field' : 'unknown');
+            itemSeen.add(normalizedKey);
+            items.push({ key: normalizedKey, label: trimmed, type });
+          }
+        });
+        normalized.push({ id, name, key, items });
+      });
+      normalized.sort((a, b) => a.id - b.id);
+      return normalized;
     }
 
     function normalizeFormbuilderSnapshot(snapshot){
@@ -3503,7 +3603,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         versionPriceCurrencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary
+        iconLibrary,
+        fieldTypes: normalizeFieldTypesSnapshot(snapshot && snapshot.fieldTypes)
       };
     }
 
@@ -3562,6 +3663,16 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
+    const FIELD_TYPE_DEFINITIONS = window.FIELD_TYPE_DEFINITIONS = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
+      ? initialFormbuilderSnapshot.fieldTypes.slice()
+      : [];
+    const FIELD_TYPE_LOOKUP = window.FIELD_TYPE_LOOKUP = new Map();
+    FIELD_TYPE_DEFINITIONS.forEach(def => {
+      if(!def || typeof def !== 'object') return;
+      const id = typeof def.id === 'number' && Number.isInteger(def.id) ? def.id : (typeof def.id === 'string' && /^\d+$/.test(def.id.trim()) ? parseInt(def.id.trim(), 10) : null);
+      if(id === null || FIELD_TYPE_LOOKUP.has(id)) return;
+      FIELD_TYPE_LOOKUP.set(id, { ...def, id });
+    });
     const existingWindowIcons = Array.isArray(window.iconLibrary)
       ? window.iconLibrary.slice()
       : [];
@@ -8296,6 +8407,7 @@ function makePosts(){
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
         const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
+        subFieldTypesMap[sub] = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -8520,6 +8632,138 @@ function makePosts(){
           deleteSubBtn.className = 'delete-subcategory-btn';
           deleteSubBtn.textContent = 'Delete Subcategory';
           deleteSubBtn.setAttribute('aria-label', `Delete ${sub} subcategory from ${c.name}`);
+
+          const defaultSubName = sub || 'Subcategory';
+          let currentSubName = defaultSubName;
+          let lastSubName = defaultSubName;
+          let currentSubId = c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null;
+
+          const fieldTypeSelectId = `${subContentId}FieldType`;
+          const fieldTypeRow = document.createElement('div');
+          fieldTypeRow.className = 'subcategory-field-type-row';
+
+          const fieldTypeLabel = document.createElement('label');
+          fieldTypeLabel.className = 'subcategory-field-type-label';
+          fieldTypeLabel.setAttribute('for', fieldTypeSelectId);
+          fieldTypeLabel.textContent = 'Field Type';
+
+          const fieldTypeSelect = document.createElement('select');
+          fieldTypeSelect.className = 'subcategory-field-type-select';
+          fieldTypeSelect.id = fieldTypeSelectId;
+
+          const fieldTypePlaceholderOption = document.createElement('option');
+          fieldTypePlaceholderOption.value = '';
+          fieldTypePlaceholderOption.textContent = FIELD_TYPE_DEFINITIONS.length ? 'Select a field type' : 'No field types available';
+          fieldTypeSelect.appendChild(fieldTypePlaceholderOption);
+
+          const initialFieldTypeIds = Array.isArray(subFieldTypesMap[sub]) ? subFieldTypesMap[sub] : [];
+          let initialFieldTypeValue = initialFieldTypeIds.length ? String(initialFieldTypeIds[0]) : '';
+          let hasInitialOption = false;
+
+          if(FIELD_TYPE_DEFINITIONS.length){
+            FIELD_TYPE_DEFINITIONS.forEach(def => {
+              if(!def || typeof def !== 'object') return;
+              const option = document.createElement('option');
+              option.value = String(def.id);
+              option.textContent = def.name || `Field Type #${def.id}`;
+              if(option.value === initialFieldTypeValue){
+                option.selected = true;
+                hasInitialOption = true;
+              }
+              fieldTypeSelect.appendChild(option);
+            });
+          } else {
+            fieldTypeSelect.disabled = true;
+            fieldTypeSelect.setAttribute('aria-disabled', 'true');
+          }
+
+          if(initialFieldTypeValue && !hasInitialOption){
+            const fallbackOption = document.createElement('option');
+            fallbackOption.value = initialFieldTypeValue;
+            fallbackOption.textContent = `Field Type #${initialFieldTypeValue}`;
+            fallbackOption.selected = true;
+            fallbackOption.dataset.missing = 'true';
+            fieldTypeSelect.appendChild(fallbackOption);
+          }
+
+          fieldTypeSelect.value = initialFieldTypeValue || '';
+
+          const fieldTypeSummary = document.createElement('div');
+          fieldTypeSummary.className = 'subcategory-field-type-summary';
+          const fieldTypeSummaryTitle = document.createElement('span');
+          fieldTypeSummaryTitle.className = 'subcategory-field-type-summary-title';
+          fieldTypeSummaryTitle.textContent = 'Fieldsets:';
+          const fieldTypeSummaryList = document.createElement('div');
+          fieldTypeSummaryList.className = 'subcategory-field-type-summary-list';
+          fieldTypeSummary.append(fieldTypeSummaryTitle, fieldTypeSummaryList);
+
+          fieldTypeRow.append(fieldTypeLabel, fieldTypeSelect);
+          fieldTypeSelect.setAttribute('aria-label', `Choose field type for ${defaultSubName}`);
+
+          const getSelectedFieldTypeId = ()=>{
+            const value = fieldTypeSelect.value;
+            if(!value) return null;
+            const parsed = parseInt(value, 10);
+            return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+          };
+
+          const setFieldTypeForCurrentSub = (id)=>{
+            const normalized = normalizeFieldTypeIdList(id ? [id] : []);
+            subFieldTypesMap[currentSubName] = normalized;
+            if(Array.isArray(categories) && categories[sourceIndex] && categories[sourceIndex].subFieldTypes && typeof categories[sourceIndex].subFieldTypes === 'object'){
+              categories[sourceIndex].subFieldTypes[currentSubName] = normalized.slice();
+            }
+          };
+
+          const renderFieldTypeSummary = ()=>{
+            fieldTypeSummaryList.innerHTML = '';
+            const selectedId = getSelectedFieldTypeId();
+            if(selectedId === null){
+              const empty = document.createElement('span');
+              empty.className = 'subcategory-field-type-empty';
+              empty.textContent = FIELD_TYPE_DEFINITIONS.length ? 'No field type selected.' : 'No field types available.';
+              fieldTypeSummaryList.appendChild(empty);
+              return;
+            }
+            const definition = FIELD_TYPE_LOOKUP.has(selectedId) ? FIELD_TYPE_LOOKUP.get(selectedId) : null;
+            if(!definition){
+              const missing = document.createElement('span');
+              missing.className = 'subcategory-field-type-empty';
+              missing.textContent = `Field type #${selectedId}`;
+              fieldTypeSummaryList.appendChild(missing);
+              return;
+            }
+            if(!definition.items || !definition.items.length){
+              const none = document.createElement('span');
+              none.className = 'subcategory-field-type-empty';
+              none.textContent = 'No fieldsets configured.';
+              fieldTypeSummaryList.appendChild(none);
+              return;
+            }
+            definition.items.forEach(item => {
+              if(!item || typeof item !== 'object') return;
+              const key = typeof item.key === 'string' ? item.key : '';
+              if(!key) return;
+              const tag = document.createElement('span');
+              tag.className = 'fieldset-tag';
+              tag.dataset.fieldsetKey = key;
+              const label = formatFieldsetLabel(key) || (typeof item.label === 'string' ? item.label : key);
+              tag.textContent = label;
+              if(item.label && typeof item.label === 'string'){
+                tag.title = item.label;
+              }
+              fieldTypeSummaryList.appendChild(tag);
+            });
+          };
+
+          fieldTypeSelect.addEventListener('change', ()=>{
+            const selectedId = getSelectedFieldTypeId();
+            setFieldTypeForCurrentSub(selectedId);
+            notifyFormbuilderChange();
+            renderFieldTypeSummary();
+          });
+
+          renderFieldTypeSummary();
 
           const subPlaceholder = document.createElement('p');
           subPlaceholder.className = 'subcategory-form-placeholder';
@@ -12524,11 +12768,6 @@ function makePosts(){
           });
 
           renderFormPreview();
-
-          const defaultSubName = sub || 'Subcategory';
-          let currentSubName = defaultSubName;
-          let lastSubName = defaultSubName;
-          let currentSubId = c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null;
           const getSubNameValue = ()=> subNameInput.value.trim();
           const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
             const updateSubIconDisplay = (src)=>{
@@ -12579,6 +12818,7 @@ function makePosts(){
             subIconButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
             subPreviewImg.alt = `${displayName} icon preview`;
             subPlaceholder.innerHTML = `Customize the <strong>${displayName}</strong> subcategory.`;
+            fieldTypeSelect.setAttribute('aria-label', `Choose field type for ${displayName}`);
             const categoryDisplayName = getCategoryDisplayName();
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
@@ -12627,6 +12867,13 @@ function makePosts(){
                 subFieldTypesMap[datasetValue] = subFieldTypesMap[previousSubName];
                 delete subFieldTypesMap[previousSubName];
               }
+              if(Array.isArray(categories) && categories[sourceIndex] && categories[sourceIndex].subFieldTypes && typeof categories[sourceIndex].subFieldTypes === 'object'){
+                const targetFieldTypes = categories[sourceIndex].subFieldTypes;
+                if(Object.prototype.hasOwnProperty.call(targetFieldTypes, previousSubName)){
+                  targetFieldTypes[datasetValue] = targetFieldTypes[previousSubName];
+                  delete targetFieldTypes[previousSubName];
+                }
+              }
               if(c.subIds && typeof c.subIds === 'object'){
                 if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
                   const preservedId = c.subIds[previousSubName];
@@ -12643,6 +12890,7 @@ function makePosts(){
             } else if(previousSubName === currentSubName){
               currentSubId = previousSubId;
             }
+            renderFieldTypeSummary();
           };
           subNameUpdaters.push(applySubNameChange);
           subNameInput.addEventListener('input', ()=> applySubNameChange());
@@ -12669,7 +12917,7 @@ function makePosts(){
             notifyFormbuilderChange();
           });
 
-          subContent.append(subNameInput, subIconPicker, subPlaceholder, fieldsSection, deleteSubBtn);
+          subContent.append(subNameInput, subIconPicker, fieldTypeRow, fieldTypeSummary, subPlaceholder, fieldsSection, deleteSubBtn);
 
           subMenu.append(subContent);
 
@@ -12882,7 +13130,7 @@ function makePosts(){
         if(subFieldTypesSource && typeof subFieldTypesSource === 'object' && !Array.isArray(subFieldTypesSource)){
           Object.keys(subFieldTypesSource).forEach(key => {
             const value = subFieldTypesSource[key];
-            subFieldTypes[key] = Array.isArray(value) ? value.slice() : [];
+            subFieldTypes[key] = normalizeFieldTypeIdList(value);
           });
         }
         return {
@@ -12949,9 +13197,7 @@ function makePosts(){
           if(!Array.isArray(cat.subFields[subName])){
             cat.subFields[subName] = [];
           }
-          if(!Array.isArray(cat.subFieldTypes[subName])){
-            cat.subFieldTypes[subName] = [];
-          }
+          cat.subFieldTypes[subName] = normalizeFieldTypeIdList(cat.subFieldTypes[subName]);
         });
       });
       assignMapLike(categoryIcons, snapshot.categoryIcons);
