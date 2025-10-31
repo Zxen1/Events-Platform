@@ -3347,25 +3347,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       fieldTypes: []
     };
 
-    const DEFAULT_FORM_FIELD_TYPES = [
-      { value: 'title', label: 'Title' },
-      { value: 'description', label: 'Description' },
-      { value: 'text-box', label: 'Text Box' },
-      { value: 'text-area', label: 'Text Area' },
-      { value: 'dropdown', label: 'Dropdown' },
-      { value: 'radio-toggle', label: 'Radio Toggle' },
-      { value: 'email', label: 'Email' },
-      { value: 'phone', label: 'Phone' },
-      { value: 'location', label: 'Location' },
-      { value: 'website-url', label: 'Website (URL)' },
-      { value: 'tickets-url', label: 'Tickets (URL)' },
-      { value: 'images', label: 'Images' },
-      { value: 'coupon', label: 'Coupon' },
-      { value: 'version-price', label: 'Version/Price' },
-      { value: 'checkout', label: 'Checkout' },
-      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
-    ];
-
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)
         ? options
@@ -3693,52 +3674,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return value && label ? { value, label } : null;
       })
       .filter(Boolean);
-    if(!finalFieldTypeOptions.length){
-      const fallbackFieldTypeSource = (typeof DEFAULT_FORM_FIELD_TYPES !== 'undefined' && Array.isArray(DEFAULT_FORM_FIELD_TYPES))
-        ? DEFAULT_FORM_FIELD_TYPES
-        : [
-          { value: 'title', label: 'Title' },
-          { value: 'description', label: 'Description' },
-          { value: 'text-box', label: 'Text Box' },
-          { value: 'text-area', label: 'Text Area' },
-          { value: 'dropdown', label: 'Dropdown' },
-          { value: 'radio-toggle', label: 'Radio Toggle' },
-          { value: 'email', label: 'Email' },
-          { value: 'phone', label: 'Phone' },
-          { value: 'location', label: 'Location' },
-          { value: 'website-url', label: 'Website (URL)' },
-          { value: 'tickets-url', label: 'Tickets (URL)' },
-          { value: 'images', label: 'Images' },
-          { value: 'coupon', label: 'Coupon' },
-          { value: 'version-price', label: 'Version/Price' },
-          { value: 'checkout', label: 'Checkout' },
-          { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
-        ];
-      finalFieldTypeOptions = fallbackFieldTypeSource
-        .map(option => {
-          if(!option || typeof option !== 'object'){
-            return null;
-          }
-          const value = typeof option.value === 'string'
-            ? option.value.trim()
-            : typeof option.key === 'string'
-              ? option.key.trim()
-              : '';
-          const label = typeof option.label === 'string'
-            ? option.label.trim()
-            : typeof option.name === 'string'
-              ? option.name.trim()
-              : '';
-          return value && label ? { value, label } : null;
-        })
-        .filter(Boolean);
-      if(!finalFieldTypeOptions.length){
-        finalFieldTypeOptions = fallbackFieldTypeSource.map(option => ({
-          value: option && typeof option.value === 'string' ? option.value : '',
-          label: option && typeof option.label === 'string' ? option.label : ''
-        })).filter(option => option.value && option.label);
-      }
-    }
     initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
