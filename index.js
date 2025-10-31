@@ -92,6 +92,131 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+let renderVenueSessionPreview = function(previewField){
+  const editor = document.createElement('div');
+  editor.className = 'venue-session-editor';
+  editor.setAttribute('aria-required', previewField && previewField.required ? 'true' : 'false');
+  return {
+    element: editor,
+    wrapperClasses: ['form-preview-field--venues-sessions-pricing'],
+    removeLabelFor: true
+  };
+};
+
+const FIELD_TYPE_BEHAVIORS = Object.freeze({
+  variant_pricing: {
+    normalizeOptions: (options, context = {}) => normalizeVariantPricingOptions(options, context),
+    buildEditor: (field, labelId, context = {}) => ({
+      element: renderVariantPricingEditor(field, labelId, context),
+      wrapperClasses: ['form-preview-field--variant-pricing'],
+      removeLabelFor: true
+    }),
+    buildPreview: (field, baseId, context = {}) => renderVariantPricingPreview(field, baseId, context),
+    collectCurrencies: (field, addCurrency) => collectVariantPricingCurrencies(field, addCurrency)
+  },
+  venues_sessions_pricing: {
+    normalizeOptions: (options, context = {}) => normalizeVenueSessionOptionsForBehavior(options, context),
+    buildEditor: (field, labelId, context = {}) => ({
+      element: renderVenueSessionEditor(field, labelId, context),
+      wrapperClasses: ['form-preview-field--venues-sessions-pricing'],
+      removeLabelFor: true
+    }),
+    buildPreview: (field, baseId, context = {}) => renderVenueSessionPreview(field, baseId, context),
+    collectCurrencies: (field, addCurrency) => collectVenueSessionCurrencies(field, addCurrency),
+    skipAutofillReset: true
+  }
+});
+
+function resolveFieldBehaviorKey(fieldOrType) {
+  if (fieldOrType && typeof fieldOrType === 'object') {
+    const keyFromBehavior = typeof fieldOrType.behaviorKey === 'string' ? fieldOrType.behaviorKey.trim() : '';
+    if (keyFromBehavior) {
+      return keyFromBehavior;
+    }
+    const keyFromFieldTypeKey = typeof fieldOrType.field_type_key === 'string' ? fieldOrType.field_type_key.trim() : '';
+    if (keyFromFieldTypeKey) {
+      return keyFromFieldTypeKey;
+    }
+    const keyFromType = typeof fieldOrType.type === 'string' ? fieldOrType.type.trim() : '';
+    if (keyFromType) {
+      return keyFromType;
+    }
+  }
+  if (typeof fieldOrType === 'string') {
+    const trimmed = fieldOrType.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return '';
+}
+
+function getFieldTypeBehavior(fieldOrType) {
+  const key = resolveFieldBehaviorKey(fieldOrType);
+  return key ? FIELD_TYPE_BEHAVIORS[key] || null : null;
+}
+
+function normalizeVariantPricingOptions(rawOptions, context = {}) {
+  const list = Array.isArray(rawOptions) ? rawOptions : [];
+  const normalized = list.map(opt => {
+    if(opt && typeof opt === 'object'){
+      return {
+        version: typeof opt.version === 'string' ? opt.version : '',
+        currency: typeof opt.currency === 'string' ? opt.currency : '',
+        price: typeof opt.price === 'string' ? opt.price : ''
+      };
+    }
+    const str = typeof opt === 'string' ? opt : String(opt ?? '');
+    return { version: str, currency: '', price: '' };
+  });
+  if(normalized.length === 0){
+    normalized.push({ version: '', currency: '', price: '' });
+  }
+  return normalized;
+}
+
+function collectVariantPricingCurrencies(field, addCurrency) {
+  if(typeof addCurrency !== 'function' || !field) return;
+  const options = Array.isArray(field.options) ? field.options : [];
+  options.forEach(opt => {
+    const code = opt && typeof opt.currency === 'string' ? opt.currency : '';
+    addCurrency(code);
+  });
+}
+
+function normalizeVenueSessionOptionsForBehavior(options, context = {}) {
+  const mode = context && typeof context.mode === 'string' ? context.mode : '';
+  if(mode === 'create'){
+    const normalized = normalizeVenueSessionOptionsFromWindow(options);
+    const list = Array.isArray(normalized) && normalized.length
+      ? normalized
+      : [venueSessionCreateVenue()];
+    return list.map(cloneVenueSessionVenueFromWindow);
+  }
+  return normalizeVenueSessionOptions(options);
+}
+
+function collectVenueSessionCurrencies(field, addCurrency) {
+  if(typeof addCurrency !== 'function' || !field) return;
+  const venues = Array.isArray(field.options) ? field.options : [];
+  venues.forEach(venue => {
+    const sessions = Array.isArray(venue && venue.sessions) ? venue.sessions : [];
+    sessions.forEach(session => {
+      const times = Array.isArray(session && session.times) ? session.times : [];
+      times.forEach(time => {
+        const versions = Array.isArray(time && time.versions) ? time.versions : [];
+        versions.forEach(version => {
+          const tiers = Array.isArray(version && version.tiers) ? version.tiers : [];
+          tiers.forEach(tier => {
+            const code = tier && typeof tier.currency === 'string' ? tier.currency : '';
+            addCurrency(code);
+          });
+        });
+      });
+    });
+  });
+}
+
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -3665,7 +3790,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         seenValues.add(value);
-        sanitized.push({ value, label });
+        const behaviorKey = typeof option.behaviorKey === 'string' ? option.behaviorKey.trim() : '';
+        sanitized.push(behaviorKey ? { value, label, behaviorKey } : { value, label });
       });
       return sanitized;
     }
@@ -8633,23 +8759,9 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(safeField.type === 'venues_sessions_pricing'){
-              safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(safeField.type === 'variant_pricing'){
-              safeField.options = safeField.options.map(opt => {
-                if(opt && typeof opt === 'object'){
-                  return {
-                    version: typeof opt.version === 'string' ? opt.version : '',
-                    currency: typeof opt.currency === 'string' ? opt.currency : '',
-                    price: typeof opt.price === 'string' ? opt.price : ''
-                  };
-                }
-                const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                return { version: str, currency: '', price: '' };
-              });
-              if(safeField.options.length === 0){
-                safeField.options.push({ version: '', currency: '', price: '' });
-              }
+            const behavior = getFieldTypeBehavior(safeField);
+            if(behavior && typeof behavior.normalizeOptions === 'function'){
+              safeField.options = behavior.normalizeOptions(safeField.options, { mode: 'snapshot', field: safeField });
             } else {
               safeField.options = safeField.options.map(opt => {
                 if(typeof opt === 'string') return opt;
@@ -8662,7 +8774,7 @@ function makePosts(){
                 safeField.options.push('', '', '');
               }
             }
-            if(safeField.type !== 'venues_sessions_pricing'){
+            if(!behavior || behavior.skipAutofillReset !== true){
               resetVenueAutofillState(safeField);
             }
             return safeField;
@@ -11260,6 +11372,15 @@ function makePosts(){
             return editor;
           };
 
+          renderVenueSessionPreview = function(previewField, baseId, context = {}){
+            const editor = buildVenueSessionPreview(previewField, baseId);
+            return {
+              element: editor,
+              wrapperClasses: ['form-preview-field--venues-sessions-pricing'],
+              removeLabelFor: true
+            };
+          };
+
           const ensureDefaultFieldSet = (fieldList)=>{
             if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
             DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
@@ -11404,366 +11525,44 @@ function makePosts(){
                     radioGroup.appendChild(radioLabel);
                   });
                 } else {
-                  const placeholderOption = document.createElement('label');
-                  placeholderOption.className = 'form-preview-radio-option';
-                  const radio = document.createElement('input');
-                  radio.type = 'radio';
-                  radio.tabIndex = -1;
-                  radio.disabled = true;
-                  placeholderOption.append(radio, document.createTextNode('Option'));
-                  radioGroup.appendChild(placeholderOption);
+              const placeholderOption = document.createElement('label');
+              placeholderOption.className = 'form-preview-radio-option';
+              const radio = document.createElement('input');
+              radio.type = 'radio';
+              radio.tabIndex = -1;
+              radio.disabled = true;
+              placeholderOption.append(radio, document.createTextNode('Option'));
+              radioGroup.appendChild(placeholderOption);
+            }
+            control = radioGroup;
+          }
+
+          if(!control){
+            const behavior = getFieldTypeBehavior(previewField);
+            if(behavior && typeof behavior.buildPreview === 'function'){
+              const result = behavior.buildPreview(previewField, baseId, {
+                notifyFormbuilderChange,
+                showCopyStyleMessage,
+                VERSION_PRICE_CURRENCIES,
+                createTransientInputAlert
+              });
+              if(result && result.element){
+                if(Array.isArray(result.wrapperClasses)){
+                  result.wrapperClasses.forEach(cls => wrapper.classList.add(cls));
                 }
-                control = radioGroup;
-              } else if(previewField.type === 'venues_sessions_pricing'){
-                wrapper.classList.add('form-preview-field--venues-sessions-pricing');
-                control = buildVenueSessionPreview(previewField, baseId);
-              } else if(previewField.type === 'variant_pricing'){
-                wrapper.classList.add('form-preview-field--variant-pricing');
-                const editor = document.createElement('div');
-                editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
-                const versionList = document.createElement('div');
-                versionList.className = 'variant-pricing-options-list';
-                editor.appendChild(versionList);
+                if(result.removeLabelFor){
+                  label.removeAttribute('for');
+                }
+                control = result.element;
+              }
+            }
+          }
 
-                const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
-
-                const normalizeOptions = ()=>{
-                  if(!Array.isArray(previewField.options)){
-                    previewField.options = [];
-                  }
-                  previewField.options = previewField.options.map(opt => {
-                    if(opt && typeof opt === 'object'){
-                      return {
-                        version: typeof opt.version === 'string' ? opt.version : '',
-                        currency: typeof opt.currency === 'string' ? opt.currency : '',
-                        price: typeof opt.price === 'string' ? opt.price : ''
-                      };
-                    }
-                    const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                    return { version: str, currency: '', price: '' };
-                  });
-                  if(previewField.options.length === 0){
-                    previewField.options.push(createEmptyOption());
-                  }
-                };
-
-                const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
-                  normalizeOptions();
-                  versionList.innerHTML = '';
-                  let firstId = null;
-                  const currencyAlertMessage = 'Please select a currency before entering a price.';
-                  let lastCurrencyAlertAt = 0;
-                  let currencyAlertHandle = null;
-                  let currencyAlertTimeout = 0;
-                  const showCurrencyAlert = target => {
-                    const candidate = (target && typeof target.getBoundingClientRect === 'function')
-                      ? target
-                      : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
-                        ? document.activeElement
-                        : null);
-                    const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
-                    if(!inputEl) return;
-                    const now = Date.now();
-                    if(now - lastCurrencyAlertAt < 400){
-                      if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
-                        currencyAlertHandle.reposition();
-                      }
-                      return;
-                    }
-                    lastCurrencyAlertAt = now;
-                    if(currencyAlertTimeout){
-                      clearTimeout(currencyAlertTimeout);
-                      currencyAlertTimeout = 0;
-                    }
-                    if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
-                      currencyAlertHandle.remove();
-                      currencyAlertHandle = null;
-                    }
-                    const handle = showCopyStyleMessage(currencyAlertMessage, inputEl);
-                    if(!handle) return;
-                    currencyAlertHandle = handle;
-                    currencyAlertTimeout = window.setTimeout(()=>{
-                      handle.remove();
-                      if(currencyAlertHandle === handle){
-                        currencyAlertHandle = null;
-                      }
-                      currencyAlertTimeout = 0;
-                    }, 1500);
-                  };
-                  previewField.options.forEach((optionValue, optionIndex)=>{
-                    const optionRow = document.createElement('div');
-                    optionRow.className = 'variant-pricing-option';
-                    optionRow.dataset.optionIndex = String(optionIndex);
-
-                    const topRow = document.createElement('div');
-                    topRow.className = 'variant-pricing-row variant-pricing-row--top';
-
-                    const versionInput = document.createElement('input');
-                    versionInput.type = 'text';
-                    versionInput.className = 'variant-pricing-name';
-                    versionInput.placeholder = 'Version Name';
-                    const versionInputId = `${baseId}-version-${optionIndex}`;
-                    versionInput.id = versionInputId;
-                    if(optionIndex === 0){
-                      firstId = versionInputId;
-                    }
-                    versionInput.value = optionValue.version || '';
-                    versionInput.addEventListener('input', ()=>{
-                      previewField.options[optionIndex].version = versionInput.value;
-                      notifyFormbuilderChange();
-                    });
-                    topRow.appendChild(versionInput);
-
-                    const bottomRow = document.createElement('div');
-                    bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
-
-                    const currencySelect = document.createElement('select');
-                    currencySelect.className = 'variant-pricing-currency';
-                    const emptyOption = document.createElement('option');
-                    emptyOption.value = '';
-                    emptyOption.textContent = 'Currency';
-                    currencySelect.appendChild(emptyOption);
-                    VERSION_PRICE_CURRENCIES.forEach(code => {
-                      const opt = document.createElement('option');
-                      opt.value = code;
-                      opt.textContent = code;
-                      currencySelect.appendChild(opt);
-                    });
-                    currencySelect.value = optionValue.currency || '';
-                    const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
-
-                    const priceInput = document.createElement('input');
-                    priceInput.type = 'text';
-                    priceInput.inputMode = 'decimal';
-                    priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
-                    priceInput.className = 'variant-pricing-price';
-                    priceInput.placeholder = '0.00';
-                    const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
-                    const formatPriceValue = value => {
-                      const trimmed = (value || '').trim();
-                      if(trimmed === '') return '';
-                      let normalized = trimmed.replace(/,/g, '.');
-                      if(normalized === '.') return '0.00';
-                      if(normalized.startsWith('.')){
-                        normalized = `0${normalized}`;
-                      }
-                      const dotIndex = normalized.indexOf('.');
-                      if(dotIndex === -1){
-                        return `${normalized}.00`;
-                      }
-                      let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
-                      if(integerPart === ''){
-                        integerPart = '0';
-                      }
-                      let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
-                      if(decimalPart.length === 0){
-                        decimalPart = '00';
-                      } else if(decimalPart.length === 1){
-                        decimalPart = `${decimalPart}0`;
-                      } else {
-                        decimalPart = decimalPart.slice(0, 2);
-                      }
-                      return `${integerPart}.${decimalPart}`;
-                    };
-                    const initialPriceValue = sanitizePriceValue(optionValue.price || '');
-                    const formattedInitialPrice = formatPriceValue(initialPriceValue);
-                    priceInput.value = formattedInitialPrice;
-                    if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
-                      previewField.options[optionIndex].price = formattedInitialPrice;
-                    }
-                    const clearPriceValue = ()=>{
-                      let changed = false;
-                      if(priceInput.value !== ''){
-                        priceInput.value = '';
-                        changed = true;
-                      }
-                      if(previewField.options[optionIndex].price !== ''){
-                        previewField.options[optionIndex].price = '';
-                        changed = true;
-                      } else if(typeof previewField.options[optionIndex].price !== 'string'){
-                        previewField.options[optionIndex].price = '';
-                      }
-                      return changed;
-                    };
-                    const updatePriceState = ()=>{
-                      if(isCurrencySelected()){
-                        priceInput.readOnly = false;
-                        priceInput.classList.remove('is-awaiting-currency');
-                        priceInput.removeAttribute('aria-disabled');
-                        return false;
-                      }
-                      priceInput.readOnly = true;
-                      priceInput.classList.add('is-awaiting-currency');
-                      priceInput.setAttribute('aria-disabled', 'true');
-                      return clearPriceValue();
-                    };
-                    const blockPriceAccess = event => {
-                      if(isCurrencySelected()) return false;
-                      if(event && event.type === 'pointerdown' && event.button !== 0) return false;
-                      if(event && typeof event.preventDefault === 'function'){
-                        event.preventDefault();
-                      }
-                      if(event && typeof event.stopPropagation === 'function'){
-                        event.stopPropagation();
-                      }
-                      if(typeof priceInput.blur === 'function'){
-                        requestAnimationFrame(()=>{
-                          try{ priceInput.blur(); }catch(err){}
-                        });
-                      }
-                      showCurrencyAlert(priceInput);
-                      return true;
-                    };
-                    currencySelect.addEventListener('change', ()=>{
-                      const previousCurrency = previewField.options[optionIndex].currency || '';
-                      const nextCurrency = currencySelect.value;
-                      previewField.options[optionIndex].currency = nextCurrency;
-                      const priceCleared = updatePriceState();
-                      if(isCurrencySelected()){
-                        commitPriceValue();
-                      }
-                      if(previousCurrency !== nextCurrency || priceCleared){
-                        notifyFormbuilderChange();
-                      }
-                    });
-
-                    const commitPriceValue = event => {
-                      if(!isCurrencySelected()){
-                        if(clearPriceValue()){
-                          notifyFormbuilderChange();
-                        }
-                        return;
-                      }
-                      const rawValue = priceInput.value;
-                      const sanitized = sanitizePriceValue(rawValue);
-                      if(rawValue !== sanitized){
-                        priceInput.value = sanitized;
-                      }
-                      const formatted = formatPriceValue(sanitized);
-                      if(priceInput.value !== formatted){
-                        priceInput.value = formatted;
-                      }
-                      if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
-                        if(formatted === ''){
-                          priceInput.setSelectionRange(0, 0);
-                        } else if(!/[.,]/.test(sanitized)){ 
-                          const dotIndex = formatted.indexOf('.');
-                          const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
-                          priceInput.setSelectionRange(caretPos, caretPos);
-                        } else {
-                          const dotIndex = formatted.indexOf('.');
-                          if(dotIndex === -1){
-                            priceInput.setSelectionRange(formatted.length, formatted.length);
-                          } else {
-                            const decimals = sanitized.split(/[.,]/)[1] || '';
-                            if(decimals.length === 0){
-                              priceInput.setSelectionRange(dotIndex + 1, formatted.length);
-                            } else {
-                              const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
-                              priceInput.setSelectionRange(caretPos, caretPos);
-                            }
-                          }
-                        }
-                      }
-                      const previous = previewField.options[optionIndex].price || '';
-                      if(previous !== formatted){
-                        previewField.options[optionIndex].price = formatted;
-                        notifyFormbuilderChange();
-                      }
-                    };
-                    priceInput.addEventListener('beforeinput', event => {
-                      if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
-                        event.preventDefault();
-                      }
-                    });
-                    priceInput.addEventListener('pointerdown', event => {
-                      blockPriceAccess(event);
-                    });
-                    priceInput.addEventListener('focus', event => {
-                      blockPriceAccess(event);
-                    });
-                    priceInput.addEventListener('keydown', event => {
-                      if(event.key === 'Tab' || event.key === 'Shift') return;
-                      if(blockPriceAccess(event)) return;
-                    });
-                    priceInput.addEventListener('input', commitPriceValue);
-                    priceInput.addEventListener('change', commitPriceValue);
-                    const initialCleared = updatePriceState();
-                    if(isCurrencySelected()){
-                      commitPriceValue();
-                    } else if(initialCleared){
-                      notifyFormbuilderChange();
-                    }
-
-                    const actions = document.createElement('div');
-                    actions.className = 'dropdown-option-actions variant-pricing-option-actions';
-
-                    const addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'dropdown-option-add';
-                    addBtn.textContent = '+';
-                    addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
-                    addBtn.addEventListener('click', ()=>{
-                      previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
-                      notifyFormbuilderChange();
-                      renderVersionEditor(optionIndex + 1);
-                    });
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'dropdown-option-remove';
-                    removeBtn.textContent = '-';
-                    removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
-                    removeBtn.disabled = previewField.options.length <= 1;
-                    removeBtn.addEventListener('click', ()=>{
-                      if(previewField.options.length <= 1){
-                        previewField.options[0] = createEmptyOption();
-                      } else {
-                        previewField.options.splice(optionIndex, 1);
-                      }
-                      notifyFormbuilderChange();
-                      const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
-                      renderVersionEditor(nextFocus);
-                    });
-
-                    actions.append(addBtn, removeBtn);
-                    bottomRow.append(currencySelect, priceInput, actions);
-
-                    optionRow.append(topRow, bottomRow);
-                    versionList.appendChild(optionRow);
-                  });
-
-                  if(focusIndex !== null){
-                    requestAnimationFrame(()=>{
-                      const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
-                      if(!targetRow) return;
-                      let focusEl = null;
-                      if(focusTarget === 'price'){
-                        focusEl = targetRow.querySelector('.variant-pricing-price');
-                      } else if(focusTarget === 'currency'){
-                        focusEl = targetRow.querySelector('.variant-pricing-currency');
-                      }
-                      if(!focusEl){
-                        focusEl = targetRow.querySelector('.variant-pricing-name');
-                      }
-                      if(focusEl && typeof focusEl.focus === 'function'){
-                        try{ focusEl.focus({ preventScroll: true }); }
-                        catch(err){
-                          try{ focusEl.focus(); }catch(e){}
-                        }
-                      }
-                    });
-                  }
-                };
-
-                renderVersionEditor();
-                editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
-                control = editor;
-              } else if(previewField.type === 'website-url' || previewField.type === 'tickets-url'){
-                wrapper.classList.add('form-preview-field--url');
-                const urlWrapper = document.createElement('div');
-                urlWrapper.className = 'form-preview-url-wrapper';
-                const urlInput = document.createElement('input');
+          if(!control && (previewField.type === 'website-url' || previewField.type === 'tickets-url')){
+            wrapper.classList.add('form-preview-field--url');
+            const urlWrapper = document.createElement('div');
+            urlWrapper.className = 'form-preview-url-wrapper';
+            const urlInput = document.createElement('input');
                 urlInput.type = 'text';
                 urlInput.className = 'form-preview-url-input';
                 const urlInputId = `${baseId}-input`;
@@ -12433,8 +12232,9 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const showVariantPricing = type === 'variant_pricing';
-              const showVenueSession = type === 'venues_sessions_pricing';
+              const behavior = getFieldTypeBehavior(type);
+              const showVariantPricing = behavior === FIELD_TYPE_BEHAVIORS.variant_pricing;
+              const showVenueSession = behavior === FIELD_TYPE_BEHAVIORS.venues_sessions_pricing;
               const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
@@ -12891,27 +12691,19 @@ function makePosts(){
               placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
               required: !!(field && field.required),
               options: Array.isArray(field && field.options)
-                ? field.options.map(opt => {
-                    if(field && field.type === 'variant_pricing'){
-                      if(opt && typeof opt === 'object'){
-                        return {
-                          version: typeof opt.version === 'string' ? opt.version : '',
-                          currency: typeof opt.currency === 'string' ? opt.currency : '',
-                          price: typeof opt.price === 'string' ? opt.price : ''
-                        };
+                ? (()=>{
+                    const behavior = getFieldTypeBehavior(field);
+                    if(behavior && typeof behavior.normalizeOptions === 'function'){
+                      return behavior.normalizeOptions(field.options, { mode: 'snapshot', field });
+                    }
+                    return field.options.map(opt => {
+                      if(typeof opt === 'string') return opt;
+                      if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
+                        return opt.version;
                       }
-                      const str = typeof opt === 'string' ? opt : String(opt ?? '');
-                      return { version: str, currency: '', price: '' };
-                    }
-                    if(field && field.type === 'venues_sessions_pricing'){
-                      return cloneVenueSessionVenue(opt);
-                    }
-                    if(typeof opt === 'string') return opt;
-                    if(opt && typeof opt === 'object' && typeof opt.version === 'string'){
-                      return opt.version;
-                    }
-                    return String(opt ?? '');
-                  })
+                      return String(opt ?? '');
+                    });
+                  })()
                 : []
             }));
           } else {
@@ -20510,34 +20302,15 @@ document.addEventListener('pointerdown', (e) => {
         const subFields = cat.subFields && typeof cat.subFields === 'object' ? cat.subFields : {};
         Object.values(subFields).forEach(fields => {
           if(!Array.isArray(fields)) return;
-          fields.forEach(field => {
-            if(!field || typeof field !== 'object') return;
-            if(field.type === 'variant_pricing'){
-              const options = Array.isArray(field.options) ? field.options : [];
-              options.forEach(opt => {
-                const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
-                if(code) codes.add(code);
-              });
-            } else if(field.type === 'venues_sessions_pricing'){
-              const venues = Array.isArray(field.options) ? field.options : [];
-              venues.forEach(venue => {
-                const sessions = Array.isArray(venue && venue.sessions) ? venue.sessions : [];
-                sessions.forEach(session => {
-                  const times = Array.isArray(session && session.times) ? session.times : [];
-                  times.forEach(time => {
-                    const versions = Array.isArray(time && time.versions) ? time.versions : [];
-                    versions.forEach(version => {
-                      const tiers = Array.isArray(version && version.tiers) ? version.tiers : [];
-                      tiers.forEach(tier => {
-                        const code = tier && typeof tier.currency === 'string' ? tier.currency.trim().toUpperCase() : '';
-                        if(code) codes.add(code);
-                      });
-                    });
-                  });
-                });
-              });
-            }
+        fields.forEach(field => {
+          if(!field || typeof field !== 'object') return;
+          const behavior = getFieldTypeBehavior(field);
+          if(!behavior || typeof behavior.collectCurrencies !== 'function') return;
+          behavior.collectCurrencies(field, code => {
+            const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
+            if(normalized) codes.add(normalized);
           });
+        });
         });
       });
       if(!codes.size && snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
@@ -20671,16 +20444,9 @@ document.addEventListener('pointerdown', (e) => {
           safe.placeholder = field.placeholder;
         }
         safe.required = !!field.required;
-        if(type === 'variant_pricing'){
-          const options = Array.isArray(field.options) ? field.options : [];
-          safe.options = options.map(opt => ({
-            version: opt && typeof opt.version === 'string' ? opt.version : '',
-            currency: opt && typeof opt.currency === 'string' ? opt.currency : '',
-            price: opt && typeof opt.price === 'string' ? opt.price : ''
-          }));
-          if(safe.options.length === 0){
-            safe.options.push({ version: '', currency: '', price: '' });
-          }
+        const behavior = getFieldTypeBehavior({ ...field, type });
+        if(behavior && typeof behavior.normalizeOptions === 'function'){
+          safe.options = behavior.normalizeOptions(field && field.options, { mode: 'create', field, safeField: safe });
         } else if(type === 'dropdown' || type === 'radio-toggle'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => {
@@ -20691,9 +20457,6 @@ document.addEventListener('pointerdown', (e) => {
           if(safe.options.length === 0){
             safe.options.push('');
           }
-        } else if(type === 'venues_sessions_pricing'){
-          const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
-          safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
         } else if(type === 'location'){
           const loc = field && field.location && typeof field.location === 'object' ? field.location : {};
           safe.location = {
@@ -20750,14 +20513,18 @@ document.addEventListener('pointerdown', (e) => {
       updatePaypalContainer(false);
     }
 
-    function buildVersionPriceEditor(field, labelId){
-      const options = Array.isArray(field.options) && field.options.length
-        ? field.options.map(opt => ({
-            version: typeof opt.version === 'string' ? opt.version : '',
-            currency: typeof opt.currency === 'string' ? opt.currency : '',
-            price: typeof opt.price === 'string' ? opt.price : ''
-          }))
-        : [{ version: '', currency: '', price: '' }];
+    function renderVariantPricingEditor(field, labelId, context = {}){
+      const initialOptions = normalizeVariantPricingOptions(field && field.options);
+      const options = initialOptions.map(opt => ({
+        version: typeof opt.version === 'string' ? opt.version : '',
+        currency: typeof opt.currency === 'string' ? opt.currency : '',
+        price: typeof opt.price === 'string' ? opt.price : ''
+      }));
+
+      const availableCurrencies = Array.isArray(context.currencyCodes) && context.currencyCodes.length
+        ? context.currencyCodes
+        : (Array.isArray(currencyCodes) ? currencyCodes : []);
+      const formatPrice = typeof context.formatPriceValue === 'function' ? context.formatPriceValue : formatPriceValue;
 
       const editor = document.createElement('div');
       editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
@@ -20790,7 +20557,7 @@ document.addEventListener('pointerdown', (e) => {
         emptyOption.value = '';
         emptyOption.textContent = 'Currency';
         currencySelect.appendChild(emptyOption);
-        currencyCodes.forEach(code => {
+        availableCurrencies.forEach(code => {
           const opt = document.createElement('option');
           opt.value = code;
           opt.textContent = code;
@@ -20805,7 +20572,7 @@ document.addEventListener('pointerdown', (e) => {
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
-          option.price = formatPriceValue(priceInput.value);
+          option.price = formatPrice(priceInput.value);
           priceInput.value = option.price;
         });
 
@@ -20855,7 +20622,349 @@ document.addEventListener('pointerdown', (e) => {
       return editor;
     }
 
-    function buildVenueSessionEditor(field, labelId){
+    function renderVariantPricingPreview(previewField, baseId, context = {}){
+      const notifyChange = typeof context.notifyFormbuilderChange === 'function'
+        ? context.notifyFormbuilderChange
+        : notifyFormbuilderChange;
+      const showMessage = typeof context.showCopyStyleMessage === 'function'
+        ? context.showCopyStyleMessage
+        : showCopyStyleMessage;
+      const currencyList = Array.isArray(context.VERSION_PRICE_CURRENCIES) && context.VERSION_PRICE_CURRENCIES.length
+        ? context.VERSION_PRICE_CURRENCIES
+        : (Array.isArray(VERSION_PRICE_CURRENCIES) ? VERSION_PRICE_CURRENCIES : []);
+
+      const editor = document.createElement('div');
+      editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
+      const versionList = document.createElement('div');
+      versionList.className = 'variant-pricing-options-list';
+      editor.appendChild(versionList);
+
+      const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
+
+      const normalizeOptions = ()=>{
+        previewField.options = normalizeVariantPricingOptions(previewField.options);
+      };
+
+      const renderVersionEditor = (focusIndex = null, focusTarget = 'version')=>{
+        normalizeOptions();
+        versionList.innerHTML = '';
+        let firstId = null;
+        const currencyAlertMessage = 'Please select a currency before entering a price.';
+        let lastCurrencyAlertAt = 0;
+        let currencyAlertHandle = null;
+        let currencyAlertTimeout = 0;
+        const showCurrencyAlert = target => {
+          const candidate = (target && typeof target.getBoundingClientRect === 'function')
+            ? target
+            : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
+              ? document.activeElement
+              : null);
+          const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
+          if(!inputEl || typeof showMessage !== 'function') return;
+          const now = Date.now();
+          if(now - lastCurrencyAlertAt < 400){
+            if(currencyAlertHandle && typeof currencyAlertHandle.reposition === 'function'){
+              currencyAlertHandle.reposition();
+            }
+            return;
+          }
+          lastCurrencyAlertAt = now;
+          if(currencyAlertTimeout){
+            clearTimeout(currencyAlertTimeout);
+            currencyAlertTimeout = 0;
+          }
+          if(currencyAlertHandle && typeof currencyAlertHandle.remove === 'function'){
+            currencyAlertHandle.remove();
+            currencyAlertHandle = null;
+          }
+          const handle = showMessage(currencyAlertMessage, inputEl);
+          if(!handle) return;
+          currencyAlertHandle = handle;
+          currencyAlertTimeout = window.setTimeout(()=>{
+            handle.remove();
+            if(currencyAlertHandle === handle){
+              currencyAlertHandle = null;
+            }
+            currencyAlertTimeout = 0;
+          }, 1500);
+        };
+        previewField.options.forEach((optionValue, optionIndex)=>{
+          const optionRow = document.createElement('div');
+          optionRow.className = 'variant-pricing-option';
+          optionRow.dataset.optionIndex = String(optionIndex);
+
+          const topRow = document.createElement('div');
+          topRow.className = 'variant-pricing-row variant-pricing-row--top';
+
+          const versionInput = document.createElement('input');
+          versionInput.type = 'text';
+          versionInput.className = 'variant-pricing-name';
+          versionInput.placeholder = 'Version Name';
+          const versionInputId = `${baseId}-version-${optionIndex}`;
+          versionInput.id = versionInputId;
+          if(optionIndex === 0){
+            firstId = versionInputId;
+          }
+          versionInput.value = optionValue.version || '';
+          versionInput.addEventListener('input', ()=>{
+            previewField.options[optionIndex].version = versionInput.value;
+            notifyChange();
+          });
+          topRow.appendChild(versionInput);
+
+          const bottomRow = document.createElement('div');
+          bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
+
+          const currencySelect = document.createElement('select');
+          currencySelect.className = 'variant-pricing-currency';
+          const emptyOption = document.createElement('option');
+          emptyOption.value = '';
+          emptyOption.textContent = 'Currency';
+          currencySelect.appendChild(emptyOption);
+          currencyList.forEach(code => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = code;
+            currencySelect.appendChild(opt);
+          });
+          currencySelect.value = optionValue.currency || '';
+          const isCurrencySelected = ()=> currencySelect.value.trim() !== '';
+
+          const priceInput = document.createElement('input');
+          priceInput.type = 'text';
+          priceInput.inputMode = 'decimal';
+          priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
+          priceInput.className = 'variant-pricing-price';
+          priceInput.placeholder = '0.00';
+          const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
+          const formatPriceValueLocal = value => {
+            const trimmed = (value || '').trim();
+            if(trimmed === '') return '';
+            let normalized = trimmed.replace(/,/g, '.');
+            if(normalized === '.') return '0.00';
+            if(normalized.startsWith('.')){
+              normalized = `0${normalized}`;
+            }
+            const dotIndex = normalized.indexOf('.');
+            if(dotIndex === -1){
+              return `${normalized}.00`;
+            }
+            let integerPart = normalized.slice(0, dotIndex).replace(/\./g, '');
+            if(integerPart === ''){
+              integerPart = '0';
+            }
+            let decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+            if(decimalPart.length === 0){
+              decimalPart = '00';
+            } else if(decimalPart.length === 1){
+              decimalPart = `${decimalPart}0`;
+            } else {
+              decimalPart = decimalPart.slice(0, 2);
+            }
+            return `${integerPart}.${decimalPart}`;
+          };
+          const initialPriceValue = sanitizePriceValue(optionValue.price || '');
+          const formattedInitialPrice = formatPriceValueLocal(initialPriceValue);
+          priceInput.value = formattedInitialPrice;
+          if(formattedInitialPrice !== (previewField.options[optionIndex].price || '')){
+            previewField.options[optionIndex].price = formattedInitialPrice;
+          }
+          const clearPriceValue = ()=>{
+            let changed = false;
+            if(priceInput.value !== ''){
+              priceInput.value = '';
+              changed = true;
+            }
+            if(previewField.options[optionIndex].price !== ''){
+              previewField.options[optionIndex].price = '';
+              changed = true;
+            } else if(typeof previewField.options[optionIndex].price !== 'string'){
+              previewField.options[optionIndex].price = '';
+            }
+            return changed;
+          };
+          const updatePriceState = ()=>{
+            if(isCurrencySelected()){
+              priceInput.readOnly = false;
+              priceInput.classList.remove('is-awaiting-currency');
+              priceInput.removeAttribute('aria-disabled');
+              return false;
+            }
+            priceInput.readOnly = true;
+            priceInput.classList.add('is-awaiting-currency');
+            priceInput.setAttribute('aria-disabled', 'true');
+            return clearPriceValue();
+          };
+          const blockPriceAccess = event => {
+            if(isCurrencySelected()) return false;
+            if(event && event.type === 'pointerdown' && event.button !== 0) return false;
+            if(event && typeof event.preventDefault === 'function'){
+              event.preventDefault();
+            }
+            if(event && typeof event.stopPropagation === 'function'){
+              event.stopPropagation();
+            }
+            if(typeof priceInput.blur === 'function'){
+              requestAnimationFrame(()=>{
+                try{ priceInput.blur(); }catch(err){}
+              });
+            }
+            showCurrencyAlert(priceInput);
+            return true;
+          };
+          currencySelect.addEventListener('change', ()=>{
+            const previousCurrency = previewField.options[optionIndex].currency || '';
+            const nextCurrency = currencySelect.value;
+            previewField.options[optionIndex].currency = nextCurrency;
+            const priceCleared = updatePriceState();
+            if(isCurrencySelected()){
+              commitPriceValue();
+            }
+            if(previousCurrency !== nextCurrency || priceCleared){
+              notifyChange();
+            }
+          });
+
+          const commitPriceValue = event => {
+            if(!isCurrencySelected()){
+              if(clearPriceValue()){
+                notifyChange();
+              }
+              return;
+            }
+            const rawValue = priceInput.value;
+            const sanitized = sanitizePriceValue(rawValue);
+            if(rawValue !== sanitized){
+              priceInput.value = sanitized;
+            }
+            const formatted = formatPriceValueLocal(sanitized);
+            if(priceInput.value !== formatted){
+              priceInput.value = formatted;
+            }
+            if(event && document.activeElement === priceInput && typeof priceInput.setSelectionRange === 'function'){
+              if(formatted === ''){
+                priceInput.setSelectionRange(0, 0);
+              } else if(!/[.,]/.test(sanitized)){
+                const dotIndex = formatted.indexOf('.');
+                const caretPos = dotIndex === -1 ? formatted.length : Math.min(sanitized.length, dotIndex);
+                priceInput.setSelectionRange(caretPos, caretPos);
+              } else {
+                const dotIndex = formatted.indexOf('.');
+                if(dotIndex === -1){
+                  priceInput.setSelectionRange(formatted.length, formatted.length);
+                } else {
+                  const decimals = sanitized.split(/[.,]/)[1] || '';
+                  if(decimals.length === 0){
+                    priceInput.setSelectionRange(dotIndex + 1, formatted.length);
+                  } else {
+                    const caretPos = Math.min(dotIndex + 1 + decimals.length, formatted.length);
+                    priceInput.setSelectionRange(caretPos, caretPos);
+                  }
+                }
+              }
+            }
+            const previous = previewField.options[optionIndex].price || '';
+            if(previous !== formatted){
+              previewField.options[optionIndex].price = formatted;
+              notifyChange();
+            }
+          };
+          priceInput.addEventListener('beforeinput', event => {
+            if(event && typeof event.data === 'string' && /[^0-9.,]/.test(event.data)){
+              event.preventDefault();
+            }
+          });
+          priceInput.addEventListener('pointerdown', event => {
+            blockPriceAccess(event);
+          });
+          priceInput.addEventListener('focus', event => {
+            blockPriceAccess(event);
+          });
+          priceInput.addEventListener('keydown', event => {
+            if(event.key === 'Tab' || event.key === 'Shift') return;
+            if(blockPriceAccess(event)) return;
+          });
+          priceInput.addEventListener('input', commitPriceValue);
+          priceInput.addEventListener('change', commitPriceValue);
+          const initialCleared = updatePriceState();
+          if(isCurrencySelected()){
+            commitPriceValue();
+          } else if(initialCleared){
+            notifyChange();
+          }
+
+          const actions = document.createElement('div');
+          actions.className = 'dropdown-option-actions variant-pricing-option-actions';
+
+          const addBtn = document.createElement('button');
+          addBtn.type = 'button';
+          addBtn.className = 'dropdown-option-add';
+          addBtn.textContent = '+';
+          addBtn.setAttribute('aria-label', `Add version after Version ${optionIndex + 1}`);
+          addBtn.addEventListener('click', ()=>{
+            previewField.options.splice(optionIndex + 1, 0, createEmptyOption());
+            notifyChange();
+            renderVersionEditor(optionIndex + 1);
+          });
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'dropdown-option-remove';
+          removeBtn.textContent = '-';
+          removeBtn.setAttribute('aria-label', `Remove Version ${optionIndex + 1}`);
+          removeBtn.disabled = previewField.options.length <= 1;
+          removeBtn.addEventListener('click', ()=>{
+            if(previewField.options.length <= 1){
+              previewField.options[0] = createEmptyOption();
+            } else {
+              previewField.options.splice(optionIndex, 1);
+            }
+            notifyChange();
+            const nextFocus = Math.min(optionIndex, Math.max(previewField.options.length - 1, 0));
+            renderVersionEditor(nextFocus);
+          });
+
+          actions.append(addBtn, removeBtn);
+          bottomRow.append(currencySelect, priceInput, actions);
+
+          optionRow.append(topRow, bottomRow);
+          versionList.appendChild(optionRow);
+        });
+
+        if(focusIndex !== null){
+          requestAnimationFrame(()=>{
+            const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
+            if(!targetRow) return;
+            let focusEl = null;
+            if(focusTarget === 'price'){
+              focusEl = targetRow.querySelector('.variant-pricing-price');
+            } else if(focusTarget === 'currency'){
+              focusEl = targetRow.querySelector('.variant-pricing-currency');
+            }
+            if(!focusEl){
+              focusEl = targetRow.querySelector('.variant-pricing-name');
+            }
+            if(focusEl && typeof focusEl.focus === 'function'){
+              try{ focusEl.focus({ preventScroll: true }); }
+              catch(err){
+                try{ focusEl.focus(); }catch(e){}
+              }
+            }
+          });
+        }
+      };
+
+      renderVersionEditor();
+      editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
+
+      return {
+        element: editor,
+        wrapperClasses: ['form-preview-field--variant-pricing'],
+        removeLabelFor: true
+      };
+    }
+
+    function renderVenueSessionEditor(field, labelId, context = {}){
       const venues = Array.isArray(field.options) && field.options.length ? field.options.map(cloneVenueSessionVenue) : [venueSessionCreateVenue()];
       const editor = document.createElement('div');
       editor.className = 'venue-session-editor';
@@ -21240,7 +21349,21 @@ document.addEventListener('pointerdown', (e) => {
       const placeholder = field.placeholder || '';
       let control = null;
 
-      if(field.type === 'description' || field.type === 'text-area'){
+      const behavior = getFieldTypeBehavior(field);
+      if(behavior && typeof behavior.buildEditor === 'function'){
+        const result = behavior.buildEditor(field, labelId, { currencyCodes, formatPriceValue });
+        if(result && result.element){
+          if(Array.isArray(result.wrapperClasses)){
+            result.wrapperClasses.forEach(cls => wrapper.classList.add(cls));
+          }
+          if(result.removeLabelFor){
+            label.removeAttribute('for');
+          }
+          control = result.element;
+        }
+      }
+
+      if(!control && (field.type === 'description' || field.type === 'text-area')){
         const textarea = document.createElement('textarea');
         textarea.id = controlId;
         textarea.rows = field.type === 'description' ? 6 : 4;
@@ -21251,7 +21374,7 @@ document.addEventListener('pointerdown', (e) => {
         }
         if(field.required) textarea.required = true;
         control = textarea;
-      } else if(field.type === 'dropdown'){
+      } else if(!control && field.type === 'dropdown'){
         wrapper.classList.add('form-preview-field--dropdown');
         const select = document.createElement('select');
         select.id = controlId;
@@ -21269,7 +21392,7 @@ document.addEventListener('pointerdown', (e) => {
           select.appendChild(option);
         });
         control = select;
-      } else if(field.type === 'radio-toggle'){
+      } else if(!control && field.type === 'radio-toggle'){
         wrapper.classList.add('form-preview-field--radio-toggle');
         label.removeAttribute('for');
         const radioGroup = document.createElement('div');
@@ -21304,7 +21427,7 @@ document.addEventListener('pointerdown', (e) => {
           radioGroup.appendChild(placeholderOption);
         }
         control = radioGroup;
-      } else if(field.type === 'images'){
+      } else if(!control && field.type === 'images'){
         wrapper.classList.add('form-preview-field--images');
         label.removeAttribute('for');
         const imageWrapper = document.createElement('div');
@@ -21328,15 +21451,7 @@ document.addEventListener('pointerdown', (e) => {
         fileInput.dataset.imagePreviewTarget = previewId;
         imageWrapper.append(fileInput, hint, message, previewGrid);
         control = imageWrapper;
-      } else if(field.type === 'variant_pricing'){
-        wrapper.classList.add('form-preview-field--variant-pricing');
-        label.removeAttribute('for');
-        control = buildVersionPriceEditor(field, labelId);
-      } else if(field.type === 'venues_sessions_pricing'){
-        wrapper.classList.add('form-preview-field--venues-sessions-pricing');
-        label.removeAttribute('for');
-        control = buildVenueSessionEditor(field, labelId);
-      } else if(field.type === 'website-url' || field.type === 'tickets-url'){
+      } else if(!control && (field.type === 'website-url' || field.type === 'tickets-url')){
         wrapper.classList.add('form-preview-field--url');
         const urlWrapper = document.createElement('div');
         urlWrapper.className = 'form-preview-url-wrapper';
