@@ -124,8 +124,6 @@ function fetchCategories(PDO $pdo, array $columns): array
     $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
-    $hasFieldTypeId = in_array('field_type_id', $columns, true);
-    $hasFieldTypeName = in_array('field_type_name', $columns, true);
 
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
@@ -145,12 +143,6 @@ function fetchCategories(PDO $pdo, array $columns): array
     }
     if ($hasMetadata) {
         $selectColumns[] = '`metadata_json`';
-    }
-    if ($hasFieldTypeId) {
-        $selectColumns[] = '`field_type_id`';
-    }
-    if ($hasFieldTypeName) {
-        $selectColumns[] = '`field_type_name`';
     }
     if (!$selectColumns) {
         $selectColumns[] = '*';
@@ -418,48 +410,20 @@ function fetchFieldTypes(PDO $pdo): array
 {
     try {
         $columns = fetchTableColumns($pdo, 'field_types');
-        if (!$columns) {
-            return [
-                'definitions' => [],
-                'raw' => [],
-                'mapById' => [],
-                'mapByName' => [],
-            ];
+        if (!$columns || !in_array('id', $columns, true)) {
+            return [];
         }
 
-        $idColumn = null;
-        if (in_array('field_type_id', $columns, true)) {
-            $idColumn = 'field_type_id';
-        } elseif (in_array('id', $columns, true)) {
-            $idColumn = 'id';
-        }
-
-        if ($idColumn === null) {
-            return [
-                'definitions' => [],
-                'raw' => [],
-                'mapById' => [],
-                'mapByName' => [],
-            ];
-        }
-
-        $selectColumns = [];
-        $selectColumns[] = '`' . str_replace('`', '``', $idColumn) . '` AS `field_type_id`';
-        if ($idColumn !== 'id' && in_array('id', $columns, true)) {
-            $selectColumns[] = '`id`';
-        }
+        $selectColumns = ['`id`'];
         if (in_array('field_type_name', $columns, true)) {
             $selectColumns[] = '`field_type_name`';
         }
         if (in_array('field_type_key', $columns, true)) {
             $selectColumns[] = '`field_type_key`';
         }
-        if (in_array('sort_order', $columns, true)) {
-            $selectColumns[] = '`sort_order`';
-        }
 
         $itemColumns = [];
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $column = 'field_type_item_' . $i;
             if (in_array($column, $columns, true)) {
                 $selectColumns[] = '`' . $column . '`';
@@ -467,55 +431,22 @@ function fetchFieldTypes(PDO $pdo): array
             }
         }
 
-        $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM field_types';
-        $orderParts = [];
-        if (in_array('sort_order', $columns, true)) {
-            $orderParts[] = '`sort_order` ASC';
-        }
-        $orderParts[] = '`field_type_id` ASC';
-        if ($orderParts) {
-            $sql .= ' ORDER BY ' . implode(', ', $orderParts);
-        }
-
+        $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM field_types ORDER BY `id` ASC';
         $stmt = $pdo->query($sql);
 
         $definitions = [];
-        $rawRecords = [];
-        $mapById = [];
-        $mapByName = [];
-
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (!isset($row['field_type_id'])) {
+            if (!isset($row['id'])) {
                 continue;
             }
 
-            $id = (int) $row['field_type_id'];
+            $id = (int) $row['id'];
             if ($id <= 0) {
                 continue;
             }
 
             $name = isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '';
             $key = isset($row['field_type_key']) ? normalizeFieldTypeKey((string) $row['field_type_key']) : '';
-
-            $rawRow = [
-                'field_type_id' => $id,
-                'field_type_name' => $name,
-                'field_type_key' => isset($row['field_type_key']) ? (string) $row['field_type_key'] : '',
-            ];
-            if (isset($row['id'])) {
-                $rawRow['id'] = (int) $row['id'];
-            } elseif ($idColumn === 'id') {
-                $rawRow['id'] = $id;
-            }
-            if (isset($row['sort_order'])) {
-                $rawRow['sort_order'] = is_numeric($row['sort_order']) ? (int) $row['sort_order'] : $row['sort_order'];
-            }
-
-            foreach ($itemColumns as $column) {
-                $rawRow[$column] = isset($row[$column]) ? (string) $row[$column] : '';
-            }
-
-            $rawRecords[] = $rawRow;
 
             $items = [];
             foreach ($itemColumns as $column) {
@@ -529,92 +460,22 @@ function fetchFieldTypes(PDO $pdo): array
                 $items[] = $meta;
             }
 
-            $definition = [
+            $definitions[] = [
                 'id' => $id,
                 'name' => $name,
                 'key' => $key,
                 'items' => $items,
             ];
-            $definitions[] = $definition;
-            $mapById[$id] = $definition;
-            if ($name !== '') {
-                $mapByName[mb_strtolower($name)] = $definition;
-            }
         }
 
-        return [
-            'definitions' => $definitions,
-            'raw' => $rawRecords,
-            'mapById' => $mapById,
-            'mapByName' => $mapByName,
-        ];
+        return $definitions;
     } catch (PDOException $e) {
-        return [
-            'definitions' => [],
-            'raw' => [],
-            'mapById' => [],
-            'mapByName' => [],
-        ];
+        return [];
     }
 }
 
 function buildSnapshot(array $categories, array $subcategories, array $fieldTypes = []): array
 {
-    $fieldTypeDefinitions = [];
-    $fieldTypeRawRecords = [];
-    $fieldTypeMapById = [];
-    $fieldTypeMapByName = [];
-
-    if (isset($fieldTypes['definitions']) && is_array($fieldTypes['definitions'])) {
-        $fieldTypeDefinitions = array_values($fieldTypes['definitions']);
-    } elseif (is_array($fieldTypes)) {
-        $fieldTypeDefinitions = array_values($fieldTypes);
-    }
-
-    if (isset($fieldTypes['raw']) && is_array($fieldTypes['raw'])) {
-        $fieldTypeRawRecords = array_values($fieldTypes['raw']);
-    }
-
-    if (isset($fieldTypes['mapById']) && is_array($fieldTypes['mapById'])) {
-        $fieldTypeMapById = $fieldTypes['mapById'];
-    }
-
-    if (isset($fieldTypes['mapByName']) && is_array($fieldTypes['mapByName'])) {
-        $fieldTypeMapByName = $fieldTypes['mapByName'];
-    }
-
-    if (!$fieldTypeMapById) {
-        foreach ($fieldTypeDefinitions as $definition) {
-            if (!is_array($definition)) {
-                continue;
-            }
-            if (!isset($definition['id'])) {
-                continue;
-            }
-            $id = (int) $definition['id'];
-            if ($id <= 0 || isset($fieldTypeMapById[$id])) {
-                continue;
-            }
-            $fieldTypeMapById[$id] = $definition;
-        }
-    }
-
-    if (!$fieldTypeMapByName) {
-        foreach ($fieldTypeDefinitions as $definition) {
-            if (!is_array($definition)) {
-                continue;
-            }
-            if (!isset($definition['name'])) {
-                continue;
-            }
-            $name = trim((string) $definition['name']);
-            if ($name === '') {
-                continue;
-            }
-            $fieldTypeMapByName[mb_strtolower($name)] = $definition;
-        }
-    }
-
     $categoriesMap = [];
     $categoryIcons = [];
     $categoryIconPaths = [];
@@ -752,38 +613,6 @@ function buildSnapshot(array $categories, array $subcategories, array $fieldType
             }
         }
         $fieldTypeNames = array_values(array_unique($fieldTypeNames));
-
-        if ($fieldTypeNames) {
-            foreach ($fieldTypeNames as $nameValue) {
-                $lower = mb_strtolower($nameValue);
-                if (isset($fieldTypeMapByName[$lower]) && isset($fieldTypeMapByName[$lower]['id'])) {
-                    $mappedId = (int) $fieldTypeMapByName[$lower]['id'];
-                    if ($mappedId > 0 && !in_array($mappedId, $fieldTypeIds, true)) {
-                        $fieldTypeIds[] = $mappedId;
-                    }
-                }
-            }
-        }
-
-        if ($fieldTypeIds) {
-            foreach ($fieldTypeIds as $candidateId) {
-                $normalizedId = (int) $candidateId;
-                if ($normalizedId <= 0) {
-                    continue;
-                }
-                if (isset($fieldTypeMapById[$normalizedId]['name'])) {
-                    $candidateName = trim((string) $fieldTypeMapById[$normalizedId]['name']);
-                    if ($candidateName !== '' && !in_array($candidateName, $fieldTypeNames, true)) {
-                        $fieldTypeNames[] = $candidateName;
-                    }
-                }
-            }
-        }
-
-        $fieldTypeIds = array_values(array_unique(array_map('intval', $fieldTypeIds)));
-        $fieldTypeNames = array_values(array_unique(array_filter(array_map('trim', $fieldTypeNames), static function ($value) {
-            return $value !== '';
-        })));
 
         $metadata['fieldTypeIds'] = $fieldTypeIds;
         $metadata['fieldTypeNames'] = $fieldTypeNames;
@@ -939,8 +768,7 @@ function buildSnapshot(array $categories, array $subcategories, array $fieldType
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
         'iconLibrary' => array_values($iconLibrary),
-        'fieldTypes' => array_values($fieldTypeDefinitions),
-        'field_types' => array_values($fieldTypeRawRecords),
+        'fieldTypes' => array_values($fieldTypes),
     ];
 }
 
