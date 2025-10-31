@@ -211,7 +211,7 @@ foreach ($fieldsRaw as $index => $fieldEntry) {
     abort_with_error($mysqli, 400, 'Invalid field entry at position ' . ($index + 1) . '.', $transactionActive);
   }
 
-  $fieldIdRaw = $fieldEntry['field_id'] ?? null;
+  $fieldIdRaw = $fieldEntry['field_id'] ?? $fieldEntry['id'] ?? null;
   if (is_int($fieldIdRaw) || is_float($fieldIdRaw)) {
     $fieldId = (string) $fieldIdRaw;
   } elseif (is_string($fieldIdRaw)) {
@@ -224,15 +224,15 @@ foreach ($fieldsRaw as $index => $fieldEntry) {
     abort_with_error($mysqli, 400, 'Missing field identifier at position ' . ($index + 1) . '.', $transactionActive);
   }
 
-  $fieldKeyRaw = $fieldEntry['field_key'] ?? '';
-  if (is_string($fieldKeyRaw) || is_numeric($fieldKeyRaw)) {
-    $fieldKey = trim((string) $fieldKeyRaw);
+  $fieldLabelRaw = $fieldEntry['label'] ?? $fieldEntry['field_label'] ?? $fieldEntry['name'] ?? '';
+  if (is_string($fieldLabelRaw) || is_numeric($fieldLabelRaw)) {
+    $fieldLabel = trim((string) $fieldLabelRaw);
   } else {
-    $fieldKey = '';
+    $fieldLabel = '';
   }
 
-  if ($fieldKey === '') {
-    abort_with_error($mysqli, 400, 'Missing field key for field ' . $fieldId . '.', $transactionActive);
+  if ($fieldLabel === '') {
+    abort_with_error($mysqli, 400, 'Missing field label for field ' . $fieldId . '.', $transactionActive);
   }
 
   if (!array_key_exists('value', $fieldEntry)) {
@@ -263,7 +263,7 @@ foreach ($fieldsRaw as $index => $fieldEntry) {
   }
 
   if ($isRequired && $fieldValue === '') {
-    abort_with_error($mysqli, 400, 'Field ' . $fieldKey . ' is required.', $transactionActive);
+    abort_with_error($mysqli, 400, 'Field ' . $fieldLabel . ' is required.', $transactionActive);
   }
 
   if (!$isRequired && $fieldValue === '') {
@@ -271,21 +271,21 @@ foreach ($fieldsRaw as $index => $fieldEntry) {
   }
 
   $fieldId = substr($fieldId, 0, 128);
-  $fieldKey = substr($fieldKey, 0, 255);
+  $fieldLabel = substr($fieldLabel, 0, 255);
   if (strlen($fieldValue) > 65535) {
     $fieldValue = substr($fieldValue, 0, 65535);
   }
 
   $preparedFields[] = [
     'field_id' => $fieldId,
-    'field_key' => $fieldKey,
+    'label' => $fieldLabel,
     'value' => $fieldValue,
   ];
 }
 
 if ($preparedFields) {
   $fieldStmt = $mysqli->prepare(
-    'INSERT INTO field_values (post_id, post_title, field_id, field_key, value) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO field_values (post_id, field_id, field_label, value, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())'
   );
 
   if (!$fieldStmt) {
@@ -293,19 +293,18 @@ if ($preparedFields) {
   }
 
   $postIdParam = $insertId;
-  $postTitleParam = substr($title, 0, 255);
   $fieldIdParam = '';
-  $fieldKeyParam = '';
+  $fieldLabelParam = '';
   $fieldValueParam = '';
 
-  if (!$fieldStmt->bind_param('issss', $postIdParam, $postTitleParam, $fieldIdParam, $fieldKeyParam, $fieldValueParam)) {
+  if (!$fieldStmt->bind_param('isss', $postIdParam, $fieldIdParam, $fieldLabelParam, $fieldValueParam)) {
     $fieldStmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind field parameters.', $transactionActive);
   }
 
   foreach ($preparedFields as $preparedField) {
     $fieldIdParam = $preparedField['field_id'];
-    $fieldKeyParam = $preparedField['field_key'];
+    $fieldLabelParam = $preparedField['label'];
     $fieldValueParam = $preparedField['value'];
 
     if (!$fieldStmt->execute()) {
