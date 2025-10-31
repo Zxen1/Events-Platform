@@ -3343,8 +3343,89 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
-      iconLibrary: []
+      iconLibrary: [],
+      fieldTypes: []
     };
+
+    const DEFAULT_FORM_FIELD_TYPES = [
+      { value: 'title', label: 'Title' },
+      { value: 'description', label: 'Description' },
+      { value: 'text-box', label: 'Text Box' },
+      { value: 'text-area', label: 'Text Area' },
+      { value: 'dropdown', label: 'Dropdown' },
+      { value: 'radio-toggle', label: 'Radio Toggle' },
+      { value: 'email', label: 'Email' },
+      { value: 'phone', label: 'Phone' },
+      { value: 'location', label: 'Location' },
+      { value: 'website-url', label: 'Website (URL)' },
+      { value: 'tickets-url', label: 'Tickets (URL)' },
+      { value: 'images', label: 'Images' },
+      { value: 'coupon', label: 'Coupon' },
+      { value: 'version-price', label: 'Version/Price' },
+      { value: 'checkout', label: 'Checkout' },
+      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
+    ];
+
+    function normalizeFieldTypeOptions(options){
+      const list = Array.isArray(options)
+        ? options
+        : Array.isArray(options && options.fieldTypes)
+          ? options.fieldTypes
+          : [];
+      const normalized = [];
+      const seen = new Set();
+      const pushOption = (value, label)=>{
+        const trimmedValue = typeof value === 'string' ? value.trim() : '';
+        if(!trimmedValue){
+          return;
+        }
+        const dedupeKey = trimmedValue.toLowerCase();
+        if(seen.has(dedupeKey)){
+          return;
+        }
+        const trimmedLabel = typeof label === 'string' ? label.trim() : '';
+        normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
+        seen.add(dedupeKey);
+      };
+      list.forEach(item => {
+        if(item && typeof item === 'object'){
+          const value = typeof item.value === 'string' && item.value.trim()
+            ? item.value.trim()
+            : typeof item.key === 'string' && item.key.trim()
+              ? item.key.trim()
+              : typeof item.field_type_key === 'string' && item.field_type_key.trim()
+                ? item.field_type_key.trim()
+                : typeof item.fieldTypeKey === 'string' && item.fieldTypeKey.trim()
+                  ? item.fieldTypeKey.trim()
+                  : typeof item.id === 'number' && Number.isFinite(item.id)
+                    ? String(item.id)
+                    : typeof item.id === 'string' && item.id.trim()
+                      ? item.id.trim()
+                      : '';
+          if(!value){
+            return;
+          }
+          const label = typeof item.label === 'string' && item.label.trim()
+            ? item.label.trim()
+            : typeof item.name === 'string' && item.name.trim()
+              ? item.name.trim()
+              : typeof item.field_type_name === 'string' && item.field_type_name.trim()
+                ? item.field_type_name.trim()
+                : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
+                  ? item.fieldTypeName.trim()
+                  : '';
+          pushOption(value, label);
+          return;
+        }
+        if(typeof item === 'string'){
+          const trimmed = item.trim();
+          if(trimmed){
+            pushOption(trimmed, trimmed);
+          }
+        }
+      });
+      return normalized;
+    }
 
     const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
 
@@ -3444,6 +3525,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedCurrencies = Array.from(new Set(rawCurrencies
         .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
         .filter(Boolean)));
+      const normalizedFieldTypes = normalizeFieldTypeOptions(
+        snapshot && (snapshot.fieldTypes || snapshot.field_types)
+      );
       if(!normalizedCurrencies.length){
         DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
       }
@@ -3482,7 +3566,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         versionPriceCurrencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary
+        iconLibrary,
+        fieldTypes: normalizedFieldTypes
       };
     }
 
@@ -3587,24 +3672,75 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
     assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
     assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [
-      { value: 'title', label: 'Title' },
-      { value: 'description', label: 'Description' },
-      { value: 'text-box', label: 'Text Box' },
-      { value: 'text-area', label: 'Text Area' },
-      { value: 'dropdown', label: 'Dropdown' },
-      { value: 'radio-toggle', label: 'Radio Toggle' },
-      { value: 'email', label: 'Email' },
-      { value: 'phone', label: 'Phone' },
-      { value: 'location', label: 'Location' },
-      { value: 'website-url', label: 'Website (URL)' },
-      { value: 'tickets-url', label: 'Tickets (URL)' },
-      { value: 'images', label: 'Images' },
-      { value: 'coupon', label: 'Coupon' },
-      { value: 'version-price', label: 'Version/Price' },
-      { value: 'checkout', label: 'Checkout' },
-      { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
-    ];
+    const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
+      ? initialFormbuilderSnapshot.fieldTypes
+      : [];
+    let finalFieldTypeOptions = snapshotFieldTypeOptions
+      .map(option => {
+        if(!option || typeof option !== 'object'){
+          return null;
+        }
+        const value = typeof option.value === 'string'
+          ? option.value.trim()
+          : typeof option.key === 'string'
+            ? option.key.trim()
+            : '';
+        const label = typeof option.label === 'string'
+          ? option.label.trim()
+          : typeof option.name === 'string'
+            ? option.name.trim()
+            : '';
+        return value && label ? { value, label } : null;
+      })
+      .filter(Boolean);
+    if(!finalFieldTypeOptions.length){
+      const fallbackFieldTypeSource = (typeof DEFAULT_FORM_FIELD_TYPES !== 'undefined' && Array.isArray(DEFAULT_FORM_FIELD_TYPES))
+        ? DEFAULT_FORM_FIELD_TYPES
+        : [
+          { value: 'title', label: 'Title' },
+          { value: 'description', label: 'Description' },
+          { value: 'text-box', label: 'Text Box' },
+          { value: 'text-area', label: 'Text Area' },
+          { value: 'dropdown', label: 'Dropdown' },
+          { value: 'radio-toggle', label: 'Radio Toggle' },
+          { value: 'email', label: 'Email' },
+          { value: 'phone', label: 'Phone' },
+          { value: 'location', label: 'Location' },
+          { value: 'website-url', label: 'Website (URL)' },
+          { value: 'tickets-url', label: 'Tickets (URL)' },
+          { value: 'images', label: 'Images' },
+          { value: 'coupon', label: 'Coupon' },
+          { value: 'version-price', label: 'Version/Price' },
+          { value: 'checkout', label: 'Checkout' },
+          { value: 'venue-session-version-tier-price', label: 'Venues, Sessions and Pricing' }
+        ];
+      finalFieldTypeOptions = fallbackFieldTypeSource
+        .map(option => {
+          if(!option || typeof option !== 'object'){
+            return null;
+          }
+          const value = typeof option.value === 'string'
+            ? option.value.trim()
+            : typeof option.key === 'string'
+              ? option.key.trim()
+              : '';
+          const label = typeof option.label === 'string'
+            ? option.label.trim()
+            : typeof option.name === 'string'
+              ? option.name.trim()
+              : '';
+          return value && label ? { value, label } : null;
+        })
+        .filter(Boolean);
+      if(!finalFieldTypeOptions.length){
+        finalFieldTypeOptions = fallbackFieldTypeSource.map(option => ({
+          value: option && typeof option.value === 'string' ? option.value : '',
+          label: option && typeof option.label === 'string' ? option.label : ''
+        })).filter(option => option.value && option.label);
+      }
+    }
+    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';

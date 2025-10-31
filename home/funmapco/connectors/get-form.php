@@ -84,7 +84,15 @@ try {
     $categories = fetchCategories($pdo, $categoryColumns);
     $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories);
 
+    $fieldTypeColumns = fetchTableColumns($pdo, 'field_types');
+    $fieldTypes = [];
+    if ($fieldTypeColumns) {
+        $fieldTypes = fetchFieldTypes($pdo, $fieldTypeColumns);
+    }
+
     $snapshot = buildSnapshot($categories, $subcategories);
+    $snapshot['fieldTypes'] = $fieldTypes;
+    $snapshot['field_types'] = $fieldTypes;
 
     echo json_encode([
         'success' => true,
@@ -403,6 +411,120 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
 
     return $results;
+}
+
+function fetchFieldTypes(PDO $pdo, array $columns): array
+{
+    $selectColumns = [];
+    $orderBy = '';
+
+    $hasId = in_array('id', $columns, true);
+    $hasKey = in_array('field_type_key', $columns, true);
+    $hasName = in_array('field_type_name', $columns, true);
+    $hasSortOrder = in_array('sort_order', $columns, true);
+
+    if ($hasId) {
+        $selectColumns[] = '`id`';
+    }
+    if ($hasKey) {
+        $selectColumns[] = '`field_type_key`';
+    }
+    if ($hasName) {
+        $selectColumns[] = '`field_type_name`';
+    }
+    if ($hasSortOrder) {
+        $selectColumns[] = '`sort_order`';
+        $orderBy = ' ORDER BY `sort_order` ASC';
+    } elseif ($hasName) {
+        $orderBy = ' ORDER BY `field_type_name` ASC';
+    } elseif ($hasId) {
+        $orderBy = ' ORDER BY `id` ASC';
+    }
+
+    if (!$selectColumns) {
+        $selectColumns[] = '*';
+    }
+
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM field_types' . $orderBy;
+
+    try {
+        $stmt = $pdo->query($sql);
+    } catch (PDOException $e) {
+        return [];
+    }
+
+    $fieldTypes = [];
+    $seen = [];
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $rawKey = '';
+        if ($hasKey && isset($row['field_type_key'])) {
+            $rawKey = trim((string) $row['field_type_key']);
+        } elseif (isset($row['field_type_name'])) {
+            $rawKey = slugify_key((string) $row['field_type_name']);
+        } elseif ($hasId && isset($row['id'])) {
+            $rawKey = (string) $row['id'];
+        }
+
+        $rawKey = trim($rawKey);
+        if ($rawKey === '') {
+            continue;
+        }
+
+        $dedupeKey = strtolower($rawKey);
+        if (isset($seen[$dedupeKey])) {
+            continue;
+        }
+
+        $rawName = '';
+        if ($hasName && isset($row['field_type_name'])) {
+            $rawName = trim((string) $row['field_type_name']);
+        } elseif ($hasKey && isset($row['field_type_key'])) {
+            $rawName = trim((string) $row['field_type_key']);
+        } elseif ($hasId && isset($row['id'])) {
+            $rawName = (string) $row['id'];
+        }
+
+        $rawName = trim($rawName);
+        if ($rawName === '') {
+            $rawName = $rawKey;
+        }
+
+        $entry = [
+            'value' => $rawKey,
+            'label' => $rawName,
+        ];
+
+        if ($hasId && isset($row['id'])) {
+            $entry['id'] = (int) $row['id'];
+        }
+        if ($hasKey && isset($row['field_type_key'])) {
+            $entry['field_type_key'] = (string) $row['field_type_key'];
+            $entry['key'] = (string) $row['field_type_key'];
+        } else {
+            $entry['key'] = $rawKey;
+        }
+        if ($hasName && isset($row['field_type_name'])) {
+            $entry['field_type_name'] = (string) $row['field_type_name'];
+            $entry['name'] = (string) $row['field_type_name'];
+        } else {
+            $entry['name'] = $rawName;
+        }
+        if ($hasSortOrder && isset($row['sort_order'])) {
+            $entry['sort_order'] = is_numeric($row['sort_order'])
+                ? (int) $row['sort_order']
+                : $row['sort_order'];
+        }
+
+        $fieldTypes[] = $entry;
+        $seen[$dedupeKey] = true;
+    }
+
+    return $fieldTypes;
 }
 
 function buildSnapshot(array $categories, array $subcategories): array
