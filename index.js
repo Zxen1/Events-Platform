@@ -307,7 +307,6 @@ function getSortedCategories(list) {
       window.__logoLoading = existingLoader;
     })();
 
-
 // Extracted from <script>
 // --- tiny scheduler helpers ---
   function rafThrottle(fn){
@@ -359,7 +358,6 @@ function getSortedCategories(list) {
     }
     target.removeEventListener('scroll', listener, capture);
   }
-
 
 // Extracted from <script>
 (function(){
@@ -471,7 +469,6 @@ function getSortedCategories(list) {
   });
 })();
 
-
 // Extracted from <script>
 if (typeof slugify !== 'function') {
   function slugify(text) {
@@ -484,7 +481,6 @@ if (typeof slugify !== 'function') {
       .replace(/^-+|-+$/g, '');
   }
 }
-
 
 // Extracted from <script>
 // === 150x40 pill provider (sprite id: marker-label-bg) ===
@@ -634,7 +630,6 @@ if (typeof slugify !== 'function') {
   ensureImage();
 })();
 
-
 // Extracted from <script>
 let __userInteractionObserved = false;
 let __notifyMapOnInteraction = null;
@@ -667,7 +662,6 @@ let __notifyMapOnInteraction = null;
         try{ fn(); }catch(err){ console.error(err); }
       }
     }, { capture: true });
-
 
 // Extracted from <script>
 async function ensureMapboxCssFor(container) {
@@ -3239,7 +3233,6 @@ function countMarkersForVenue(postsAtVenue, venueKey, bounds){
   }, 0);
 }
 
-
 function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
     const rnd = mulberry32(42);
 
@@ -5081,7 +5074,6 @@ function uniqueTitle(seed, cityName, idx){
   }
 
   rebuildVenueIndex();
-
 
   function randomImages(id){
     const hero = heroUrl(id);
@@ -10124,7 +10116,6 @@ function makePosts(){
                 venueCard.className = 'venue-card';
                 venueList.appendChild(venueCard);
 
-
                 const venueLine = document.createElement('div');
                 venueLine.className = 'venue-line';
                 let geocoderInputRef = null;
@@ -11663,7 +11654,6 @@ function makePosts(){
                     optionRow.append(topRow, bottomRow);
                     versionList.appendChild(optionRow);
                   });
-
 
                   if(focusIndex !== null){
                     requestAnimationFrame(()=>{
@@ -15795,8 +15785,6 @@ if (!map.__pillHooksInstalled) {
       };
     }
 
-
-
     let addingPostSource = false;
     let pendingAddPostSource = false;
 
@@ -19691,9 +19679,6 @@ const adminPanelChangeManager = (()=>{
   };
 })();
 
-
-
-
 function closePanel(m){
   const btnId = panelButtons[m && m.id];
   if(btnId){
@@ -19731,12 +19716,6 @@ function closePanel(m){
   }
   if(typeof window.updateHeaderMapControls === 'function') window.updateHeaderMapControls();
 }
-
-
-
-
-
-
 
 const adminAuthManager = (()=>{
   const STORAGE_KEY = 'admin-authenticated';
@@ -22191,7 +22170,6 @@ document.addEventListener('pointerdown', (e) => {
   }
 })();
 
-
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
   const editor = document.getElementById('welcomeMessageEditor');
@@ -22212,7 +22190,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#adminPanel input[type="checkbox"]').forEach(cb => {
@@ -22227,7 +22204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     cb.after(slider);
   });
 });
-
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -22272,7 +22248,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 });
-
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -22383,14 +22358,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('input[type="color"]').forEach(el => {
     if(!el.value) el.value = '#000000';
   });
 });
-
 
 // Extracted from <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -22412,7 +22385,6 @@ document.addEventListener('DOMContentLoaded', () => {
     postsBg.addEventListener('click', e => e.stopPropagation());
   }
 });
-
 
 // Extracted from <script>
 let boardAdjustCleanup = null;
@@ -22774,7 +22746,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initPostLayout(document.querySelector('.post-board'));
 });
 
-
 // Extracted from <script>
 (function(){
   const MESSAGE = 'Please enter a valid URL with a dot and letters after it.';
@@ -22915,7 +22886,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startObserver();
   }
 })();
-
 
 // Extracted from <script>
 (function(){
@@ -23232,7 +23202,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
-
 // Extracted from <script>
 (function(){
   const MESSAGE = 'Please include "@" and "." in the email address.';
@@ -23330,7 +23299,6 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
   }
 })();
-
 
 // Extracted from <script>
 (function(){
@@ -24092,7 +24060,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
-
 // Extracted from <script>
 // Wait helpers if your app exposes callWhenDefined; otherwise poll.
 (function(){
@@ -24155,10 +24122,4 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
  
  
-
-
-
-
-
-
 
