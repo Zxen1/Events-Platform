@@ -1945,18 +1945,18 @@ button[aria-expanded="true"] .results-arrow{
 #memberPanel .member-radio-option input{
   width:auto;
 }
-#memberPanel .member-version-price-list{
+#memberPanel .member-variant-pricing-list{
   display:flex;
   flex-direction:column;
   gap:12px;
 }
-#memberPanel .member-version-price-row{
+#memberPanel .member-variant-pricing-row{
   display:grid;
   grid-template-columns:minmax(0,1fr) 110px 110px auto;
   gap:8px;
   align-items:center;
 }
-#memberPanel .member-version-price-row button{
+#memberPanel .member-variant-pricing-row button{
   padding:6px 8px;
   border-radius:6px;
   background:rgba(0,0,0,0.35);
@@ -1964,7 +1964,7 @@ button[aria-expanded="true"] .results-arrow{
   color:var(--button-text);
   cursor:pointer;
 }
-#memberPanel .member-version-price-row button:hover{
+#memberPanel .member-variant-pricing-row button:hover{
   background:var(--btn-hover, #2e3a72);
   border-color:var(--btn-hover, #2e3a72);
 }
@@ -6602,24 +6602,24 @@ html, body { cursor: auto !important; }
               background:#d13c3c;
               border-color:#d13c3c;
             }
-            #tab-forms .version-price-options-editor{
+            #tab-forms .variant-pricing-options-editor{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #tab-forms .version-price-options-editor[hidden]{
+            #tab-forms .variant-pricing-options-editor[hidden]{
               display:none !important;
             }
-            #tab-forms .version-price-options-label{
+            #tab-forms .variant-pricing-options-label{
               font-size:14px;
               font-weight:600;
             }
-            #tab-forms .version-price-options-list{
+            #tab-forms .variant-pricing-options-list{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #tab-forms .version-price-option{
+            #tab-forms .variant-pricing-option{
               display:flex;
               flex-direction:column;
               gap:8px;
@@ -6627,27 +6627,27 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               background:rgba(0,0,0,0.2);
             }
-            #tab-forms .version-price-row{
+            #tab-forms .variant-pricing-row{
               display:flex;
               gap:8px;
               align-items:center;
             }
-            #tab-forms .version-price-row--top input{
+            #tab-forms .variant-pricing-row--top input{
               width:100%;
             }
-            #tab-forms .version-price-row--bottom{
+            #tab-forms .variant-pricing-row--bottom{
               display:grid;
               grid-template-columns:minmax(110px, auto) 1fr auto;
               gap:8px;
               align-items:center;
             }
-            #tab-forms .version-price-currency{
+            #tab-forms .variant-pricing-currency{
               width:100%;
             }
-            #tab-forms .version-price-price{
+            #tab-forms .variant-pricing-price{
               width:100%;
             }
-            #tab-forms .version-price-price.is-awaiting-currency{
+            #tab-forms .variant-pricing-price.is-awaiting-currency{
               opacity:0.45;
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
@@ -6657,7 +6657,7 @@ html, body { cursor: auto !important; }
               background:rgba(0,0,0,0.2);
               cursor:not-allowed;
             }
-            #tab-forms .version-price-option-actions{
+            #tab-forms .variant-pricing-option-actions{
               display:flex;
               gap:6px;
               justify-content:flex-end;
@@ -7117,17 +7117,17 @@ html, body { cursor: auto !important; }
               height:100%;
               object-fit:cover;
             }
-            #memberPanel .member-create-fields .form-preview-version-price{
+            #memberPanel .member-create-fields .form-preview-variant-pricing{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #memberPanel .member-create-fields .version-price-options-list{
+            #memberPanel .member-create-fields .variant-pricing-options-list{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #memberPanel .member-create-fields .version-price-option{
+            #memberPanel .member-create-fields .variant-pricing-option{
               border:1px solid var(--border);
               border-radius:8px;
               padding:10px 12px;
@@ -7136,17 +7136,17 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:8px;
             }
-            #memberPanel .member-create-fields .version-price-row{
+            #memberPanel .member-create-fields .variant-pricing-row{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #memberPanel .member-create-fields .version-price-row--bottom{
+            #memberPanel .member-create-fields .variant-pricing-row--bottom{
               flex-direction:row;
               align-items:center;
               gap:8px;
             }
-            #memberPanel .member-create-fields .version-price-option-actions{
+            #memberPanel .member-create-fields .variant-pricing-option-actions{
               display:flex;
               justify-content:flex-end;
               gap:8px;
@@ -7247,12 +7247,12 @@ html, body { cursor: auto !important; }
             #memberPanel .member-create-fields .tier-row select{
               width:100%;
             }
-            #tab-forms .form-preview-field--version-price .form-preview-version-price{
+            #tab-forms .form-preview-field--variant-pricing .form-preview-variant-pricing{
               display:flex;
               flex-direction:column;
               gap:8px;
             }
-            #tab-forms .form-preview-version-price-item{
+            #tab-forms .form-preview-variant-pricing-item{
               border:1px solid var(--border);
               border-radius:8px;
               padding:10px 12px;
@@ -7261,10 +7261,10 @@ html, body { cursor: auto !important; }
               flex-direction:column;
               gap:4px;
             }
-            #tab-forms .form-preview-version-price-name{
+            #tab-forms .form-preview-variant-pricing-name{
               font-weight:600;
             }
-            #tab-forms .form-preview-version-price-price{
+            #tab-forms .form-preview-variant-pricing-price{
               font-size:14px;
               color:rgba(255,255,255,0.85);
             }

@@ -8628,7 +8628,7 @@ function makePosts(){
             }
             if(safeField.type === 'venue-session-version-tier-price'){
               safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(safeField.type === 'version-price'){
+            } else if(safeField.type === 'variant_pricing'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
                   return {
@@ -11410,12 +11410,12 @@ function makePosts(){
               } else if(previewField.type === 'venue-session-version-tier-price'){
                 wrapper.classList.add('form-preview-field--venue-session');
                 control = buildVenueSessionPreview(previewField, baseId);
-              } else if(previewField.type === 'version-price'){
-                wrapper.classList.add('form-preview-field--version-price');
+              } else if(previewField.type === 'variant_pricing'){
+                wrapper.classList.add('form-preview-field--variant-pricing');
                 const editor = document.createElement('div');
-                editor.className = 'form-preview-version-price version-price-options-editor';
+                editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
                 const versionList = document.createElement('div');
-                versionList.className = 'version-price-options-list';
+                versionList.className = 'variant-pricing-options-list';
                 editor.appendChild(versionList);
 
                 const createEmptyOption = ()=>({ version: '', currency: '', price: '' });
@@ -11485,15 +11485,15 @@ function makePosts(){
                   };
                   previewField.options.forEach((optionValue, optionIndex)=>{
                     const optionRow = document.createElement('div');
-                    optionRow.className = 'version-price-option';
+                    optionRow.className = 'variant-pricing-option';
                     optionRow.dataset.optionIndex = String(optionIndex);
 
                     const topRow = document.createElement('div');
-                    topRow.className = 'version-price-row version-price-row--top';
+                    topRow.className = 'variant-pricing-row variant-pricing-row--top';
 
                     const versionInput = document.createElement('input');
                     versionInput.type = 'text';
-                    versionInput.className = 'version-price-name';
+                    versionInput.className = 'variant-pricing-name';
                     versionInput.placeholder = 'Version Name';
                     const versionInputId = `${baseId}-version-${optionIndex}`;
                     versionInput.id = versionInputId;
@@ -11508,10 +11508,10 @@ function makePosts(){
                     topRow.appendChild(versionInput);
 
                     const bottomRow = document.createElement('div');
-                    bottomRow.className = 'version-price-row version-price-row--bottom';
+                    bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
 
                     const currencySelect = document.createElement('select');
-                    currencySelect.className = 'version-price-currency';
+                    currencySelect.className = 'variant-pricing-currency';
                     const emptyOption = document.createElement('option');
                     emptyOption.value = '';
                     emptyOption.textContent = 'Currency';
@@ -11529,7 +11529,7 @@ function makePosts(){
                     priceInput.type = 'text';
                     priceInput.inputMode = 'decimal';
                     priceInput.pattern = '[0-9]+([\.,][0-9]{0,2})?';
-                    priceInput.className = 'version-price-price';
+                    priceInput.className = 'variant-pricing-price';
                     priceInput.placeholder = '0.00';
                     const sanitizePriceValue = value => (value || '').replace(/[^0-9.,]/g, '');
                     const formatPriceValue = value => {
@@ -11689,7 +11689,7 @@ function makePosts(){
                     }
 
                     const actions = document.createElement('div');
-                    actions.className = 'dropdown-option-actions version-price-option-actions';
+                    actions.className = 'dropdown-option-actions variant-pricing-option-actions';
 
                     const addBtn = document.createElement('button');
                     addBtn.type = 'button';
@@ -11728,16 +11728,16 @@ function makePosts(){
 
                   if(focusIndex !== null){
                     requestAnimationFrame(()=>{
-                      const targetRow = versionList.querySelector(`.version-price-option[data-option-index="${focusIndex}"]`);
+                      const targetRow = versionList.querySelector(`.variant-pricing-option[data-option-index="${focusIndex}"]`);
                       if(!targetRow) return;
                       let focusEl = null;
                       if(focusTarget === 'price'){
-                        focusEl = targetRow.querySelector('.version-price-price');
+                        focusEl = targetRow.querySelector('.variant-pricing-price');
                       } else if(focusTarget === 'currency'){
-                        focusEl = targetRow.querySelector('.version-price-currency');
+                        focusEl = targetRow.querySelector('.variant-pricing-currency');
                       }
                       if(!focusEl){
-                        focusEl = targetRow.querySelector('.version-price-name');
+                        focusEl = targetRow.querySelector('.variant-pricing-name');
                       }
                       if(focusEl && typeof focusEl.focus === 'function'){
                         try{ focusEl.focus({ preventScroll: true }); }
@@ -12426,9 +12426,9 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const showVersionPrice = type === 'version-price';
+              const showVariantPricing = type === 'variant_pricing';
               const showVenueSession = type === 'venue-session-version-tier-price';
-              const hidePlaceholder = isOptionsType || type === 'images' || showVersionPrice || showVenueSession;
+              const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
                 if(fieldPlaceholderInput.value){
@@ -12445,7 +12445,7 @@ function makePosts(){
               dropdownOptionsContainer.hidden = !isOptionsType;
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
-              } else if(showVersionPrice){
+              } else if(showVariantPricing){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = [{ version: '', currency: '', price: '' }];
                   notifyFormbuilderChange();
@@ -12476,7 +12476,7 @@ function makePosts(){
                   notifyFormbuilderChange();
                 }
                 renderDropdownOptions();
-              } else if(!showVersionPrice && !showVenueSession){
+              } else if(!showVariantPricing && !showVenueSession){
                 dropdownOptionsList.innerHTML = '';
               } else if(showVenueSession){
                 dropdownOptionsList.innerHTML = '';
@@ -12885,7 +12885,7 @@ function makePosts(){
               required: !!(field && field.required),
               options: Array.isArray(field && field.options)
                 ? field.options.map(opt => {
-                    if(field && field.type === 'version-price'){
+                    if(field && field.type === 'variant_pricing'){
                       if(opt && typeof opt === 'object'){
                         return {
                           version: typeof opt.version === 'string' ? opt.version : '',
@@ -20502,7 +20502,7 @@ document.addEventListener('pointerdown', (e) => {
           if(!Array.isArray(fields)) return;
           fields.forEach(field => {
             if(!field || typeof field !== 'object') return;
-            if(field.type === 'version-price'){
+            if(field.type === 'variant_pricing'){
               const options = Array.isArray(field.options) ? field.options : [];
               options.forEach(opt => {
                 const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
@@ -20662,7 +20662,7 @@ document.addEventListener('pointerdown', (e) => {
           safe.placeholder = field.placeholder;
         }
         safe.required = !!field.required;
-        if(type === 'version-price'){
+        if(type === 'variant_pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => ({
             version: opt && typeof opt.version === 'string' ? opt.version : '',
@@ -20751,32 +20751,32 @@ document.addEventListener('pointerdown', (e) => {
         : [{ version: '', currency: '', price: '' }];
 
       const editor = document.createElement('div');
-      editor.className = 'form-preview-version-price version-price-options-editor';
+      editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
       editor.setAttribute('role', 'group');
       editor.setAttribute('aria-labelledby', labelId);
 
       const list = document.createElement('div');
-      list.className = 'version-price-options-list';
+      list.className = 'variant-pricing-options-list';
       editor.appendChild(list);
 
       function addRow(option){
         const row = document.createElement('div');
-        row.className = 'version-price-option';
+        row.className = 'variant-pricing-option';
 
         const topRow = document.createElement('div');
-        topRow.className = 'version-price-row version-price-row--top';
+        topRow.className = 'variant-pricing-row variant-pricing-row--top';
         const versionInput = document.createElement('input');
         versionInput.type = 'text';
-        versionInput.className = 'version-price-name form-preview-version-price-name';
+        versionInput.className = 'variant-pricing-name form-preview-variant-pricing-name';
         versionInput.placeholder = 'Version Name';
         versionInput.value = option.version || '';
         versionInput.addEventListener('input', ()=>{ option.version = versionInput.value; });
         topRow.appendChild(versionInput);
 
         const bottomRow = document.createElement('div');
-        bottomRow.className = 'version-price-row version-price-row--bottom';
+        bottomRow.className = 'variant-pricing-row variant-pricing-row--bottom';
         const currencySelect = document.createElement('select');
-        currencySelect.className = 'version-price-currency';
+        currencySelect.className = 'variant-pricing-currency';
         const emptyOption = document.createElement('option');
         emptyOption.value = '';
         emptyOption.textContent = 'Currency';
@@ -20792,7 +20792,7 @@ document.addEventListener('pointerdown', (e) => {
 
         const priceInput = document.createElement('input');
         priceInput.type = 'text';
-        priceInput.className = 'version-price-price form-preview-version-price-price';
+        priceInput.className = 'variant-pricing-price form-preview-variant-pricing-price';
         priceInput.placeholder = '0.00';
         priceInput.value = option.price || '';
         priceInput.addEventListener('blur', ()=>{
@@ -20803,7 +20803,7 @@ document.addEventListener('pointerdown', (e) => {
         bottomRow.append(currencySelect, priceInput);
 
         const actions = document.createElement('div');
-        actions.className = 'version-price-option-actions';
+        actions.className = 'variant-pricing-option-actions';
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'member-create-secondary-btn';
@@ -21319,8 +21319,8 @@ document.addEventListener('pointerdown', (e) => {
         fileInput.dataset.imagePreviewTarget = previewId;
         imageWrapper.append(fileInput, hint, message, previewGrid);
         control = imageWrapper;
-      } else if(field.type === 'version-price'){
-        wrapper.classList.add('form-preview-field--version-price');
+      } else if(field.type === 'variant_pricing'){
+        wrapper.classList.add('form-preview-field--variant-pricing');
         label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
       } else if(field.type === 'venue-session-version-tier-price'){
@@ -21758,7 +21758,7 @@ document.addEventListener('pointerdown', (e) => {
             };
             break;
           }
-        } else if(type === 'version-price'){
+        } else if(type === 'variant_pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           value = options.map(opt => ({
             version: typeof opt.version === 'string' ? opt.version.trim() : '',
@@ -21770,7 +21770,7 @@ document.addEventListener('pointerdown', (e) => {
             if(!hasComplete){
               invalid = {
                 message: `Provide pricing details for ${label}.`,
-                focus: ()=> focusElement(findFirstFocusable(['.version-price-option select','.version-price-option input']))
+                focus: ()=> focusElement(findFirstFocusable(['.variant-pricing-option select','.variant-pricing-option input']))
               };
               break;
             }

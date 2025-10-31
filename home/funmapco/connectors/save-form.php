@@ -914,7 +914,7 @@ function sanitizeField(array $field): array
         'tickets-url',
         'images',
         'coupon',
-        'version-price',
+        'variant_pricing',
         'checkout',
         'venue-session-version-tier-price',
     ];
@@ -941,8 +941,8 @@ function sanitizeField(array $field): array
     }
 
     switch ($safe['type']) {
-        case 'version-price':
-            $safe['options'] = sanitizeVersionPriceOptions($options);
+        case 'variant_pricing':
+            $safe['options'] = sanitizeVariantPricingOptions($options);
             break;
         case 'dropdown':
         case 'radio-toggle':
@@ -997,7 +997,7 @@ function sanitizeGenericOptions(array $options): array
     return $clean;
 }
 
-function sanitizeVersionPriceOptions(array $options): array
+function sanitizeVariantPricingOptions(array $options): array
 {
     $clean = [];
     foreach ($options as $option) {
