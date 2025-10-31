@@ -8840,7 +8840,7 @@ function uniqueTitle(seed, cityName, idx){
             return safeField;
           };
 
-          const buildVenueSessionPreview = (previewField, baseId)=>{
+          const buildVenueSessionPreview = (previewField, baseId, context = {})=>{
             const editor = document.createElement('div');
             editor.className = 'venue-session-editor';
             editor.setAttribute('aria-required', previewField.required ? 'true' : 'false');
@@ -8848,8 +8848,22 @@ function uniqueTitle(seed, cityName, idx){
             venueList.className = 'venue-session-venues';
             editor.appendChild(venueList);
 
+            const notifyChange = typeof context.notifyFormbuilderChange === 'function'
+              ? context.notifyFormbuilderChange
+              : notifyFormbuilderChange;
+            const requestRenderPreview = typeof context.renderFormPreview === 'function'
+              ? context.renderFormPreview
+              : (()=>{});
+            const normalizeBehaviorOptions = typeof context.normalizeVenueSessionOptions === 'function'
+              ? context.normalizeVenueSessionOptions
+              : normalizeVenueSessionOptions;
+            const notifyAndRender = ()=>{
+              notifyChange();
+              requestRenderPreview();
+            };
+
             const ensureOptions = ()=>{
-              previewField.options = normalizeVenueSessionOptions(previewField.options);
+              previewField.options = normalizeBehaviorOptions(previewField.options);
               if(!Array.isArray(previewField.options) || previewField.options.length === 0){
                 previewField.options = [venueSessionCreateVenue()];
               }
@@ -9376,7 +9390,7 @@ function uniqueTitle(seed, cityName, idx){
               }
               venues.splice(afterIndex + 1, 0, newVenue);
               openSessions.clear();
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues({ type: 'venue-name', venueIndex: afterIndex + 1 });
             };
 
@@ -9389,7 +9403,7 @@ function uniqueTitle(seed, cityName, idx){
                 try{ state.delete(removed); }catch(err){}
               }
               openSessions.clear();
-              notifyFormbuilderChange();
+              notifyAndRender();
               const nextIndex = Math.max(0, index - 1);
               renderVenues({ type: 'venue-name', venueIndex: nextIndex });
             };
@@ -9452,7 +9466,7 @@ function uniqueTitle(seed, cityName, idx){
               sessions.splice(afterIndex + 1, 0, newSession);
               applyAutofillToSession(venue, newSession);
               openSessions.clear();
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues();
             };
 
@@ -9460,7 +9474,7 @@ function uniqueTitle(seed, cityName, idx){
               if(venue.sessions.length <= 1) return;
               venue.sessions.splice(sessionIndex, 1);
               openSessions.clear();
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues();
             };
 
@@ -9505,7 +9519,7 @@ function uniqueTitle(seed, cityName, idx){
                 }
               });
               openSessions.add(newSession);
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues({ type: 'session-time', venueIndex, sessionIndex: sessionIndex + 1, timeIndex: 0 });
             };
 
@@ -9552,7 +9566,7 @@ function uniqueTitle(seed, cityName, idx){
               if(Array.isArray(state.slots) && state.slots.length > timeIndex){
                 state.slots.splice(timeIndex, 1);
               }
-              notifyFormbuilderChange();
+              notifyAndRender();
               const nextTime = Math.max(0, Math.min(timeIndex, venue.sessions[sessionIndex]?.times.length - 1));
               renderVenues({ type: 'session-time', venueIndex, sessionIndex, timeIndex: nextTime });
             };
@@ -9595,7 +9609,7 @@ function uniqueTitle(seed, cityName, idx){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: afterIndex + 1 });
             };
 
@@ -9623,7 +9637,7 @@ function uniqueTitle(seed, cityName, idx){
                 lockSessionMirror(venue);
               }
               versions.splice(targetIndex, 1);
-              notifyFormbuilderChange();
+              notifyAndRender();
               const focusVersion = Math.max(0, Math.min(targetIndex, versions.length - 1));
               renderVenues({ type: 'version', venueIndex, sessionIndex, timeIndex, versionIndex: focusVersion });
             };
@@ -9662,7 +9676,7 @@ function uniqueTitle(seed, cityName, idx){
               } else if(sessionIndex > 0){
                 lockSessionMirror(venue);
               }
-              notifyFormbuilderChange();
+              notifyAndRender();
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex: afterIndex + 1 });
             };
 
@@ -9714,7 +9728,7 @@ function uniqueTitle(seed, cityName, idx){
               if(templateRemoval){
                 syncTiersFromTemplate(time);
               }
-              notifyFormbuilderChange();
+              notifyAndRender();
               const focusTier = Math.max(0, Math.min(targetTierIndex, tiers.length - 1));
               renderVenues({ type: 'tier', venueIndex, sessionIndex, timeIndex, versionIndex: targetVersionIndex, tierIndex: focusTier });
             };
@@ -9824,7 +9838,7 @@ function uniqueTitle(seed, cityName, idx){
                 }
                 if(previous){
                   timeObj.time = '';
-                  notifyFormbuilderChange();
+                  notifyAndRender();
                 }
                 const slot = ensureSlot(venue, timeIndex);
                 if(isMaster && !mirrorLocked){
@@ -9923,7 +9937,7 @@ function uniqueTitle(seed, cityName, idx){
                 slot.source = timeObj;
                 slot.locked = true;
               }
-              notifyFormbuilderChange();
+              notifyAndRender();
             };
 
             const setupDatePicker = (input, venue, session, venueIndex, sessionIndex, options = {})=>{
@@ -10104,7 +10118,7 @@ function uniqueTitle(seed, cityName, idx){
                 }
                 venue.sessions.splice(0, venue.sessions.length, ...newSessions);
                 openSessions.clear();
-                notifyFormbuilderChange();
+                notifyAndRender();
                 closePicker();
                 renderVenues();
               };
@@ -10400,7 +10414,7 @@ function uniqueTitle(seed, cityName, idx){
                       lat: Number(center[1])
                     };
                   }
-                  notifyFormbuilderChange();
+                  notifyAndRender();
                 };
 
                 const venueNamePlaceholder = `Venue Name ${venueIndex + 1}`;
@@ -10415,7 +10429,7 @@ function uniqueTitle(seed, cityName, idx){
                 venueNameInput.addEventListener('input', ()=>{
                   const value = venueNameInput.value || '';
                   venue.name = value;
-                  notifyFormbuilderChange();
+                  notifyAndRender();
                   if(nameSearchTimeout){
                     clearTimeout(nameSearchTimeout);
                     nameSearchTimeout = null;
@@ -10536,7 +10550,7 @@ function uniqueTitle(seed, cityName, idx){
                   fallback.dataset.venueIndex = String(venueIndex);
                   fallback.addEventListener('input', ()=>{
                     venue.address = fallback.value;
-                    notifyFormbuilderChange();
+                    notifyAndRender();
                   });
                   geocoderContainer.appendChild(fallback);
                   geocoderInputRef = fallback;
@@ -10625,7 +10639,7 @@ function uniqueTitle(seed, cityName, idx){
                       const nextValue = geocoderInput.value || '';
                       if(venue.address !== nextValue){
                         venue.address = nextValue;
-                        notifyFormbuilderChange();
+                        notifyAndRender();
                       }
                     });
                     geocoder.on('results', ()=> setGeocoderActive(true));
@@ -10642,7 +10656,7 @@ function uniqueTitle(seed, cityName, idx){
                       venue.address = '';
                       venue.location = null;
                       clearNameSuggestions();
-                      notifyFormbuilderChange();
+                      notifyAndRender();
                       setGeocoderActive(false);
                     });
                     geocoder.on('error', ()=> setGeocoderActive(false));
@@ -10966,7 +10980,7 @@ function uniqueTitle(seed, cityName, idx){
                           } else if(sessionIndex > 0 && previous !== nextValue){
                             lockSessionMirror(venue);
                           }
-                          notifyFormbuilderChange();
+                          notifyAndRender();
                         });
                         versionCard.appendChild(seatingLabel);
                         versionCard.appendChild(versionInput);
@@ -11057,7 +11071,7 @@ function uniqueTitle(seed, cityName, idx){
                             }
                             const locked = lockTierAutofillIfNeeded(timeObj, versionIndex);
                             if(previous !== nextValue || locked || syncedFromTemplate){
-                              notifyFormbuilderChange();
+                              notifyAndRender();
                             }
                           });
                           tierRow.appendChild(tierInput);
@@ -11202,7 +11216,7 @@ function uniqueTitle(seed, cityName, idx){
                               shouldNotify = true;
                             }
                             if(shouldNotify){
-                              notifyFormbuilderChange();
+                              notifyAndRender();
                             }
                           };
 
@@ -11243,7 +11257,7 @@ function uniqueTitle(seed, cityName, idx){
                               notifyNeeded = true;
                             }
                             if(notifyNeeded){
-                              notifyFormbuilderChange();
+                              notifyAndRender();
                             }
                             renderVenues({ type: 'price', venueIndex, sessionIndex, timeIndex, versionIndex, tierIndex });
                           });
@@ -11318,7 +11332,7 @@ function uniqueTitle(seed, cityName, idx){
                         }
                         timeObj.tierAutofillLocked = false;
                       }
-                      notifyFormbuilderChange();
+                      notifyAndRender();
                       populateVersionList();
                       updateSamePricingUI();
                     };
@@ -11382,7 +11396,7 @@ function uniqueTitle(seed, cityName, idx){
 
               });
               if(shouldNotifyAfterRender){
-                notifyFormbuilderChange();
+                notifyAndRender();
               }
               applyFocus();
             };
@@ -11392,7 +11406,7 @@ function uniqueTitle(seed, cityName, idx){
           };
 
           renderVenueSessionPreview = function(previewField, baseId, context = {}){
-            const editor = buildVenueSessionPreview(previewField, baseId);
+            const editor = buildVenueSessionPreview(previewField, baseId, context);
             return {
               element: editor,
               wrapperClasses: ['form-preview-field--venues-sessions-pricing'],
@@ -12018,6 +12032,22 @@ function uniqueTitle(seed, cityName, idx){
             dropdownOptionsList.className = 'dropdown-options-list';
             dropdownOptionsContainer.append(dropdownOptionsLabel, dropdownOptionsList);
 
+            const behaviorEditorContainer = document.createElement('div');
+            behaviorEditorContainer.className = 'behavior-editor-container';
+            behaviorEditorContainer.hidden = true;
+
+            let behaviorEditorCleanup = null;
+            let behaviorEditorInstanceId = 0;
+
+            const teardownBehaviorEditor = ()=>{
+              if(typeof behaviorEditorCleanup === 'function'){
+                try{ behaviorEditorCleanup(); }catch(err){}
+              }
+              behaviorEditorCleanup = null;
+              behaviorEditorContainer.innerHTML = '';
+              behaviorEditorContainer.hidden = true;
+            };
+
             let draggedOptionRow = null;
 
             const ensureDropdownSeeds = ()=>{
@@ -12234,6 +12264,7 @@ function uniqueTitle(seed, cityName, idx){
             if(overlayPlaceholder && overlayPlaceholder.parentNode){
               overlayPlaceholder.remove();
             }
+            teardownBehaviorEditor();
             row.remove();
             if(safeField.__rowEl === row){
               delete safeField.__rowEl;
@@ -12256,6 +12287,7 @@ function uniqueTitle(seed, cityName, idx){
               const showVenueSession = behavior === FIELD_TYPE_BEHAVIORS.venues_sessions_pricing;
               const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
+              teardownBehaviorEditor();
               if(type === 'images'){
                 if(fieldPlaceholderInput.value){
                   fieldPlaceholderInput.value = '';
@@ -12268,7 +12300,15 @@ function uniqueTitle(seed, cityName, idx){
                 safeField.placeholder = '';
                 notifyFormbuilderChange();
               }
-              dropdownOptionsContainer.hidden = !isOptionsType;
+              const behaviorConfigurator = behavior && (
+                typeof behavior.buildConfigurator === 'function'
+                  ? behavior.buildConfigurator
+                  : (behavior === FIELD_TYPE_BEHAVIORS.venues_sessions_pricing && typeof behavior.buildPreview === 'function'
+                    ? behavior.buildPreview
+                    : null)
+              );
+              const useBehaviorEditor = !!behaviorConfigurator;
+              dropdownOptionsContainer.hidden = useBehaviorEditor || !isOptionsType;
               if(showVenueSession){
                 safeField.options = normalizeVenueSessionOptions(safeField.options);
               } else if(showVariantPricing){
@@ -12296,7 +12336,38 @@ function uniqueTitle(seed, cityName, idx){
               } else {
                 dropdownOptionsLabel.textContent = 'Field Options';
               }
-              if(isOptionsType){
+              if(useBehaviorEditor){
+                const baseId = `formbuilder-behavior-${++behaviorEditorInstanceId}`;
+                const result = behaviorConfigurator(
+                  safeField,
+                  baseId,
+                  {
+                    notifyFormbuilderChange(){
+                      notifyFormbuilderChange();
+                      renderFormPreview();
+                    },
+                    renderFormPreview,
+                    normalizeVenueSessionOptions
+                  }
+                ) || null;
+                let behaviorElement = null;
+                let cleanup = null;
+                if(result){
+                  if(result.element){
+                    behaviorElement = result.element;
+                    cleanup = typeof result.cleanup === 'function' ? result.cleanup : (typeof result.teardown === 'function' ? result.teardown : null);
+                  } else if(result instanceof Element || (result && typeof result.nodeType === 'number')){
+                    behaviorElement = result;
+                  }
+                }
+                if(behaviorElement){
+                  behaviorEditorContainer.appendChild(behaviorElement);
+                  behaviorEditorContainer.hidden = false;
+                  behaviorEditorCleanup = cleanup;
+                } else {
+                  teardownBehaviorEditor();
+                }
+              } else if(isOptionsType){
                 if(!Array.isArray(safeField.options) || safeField.options.length === 0){
                   safeField.options = ['', '', ''];
                   notifyFormbuilderChange();
@@ -12329,7 +12400,7 @@ function uniqueTitle(seed, cityName, idx){
 
             fieldHeader.append(fieldNameInput, deleteFieldBtn);
 
-            row.append(fieldHeader, fieldTypeWrapper, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer);
+            row.append(fieldHeader, fieldTypeWrapper, fieldPlaceholderWrapper, fieldRequiredRow, dropdownOptionsContainer, behaviorEditorContainer);
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
