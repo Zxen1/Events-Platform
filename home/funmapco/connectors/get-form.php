@@ -513,8 +513,10 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         if ($hasKey && isset($row['field_type_key'])) {
             $entry['field_type_key'] = (string) $row['field_type_key'];
             $entry['key'] = (string) $row['field_type_key'];
+            $entry['behaviorKey'] = (string) $row['field_type_key'];
         } else {
             $entry['key'] = $rawKey;
+            $entry['behaviorKey'] = $rawKey;
         }
         if ($hasName && isset($row['field_type_name'])) {
             $entry['field_type_name'] = (string) $row['field_type_name'];
