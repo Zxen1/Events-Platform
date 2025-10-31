@@ -92,6 +92,33 @@ try {
     $subcategoriesById = fetchSubcategoriesById($pdo, $subcategoryColumns);
     $fieldCatalog = fetchFieldCatalog($pdo);
     $fieldTypeDefinitions = fetchFieldTypeDefinitions($pdo);
+    $fieldTypeDefinitionsByName = [];
+    foreach ($fieldTypeDefinitions as $definitionRow) {
+        if (!is_array($definitionRow)) {
+            continue;
+        }
+        $id = filterPositiveInt($definitionRow['id'] ?? ($definitionRow['field_type_id'] ?? null));
+        if ($id === null) {
+            continue;
+        }
+        $nameCandidates = [];
+        if (isset($definitionRow['name'])) {
+            $nameCandidates[] = (string) $definitionRow['name'];
+        }
+        if (isset($definitionRow['field_type_name'])) {
+            $nameCandidates[] = (string) $definitionRow['field_type_name'];
+        }
+        foreach ($nameCandidates as $candidateName) {
+            $trimmed = trim($candidateName);
+            if ($trimmed === '') {
+                continue;
+            }
+            $key = mb_strtolower($trimmed);
+            if (!isset($fieldTypeDefinitionsByName[$key])) {
+                $fieldTypeDefinitionsByName[$key] = $id;
+            }
+        }
+    }
 
     $versionCurrencies = [];
     if (isset($decoded['versionPriceCurrencies']) && is_array($decoded['versionPriceCurrencies'])) {
@@ -423,6 +450,30 @@ try {
                             $fieldTypeIds[] = $typeId;
                         } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
                             $fieldTypeIds[] = (int) $typeId;
+                        }
+                    }
+                }
+            }
+
+            if (!$fieldTypeIds) {
+                $nameCandidates = [];
+                if (is_array($subEntry) && isset($subEntry['fieldTypeNames'])) {
+                    $nameCandidates = extractFieldTypeNames($subEntry['fieldTypeNames']);
+                }
+                if (!$nameCandidates && isset($subcategoryRow['field_type_name'])) {
+                    $nameCandidates = extractFieldTypeNames($subcategoryRow['field_type_name']);
+                }
+                if (!$nameCandidates && isset($subcategoryRow['metadata_json']) && is_string($subcategoryRow['metadata_json']) && $subcategoryRow['metadata_json'] !== '') {
+                    $decodedMeta = json_decode($subcategoryRow['metadata_json'], true);
+                    if (is_array($decodedMeta) && isset($decodedMeta['fieldTypeNames'])) {
+                        $nameCandidates = extractFieldTypeNames($decodedMeta['fieldTypeNames']);
+                    }
+                }
+                if ($nameCandidates) {
+                    foreach ($nameCandidates as $candidateName) {
+                        $lookup = mb_strtolower($candidateName);
+                        if (isset($fieldTypeDefinitionsByName[$lookup])) {
+                            $fieldTypeIds[] = $fieldTypeDefinitionsByName[$lookup];
                         }
                     }
                 }
@@ -861,6 +912,49 @@ function deriveIconVariants(string $path): array
         }
     }
     return ['icon' => $icon, 'marker' => $marker];
+}
+
+function extractFieldTypeNames($source): array
+{
+    $names = [];
+    if (is_array($source)) {
+        foreach ($source as $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                continue;
+            }
+            $names[] = $trimmed;
+        }
+    } elseif (is_string($source)) {
+        $parts = preg_split('/\s*,\s*/', $source);
+        if (!is_array($parts)) {
+            $parts = [$source];
+        }
+        foreach ($parts as $part) {
+            if (!is_string($part)) {
+                continue;
+            }
+            $trimmed = trim($part);
+            if ($trimmed === '') {
+                continue;
+            }
+            $names[] = $trimmed;
+        }
+    }
+
+    $normalized = [];
+    foreach ($names as $name) {
+        $lower = mb_strtolower($name);
+        if (isset($normalized[$lower])) {
+            continue;
+        }
+        $normalized[$lower] = $name;
+    }
+
+    return array_values($normalized);
 }
 
 function filterPositiveInt($value): ?int
@@ -1384,36 +1478,70 @@ function fetchFieldTypeDefinitions(PDO $pdo): array
 {
     try {
         $columns = fetchTableColumns($pdo, 'field_types');
-        if (!$columns || !in_array('id', $columns, true)) {
+        if (!$columns) {
             return [];
         }
 
-        $select = ['id'];
-        if (in_array('field_type_name', $columns, true)) {
-            $select[] = 'field_type_name';
-        }
-        if (in_array('field_type_key', $columns, true)) {
-            $select[] = 'field_type_key';
+        $idColumn = null;
+        if (in_array('field_type_id', $columns, true)) {
+            $idColumn = 'field_type_id';
+        } elseif (in_array('id', $columns, true)) {
+            $idColumn = 'id';
         }
 
-        $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
-            return '`' . str_replace('`', '``', $col) . '`';
-        }, $select)) . ' FROM field_types ORDER BY `id` ASC';
+        if ($idColumn === null) {
+            return [];
+        }
+
+        $select = ['`' . str_replace('`', '``', $idColumn) . '` AS `field_type_id`'];
+        if ($idColumn !== 'id' && in_array('id', $columns, true)) {
+            $select[] = '`id`';
+        }
+        if (in_array('field_type_name', $columns, true)) {
+            $select[] = '`field_type_name`';
+        }
+        if (in_array('field_type_key', $columns, true)) {
+            $select[] = '`field_type_key`';
+        }
+        if (in_array('sort_order', $columns, true)) {
+            $select[] = '`sort_order`';
+        }
+
+        $sql = 'SELECT ' . implode(', ', $select) . ' FROM field_types';
+        $orderParts = [];
+        if (in_array('sort_order', $columns, true)) {
+            $orderParts[] = '`sort_order` ASC';
+        }
+        $orderParts[] = '`field_type_id` ASC';
+        if ($orderParts) {
+            $sql .= ' ORDER BY ' . implode(', ', $orderParts);
+        }
 
         $stmt = $pdo->query($sql);
         $map = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (!isset($row['id'])) {
+            $id = null;
+            if (isset($row['field_type_id'])) {
+                $id = filterPositiveInt($row['field_type_id']);
+            } elseif (isset($row['id'])) {
+                $id = filterPositiveInt($row['id']);
+            }
+            if ($id === null) {
                 continue;
             }
-            $id = (int) $row['id'];
             $name = isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '';
             $key = isset($row['field_type_key']) ? sanitizeKey((string) $row['field_type_key']) : '';
-            $map[$id] = [
+            $record = [
                 'id' => $id,
+                'field_type_id' => $id,
                 'name' => $name,
+                'field_type_name' => $name,
                 'key' => $key,
             ];
+            if (isset($row['sort_order'])) {
+                $record['sort_order'] = is_numeric($row['sort_order']) ? (int) $row['sort_order'] : $row['sort_order'];
+            }
+            $map[$id] = $record;
         }
 
         return $map;
