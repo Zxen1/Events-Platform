@@ -12962,6 +12962,9 @@ function makePosts(){
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
         categoryShapes: cloneMapLike(categoryShapes),
+        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
+          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+          : [],
         versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
           ? VERSION_PRICE_CURRENCIES.slice()
           : []
