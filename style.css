@@ -734,8 +734,11 @@ input[type="checkbox"]{
   }
 
   .header-loading-overlay{
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    top: var(--safe-top);
+    left: var(--gap);
+    right: var(--gap);
+    height: var(--header-h);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -744,7 +747,7 @@ input[type="checkbox"]{
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    z-index: 10;
+    z-index: 2500;
     opacity: 1;
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
