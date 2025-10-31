@@ -1,26 +1,32 @@
 <?php
-$log = __DIR__ . '/deploy.log';
-function logline($msg) {
-  global $log;
-  file_put_contents($log, date('[Y-m-d H:i:s] ') . $msg . "\n", FILE_APPEND);
+// ======================================================
+// 🍌 FunMap GitHub → cPanel Webhook (Banana-Skin Protected)
+// Instant 200 OK response to prevent GitHub timeout
+// Background executes /home/funmapco/auto-publish.sh pull
+// ======================================================
+
+ignore_user_abort(true);
+set_time_limit(0);
+
+// --- Immediate 200 OK so GitHub stops waiting ---
+header("HTTP/1.1 200 OK");
+echo "Deployment started.";
+flush();
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
 }
 
-logline("Webhook triggered.");
+// --- Logging setup ---
+$logDir = "/home/funmapco/logs";
+if (!is_dir($logDir)) {
+    mkdir($logDir, 0755, true);
+}
+$logFile = $logDir . "/deploy-" . date("Y-m-d") . ".log";
 
-// Move to local repo folder
-chdir('/home/funmapco/repositories/github');
+// --- Run auto-publish in background ---
+$cmd = "/home/funmapco/auto-publish.sh pull >> $logFile 2>&1 &";
+exec($cmd);
 
-// Pull latest from GitHub
-exec('git fetch origin main 2>&1', $out1, $ret1);
-logline("git fetch: " . implode("\n", $out1));
-
-exec('git reset --hard origin/main 2>&1', $out2, $ret2);
-logline("git reset: " . implode("\n", $out2));
-
-// Run sync to update public_html
-exec('/home/funmapco/auto-publish.sh 2>&1', $out3, $ret3);
-logline("auto-publish: " . implode("\n", $out3));
-
-logline("Deployment finished.\n");
-http_response_code(200);
+// --- Optional simple confirmation log entry ---
+file_put_contents($logFile, "[" . date("Y-m-d H:i:s") . "] Webhook triggered\n", FILE_APPEND);
 ?>
