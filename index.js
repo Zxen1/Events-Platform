@@ -3655,9 +3655,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         }
         let value = typeof option.value === 'string' ? option.value.trim() : '';
         let label = typeof option.label === 'string' ? option.label.trim() : '';
-        if(value === 'venue-session-version-tier-price' || value === 'venue-session-price'){
-          value = 'venues_sessions_pricing';
-        }
         if(!value){
           return;
         }
@@ -8602,16 +8599,13 @@ function makePosts(){
               safeField.name = '';
             } else if(!safeField.name.trim()){
               safeField.name = '';
-            }
-            if(typeof safeField.type !== 'string'){
-              safeField.type = '';
-            }
-            if(safeField.type === 'venue-session-version-tier-price' || safeField.type === 'venue-session-price'){
-              safeField.type = 'venues_sessions_pricing';
-            }
-            if(!FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
-              safeField.type = 'text-box';
-            }
+          }
+          if(typeof safeField.type !== 'string'){
+            safeField.type = '';
+          }
+          if(!FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
+            safeField.type = 'text-box';
+          }
             if(!safeField.name){
               const typeLabel = getFormFieldTypeLabel(safeField.type).trim();
               if(typeLabel){
@@ -20669,7 +20663,6 @@ document.addEventListener('pointerdown', (e) => {
           safe.name = field.name.trim();
         }
         let type = typeof field.type === 'string' ? field.type : 'text-box';
-        if(type === 'venue-session-version-tier-price' || type === 'venue-session-price') type = 'venues_sessions_pricing';
         if(!FORM_FIELD_TYPES.some(opt => opt.value === type)){
           type = 'text-box';
         }
