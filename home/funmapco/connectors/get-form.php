@@ -131,6 +131,8 @@ function fetchCategories(PDO $pdo, array $columns): array
     $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
+    $hasFieldTypeId = in_array('field_type_id', $columns, true);
+    $hasFieldTypeName = in_array('field_type_name', $columns, true);
 
     if (in_array('id', $columns, true)) {
         $selectColumns[] = '`id`';
@@ -150,6 +152,12 @@ function fetchCategories(PDO $pdo, array $columns): array
     }
     if ($hasMetadata) {
         $selectColumns[] = '`metadata_json`';
+    }
+    if ($hasFieldTypeId) {
+        $selectColumns[] = '`field_type_id`';
+    }
+    if ($hasFieldTypeName) {
+        $selectColumns[] = '`field_type_name`';
     }
     if (!$selectColumns) {
         $selectColumns[] = '*';
