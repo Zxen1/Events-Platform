@@ -3645,6 +3645,33 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     window.iconLibrary = ICON_LIBRARY;
     initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
+    function sanitizeFieldTypeOptions(options){
+      const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
+      const sanitized = [];
+      const seenValues = new Set();
+      list.forEach(option => {
+        if(!option || typeof option !== 'object'){
+          return;
+        }
+        let value = typeof option.value === 'string' ? option.value.trim() : '';
+        let label = typeof option.label === 'string' ? option.label.trim() : '';
+        if(value === 'venue-session-version-tier-price' || value === 'venue-session-price'){
+          value = 'venues_sessions_pricing';
+        }
+        if(!value){
+          return;
+        }
+        if(!label){
+          label = value;
+        }
+        if(seenValues.has(value)){
+          return;
+        }
+        seenValues.add(value);
+        sanitized.push({ value, label });
+      });
+      return sanitized;
+    }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
@@ -3656,37 +3683,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
       ? initialFormbuilderSnapshot.fieldTypes
       : [];
-    let finalFieldTypeOptions = snapshotFieldTypeOptions
-      .map(option => {
-        if(!option || typeof option !== 'object'){
-          return null;
-        }
-        let value = typeof option.value === 'string'
-          ? option.value.trim()
-          : typeof option.key === 'string'
-            ? option.key.trim()
-            : '';
-        if(value === 'venue-session-version-tier-price' || value === 'venue-session-price'){
-          value = 'venues_sessions_pricing';
-        }
-        const label = typeof option.label === 'string'
-          ? option.label.trim()
-          : typeof option.name === 'string'
-            ? option.name.trim()
-            : '';
-        return value && label ? { value, label } : null;
-      })
-      .filter(Boolean);
-    if(finalFieldTypeOptions.length){
-      const seenValues = new Set();
-      finalFieldTypeOptions = finalFieldTypeOptions.filter(option => {
-        if(seenValues.has(option.value)){
-          return false;
-        }
-        seenValues.add(option.value);
-        return true;
-      });
-    }
+    const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
     initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
@@ -12980,6 +12977,9 @@ function makePosts(){
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
       const normalized = normalizeFormbuilderSnapshot(snapshot);
+      const sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
+      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
+      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
