@@ -734,11 +734,8 @@ input[type="checkbox"]{
   }
 
   .header-loading-overlay{
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: calc(var(--header-h) + var(--safe-top));
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -747,9 +744,8 @@ input[type="checkbox"]{
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    z-index: 2500;
+    z-index: 10;
     opacity: 1;
-    visibility: visible; /* ensure overlay reappears when the hidden state is removed */
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
@@ -7327,61 +7323,6 @@ html, body { cursor: auto !important; }
               margin:0;
               font-size:14px;
               color:var(--muted);
-            }
-            #tab-forms .subcategory-field-type-row{
-              margin:12px 0 6px;
-              display:flex;
-              flex-direction:column;
-              gap:4px;
-            }
-            #tab-forms .subcategory-field-type-label{
-              font-size:13px;
-              font-weight:600;
-              color:var(--button-text);
-            }
-            #tab-forms .subcategory-field-type-select{
-              height:36px;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              padding:0 12px;
-            }
-            #tab-forms .subcategory-field-type-select:disabled{
-              opacity:0.6;
-              cursor:not-allowed;
-            }
-            #tab-forms .subcategory-field-type-summary{
-              display:flex;
-              align-items:flex-start;
-              flex-wrap:wrap;
-              gap:6px;
-              margin:0 0 10px;
-            }
-            #tab-forms .subcategory-field-type-summary-title{
-              font-size:13px;
-              font-weight:600;
-              color:var(--button-text);
-            }
-            #tab-forms .subcategory-field-type-summary-list{
-              display:flex;
-              flex-wrap:wrap;
-              gap:6px;
-            }
-            #tab-forms .subcategory-field-type-empty{
-              font-size:12px;
-              color:var(--muted);
-              font-style:italic;
-            }
-            #tab-forms .fieldset-tag{
-              display:inline-flex;
-              align-items:center;
-              border-radius:999px;
-              padding:2px 10px;
-              background:rgba(255,255,255,0.15);
-              color:var(--button-text);
-              font-size:12px;
-              line-height:1.4;
             }
             #tab-forms .add-subcategory-btn{
               padding:0 16px;
