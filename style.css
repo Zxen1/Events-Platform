@@ -735,13 +735,14 @@ input[type="checkbox"]{
 
   .header-loading-overlay{
     position: fixed;
-    top: var(--safe-top);
-    left: var(--gap);
-    right: var(--gap);
-    height: var(--header-h);
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--header-h) + var(--safe-top));
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: var(--safe-top) var(--gap) 0 var(--gap);
     background: rgba(0, 0, 0, 0.9);
     color: #fff;
     font-size: 1.1rem;
