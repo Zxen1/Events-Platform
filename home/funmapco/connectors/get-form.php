@@ -83,9 +83,8 @@ try {
 
     $categories = fetchCategories($pdo, $categoryColumns);
     $subcategories = fetchSubcategories($pdo, $subcategoryColumns, $categories);
-    $fieldTypes = fetchFieldTypes($pdo);
 
-    $snapshot = buildSnapshot($categories, $subcategories, $fieldTypes);
+    $snapshot = buildSnapshot($categories, $subcategories);
 
     echo json_encode([
         'success' => true,
@@ -406,75 +405,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     return $results;
 }
 
-function fetchFieldTypes(PDO $pdo): array
-{
-    try {
-        $columns = fetchTableColumns($pdo, 'field_types');
-        if (!$columns || !in_array('id', $columns, true)) {
-            return [];
-        }
-
-        $selectColumns = ['`id`'];
-        if (in_array('field_type_name', $columns, true)) {
-            $selectColumns[] = '`field_type_name`';
-        }
-        if (in_array('field_type_key', $columns, true)) {
-            $selectColumns[] = '`field_type_key`';
-        }
-
-        $itemColumns = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $column = 'field_type_item_' . $i;
-            if (in_array($column, $columns, true)) {
-                $selectColumns[] = '`' . $column . '`';
-                $itemColumns[] = $column;
-            }
-        }
-
-        $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM field_types ORDER BY `id` ASC';
-        $stmt = $pdo->query($sql);
-
-        $definitions = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (!isset($row['id'])) {
-                continue;
-            }
-
-            $id = (int) $row['id'];
-            if ($id <= 0) {
-                continue;
-            }
-
-            $name = isset($row['field_type_name']) ? trim((string) $row['field_type_name']) : '';
-            $key = isset($row['field_type_key']) ? normalizeFieldTypeKey((string) $row['field_type_key']) : '';
-
-            $items = [];
-            foreach ($itemColumns as $column) {
-                if (!isset($row[$column]) || !is_string($row[$column])) {
-                    continue;
-                }
-                $meta = extractFieldTypeItemMeta($row[$column]);
-                if ($meta === null) {
-                    continue;
-                }
-                $items[] = $meta;
-            }
-
-            $definitions[] = [
-                'id' => $id,
-                'name' => $name,
-                'key' => $key,
-                'items' => $items,
-            ];
-        }
-
-        return $definitions;
-    } catch (PDOException $e) {
-        return [];
-    }
-}
-
-function buildSnapshot(array $categories, array $subcategories, array $fieldTypes = []): array
+function buildSnapshot(array $categories, array $subcategories): array
 {
     $categoriesMap = [];
     $categoryIcons = [];
@@ -768,60 +699,6 @@ function buildSnapshot(array $categories, array $subcategories, array $fieldType
         'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
         'iconLibrary' => array_values($iconLibrary),
-        'fieldTypes' => array_values($fieldTypes),
-    ];
-}
-
-function normalizeFieldTypeKey(string $value): string
-{
-    $trimmed = trim($value);
-    if ($trimmed === '') {
-        return '';
-    }
-
-    $normalized = strtolower($trimmed);
-    $normalized = preg_replace('/[^a-z0-9_\-]+/', '-', $normalized);
-    $normalized = preg_replace('/-+/', '-', $normalized);
-    $normalized = preg_replace('/_+/', '_', $normalized);
-
-    return trim((string) $normalized, '-_');
-}
-
-function extractFieldTypeItemMeta(string $value): ?array
-{
-    $label = trim($value);
-    if ($label === '') {
-        return null;
-    }
-
-    $keySource = $label;
-    $bracketPos = strpos($keySource, '[');
-    if ($bracketPos !== false) {
-        $keySource = substr($keySource, 0, $bracketPos);
-    }
-    $keySource = trim((string) $keySource);
-    if ($keySource === '') {
-        return null;
-    }
-
-    $parts = preg_split('/\s+/', $keySource);
-    $candidate = is_array($parts) && isset($parts[0]) ? $parts[0] : $keySource;
-    $key = normalizeFieldTypeKey($candidate);
-    if ($key === '') {
-        return null;
-    }
-
-    $type = 'unknown';
-    if (stripos($label, '[fieldset=') !== false) {
-        $type = 'fieldset';
-    } elseif (stripos($label, '[field=') !== false) {
-        $type = 'field';
-    }
-
-    return [
-        'key' => $key,
-        'label' => $label,
-        'type' => $type,
     ];
 }
 
