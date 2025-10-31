@@ -734,17 +734,21 @@ input[type="checkbox"]{
   }
 
   .header-loading-overlay{
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--safe-top) + var(--header-h));
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: var(--safe-top) var(--gap) 0;
     background: rgba(0, 0, 0, 0.9);
     color: #fff;
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
-    z-index: 10;
+    z-index: 2500;
     opacity: 1;
     pointer-events: auto;
     transition: opacity 0.3s ease, visibility 0.3s ease;
