@@ -5382,7 +5382,67 @@ function uniqueTitle(seed, cityName, idx){
     return { element: msg, remove, reposition };
   }
 
-function makePosts(){
+  function createTransientInputAlert(message, options = {}){
+    const showMessage = options && typeof options.showMessage === 'function'
+      ? options.showMessage
+      : showCopyStyleMessage;
+    const duration = options && Number.isFinite(options.duration)
+      ? Math.max(0, options.duration)
+      : 1500;
+    const doc = typeof document !== 'undefined' ? document : null;
+    const win = typeof window !== 'undefined' ? window : null;
+    let lastTimestamp = 0;
+    let activeAlert = null;
+    let activeAlertTimeout = 0;
+
+    return target => {
+      if(typeof showMessage !== 'function') return;
+      const candidate = (target && typeof target.getBoundingClientRect === 'function')
+        ? target
+        : (doc && doc.activeElement && typeof doc.activeElement.getBoundingClientRect === 'function'
+          ? doc.activeElement
+          : null);
+      const inputEl = candidate && doc && doc.body && doc.body.contains(candidate) ? candidate : null;
+      if(!inputEl) return;
+      const now = Date.now();
+      if(now - lastTimestamp < 400){
+        if(activeAlert && typeof activeAlert.reposition === 'function'){
+          activeAlert.reposition();
+        }
+        return;
+      }
+      lastTimestamp = now;
+      if(activeAlertTimeout){
+        if(win && typeof win.clearTimeout === 'function'){
+          win.clearTimeout(activeAlertTimeout);
+        } else {
+          clearTimeout(activeAlertTimeout);
+        }
+        activeAlertTimeout = 0;
+      }
+      if(activeAlert && typeof activeAlert.remove === 'function'){
+        activeAlert.remove();
+        activeAlert = null;
+      }
+      const alertHandle = showMessage(message, inputEl);
+      if(!alertHandle) return;
+      activeAlert = alertHandle;
+      const clearHandle = ()=>{
+        alertHandle.remove();
+        if(activeAlert === alertHandle){
+          activeAlert = null;
+        }
+        activeAlertTimeout = 0;
+      };
+      if(win && typeof win.setTimeout === 'function'){
+        activeAlertTimeout = win.setTimeout(clearHandle, duration);
+      } else {
+        activeAlertTimeout = setTimeout(clearHandle, duration);
+      }
+    };
+  }
+
+  function makePosts(){
   const out = [];
   const cityCounts = Object.create(null);
   const MAX_POSTS_PER_CITY = 200;
@@ -8810,47 +8870,6 @@ function makePosts(){
                 try{ close(); }catch(err){}
               });
               openPickers.clear();
-            };
-
-            const createTransientInputAlert = message => {
-              let lastTimestamp = 0;
-              let activeAlert = null;
-              let activeAlertTimeout = 0;
-              return target => {
-                const candidate = (target && typeof target.getBoundingClientRect === 'function')
-                  ? target
-                  : ((document && document.activeElement && typeof document.activeElement.getBoundingClientRect === 'function')
-                    ? document.activeElement
-                    : null);
-                const inputEl = candidate && document.body && document.body.contains(candidate) ? candidate : null;
-                if(!inputEl) return;
-                const now = Date.now();
-                if(now - lastTimestamp < 400){
-                  if(activeAlert && typeof activeAlert.reposition === 'function'){
-                    activeAlert.reposition();
-                  }
-                  return;
-                }
-                lastTimestamp = now;
-                if(activeAlertTimeout){
-                  clearTimeout(activeAlertTimeout);
-                  activeAlertTimeout = 0;
-                }
-                if(activeAlert && typeof activeAlert.remove === 'function'){
-                  activeAlert.remove();
-                  activeAlert = null;
-                }
-                const handle = showCopyStyleMessage(message, inputEl);
-                if(!handle) return;
-                activeAlert = handle;
-                activeAlertTimeout = window.setTimeout(()=>{
-                  handle.remove();
-                  if(activeAlert === handle){
-                    activeAlert = null;
-                  }
-                  activeAlertTimeout = 0;
-                }, 1500);
-              };
             };
 
             const currencyAlertMessage = 'Please select a currency before entering a price.';
