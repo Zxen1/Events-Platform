@@ -3661,11 +3661,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         if(!option || typeof option !== 'object'){
           return null;
         }
-        const value = typeof option.value === 'string'
+        let value = typeof option.value === 'string'
           ? option.value.trim()
           : typeof option.key === 'string'
             ? option.key.trim()
             : '';
+        if(value === 'venue-session-version-tier-price' || value === 'venue-session-price'){
+          value = 'venues_sessions_pricing';
+        }
         const label = typeof option.label === 'string'
           ? option.label.trim()
           : typeof option.name === 'string'
@@ -3674,6 +3677,16 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         return value && label ? { value, label } : null;
       })
       .filter(Boolean);
+    if(finalFieldTypeOptions.length){
+      const seenValues = new Set();
+      finalFieldTypeOptions = finalFieldTypeOptions.filter(option => {
+        if(seenValues.has(option.value)){
+          return false;
+        }
+        seenValues.add(option.value);
+        return true;
+      });
+    }
     initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
     const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
@@ -8593,10 +8606,13 @@ function makePosts(){
             } else if(!safeField.name.trim()){
               safeField.name = '';
             }
-            if(safeField.type === 'venue-session-price'){
-              safeField.type = 'venue-session-version-tier-price';
+            if(typeof safeField.type !== 'string'){
+              safeField.type = '';
             }
-            if(typeof safeField.type !== 'string' || !FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
+            if(safeField.type === 'venue-session-version-tier-price' || safeField.type === 'venue-session-price'){
+              safeField.type = 'venues_sessions_pricing';
+            }
+            if(!FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
               safeField.type = 'text-box';
             }
             if(!safeField.name){
@@ -8626,7 +8642,7 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(safeField.type === 'venue-session-version-tier-price'){
+            if(safeField.type === 'venues_sessions_pricing'){
               safeField.options = normalizeVenueSessionOptions(safeField.options);
             } else if(safeField.type === 'variant_pricing'){
               safeField.options = safeField.options.map(opt => {
@@ -8655,7 +8671,7 @@ function makePosts(){
                 safeField.options.push('', '', '');
               }
             }
-            if(safeField.type !== 'venue-session-version-tier-price'){
+            if(safeField.type !== 'venues_sessions_pricing'){
               resetVenueAutofillState(safeField);
             }
             return safeField;
@@ -11407,8 +11423,8 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
-              } else if(previewField.type === 'venue-session-version-tier-price'){
-                wrapper.classList.add('form-preview-field--venue-session');
+              } else if(previewField.type === 'venues_sessions_pricing'){
+                wrapper.classList.add('form-preview-field--venues-sessions-pricing');
                 control = buildVenueSessionPreview(previewField, baseId);
               } else if(previewField.type === 'variant_pricing'){
                 wrapper.classList.add('form-preview-field--variant-pricing');
@@ -12427,7 +12443,7 @@ function makePosts(){
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
               const showVariantPricing = type === 'variant_pricing';
-              const showVenueSession = type === 'venue-session-version-tier-price';
+              const showVenueSession = type === 'venues_sessions_pricing';
               const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
@@ -12896,7 +12912,7 @@ function makePosts(){
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
                       return { version: str, currency: '', price: '' };
                     }
-                    if(field && field.type === 'venue-session-version-tier-price'){
+                    if(field && field.type === 'venues_sessions_pricing'){
                       return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
@@ -20508,7 +20524,7 @@ document.addEventListener('pointerdown', (e) => {
                 const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
                 if(code) codes.add(code);
               });
-            } else if(field.type === 'venue-session-version-tier-price'){
+            } else if(field.type === 'venues_sessions_pricing'){
               const venues = Array.isArray(field.options) ? field.options : [];
               venues.forEach(venue => {
                 const sessions = Array.isArray(venue && venue.sessions) ? venue.sessions : [];
@@ -20653,7 +20669,7 @@ document.addEventListener('pointerdown', (e) => {
           safe.name = field.name.trim();
         }
         let type = typeof field.type === 'string' ? field.type : 'text-box';
-        if(type === 'venue-session-price') type = 'venue-session-version-tier-price';
+        if(type === 'venue-session-version-tier-price' || type === 'venue-session-price') type = 'venues_sessions_pricing';
         if(!FORM_FIELD_TYPES.some(opt => opt.value === type)){
           type = 'text-box';
         }
@@ -20682,7 +20698,7 @@ document.addEventListener('pointerdown', (e) => {
           if(safe.options.length === 0){
             safe.options.push('');
           }
-        } else if(type === 'venue-session-version-tier-price'){
+        } else if(type === 'venues_sessions_pricing'){
           const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
           safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
         } else if(type === 'location'){
@@ -21323,8 +21339,8 @@ document.addEventListener('pointerdown', (e) => {
         wrapper.classList.add('form-preview-field--variant-pricing');
         label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
-      } else if(field.type === 'venue-session-version-tier-price'){
-        wrapper.classList.add('form-preview-field--venue-session');
+      } else if(field.type === 'venues_sessions_pricing'){
+        wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
         control = buildVenueSessionEditor(field, labelId);
       } else if(field.type === 'website-url' || field.type === 'tickets-url'){
@@ -21775,7 +21791,7 @@ document.addEventListener('pointerdown', (e) => {
               break;
             }
           }
-        } else if(type === 'venue-session-version-tier-price'){
+        } else if(type === 'venues_sessions_pricing'){
           const venues = Array.isArray(field.options) ? field.options : [];
           value = venues.map(cloneVenueSessionVenueFromWindow);
           if(field.required){

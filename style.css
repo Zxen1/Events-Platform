@@ -6031,7 +6031,7 @@ html, body { cursor: auto !important; }
             #tab-forms .form-preview-btn[aria-expanded="true"] .dropdown-arrow{
               transform:rotate(-135deg);
             }
-            #tab-forms .form-preview-field--venue-session .venue-session-editor{
+            #tab-forms .form-preview-field--venues-sessions-pricing .venue-session-editor{
               display:flex;
               flex-direction:column;
               gap:16px;
