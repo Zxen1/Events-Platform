@@ -11550,8 +11550,8 @@ function makePosts(){
                 if(Array.isArray(result.wrapperClasses)){
                   result.wrapperClasses.forEach(cls => wrapper.classList.add(cls));
                 }
-                if(result.removeLabelFor){
-                  label.removeAttribute('for');
+                if(result.removeLabelFor && labelButton instanceof HTMLElement){
+                  labelButton.removeAttribute('for');
                 }
                 control = result.element;
               }
