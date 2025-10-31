@@ -26,16 +26,13 @@ if ($connectorDir === null) {
   exit;
 }
 
-$formbuilderRoutes = [
-  'get-form' => $connectorDir . DIRECTORY_SEPARATOR . 'get-form.php',
-  'save-form' => $connectorDir . DIRECTORY_SEPARATOR . 'save-form.php',
-];
-
-$map = $formbuilderRoutes + [
-  'verify-login' => $connectorDir . DIRECTORY_SEPARATOR . 'verify-login.php',
-  'add-member' => $connectorDir . DIRECTORY_SEPARATOR . 'add-member.php',
-  'add-post' => $connectorDir . DIRECTORY_SEPARATOR . 'add-post.php',
-  'upload-media' => $connectorDir . DIRECTORY_SEPARATOR . 'upload-media.php',
+$map = [
+  'verify-login' => $connectorDir . '/verify-login.php',
+  'add-member' => $connectorDir . '/add-member.php',
+  'save-form' => $connectorDir . '/save-form.php',
+  'get-form' => $connectorDir . '/get-form.php',
+  'add-post' => $connectorDir . '/add-post.php',
+  'upload-media' => $connectorDir . '/upload-media.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
