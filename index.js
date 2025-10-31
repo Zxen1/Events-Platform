@@ -3397,7 +3397,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
-      iconLibrary: []
+      iconLibrary: [],
+      field_types: []
     };
 
     const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
@@ -3598,13 +3599,19 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       iconLibrarySource.forEach(addIconToLibrary);
       normalizedIconPathsFromMaps.forEach(addIconToLibrary);
       const iconLibrary = mergedIconLibrary;
+      const rawFieldTypes = Array.isArray(snapshot && snapshot.field_types)
+        ? snapshot.field_types
+            .filter(entry => entry && typeof entry === 'object' && !Array.isArray(entry))
+            .map(entry => ({ ...entry }))
+        : [];
       return {
         categories: normalizedCategories,
         versionPriceCurrencies: normalizedCurrencies,
         categoryIconPaths: normalizedCategoryIconPaths,
         subcategoryIconPaths: normalizedSubcategoryIconPaths,
         iconLibrary,
-        fieldTypes: normalizeFieldTypesSnapshot(snapshot && snapshot.fieldTypes)
+        fieldTypes: normalizeFieldTypesSnapshot(snapshot && snapshot.fieldTypes),
+        field_types: rawFieldTypes
       };
     }
 
@@ -3660,6 +3667,37 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
+    if(typeof window !== 'undefined'){
+      window.initialFormbuilderSnapshot = initialFormbuilderSnapshot;
+    }
+    const RAW_FIELD_TYPE_ROWS = window.RAW_FIELD_TYPE_ROWS = Array.isArray(initialFormbuilderSnapshot.field_types)
+      ? initialFormbuilderSnapshot.field_types
+          .filter(row => row && typeof row === 'object' && !Array.isArray(row))
+          .map(row => ({ ...row }))
+      : [];
+    const RAW_FIELD_TYPE_LOOKUP = window.RAW_FIELD_TYPE_LOOKUP = new Map();
+    RAW_FIELD_TYPE_ROWS.forEach(row => {
+      const idValue = row.field_type_id ?? row.id;
+      let id = null;
+      if(typeof idValue === 'number' && Number.isFinite(idValue)){
+        id = Math.trunc(idValue);
+      } else if(typeof idValue === 'string' && /^\d+$/.test(idValue.trim())){
+        id = parseInt(idValue.trim(), 10);
+      }
+      if(id === null || id <= 0 || RAW_FIELD_TYPE_LOOKUP.has(id)){
+        return;
+      }
+      row.field_type_id = id;
+      if(!Object.prototype.hasOwnProperty.call(row, 'id') || row.id === undefined || row.id === null){
+        row.id = id;
+      } else if(typeof row.id === 'string' && /^\d+$/.test(row.id.trim())){
+        row.id = parseInt(row.id.trim(), 10);
+      } else if(typeof row.id === 'number' && Number.isFinite(row.id)){
+        row.id = Math.trunc(row.id);
+      }
+      RAW_FIELD_TYPE_LOOKUP.set(id, row);
+    });
+    initialFormbuilderSnapshot.field_types = RAW_FIELD_TYPE_ROWS.map(row => ({ ...row }));
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
@@ -3671,7 +3709,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(!def || typeof def !== 'object') return;
       const id = typeof def.id === 'number' && Number.isInteger(def.id) ? def.id : (typeof def.id === 'string' && /^\d+$/.test(def.id.trim()) ? parseInt(def.id.trim(), 10) : null);
       if(id === null || FIELD_TYPE_LOOKUP.has(id)) return;
-      FIELD_TYPE_LOOKUP.set(id, { ...def, id });
+      const raw = RAW_FIELD_TYPE_LOOKUP.has(id) ? RAW_FIELD_TYPE_LOOKUP.get(id) : null;
+      FIELD_TYPE_LOOKUP.set(id, { ...def, id, raw });
     });
     const existingWindowIcons = Array.isArray(window.iconLibrary)
       ? window.iconLibrary.slice()
@@ -24447,14 +24486,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ========== NEW FIELD TYPES SUPPORT ==========
-function getDropdownOptionsFromFieldType(fieldTypeId) {
-    const fieldType = formSnapshot.field_types.find(ft => ft.field_type_id === fieldTypeId);
-    if (!fieldType) return [];
-    const options = [];
-    for (let i = 1; i <= 8; i++) {
-        const item = fieldType[`field_type_item_${i}`];
-        if (item && item.trim() !== '') options.push(item.trim());
+const FIELD_TYPE_LOOKUP_REFERENCE = window.FIELD_TYPE_LOOKUP instanceof Map
+  ? window.FIELD_TYPE_LOOKUP
+  : new Map();
+const RAW_FIELD_TYPE_LOOKUP_REFERENCE = window.RAW_FIELD_TYPE_LOOKUP instanceof Map
+  ? window.RAW_FIELD_TYPE_LOOKUP
+  : new Map();
+const MAX_FIELD_TYPE_ITEM_COLUMNS = 12;
+
+function normalizeFieldTypeIdValue(value){
+  if(typeof value === 'number' && Number.isFinite(value)){
+    const parsed = Math.trunc(value);
+    return parsed > 0 ? parsed : null;
+  }
+  if(typeof value === 'string'){
+    const trimmed = value.trim();
+    if(trimmed && /^\d+$/.test(trimmed)){
+      const parsed = parseInt(trimmed, 10);
+      return parsed > 0 ? parsed : null;
     }
+  }
+  return null;
+}
+
+function getDropdownOptionsFromFieldType(fieldTypeId) {
+    const id = normalizeFieldTypeIdValue(fieldTypeId);
+    if (id === null) return [];
+    const seen = new Set();
+    const options = [];
+    const addOption = value => {
+      if (typeof value !== 'string') return;
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      const key = trimmed.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      options.push(trimmed);
+    };
+
+    if (RAW_FIELD_TYPE_LOOKUP_REFERENCE.has(id)) {
+      const raw = RAW_FIELD_TYPE_LOOKUP_REFERENCE.get(id);
+      if (raw && typeof raw === 'object') {
+        for (let i = 1; i <= MAX_FIELD_TYPE_ITEM_COLUMNS; i += 1) {
+          const candidate = raw[`field_type_item_${i}`] ?? raw[`field_type_item${i}`];
+          addOption(candidate);
+        }
+      }
+    }
+
+    if (!options.length && FIELD_TYPE_LOOKUP_REFERENCE.has(id)) {
+      const definition = FIELD_TYPE_LOOKUP_REFERENCE.get(id);
+      if (definition && Array.isArray(definition.items)) {
+        definition.items.forEach(item => {
+          if (!item || typeof item !== 'object') return;
+          if (typeof item.label === 'string') {
+            addOption(item.label);
+          }
+        });
+      } else if (definition && typeof definition.name === 'string') {
+        addOption(definition.name);
+      }
+    }
+
     return options;
 }
 
@@ -24464,12 +24557,12 @@ function renderDropdownField(field, container) {
     select.classList.add('form-control');
 
     const options = getDropdownOptionsFromFieldType(field.field_type_id);
-    for (const opt of options) {
-        const optionEl = document.createElement('option');
-        optionEl.value = opt;
-        optionEl.textContent = opt.replace(/\[.*?=|\]/g, ''); // clean label
-        select.appendChild(optionEl);
-    }
+    options.forEach(opt => {
+      const optionEl = document.createElement('option');
+      optionEl.value = opt;
+      optionEl.textContent = opt.replace(/\[.*?=|\]/g, '');
+      select.appendChild(optionEl);
+    });
 
     container.appendChild(select);
 }
