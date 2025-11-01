@@ -20041,6 +20041,10 @@ const adminPanelChangeManager = (()=>{
   };
 })();
 
+if (typeof window !== 'undefined') {
+  window.memberPanelChangeManager = memberPanelChangeManager;
+}
+
 function closePanel(m){
   const btnId = panelButtons[m && m.id];
   if(btnId){
