@@ -738,7 +738,10 @@ input[type="checkbox"]{
     top: 0;
     left: 0;
     right: 0;
+    bottom: auto;
     height: calc(var(--header-h) + var(--safe-top));
+    min-height: calc(var(--header-h) + var(--safe-top));
+    max-height: calc(var(--header-h) + var(--safe-top));
     display: flex;
     align-items: center;
     justify-content: center;
