@@ -92,27 +92,6 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
-function handlePromptKeydown(event, context){
-  if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
-    return;
-  }
-  const { prompt, cancelButton, cancelPrompt } = context;
-  if(event.key !== 'Enter' || event.defaultPrevented){
-    return;
-  }
-  if(!prompt.contains(event.target)){
-    return;
-  }
-  const active = document.activeElement;
-  const activeInPrompt = !!(active && prompt.contains(active));
-  const isCancelFocused = activeInPrompt && cancelButton && active === cancelButton;
-  const nothingFocusable = !activeInPrompt || active === prompt || active === document.body;
-  if(isCancelFocused || nothingFocusable){
-    event.preventDefault();
-    cancelPrompt();
-  }
-}
-
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -489,10 +468,6 @@ function handlePromptKeydown(event, context){
     setupGeocoderObserver();
   });
 })();
-
-if (typeof window !== 'undefined') {
-  window.memberPanelChangeManager = memberPanelChangeManager;
-}
 
 // Extracted from <script>
 if (typeof slugify !== 'function') {
@@ -3433,87 +3408,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return normalized;
     }
 
-    function normalizeFieldTypeIdList(source){
-      let list;
-      if(Array.isArray(source)){
-        list = source.slice();
-      } else if(source && typeof source === 'object' && !Array.isArray(source)){
-        list = Object.values(source);
-      } else if(typeof source === 'string'){
-        list = source.split(',');
-      } else {
-        list = [];
-      }
-
-      const normalized = [];
-      const seen = new Set();
-
-      list.forEach(item => {
-        let candidate = null;
-        if(typeof item === 'number' && Number.isInteger(item) && item > 0){
-          candidate = item;
-        } else if(typeof item === 'string'){
-          const trimmed = item.trim();
-          if(trimmed && /^\d+$/.test(trimmed)){
-            candidate = parseInt(trimmed, 10);
-          }
-        } else if(item && typeof item === 'object'){
-          if(typeof item.id === 'number' && Number.isInteger(item.id) && item.id > 0){
-            candidate = item.id;
-          } else if(typeof item.id === 'string'){
-            const trimmed = item.id.trim();
-            if(trimmed && /^\d+$/.test(trimmed)){
-              candidate = parseInt(trimmed, 10);
-            }
-          } else if(typeof item.value === 'string'){
-            const trimmed = item.value.trim();
-            if(trimmed && /^\d+$/.test(trimmed)){
-              candidate = parseInt(trimmed, 10);
-            }
-          }
-        }
-
-        if(candidate === null || candidate === undefined){
-          return;
-        }
-
-        if(!seen.has(candidate)){
-          seen.add(candidate);
-          normalized.push(candidate);
-        }
-      });
-
-      return normalized;
-    }
-
     const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
 
-    function normalizeCategoriesSnapshot(sourceCategories, subcategoryFieldTypeIds){
+    function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
-      const fallbackFieldTypeMap = (subcategoryFieldTypeIds && typeof subcategoryFieldTypeIds === 'object' && !Array.isArray(subcategoryFieldTypeIds))
-        ? subcategoryFieldTypeIds
-        : {};
-      const resolveFieldTypeList = (map, key)=>{
-        if(!map || typeof map !== 'object'){
-          return undefined;
-        }
-        if(Object.prototype.hasOwnProperty.call(map, key)){
-          return map[key];
-        }
-        if(typeof key === 'string'){
-          const trimmed = key.trim();
-          if(trimmed && Object.prototype.hasOwnProperty.call(map, trimmed)){
-            return map[trimmed];
-          }
-          const lower = trimmed.toLowerCase();
-          for(const candidateKey of Object.keys(map)){
-            if(typeof candidateKey === 'string' && candidateKey.toLowerCase() === lower){
-              return map[candidateKey];
-            }
-          }
-        }
-        return undefined;
-      };
       const parseId = value => {
         if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
           return value;
@@ -3560,43 +3458,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           }
         });
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
-        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
         const subFields = {};
-        const subFieldTypes = {};
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
-          const resolvedTypes = (()=>{
-            let direct = resolveFieldTypeList(rawSubFieldTypes, sub);
-            if(direct !== undefined){
-              return direct;
-            }
-            direct = resolveFieldTypeList(fallbackFieldTypeMap, sub);
-            if(direct !== undefined){
-              return direct;
-            }
-            if(typeof sub === 'string'){
-              const trimmed = sub.trim();
-              if(trimmed){
-                const slug = typeof slugify === 'function' ? slugify(trimmed) : trimmed.toLowerCase();
-                if(slug){
-                  direct = resolveFieldTypeList(rawSubFieldTypes, slug);
-                  if(direct !== undefined){
-                    return direct;
-                  }
-                  direct = resolveFieldTypeList(fallbackFieldTypeMap, slug);
-                  if(direct !== undefined){
-                    return direct;
-                  }
-                }
-              }
-            }
-            return undefined;
-          })();
-          subFieldTypes[sub] = normalizeFieldTypeIdList(resolvedTypes);
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3610,18 +3478,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
-        subFieldTypes: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
-        }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3629,9 +3490,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
-          }
-          if(!Array.isArray(cat.subFieldTypes[sub])){
-            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -3643,10 +3501,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     function normalizeFormbuilderSnapshot(snapshot){
-      const normalizedCategories = normalizeCategoriesSnapshot(
-        snapshot && snapshot.categories,
-        snapshot && snapshot.subcategoryFieldTypeIds
-      );
+      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
       const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
       const normalizedCurrencies = Array.from(new Set(rawCurrencies
         .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
@@ -4252,15 +4107,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
         cat.subFields = {};
       }
-      if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-        cat.subFieldTypes = {};
-      }
       (cat.subs || []).forEach(subName => {
         if(!Array.isArray(cat.subFields[subName])){
           cat.subFields[subName] = [];
-        }
-        if(!Array.isArray(cat.subFieldTypes[subName])){
-          cat.subFieldTypes[subName] = [];
         }
       });
     });
@@ -8502,7 +8351,6 @@ function makePosts(){
 
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
-        const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -11427,9 +11275,6 @@ function makePosts(){
           };
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-          if(!Array.isArray(subFieldTypesMap[sub])){
-            subFieldTypesMap[sub] = [];
-          }
 
           if(ensureDefaultFieldSet(fields)){
             notifyFormbuilderChange();
@@ -12831,10 +12676,6 @@ function makePosts(){
                 subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
                 delete subFieldsMap[previousSubName];
               }
-              if(subFieldTypesMap[previousSubName] !== undefined){
-                subFieldTypesMap[datasetValue] = subFieldTypesMap[previousSubName];
-                delete subFieldTypesMap[previousSubName];
-              }
               if(c.subIds && typeof c.subIds === 'object'){
                 if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
                   const preservedId = c.subIds[previousSubName];
@@ -12873,7 +12714,6 @@ function makePosts(){
             }
             subMenu.remove();
             delete subFieldsMap[currentSubName];
-            delete subFieldTypesMap[currentSubName];
             notifyFormbuilderChange();
           });
 
@@ -12942,7 +12782,6 @@ function makePosts(){
           c.subs.unshift(candidate);
           c.subIds[candidate] = null;
           subFieldsMap[candidate] = [];
-          subFieldTypesMap[candidate] = [];
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
@@ -13082,15 +12921,6 @@ function makePosts(){
       }
       return out;
     }
-    function cloneFieldTypeMap(source){
-      const out = {};
-      if(source && typeof source === 'object' && !Array.isArray(source)){
-        Object.keys(source).forEach(key => {
-          out[key] = normalizeFieldTypeIdList(source[key]);
-        });
-      }
-      return out;
-    }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
@@ -13099,7 +12929,6 @@ function makePosts(){
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
-          subFieldTypes: cloneFieldTypeMap(item && item.subFieldTypes),
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -13169,15 +12998,9 @@ function makePosts(){
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
         }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
-        }
         (cat.subs || []).forEach(subName => {
           if(!Array.isArray(cat.subFields[subName])){
             cat.subFields[subName] = [];
-          }
-          if(!Array.isArray(cat.subFieldTypes[subName])){
-            cat.subFieldTypes[subName] = [];
           }
         });
       });
@@ -19158,13 +18981,8 @@ const memberPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
-  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
-  let promptKeydownListener = null;
-  let promptKeydownTarget = null;
-  let promptOpener = null;
-  let promptOpener = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19182,7 +19000,6 @@ const memberPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('memberUnsavedPrompt');
     if(prompt){
-      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
     }
@@ -19310,46 +19127,17 @@ const memberPanelChangeManager = (()=>{
     setDirty(false);
   }
 
-  function isFocusableCandidate(el){
-    if(!el || typeof el.focus !== 'function'){ return false; }
-    if('disabled' in el && el.disabled){ return false; }
-    if(el.classList && el.classList.contains('primary-action')){ return false; }
-    return true;
-  }
-
-  function findFocusTarget(){
-    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
-      return promptOpener;
-    }
-    const roots = [];
-    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
-      roots.push(pendingCloseTarget);
-    }
-    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
-      roots.push(panel);
-    }
-    for(const root of roots){
-      const closeButton = root.querySelector('.close-panel');
-      if(isFocusableCandidate(closeButton)){
-        return closeButton;
-      }
-      const discardButtonCandidate = root.querySelector('.discard-changes');
-      if(isFocusableCandidate(discardButtonCandidate)){
-        return discardButtonCandidate;
-      }
-      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-      if(isFocusableCandidate(fallback)){
-        return fallback;
-      }
-    }
-    return null;
-  }
-
   function closePrompt(){
     if(prompt){
       const active = document.activeElement;
       if(active && prompt.contains(active)){
-        const focusTarget = findFocusTarget();
+        let focusTarget = null;
+        if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+          focusTarget = pendingCloseTarget.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        }
+        if(!focusTarget && panel && typeof panel.querySelector === 'function'){
+          focusTarget = panel.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        }
         if(!focusTarget && panel){
           const previousTabIndex = panel.getAttribute('tabindex');
           panel.setAttribute('tabindex','-1');
@@ -19366,7 +19154,6 @@ const memberPanelChangeManager = (()=>{
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
       prompt.setAttribute('inert','');
-      promptOpener = null;
     }
   }
 
@@ -19377,17 +19164,12 @@ const memberPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target || panel;
-    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
       prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptCancelButton && !promptCancelButton.disabled){
-          promptCancelButton.focus();
-        } else if(promptSaveButton && !promptSaveButton.disabled){
-          promptSaveButton.focus();
-        }
+        if(promptSaveButton) promptSaveButton.focus();
       }, 0);
     }
   }
@@ -19480,12 +19262,6 @@ form.addEventListener('input', formChanged, true);
         discardChanges({ closeAfter:false });
       });
     }
-    if(promptCancelButton){
-      promptCancelButton.addEventListener('click', e=>{
-        e.preventDefault();
-        cancelPrompt();
-      });
-    }
     if(promptSaveButton){
       promptSaveButton.addEventListener('click', e=>{
         e.preventDefault();
@@ -19499,18 +19275,6 @@ form.addEventListener('input', formChanged, true);
       });
     }
     if(prompt){
-      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
-        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
-      }
-      if(!promptKeydownListener){
-        promptKeydownListener = event => handlePromptKeydown(event, {
-          prompt,
-          cancelButton: promptCancelButton,
-          cancelPrompt
-        });
-      }
-      promptKeydownTarget = prompt;
-      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
@@ -19646,11 +19410,8 @@ const adminPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
-  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
-  let promptKeydownListener = null;
-  let promptKeydownTarget = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19668,7 +19429,6 @@ const adminPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('adminUnsavedPrompt');
     if(prompt){
-      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
     }
@@ -19868,63 +19628,10 @@ const adminPanelChangeManager = (()=>{
     }, 2000);
   }
 
-  function isFocusableCandidate(el){
-    if(!el || typeof el.focus !== 'function'){ return false; }
-    if('disabled' in el && el.disabled){ return false; }
-    if(el.classList && el.classList.contains('primary-action')){ return false; }
-    return true;
-  }
-
-  function findFocusTarget(){
-    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
-      return promptOpener;
-    }
-    const roots = [];
-    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
-      roots.push(pendingCloseTarget);
-    }
-    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
-      roots.push(panel);
-    }
-    for(const root of roots){
-      const closeButton = root.querySelector('.close-panel');
-      if(isFocusableCandidate(closeButton)){
-        return closeButton;
-      }
-      const discardButtonCandidate = root.querySelector('.discard-changes');
-      if(isFocusableCandidate(discardButtonCandidate)){
-        return discardButtonCandidate;
-      }
-      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-      if(isFocusableCandidate(fallback)){
-        return fallback;
-      }
-    }
-    return null;
-  }
-
   function closePrompt(){
     if(prompt){
-      const active = document.activeElement;
-      if(active && prompt.contains(active)){
-        const focusTarget = findFocusTarget();
-        if(!focusTarget && panel){
-          const previousTabIndex = panel.getAttribute('tabindex');
-          panel.setAttribute('tabindex','-1');
-          panel.focus({ preventScroll: true });
-          if(previousTabIndex === null){
-            panel.removeAttribute('tabindex');
-          } else {
-            panel.setAttribute('tabindex', previousTabIndex);
-          }
-        } else if(focusTarget){
-          focusTarget.focus({ preventScroll: true });
-        }
-      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
-      prompt.setAttribute('inert','');
-      promptOpener = null;
     }
   }
 
@@ -19935,17 +19642,11 @@ const adminPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target;
-    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
-      prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptCancelButton && !promptCancelButton.disabled){
-          promptCancelButton.focus();
-        } else if(promptSaveButton && !promptSaveButton.disabled){
-          promptSaveButton.focus();
-        }
+        if(promptSaveButton) promptSaveButton.focus();
       }, 0);
     }
   }
@@ -20038,12 +19739,6 @@ const adminPanelChangeManager = (()=>{
         discardChanges({ closeAfter:false });
       });
     }
-    if(promptCancelButton){
-      promptCancelButton.addEventListener('click', e=>{
-        e.preventDefault();
-        cancelPrompt();
-      });
-    }
     if(promptSaveButton){
       promptSaveButton.addEventListener('click', e=>{
         e.preventDefault();
@@ -20057,18 +19752,6 @@ const adminPanelChangeManager = (()=>{
       });
     }
     if(prompt){
-      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
-        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
-      }
-      if(!promptKeydownListener){
-        promptKeydownListener = event => handlePromptKeydown(event, {
-          prompt,
-          cancelButton: promptCancelButton,
-          cancelPrompt
-        });
-      }
-      promptKeydownTarget = prompt;
-      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
