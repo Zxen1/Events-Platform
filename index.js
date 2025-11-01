@@ -17062,29 +17062,91 @@ function openPostModal(id){
         });
       });
 
+      const postImagesEl = el.querySelector('.post-images');
       const descEl = el.querySelector('.post-details .desc');
+
+      const animatePostImages = direction => {
+        if(!postImagesEl || typeof postImagesEl.animate !== 'function'){
+          return;
+        }
+        try {
+          if(postImagesEl._descAnimation){
+            postImagesEl._descAnimation.cancel();
+          }
+        } catch(err){}
+        const distance = 16;
+        let keyframes;
+        let duration = 260;
+        let easing = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+        if(direction === 'down'){
+          keyframes = [
+            { transform: `translateY(-${distance}px)` },
+            { transform: 'translateY(0)' }
+          ];
+        } else {
+          keyframes = [
+            { transform: 'translateY(0)' },
+            { transform: `translateY(-${Math.round(distance * 0.75)}px)` },
+            { transform: 'translateY(0)' }
+          ];
+          duration = 220;
+          easing = 'cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+        const animation = postImagesEl.animate(keyframes, { duration, easing });
+        postImagesEl._descAnimation = animation;
+        if(animation){
+          animation.onfinish = animation.oncancel = () => {
+            if(postImagesEl._descAnimation === animation){
+              postImagesEl._descAnimation = null;
+            }
+          };
+        }
+      };
+
+      const setDescExpandedState = targetState => {
+        if(!descEl){
+          return false;
+        }
+        const openPostEl = el;
+        const desired = !!targetState;
+        const current = openPostEl
+          ? openPostEl.classList.contains('desc-expanded')
+          : descEl.classList.contains('expanded');
+        if(current === desired){
+          return false;
+        }
+        descEl.classList.toggle('expanded', desired);
+        descEl.setAttribute('aria-expanded', desired ? 'true' : 'false');
+        if(openPostEl){
+          openPostEl.classList.toggle('desc-expanded', desired);
+        }
+        if(desired){
+          document.body.classList.remove('open-post-sticky-images');
+          animatePostImages('down');
+        } else {
+          if(typeof updateStickyImages === 'function'){
+            updateStickyImages();
+          }
+          animatePostImages('up');
+        }
+        return true;
+      };
+
       if(descEl){
-        const toggleDesc = evt => {
+        const handleDescToggle = evt => {
           const allowed = ['Enter', ' ', 'Spacebar', 'Space'];
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
             return;
           }
           evt.preventDefault();
-          const expanded = !descEl.classList.contains('expanded');
-          descEl.classList.toggle('expanded', expanded);
-          descEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
           const openPostEl = el;
-          if(openPostEl){
-            openPostEl.classList.toggle('desc-expanded', expanded);
-          }
-          if(expanded){
-            document.body.classList.remove('open-post-sticky-images');
-          } else if(typeof updateStickyImages === 'function'){
-            updateStickyImages();
-          }
+          const isExpanded = openPostEl
+            ? openPostEl.classList.contains('desc-expanded')
+            : descEl.classList.contains('expanded');
+          setDescExpandedState(!isExpanded);
         };
-        descEl.addEventListener('click', toggleDesc);
-        descEl.addEventListener('keydown', toggleDesc);
+        descEl.addEventListener('click', handleDescToggle);
+        descEl.addEventListener('keydown', handleDescToggle);
       }
 
       const imgs = p.images && p.images.length ? p.images : [heroUrl(p)];
@@ -17280,6 +17342,13 @@ function openPostModal(id){
           const imgTarget = e.target.closest('.image-track img');
           if(!imgTarget) return;
           e.stopPropagation();
+          const openPostEl = imageBox.closest('.open-post');
+          if(openPostEl && !openPostEl.classList.contains('desc-expanded')){
+            const changed = setDescExpandedState(true);
+            if(changed){
+              return;
+            }
+          }
           const currentSlide = ensureSlide(currentIdx) || slides[currentIdx] || imgTarget;
           const fullSrc = currentSlide ? (currentSlide.dataset.full || currentSlide.src) : imgs[currentIdx];
           openImageModal(fullSrc, {images: imgs, startIndex: currentIdx, origin: imgTarget});
