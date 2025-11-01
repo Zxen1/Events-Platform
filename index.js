@@ -92,6 +92,27 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+function handlePromptKeydown(event, context){
+  if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
+    return;
+  }
+  const { prompt, cancelButton, cancelPrompt } = context;
+  if(event.key !== 'Enter' || event.defaultPrevented){
+    return;
+  }
+  if(!prompt.contains(event.target)){
+    return;
+  }
+  const active = document.activeElement;
+  const activeInPrompt = !!(active && prompt.contains(active));
+  const isCancelFocused = activeInPrompt && cancelButton && active === cancelButton;
+  const nothingFocusable = !activeInPrompt || active === prompt || active === document.body;
+  if(isCancelFocused || nothingFocusable){
+    event.preventDefault();
+    cancelPrompt();
+  }
+}
+
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -18981,8 +19002,12 @@ const memberPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
+  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
+  let promptOpener = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19000,8 +19025,13 @@ const memberPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('memberUnsavedPrompt');
     if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
+    } else {
+      promptCancelButton = null;
+      promptSaveButton = null;
+      promptDiscardButton = null;
     }
     statusMessage = document.getElementById('memberStatusMessage');
   }
@@ -19127,17 +19157,46 @@ const memberPanelChangeManager = (()=>{
     setDirty(false);
   }
 
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
   function closePrompt(){
     if(prompt){
       const active = document.activeElement;
       if(active && prompt.contains(active)){
-        let focusTarget = null;
-        if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
-          focusTarget = pendingCloseTarget.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
-        if(!focusTarget && panel && typeof panel.querySelector === 'function'){
-          focusTarget = panel.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
+        const focusTarget = findFocusTarget();
         if(!focusTarget && panel){
           const previousTabIndex = panel.getAttribute('tabindex');
           panel.setAttribute('tabindex','-1');
@@ -19154,6 +19213,7 @@ const memberPanelChangeManager = (()=>{
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
       prompt.setAttribute('inert','');
+      promptOpener = null;
     }
   }
 
@@ -19164,12 +19224,17 @@ const memberPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target || panel;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
       prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptSaveButton) promptSaveButton.focus();
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
       }, 0);
     }
   }
@@ -19262,6 +19327,12 @@ form.addEventListener('input', formChanged, true);
         discardChanges({ closeAfter:false });
       });
     }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
+      });
+    }
     if(promptSaveButton){
       promptSaveButton.addEventListener('click', e=>{
         e.preventDefault();
@@ -19275,6 +19346,18 @@ form.addEventListener('input', formChanged, true);
       });
     }
     if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
@@ -19410,8 +19493,12 @@ const adminPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
+  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
+  let promptOpener = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19429,8 +19516,13 @@ const adminPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('adminUnsavedPrompt');
     if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
+    } else {
+      promptCancelButton = null;
+      promptSaveButton = null;
+      promptDiscardButton = null;
     }
     statusMessage = document.getElementById('adminStatusMessage');
   }
@@ -19628,10 +19720,63 @@ const adminPanelChangeManager = (()=>{
     }, 2000);
   }
 
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
   function closePrompt(){
     if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        const focusTarget = findFocusTarget();
+        if(!focusTarget && panel){
+          const previousTabIndex = panel.getAttribute('tabindex');
+          panel.setAttribute('tabindex','-1');
+          panel.focus({ preventScroll: true });
+          if(previousTabIndex === null){
+            panel.removeAttribute('tabindex');
+          } else {
+            panel.setAttribute('tabindex', previousTabIndex);
+          }
+        } else if(focusTarget){
+          focusTarget.focus({ preventScroll: true });
+        }
+      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
+      promptOpener = null;
     }
   }
 
@@ -19642,11 +19787,17 @@ const adminPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
+      prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptSaveButton) promptSaveButton.focus();
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
       }, 0);
     }
   }
@@ -19739,6 +19890,12 @@ const adminPanelChangeManager = (()=>{
         discardChanges({ closeAfter:false });
       });
     }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
+      });
+    }
     if(promptSaveButton){
       promptSaveButton.addEventListener('click', e=>{
         e.preventDefault();
@@ -19752,6 +19909,18 @@ const adminPanelChangeManager = (()=>{
       });
     }
     if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
