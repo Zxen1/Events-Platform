@@ -12973,8 +12973,20 @@ function makePosts(){
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
+      const existingFieldTypes = (() => {
+        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
+          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+        }
+        if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
+          return FORM_FIELD_TYPES.map(option => ({ ...option }));
+        }
+        return [];
+      })();
       const normalized = normalizeFormbuilderSnapshot(snapshot);
-      const sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
+      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
+      if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
+        sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
+      }
       initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
       FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
       const nextCategories = cloneCategoryList(normalized.categories);
