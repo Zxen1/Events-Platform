@@ -19159,6 +19159,8 @@ const memberPanelChangeManager = (()=>{
   let promptDiscardButton = null;
   let promptKeydownListener = null;
   let promptKeydownTarget = null;
+  let promptOpener = null;
+  let promptOpener = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19304,17 +19306,46 @@ const memberPanelChangeManager = (()=>{
     setDirty(false);
   }
 
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
   function closePrompt(){
     if(prompt){
       const active = document.activeElement;
       if(active && prompt.contains(active)){
-        let focusTarget = null;
-        if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
-          focusTarget = pendingCloseTarget.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
-        if(!focusTarget && panel && typeof panel.querySelector === 'function'){
-          focusTarget = panel.querySelector('.close-panel, .primary-action, button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-        }
+        const focusTarget = findFocusTarget();
         if(!focusTarget && panel){
           const previousTabIndex = panel.getAttribute('tabindex');
           panel.setAttribute('tabindex','-1');
@@ -19331,6 +19362,7 @@ const memberPanelChangeManager = (()=>{
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
       prompt.setAttribute('inert','');
+      promptOpener = null;
     }
   }
 
@@ -19341,6 +19373,7 @@ const memberPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target || panel;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
@@ -19831,11 +19864,63 @@ const adminPanelChangeManager = (()=>{
     }, 2000);
   }
 
+  function isFocusableCandidate(el){
+    if(!el || typeof el.focus !== 'function'){ return false; }
+    if('disabled' in el && el.disabled){ return false; }
+    if(el.classList && el.classList.contains('primary-action')){ return false; }
+    return true;
+  }
+
+  function findFocusTarget(){
+    if(isFocusableCandidate(promptOpener) && promptOpener.isConnected){
+      return promptOpener;
+    }
+    const roots = [];
+    if(pendingCloseTarget && typeof pendingCloseTarget.querySelector === 'function'){
+      roots.push(pendingCloseTarget);
+    }
+    if(panel && typeof panel.querySelector === 'function' && !roots.includes(panel)){
+      roots.push(panel);
+    }
+    for(const root of roots){
+      const closeButton = root.querySelector('.close-panel');
+      if(isFocusableCandidate(closeButton)){
+        return closeButton;
+      }
+      const discardButtonCandidate = root.querySelector('.discard-changes');
+      if(isFocusableCandidate(discardButtonCandidate)){
+        return discardButtonCandidate;
+      }
+      const fallback = root.querySelector('button:not([disabled]):not(.primary-action), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if(isFocusableCandidate(fallback)){
+        return fallback;
+      }
+    }
+    return null;
+  }
+
   function closePrompt(){
     if(prompt){
+      const active = document.activeElement;
+      if(active && prompt.contains(active)){
+        const focusTarget = findFocusTarget();
+        if(!focusTarget && panel){
+          const previousTabIndex = panel.getAttribute('tabindex');
+          panel.setAttribute('tabindex','-1');
+          panel.focus({ preventScroll: true });
+          if(previousTabIndex === null){
+            panel.removeAttribute('tabindex');
+          } else {
+            panel.setAttribute('tabindex', previousTabIndex);
+          }
+        } else if(focusTarget){
+          focusTarget.focus({ preventScroll: true });
+        }
+      }
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
       prompt.setAttribute('inert','');
+      promptOpener = null;
     }
   }
 
@@ -19846,6 +19931,7 @@ const adminPanelChangeManager = (()=>{
 
   function openPrompt(target){
     pendingCloseTarget = target;
+    promptOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
