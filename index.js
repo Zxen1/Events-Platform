@@ -3408,10 +3408,87 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return normalized;
     }
 
+    function normalizeFieldTypeIdList(source){
+      let list;
+      if(Array.isArray(source)){
+        list = source.slice();
+      } else if(source && typeof source === 'object' && !Array.isArray(source)){
+        list = Object.values(source);
+      } else if(typeof source === 'string'){
+        list = source.split(',');
+      } else {
+        list = [];
+      }
+
+      const normalized = [];
+      const seen = new Set();
+
+      list.forEach(item => {
+        let candidate = null;
+        if(typeof item === 'number' && Number.isInteger(item) && item > 0){
+          candidate = item;
+        } else if(typeof item === 'string'){
+          const trimmed = item.trim();
+          if(trimmed && /^\d+$/.test(trimmed)){
+            candidate = parseInt(trimmed, 10);
+          }
+        } else if(item && typeof item === 'object'){
+          if(typeof item.id === 'number' && Number.isInteger(item.id) && item.id > 0){
+            candidate = item.id;
+          } else if(typeof item.id === 'string'){
+            const trimmed = item.id.trim();
+            if(trimmed && /^\d+$/.test(trimmed)){
+              candidate = parseInt(trimmed, 10);
+            }
+          } else if(typeof item.value === 'string'){
+            const trimmed = item.value.trim();
+            if(trimmed && /^\d+$/.test(trimmed)){
+              candidate = parseInt(trimmed, 10);
+            }
+          }
+        }
+
+        if(candidate === null || candidate === undefined){
+          return;
+        }
+
+        if(!seen.has(candidate)){
+          seen.add(candidate);
+          normalized.push(candidate);
+        }
+      });
+
+      return normalized;
+    }
+
     const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
 
-    function normalizeCategoriesSnapshot(sourceCategories){
+    function normalizeCategoriesSnapshot(sourceCategories, subcategoryFieldTypeIds){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
+      const fallbackFieldTypeMap = (subcategoryFieldTypeIds && typeof subcategoryFieldTypeIds === 'object' && !Array.isArray(subcategoryFieldTypeIds))
+        ? subcategoryFieldTypeIds
+        : {};
+      const resolveFieldTypeList = (map, key)=>{
+        if(!map || typeof map !== 'object'){
+          return undefined;
+        }
+        if(Object.prototype.hasOwnProperty.call(map, key)){
+          return map[key];
+        }
+        if(typeof key === 'string'){
+          const trimmed = key.trim();
+          if(trimmed && Object.prototype.hasOwnProperty.call(map, trimmed)){
+            return map[trimmed];
+          }
+          const lower = trimmed.toLowerCase();
+          for(const candidateKey of Object.keys(map)){
+            if(typeof candidateKey === 'string' && candidateKey.toLowerCase() === lower){
+              return map[candidateKey];
+            }
+          }
+        }
+        return undefined;
+      };
       const parseId = value => {
         if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
           return value;
@@ -3458,13 +3535,43 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           }
         });
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
+        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
         const subFields = {};
+        const subFieldTypes = {};
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
+          const resolvedTypes = (()=>{
+            let direct = resolveFieldTypeList(rawSubFieldTypes, sub);
+            if(direct !== undefined){
+              return direct;
+            }
+            direct = resolveFieldTypeList(fallbackFieldTypeMap, sub);
+            if(direct !== undefined){
+              return direct;
+            }
+            if(typeof sub === 'string'){
+              const trimmed = sub.trim();
+              if(trimmed){
+                const slug = typeof slugify === 'function' ? slugify(trimmed) : trimmed.toLowerCase();
+                if(slug){
+                  direct = resolveFieldTypeList(rawSubFieldTypes, slug);
+                  if(direct !== undefined){
+                    return direct;
+                  }
+                  direct = resolveFieldTypeList(fallbackFieldTypeMap, slug);
+                  if(direct !== undefined){
+                    return direct;
+                  }
+                }
+              }
+            }
+            return undefined;
+          })();
+          subFieldTypes[sub] = normalizeFieldTypeIdList(resolvedTypes);
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3478,11 +3585,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
+        subFieldTypes: cat.subs.reduce((acc, sub) => {
+          acc[sub] = [];
+          return acc;
+        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
+        }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3490,6 +3604,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[sub])){
+            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -3501,7 +3618,10 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     function normalizeFormbuilderSnapshot(snapshot){
-      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
+      const normalizedCategories = normalizeCategoriesSnapshot(
+        snapshot && snapshot.categories,
+        snapshot && snapshot.subcategoryFieldTypeIds
+      );
       const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
       const normalizedCurrencies = Array.from(new Set(rawCurrencies
         .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
@@ -4107,9 +4227,15 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
         cat.subFields = {};
       }
+      if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+        cat.subFieldTypes = {};
+      }
       (cat.subs || []).forEach(subName => {
         if(!Array.isArray(cat.subFields[subName])){
           cat.subFields[subName] = [];
+        }
+        if(!Array.isArray(cat.subFieldTypes[subName])){
+          cat.subFieldTypes[subName] = [];
         }
       });
     });
@@ -8351,6 +8477,7 @@ function makePosts(){
 
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
+        const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -11275,6 +11402,9 @@ function makePosts(){
           };
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+          if(!Array.isArray(subFieldTypesMap[sub])){
+            subFieldTypesMap[sub] = [];
+          }
 
           if(ensureDefaultFieldSet(fields)){
             notifyFormbuilderChange();
@@ -12676,6 +12806,10 @@ function makePosts(){
                 subFieldsMap[datasetValue] = subFieldsMap[previousSubName];
                 delete subFieldsMap[previousSubName];
               }
+              if(subFieldTypesMap[previousSubName] !== undefined){
+                subFieldTypesMap[datasetValue] = subFieldTypesMap[previousSubName];
+                delete subFieldTypesMap[previousSubName];
+              }
               if(c.subIds && typeof c.subIds === 'object'){
                 if(Object.prototype.hasOwnProperty.call(c.subIds, previousSubName)){
                   const preservedId = c.subIds[previousSubName];
@@ -12714,6 +12848,7 @@ function makePosts(){
             }
             subMenu.remove();
             delete subFieldsMap[currentSubName];
+            delete subFieldTypesMap[currentSubName];
             notifyFormbuilderChange();
           });
 
@@ -12782,6 +12917,7 @@ function makePosts(){
           c.subs.unshift(candidate);
           c.subIds[candidate] = null;
           subFieldsMap[candidate] = [];
+          subFieldTypesMap[candidate] = [];
           const categoryIndex = categories.indexOf(c);
           renderFormbuilderCats();
           notifyFormbuilderChange();
@@ -12921,6 +13057,15 @@ function makePosts(){
       }
       return out;
     }
+    function cloneFieldTypeMap(source){
+      const out = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          out[key] = normalizeFieldTypeIdList(source[key]);
+        });
+      }
+      return out;
+    }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
@@ -12929,6 +13074,7 @@ function makePosts(){
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
+          subFieldTypes: cloneFieldTypeMap(item && item.subFieldTypes),
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -12998,9 +13144,15 @@ function makePosts(){
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
         }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
+        }
         (cat.subs || []).forEach(subName => {
           if(!Array.isArray(cat.subFields[subName])){
             cat.subFields[subName] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[subName])){
+            cat.subFieldTypes[subName] = [];
           }
         });
       });
