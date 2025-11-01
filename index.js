@@ -18609,7 +18609,7 @@ function openPostModal(id){
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
-let __stableViewportHeight = (()=>{
+var __stableViewportHeight = (()=>{
   const initialInner = window.innerHeight || 0;
   const initialClient = document.documentElement ? document.documentElement.clientHeight : 0;
   const initialVisual = window.visualViewport ? (window.visualViewport.height || 0) : 0;
