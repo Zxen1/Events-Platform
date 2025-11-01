@@ -425,6 +425,7 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
     $orderBy = '';
+    $itemColumns = [];
 
     $hasId = in_array('id', $columns, true);
     $hasKey = in_array('field_type_key', $columns, true);
@@ -447,6 +448,14 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         $orderBy = ' ORDER BY `field_type_name` ASC';
     } elseif ($hasId) {
         $orderBy = ' ORDER BY `id` ASC';
+    }
+
+    for ($i = 1; $i <= 5; $i++) {
+        $column = 'field_type_item_' . $i;
+        if (in_array($column, $columns, true)) {
+            $itemColumns[] = $column;
+            $selectColumns[] = '`' . $column . '`';
+        }
     }
 
     if (!$selectColumns) {
@@ -527,6 +536,37 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
                 ? (int) $row['sort_order']
                 : $row['sort_order'];
         }
+
+        $items = [];
+        if ($itemColumns) {
+            foreach ($itemColumns as $column) {
+                if (!array_key_exists($column, $row)) {
+                    continue;
+                }
+
+                $value = $row[$column];
+                if ($value === null) {
+                    continue;
+                }
+
+                if (!is_string($value)) {
+                    if (is_scalar($value)) {
+                        $value = (string) $value;
+                    } else {
+                        continue;
+                    }
+                }
+
+                $trimmed = trim($value);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                $items[] = $trimmed;
+            }
+        }
+
+        $entry['items'] = $items;
 
         $fieldTypes[] = $entry;
         $seen[$dedupeKey] = true;
