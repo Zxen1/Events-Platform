@@ -92,6 +92,27 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+function handlePromptKeydown(event, context){
+  if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
+    return;
+  }
+  const { prompt, cancelButton, cancelPrompt } = context;
+  if(event.key !== 'Enter' || event.defaultPrevented){
+    return;
+  }
+  if(!prompt.contains(event.target)){
+    return;
+  }
+  const active = document.activeElement;
+  const activeInPrompt = !!(active && prompt.contains(active));
+  const isCancelFocused = activeInPrompt && cancelButton && active === cancelButton;
+  const nothingFocusable = !activeInPrompt || active === prompt || active === document.body;
+  if(isCancelFocused || nothingFocusable){
+    event.preventDefault();
+    cancelPrompt();
+  }
+}
+
 // Extracted from <script>
 (function(){
       const LOADING_CLASS = 'is-loading';
@@ -19136,6 +19157,8 @@ const memberPanelChangeManager = (()=>{
   let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19439,6 +19462,18 @@ form.addEventListener('input', formChanged, true);
       });
     }
     if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
@@ -19577,6 +19612,8 @@ const adminPanelChangeManager = (()=>{
   let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
+  let promptKeydownListener = null;
+  let promptKeydownTarget = null;
   let statusMessage = null;
   let dirty = false;
   let savedState = {};
@@ -19930,6 +19967,18 @@ const adminPanelChangeManager = (()=>{
       });
     }
     if(prompt){
+      if(promptKeydownTarget && promptKeydownTarget !== prompt && promptKeydownListener){
+        promptKeydownTarget.removeEventListener('keydown', promptKeydownListener);
+      }
+      if(!promptKeydownListener){
+        promptKeydownListener = event => handlePromptKeydown(event, {
+          prompt,
+          cancelButton: promptCancelButton,
+          cancelPrompt
+        });
+      }
+      promptKeydownTarget = prompt;
+      prompt.addEventListener('keydown', promptKeydownListener);
       prompt.addEventListener('click', e=>{
         if(e.target === prompt) cancelPrompt();
       });
