@@ -18609,8 +18609,47 @@ function openPostModal(id){
 function isPortrait(id){ let h=0; for(let i=0;i<id.length;i++){ h=(h<<5)-h+id.charCodeAt(i); h|=0; } return Math.abs(h)%2===0; }
 function heroUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'800/1200':'1200/800'}`; }
 function thumbUrl(p){ const id = (typeof p==='string')? p : p.id; const port=isPortrait(id); return `https://picsum.photos/seed/${encodeURIComponent(id)}-t/${port?'200/300':'300/200'}`; }
+let __stableViewportHeight = (()=>{
+  const initialInner = window.innerHeight || 0;
+  const initialClient = document.documentElement ? document.documentElement.clientHeight : 0;
+  const initialVisual = window.visualViewport ? (window.visualViewport.height || 0) : 0;
+  const initial = Math.max(initialInner, initialClient, initialVisual);
+  return Number.isFinite(initial) && initial > 0 ? initial : 0;
+})();
+
 function getViewportHeight(){
-  return window.innerHeight || document.documentElement.clientHeight || 0;
+  const innerHeight = window.innerHeight || 0;
+  const clientHeight = document.documentElement ? document.documentElement.clientHeight : 0;
+  if(window.visualViewport){
+    const viewport = window.visualViewport;
+    const viewportHeight = viewport.height || 0;
+    const offsetTop = typeof viewport.offsetTop === 'number' ? viewport.offsetTop : 0;
+    if(offsetTop > 0){
+      if(Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0){
+        return __stableViewportHeight;
+      }
+      return Math.max(innerHeight, clientHeight, viewportHeight, 0);
+    }
+    const candidate = Math.max(innerHeight, clientHeight, viewportHeight, 0);
+    if(Number.isFinite(candidate) && candidate > 0){
+      __stableViewportHeight = candidate;
+      return candidate;
+    }
+    return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
+  }
+  const fallback = Math.max(innerHeight, clientHeight, 0);
+  if(Number.isFinite(fallback) && fallback > 0){
+    if(!Number.isFinite(__stableViewportHeight) || __stableViewportHeight <= 0){
+      __stableViewportHeight = fallback;
+    } else {
+      const delta = Math.abs(fallback - __stableViewportHeight);
+      if(delta <= 120 || fallback > __stableViewportHeight){
+        __stableViewportHeight = fallback;
+      }
+    }
+    return fallback;
+  }
+  return Number.isFinite(__stableViewportHeight) && __stableViewportHeight > 0 ? __stableViewportHeight : 0;
 }
 const panelStack = [];
 function bringToTop(item){
