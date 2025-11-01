@@ -19133,6 +19133,7 @@ const memberPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
+  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
   let statusMessage = null;
@@ -19152,6 +19153,7 @@ const memberPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('memberUnsavedPrompt');
     if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
     }
@@ -19321,7 +19323,11 @@ const memberPanelChangeManager = (()=>{
       prompt.setAttribute('aria-hidden','false');
       prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptSaveButton) promptSaveButton.focus();
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
       }, 0);
     }
   }
@@ -19412,6 +19418,12 @@ form.addEventListener('input', formChanged, true);
         e.preventDefault();
         pendingCloseTarget = null;
         discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
       });
     }
     if(promptSaveButton){
@@ -19562,6 +19574,7 @@ const adminPanelChangeManager = (()=>{
   let saveButton = null;
   let discardButton = null;
   let prompt = null;
+  let promptCancelButton = null;
   let promptSaveButton = null;
   let promptDiscardButton = null;
   let statusMessage = null;
@@ -19581,6 +19594,7 @@ const adminPanelChangeManager = (()=>{
     }
     prompt = document.getElementById('adminUnsavedPrompt');
     if(prompt){
+      promptCancelButton = prompt.querySelector('.confirm-cancel');
       promptSaveButton = prompt.querySelector('.confirm-save');
       promptDiscardButton = prompt.querySelector('.confirm-discard');
     }
@@ -19784,6 +19798,7 @@ const adminPanelChangeManager = (()=>{
     if(prompt){
       prompt.classList.remove('show');
       prompt.setAttribute('aria-hidden','true');
+      prompt.setAttribute('inert','');
     }
   }
 
@@ -19797,8 +19812,13 @@ const adminPanelChangeManager = (()=>{
     if(prompt){
       prompt.classList.add('show');
       prompt.setAttribute('aria-hidden','false');
+      prompt.removeAttribute('inert');
       setTimeout(()=>{
-        if(promptSaveButton) promptSaveButton.focus();
+        if(promptCancelButton && !promptCancelButton.disabled){
+          promptCancelButton.focus();
+        } else if(promptSaveButton && !promptSaveButton.disabled){
+          promptSaveButton.focus();
+        }
       }, 0);
     }
   }
@@ -19889,6 +19909,12 @@ const adminPanelChangeManager = (()=>{
       discardButton.addEventListener('click', e=>{
         e.preventDefault();
         discardChanges({ closeAfter:false });
+      });
+    }
+    if(promptCancelButton){
+      promptCancelButton.addEventListener('click', e=>{
+        e.preventDefault();
+        cancelPrompt();
       });
     }
     if(promptSaveButton){
