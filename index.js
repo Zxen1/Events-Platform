@@ -490,6 +490,10 @@ function handlePromptKeydown(event, context){
   });
 })();
 
+if (typeof window !== 'undefined') {
+  window.memberPanelChangeManager = memberPanelChangeManager;
+}
+
 // Extracted from <script>
 if (typeof slugify !== 'function') {
   function slugify(text) {
@@ -20126,10 +20130,6 @@ const adminPanelChangeManager = (()=>{
     }
   };
 })();
-
-if (typeof window !== 'undefined') {
-  window.memberPanelChangeManager = memberPanelChangeManager;
-}
 
 function closePanel(m){
   const btnId = panelButtons[m && m.id];
