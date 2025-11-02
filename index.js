@@ -17106,9 +17106,7 @@ function openPostModal(id){
       const setDescExpandedState = targetState => {
         const openPostEl = el;
         const desired = !!targetState;
-        const current = openPostEl && openPostEl.classList
-          ? openPostEl.classList.contains('desc-expanded')
-          : false;
+        const current = openPostEl.classList.contains('desc-expanded');
         if(current === desired){
           return false;
         }
@@ -17116,9 +17114,7 @@ function openPostModal(id){
           descEl.classList.toggle('expanded', desired);
           descEl.setAttribute('aria-expanded', desired ? 'true' : 'false');
         }
-        if(openPostEl){
-          openPostEl.classList.toggle('desc-expanded', desired);
-        }
+        openPostEl.classList.toggle('desc-expanded', desired);
         if(desired){
           document.body.classList.remove('open-post-sticky-images');
           animatePostImages('down');
