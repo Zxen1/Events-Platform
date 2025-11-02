@@ -17105,14 +17105,21 @@ function openPostModal(id){
 
       const setDescExpandedState = targetState => {
         const openPostEl = el;
+        if(!openPostEl || !openPostEl.classList){
+          return false;
+        }
         const desired = !!targetState;
         const current = openPostEl.classList.contains('desc-expanded');
         if(current === desired){
           return false;
         }
         if(descEl){
-          descEl.classList.toggle('expanded', desired);
-          descEl.setAttribute('aria-expanded', desired ? 'true' : 'false');
+          if(descEl.classList){
+            descEl.classList.toggle('expanded', desired);
+          }
+          if(typeof descEl.setAttribute === 'function'){
+            descEl.setAttribute('aria-expanded', desired ? 'true' : 'false');
+          }
         }
         openPostEl.classList.toggle('desc-expanded', desired);
         if(desired){
