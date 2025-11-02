@@ -17140,12 +17140,18 @@ function openPostModal(id){
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
             return;
           }
-          evt.preventDefault();
           const openPostEl = el;
           const isExpanded = openPostEl
             ? openPostEl.classList.contains('desc-expanded')
             : descEl.classList.contains('expanded');
-          setDescExpandedState(!isExpanded);
+          if(isExpanded){
+            if(evt.type === 'keydown'){
+              evt.preventDefault();
+            }
+            return;
+          }
+          evt.preventDefault();
+          setDescExpandedState(true);
         };
         descEl.addEventListener('click', handleDescToggle);
         descEl.addEventListener('keydown', handleDescToggle);
