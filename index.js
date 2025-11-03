@@ -13199,6 +13199,20 @@ function makePosts(){
       }
       return out;
     }
+    function cloneSubFieldTypesMap(source){
+      const out = {};
+      if(source && typeof source === 'object' && !Array.isArray(source)){
+        Object.keys(source).forEach(key => {
+          const value = source[key];
+          if(Array.isArray(value)){
+            out[key] = value.slice();
+          } else {
+            out[key] = [];
+          }
+        });
+      }
+      return out;
+    }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
@@ -13207,6 +13221,7 @@ function makePosts(){
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
+          subFieldTypes: cloneSubFieldTypesMap(item && item.subFieldTypes),
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -13231,8 +13246,10 @@ function makePosts(){
       }
     }
     function captureFormbuilderSnapshot(){
+      const clonedCategories = cloneCategoryList(categories);
       return {
-        categories: cloneCategoryList(categories),
+        categories: clonedCategories,
+        subFieldTypes: clonedCategories.map(cat => cloneSubFieldTypesMap(cat && cat.subFieldTypes)),
         categoryIcons: cloneMapLike(categoryIcons),
         subcategoryIcons: cloneMapLike(subcategoryIcons),
         categoryIconPaths: cloneMapLike(categoryIconPaths),
