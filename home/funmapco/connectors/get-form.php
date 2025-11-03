@@ -431,6 +431,15 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
 
+    $itemColumns = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $column = 'field_type_item_' . $i;
+        if (in_array($column, $columns, true)) {
+            $selectColumns[] = '`' . $column . '`';
+            $itemColumns[] = $column;
+        }
+    }
+
     if ($hasId) {
         $selectColumns[] = '`id`';
     }
@@ -460,6 +469,9 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     } catch (PDOException $e) {
         return [];
     }
+
+    $fieldDefinitionLookup = buildFieldDefinitionLookup($pdo);
+    $fieldsetLookup = buildFieldsetLookup($pdo, $fieldDefinitionLookup);
 
     $fieldTypes = [];
     $seen = [];
@@ -528,11 +540,558 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
                 : $row['sort_order'];
         }
 
+        $fieldsList = buildFieldTypeFieldList($row, $itemColumns, $fieldDefinitionLookup, $fieldsetLookup);
+        $entry['fields'] = deepCloneValue($fieldsList);
+        if (!isset($entry['definition']) || !is_array($entry['definition'])) {
+            $entry['definition'] = [];
+        }
+        $entry['definition']['defaultFields'] = deepCloneValue($fieldsList);
+
+        foreach ($itemColumns as $columnName) {
+            if (array_key_exists($columnName, $row)) {
+                $entry[$columnName] = $row[$columnName];
+            }
+        }
+
         $fieldTypes[] = $entry;
         $seen[$dedupeKey] = true;
     }
 
     return $fieldTypes;
+}
+
+function buildFieldDefinitionLookup(PDO $pdo): array
+{
+    $columns = fetchTableColumns($pdo, 'fields');
+    if (!$columns) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $select = [];
+    foreach (['id', 'field_key', 'type', 'required', 'options_json'] as $column) {
+        if (in_array($column, $columns, true)) {
+            $select[] = '`' . $column . '`';
+        }
+    }
+
+    if (!$select) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $sql = 'SELECT ' . implode(', ', $select) . ' FROM fields';
+
+    try {
+        $stmt = $pdo->query($sql);
+    } catch (PDOException $e) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $byId = [];
+    $byKey = [];
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!isset($row['id'])) {
+            continue;
+        }
+
+        $id = (int) $row['id'];
+        $rawKey = isset($row['field_key']) ? trim((string) $row['field_key']) : '';
+        $key = $rawKey !== '' ? $rawKey : 'field_' . $id;
+        $name = formatFieldDisplayName($rawKey !== '' ? $rawKey : ('Field ' . $id));
+        $inputType = isset($row['type']) ? (string) $row['type'] : null;
+        $type = mapFieldBuilderType($rawKey, $inputType);
+        $required = normalizeBooleanValue($row['required'] ?? null);
+        $options = normalizeFieldOptions($row['options_json'] ?? null);
+
+        $definition = [
+            'id' => $id,
+            'field_id' => $id,
+            'fieldId' => $id,
+            'key' => $key,
+            'field_key' => $key,
+            'name' => $name,
+            'type' => $type,
+            'placeholder' => '',
+            'required' => $required,
+            'options' => $options,
+            'source' => 'field',
+        ];
+
+        if ($inputType !== null) {
+            $definition['input_type'] = $inputType;
+        }
+        if (isset($row['options_json'])) {
+            $definition['options_source'] = (string) $row['options_json'];
+        }
+
+        $byId[$id] = $definition;
+        if ($rawKey !== '') {
+            $byKey[strtolower($rawKey)] = $definition;
+        }
+    }
+
+    return ['byId' => $byId, 'byKey' => $byKey];
+}
+
+function buildFieldsetLookup(PDO $pdo, array $fieldDefinitionLookup): array
+{
+    $columns = fetchTableColumns($pdo, 'fieldsets');
+    if (!$columns) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $select = [];
+    foreach (['id', 'fieldset_key', 'description', 'field_id', 'field_key'] as $column) {
+        if (in_array($column, $columns, true)) {
+            $select[] = '`' . $column . '`';
+        }
+    }
+
+    if (!$select) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $sql = 'SELECT ' . implode(', ', $select) . ' FROM fieldsets';
+
+    try {
+        $stmt = $pdo->query($sql);
+    } catch (PDOException $e) {
+        return ['byId' => [], 'byKey' => []];
+    }
+
+    $byId = [];
+    $byKey = [];
+
+    $fieldsById = $fieldDefinitionLookup['byId'] ?? [];
+    $fieldsByKey = $fieldDefinitionLookup['byKey'] ?? [];
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!isset($row['id'])) {
+            continue;
+        }
+
+        $id = (int) $row['id'];
+        $rawKey = isset($row['fieldset_key']) ? trim((string) $row['fieldset_key']) : '';
+        $key = $rawKey !== '' ? $rawKey : 'fieldset_' . $id;
+        $name = formatFieldDisplayName($rawKey !== '' ? $rawKey : ('Fieldset ' . $id));
+        $description = isset($row['description']) && is_string($row['description'])
+            ? trim($row['description'])
+            : null;
+
+        $fieldIds = parseNumericCsv($row['field_id'] ?? null);
+        $fieldKeys = parseFieldKeyCsv($row['field_key'] ?? null);
+
+        $resolvedFields = [];
+        foreach ($fieldIds as $fieldId) {
+            if (isset($fieldsById[$fieldId])) {
+                $resolvedFields[] = cloneFieldConfigArray($fieldsById[$fieldId]);
+            }
+        }
+
+        if (!$resolvedFields && $fieldKeys) {
+            foreach ($fieldKeys as $fieldKey) {
+                $lower = strtolower($fieldKey);
+                if (isset($fieldsByKey[$lower])) {
+                    $resolvedFields[] = cloneFieldConfigArray($fieldsByKey[$lower]);
+                }
+            }
+        }
+
+        $fieldset = [
+            'id' => $id,
+            'key' => $key,
+            'name' => $name !== '' ? $name : ('Fieldset ' . $id),
+            'description' => $description,
+            'fields' => $resolvedFields,
+        ];
+
+        $byId[$id] = $fieldset;
+        $byKey[strtolower($key)] = $fieldset;
+    }
+
+    return ['byId' => $byId, 'byKey' => $byKey];
+}
+
+function buildFieldTypeFieldList(array $row, array $itemColumns, array $fieldDefinitionLookup, array $fieldsetLookup): array
+{
+    if (!$itemColumns) {
+        return [];
+    }
+
+    $fields = [];
+    $fieldsById = $fieldDefinitionLookup['byId'] ?? [];
+    $fieldsByKey = $fieldDefinitionLookup['byKey'] ?? [];
+    $fieldsetsById = $fieldsetLookup['byId'] ?? [];
+    $fieldsetsByKey = $fieldsetLookup['byKey'] ?? [];
+
+    foreach ($itemColumns as $column) {
+        if (!isset($row[$column]) || !is_string($row[$column])) {
+            continue;
+        }
+
+        $parsed = parseFieldTypeItemValue($row[$column]);
+        if ($parsed === null) {
+            continue;
+        }
+
+        if ($parsed['kind'] === 'field') {
+            $fieldConfig = null;
+            if (isset($fieldsById[$parsed['id']])) {
+                $fieldConfig = cloneFieldConfigArray($fieldsById[$parsed['id']]);
+            } elseif ($parsed['label'] !== null) {
+                $labelKey = strtolower(str_replace(' ', '_', $parsed['label']));
+                if (isset($fieldsByKey[$labelKey])) {
+                    $fieldConfig = cloneFieldConfigArray($fieldsByKey[$labelKey]);
+                } elseif (isset($fieldsByKey[strtolower($parsed['label'])])) {
+                    $fieldConfig = cloneFieldConfigArray($fieldsByKey[strtolower($parsed['label'])]);
+                }
+            }
+
+            if ($fieldConfig !== null) {
+                if ($parsed['label'] !== null && $parsed['label'] !== '') {
+                    $fieldConfig['name'] = formatFieldDisplayName($parsed['label']);
+                }
+                $fieldConfig['source'] = 'field';
+                $fieldConfig['field_type_item'] = $row[$column];
+                $fieldConfig['fieldTypeItemColumn'] = $column;
+                $fields[] = $fieldConfig;
+            }
+
+            continue;
+        }
+
+        if ($parsed['kind'] === 'fieldset') {
+            $fieldset = $fieldsetsById[$parsed['id']] ?? null;
+            if ($fieldset === null && $parsed['label'] !== null) {
+                $fieldsetKey = strtolower(str_replace(' ', '_', $parsed['label']));
+                if (isset($fieldsetsByKey[$fieldsetKey])) {
+                    $fieldset = $fieldsetsByKey[$fieldsetKey];
+                }
+            }
+
+            if ($fieldset === null) {
+                continue;
+            }
+
+            $fieldsetName = $parsed['label'] !== null && $parsed['label'] !== ''
+                ? formatFieldDisplayName($parsed['label'])
+                : $fieldset['name'];
+
+            foreach ($fieldset['fields'] as $fieldsetField) {
+                $fieldConfig = cloneFieldConfigArray($fieldsetField);
+                $fieldConfig['fieldsetId'] = $fieldset['id'];
+                $fieldConfig['fieldsetKey'] = $fieldset['key'];
+                $fieldConfig['fieldsetName'] = $fieldsetName;
+                $fieldConfig['fieldsetSource'] = [
+                    'id' => $fieldset['id'],
+                    'key' => $fieldset['key'],
+                    'name' => $fieldsetName,
+                ];
+                $fieldConfig['source'] = 'fieldset';
+                $fieldConfig['field_type_item'] = $row[$column];
+                $fieldConfig['fieldTypeItemColumn'] = $column;
+                $fields[] = $fieldConfig;
+            }
+        }
+    }
+
+    return $fields;
+}
+
+function parseFieldTypeItemValue(?string $value): ?array
+{
+    if (!is_string($value)) {
+        return null;
+    }
+
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return null;
+    }
+
+    if (!preg_match('/^(.*?)\s*\[(field|fieldset)\s*=\s*(\d+)\]\s*$/i', $trimmed, $matches)) {
+        return null;
+    }
+
+    $label = trim((string) $matches[1]);
+    $kind = strtolower((string) $matches[2]);
+    $id = (int) $matches[3];
+
+    return [
+        'kind' => $kind === 'fieldset' ? 'fieldset' : 'field',
+        'id' => $id,
+        'label' => $label !== '' ? $label : null,
+    ];
+}
+
+function normalizeFieldOptions($rawOptions): array
+{
+    $decoded = null;
+
+    if (is_string($rawOptions)) {
+        $trimmed = trim($rawOptions);
+        if ($trimmed !== '') {
+            $json = json_decode($trimmed, true);
+            if (is_array($json)) {
+                $decoded = $json;
+            }
+        }
+    } elseif (is_array($rawOptions)) {
+        $decoded = $rawOptions;
+    }
+
+    if ($decoded === null) {
+        return [];
+    }
+
+    if (isset($decoded['options']) && is_array($decoded['options'])) {
+        return sanitizeFieldOptionsList($decoded['options']);
+    }
+
+    if (isset($decoded['values']) && is_array($decoded['values'])) {
+        return sanitizeFieldOptionsList($decoded['values']);
+    }
+
+    if (is_list_array($decoded)) {
+        return sanitizeFieldOptionsList($decoded);
+    }
+
+    return [];
+}
+
+function sanitizeFieldOptionsList(array $list): array
+{
+    $options = [];
+    $seen = [];
+
+    foreach ($list as $option) {
+        $value = sanitizeFieldOptionValue($option);
+        if ($value === '') {
+            continue;
+        }
+
+        $dedupeKey = strtolower($value);
+        if (isset($seen[$dedupeKey])) {
+            continue;
+        }
+
+        $options[] = $value;
+        $seen[$dedupeKey] = true;
+    }
+
+    return $options;
+}
+
+function sanitizeFieldOptionValue($option): string
+{
+    if (is_string($option)) {
+        return trim($option);
+    }
+
+    if (is_array($option)) {
+        if (isset($option['value']) && is_string($option['value'])) {
+            return trim($option['value']);
+        }
+        if (isset($option['label']) && is_string($option['label'])) {
+            return trim($option['label']);
+        }
+    }
+
+    if (is_scalar($option)) {
+        return trim((string) $option);
+    }
+
+    return '';
+}
+
+function formatFieldDisplayName(string $value): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    $normalized = preg_replace('/[_\-]+/', ' ', $trimmed);
+    if (!is_string($normalized)) {
+        $normalized = $trimmed;
+    }
+    $normalized = preg_replace('/\s+/', ' ', $normalized);
+    if (!is_string($normalized)) {
+        $normalized = $trimmed;
+    }
+
+    return ucwords(strtolower($normalized));
+}
+
+function mapFieldBuilderType(?string $fieldKey, ?string $dbType): string
+{
+    $key = is_string($fieldKey) ? strtolower(trim($fieldKey)) : '';
+    $dbTypeNormalized = is_string($dbType) ? strtolower(trim($dbType)) : '';
+
+    $keyMap = [
+        'title' => 'title',
+        'description' => 'description',
+        'images' => 'images',
+        'text_box' => 'text-box',
+        'text-area' => 'text-area',
+        'text_area' => 'text-area',
+        'dropdown' => 'dropdown',
+        'radio_toggle' => 'radio-toggle',
+        'radio-toggle' => 'radio-toggle',
+        'email' => 'email',
+        'phone' => 'phone',
+        'website' => 'website_url',
+        'website_url' => 'website_url',
+        'tickets_url' => 'tickets_url',
+        'coupon' => 'coupon',
+        'location' => 'location',
+        'variant_pricing' => 'variant_pricing',
+        'venues_sessions_pricing' => 'venues_sessions_pricing',
+        'checkout_table' => 'checkout',
+        'checkout' => 'checkout',
+    ];
+
+    if ($key !== '' && isset($keyMap[$key])) {
+        return $keyMap[$key];
+    }
+
+    $typeMap = [
+        'text' => 'text-box',
+        'textarea' => 'text-area',
+        'dropdown' => 'dropdown',
+        'radio' => 'radio-toggle',
+        'email' => 'email',
+        'tel' => 'phone',
+        'phone' => 'phone',
+        'url' => 'website_url',
+        'images' => 'images',
+        'decimal' => 'text-box',
+        'decimal(10,2)' => 'text-box',
+        'number' => 'text-box',
+        'date' => 'text-box',
+        'time' => 'text-box',
+    ];
+
+    if ($dbTypeNormalized !== '' && isset($typeMap[$dbTypeNormalized])) {
+        return $typeMap[$dbTypeNormalized];
+    }
+
+    if ($key !== '') {
+        return $key;
+    }
+
+    return 'text-box';
+}
+
+function normalizeBooleanValue($value): bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    if (is_int($value)) {
+        return $value === 1;
+    }
+
+    if (is_numeric($value)) {
+        return (int) $value === 1;
+    }
+
+    if (is_string($value)) {
+        $normalized = strtolower(trim($value));
+        if ($normalized === '1' || $normalized === 'true' || $normalized === 'yes' || $normalized === 'required') {
+            return true;
+        }
+        if ($normalized === '0' || $normalized === 'false' || $normalized === 'no' || $normalized === 'optional') {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+function parseNumericCsv($value): array
+{
+    if (!is_string($value)) {
+        return [];
+    }
+
+    $parts = preg_split('/\s*,\s*/', trim($value));
+    if (!is_array($parts)) {
+        return [];
+    }
+
+    $results = [];
+    foreach ($parts as $part) {
+        $candidate = trim($part);
+        if ($candidate === '') {
+            continue;
+        }
+        if (preg_match('/^\d+$/', $candidate)) {
+            $results[] = (int) $candidate;
+        }
+    }
+
+    return $results;
+}
+
+function parseFieldKeyCsv($value): array
+{
+    if (!is_string($value)) {
+        return [];
+    }
+
+    $parts = explode(',', $value);
+    $results = [];
+
+    foreach ($parts as $part) {
+        $candidate = trim($part);
+        if ($candidate === '') {
+            continue;
+        }
+        $candidate = ltrim($candidate, '_ ');
+        if ($candidate === '') {
+            continue;
+        }
+        $results[] = $candidate;
+    }
+
+    return $results;
+}
+
+function deepCloneValue($value)
+{
+    if (is_array($value)) {
+        $clone = [];
+        foreach ($value as $key => $item) {
+            $clone[$key] = deepCloneValue($item);
+        }
+        return $clone;
+    }
+
+    return $value;
+}
+
+function cloneFieldConfigArray(array $config): array
+{
+    return deepCloneValue($config);
+}
+
+function is_list_array(array $array): bool
+{
+    if (function_exists('array_is_list')) {
+        return array_is_list($array);
+    }
+
+    $i = 0;
+    foreach ($array as $key => $_) {
+        if ($key !== $i) {
+            return false;
+        }
+        $i++;
+    }
+
+    return true;
 }
 
 function buildSnapshot(array $categories, array $subcategories): array
