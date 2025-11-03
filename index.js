@@ -3359,6 +3359,74 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
+    const FIELD_TYPE_ARRAY_PROPS = ['fields','defaultFields','fieldDefinitions','fieldConfigs','templates'];
+
+    function cloneFieldTypeOption(source, valueOverride, labelOverride){
+      const baseClone = (source && typeof source === 'object' && !Array.isArray(source))
+        ? cloneFieldValue(source)
+        : {};
+      const target = (baseClone && typeof baseClone === 'object' && !Array.isArray(baseClone)) ? baseClone : {};
+      const applyArrayProps = (targetObj, sourceObj)=>{
+        if(!targetObj || typeof targetObj !== 'object' || Array.isArray(targetObj)){
+          return;
+        }
+        FIELD_TYPE_ARRAY_PROPS.forEach(prop => {
+          const sourceList = sourceObj && Array.isArray(sourceObj[prop]) ? sourceObj[prop] : null;
+          if(sourceList){
+            targetObj[prop] = sourceList.map(cloneFieldValue);
+          } else if(Array.isArray(targetObj[prop])){
+            targetObj[prop] = targetObj[prop].map(cloneFieldValue);
+          } else if(Object.prototype.hasOwnProperty.call(targetObj, prop)){
+            delete targetObj[prop];
+          }
+        });
+      };
+      applyArrayProps(target, source);
+      const sourceDefinition = source && source.definition;
+      if(sourceDefinition && typeof sourceDefinition === 'object' && !Array.isArray(sourceDefinition)){
+        const clonedDefinition = cloneFieldValue(sourceDefinition);
+        const definitionTarget = (clonedDefinition && typeof clonedDefinition === 'object' && !Array.isArray(clonedDefinition))
+          ? clonedDefinition
+          : {};
+        applyArrayProps(definitionTarget, sourceDefinition);
+        target.definition = definitionTarget;
+      } else if(target.definition && typeof target.definition === 'object' && !Array.isArray(target.definition)){
+        applyArrayProps(target.definition, target.definition);
+      } else {
+        delete target.definition;
+      }
+      const normalizedValue = typeof valueOverride === 'string' ? valueOverride.trim() : '';
+      const normalizedLabel = typeof labelOverride === 'string' ? labelOverride.trim() : '';
+      target.value = normalizedValue;
+      target.label = normalizedLabel || normalizedValue;
+      return target;
+    }
+
+    function cloneFieldTypeOptionsList(list){
+      if(!Array.isArray(list)){
+        return [];
+      }
+      const cloned = [];
+      const seen = new Set();
+      list.forEach(option => {
+        if(!option || typeof option !== 'object'){
+          return;
+        }
+        const rawValue = typeof option.value === 'string' ? option.value.trim() : '';
+        if(!rawValue){
+          return;
+        }
+        const dedupeKey = rawValue.toLowerCase();
+        if(seen.has(dedupeKey)){
+          return;
+        }
+        const rawLabel = typeof option.label === 'string' ? option.label : '';
+        cloned.push(cloneFieldTypeOption(option, rawValue, rawLabel));
+        seen.add(dedupeKey);
+      });
+      return cloned;
+    }
+
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
@@ -3376,7 +3444,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, label)=>{
+      const pushOption = (value, label, source)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3386,7 +3454,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         const trimmedLabel = typeof label === 'string' ? label.trim() : '';
-        normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
+        normalized.push(cloneFieldTypeOption(source, trimmedValue, trimmedLabel || trimmedValue));
         seen.add(dedupeKey);
       };
       list.forEach(item => {
@@ -3416,13 +3484,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
                 : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                   ? item.fieldTypeName.trim()
                   : '';
-          pushOption(value, label);
+          pushOption(value, label, item);
           return;
         }
         if(typeof item === 'string'){
           const trimmed = item.trim();
           if(trimmed){
-            pushOption(trimmed, trimmed);
+            pushOption(trimmed, trimmed, null);
           }
         }
       });
@@ -3667,29 +3735,134 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.iconLibrary = ICON_LIBRARY;
     initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
     function sanitizeFieldTypeOptions(options){
-      const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
-      const sanitized = [];
-      const seenValues = new Set();
-      list.forEach(option => {
-        if(!option || typeof option !== 'object'){
-          return;
+      const normalizeFn = typeof normalizeFieldTypeOptions === 'function'
+        ? normalizeFieldTypeOptions
+        : null;
+      const cloneListFn = typeof cloneFieldTypeOptionsList === 'function'
+        ? cloneFieldTypeOptionsList
+        : null;
+      const cloneOptionFn = typeof cloneFieldTypeOption === 'function'
+        ? cloneFieldTypeOption
+        : null;
+      const deepClone = (value)=>{
+        if(typeof cloneFieldValue === 'function'){
+          return cloneFieldValue(value);
         }
-        let value = typeof option.value === 'string' ? option.value.trim() : '';
-        let label = typeof option.label === 'string' ? option.label.trim() : '';
-        if(!value){
-          return;
+        if(Array.isArray(value)){
+          return value.map(deepClone);
         }
-        if(!label){
-          label = value;
+        if(value && typeof value === 'object'){
+          try{
+            return JSON.parse(JSON.stringify(value));
+          }catch(err){
+            return { ...value };
+          }
         }
-        if(seenValues.has(value)){
-          return;
+        return value;
+      };
+      const ensureOption = (source, value, label)=>{
+        if(cloneOptionFn){
+          return cloneOptionFn(source, value, label);
         }
-        seenValues.add(value);
-        sanitized.push({ value, label });
-      });
-      return sanitized;
+        const option = {};
+        if(source && typeof source === 'object' && !Array.isArray(source)){
+          Object.keys(source).forEach(key => {
+            if(key === 'value' || key === 'label'){
+              return;
+            }
+            option[key] = deepClone(source[key]);
+          });
+        }
+        option.value = value;
+        option.label = label || value;
+        return option;
+      };
+      const dedupeAndCloneList = (list)=>{
+        if(cloneListFn){
+          return cloneListFn(list);
+        }
+        const sanitized = [];
+        const seen = new Set();
+        if(Array.isArray(list)){
+          list.forEach(item => {
+            if(!item || typeof item !== 'object'){
+              return;
+            }
+            const rawValue = typeof item.value === 'string' ? item.value.trim() : '';
+            if(!rawValue){
+              return;
+            }
+            const dedupeKey = rawValue.toLowerCase();
+            if(seen.has(dedupeKey)){
+              return;
+            }
+            const rawLabel = typeof item.label === 'string' ? item.label.trim() : '';
+            sanitized.push(ensureOption(item, rawValue, rawLabel || rawValue));
+            seen.add(dedupeKey);
+          });
+        }
+        return sanitized;
+      };
+      let normalized = normalizeFn ? normalizeFn(options) : null;
+      if(!Array.isArray(normalized) || !normalized.length){
+        const list = Array.isArray(options)
+          ? options
+          : Array.isArray(options && options.fieldTypes)
+            ? options.fieldTypes
+            : [];
+        const fallback = [];
+        const seen = new Set();
+        list.forEach(item => {
+          if(item && typeof item === 'object'){
+            const value = typeof item.value === 'string' && item.value.trim()
+              ? item.value.trim()
+              : typeof item.key === 'string' && item.key.trim()
+                ? item.key.trim()
+                : typeof item.id === 'number' && Number.isFinite(item.id)
+                  ? String(item.id)
+                  : typeof item.id === 'string' && item.id.trim()
+                    ? item.id.trim()
+                    : '';
+            if(!value){
+              return;
+            }
+            const dedupeKey = value.toLowerCase();
+            if(seen.has(dedupeKey)){
+              return;
+            }
+            const label = typeof item.label === 'string' && item.label.trim()
+              ? item.label.trim()
+              : typeof item.name === 'string' && item.name.trim()
+                ? item.name.trim()
+                : value;
+            fallback.push(ensureOption(item, value, label));
+            seen.add(dedupeKey);
+            return;
+          }
+          if(typeof item === 'string'){
+            const trimmed = item.trim();
+            if(!trimmed){
+              return;
+            }
+            const dedupeKey = trimmed.toLowerCase();
+            if(seen.has(dedupeKey)){
+              return;
+            }
+            fallback.push(ensureOption(null, trimmed, trimmed));
+            seen.add(dedupeKey);
+          }
+        });
+        normalized = fallback;
+      }
+      return dedupeAndCloneList(normalized);
     }
+
+    const ensureFieldTypeOptionsClone = (list)=>{
+      if(typeof cloneFieldTypeOptionsList === 'function'){
+        return cloneFieldTypeOptionsList(list);
+      }
+      return sanitizeFieldTypeOptions(list);
+    };
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
@@ -3702,8 +3875,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? initialFormbuilderSnapshot.fieldTypes
       : [];
     const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
-    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+    initialFormbuilderSnapshot.fieldTypes = ensureFieldTypeOptionsClone(finalFieldTypeOptions);
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes);
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';
@@ -12983,9 +13156,7 @@ function makePosts(){
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
         categoryShapes: cloneMapLike(categoryShapes),
-        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
-          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
-          : [],
+        fieldTypes: ensureFieldTypeOptionsClone(FORM_FIELD_TYPES),
         versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
           ? VERSION_PRICE_CURRENCIES.slice()
           : []
@@ -12996,10 +13167,10 @@ function makePosts(){
       if(!snapshot) return;
       const existingFieldTypes = (() => {
         if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
-          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+          return ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes);
         }
         if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
-          return FORM_FIELD_TYPES.map(option => ({ ...option }));
+          return ensureFieldTypeOptionsClone(FORM_FIELD_TYPES);
         }
         return [];
       })();
@@ -13008,8 +13179,8 @@ function makePosts(){
       if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
         sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
       }
-      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
-      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      initialFormbuilderSnapshot.fieldTypes = ensureFieldTypeOptionsClone(sanitizedFieldTypes);
+      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes));
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
