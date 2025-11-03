@@ -3429,6 +3429,55 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return normalized;
     }
 
+    function normalizeFieldTypeIdList(source){
+      const normalized = [];
+      const seen = new Set();
+      const processValue = entry => {
+        if(entry === null || entry === undefined) return;
+        if(typeof entry === 'number' && Number.isInteger(entry) && entry >= 0){
+          if(!seen.has(entry)){
+            seen.add(entry);
+            normalized.push(entry);
+          }
+          return;
+        }
+        if(typeof entry === 'string'){
+          const trimmed = entry.trim();
+          if(!trimmed) return;
+          if(/^\d+$/.test(trimmed)){
+            const parsed = parseInt(trimmed, 10);
+            if(!seen.has(parsed)){
+              seen.add(parsed);
+              normalized.push(parsed);
+            }
+            return;
+          }
+        }
+        if(entry && typeof entry === 'object'){
+          if(Object.prototype.hasOwnProperty.call(entry, 'id')){
+            processValue(entry.id);
+          }
+          if(Object.prototype.hasOwnProperty.call(entry, 'value')){
+            processValue(entry.value);
+          }
+        }
+      };
+      if(Array.isArray(source)){
+        source.forEach(processValue);
+      } else if(source && typeof source === 'object'){
+        const candidates = [];
+        if(Array.isArray(source.ids)) candidates.push(source.ids);
+        if(Array.isArray(source.values)) candidates.push(source.values);
+        if(Array.isArray(source.fieldTypeIds)) candidates.push(source.fieldTypeIds);
+        candidates.forEach(list => {
+          list.forEach(processValue);
+        });
+      } else if(typeof source === 'string' || typeof source === 'number'){
+        processValue(source);
+      }
+      return normalized;
+    }
+
     const ICON_LIBRARY_ALLOWED_EXTENSION_RE = /\.(?:png|jpe?g|gif|svg|webp)$/i;
 
     function normalizeCategoriesSnapshot(sourceCategories){
@@ -3480,12 +3529,39 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         });
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
         const subFields = {};
+        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
+        const normalizedSubFieldTypeEntries = [];
+        Object.keys(rawSubFieldTypes).forEach(rawKey => {
+          const trimmedKey = typeof rawKey === 'string' ? rawKey.trim() : '';
+          if(!trimmedKey) return;
+          const slugKey = typeof slugify === 'function' ? slugify(trimmedKey) : '';
+          normalizedSubFieldTypeEntries.push({
+            key: trimmedKey,
+            lower: trimmedKey.toLowerCase(),
+            slug: typeof slugKey === 'string' ? slugKey : '',
+            ids: normalizeFieldTypeIdList(rawSubFieldTypes[rawKey])
+          });
+        });
+        const subFieldTypes = {};
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
+          const lower = typeof sub === 'string' ? sub.toLowerCase() : '';
+          const subSlug = typeof slugify === 'function' ? slugify(sub) : '';
+          let matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.key === sub);
+          if(!matchedEntry && lower){
+            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.lower === lower);
+          }
+          if(!matchedEntry && subSlug){
+            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.slug && entry.slug === subSlug);
+          }
+          if(!matchedEntry && typeof sub === 'string'){
+            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.key === sub.trim());
+          }
+          subFieldTypes[sub] = matchedEntry ? matchedEntry.ids.slice() : [];
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3499,11 +3575,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
+        subFieldTypes: cat.subs.reduce((acc, sub) => {
+          acc[sub] = [];
+          return acc;
+        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
+        }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3512,6 +3595,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
           }
+          cat.subFieldTypes[sub] = normalizeFieldTypeIdList(cat.subFieldTypes[sub]);
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
           }
@@ -20950,6 +21034,192 @@ document.addEventListener('pointerdown', (e) => {
       }
     }
 
+    function buildFieldTypeDefinitionCache(){
+      const byId = new Map();
+      const byKey = new Map();
+      const seen = new Set();
+      const visited = new Set();
+      const addDefinition = def => {
+        if(!def || typeof def !== 'object' || seen.has(def)){
+          return false;
+        }
+        seen.add(def);
+        const fieldSources = [];
+        if(Array.isArray(def.fields) && def.fields.length){
+          fieldSources.push(def.fields);
+        }
+        if(def.definition && typeof def.definition === 'object'){
+          if(Array.isArray(def.definition.fields) && def.definition.fields.length){
+            fieldSources.push(def.definition.fields);
+          }
+          if(Array.isArray(def.definition.defaultFields) && def.definition.defaultFields.length){
+            fieldSources.push(def.definition.defaultFields);
+          }
+        }
+        if(Array.isArray(def.fieldDefinitions) && def.fieldDefinitions.length){
+          fieldSources.push(def.fieldDefinitions);
+        }
+        if(Array.isArray(def.fieldConfigs) && def.fieldConfigs.length){
+          fieldSources.push(def.fieldConfigs);
+        }
+        if(Array.isArray(def.defaultFields) && def.defaultFields.length){
+          fieldSources.push(def.defaultFields);
+        }
+        if(Array.isArray(def.templates) && def.templates.length){
+          fieldSources.push(def.templates);
+        }
+        const fieldsSource = fieldSources.find(list => Array.isArray(list) && list.length);
+        if(!fieldsSource){
+          return false;
+        }
+        const idCandidates = [];
+        const pushIdCandidate = value => {
+          if(typeof value === 'number' && Number.isInteger(value)){
+            idCandidates.push(value);
+            return;
+          }
+          if(typeof value === 'string'){
+            const trimmed = value.trim();
+            if(trimmed && /^\d+$/.test(trimmed)){
+              idCandidates.push(parseInt(trimmed, 10));
+            }
+          }
+        };
+        pushIdCandidate(def.id);
+        pushIdCandidate(def.value);
+        pushIdCandidate(def.field_type_id);
+        if(def.definition && typeof def.definition === 'object'){
+          pushIdCandidate(def.definition.id);
+        }
+        const keyCandidates = [];
+        const pushKeyCandidate = value => {
+          if(typeof value === 'string'){
+            const trimmed = value.trim();
+            if(trimmed){
+              keyCandidates.push(trimmed.toLowerCase());
+            }
+          }
+        };
+        pushKeyCandidate(def.key);
+        pushKeyCandidate(def.value);
+        pushKeyCandidate(def.name);
+        pushKeyCandidate(def.field_type_key);
+        pushKeyCandidate(def.fieldTypeKey);
+        pushKeyCandidate(def.field_type_name);
+        pushKeyCandidate(def.fieldTypeName);
+        if(def.definition && typeof def.definition === 'object'){
+          pushKeyCandidate(def.definition.key);
+          pushKeyCandidate(def.definition.name);
+        }
+        if(idCandidates.length === 0 && keyCandidates.length === 0){
+          return false;
+        }
+        idCandidates.forEach(id => {
+          if(typeof id === 'number' && Number.isInteger(id) && !byId.has(id)){
+            byId.set(id, fieldsSource);
+          }
+        });
+        keyCandidates.forEach(key => {
+          if(key && !byKey.has(key)){
+            byKey.set(key, fieldsSource);
+          }
+        });
+        return true;
+      };
+      const collectFromCandidate = candidate => {
+        if(candidate === null || candidate === undefined) return;
+        if(candidate instanceof Map){
+          if(visited.has(candidate)) return;
+          visited.add(candidate);
+          candidate.forEach(value => collectFromCandidate(value));
+          return;
+        }
+        if(Array.isArray(candidate)){
+          if(visited.has(candidate)) return;
+          visited.add(candidate);
+          candidate.forEach(value => collectFromCandidate(value));
+          return;
+        }
+        if(typeof candidate === 'object'){
+          if(visited.has(candidate)) return;
+          visited.add(candidate);
+          addDefinition(candidate);
+          const nestedProps = ['definitions','items','list','values','fieldTypes','entries','options'];
+          nestedProps.forEach(prop => {
+            const value = candidate[prop];
+            if(Array.isArray(value) || value instanceof Map){
+              collectFromCandidate(value);
+            }
+          });
+        }
+      };
+      if(typeof window !== 'undefined'){
+        [
+          window.FIELD_TYPE_DEFINITIONS,
+          window.fieldTypeDefinitions,
+          window.FIELD_TYPE_LOOKUP,
+          window.fieldTypeLookup,
+          window.FIELD_TYPES,
+          window.fieldTypes,
+          window.formbuilderFieldTypeDefinitions,
+          window.formbuilderFieldTypes,
+          window.fieldTypeCatalog,
+          window.fieldTypeLibrary,
+          window.FIELD_TYPE_CATALOG,
+          window.FIELD_TYPE_LIBRARY
+        ].forEach(candidate => collectFromCandidate(candidate));
+      }
+      return { byId, byKey };
+    }
+
+    function getFieldTypeDefinitionCache(){
+      return buildFieldTypeDefinitionCache();
+    }
+
+    function resolveFieldTypeFieldsByIds(typeIds){
+      const ids = normalizeFieldTypeIdList(typeIds);
+      if(!ids.length){
+        return [];
+      }
+      const { byId, byKey } = getFieldTypeDefinitionCache();
+      const resolved = [];
+      ids.forEach(id => {
+        let fieldsSource = null;
+        if(typeof id === 'number' && byId.has(id)){
+          fieldsSource = byId.get(id);
+        }
+        if(!fieldsSource && typeof id === 'string'){
+          const trimmed = id.trim();
+          if(trimmed){
+            if(/^\d+$/.test(trimmed)){
+              const numeric = parseInt(trimmed, 10);
+              if(byId.has(numeric)){
+                fieldsSource = byId.get(numeric);
+              }
+            }
+            if(!fieldsSource){
+              const key = trimmed.toLowerCase();
+              if(byKey.has(key)){
+                fieldsSource = byKey.get(key);
+              }
+            }
+          }
+        }
+        if(!fieldsSource && typeof id === 'number'){
+          const key = String(id).toLowerCase();
+          if(byKey.has(key)){
+            fieldsSource = byKey.get(key);
+          }
+        }
+        if(fieldsSource){
+          fieldsSource.forEach(field => {
+            resolved.push(cloneFieldValue(field));
+          });
+        }
+      });
+      return resolved;
+    }
+
     function sanitizeCreateField(field){
       const safe = {
         name: '',
@@ -21026,6 +21296,13 @@ document.addEventListener('pointerdown', (e) => {
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
+        const typeFields = resolveFieldTypeFieldsByIds(subFieldTypesMap[subcategoryName]);
+        if(typeFields.length){
+          fields = typeFields;
+        }
+      }
       if(!fields || fields.length === 0){
         fields = sharedDefaultSubcategoryFields;
       }
