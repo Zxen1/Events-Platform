@@ -3625,7 +3625,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
+    const initialFormbuilderSnapshot = window.initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
@@ -7338,6 +7338,7 @@ function makePosts(){
         if(start && end && d>start && d<end) day.classList.add('in-range');
       });
     }
+    window.updateRangeClasses = updateRangeClasses;
 
     function updateInput(){
       const input = $('#daterange-textbox');

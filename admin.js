@@ -2326,7 +2326,7 @@ const adminAuthManager = (()=>{
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           }
-          if(!FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
+          if(!window.FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
             safeField.type = 'text-box';
           }
             if(!safeField.name){
@@ -5832,7 +5832,7 @@ const adminAuthManager = (()=>{
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
-            FORM_FIELD_TYPES.forEach(optionDef => {
+            window.FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
               option.textContent = optionDef.label;
@@ -6104,7 +6104,7 @@ const adminAuthManager = (()=>{
               const previousLabel = getFormFieldTypeLabel(previousType).trim();
               const currentName = fieldNameInput.value.trim();
               const nextType = fieldTypeSelect.value;
-              const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
+              const nextValidType = window.FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
               const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
               safeField.type = nextValidType;
@@ -6608,7 +6608,7 @@ const adminAuthManager = (()=>{
           if(Array.isArray(value)){
             out[key] = value.map(field => ({
               name: field && typeof field.name === 'string' ? field.name : '',
-              type: field && typeof field.type === 'string' && FORM_FIELD_TYPES.some(opt => opt.value === field.type)
+              type: field && typeof field.type === 'string' && window.FORM_FIELD_TYPES.some(opt => opt.value === field.type)
                 ? field.type
                 : 'text-box',
               placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
@@ -6697,11 +6697,11 @@ const adminAuthManager = (()=>{
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
       const existingFieldTypes = (() => {
-        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
-          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+        if(Array.isArray(window.initialFormbuilderSnapshot?.fieldTypes) && window.initialFormbuilderSnapshot.fieldTypes.length){
+          return window.initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
         }
-        if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
-          return FORM_FIELD_TYPES.map(option => ({ ...option }));
+        if(Array.isArray(window.FORM_FIELD_TYPES) && window.FORM_FIELD_TYPES.length){
+          return window.FORM_FIELD_TYPES.map(option => ({ ...option }));
         }
         return [];
       })();
@@ -6710,13 +6710,13 @@ const adminAuthManager = (()=>{
       if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
         sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
       }
-      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
-      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      window.initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
+      window.FORM_FIELD_TYPES.splice(0, window.FORM_FIELD_TYPES.length, ...window.initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
-        categories.splice(0, categories.length, ...nextCategories);
+        window.categories.splice(0, window.categories.length, ...nextCategories);
       }
-      categories.forEach(cat => {
+      window.categories.forEach(cat => {
         if(!cat || typeof cat !== 'object') return;
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
@@ -6727,18 +6727,18 @@ const adminAuthManager = (()=>{
           }
         });
       });
-      assignMapLike(categoryIcons, snapshot.categoryIcons);
-      assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
-      assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
-      assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
-      const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
-      Object.keys(subcategoryMarkers).forEach(key => {
+      assignMapLike(window.categoryIcons, snapshot.categoryIcons);
+      assignMapLike(window.subcategoryIcons, snapshot.subcategoryIcons);
+      assignMapLike(window.categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
+      assignMapLike(window.subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
+      const multiIconSrc = window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
+      Object.keys(window.subcategoryMarkers).forEach(key => {
         if(key !== MULTI_POST_MARKER_ICON_ID){
-          delete subcategoryMarkers[key];
+          delete window.subcategoryMarkers[key];
         }
       });
       if(multiIconSrc){
-        subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
+        window.subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
       }
       const markerOverrides = snapshot && snapshot.subcategoryMarkers;
       if(markerOverrides && typeof markerOverrides === 'object'){
@@ -6753,20 +6753,20 @@ const adminAuthManager = (()=>{
           }
           const slugKey = slugify(typeof name === 'string' ? name : '');
           if(slugKey){
-            subcategoryMarkers[slugKey] = trimmedUrl;
+            window.subcategoryMarkers[slugKey] = trimmedUrl;
           }
           if(typeof name === 'string' && name){
-            subcategoryMarkers[name] = trimmedUrl;
+            window.subcategoryMarkers[name] = trimmedUrl;
           }
         });
       }
-      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
-      assignMapLike(categoryShapes, snapshot.categoryShapes);
+      assignMapLike(window.subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
+      assignMapLike(window.categoryShapes, snapshot.categoryShapes);
       if(Array.isArray(normalized.versionPriceCurrencies)){
-        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
+        window.VERSION_PRICE_CURRENCIES.splice(0, window.VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
       }
-      renderFilterCategories();
-      renderFormbuilderCats();
+      if(typeof window.renderFilterCategories === 'function') window.renderFilterCategories();
+      if(typeof renderFormbuilderCats === 'function') renderFormbuilderCats();
       refreshFormbuilderSubcategoryLogos();
       if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
         try{

@@ -269,7 +269,7 @@
         monthIndex++;
       }
       container.appendChild(cal);
-      updateRangeClasses();
+      if(typeof window.updateRangeClasses === 'function') window.updateRangeClasses();
       if(calendarScroll){
         const monthWidth = cal.querySelector('.month').offsetWidth;
         const scrollPos = monthWidth * currentMonthIndex;
