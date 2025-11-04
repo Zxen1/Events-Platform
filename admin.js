@@ -678,6 +678,7 @@ const adminAuthManager = (()=>{
     // Categories UI
     const categoryControllers = {};
     const allSubcategoryKeys = [];
+    const $ = window.$ || ((sel, root=document) => root.querySelector(sel));
     const resetCategoriesBtn = $('#resetCategoriesBtn');
     const catsEl = $('#cats');
     const formbuilderCats = document.getElementById('formbuilderCats');

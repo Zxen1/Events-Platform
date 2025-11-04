@@ -2596,6 +2596,7 @@ async function ensureMapboxCssFor(container) {
     let favToTop = false, favSortDirty = true, currentSort = 'az';
     let selection = { cats: new Set(), subs: new Set() };
     let viewHistory = loadHistory();
+    window.viewHistory = viewHistory;
     let hoverPopup = null;
     let postSourceEventsBound = false;
     let touchMarker = null;
@@ -2704,6 +2705,8 @@ async function ensureMapboxCssFor(container) {
 
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    window.$ = $;
+    window.$$ = $$;
     const clamp = (n, a, b)=> Math.max(a, Math.min(b, n));
     const toRad = d => d * Math.PI / 180;
     function distKm(a,b){ const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng); const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(Math.PI*(b.lng - a.lng)/360)**2; return 2 * 6371 * Math.asin(Math.sqrt(s)); }
@@ -7011,16 +7014,7 @@ function makePosts(){
         }
       });
     }
-    if(catsEl){
-      renderFilterCategories();
-      renderFormbuilderCats();
-      updateFormbuilderSnapshot();
-      const handleIconsReady = ()=>{
-        refreshSubcategoryLogos();
-        refreshFormbuilderSubcategoryLogos();
-      };
-      document.addEventListener('subcategory-icons-ready', handleIconsReady);
-    }
+    // catsEl is now in filter.js/admin.js - this code has been moved
 
     if(resetCategoriesBtn){
       resetCategoriesBtn.addEventListener('click', ()=>{

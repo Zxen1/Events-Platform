@@ -1,10 +1,15 @@
-﻿    function renderFilterCategories(){
-      if(!catsEl) return;
-      catsEl.textContent = '';
-      Object.keys(categoryControllers).forEach(key=>{ delete categoryControllers[key]; });
-      allSubcategoryKeys.length = 0;
-      selection.cats = new Set();
-      selection.subs = new Set();
+﻿(function(){
+  const categoryControllers = {};
+  const allSubcategoryKeys = [];
+  
+  function renderFilterCategories(){
+    const catsEl = $('#cats');
+    if(!catsEl) return;
+    catsEl.textContent = '';
+    Object.keys(categoryControllers).forEach(key=>{ delete categoryControllers[key]; });
+    allSubcategoryKeys.length = 0;
+    selection.cats = new Set();
+    selection.subs = new Set();
       const seedSubs = true;
       const sortedCategories = getSortedCategories(categories);
       sortedCategories.forEach(c=>{
@@ -203,8 +208,9 @@
       refreshSubcategoryLogos();
       updateCategoryResetBtn();
       updateResetBtn();
-    }
-    function buildFilterCalendar(minDate, maxDate){
+  }
+
+  function buildFilterCalendar(minDate, maxDate){
       const container = $('#datePicker');
       container.innerHTML='';
       const cal = document.createElement('div');
@@ -277,10 +283,10 @@
         calendarScroll.appendChild(marker);
         marker.addEventListener('click', ()=> scrollCalendarToToday('smooth'));
       }
-    }
+  }
 
-    function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
-    function getPriceFilterValues(){
+  function kwMatch(p){ const kw = $('#keyword-textbox').value.trim().toLowerCase(); if(!kw) return true; return (p.title+' '+p.city+' '+p.category+' '+p.subcategory).toLowerCase().includes(kw); }
+  function getPriceFilterValues(){
       const minInput = $('#min-price-input');
       const maxInput = $('#max-price-input');
       const rawMin = minInput ? minInput.value.trim() : '';
@@ -301,8 +307,8 @@
       const min = Math.min(...nums);
       const max = Math.max(...nums);
       return {min, max};
-    }
-    function priceMatch(p){
+  }
+  function priceMatch(p){
       const {min, max} = getPriceFilterValues();
       if(min === null && max === null) return true;
       const ranges = [];
@@ -346,8 +352,8 @@
       });
       if(!satisfiesBounds) return false;
       return true;
-    }
-    function dateMatch(p){
+  }
+  function dateMatch(p){
       const {start,end} = orderedRange();
       const expiredChk = $('#expiredToggle');
       if(!start && !end){
@@ -363,8 +369,8 @@
         if(end && dt > end) return false;
         return true;
       });
-    }
-    function catMatch(p){
+  }
+  function catMatch(p){
       const haveCategoryControllers = Object.keys(categoryControllers).length > 0;
       if(!haveCategoryControllers){
         return true;
@@ -378,9 +384,9 @@
         return false;
       }
       return selection.subs.has(p.category+'::'+p.subcategory);
-    }
+  }
 
-    function hideResultIndicators(){
+  function hideResultIndicators(){
       const resultCountEl = $('#resultCount');
       if(resultCountEl){
         resultCountEl.innerHTML = '';
@@ -426,9 +432,9 @@
       if(summary){ summary.textContent = `${filteredMarkers} results showing out of ${totalMarkers} results in the area.`; }
       updateResultCount(filteredMarkers);
       updateResetBtn();
-    }
+  }
 
-    function refreshMarkers(render = true){
+  function refreshMarkers(render = true){
       if(spinning) return;
       if(!postsLoaded) return;
       const newAdPosts = filtered.filter(p => p.sponsored);
@@ -458,14 +464,25 @@
       syncMarkerSources(filtered);
       updateLayerVisibility(lastKnownZoom);
       filtersInitialized = true;
-    }
+  }
 
-    function applyFilters(render = true){
-      if(spinning){
-        hideResultIndicators();
-        return;
-      }
-      updateFilterCounts();
-      refreshMarkers(render);
+  function applyFilters(render = true){
+    if(spinning){
+      hideResultIndicators();
+      return;
     }
+    updateFilterCounts();
+    refreshMarkers(render);
+  }
+
+  window.renderFilterCategories = renderFilterCategories;
+  window.buildFilterCalendar = buildFilterCalendar;
+  window.kwMatch = kwMatch;
+  window.priceMatch = priceMatch;
+  window.dateMatch = dateMatch;
+  window.catMatch = catMatch;
+  window.applyFilters = applyFilters;
+  window.updateFilterCounts = updateFilterCounts;
+  window.refreshMarkers = refreshMarkers;
+})();
 
