@@ -3783,6 +3783,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
+    if(
+      typeof updateDefaultSubcategoryFields === 'function'
+      && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
+    ){
+      updateDefaultSubcategoryFields(
+        deriveDefaultSubcategoryFieldsFromSnapshot(initialFormbuilderSnapshot)
+      );
+    }
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
@@ -4185,14 +4193,50 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+    function sanitizeDefaultSubcategoryFields(fields){
+      if(!Array.isArray(fields)){
+        return [];
+      }
+      return fields.map(cloneFieldValue);
+    }
+
+    let DEFAULT_SUBCATEGORY_FIELDS = [];
+
+    function updateDefaultSubcategoryFields(fields){
+      DEFAULT_SUBCATEGORY_FIELDS = sanitizeDefaultSubcategoryFields(fields);
+      if(typeof window !== 'undefined'){
+        window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+      }
+    }
+
+    function deriveDefaultSubcategoryFieldsFromSnapshot(snapshot){
+      const categories = Array.isArray(snapshot && snapshot.categories) ? snapshot.categories : [];
+      for(const category of categories){
+        if(!category || typeof category !== 'object'){
+          continue;
+        }
+        const subFieldsMap = category.subFields && typeof category.subFields === 'object' && !Array.isArray(category.subFields)
+          ? category.subFields
+          : {};
+        const subs = Array.isArray(category.subs) && category.subs.length
+          ? category.subs
+          : Object.keys(subFieldsMap);
+        for(const sub of subs){
+          if(typeof sub !== 'string' || !sub){
+            continue;
+          }
+          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+          if(fields.length){
+            return fields.map(cloneFieldValue);
+          }
+        }
+      }
+      return [];
+    }
+
+    if(typeof updateDefaultSubcategoryFields === 'function'){
+      updateDefaultSubcategoryFields(typeof window !== 'undefined' ? window.DEFAULT_SUBCATEGORY_FIELDS : []);
+    }
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -11591,8 +11635,8 @@ function makePosts(){
               const empty = document.createElement('p');
               empty.className = 'form-preview-empty';
               empty.textContent = fieldTypeIds.length
-                ? 'Form fields for this subcategory could not be loaded. Reload the definitions to continue.'
-                : 'No fields added yet.';
+                ? 'Fields unavailable for this subcategory. Reload the definitions to continue.'
+                : 'Fields unavailable for this subcategory.';
               formPreviewFields.appendChild(empty);
               return;
             }
@@ -13268,6 +13312,14 @@ function makePosts(){
         return [];
       })();
       const normalized = normalizeFormbuilderSnapshot(snapshot);
+      if(
+        typeof updateDefaultSubcategoryFields === 'function'
+        && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
+      ){
+        updateDefaultSubcategoryFields(
+          deriveDefaultSubcategoryFieldsFromSnapshot(normalized)
+        );
+      }
       let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
       if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
         sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
@@ -21132,6 +21184,14 @@ document.addEventListener('pointerdown', (e) => {
 
     function applyMemberSnapshot(snapshot, options = {}){
       const normalized = normalizeFormbuilderSnapshot(snapshot);
+      if(
+        typeof updateDefaultSubcategoryFields === 'function'
+        && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
+      ){
+        updateDefaultSubcategoryFields(
+          deriveDefaultSubcategoryFieldsFromSnapshot(normalized)
+        );
+      }
       memberSnapshot = normalized;
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
@@ -22369,7 +22429,7 @@ document.addEventListener('pointerdown', (e) => {
         placeholder.className = 'member-create-placeholder';
         const message = shouldSuggestDefinitionReload
           ? (memberSnapshotErrorMessage || fetchErrorMessage)
-          : 'No fields configured for this subcategory yet.';
+          : 'Fields unavailable for this subcategory.';
         const messageEl = document.createElement('p');
         messageEl.textContent = message;
         placeholder.appendChild(messageEl);
