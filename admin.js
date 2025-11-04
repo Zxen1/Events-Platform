@@ -6677,19 +6677,19 @@ const adminAuthManager = (()=>{
     }
     function captureFormbuilderSnapshot(){
       return {
-        categories: cloneCategoryList(categories),
-        categoryIcons: cloneMapLike(categoryIcons),
-        subcategoryIcons: cloneMapLike(subcategoryIcons),
-        categoryIconPaths: cloneMapLike(categoryIconPaths),
-        subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
-        subcategoryMarkers: cloneMapLike(subcategoryMarkers),
-        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes),
-        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
-          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+        categories: cloneCategoryList(window.categories),
+        categoryIcons: cloneMapLike(window.categoryIcons || {}),
+        subcategoryIcons: cloneMapLike(window.subcategoryIcons || {}),
+        categoryIconPaths: cloneMapLike(window.categoryIconPaths || {}),
+        subcategoryIconPaths: cloneMapLike(window.subcategoryIconPaths || {}),
+        subcategoryMarkers: cloneMapLike(window.subcategoryMarkers || {}),
+        subcategoryMarkerIds: cloneMapLike(window.subcategoryMarkerIds || {}),
+        categoryShapes: cloneMapLike(window.categoryShapes || {}),
+        fieldTypes: Array.isArray(window.FORM_FIELD_TYPES)
+          ? window.FORM_FIELD_TYPES.map(option => ({ ...option }))
           : [],
-        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
-          ? VERSION_PRICE_CURRENCIES.slice()
+        versionPriceCurrencies: Array.isArray(window.VERSION_PRICE_CURRENCIES)
+          ? window.VERSION_PRICE_CURRENCIES.slice()
           : []
       };
     }

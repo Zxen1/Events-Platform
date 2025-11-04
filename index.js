@@ -4416,11 +4416,13 @@ function uniqueTitle(seed, cityName, idx){
     const day = String(d.getDate()).padStart(2,'0');
     return `${y}-${m}-${day}`;
   }
+  window.toISODate = toISODate;
 
   function parseISODate(s){
     const [yy, mm, dd] = s.split('-').map(Number);
     return new Date(yy, mm - 1, dd);
   }
+  window.parseISODate = parseISODate;
 
   const DAY_MS = 86400000;
 
@@ -7313,9 +7315,15 @@ function makePosts(){
       }
       return {start:dateStart,end:dateEnd};
     }
+    window.orderedRange = orderedRange;
 
     function sameDay(a,b){ return a.toDateString()===b.toDateString(); }
-    function isToday(d){ return sameDay(d,today); }
+    function isToday(d){ 
+      const today = new Date(); 
+      today.setHours(0,0,0,0);
+      return sameDay(d, today); 
+    }
+    window.isToday = isToday;
 
     function updateRangeClasses(){
       const {start,end} = orderedRange();
@@ -7354,6 +7362,7 @@ function makePosts(){
         closeCalendarPopup();
       }
     }
+    window.selectRangeDate = selectRangeDate;
 
 
     buildFilterCalendar(today, maxPickerDate);

@@ -252,11 +252,11 @@
           }else{
             cell.textContent=dayNum;
             const date=new Date(current.getFullYear(), current.getMonth(), dayNum);
-            cell.dataset.iso = toISODate(date);
+            cell.dataset.iso = window.toISODate(date);
             if(date < todayDate) cell.classList.add('past');
             else cell.classList.add('future');
-            if(isToday(date)) cell.classList.add('today');
-            if(date >= minDate) cell.addEventListener('click', ()=> selectRangeDate(date));
+            if(window.isToday(date)) cell.classList.add('today');
+            if(date >= minDate) cell.addEventListener('click', ()=> window.selectRangeDate(date));
           }
           grid.appendChild(cell);
         }
@@ -354,17 +354,17 @@
       return true;
   }
   function dateMatch(p){
-      const {start,end} = orderedRange();
+      const {start,end} = window.orderedRange();
       const expiredChk = $('#expiredToggle');
       if(!start && !end){
         if(expiredChk && expiredChk.checked){
           return true;
         }
         const today = new Date(); today.setHours(0,0,0,0);
-        return p.dates.some(d => parseISODate(d) >= today);
+        return p.dates.some(d => window.parseISODate(d) >= today);
       }
       return p.dates.some(d => {
-        const dt = parseISODate(d);
+        const dt = window.parseISODate(d);
         if(start && dt < start) return false;
         if(end && dt > end) return false;
         return true;
