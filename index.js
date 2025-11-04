@@ -21411,6 +21411,8 @@ document.addEventListener('pointerdown', (e) => {
           window.fieldTypeLookup,
           window.FIELD_TYPES,
           window.fieldTypes,
+          window.FORM_FIELD_TYPES,
+          window.formFieldTypes,
           window.formbuilderFieldTypeDefinitions,
           window.formbuilderFieldTypes,
           window.fieldTypeCatalog,
