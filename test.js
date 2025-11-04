@@ -131,8 +131,8 @@ const formbuilderSlices = [
   mainSource.slice(baseFnStart, baseFnEnd)
 ];
 
-const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE };');
-const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE } = formbuilderFactory(formbuilderWindow);
+const formbuilderFactory = new Function('window', `${formbuilderSlices.join('\n')}` + '\nreturn { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE, cloneFieldValue };');
+const { normalizeFormbuilderSnapshot, normalizeIconLibraryEntries, normalizeIconPathMap, normalizeIconAssetPath, ICON_LIBRARY_ALLOWED_EXTENSION_RE, cloneFieldValue } = formbuilderFactory(formbuilderWindow);
 
 const seededSnapshot = normalizeFormbuilderSnapshot({
   categories: [],
@@ -294,6 +294,7 @@ const bootstrapContext = {
   normalizeIconAssetPath,
   ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
+  cloneFieldValue,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshot,
   getSavedFormbuilderSnapshot: () => {
     throw new Error('getSavedFormbuilderSnapshot should not be called when persisted snapshot exists.');
@@ -365,6 +366,7 @@ const bootstrapContextFromPaths = {
   normalizeIconAssetPath,
   ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
+  cloneFieldValue,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotFromPaths,
   getSavedFormbuilderSnapshot: () => {
     throw new Error('getSavedFormbuilderSnapshot should not be called when persisted snapshot exists.');
@@ -424,6 +426,7 @@ const bootstrapContextCategoryOnly = {
   normalizeIconAssetPath,
   ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
+  cloneFieldValue,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotCategoryOnly,
   getSavedFormbuilderSnapshot: () => {
     throw new Error('Unexpected saved snapshot lookup for category-only bootstrap test.');
@@ -460,6 +463,7 @@ const bootstrapContextSubcategoryOnly = {
   normalizeIconAssetPath,
   ICON_LIBRARY_ALLOWED_EXTENSION_RE,
   assignMapLike,
+  cloneFieldValue,
   getPersistedFormbuilderSnapshotFromGlobals: () => persistedBootstrapSnapshotSubcategoryOnly,
   getSavedFormbuilderSnapshot: () => {
     throw new Error('Unexpected saved snapshot lookup for subcategory-only bootstrap test.');
