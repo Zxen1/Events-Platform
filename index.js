@@ -21078,6 +21078,13 @@ document.addEventListener('pointerdown', (e) => {
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
       
+      // Debug: Always log for Live Gigs
+      if(subcategoryName === 'Live Gigs'){
+        console.log('Live Gigs - getFieldsForSelection called');
+        console.log('Live Gigs - fields from subFieldsMap:', fields);
+        console.log('Live Gigs - category.subFieldTypes:', category.subFieldTypes);
+      }
+      
       // If fields are empty, resolve from DB field type IDs (no hardcoded defaults)
       if(!fields || fields.length === 0){
         const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
