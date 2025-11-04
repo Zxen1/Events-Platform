@@ -3484,14 +3484,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
-        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
-        const subFieldTypes = {};
-        subs.forEach(sub => {
-          const fieldTypeIds = Array.isArray(rawSubFieldTypes[sub]) ? rawSubFieldTypes[sub].slice() : [];
-          subFieldTypes[sub] = fieldTypeIds;
-        });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3505,18 +3499,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
-        subFieldTypes: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
-        }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3524,9 +3511,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
-          }
-          if(!Array.isArray(cat.subFieldTypes[sub])){
-            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -3702,19 +3686,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         seenValues.add(value);
-        // Preserve all properties, especially id, name, key for database field type lookups
-        const sanitizedOption = { value, label };
-        if(typeof option.id === 'number' || (typeof option.id === 'string' && /^\d+$/.test(option.id))){
-          sanitizedOption.id = typeof option.id === 'number' ? option.id : parseInt(option.id, 10);
-        }
-        if(typeof option.name === 'string' && option.name.trim()) sanitizedOption.name = option.name.trim();
-        if(typeof option.key === 'string' && option.key.trim()) sanitizedOption.key = option.key.trim();
-        if(typeof option.field_type_name === 'string' && option.field_type_name.trim()) sanitizedOption.field_type_name = option.field_type_name.trim();
-        if(typeof option.field_type_key === 'string' && option.field_type_key.trim()) sanitizedOption.field_type_key = option.field_type_key.trim();
-        if(typeof option.sort_order === 'number' || (typeof option.sort_order === 'string' && /^\d+$/.test(option.sort_order))){
-          sanitizedOption.sort_order = typeof option.sort_order === 'number' ? option.sort_order : parseInt(option.sort_order, 10);
-        }
-        sanitized.push(sanitizedOption);
+        sanitized.push({ value, label });
       });
       return sanitized;
     }
@@ -3950,7 +3922,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    // Legacy hardcoded defaults removed - database field types are now the source of truth
+    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -11302,23 +11281,24 @@ function makePosts(){
             return editor;
           };
 
-          // Use DB field type IDs only - no metadata fallback
-          const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : {};
-          const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
-          let fields = [];
-          
-          // Resolve from DB field type IDs only
-          if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
-            try{
-              const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
-              if(resolvedFields && resolvedFields.length > 0){
-                fields = resolvedFields;
-                subFieldsMap[sub] = fields;
-                notifyFormbuilderChange();
-              }
-            }catch(e){
-              console.warn('Failed to resolve fields from field type IDs', e);
-            }
+          const ensureDefaultFieldSet = (fieldList)=>{
+            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
+            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
+              fieldList.push({
+                name: typeof defaultField.name === 'string' ? defaultField.name : '',
+                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
+                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
+                required: !!defaultField.required,
+                options: []
+              });
+            });
+            return fieldList.length > 0;
+          };
+
+          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+
+          if(ensureDefaultFieldSet(fields)){
+            notifyFormbuilderChange();
           }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
@@ -20763,7 +20743,13 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    // Legacy hardcoded defaults removed - database field types are now the source of truth
+    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -21028,110 +21014,14 @@ document.addEventListener('pointerdown', (e) => {
       return safe;
     }
 
-    // Normalize field type ID list (handles arrays, strings, numbers, etc.)
-    function normalizeFieldTypeIdList(input){
-      if(!input) return [];
-      if(Array.isArray(input)){
-        return input.map(id => {
-          if(typeof id === 'number') return id;
-          if(typeof id === 'string'){
-            const trimmed = id.trim();
-            if(/^\d+$/.test(trimmed)) return parseInt(trimmed, 10);
-          }
-          return null;
-        }).filter(id => id !== null);
-      }
-      if(typeof input === 'number') return [input];
-      if(typeof input === 'string'){
-        const trimmed = input.trim();
-        if(/^\d+$/.test(trimmed)) return [parseInt(trimmed, 10)];
-        // Try comma-separated values
-        const parts = trimmed.split(',').map(p => p.trim()).filter(p => /^\d+$/.test(p));
-        if(parts.length) return parts.map(p => parseInt(p, 10));
-      }
-      return [];
-    }
-
-    // Make it available globally
-    if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList !== 'function'){
-      window.normalizeFieldTypeIdList = normalizeFieldTypeIdList;
-    }
-
-    // Resolve field type IDs to actual field definitions (from database field types)
-    function resolveFieldTypeFieldsByIds(typeIds){
-      const normalizeIds = typeof window.normalizeFieldTypeIdList === 'function' 
-        ? window.normalizeFieldTypeIdList 
-        : normalizeFieldTypeIdList;
-      const ids = normalizeIds ? normalizeIds(typeIds) : [];
-      if(!ids.length) return [];
-      
-      const formFieldTypes = window.FORM_FIELD_TYPES || [];
-      const resolved = [];
-      const seen = new Set();
-      
-      const cloneField = (field) => {
-        if(!field || typeof field !== 'object') return null;
-        try{
-          return JSON.parse(JSON.stringify(field));
-        }catch(e){
-          return { ...field };
-        }
-      };
-      
-      const extractFieldsFromType = (typeDef) => {
-        if(!typeDef || typeof typeDef !== 'object') return [];
-        const sources = [];
-        if(Array.isArray(typeDef.fields)) sources.push(...typeDef.fields);
-        if(typeDef.definition && Array.isArray(typeDef.definition.fields)) sources.push(...typeDef.definition.fields);
-        if(Array.isArray(typeDef.defaultFields)) sources.push(...typeDef.defaultFields);
-        if(Array.isArray(typeDef.fieldDefinitions)) sources.push(...typeDef.fieldDefinitions);
-        if(Array.isArray(typeDef.fieldConfigs)) sources.push(...typeDef.fieldConfigs);
-        if(Array.isArray(typeDef.templates)) sources.push(...typeDef.templates);
-        return sources;
-      };
-      
-      ids.forEach(id => {
-        const idNum = typeof id === 'number' ? id : (typeof id === 'string' && /^\d+$/.test(id.trim()) ? parseInt(id.trim(), 10) : null);
-        if(idNum === null || seen.has(idNum)) return;
-        
-        const typeDef = formFieldTypes.find(opt => opt.id === idNum);
-        if(!typeDef) return;
-        
-        seen.add(idNum);
-        const fields = extractFieldsFromType(typeDef);
-        fields.forEach(field => {
-          const cloned = cloneField(field);
-          if(cloned) resolved.push(cloned);
-        });
-      });
-      
-      return resolved;
-    }
-    
-    // Make it available globally for form builder
-    if(typeof window !== 'undefined'){
-      window.resolveFieldTypeFieldsByIds = resolveFieldTypeFieldsByIds;
-    }
-
     function getFieldsForSelection(categoryName, subcategoryName){
       if(!categoryName || !subcategoryName) return [];
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
-      // Use database field types only - no metadata fallback
-      const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
-      const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
-      let fields = [];
-      
-      // Resolve from database field type IDs only (database is source of truth - no metadata fallback)
-      if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
-        try{
-          const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
-          if(resolvedFields && resolvedFields.length > 0){
-            fields = resolvedFields;
-          }
-        }catch(e){
-          console.warn('Failed to resolve fields from field type IDs for member create', e);
-        }
+      const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
+      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        fields = sharedDefaultSubcategoryFields;
       }
       return fields.map(sanitizeCreateField);
     }

@@ -190,8 +190,7 @@ function fetchCategories(PDO $pdo, array $columns): array
             }
         }
 
-        // ONLY use metadata if DB CSV is empty (database is source of truth for categories)
-        if (!$fieldTypeIds && isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
             $metadataFieldTypeIds = [];
             foreach ($metadata['fieldTypeIds'] as $value) {
                 if (is_int($value)) {
@@ -209,7 +208,7 @@ function fetchCategories(PDO $pdo, array $columns): array
             $metadata['fieldTypeIds'] = $fieldTypeIds;
         }
 
-        if (!$fieldTypeNames && isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
             $metadataFieldTypeNames = [];
             foreach ($metadata['fieldTypeNames'] as $value) {
                 if (is_string($value)) {
@@ -365,8 +364,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             }
         }
 
-        // ONLY use metadata if DB CSV is empty (database is source of truth for subcategories)
-        if (!$fieldTypeIds && isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
             $metadataFieldTypeIds = [];
             foreach ($metadata['fieldTypeIds'] as $value) {
                 if (is_int($value)) {
@@ -384,7 +382,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $metadata['fieldTypeIds'] = $fieldTypeIds;
         }
 
-        if (!$fieldTypeNames && isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
             $metadataFieldTypeNames = [];
             foreach ($metadata['fieldTypeNames'] as $value) {
                 if (is_string($value)) {
@@ -432,7 +430,6 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasKey = in_array('field_type_key', $columns, true);
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasFieldTypeItems = in_array('field_type_item_1', $columns, true) || in_array('field_type_item_2', $columns, true) || in_array('field_type_item_3', $columns, true) || in_array('field_type_item_4', $columns, true) || in_array('field_type_item_5', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
@@ -450,16 +447,6 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         $orderBy = ' ORDER BY `field_type_name` ASC';
     } elseif ($hasId) {
         $orderBy = ' ORDER BY `id` ASC';
-    }
-    
-    // Include field_type_item_X columns to parse field definitions
-    if ($hasFieldTypeItems) {
-        for ($i = 1; $i <= 5; $i++) {
-            $colName = 'field_type_item_' . $i;
-            if (in_array($colName, $columns, true)) {
-                $selectColumns[] = '`' . $colName . '`';
-            }
-        }
     }
 
     if (!$selectColumns) {
@@ -540,53 +527,6 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
                 ? (int) $row['sort_order']
                 : $row['sort_order'];
         }
-        
-        // Parse field_type_item_X columns to build field definitions
-        $fields = [];
-        if ($hasFieldTypeItems) {
-            for ($i = 1; $i <= 5; $i++) {
-                $colName = 'field_type_item_' . $i;
-                if (isset($row[$colName]) && is_string($row[$colName]) && $row[$colName] !== '') {
-                    // Parse format like "title [field=1]" or "venues [fieldset=1]"
-                    $item = trim($row[$colName]);
-                    if (preg_match('/^(.+?)\s*\[(field|fieldset)=(\d+)\]$/', $item, $matches)) {
-                        $fieldName = trim($matches[1]);
-                        $isFieldset = ($matches[2] === 'fieldset');
-                        $fieldId = (int) $matches[3];
-                        
-                        // Create field definition from parsed reference
-                        $fieldDef = [
-                            'name' => ucfirst(str_replace('_', ' ', $fieldName)),
-                            'type' => $fieldName,
-                            'required' => false,
-                            'options' => []
-                        ];
-                        
-                        // Add specific handling for known field types
-                        if ($fieldName === 'title') {
-                            $fieldDef['required'] = true;
-                        } elseif ($fieldName === 'description') {
-                            $fieldDef['required'] = true;
-                        } elseif ($fieldName === 'images') {
-                            $fieldDef['required'] = true;
-                        }
-                        
-                        if ($isFieldset) {
-                            $fieldDef['isFieldset'] = true;
-                            $fieldDef['fieldsetId'] = $fieldId;
-                        } else {
-                            $fieldDef['fieldId'] = $fieldId;
-                        }
-                        
-                        $fields[] = $fieldDef;
-                    }
-                }
-            }
-        }
-        
-        if (!empty($fields)) {
-            $entry['fields'] = $fields;
-        }
 
         $fieldTypes[] = $entry;
         $seen[$dedupeKey] = true;
@@ -613,10 +553,6 @@ function buildSnapshot(array $categories, array $subcategories): array
             'sort_order' => $category['sort_order'] ?? null,
             'subIds' => [],
         ];
-        // Ensure subFieldTypes is treated as an object (associative array)
-        if (!is_array($categoriesMap[$categoryName]['subFieldTypes'])) {
-            $categoriesMap[$categoryName]['subFieldTypes'] = [];
-        }
 
         $metadata = [];
         if (isset($category['metadata']) && is_array($category['metadata'])) {
@@ -692,8 +628,10 @@ function buildSnapshot(array $categories, array $subcategories): array
             $metadata = [];
         }
 
-        // Don't use metadata fields - database field types are the source of truth
         $fields = [];
+        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
+            $fields = $metadata['fields'];
+        }
 
         $fieldTypeIds = [];
         if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
@@ -740,20 +678,11 @@ function buildSnapshot(array $categories, array $subcategories): array
         $metadata['fieldTypeIds'] = $fieldTypeIds;
         $metadata['fieldTypeNames'] = $fieldTypeNames;
 
-        // Don't populate subFields from metadata - database field types are the source of truth
-        // Fields will be resolved from field type IDs on the frontend
-        $categoriesMap[$categoryName]['subFields'][$sub['name']] = [];
+        $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
         $categoriesMap[$categoryName]['subFieldTypes'][$sub['name']] = $fieldTypeIds;
 
         $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;
         $subcategoryFieldTypeNames[$sub['name']] = $fieldTypeNames;
-        
-        // Debug: Log field type IDs for Live Gigs
-        if ($sub['name'] === 'Live Gigs') {
-            error_log('Live Gigs - field_type_ids from DB: ' . json_encode($sub['field_type_ids'] ?? 'NOT SET'));
-            error_log('Live Gigs - resolved fieldTypeIds: ' . json_encode($fieldTypeIds));
-            error_log('Live Gigs - metadata fieldTypeIds: ' . json_encode($metadata['fieldTypeIds'] ?? 'NOT SET'));
-        }
 
         $iconHtml = '';
         $iconPath = '';
