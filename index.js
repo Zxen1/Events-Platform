@@ -21091,41 +21091,39 @@ document.addEventListener('pointerdown', (e) => {
       if(!categoryName || !subcategoryName) return [];
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
-      const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      // Prioritize database field types over metadata fields
+      const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
+      const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
+      let fields = [];
       
       // Debug: Always log for Live Gigs
       if(subcategoryName === 'Live Gigs'){
         console.log('Live Gigs - getFieldsForSelection called');
-        console.log('Live Gigs - fields from subFieldsMap:', fields);
+        console.log('Live Gigs - fieldTypeIds from DB:', fieldTypeIds);
         console.log('Live Gigs - category.subFieldTypes:', category.subFieldTypes);
       }
-      // Test sync - 2
       
-      // If fields are empty, resolve from DB field type IDs (no hardcoded defaults)
-      if(!fields || fields.length === 0){
-        const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
-        const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
-        
-        // Debug: Log for Live Gigs
-        if(subcategoryName === 'Live Gigs'){
-          console.log('Live Gigs - subFieldTypesMap:', subFieldTypesMap);
-          console.log('Live Gigs - raw fieldTypeIds:', subFieldTypesMap[subcategoryName]);
-          console.log('Live Gigs - normalized fieldTypeIds:', fieldTypeIds);
-        }
-        
-        if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
-          try{
-            const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
-            if(subcategoryName === 'Live Gigs'){
-              console.log('Live Gigs - resolvedFields:', resolvedFields);
-            }
-            if(resolvedFields && resolvedFields.length > 0){
-              fields = resolvedFields;
-            }
-          }catch(e){
-            console.warn('Failed to resolve fields from field type IDs for member create', e);
+      // Resolve from database field type IDs first (database is source of truth)
+      if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
+        try{
+          const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
+          if(subcategoryName === 'Live Gigs'){
+            console.log('Live Gigs - resolvedFields from DB:', resolvedFields);
           }
+          if(resolvedFields && resolvedFields.length > 0){
+            fields = resolvedFields;
+          }
+        }catch(e){
+          console.warn('Failed to resolve fields from field type IDs for member create', e);
+        }
+      }
+      
+      // Fallback to metadata fields only if database field types didn't resolve
+      if(!fields || fields.length === 0){
+        const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
+        fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+        if(subcategoryName === 'Live Gigs'){
+          console.log('Live Gigs - falling back to metadata fields:', fields);
         }
       }
       return fields.map(sanitizeCreateField);
