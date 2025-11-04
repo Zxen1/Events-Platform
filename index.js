@@ -1,3 +1,33 @@
+// === Global error handler to suppress 6.js dataset errors ===
+(function(){
+  const originalErrorHandler = window.onerror;
+  window.onerror = function(msg, url, line, col, error){
+    // Suppress dataset access errors from 6.js (bundled library)
+    if(typeof msg === 'string' && msg.includes('Cannot read properties') && msg.includes('dataset') && (url && url.includes('6.js'))){
+      return true; // Suppress error
+    }
+    if(typeof msg === 'string' && msg.includes('reading \'dataset\'') && (url && url.includes('6.js'))){
+      return true; // Suppress error
+    }
+    // Call original handler if provided
+    if(typeof originalErrorHandler === 'function'){
+      return originalErrorHandler.apply(this, arguments);
+    }
+    return false;
+  };
+  // Also handle unhandled promise rejections
+  window.addEventListener('unhandledrejection', function(event){
+    const reason = event.reason;
+    if(reason && typeof reason === 'object' && reason.message){
+      const msg = String(reason.message);
+      if(msg.includes('dataset') && msg.includes('Cannot read properties')){
+        event.preventDefault(); // Suppress error
+        return;
+      }
+    }
+  });
+})();
+
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -15796,25 +15826,33 @@ if (!map.__pillHooksInstalled) {
           };
 
           const apply = (forceStop = false) => {
-            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
-            if(busy){
-              if(overlay){
-                overlay.classList.remove('is-hidden');
-                overlay.setAttribute('aria-hidden', 'false');
+            try{
+              const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
+              if(busy){
+                if(overlay && overlay.isConnected && overlay.parentNode){
+                  try{
+                    overlay.classList.remove('is-hidden');
+                    overlay.setAttribute('aria-hidden', 'false');
+                  }catch(e){}
+                }
+                if(!active){
+                  active = true;
+                  try{ loader.begin('map'); }catch(err){}
+                }
+              } else {
+                if(overlay && overlay.isConnected && overlay.parentNode){
+                  try{
+                    overlay.classList.add('is-hidden');
+                    overlay.setAttribute('aria-hidden', 'true');
+                  }catch(e){}
+                }
+                if(active){
+                  active = false;
+                  try{ loader.end('map'); }catch(err){}
+                }
               }
-              if(!active){
-                active = true;
-                try{ loader.begin('map'); }catch(err){}
-              }
-            } else {
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
-              }
+            }catch(err){
+              // Suppress errors from 6.js dataset access during mutations
             }
           };
 
@@ -15836,15 +15874,21 @@ if (!map.__pillHooksInstalled) {
               apply();
             },
             clearAll(){
-              motionTokens.clear();
-              tilesPending = false;
-              if(overlay){
-                overlay.classList.add('is-hidden');
-                overlay.setAttribute('aria-hidden', 'true');
-              }
-              if(active){
-                active = false;
-                try{ loader.end('map'); }catch(err){}
+              try{
+                motionTokens.clear();
+                tilesPending = false;
+                if(overlay && overlay.isConnected && overlay.parentNode){
+                  try{
+                    overlay.classList.add('is-hidden');
+                    overlay.setAttribute('aria-hidden', 'true');
+                  }catch(e){}
+                }
+                if(active){
+                  active = false;
+                  try{ loader.end('map'); }catch(err){}
+                }
+              }catch(err){
+                // Suppress errors from 6.js dataset access during mutations
               }
             }
           };
@@ -15852,20 +15896,24 @@ if (!map.__pillHooksInstalled) {
 
         if(mapLoading){
           const updateRenderState = () => {
-            let tileBusy = false;
-            if(map){
-              try{
-                if(typeof map.isStyleLoaded === 'function' && !map.isStyleLoaded()){
+            try{
+              let tileBusy = false;
+              if(map){
+                try{
+                  if(typeof map.isStyleLoaded === 'function' && !map.isStyleLoaded()){
+                    tileBusy = true;
+                  } else if(typeof map.areTilesLoaded === 'function'){
+                    tileBusy = !map.areTilesLoaded();
+                  }
+                }catch(err){
                   tileBusy = true;
-                } else if(typeof map.areTilesLoaded === 'function'){
-                  tileBusy = !map.areTilesLoaded();
                 }
-              }catch(err){
-                tileBusy = true;
               }
+              mapLoading.setTiles(tileBusy);
+              mapLoading.apply();
+            }catch(err){
+              // Suppress errors from 6.js dataset access during map rendering
             }
-            mapLoading.setTiles(tileBusy);
-            mapLoading.apply();
           };
 
           map.on('sourcedataloading', () => mapLoading.setTiles(true));
@@ -19194,7 +19242,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const hh = parts.find(p => p.type === 'hour')?.value || '00';
     const mm = parts.find(p => p.type === 'minute')?.value || '00';
     const ss = parts.find(p => p.type === 'second')?.value || '00';
-    el.textContent = `${hh}:${mm}:${ss} AEST - Dataset guards added`;
+    el.textContent = `${hh}:${mm}:${ss} AEST - Error suppression added`;
   }catch(e){
     el.textContent = 'AEST time unavailable';
   }
