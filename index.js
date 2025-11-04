@@ -21100,7 +21100,7 @@ document.addEventListener('pointerdown', (e) => {
         console.log('Live Gigs - fields from subFieldsMap:', fields);
         console.log('Live Gigs - category.subFieldTypes:', category.subFieldTypes);
       }
-      // Test sync
+      // Test sync - 2
       
       // If fields are empty, resolve from DB field type IDs (no hardcoded defaults)
       if(!fields || fields.length === 0){
