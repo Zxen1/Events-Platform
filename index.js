@@ -21082,9 +21082,20 @@ document.addEventListener('pointerdown', (e) => {
       if(!fields || fields.length === 0){
         const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
         const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
+        
+        // Debug: Log for Live Gigs
+        if(subcategoryName === 'Live Gigs'){
+          console.log('Live Gigs - subFieldTypesMap:', subFieldTypesMap);
+          console.log('Live Gigs - raw fieldTypeIds:', subFieldTypesMap[subcategoryName]);
+          console.log('Live Gigs - normalized fieldTypeIds:', fieldTypeIds);
+        }
+        
         if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
           try{
             const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
+            if(subcategoryName === 'Live Gigs'){
+              console.log('Live Gigs - resolvedFields:', resolvedFields);
+            }
             if(resolvedFields && resolvedFields.length > 0){
               fields = resolvedFields;
             }

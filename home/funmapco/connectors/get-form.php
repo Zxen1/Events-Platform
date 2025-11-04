@@ -685,6 +685,13 @@ function buildSnapshot(array $categories, array $subcategories): array
 
         $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;
         $subcategoryFieldTypeNames[$sub['name']] = $fieldTypeNames;
+        
+        // Debug: Log field type IDs for Live Gigs
+        if ($sub['name'] === 'Live Gigs') {
+            error_log('Live Gigs - field_type_ids from DB: ' . json_encode($sub['field_type_ids'] ?? 'NOT SET'));
+            error_log('Live Gigs - resolved fieldTypeIds: ' . json_encode($fieldTypeIds));
+            error_log('Live Gigs - metadata fieldTypeIds: ' . json_encode($metadata['fieldTypeIds'] ?? 'NOT SET'));
+        }
 
         $iconHtml = '';
         $iconPath = '';
