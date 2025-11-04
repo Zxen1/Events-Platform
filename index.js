@@ -8635,6 +8635,7 @@ function makePosts(){
 
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
+        const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -11544,25 +11545,8 @@ function makePosts(){
             return editor;
           };
 
-          const ensureDefaultFieldSet = (fieldList)=>{
-            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
-            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-              fieldList.push({
-                name: typeof defaultField.name === 'string' ? defaultField.name : '',
-                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
-                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
-                required: !!defaultField.required,
-                options: []
-              });
-            });
-            return fieldList.length > 0;
-          };
-
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          if(ensureDefaultFieldSet(fields)){
-            notifyFormbuilderChange();
-          }
+          const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -11606,7 +11590,9 @@ function makePosts(){
             if(!fields.length){
               const empty = document.createElement('p');
               empty.className = 'form-preview-empty';
-              empty.textContent = 'No fields added yet.';
+              empty.textContent = fieldTypeIds.length
+                ? 'Form fields for this subcategory could not be loaded. Reload the definitions to continue.'
+                : 'No fields added yet.';
               formPreviewFields.appendChild(empty);
               return;
             }
@@ -21027,14 +21013,6 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
       : normalizeVenueSessionOptions;
@@ -21132,7 +21110,8 @@ document.addEventListener('pointerdown', (e) => {
 
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
     const loadingMessage = 'Loading form fields…';
-    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
+    const fetchErrorMessage = 'We couldn’t load the latest form fields. Please reload the form definitions and try again.';
+    const fieldDefinitionReloadMessage = 'We couldn’t load the fields for this subcategory. Please reload the form definitions and try again.';
 
     const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
     let memberSnapshot = defaultMemberSnapshot;
@@ -21140,6 +21119,7 @@ document.addEventListener('pointerdown', (e) => {
     let currencyCodes = collectCurrencyCodes(memberSnapshot);
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
+    let shouldSuggestDefinitionReload = false;
 
     function setEmptyStateMessage(message){
       if(!emptyState) return;
@@ -21490,16 +21470,30 @@ document.addEventListener('pointerdown', (e) => {
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      let attemptedFieldTypeResolution = false;
       if(!fields || fields.length === 0){
         const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
-        const typeFields = resolveFieldTypeFieldsByIds(subFieldTypesMap[subcategoryName]);
-        if(typeFields.length){
-          fields = typeFields;
+        const typeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
+        if(typeIds.length){
+          attemptedFieldTypeResolution = true;
+          const typeFields = resolveFieldTypeFieldsByIds(typeIds);
+          if(typeFields.length){
+            fields = typeFields;
+            shouldSuggestDefinitionReload = false;
+          } else {
+            shouldSuggestDefinitionReload = true;
+            memberSnapshotErrorMessage = fieldDefinitionReloadMessage;
+            fields = [];
+          }
         }
       }
       if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
+        if(!attemptedFieldTypeResolution){
+          shouldSuggestDefinitionReload = false;
+        }
+        return [];
       }
+      shouldSuggestDefinitionReload = false;
       return fields.map(sanitizeCreateField);
     }
 
@@ -21967,6 +21961,7 @@ document.addEventListener('pointerdown', (e) => {
           window.formbuilderStateManager.restore(snapshot);
         }
         applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
+        shouldSuggestDefinitionReload = false;
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
       }catch(error){
@@ -21976,6 +21971,7 @@ document.addEventListener('pointerdown', (e) => {
         } else {
           console.error('Failed to load formbuilder snapshot for members', error);
         }
+        shouldSuggestDefinitionReload = true;
         memberSnapshotErrorMessage = fetchErrorMessage;
         setEmptyStateMessage(fetchErrorMessage);
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
@@ -22369,12 +22365,28 @@ document.addEventListener('pointerdown', (e) => {
       formFields.innerHTML = '';
       currentCreateFields = [];
       if(fields.length === 0){
-        const placeholder = document.createElement('p');
+        const placeholder = document.createElement('div');
         placeholder.className = 'member-create-placeholder';
-        placeholder.textContent = 'No fields configured for this subcategory yet.';
+        const message = shouldSuggestDefinitionReload
+          ? (memberSnapshotErrorMessage || fetchErrorMessage)
+          : 'No fields configured for this subcategory yet.';
+        const messageEl = document.createElement('p');
+        messageEl.textContent = message;
+        placeholder.appendChild(messageEl);
+        if(shouldSuggestDefinitionReload){
+          const reloadBtn = document.createElement('button');
+          reloadBtn.type = 'button';
+          reloadBtn.className = 'member-create-secondary-btn member-create-reload-btn';
+          reloadBtn.textContent = 'Reload Form Definitions';
+          reloadBtn.addEventListener('click', ()=>{
+            initializeMemberFormbuilderSnapshot();
+          });
+          placeholder.appendChild(reloadBtn);
+        }
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
+        shouldSuggestDefinitionReload = false;
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl){
