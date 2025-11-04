@@ -3780,6 +3780,47 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
+    function sanitizeDefaultSubcategoryFields(fields){
+      if(!Array.isArray(fields)){
+        return [];
+      }
+      return fields.map(cloneFieldValue);
+    }
+
+    let DEFAULT_SUBCATEGORY_FIELDS = [];
+
+    function updateDefaultSubcategoryFields(fields){
+      DEFAULT_SUBCATEGORY_FIELDS = sanitizeDefaultSubcategoryFields(fields);
+      if(typeof window !== 'undefined'){
+        window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+      }
+    }
+
+    function deriveDefaultSubcategoryFieldsFromSnapshot(snapshot){
+      const categories = Array.isArray(snapshot && snapshot.categories) ? snapshot.categories : [];
+      for(const category of categories){
+        if(!category || typeof category !== 'object'){
+          continue;
+        }
+        const subFieldsMap = category.subFields && typeof category.subFields === 'object' && !Array.isArray(category.subFields)
+          ? category.subFields
+          : {};
+        const subs = Array.isArray(category.subs) && category.subs.length
+          ? category.subs
+          : Object.keys(subFieldsMap);
+        for(const sub of subs){
+          if(typeof sub !== 'string' || !sub){
+            continue;
+          }
+          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
+          if(fields.length){
+            return fields.map(cloneFieldValue);
+          }
+        }
+      }
+      return [];
+    }
+
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
@@ -4191,47 +4232,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
     function resetVenueAutofillState(field){
       VENUE_TIME_AUTOFILL_STATE.delete(field);
-    }
-
-    function sanitizeDefaultSubcategoryFields(fields){
-      if(!Array.isArray(fields)){
-        return [];
-      }
-      return fields.map(cloneFieldValue);
-    }
-
-    let DEFAULT_SUBCATEGORY_FIELDS = [];
-
-    function updateDefaultSubcategoryFields(fields){
-      DEFAULT_SUBCATEGORY_FIELDS = sanitizeDefaultSubcategoryFields(fields);
-      if(typeof window !== 'undefined'){
-        window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-      }
-    }
-
-    function deriveDefaultSubcategoryFieldsFromSnapshot(snapshot){
-      const categories = Array.isArray(snapshot && snapshot.categories) ? snapshot.categories : [];
-      for(const category of categories){
-        if(!category || typeof category !== 'object'){
-          continue;
-        }
-        const subFieldsMap = category.subFields && typeof category.subFields === 'object' && !Array.isArray(category.subFields)
-          ? category.subFields
-          : {};
-        const subs = Array.isArray(category.subs) && category.subs.length
-          ? category.subs
-          : Object.keys(subFieldsMap);
-        for(const sub of subs){
-          if(typeof sub !== 'string' || !sub){
-            continue;
-          }
-          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-          if(fields.length){
-            return fields.map(cloneFieldValue);
-          }
-        }
-      }
-      return [];
     }
 
     if(typeof updateDefaultSubcategoryFields === 'function'){
