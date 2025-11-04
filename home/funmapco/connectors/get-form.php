@@ -432,6 +432,7 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasKey = in_array('field_type_key', $columns, true);
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
+    $hasFieldTypeItems = in_array('field_type_item_1', $columns, true) || in_array('field_type_item_2', $columns, true) || in_array('field_type_item_3', $columns, true) || in_array('field_type_item_4', $columns, true) || in_array('field_type_item_5', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
@@ -449,6 +450,16 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         $orderBy = ' ORDER BY `field_type_name` ASC';
     } elseif ($hasId) {
         $orderBy = ' ORDER BY `id` ASC';
+    }
+    
+    // Include field_type_item_X columns to parse field definitions
+    if ($hasFieldTypeItems) {
+        for ($i = 1; $i <= 5; $i++) {
+            $colName = 'field_type_item_' . $i;
+            if (in_array($colName, $columns, true)) {
+                $selectColumns[] = '`' . $colName . '`';
+            }
+        }
     }
 
     if (!$selectColumns) {
@@ -528,6 +539,53 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
             $entry['sort_order'] = is_numeric($row['sort_order'])
                 ? (int) $row['sort_order']
                 : $row['sort_order'];
+        }
+        
+        // Parse field_type_item_X columns to build field definitions
+        $fields = [];
+        if ($hasFieldTypeItems) {
+            for ($i = 1; $i <= 5; $i++) {
+                $colName = 'field_type_item_' . $i;
+                if (isset($row[$colName]) && is_string($row[$colName]) && $row[$colName] !== '') {
+                    // Parse format like "title [field=1]" or "venues [fieldset=1]"
+                    $item = trim($row[$colName]);
+                    if (preg_match('/^(.+?)\s*\[(field|fieldset)=(\d+)\]$/', $item, $matches)) {
+                        $fieldName = trim($matches[1]);
+                        $isFieldset = ($matches[2] === 'fieldset');
+                        $fieldId = (int) $matches[3];
+                        
+                        // Create field definition from parsed reference
+                        $fieldDef = [
+                            'name' => ucfirst(str_replace('_', ' ', $fieldName)),
+                            'type' => $fieldName,
+                            'required' => false,
+                            'options' => []
+                        ];
+                        
+                        // Add specific handling for known field types
+                        if ($fieldName === 'title') {
+                            $fieldDef['required'] = true;
+                        } elseif ($fieldName === 'description') {
+                            $fieldDef['required'] = true;
+                        } elseif ($fieldName === 'images') {
+                            $fieldDef['required'] = true;
+                        }
+                        
+                        if ($isFieldset) {
+                            $fieldDef['isFieldset'] = true;
+                            $fieldDef['fieldsetId'] = $fieldId;
+                        } else {
+                            $fieldDef['fieldId'] = $fieldId;
+                        }
+                        
+                        $fields[] = $fieldDef;
+                    }
+                }
+            }
+        }
+        
+        if (!empty($fields)) {
+            $entry['fields'] = $fields;
         }
 
         $fieldTypes[] = $entry;
