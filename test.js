@@ -603,4 +603,127 @@ assert(
   'Subcategory icon picker buttons should clear aria-disabled when icons are available.'
 );
 
+const normalizeIdsSourceStart = mainSource.indexOf('function normalizeFieldTypeIdList(');
+const normalizeIdsSourceEnd = mainSource.indexOf("if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList !== 'function')", normalizeIdsSourceStart);
+assert(normalizeIdsSourceStart !== -1 && normalizeIdsSourceEnd !== -1, 'Unable to locate normalizeFieldTypeIdList source.');
+
+const cloneFieldValueSourceStart = mainSource.indexOf('function cloneFieldValue(');
+const cloneFieldValueSourceEnd = mainSource.indexOf('const FIELD_TYPE_ARRAY_PROPS', cloneFieldValueSourceStart);
+assert(cloneFieldValueSourceStart !== -1 && cloneFieldValueSourceEnd !== -1, 'Unable to locate cloneFieldValue source.');
+
+const buildCacheSourceStart = mainSource.indexOf('    function buildFieldTypeDefinitionCache(){');
+const buildCacheSourceEnd = mainSource.indexOf('    function getFieldTypeDefinitionCache(){', buildCacheSourceStart);
+assert(buildCacheSourceStart !== -1 && buildCacheSourceEnd !== -1, 'Unable to locate buildFieldTypeDefinitionCache source.');
+
+const getCacheSourceStart = buildCacheSourceEnd;
+const getCacheSourceEnd = mainSource.indexOf('    function getSharedFieldTypeIdListNormalizer(){', getCacheSourceStart);
+assert(getCacheSourceStart !== -1 && getCacheSourceEnd !== -1, 'Unable to locate getFieldTypeDefinitionCache source.');
+
+const sharedNormalizerSourceStart = getCacheSourceEnd;
+const sharedNormalizerSourceEnd = mainSource.indexOf('    function resolveFieldTypeFieldsByIds(typeIds){', sharedNormalizerSourceStart);
+assert(sharedNormalizerSourceStart !== -1 && sharedNormalizerSourceEnd !== -1, 'Unable to locate getSharedFieldTypeIdListNormalizer source.');
+
+const resolveFieldsSourceStart = sharedNormalizerSourceEnd;
+const resolveFieldsSourceEnd = mainSource.indexOf('    function sanitizeCreateField(field){', resolveFieldsSourceStart);
+assert(resolveFieldsSourceStart !== -1 && resolveFieldsSourceEnd !== -1, 'Unable to locate resolveFieldTypeFieldsByIds source.');
+
+const sanitizeFieldSourceStart = resolveFieldsSourceEnd;
+const sanitizeFieldSourceEnd = mainSource.indexOf('    function getFieldsForSelection(categoryName, subcategoryName){', sanitizeFieldSourceStart);
+assert(sanitizeFieldSourceStart !== -1 && sanitizeFieldSourceEnd !== -1, 'Unable to locate sanitizeCreateField source.');
+
+const getFieldsSourceStart = sanitizeFieldSourceEnd;
+const getFieldsSourceEnd = mainSource.indexOf('    function renderEmptyState(message){', getFieldsSourceStart);
+assert(getFieldsSourceStart !== -1 && getFieldsSourceEnd !== -1, 'Unable to locate getFieldsForSelection source.');
+
+const memberScriptSource = [
+  mainSource.slice(normalizeIdsSourceStart, normalizeIdsSourceEnd),
+  mainSource.slice(cloneFieldValueSourceStart, cloneFieldValueSourceEnd),
+  mainSource.slice(buildCacheSourceStart, buildCacheSourceEnd),
+  mainSource.slice(getCacheSourceStart, getCacheSourceEnd),
+  mainSource.slice(sharedNormalizerSourceStart, sharedNormalizerSourceEnd),
+  mainSource.slice(resolveFieldsSourceStart, resolveFieldsSourceEnd),
+  mainSource.slice(sanitizeFieldSourceStart, sanitizeFieldSourceEnd),
+  mainSource.slice(getFieldsSourceStart, getFieldsSourceEnd)
+].join('\n');
+
+const memberContext = {
+  window: {},
+  console
+};
+
+vm.createContext(memberContext);
+vm.runInContext(memberScriptSource, memberContext);
+
+assert.strictEqual(typeof memberContext.normalizeFieldTypeIdList, 'function', 'normalizeFieldTypeIdList should be defined in member context.');
+assert.strictEqual(typeof memberContext.buildFieldTypeDefinitionCache, 'function', 'buildFieldTypeDefinitionCache should be defined in member context.');
+assert.strictEqual(typeof memberContext.resolveFieldTypeFieldsByIds, 'function', 'resolveFieldTypeFieldsByIds should be defined in member context.');
+assert.strictEqual(typeof memberContext.getFieldsForSelection, 'function', 'getFieldsForSelection should be defined in member context.');
+
+memberContext.window.normalizeFieldTypeIdList = memberContext.normalizeFieldTypeIdList;
+
+const baseNameField = { name: 'Listing Name', type: 'text-box', placeholder: 'Event Name', required: true };
+const basePricingField = {
+  name: 'Ticket Pricing',
+  type: 'variant_pricing',
+  options: [{ version: 'General Admission', currency: 'USD', price: '100.00' }]
+};
+const baseAgreementField = { name: 'Agree to Terms', type: 'checkbox', options: ['Yes', 'No'] };
+const baseNotesField = { name: 'Internal Notes', type: 'text-box', placeholder: 'Notes', required: false };
+const basePreferenceField = { name: 'Preference', type: 'radio-toggle', options: ['Option 1', 'Option 2'] };
+
+const formFieldTypeOptions = [
+  { id: 1, value: 'text-box', label: 'Text Box', fields: [baseNameField] },
+  { id: 2, value: 'variant_pricing', label: 'Variant Pricing', definition: { fields: [basePricingField] } },
+  { id: 12, value: 'checkbox', label: 'Checkbox', fieldDefinitions: [baseAgreementField] },
+  { id: 16, value: 'text-box', label: 'Text Box', defaultFields: [baseNotesField] },
+  { id: 15, value: 'radio-toggle', label: 'Radio Toggle', templates: [basePreferenceField] }
+];
+
+memberContext.window.FORM_FIELD_TYPES = formFieldTypeOptions;
+memberContext.window.formFieldTypes = undefined;
+memberContext.FORM_FIELD_TYPES = formFieldTypeOptions;
+memberContext.memberCategories = [
+  {
+    name: 'General',
+    subFields: {},
+    subFieldTypes: { Basics: [1, 2, 12, 16, 15] }
+  }
+];
+memberContext.shouldSuggestDefinitionReload = false;
+memberContext.memberSnapshotErrorMessage = '';
+memberContext.fieldDefinitionReloadMessage = 'Reload the form definitions to continue.';
+
+const resolvedFieldsFromUpper = memberContext.resolveFieldTypeFieldsByIds([1, 2, 12, 16, 15]);
+assert.strictEqual(resolvedFieldsFromUpper.length, 5, 'Expected all field type IDs to resolve from FORM_FIELD_TYPES.');
+
+assert.notStrictEqual(resolvedFieldsFromUpper[0], baseNameField, 'Resolved fields should be clones of the cached definitions.');
+assert.notStrictEqual(resolvedFieldsFromUpper[1], basePricingField, 'Resolved fields should be clones of the cached definitions.');
+assert.notStrictEqual(resolvedFieldsFromUpper[2], baseAgreementField, 'Resolved fields should be clones of the cached definitions.');
+assert.notStrictEqual(resolvedFieldsFromUpper[3], baseNotesField, 'Resolved fields should be clones of the cached definitions.');
+assert.notStrictEqual(resolvedFieldsFromUpper[4], basePreferenceField, 'Resolved fields should be clones of the cached definitions.');
+
+resolvedFieldsFromUpper[1].options[0].price = '125.00';
+assert.strictEqual(basePricingField.options[0].price, '100.00', 'Mutating resolved fields should not affect cached definitions.');
+
+const selectionFields = memberContext.getFieldsForSelection('General', 'Basics');
+assert(Array.isArray(selectionFields) && selectionFields.length === 5, 'getFieldsForSelection should return sanitized fields for the selection.');
+selectionFields.forEach(field => {
+  assert.strictEqual(typeof field, 'object');
+  assert('name' in field, 'Sanitized field should include a name property.');
+  assert('type' in field, 'Sanitized field should include a type property.');
+});
+
+selectionFields[0].name = 'Modified Name';
+assert.strictEqual(baseNameField.name, 'Listing Name', 'Sanitized fields must be clones of the cached definitions.');
+
+assert.strictEqual(memberContext.shouldSuggestDefinitionReload, false, 'Successful field resolution should not suggest definition reload.');
+assert.strictEqual(memberContext.memberSnapshotErrorMessage, '', 'Successful field resolution should not set an error message.');
+
+memberContext.window.FORM_FIELD_TYPES = undefined;
+memberContext.window.formFieldTypes = formFieldTypeOptions;
+
+const resolvedFieldsFromLower = memberContext.resolveFieldTypeFieldsByIds(['1', '2', '12', '16', '15']);
+assert.strictEqual(resolvedFieldsFromLower.length, 5, 'Expected all field type IDs to resolve from formFieldTypes.');
+assert.strictEqual(resolvedFieldsFromLower[0].name, 'Listing Name', 'Resolved fields should match the cached definitions.');
+
 console.log('All tests passed');
