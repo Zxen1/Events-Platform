@@ -21031,6 +21031,35 @@ document.addEventListener('pointerdown', (e) => {
       return safe;
     }
 
+    // Normalize field type ID list (handles arrays, strings, numbers, etc.)
+    function normalizeFieldTypeIdList(input){
+      if(!input) return [];
+      if(Array.isArray(input)){
+        return input.map(id => {
+          if(typeof id === 'number') return id;
+          if(typeof id === 'string'){
+            const trimmed = id.trim();
+            if(/^\d+$/.test(trimmed)) return parseInt(trimmed, 10);
+          }
+          return null;
+        }).filter(id => id !== null);
+      }
+      if(typeof input === 'number') return [input];
+      if(typeof input === 'string'){
+        const trimmed = input.trim();
+        if(/^\d+$/.test(trimmed)) return [parseInt(trimmed, 10)];
+        // Try comma-separated values
+        const parts = trimmed.split(',').map(p => p.trim()).filter(p => /^\d+$/.test(p));
+        if(parts.length) return parts.map(p => parseInt(p, 10));
+      }
+      return [];
+    }
+
+    // Make it available globally
+    if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList !== 'function'){
+      window.normalizeFieldTypeIdList = normalizeFieldTypeIdList;
+    }
+
     // Resolve field type IDs to actual field definitions (from database field types)
     function resolveFieldTypeFieldsByIds(typeIds){
       const normalizeIds = typeof window.normalizeFieldTypeIdList === 'function' 
