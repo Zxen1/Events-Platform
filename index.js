@@ -21138,9 +21138,12 @@ document.addEventListener('pointerdown', (e) => {
           if(subcategoryName === 'Live Gigs'){
             console.log('Live Gigs - FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES);
             console.log('Live Gigs - Looking for IDs:', fieldTypeIds);
+            console.log('Live Gigs - First 3 FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES?.slice(0, 3));
             fieldTypeIds.forEach(id => {
-              const found = window.FORM_FIELD_TYPES?.find(ft => ft.id === id);
-              console.log(`Live Gigs - Field type ID ${id}:`, found);
+              const foundById = window.FORM_FIELD_TYPES?.find(ft => ft.id === id);
+              const foundByValue = window.FORM_FIELD_TYPES?.find(ft => ft.value === id || ft.value === String(id));
+              console.log(`Live Gigs - Field type ID ${id} (by id):`, foundById);
+              console.log(`Live Gigs - Field type ID ${id} (by value):`, foundByValue);
             });
           }
           const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
