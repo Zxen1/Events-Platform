@@ -19169,11 +19169,27 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 });
 
-// Static timecode in header center for verification (no auto-update)
+// Static timecode in header center for verification (shows AEST time)
 document.addEventListener('DOMContentLoaded', ()=>{
   const el = document.getElementById('headerTimecode');
   if(!el) return;
-  el.textContent = 'Timecode applied: 2025-11-04 00:00:00';
+  try{
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-AU', {
+      timeZone: 'Australia/Sydney',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(now);
+    const hh = parts.find(p => p.type === 'hour')?.value || '00';
+    const mm = parts.find(p => p.type === 'minute')?.value || '00';
+    const ss = parts.find(p => p.type === 'second')?.value || '00';
+    el.textContent = `${hh}:${mm}:${ss} AEST`;
+  }catch(e){
+    el.textContent = 'AEST time unavailable';
+  }
 });
 
 (function(){
