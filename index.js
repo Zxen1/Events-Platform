@@ -92,6 +92,71 @@ function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
 }
 
+function normalizeFieldTypeIdList(source){
+  const normalized = [];
+  const seen = new Set();
+  const processValue = entry => {
+    if(entry === null || entry === undefined) return;
+    if(typeof entry === 'number' && Number.isInteger(entry) && entry >= 0){
+      if(!seen.has(entry)){
+        seen.add(entry);
+        normalized.push(entry);
+      }
+      return;
+    }
+    if(typeof entry === 'string'){
+      const trimmed = entry.trim();
+      if(!trimmed) return;
+      if(/^\d+$/.test(trimmed)){
+        const parsed = parseInt(trimmed, 10);
+        if(!seen.has(parsed)){
+          seen.add(parsed);
+          normalized.push(parsed);
+        }
+        return;
+      }
+      if(!seen.has(trimmed)){
+        seen.add(trimmed);
+        normalized.push(trimmed);
+      }
+      return;
+    }
+    if(Array.isArray(entry)){
+      entry.forEach(processValue);
+      return;
+    }
+    if(typeof entry === 'object'){
+      if(Object.prototype.hasOwnProperty.call(entry, 'id')){
+        processValue(entry.id);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'value')){
+        processValue(entry.value);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'fieldTypeId')){
+        processValue(entry.fieldTypeId);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'field_type_id')){
+        processValue(entry.field_type_id);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'fieldTypeIds')){
+        processValue(entry.fieldTypeIds);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'field_type_ids')){
+        processValue(entry.field_type_ids);
+      }
+      if(Object.prototype.hasOwnProperty.call(entry, 'ids')){
+        processValue(entry.ids);
+      }
+    }
+  };
+  processValue(source);
+  return normalized;
+}
+
+if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList !== 'function'){
+  window.normalizeFieldTypeIdList = normalizeFieldTypeIdList;
+}
+
 function handlePromptKeydown(event, context){
   if(!context || !context.prompt || typeof context.cancelPrompt !== 'function'){
     return;
@@ -3494,55 +3559,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           }
         }
       });
-      return normalized;
-    }
-
-    function normalizeFieldTypeIdList(source){
-      const normalized = [];
-      const seen = new Set();
-      const processValue = entry => {
-        if(entry === null || entry === undefined) return;
-        if(typeof entry === 'number' && Number.isInteger(entry) && entry >= 0){
-          if(!seen.has(entry)){
-            seen.add(entry);
-            normalized.push(entry);
-          }
-          return;
-        }
-        if(typeof entry === 'string'){
-          const trimmed = entry.trim();
-          if(!trimmed) return;
-          if(/^\d+$/.test(trimmed)){
-            const parsed = parseInt(trimmed, 10);
-            if(!seen.has(parsed)){
-              seen.add(parsed);
-              normalized.push(parsed);
-            }
-            return;
-          }
-        }
-        if(entry && typeof entry === 'object'){
-          if(Object.prototype.hasOwnProperty.call(entry, 'id')){
-            processValue(entry.id);
-          }
-          if(Object.prototype.hasOwnProperty.call(entry, 'value')){
-            processValue(entry.value);
-          }
-        }
-      };
-      if(Array.isArray(source)){
-        source.forEach(processValue);
-      } else if(source && typeof source === 'object'){
-        const candidates = [];
-        if(Array.isArray(source.ids)) candidates.push(source.ids);
-        if(Array.isArray(source.values)) candidates.push(source.values);
-        if(Array.isArray(source.fieldTypeIds)) candidates.push(source.fieldTypeIds);
-        candidates.forEach(list => {
-          list.forEach(processValue);
-        });
-      } else if(typeof source === 'string' || typeof source === 'number'){
-        processValue(source);
-      }
       return normalized;
     }
 
@@ -21410,9 +21426,23 @@ document.addEventListener('pointerdown', (e) => {
       return buildFieldTypeDefinitionCache();
     }
 
+    function getSharedFieldTypeIdListNormalizer(){
+      if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList === 'function'){
+        return window.normalizeFieldTypeIdList;
+      }
+      if(typeof normalizeFieldTypeIdList === 'function'){
+        return normalizeFieldTypeIdList;
+      }
+      return null;
+    }
+
     function resolveFieldTypeFieldsByIds(typeIds){
-      const ids = normalizeFieldTypeIdList(typeIds);
+      const normalizeIds = getSharedFieldTypeIdListNormalizer();
+      const ids = normalizeIds ? normalizeIds(typeIds) : [];
       if(!ids.length){
+        if(!normalizeIds && typeof console !== 'undefined' && console.warn){
+          console.warn('normalizeFieldTypeIdList helper unavailable; unable to resolve field type IDs.');
+        }
         return [];
       }
       const { byId, byKey } = getFieldTypeDefinitionCache();
@@ -21533,7 +21563,8 @@ document.addEventListener('pointerdown', (e) => {
       let attemptedFieldTypeResolution = false;
       if(!fields || fields.length === 0){
         const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
-        const typeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
+        const normalizeIds = getSharedFieldTypeIdListNormalizer();
+        const typeIds = normalizeIds ? normalizeIds(subFieldTypesMap[subcategoryName]) : [];
         if(typeIds.length){
           attemptedFieldTypeResolution = true;
           const typeFields = resolveFieldTypeFieldsByIds(typeIds);
