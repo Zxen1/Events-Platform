@@ -1,33 +1,3 @@
-// === Global error handler to suppress 6.js dataset errors ===
-(function(){
-  const originalErrorHandler = window.onerror;
-  window.onerror = function(msg, url, line, col, error){
-    // Suppress dataset access errors from 6.js (bundled library)
-    if(typeof msg === 'string' && msg.includes('Cannot read properties') && msg.includes('dataset') && (url && url.includes('6.js'))){
-      return true; // Suppress error
-    }
-    if(typeof msg === 'string' && msg.includes('reading \'dataset\'') && (url && url.includes('6.js'))){
-      return true; // Suppress error
-    }
-    // Call original handler if provided
-    if(typeof originalErrorHandler === 'function'){
-      return originalErrorHandler.apply(this, arguments);
-    }
-    return false;
-  };
-  // Also handle unhandled promise rejections
-  window.addEventListener('unhandledrejection', function(event){
-    const reason = event.reason;
-    if(reason && typeof reason === 'object' && reason.message){
-      const msg = String(reason.message);
-      if(msg.includes('dataset') && msg.includes('Cannot read properties')){
-        event.preventDefault(); // Suppress error
-        return;
-      }
-    }
-  });
-})();
-
 // === Shared login verifier ===
 async function verifyUserLogin(username, password) {
   try {
@@ -120,71 +90,6 @@ function getSortedCategoryEntries(list) {
 
 function getSortedCategories(list) {
   return getSortedCategoryEntries(list).map(entry => entry.category);
-}
-
-function normalizeFieldTypeIdList(source){
-  const normalized = [];
-  const seen = new Set();
-  const processValue = entry => {
-    if(entry === null || entry === undefined) return;
-    if(typeof entry === 'number' && Number.isInteger(entry) && entry >= 0){
-      if(!seen.has(entry)){
-        seen.add(entry);
-        normalized.push(entry);
-      }
-      return;
-    }
-    if(typeof entry === 'string'){
-      const trimmed = entry.trim();
-      if(!trimmed) return;
-      if(/^\d+$/.test(trimmed)){
-        const parsed = parseInt(trimmed, 10);
-        if(!seen.has(parsed)){
-          seen.add(parsed);
-          normalized.push(parsed);
-        }
-        return;
-      }
-      if(!seen.has(trimmed)){
-        seen.add(trimmed);
-        normalized.push(trimmed);
-      }
-      return;
-    }
-    if(Array.isArray(entry)){
-      entry.forEach(processValue);
-      return;
-    }
-    if(typeof entry === 'object'){
-      if(Object.prototype.hasOwnProperty.call(entry, 'id')){
-        processValue(entry.id);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'value')){
-        processValue(entry.value);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'fieldTypeId')){
-        processValue(entry.fieldTypeId);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'field_type_id')){
-        processValue(entry.field_type_id);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'fieldTypeIds')){
-        processValue(entry.fieldTypeIds);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'field_type_ids')){
-        processValue(entry.field_type_ids);
-      }
-      if(Object.prototype.hasOwnProperty.call(entry, 'ids')){
-        processValue(entry.ids);
-      }
-    }
-  };
-  processValue(source);
-  return normalized;
-}
-
-if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList !== 'function'){
-  window.normalizeFieldTypeIdList = normalizeFieldTypeIdList;
 }
 
 function handlePromptKeydown(event, context){
@@ -3126,7 +3031,6 @@ async function ensureMapboxCssFor(container) {
       const overlays = findMarkerOverlaysById(postId);
       overlays.forEach(overlay => {
         overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
-          if(!cardEl || !cardEl.dataset) return;
           if(shouldHighlight){
             if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
               cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
@@ -3147,7 +3051,6 @@ async function ensureMapboxCssFor(container) {
           }
         });
         overlay.querySelectorAll('.big-map-card').forEach(cardEl => {
-          if(!cardEl || !cardEl.dataset) return;
           if(shouldHighlight){
             if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
               cardEl.dataset.hoverPrevMapHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
@@ -3456,74 +3359,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
-    const FIELD_TYPE_ARRAY_PROPS = ['fields','defaultFields','fieldDefinitions','fieldConfigs','templates'];
-
-    function cloneFieldTypeOption(source, valueOverride, labelOverride){
-      const baseClone = (source && typeof source === 'object' && !Array.isArray(source))
-        ? cloneFieldValue(source)
-        : {};
-      const target = (baseClone && typeof baseClone === 'object' && !Array.isArray(baseClone)) ? baseClone : {};
-      const applyArrayProps = (targetObj, sourceObj)=>{
-        if(!targetObj || typeof targetObj !== 'object' || Array.isArray(targetObj)){
-          return;
-        }
-        FIELD_TYPE_ARRAY_PROPS.forEach(prop => {
-          const sourceList = sourceObj && Array.isArray(sourceObj[prop]) ? sourceObj[prop] : null;
-          if(sourceList){
-            targetObj[prop] = sourceList.map(cloneFieldValue);
-          } else if(Array.isArray(targetObj[prop])){
-            targetObj[prop] = targetObj[prop].map(cloneFieldValue);
-          } else if(Object.prototype.hasOwnProperty.call(targetObj, prop)){
-            delete targetObj[prop];
-          }
-        });
-      };
-      applyArrayProps(target, source);
-      const sourceDefinition = source && source.definition;
-      if(sourceDefinition && typeof sourceDefinition === 'object' && !Array.isArray(sourceDefinition)){
-        const clonedDefinition = cloneFieldValue(sourceDefinition);
-        const definitionTarget = (clonedDefinition && typeof clonedDefinition === 'object' && !Array.isArray(clonedDefinition))
-          ? clonedDefinition
-          : {};
-        applyArrayProps(definitionTarget, sourceDefinition);
-        target.definition = definitionTarget;
-      } else if(target.definition && typeof target.definition === 'object' && !Array.isArray(target.definition)){
-        applyArrayProps(target.definition, target.definition);
-      } else {
-        delete target.definition;
-      }
-      const normalizedValue = typeof valueOverride === 'string' ? valueOverride.trim() : '';
-      const normalizedLabel = typeof labelOverride === 'string' ? labelOverride.trim() : '';
-      target.value = normalizedValue;
-      target.label = normalizedLabel || normalizedValue;
-      return target;
-    }
-
-    function cloneFieldTypeOptionsList(list){
-      if(!Array.isArray(list)){
-        return [];
-      }
-      const cloned = [];
-      const seen = new Set();
-      list.forEach(option => {
-        if(!option || typeof option !== 'object'){
-          return;
-        }
-        const rawValue = typeof option.value === 'string' ? option.value.trim() : '';
-        if(!rawValue){
-          return;
-        }
-        const dedupeKey = rawValue.toLowerCase();
-        if(seen.has(dedupeKey)){
-          return;
-        }
-        const rawLabel = typeof option.label === 'string' ? option.label : '';
-        cloned.push(cloneFieldTypeOption(option, rawValue, rawLabel));
-        seen.add(dedupeKey);
-      });
-      return cloned;
-    }
-
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
       versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
@@ -3541,7 +3376,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, label, source)=>{
+      const pushOption = (value, label)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3551,7 +3386,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         const trimmedLabel = typeof label === 'string' ? label.trim() : '';
-        normalized.push(cloneFieldTypeOption(source, trimmedValue, trimmedLabel || trimmedValue));
+        normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
         seen.add(dedupeKey);
       };
       list.forEach(item => {
@@ -3581,13 +3416,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
                 : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                   ? item.fieldTypeName.trim()
                   : '';
-          pushOption(value, label, item);
+          pushOption(value, label);
           return;
         }
         if(typeof item === 'string'){
           const trimmed = item.trim();
           if(trimmed){
-            pushOption(trimmed, trimmed, null);
+            pushOption(trimmed, trimmed);
           }
         }
       });
@@ -3645,45 +3480,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         });
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
         const subFields = {};
-        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
-        const normalizedSubFieldTypeEntries = [];
-        Object.keys(rawSubFieldTypes).forEach(rawKey => {
-          const trimmedKey = typeof rawKey === 'string' ? rawKey.trim() : '';
-          if(!trimmedKey) return;
-          const slugKey = typeof slugify === 'function' ? slugify(trimmedKey) : '';
-          normalizedSubFieldTypeEntries.push({
-            key: trimmedKey,
-            lower: trimmedKey.toLowerCase(),
-            slug: typeof slugKey === 'string' ? slugKey : '',
-            ids: normalizeFieldTypeIdList(rawSubFieldTypes[rawKey])
-          });
-        });
-        const subFieldTypes = normalizedSubFieldTypeEntries.reduce((acc, entry) => {
-          if(entry && typeof entry.key === 'string' && entry.key){
-            acc[entry.key] = entry.ids.slice();
-          }
-          return acc;
-        }, {});
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
-          const lower = typeof sub === 'string' ? sub.toLowerCase() : '';
-          const subSlug = typeof slugify === 'function' ? slugify(sub) : '';
-          let matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.key === sub);
-          if(!matchedEntry && lower){
-            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.lower === lower);
-          }
-          if(!matchedEntry && subSlug){
-            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.slug && entry.slug === subSlug);
-          }
-          if(!matchedEntry && typeof sub === 'string'){
-            matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.key === sub.trim());
-          }
-          const matchedIds = matchedEntry ? matchedEntry.ids.slice() : (Array.isArray(subFieldTypes[sub]) ? subFieldTypes[sub].slice() : []);
-          subFieldTypes[sub] = matchedIds;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3697,18 +3499,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
-        subFieldTypes: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
-        }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3717,7 +3512,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
           }
-          cat.subFieldTypes[sub] = normalizeFieldTypeIdList(cat.subFieldTypes[sub]);
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
           }
@@ -3828,58 +3622,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    function sanitizeDefaultSubcategoryFields(fields){
-      if(!Array.isArray(fields)){
-        return [];
-      }
-      return fields.map(cloneFieldValue);
-    }
-
-    let DEFAULT_SUBCATEGORY_FIELDS = [];
-
-    function updateDefaultSubcategoryFields(fields){
-      DEFAULT_SUBCATEGORY_FIELDS = sanitizeDefaultSubcategoryFields(fields);
-      if(typeof window !== 'undefined'){
-        window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
-      }
-    }
-
-    function deriveDefaultSubcategoryFieldsFromSnapshot(snapshot){
-      const categories = Array.isArray(snapshot && snapshot.categories) ? snapshot.categories : [];
-      for(const category of categories){
-        if(!category || typeof category !== 'object'){
-          continue;
-        }
-        const subFieldsMap = category.subFields && typeof category.subFields === 'object' && !Array.isArray(category.subFields)
-          ? category.subFields
-          : {};
-        const subs = Array.isArray(category.subs) && category.subs.length
-          ? category.subs
-          : Object.keys(subFieldsMap);
-        for(const sub of subs){
-          if(typeof sub !== 'string' || !sub){
-            continue;
-          }
-          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : [];
-          if(fields.length){
-            return fields.map(cloneFieldValue);
-          }
-        }
-      }
-      return [];
-    }
-
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
       getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
     );
-    if(
-      typeof updateDefaultSubcategoryFields === 'function'
-      && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
-    ){
-      updateDefaultSubcategoryFields(
-        deriveDefaultSubcategoryFieldsFromSnapshot(initialFormbuilderSnapshot)
-      );
-    }
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
@@ -3922,134 +3667,29 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.iconLibrary = ICON_LIBRARY;
     initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
     function sanitizeFieldTypeOptions(options){
-      const normalizeFn = typeof normalizeFieldTypeOptions === 'function'
-        ? normalizeFieldTypeOptions
-        : null;
-      const cloneListFn = typeof cloneFieldTypeOptionsList === 'function'
-        ? cloneFieldTypeOptionsList
-        : null;
-      const cloneOptionFn = typeof cloneFieldTypeOption === 'function'
-        ? cloneFieldTypeOption
-        : null;
-      const deepClone = (value)=>{
-        if(typeof cloneFieldValue === 'function'){
-          return cloneFieldValue(value);
+      const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
+      const sanitized = [];
+      const seenValues = new Set();
+      list.forEach(option => {
+        if(!option || typeof option !== 'object'){
+          return;
         }
-        if(Array.isArray(value)){
-          return value.map(deepClone);
+        let value = typeof option.value === 'string' ? option.value.trim() : '';
+        let label = typeof option.label === 'string' ? option.label.trim() : '';
+        if(!value){
+          return;
         }
-        if(value && typeof value === 'object'){
-          try{
-            return JSON.parse(JSON.stringify(value));
-          }catch(err){
-            return { ...value };
-          }
+        if(!label){
+          label = value;
         }
-        return value;
-      };
-      const ensureOption = (source, value, label)=>{
-        if(cloneOptionFn){
-          return cloneOptionFn(source, value, label);
+        if(seenValues.has(value)){
+          return;
         }
-        const option = {};
-        if(source && typeof source === 'object' && !Array.isArray(source)){
-          Object.keys(source).forEach(key => {
-            if(key === 'value' || key === 'label'){
-              return;
-            }
-            option[key] = deepClone(source[key]);
-          });
-        }
-        option.value = value;
-        option.label = label || value;
-        return option;
-      };
-      const dedupeAndCloneList = (list)=>{
-        if(cloneListFn){
-          return cloneListFn(list);
-        }
-        const sanitized = [];
-        const seen = new Set();
-        if(Array.isArray(list)){
-          list.forEach(item => {
-            if(!item || typeof item !== 'object'){
-              return;
-            }
-            const rawValue = typeof item.value === 'string' ? item.value.trim() : '';
-            if(!rawValue){
-              return;
-            }
-            const dedupeKey = rawValue.toLowerCase();
-            if(seen.has(dedupeKey)){
-              return;
-            }
-            const rawLabel = typeof item.label === 'string' ? item.label.trim() : '';
-            sanitized.push(ensureOption(item, rawValue, rawLabel || rawValue));
-            seen.add(dedupeKey);
-          });
-        }
-        return sanitized;
-      };
-      let normalized = normalizeFn ? normalizeFn(options) : null;
-      if(!Array.isArray(normalized) || !normalized.length){
-        const list = Array.isArray(options)
-          ? options
-          : Array.isArray(options && options.fieldTypes)
-            ? options.fieldTypes
-            : [];
-        const fallback = [];
-        const seen = new Set();
-        list.forEach(item => {
-          if(item && typeof item === 'object'){
-            const value = typeof item.value === 'string' && item.value.trim()
-              ? item.value.trim()
-              : typeof item.key === 'string' && item.key.trim()
-                ? item.key.trim()
-                : typeof item.id === 'number' && Number.isFinite(item.id)
-                  ? String(item.id)
-                  : typeof item.id === 'string' && item.id.trim()
-                    ? item.id.trim()
-                    : '';
-            if(!value){
-              return;
-            }
-            const dedupeKey = value.toLowerCase();
-            if(seen.has(dedupeKey)){
-              return;
-            }
-            const label = typeof item.label === 'string' && item.label.trim()
-              ? item.label.trim()
-              : typeof item.name === 'string' && item.name.trim()
-                ? item.name.trim()
-                : value;
-            fallback.push(ensureOption(item, value, label));
-            seen.add(dedupeKey);
-            return;
-          }
-          if(typeof item === 'string'){
-            const trimmed = item.trim();
-            if(!trimmed){
-              return;
-            }
-            const dedupeKey = trimmed.toLowerCase();
-            if(seen.has(dedupeKey)){
-              return;
-            }
-            fallback.push(ensureOption(null, trimmed, trimmed));
-            seen.add(dedupeKey);
-          }
-        });
-        normalized = fallback;
-      }
-      return dedupeAndCloneList(normalized);
+        seenValues.add(value);
+        sanitized.push({ value, label });
+      });
+      return sanitized;
     }
-
-    const ensureFieldTypeOptionsClone = (list)=>{
-      if(typeof cloneFieldTypeOptionsList === 'function'){
-        return cloneFieldTypeOptionsList(list);
-      }
-      return sanitizeFieldTypeOptions(list);
-    };
     const categories = window.categories = initialFormbuilderSnapshot.categories;
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
@@ -4062,8 +3702,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? initialFormbuilderSnapshot.fieldTypes
       : [];
     const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
-    initialFormbuilderSnapshot.fieldTypes = ensureFieldTypeOptionsClone(finalFieldTypeOptions);
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes);
+    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';
@@ -4282,9 +3922,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    if(typeof updateDefaultSubcategoryFields === 'function'){
-      updateDefaultSubcategoryFields(typeof window !== 'undefined' ? window.DEFAULT_SUBCATEGORY_FIELDS : []);
-    }
+    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -7488,7 +7133,6 @@ function makePosts(){
       const used = new Set();
       const newOrder = [];
       menuEls.forEach(menu=>{
-        if(!menu || !menu.dataset) return;
         const idx = Number.parseInt(menu.dataset.categoryIndex, 10);
         if(Number.isInteger(idx) && idx >= 0 && idx < categories.length && !used.has(idx)){
           newOrder.push(categories[idx]);
@@ -7515,9 +7159,7 @@ function makePosts(){
         }
       }
       menuEls.forEach((menu, index)=>{
-        if(menu && menu.dataset){
-          menu.dataset.categoryIndex = String(index);
-        }
+        menu.dataset.categoryIndex = String(index);
       });
       if(changed){
         notifyFormbuilderChange();
@@ -7629,7 +7271,6 @@ function makePosts(){
       const used = new Set();
       const reordered = [];
       subEls.forEach(subMenu=>{
-        if(!subMenu || !subMenu.dataset) return;
         const idx = Number.parseInt(subMenu.dataset.subIndex, 10);
         if(Number.isInteger(idx) && idx >= 0 && idx < original.length && !used.has(idx)){
           reordered.push(original[idx]);
@@ -7656,9 +7297,7 @@ function makePosts(){
         }
       }
       subEls.forEach((subMenu, index)=>{
-        if(subMenu && subMenu.dataset){
-          subMenu.dataset.subIndex = String(index);
-        }
+        subMenu.dataset.subIndex = String(index);
       });
       if(changed){
         notifyFormbuilderChange();
@@ -7767,7 +7406,7 @@ function makePosts(){
         header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          try{ event.dataTransfer.setData('text/plain', (menu && menu.dataset ? menu.dataset.category : '') || ''); }catch(err){}
+          try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
           try{
             const rect = menu.getBoundingClientRect();
             event.dataTransfer.setDragImage(menu, rect.width / 2, rect.height / 2);
@@ -8733,7 +8372,6 @@ function makePosts(){
 
         const subNameUpdaters = [];
         const subFieldsMap = (c.subFields && typeof c.subFields === 'object' && !Array.isArray(c.subFields)) ? c.subFields : (c.subFields = {});
-        const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : (c.subFieldTypes = {});
         const getCategoryNameValue = ()=> nameInput.value.trim();
         let lastCategoryName = c.name || 'Category';
         let currentCategoryName = c.name || 'Category';
@@ -11643,8 +11281,25 @@ function makePosts(){
             return editor;
           };
 
+          const ensureDefaultFieldSet = (fieldList)=>{
+            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
+            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
+              fieldList.push({
+                name: typeof defaultField.name === 'string' ? defaultField.name : '',
+                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
+                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
+                required: !!defaultField.required,
+                options: []
+              });
+            });
+            return fieldList.length > 0;
+          };
+
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-          const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
+
+          if(ensureDefaultFieldSet(fields)){
+            notifyFormbuilderChange();
+          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -11688,9 +11343,7 @@ function makePosts(){
             if(!fields.length){
               const empty = document.createElement('p');
               empty.className = 'form-preview-empty';
-              empty.textContent = fieldTypeIds.length
-                ? 'Fields unavailable for this subcategory. Reload the definitions to continue.'
-                : 'Fields unavailable for this subcategory.';
+              empty.textContent = 'No fields added yet.';
               formPreviewFields.appendChild(empty);
               return;
             }
@@ -13289,20 +12942,6 @@ function makePosts(){
       }
       return out;
     }
-    function cloneSubFieldTypesMap(source){
-      const out = {};
-      if(source && typeof source === 'object' && !Array.isArray(source)){
-        Object.keys(source).forEach(key => {
-          const value = source[key];
-          if(Array.isArray(value)){
-            out[key] = value.slice();
-          } else {
-            out[key] = [];
-          }
-        });
-      }
-      return out;
-    }
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
@@ -13311,7 +12950,6 @@ function makePosts(){
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
-          subFieldTypes: cloneSubFieldTypesMap(item && item.subFieldTypes),
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -13336,10 +12974,8 @@ function makePosts(){
       }
     }
     function captureFormbuilderSnapshot(){
-      const clonedCategories = cloneCategoryList(categories);
       return {
-        categories: clonedCategories,
-        subFieldTypes: clonedCategories.map(cat => cloneSubFieldTypesMap(cat && cat.subFieldTypes)),
+        categories: cloneCategoryList(categories),
         categoryIcons: cloneMapLike(categoryIcons),
         subcategoryIcons: cloneMapLike(subcategoryIcons),
         categoryIconPaths: cloneMapLike(categoryIconPaths),
@@ -13347,7 +12983,9 @@ function makePosts(){
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
         subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
         categoryShapes: cloneMapLike(categoryShapes),
-        fieldTypes: ensureFieldTypeOptionsClone(FORM_FIELD_TYPES),
+        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
+          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+          : [],
         versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
           ? VERSION_PRICE_CURRENCIES.slice()
           : []
@@ -13358,28 +12996,20 @@ function makePosts(){
       if(!snapshot) return;
       const existingFieldTypes = (() => {
         if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
-          return ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes);
+          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
         }
         if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
-          return ensureFieldTypeOptionsClone(FORM_FIELD_TYPES);
+          return FORM_FIELD_TYPES.map(option => ({ ...option }));
         }
         return [];
       })();
       const normalized = normalizeFormbuilderSnapshot(snapshot);
-      if(
-        typeof updateDefaultSubcategoryFields === 'function'
-        && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
-      ){
-        updateDefaultSubcategoryFields(
-          deriveDefaultSubcategoryFieldsFromSnapshot(normalized)
-        );
-      }
       let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
       if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
         sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
       }
-      initialFormbuilderSnapshot.fieldTypes = ensureFieldTypeOptionsClone(sanitizedFieldTypes);
-      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...ensureFieldTypeOptionsClone(initialFormbuilderSnapshot.fieldTypes));
+      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
+      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
@@ -15826,33 +15456,25 @@ if (!map.__pillHooksInstalled) {
           };
 
           const apply = (forceStop = false) => {
-            try{
-              const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
-              if(busy){
-                if(overlay && overlay.isConnected && overlay.parentNode){
-                  try{
-                    overlay.classList.remove('is-hidden');
-                    overlay.setAttribute('aria-hidden', 'false');
-                  }catch(e){}
-                }
-                if(!active){
-                  active = true;
-                  try{ loader.begin('map'); }catch(err){}
-                }
-              } else {
-                if(overlay && overlay.isConnected && overlay.parentNode){
-                  try{
-                    overlay.classList.add('is-hidden');
-                    overlay.setAttribute('aria-hidden', 'true');
-                  }catch(e){}
-                }
-                if(active){
-                  active = false;
-                  try{ loader.end('map'); }catch(err){}
-                }
+            const busy = !forceStop && (tilesPending || motionTokens.size > 0 || isMapMovingNow());
+            if(busy){
+              if(overlay){
+                overlay.classList.remove('is-hidden');
+                overlay.setAttribute('aria-hidden', 'false');
               }
-            }catch(err){
-              // Suppress errors from 6.js dataset access during mutations
+              if(!active){
+                active = true;
+                try{ loader.begin('map'); }catch(err){}
+              }
+            } else {
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
+              }
             }
           };
 
@@ -15874,21 +15496,15 @@ if (!map.__pillHooksInstalled) {
               apply();
             },
             clearAll(){
-              try{
-                motionTokens.clear();
-                tilesPending = false;
-                if(overlay && overlay.isConnected && overlay.parentNode){
-                  try{
-                    overlay.classList.add('is-hidden');
-                    overlay.setAttribute('aria-hidden', 'true');
-                  }catch(e){}
-                }
-                if(active){
-                  active = false;
-                  try{ loader.end('map'); }catch(err){}
-                }
-              }catch(err){
-                // Suppress errors from 6.js dataset access during mutations
+              motionTokens.clear();
+              tilesPending = false;
+              if(overlay){
+                overlay.classList.add('is-hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+              }
+              if(active){
+                active = false;
+                try{ loader.end('map'); }catch(err){}
               }
             }
           };
@@ -15896,24 +15512,20 @@ if (!map.__pillHooksInstalled) {
 
         if(mapLoading){
           const updateRenderState = () => {
-            try{
-              let tileBusy = false;
-              if(map){
-                try{
-                  if(typeof map.isStyleLoaded === 'function' && !map.isStyleLoaded()){
-                    tileBusy = true;
-                  } else if(typeof map.areTilesLoaded === 'function'){
-                    tileBusy = !map.areTilesLoaded();
-                  }
-                }catch(err){
+            let tileBusy = false;
+            if(map){
+              try{
+                if(typeof map.isStyleLoaded === 'function' && !map.isStyleLoaded()){
                   tileBusy = true;
+                } else if(typeof map.areTilesLoaded === 'function'){
+                  tileBusy = !map.areTilesLoaded();
                 }
+              }catch(err){
+                tileBusy = true;
               }
-              mapLoading.setTiles(tileBusy);
-              mapLoading.apply();
-            }catch(err){
-              // Suppress errors from 6.js dataset access during map rendering
             }
+            mapLoading.setTiles(tileBusy);
+            mapLoading.apply();
           };
 
           map.on('sourcedataloading', () => mapLoading.setTiles(true));
@@ -17528,18 +17140,12 @@ function openPostModal(id){
           if(evt.type === 'keydown' && !allowed.includes(evt.key)){
             return;
           }
+          evt.preventDefault();
           const openPostEl = el;
           const isExpanded = openPostEl
             ? openPostEl.classList.contains('desc-expanded')
             : descEl.classList.contains('expanded');
-          if(isExpanded){
-            if(evt.type === 'keydown'){
-              evt.preventDefault();
-            }
-            return;
-          }
-          evt.preventDefault();
-          setDescExpandedState(true);
+          setDescExpandedState(!isExpanded);
         };
         descEl.addEventListener('click', handleDescToggle);
         descEl.addEventListener('keydown', handleDescToggle);
@@ -19223,29 +18829,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
       panelScrollOverlayItems.forEach(updatePanelScrollOverlay);
     });
   });
-});
-
-// Static timecode in header center for verification (shows AEST time)
-document.addEventListener('DOMContentLoaded', ()=>{
-  const el = document.getElementById('headerTimecode');
-  if(!el) return;
-  try{
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-AU', {
-      timeZone: 'Australia/Sydney',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-    const parts = formatter.formatToParts(now);
-    const hh = parts.find(p => p.type === 'hour')?.value || '00';
-    const mm = parts.find(p => p.type === 'minute')?.value || '00';
-    const ss = parts.find(p => p.type === 'second')?.value || '00';
-    el.textContent = `${hh}:${mm}:${ss} AEST - Error suppression added`;
-  }catch(e){
-    el.textContent = 'AEST time unavailable';
-  }
 });
 
 (function(){
@@ -21160,6 +20743,14 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
+    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
       : normalizeVenueSessionOptions;
@@ -21257,8 +20848,7 @@ document.addEventListener('pointerdown', (e) => {
 
     const defaultEmptyMessage = emptyState ? emptyState.textContent : '';
     const loadingMessage = 'Loading form fields…';
-    const fetchErrorMessage = 'We couldn’t load the latest form fields. Please reload the form definitions and try again.';
-    const fieldDefinitionReloadMessage = 'We couldn’t load the fields for this subcategory. Please reload the form definitions and try again.';
+    const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
 
     const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
     let memberSnapshot = defaultMemberSnapshot;
@@ -21266,7 +20856,6 @@ document.addEventListener('pointerdown', (e) => {
     let currencyCodes = collectCurrencyCodes(memberSnapshot);
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
-    let shouldSuggestDefinitionReload = false;
 
     function setEmptyStateMessage(message){
       if(!emptyState) return;
@@ -21279,14 +20868,6 @@ document.addEventListener('pointerdown', (e) => {
 
     function applyMemberSnapshot(snapshot, options = {}){
       const normalized = normalizeFormbuilderSnapshot(snapshot);
-      if(
-        typeof updateDefaultSubcategoryFields === 'function'
-        && typeof deriveDefaultSubcategoryFieldsFromSnapshot === 'function'
-      ){
-        updateDefaultSubcategoryFields(
-          deriveDefaultSubcategoryFieldsFromSnapshot(normalized)
-        );
-      }
       memberSnapshot = normalized;
       memberCategories = memberSnapshot.categories;
       currencyCodes = collectCurrencyCodes(memberSnapshot);
@@ -21361,221 +20942,6 @@ document.addEventListener('pointerdown', (e) => {
       if(paypalButton){
         paypalButton.disabled = !hasCredentials;
       }
-    }
-
-    function buildFieldTypeDefinitionCache(){
-      const byId = new Map();
-      const byKey = new Map();
-      const seen = new Set();
-      const visited = new Set();
-      const addDefinition = def => {
-        if(!def || typeof def !== 'object' || seen.has(def)){
-          return false;
-        }
-        seen.add(def);
-        const fieldSources = [];
-        if(Array.isArray(def.fields) && def.fields.length){
-          fieldSources.push(def.fields);
-        }
-        if(def.definition && typeof def.definition === 'object'){
-          if(Array.isArray(def.definition.fields) && def.definition.fields.length){
-            fieldSources.push(def.definition.fields);
-          }
-          if(Array.isArray(def.definition.defaultFields) && def.definition.defaultFields.length){
-            fieldSources.push(def.definition.defaultFields);
-          }
-        }
-        if(Array.isArray(def.fieldDefinitions) && def.fieldDefinitions.length){
-          fieldSources.push(def.fieldDefinitions);
-        }
-        if(Array.isArray(def.fieldConfigs) && def.fieldConfigs.length){
-          fieldSources.push(def.fieldConfigs);
-        }
-        if(Array.isArray(def.defaultFields) && def.defaultFields.length){
-          fieldSources.push(def.defaultFields);
-        }
-        if(Array.isArray(def.templates) && def.templates.length){
-          fieldSources.push(def.templates);
-        }
-        const fieldsSource = fieldSources.find(list => Array.isArray(list) && list.length);
-        if(!fieldsSource){
-          return false;
-        }
-        const idCandidates = [];
-        const pushIdCandidate = value => {
-          if(typeof value === 'number' && Number.isInteger(value)){
-            idCandidates.push(value);
-            return;
-          }
-          if(typeof value === 'string'){
-            const trimmed = value.trim();
-            if(trimmed && /^\d+$/.test(trimmed)){
-              idCandidates.push(parseInt(trimmed, 10));
-            }
-          }
-        };
-        pushIdCandidate(def.id);
-        pushIdCandidate(def.value);
-        pushIdCandidate(def.field_type_id);
-        if(def.definition && typeof def.definition === 'object'){
-          pushIdCandidate(def.definition.id);
-        }
-        const keyCandidates = [];
-        const pushKeyCandidate = value => {
-          if(typeof value === 'string'){
-            const trimmed = value.trim();
-            if(trimmed){
-              keyCandidates.push(trimmed.toLowerCase());
-            }
-          }
-        };
-        pushKeyCandidate(def.key);
-        pushKeyCandidate(def.value);
-        pushKeyCandidate(def.name);
-        pushKeyCandidate(def.field_type_key);
-        pushKeyCandidate(def.fieldTypeKey);
-        pushKeyCandidate(def.field_type_name);
-        pushKeyCandidate(def.fieldTypeName);
-        if(def.definition && typeof def.definition === 'object'){
-          pushKeyCandidate(def.definition.key);
-          pushKeyCandidate(def.definition.name);
-        }
-        if(idCandidates.length === 0 && keyCandidates.length === 0){
-          return false;
-        }
-        idCandidates.forEach(id => {
-          if(typeof id === 'number' && Number.isInteger(id) && !byId.has(id)){
-            byId.set(id, fieldsSource);
-          }
-        });
-        keyCandidates.forEach(key => {
-          if(key && !byKey.has(key)){
-            byKey.set(key, fieldsSource);
-          }
-        });
-        return true;
-      };
-      const collectFromCandidate = candidate => {
-        if(candidate === null || candidate === undefined) return;
-        if(candidate instanceof Map){
-          if(visited.has(candidate)) return;
-          visited.add(candidate);
-          candidate.forEach(value => collectFromCandidate(value));
-          return;
-        }
-        if(Array.isArray(candidate)){
-          if(visited.has(candidate)) return;
-          visited.add(candidate);
-          candidate.forEach(value => collectFromCandidate(value));
-          return;
-        }
-        if(typeof candidate === 'object'){
-          if(visited.has(candidate)) return;
-          visited.add(candidate);
-          addDefinition(candidate);
-          const nestedProps = ['definitions','items','list','values','fieldTypes','entries','options'];
-          nestedProps.forEach(prop => {
-            const value = candidate[prop];
-            if(Array.isArray(value) || value instanceof Map){
-              collectFromCandidate(value);
-            }
-          });
-        }
-      };
-      if(typeof window !== 'undefined'){
-        [
-          window.FIELD_TYPE_DEFINITIONS,
-          window.fieldTypeDefinitions,
-          window.FIELD_TYPE_LOOKUP,
-          window.fieldTypeLookup,
-          window.FIELD_TYPES,
-          window.fieldTypes,
-          window.FORM_FIELD_TYPES,
-          window.formFieldTypes,
-          window.formbuilderFieldTypeDefinitions,
-          window.formbuilderFieldTypes,
-          window.fieldTypeCatalog,
-          window.fieldTypeLibrary,
-          window.FIELD_TYPE_CATALOG,
-          window.FIELD_TYPE_LIBRARY
-        ].forEach(candidate => collectFromCandidate(candidate));
-      }
-      return { byId, byKey };
-    }
-
-    function getFieldTypeDefinitionCache(){
-      return buildFieldTypeDefinitionCache();
-    }
-
-    function getSharedFieldTypeIdListNormalizer(){
-      if(typeof window !== 'undefined' && typeof window.normalizeFieldTypeIdList === 'function'){
-        return window.normalizeFieldTypeIdList;
-      }
-      if(typeof normalizeFieldTypeIdList === 'function'){
-        return normalizeFieldTypeIdList;
-      }
-      return null;
-    }
-
-    function resolveFieldTypeFieldsByIds(typeIds){
-      const localClone = (value)=>{
-        if(Array.isArray(value)){
-          return value.map(localClone);
-        }
-        if(value && typeof value === 'object'){
-          try{
-            return JSON.parse(JSON.stringify(value));
-          }catch(err){
-            return { ...value };
-          }
-        }
-        return value;
-      };
-      const normalizeIds = getSharedFieldTypeIdListNormalizer();
-      const ids = normalizeIds ? normalizeIds(typeIds) : [];
-      if(!ids.length){
-        if(!normalizeIds && typeof console !== 'undefined' && console.warn){
-          console.warn('normalizeFieldTypeIdList helper unavailable; unable to resolve field type IDs.');
-        }
-        return [];
-      }
-      const { byId, byKey } = getFieldTypeDefinitionCache();
-      const resolved = [];
-      ids.forEach(id => {
-        let fieldsSource = null;
-        if(typeof id === 'number' && byId.has(id)){
-          fieldsSource = byId.get(id);
-        }
-        if(!fieldsSource && typeof id === 'string'){
-          const trimmed = id.trim();
-          if(trimmed){
-            if(/^\d+$/.test(trimmed)){
-              const numeric = parseInt(trimmed, 10);
-              if(byId.has(numeric)){
-                fieldsSource = byId.get(numeric);
-              }
-            }
-            if(!fieldsSource){
-              const key = trimmed.toLowerCase();
-              if(byKey.has(key)){
-                fieldsSource = byKey.get(key);
-              }
-            }
-          }
-        }
-        if(!fieldsSource && typeof id === 'number'){
-          const key = String(id).toLowerCase();
-          if(byKey.has(key)){
-            fieldsSource = byKey.get(key);
-          }
-        }
-        if(fieldsSource){
-          fieldsSource.forEach(field => {
-            resolved.push(localClone(field));
-          });
-        }
-      });
-      return resolved;
     }
 
     function sanitizeCreateField(field){
@@ -21654,31 +21020,9 @@ document.addEventListener('pointerdown', (e) => {
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-      let attemptedFieldTypeResolution = false;
       if(!fields || fields.length === 0){
-        const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
-        const normalizeIds = getSharedFieldTypeIdListNormalizer();
-        const typeIds = normalizeIds ? normalizeIds(subFieldTypesMap[subcategoryName]) : [];
-        if(typeIds.length){
-          attemptedFieldTypeResolution = true;
-          const typeFields = resolveFieldTypeFieldsByIds(typeIds);
-          if(typeFields.length){
-            fields = typeFields;
-            shouldSuggestDefinitionReload = false;
-          } else {
-            shouldSuggestDefinitionReload = true;
-            memberSnapshotErrorMessage = fieldDefinitionReloadMessage;
-            fields = [];
-          }
-        }
+        fields = sharedDefaultSubcategoryFields;
       }
-      if(!fields || fields.length === 0){
-        if(!attemptedFieldTypeResolution){
-          shouldSuggestDefinitionReload = false;
-        }
-        return [];
-      }
-      shouldSuggestDefinitionReload = false;
       return fields.map(sanitizeCreateField);
     }
 
@@ -22146,7 +21490,6 @@ document.addEventListener('pointerdown', (e) => {
           window.formbuilderStateManager.restore(snapshot);
         }
         applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
-        shouldSuggestDefinitionReload = false;
         memberSnapshotErrorMessage = '';
         setEmptyStateMessage(defaultEmptyMessage);
       }catch(error){
@@ -22156,7 +21499,6 @@ document.addEventListener('pointerdown', (e) => {
         } else {
           console.error('Failed to load formbuilder snapshot for members', error);
         }
-        shouldSuggestDefinitionReload = true;
         memberSnapshotErrorMessage = fetchErrorMessage;
         setEmptyStateMessage(fetchErrorMessage);
         applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
@@ -22550,28 +21892,12 @@ document.addEventListener('pointerdown', (e) => {
       formFields.innerHTML = '';
       currentCreateFields = [];
       if(fields.length === 0){
-        const placeholder = document.createElement('div');
+        const placeholder = document.createElement('p');
         placeholder.className = 'member-create-placeholder';
-        const message = shouldSuggestDefinitionReload
-          ? (memberSnapshotErrorMessage || fetchErrorMessage)
-          : 'Fields unavailable for this subcategory.';
-        const messageEl = document.createElement('p');
-        messageEl.textContent = message;
-        placeholder.appendChild(messageEl);
-        if(shouldSuggestDefinitionReload){
-          const reloadBtn = document.createElement('button');
-          reloadBtn.type = 'button';
-          reloadBtn.className = 'member-create-secondary-btn member-create-reload-btn';
-          reloadBtn.textContent = 'Reload Form Definitions';
-          reloadBtn.addEventListener('click', ()=>{
-            initializeMemberFormbuilderSnapshot();
-          });
-          placeholder.appendChild(reloadBtn);
-        }
+        placeholder.textContent = 'No fields configured for this subcategory yet.';
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        shouldSuggestDefinitionReload = false;
         fields.forEach((field, index)=>{
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl){
