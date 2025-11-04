@@ -692,10 +692,8 @@ function buildSnapshot(array $categories, array $subcategories): array
             $metadata = [];
         }
 
+        // Don't use metadata fields - database field types are the source of truth
         $fields = [];
-        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
-            $fields = $metadata['fields'];
-        }
 
         $fieldTypeIds = [];
         if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
@@ -742,7 +740,9 @@ function buildSnapshot(array $categories, array $subcategories): array
         $metadata['fieldTypeIds'] = $fieldTypeIds;
         $metadata['fieldTypeNames'] = $fieldTypeNames;
 
-        $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
+        // Don't populate subFields from metadata - database field types are the source of truth
+        // Fields will be resolved from field type IDs on the frontend
+        $categoriesMap[$categoryName]['subFields'][$sub['name']] = [];
         $categoriesMap[$categoryName]['subFieldTypes'][$sub['name']] = $fieldTypeIds;
 
         $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;

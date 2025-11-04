@@ -11302,24 +11302,22 @@ function makePosts(){
             return editor;
           };
 
-          // Use DB field type IDs to resolve fields - no hardcoded defaults
+          // Use DB field type IDs only - no metadata fallback
           const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : {};
-          let fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+          const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
+          let fields = [];
           
-          // If fields are empty, try to resolve from DB field type IDs
-          if(!fields || fields.length === 0){
-            const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
-            if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
-              try{
-                const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
-                if(resolvedFields && resolvedFields.length > 0){
-                  fields = resolvedFields;
-                  subFieldsMap[sub] = fields;
-                  notifyFormbuilderChange();
-                }
-              }catch(e){
-                console.warn('Failed to resolve fields from field type IDs', e);
+          // Resolve from DB field type IDs only
+          if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
+            try{
+              const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
+              if(resolvedFields && resolvedFields.length > 0){
+                fields = resolvedFields;
+                subFieldsMap[sub] = fields;
+                notifyFormbuilderChange();
               }
+            }catch(e){
+              console.warn('Failed to resolve fields from field type IDs', e);
             }
           }
 
@@ -21119,51 +21117,20 @@ document.addEventListener('pointerdown', (e) => {
       if(!categoryName || !subcategoryName) return [];
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
-      // Prioritize database field types over metadata fields
+      // Use database field types only - no metadata fallback
       const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
       const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
       let fields = [];
       
-      // Debug: Always log for Live Gigs
-      if(subcategoryName === 'Live Gigs'){
-        console.log('Live Gigs - getFieldsForSelection called');
-        console.log('Live Gigs - fieldTypeIds from DB:', fieldTypeIds);
-        console.log('Live Gigs - category.subFieldTypes:', category.subFieldTypes);
-      }
-      
-      // Resolve from database field type IDs first (database is source of truth)
+      // Resolve from database field type IDs only (database is source of truth - no metadata fallback)
       if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
         try{
-          if(subcategoryName === 'Live Gigs'){
-            console.log('Live Gigs - FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES);
-            console.log('Live Gigs - Looking for IDs:', fieldTypeIds);
-            console.log('Live Gigs - First 3 FORM_FIELD_TYPES:', JSON.stringify(window.FORM_FIELD_TYPES?.slice(0, 3), null, 2));
-            console.log('Live Gigs - All FORM_FIELD_TYPES IDs:', window.FORM_FIELD_TYPES?.map(ft => ({ id: ft.id, value: ft.value, label: ft.label })));
-            fieldTypeIds.forEach(id => {
-              const foundById = window.FORM_FIELD_TYPES?.find(ft => ft.id === id);
-              const foundByValue = window.FORM_FIELD_TYPES?.find(ft => ft.value === id || ft.value === String(id));
-              console.log(`Live Gigs - Field type ID ${id} (by id):`, foundById);
-              console.log(`Live Gigs - Field type ID ${id} (by value):`, foundByValue);
-            });
-          }
           const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
-          if(subcategoryName === 'Live Gigs'){
-            console.log('Live Gigs - resolvedFields from DB:', resolvedFields);
-          }
           if(resolvedFields && resolvedFields.length > 0){
             fields = resolvedFields;
           }
         }catch(e){
           console.warn('Failed to resolve fields from field type IDs for member create', e);
-        }
-      }
-      
-      // Fallback to metadata fields only if database field types didn't resolve
-      if(!fields || fields.length === 0){
-        const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-        fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-        if(subcategoryName === 'Live Gigs'){
-          console.log('Live Gigs - falling back to metadata fields:', fields);
         }
       }
       return fields.map(sanitizeCreateField);
