@@ -555,6 +555,10 @@ function buildSnapshot(array $categories, array $subcategories): array
             'sort_order' => $category['sort_order'] ?? null,
             'subIds' => [],
         ];
+        // Ensure subFieldTypes is treated as an object (associative array)
+        if (!is_array($categoriesMap[$categoryName]['subFieldTypes'])) {
+            $categoriesMap[$categoryName]['subFieldTypes'] = [];
+        }
 
         $metadata = [];
         if (isset($category['metadata']) && is_array($category['metadata'])) {
