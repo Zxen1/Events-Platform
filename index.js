@@ -3610,7 +3610,12 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
             ids: normalizeFieldTypeIdList(rawSubFieldTypes[rawKey])
           });
         });
-        const subFieldTypes = {};
+        const subFieldTypes = normalizedSubFieldTypeEntries.reduce((acc, entry) => {
+          if(entry && typeof entry.key === 'string' && entry.key){
+            acc[entry.key] = entry.ids.slice();
+          }
+          return acc;
+        }, {});
         subs.forEach(sub => {
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
@@ -3626,7 +3631,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!matchedEntry && typeof sub === 'string'){
             matchedEntry = normalizedSubFieldTypeEntries.find(entry => entry.key === sub.trim());
           }
-          subFieldTypes[sub] = matchedEntry ? matchedEntry.ids.slice() : [];
+          const matchedIds = matchedEntry ? matchedEntry.ids.slice() : (Array.isArray(subFieldTypes[sub]) ? subFieldTypes[sub].slice() : []);
+          subFieldTypes[sub] = matchedIds;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
         return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
