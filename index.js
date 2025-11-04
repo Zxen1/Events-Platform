@@ -3702,7 +3702,19 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         seenValues.add(value);
-        sanitized.push({ value, label });
+        // Preserve all properties, especially id, name, key for database field type lookups
+        const sanitizedOption = { value, label };
+        if(typeof option.id === 'number' || (typeof option.id === 'string' && /^\d+$/.test(option.id))){
+          sanitizedOption.id = typeof option.id === 'number' ? option.id : parseInt(option.id, 10);
+        }
+        if(typeof option.name === 'string' && option.name.trim()) sanitizedOption.name = option.name.trim();
+        if(typeof option.key === 'string' && option.key.trim()) sanitizedOption.key = option.key.trim();
+        if(typeof option.field_type_name === 'string' && option.field_type_name.trim()) sanitizedOption.field_type_name = option.field_type_name.trim();
+        if(typeof option.field_type_key === 'string' && option.field_type_key.trim()) sanitizedOption.field_type_key = option.field_type_key.trim();
+        if(typeof option.sort_order === 'number' || (typeof option.sort_order === 'string' && /^\d+$/.test(option.sort_order))){
+          sanitizedOption.sort_order = typeof option.sort_order === 'number' ? option.sort_order : parseInt(option.sort_order, 10);
+        }
+        sanitized.push(sanitizedOption);
       });
       return sanitized;
     }
@@ -3938,14 +3950,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+    // Legacy hardcoded defaults removed - database field types are now the source of truth
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -20760,13 +20765,7 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
+    // Legacy hardcoded defaults removed - database field types are now the source of truth
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -21138,7 +21137,8 @@ document.addEventListener('pointerdown', (e) => {
           if(subcategoryName === 'Live Gigs'){
             console.log('Live Gigs - FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES);
             console.log('Live Gigs - Looking for IDs:', fieldTypeIds);
-            console.log('Live Gigs - First 3 FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES?.slice(0, 3));
+            console.log('Live Gigs - First 3 FORM_FIELD_TYPES:', JSON.stringify(window.FORM_FIELD_TYPES?.slice(0, 3), null, 2));
+            console.log('Live Gigs - All FORM_FIELD_TYPES IDs:', window.FORM_FIELD_TYPES?.map(ft => ({ id: ft.id, value: ft.value, label: ft.label })));
             fieldTypeIds.forEach(id => {
               const foundById = window.FORM_FIELD_TYPES?.find(ft => ft.id === id);
               const foundByValue = window.FORM_FIELD_TYPES?.find(ft => ft.value === id || ft.value === String(id));
