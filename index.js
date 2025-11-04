@@ -3096,6 +3096,7 @@ async function ensureMapboxCssFor(container) {
       const overlays = findMarkerOverlaysById(postId);
       overlays.forEach(overlay => {
         overlay.querySelectorAll('.small-map-card').forEach(cardEl => {
+          if(!cardEl || !cardEl.dataset) return;
           if(shouldHighlight){
             if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevHighlight')){
               cardEl.dataset.hoverPrevHighlight = cardEl.classList.contains(highlightClass) ? '1' : '0';
@@ -3116,6 +3117,7 @@ async function ensureMapboxCssFor(container) {
           }
         });
         overlay.querySelectorAll('.big-map-card').forEach(cardEl => {
+          if(!cardEl || !cardEl.dataset) return;
           if(shouldHighlight){
             if(!Object.prototype.hasOwnProperty.call(cardEl.dataset, 'hoverPrevMapHighlight')){
               cardEl.dataset.hoverPrevMapHighlight = cardEl.classList.contains(mapHighlightClass) ? '1' : '0';
@@ -7456,6 +7458,7 @@ function makePosts(){
       const used = new Set();
       const newOrder = [];
       menuEls.forEach(menu=>{
+        if(!menu || !menu.dataset) return;
         const idx = Number.parseInt(menu.dataset.categoryIndex, 10);
         if(Number.isInteger(idx) && idx >= 0 && idx < categories.length && !used.has(idx)){
           newOrder.push(categories[idx]);
@@ -7482,7 +7485,9 @@ function makePosts(){
         }
       }
       menuEls.forEach((menu, index)=>{
-        menu.dataset.categoryIndex = String(index);
+        if(menu && menu.dataset){
+          menu.dataset.categoryIndex = String(index);
+        }
       });
       if(changed){
         notifyFormbuilderChange();
@@ -7594,6 +7599,7 @@ function makePosts(){
       const used = new Set();
       const reordered = [];
       subEls.forEach(subMenu=>{
+        if(!subMenu || !subMenu.dataset) return;
         const idx = Number.parseInt(subMenu.dataset.subIndex, 10);
         if(Number.isInteger(idx) && idx >= 0 && idx < original.length && !used.has(idx)){
           reordered.push(original[idx]);
@@ -7620,7 +7626,9 @@ function makePosts(){
         }
       }
       subEls.forEach((subMenu, index)=>{
-        subMenu.dataset.subIndex = String(index);
+        if(subMenu && subMenu.dataset){
+          subMenu.dataset.subIndex = String(index);
+        }
       });
       if(changed){
         notifyFormbuilderChange();
@@ -7729,7 +7737,7 @@ function makePosts(){
         header.classList.add('is-dragging');
         if(event.dataTransfer){
           event.dataTransfer.effectAllowed = 'move';
-          try{ event.dataTransfer.setData('text/plain', menu.dataset.category || ''); }catch(err){}
+          try{ event.dataTransfer.setData('text/plain', (menu && menu.dataset ? menu.dataset.category : '') || ''); }catch(err){}
           try{
             const rect = menu.getBoundingClientRect();
             event.dataTransfer.setDragImage(menu, rect.width / 2, rect.height / 2);
@@ -19186,7 +19194,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const hh = parts.find(p => p.type === 'hour')?.value || '00';
     const mm = parts.find(p => p.type === 'minute')?.value || '00';
     const ss = parts.find(p => p.type === 'second')?.value || '00';
-    el.textContent = `${hh}:${mm}:${ss} AEST`;
+    el.textContent = `${hh}:${mm}:${ss} AEST - Dataset guards added`;
   }catch(e){
     el.textContent = 'AEST time unavailable';
   }
