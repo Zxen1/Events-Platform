@@ -11281,24 +11281,25 @@ function makePosts(){
             return editor;
           };
 
-          const ensureDefaultFieldSet = (fieldList)=>{
-            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
-            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-              fieldList.push({
-                name: typeof defaultField.name === 'string' ? defaultField.name : '',
-                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
-                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
-                required: !!defaultField.required,
-                options: []
-              });
-            });
-            return fieldList.length > 0;
-          };
-
-          const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          if(ensureDefaultFieldSet(fields)){
-            notifyFormbuilderChange();
+          // Use DB field type IDs to resolve fields - no hardcoded defaults
+          const subFieldTypesMap = (c.subFieldTypes && typeof c.subFieldTypes === 'object' && !Array.isArray(c.subFieldTypes)) ? c.subFieldTypes : {};
+          let fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+          
+          // If fields are empty, try to resolve from DB field type IDs
+          if(!fields || fields.length === 0){
+            const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[sub]);
+            if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
+              try{
+                const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
+                if(resolvedFields && resolvedFields.length > 0){
+                  fields = resolvedFields;
+                  subFieldsMap[sub] = fields;
+                  notifyFormbuilderChange();
+                }
+              }catch(e){
+                console.warn('Failed to resolve fields from field type IDs', e);
+              }
+            }
           }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
@@ -21014,14 +21015,83 @@ document.addEventListener('pointerdown', (e) => {
       return safe;
     }
 
+    // Resolve field type IDs to actual field definitions (from database field types)
+    function resolveFieldTypeFieldsByIds(typeIds){
+      const normalizeIds = typeof window.normalizeFieldTypeIdList === 'function' 
+        ? window.normalizeFieldTypeIdList 
+        : normalizeFieldTypeIdList;
+      const ids = normalizeIds ? normalizeIds(typeIds) : [];
+      if(!ids.length) return [];
+      
+      const formFieldTypes = window.FORM_FIELD_TYPES || [];
+      const resolved = [];
+      const seen = new Set();
+      
+      const cloneField = (field) => {
+        if(!field || typeof field !== 'object') return null;
+        try{
+          return JSON.parse(JSON.stringify(field));
+        }catch(e){
+          return { ...field };
+        }
+      };
+      
+      const extractFieldsFromType = (typeDef) => {
+        if(!typeDef || typeof typeDef !== 'object') return [];
+        const sources = [];
+        if(Array.isArray(typeDef.fields)) sources.push(...typeDef.fields);
+        if(typeDef.definition && Array.isArray(typeDef.definition.fields)) sources.push(...typeDef.definition.fields);
+        if(Array.isArray(typeDef.defaultFields)) sources.push(...typeDef.defaultFields);
+        if(Array.isArray(typeDef.fieldDefinitions)) sources.push(...typeDef.fieldDefinitions);
+        if(Array.isArray(typeDef.fieldConfigs)) sources.push(...typeDef.fieldConfigs);
+        if(Array.isArray(typeDef.templates)) sources.push(...typeDef.templates);
+        return sources;
+      };
+      
+      ids.forEach(id => {
+        const idNum = typeof id === 'number' ? id : (typeof id === 'string' && /^\d+$/.test(id.trim()) ? parseInt(id.trim(), 10) : null);
+        if(idNum === null || seen.has(idNum)) return;
+        
+        const typeDef = formFieldTypes.find(opt => opt.id === idNum);
+        if(!typeDef) return;
+        
+        seen.add(idNum);
+        const fields = extractFieldsFromType(typeDef);
+        fields.forEach(field => {
+          const cloned = cloneField(field);
+          if(cloned) resolved.push(cloned);
+        });
+      });
+      
+      return resolved;
+    }
+    
+    // Make it available globally for form builder
+    if(typeof window !== 'undefined'){
+      window.resolveFieldTypeFieldsByIds = resolveFieldTypeFieldsByIds;
+    }
+
     function getFieldsForSelection(categoryName, subcategoryName){
       if(!categoryName || !subcategoryName) return [];
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      
+      // If fields are empty, resolve from DB field type IDs (no hardcoded defaults)
       if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
+        const subFieldTypesMap = category.subFieldTypes && typeof category.subFieldTypes === 'object' ? category.subFieldTypes : {};
+        const fieldTypeIds = normalizeFieldTypeIdList(subFieldTypesMap[subcategoryName]);
+        if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
+          try{
+            const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
+            if(resolvedFields && resolvedFields.length > 0){
+              fields = resolvedFields;
+            }
+          }catch(e){
+            console.warn('Failed to resolve fields from field type IDs for member create', e);
+          }
+        }
       }
       return fields.map(sanitizeCreateField);
     }

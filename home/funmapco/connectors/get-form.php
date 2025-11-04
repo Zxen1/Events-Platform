@@ -190,7 +190,8 @@ function fetchCategories(PDO $pdo, array $columns): array
             }
         }
 
-        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+        // ONLY use metadata if DB CSV is empty (database is source of truth for categories)
+        if (!$fieldTypeIds && isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
             $metadataFieldTypeIds = [];
             foreach ($metadata['fieldTypeIds'] as $value) {
                 if (is_int($value)) {
@@ -208,7 +209,7 @@ function fetchCategories(PDO $pdo, array $columns): array
             $metadata['fieldTypeIds'] = $fieldTypeIds;
         }
 
-        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+        if (!$fieldTypeNames && isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
             $metadataFieldTypeNames = [];
             foreach ($metadata['fieldTypeNames'] as $value) {
                 if (is_string($value)) {
@@ -364,7 +365,8 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             }
         }
 
-        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
+        // ONLY use metadata if DB CSV is empty (database is source of truth for subcategories)
+        if (!$fieldTypeIds && isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
             $metadataFieldTypeIds = [];
             foreach ($metadata['fieldTypeIds'] as $value) {
                 if (is_int($value)) {
@@ -382,7 +384,7 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $metadata['fieldTypeIds'] = $fieldTypeIds;
         }
 
-        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
+        if (!$fieldTypeNames && isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
             $metadataFieldTypeNames = [];
             foreach ($metadata['fieldTypeNames'] as $value) {
                 if (is_string($value)) {
