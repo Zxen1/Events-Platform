@@ -1187,11 +1187,6 @@ function buildSnapshot(array $categories, array $subcategories): array
             $metadata = [];
         }
 
-        $fields = [];
-        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
-            $fields = $metadata['fields'];
-        }
-
         $fieldTypeIds = [];
         if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
             foreach ($sub['field_type_ids'] as $value) {
@@ -1211,6 +1206,14 @@ function buildSnapshot(array $categories, array $subcategories): array
             }
         }
         $fieldTypeIds = array_values(array_unique($fieldTypeIds));
+
+        $fields = [];
+        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
+            $fields = $metadata['fields'];
+        }
+        if ($fieldTypeIds) {
+            $fields = [];
+        }
 
         $fieldTypeNames = [];
         if (isset($sub['field_type_names']) && is_array($sub['field_type_names'])) {
