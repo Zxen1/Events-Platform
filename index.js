@@ -21439,6 +21439,19 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function resolveFieldTypeFieldsByIds(typeIds){
+      const localClone = (value)=>{
+        if(Array.isArray(value)){
+          return value.map(localClone);
+        }
+        if(value && typeof value === 'object'){
+          try{
+            return JSON.parse(JSON.stringify(value));
+          }catch(err){
+            return { ...value };
+          }
+        }
+        return value;
+      };
       const normalizeIds = getSharedFieldTypeIdListNormalizer();
       const ids = normalizeIds ? normalizeIds(typeIds) : [];
       if(!ids.length){
@@ -21479,7 +21492,7 @@ document.addEventListener('pointerdown', (e) => {
         }
         if(fieldsSource){
           fieldsSource.forEach(field => {
-            resolved.push(cloneFieldValue(field));
+            resolved.push(localClone(field));
           });
         }
       });
