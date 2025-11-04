@@ -19169,6 +19169,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 });
 
+// Static timecode in header center for verification (no auto-update)
+document.addEventListener('DOMContentLoaded', ()=>{
+  const el = document.getElementById('headerTimecode');
+  if(!el) return;
+  el.textContent = 'Timecode applied: 2025-11-04 00:00:00';
+});
+
 (function(){
   const MIN_HEADER_WIDTH = 390;
   const SIDE_MARGIN = 10;
