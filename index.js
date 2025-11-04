@@ -21135,6 +21135,14 @@ document.addEventListener('pointerdown', (e) => {
       // Resolve from database field type IDs first (database is source of truth)
       if(fieldTypeIds && fieldTypeIds.length > 0 && typeof window.resolveFieldTypeFieldsByIds === 'function'){
         try{
+          if(subcategoryName === 'Live Gigs'){
+            console.log('Live Gigs - FORM_FIELD_TYPES:', window.FORM_FIELD_TYPES);
+            console.log('Live Gigs - Looking for IDs:', fieldTypeIds);
+            fieldTypeIds.forEach(id => {
+              const found = window.FORM_FIELD_TYPES?.find(ft => ft.id === id);
+              console.log(`Live Gigs - Field type ID ${id}:`, found);
+            });
+          }
           const resolvedFields = window.resolveFieldTypeFieldsByIds(fieldTypeIds);
           if(subcategoryName === 'Live Gigs'){
             console.log('Live Gigs - resolvedFields from DB:', resolvedFields);
