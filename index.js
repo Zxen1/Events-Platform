@@ -3346,8 +3346,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     function cloneFieldValue(value){
+      if(value === null || value === undefined){
+        return null;
+      }
       if(Array.isArray(value)){
-        return value.map(cloneFieldValue);
+        return value.map(cloneFieldValue).filter(v => v !== null && v !== undefined);
       }
       if(value && typeof value === 'object'){
         try{
@@ -3361,7 +3364,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
-      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
+      versionPriceCurrencies: [],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
       iconLibrary: [],
@@ -3481,7 +3484,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
         const subFields = {};
         subs.forEach(sub => {
-          const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
+          const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue).filter(f => f !== null && f !== undefined) : [];
           subFields[sub] = fields;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
@@ -3530,9 +3533,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedFieldTypes = normalizeFieldTypeOptions(
         snapshot && (snapshot.fieldTypes || snapshot.field_types)
       );
-      if(!normalizedCurrencies.length){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
-      }
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
       const normalizedIconPathsFromMaps = [
@@ -3691,7 +3691,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return sanitized;
     }
     const categories = window.categories = initialFormbuilderSnapshot.categories;
-    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
+    // versionPriceCurrencies now come from backend via currency field options
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
@@ -3922,14 +3922,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+    // Fields now come from backend via field_types table, no hardcoded defaults
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -4121,8 +4114,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
       subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
     }
-    const subcategoryMarkerIds = window.subcategoryMarkerIds = window.subcategoryMarkerIds || {};
-    const categoryShapes = window.categoryShapes = window.categoryShapes || {};
     categories.forEach(cat => {
       if(!cat || typeof cat !== 'object') return;
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -7535,6 +7526,7 @@ function makePosts(){
         }
       }
       rows.forEach((row, index)=>{
+        if(!row || !(row instanceof Element) || !row.dataset) return;
         row.dataset.fieldIndex = String(index);
       });
     }
@@ -8646,11 +8638,8 @@ function makePosts(){
             } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
               delete safeField.location;
             }
-            const requiresByDefault = safeField.type === 'title'
-              || safeField.type === 'description'
-              || safeField.type === 'images';
             const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-            safeField.required = hasRequiredProp ? !!safeField.required : requiresByDefault;
+            safeField.required = hasRequiredProp ? !!safeField.required : false;
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
@@ -10974,7 +10963,9 @@ function makePosts(){
                           emptyOpt.value = '';
                           emptyOpt.textContent = 'Currency';
                           currencySelect.appendChild(emptyOpt);
-                          VERSION_PRICE_CURRENCIES.forEach(code => {
+                          // Currency options should come from backend via currency field
+                          const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                          currencyOptions.forEach(code => {
                             const opt = document.createElement('option');
                             opt.value = code;
                             opt.textContent = code;
@@ -11281,25 +11272,9 @@ function makePosts(){
             return editor;
           };
 
-          const ensureDefaultFieldSet = (fieldList)=>{
-            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
-            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-              fieldList.push({
-                name: typeof defaultField.name === 'string' ? defaultField.name : '',
-                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
-                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
-                required: !!defaultField.required,
-                options: []
-              });
-            });
-            return fieldList.length > 0;
-          };
+          // Fields now come from backend via field_types, no hardcoded defaults
 
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          if(ensureDefaultFieldSet(fields)){
-            notifyFormbuilderChange();
-          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -11544,7 +11519,9 @@ function makePosts(){
                     emptyOption.value = '';
                     emptyOption.textContent = 'Currency';
                     currencySelect.appendChild(emptyOption);
-                    VERSION_PRICE_CURRENCIES.forEach(code => {
+                    // Currency options should come from backend via currency field
+                    const currencyOptions = Array.isArray(window.currencyCodes) ? window.currencyCodes : [];
+                    currencyOptions.forEach(code => {
                       const opt = document.createElement('option');
                       opt.value = code;
                       opt.textContent = code;
@@ -12573,7 +12550,9 @@ function makePosts(){
           };
 
           fields.forEach((existingField, fieldIndex) => {
+            if(!existingField) return;
             const fieldRow = createFieldRow(existingField);
+            if(!fieldRow || !fieldRow.row) return;
             fieldRow.row.dataset.fieldIndex = String(fieldIndex);
             fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
@@ -12981,13 +12960,8 @@ function makePosts(){
         categoryIconPaths: cloneMapLike(categoryIconPaths),
         subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
-        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes),
         fieldTypes: Array.isArray(FORM_FIELD_TYPES)
           ? FORM_FIELD_TYPES.map(option => ({ ...option }))
-          : [],
-        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
-          ? VERSION_PRICE_CURRENCIES.slice()
           : []
       };
     }
@@ -13057,11 +13031,6 @@ function makePosts(){
             subcategoryMarkers[name] = trimmedUrl;
           }
         });
-      }
-      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
-      assignMapLike(categoryShapes, snapshot.categoryShapes);
-      if(Array.isArray(normalized.versionPriceCurrencies)){
-        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
       }
       renderFilterCategories();
       renderFormbuilderCats();
@@ -15270,10 +15239,15 @@ function makePosts(){
       try{
         await ensureMapboxCssFor(document.body);
       }catch(err){}
-          mapboxgl.accessToken = MAPBOX_TOKEN;
-        if(typeof mapboxgl.setLogLevel === 'function'){
-          mapboxgl.setLogLevel('error');
-        }
+      // Validate Mapbox token before initialization
+      if(!MAPBOX_TOKEN || typeof MAPBOX_TOKEN !== 'string' || MAPBOX_TOKEN.trim() === ''){
+        console.error('Mapbox token is missing or invalid');
+        return;
+      }
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      if(typeof mapboxgl.setLogLevel === 'function'){
+        mapboxgl.setLogLevel('error');
+      }
         map = new mapboxgl.Map({
           container:'map',
           style:'mapbox://styles/mapbox/standard',
@@ -15283,6 +15257,12 @@ function makePosts(){
           pitch: startPitch,
           bearing: startBearing,
           attributionControl:true
+        });
+        // Add error handler for token/auth errors
+        map.on('error', (e) => {
+          if(e && e.error && (e.error.message || '').includes('token') || (e.error.message || '').includes('Unauthorized')){
+            console.error('Mapbox authentication error:', e.error);
+          }
         });
         try{ ensurePlaceholderSprites(map); }catch(err){}
         const zoomIndicatorEl = document.getElementById('mapZoomIndicator');
@@ -15303,11 +15283,13 @@ function makePosts(){
             }
           }catch(err){}
         };
-        if(zoomIndicatorEl){
+        if(zoomIndicatorEl && map && typeof map.on === 'function'){
           ['zoom','zoomend','pitch','pitchend'].forEach(evt => {
             try{ map.on(evt, updateZoomIndicator); }catch(err){}
           });
-          map.once('load', updateZoomIndicator);
+          if(typeof map.once === 'function'){
+            try{ map.once('load', updateZoomIndicator); }catch(err){}
+          }
           updateZoomIndicator();
         }
 
@@ -15331,17 +15313,19 @@ function makePosts(){
               mapCanvasContainer.addEventListener(evtName, markRecentInteraction, { passive: true });
             }catch(err){}
           });
-          try{
-            map.on('remove', () => {
-              if(recentInteractionTimeout){
-                clearTimeout(recentInteractionTimeout);
-                recentInteractionTimeout = null;
-              }
-              ['mousedown','touchstart','wheel','pointerdown'].forEach(evtName => {
-                try{ mapCanvasContainer.removeEventListener(evtName, markRecentInteraction, false); }catch(err){}
+          if(map && typeof map.on === 'function'){
+            try{
+              map.on('remove', () => {
+                if(recentInteractionTimeout){
+                  clearTimeout(recentInteractionTimeout);
+                  recentInteractionTimeout = null;
+                }
+                ['mousedown','touchstart','wheel','pointerdown'].forEach(evtName => {
+                  try{ mapCanvasContainer.removeEventListener(evtName, markRecentInteraction, false); }catch(err){}
+                });
               });
-            });
-          }catch(err){}
+            }catch(err){}
+          }
         }
 
         const handleWelcomeOnMapMotion = (evt) => {
@@ -15354,9 +15338,11 @@ function makePosts(){
           }
         };
 
-        ['movestart','dragstart','zoomstart','rotatestart','pitchstart','boxzoomstart'].forEach(evtName => {
-          try{ map.on(evtName, handleWelcomeOnMapMotion); }catch(err){}
-        });
+        if(map && typeof map.on === 'function'){
+          ['movestart','dragstart','zoomstart','rotatestart','pitchstart','boxzoomstart'].forEach(evtName => {
+            try{ map.on(evtName, handleWelcomeOnMapMotion); }catch(err){}
+          });
+        }
 // === Pill hooks (safe) ===
 try { if (typeof __addOrReplacePill150x40 === 'function') __addOrReplacePill150x40(map); } catch(e){}
 if (!map.__pillHooksInstalled) {
@@ -15797,7 +15783,7 @@ if (!map.__pillHooksInstalled) {
       const buildSingleFeature = ({ post, entry }) => {
         if(!post || !entry) return null;
         const key = entry.key || '';
-        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        const baseSub = slugify(post.subcategory);
         const labelLines = getMarkerLabelLines(post);
         const combinedLabel = buildMarkerLabelText(post, labelLines);
         const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
@@ -15839,7 +15825,7 @@ if (!map.__pillHooksInstalled) {
         const primary = group.entries[0];
         if(!primary || !primary.post || !primary.entry) return null;
         const { post, entry } = primary;
-        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        const baseSub = slugify(post.subcategory);
         const multiIconId = MULTI_POST_MARKER_ICON_ID;
         const venueName = (() => {
           for(const item of group.entries){
@@ -20743,13 +20729,7 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
+    // Fields now come from backend via field_types table, no hardcoded defaults
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -20834,15 +20814,6 @@ document.addEventListener('pointerdown', (e) => {
           });
         });
       });
-      if(!codes.size && snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
-        snapshot.versionPriceCurrencies.forEach(code => {
-          const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
-          if(normalized) codes.add(normalized);
-        });
-      }
-      if(!codes.size){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => codes.add(code));
-      }
       return Array.from(codes);
     }
 
@@ -21020,9 +20991,6 @@ document.addEventListener('pointerdown', (e) => {
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-      if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
-      }
       return fields.map(sanitizeCreateField);
     }
 
@@ -22174,12 +22142,7 @@ document.addEventListener('pointerdown', (e) => {
           postTitle = fallback.value;
         }
       }
-      if(!postTitle){
-        showCreateStatus('Enter a title before posting your listing.', { error: true });
-        restoreButtonState();
-        isSubmittingCreatePost = false;
-        return;
-      }
+      // Title requirement is now handled by backend validation based on subcategories.required column
 
       const currentMember = loadCurrentMember();
       const payload = {
