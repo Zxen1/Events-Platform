@@ -3497,24 +3497,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
         return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
-      const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
-        id: null,
-        name: cat.name,
-        subs: cat.subs.slice(),
-        subIds: cat.subs.reduce((acc, sub) => {
-          acc[sub] = null;
-          return acc;
-        }, {}),
-        subFields: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
-        subFieldTypes: cat.subs.reduce((acc, sub) => {
-          acc[sub] = [];
-          return acc;
-        }, {}),
-        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
-      }));
+      // Use normalized categories from database - don't fall back to empty default
+      const base = normalized;
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
