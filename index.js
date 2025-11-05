@@ -3581,24 +3581,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
 
     function getPersistedFormbuilderSnapshotFromGlobals(){
-      if(typeof window === 'undefined'){
-        return null;
-      }
-      const candidates = [
-        window.__persistedFormbuilderSnapshot,
-        window.__PERSISTED_FORMBUILDER_SNAPSHOT__,
-        window.__FORMBUILDER_SNAPSHOT__,
-        window.persistedFormbuilderSnapshot,
-        window.formbuilderSnapshot,
-        window.formBuilderSnapshot,
-        window.initialFormbuilderSnapshot,
-        window.__initialFormbuilderSnapshot
-      ];
-      for(const candidate of candidates){
-        if(candidate && typeof candidate === 'object'){
-          return candidate;
-        }
-      }
+      // Don't use hardcoded window variables - only use database
       return null;
     }
 
@@ -3626,12 +3609,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    // Don't use cached field types - only use database snapshot
+    // Don't use cached data - only use database snapshot
     const initialSnapshotSource = getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot();
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(initialSnapshotSource);
-    // Clear field types from initial snapshot - they'll come from database
+    // Clear all data from initial snapshot - it will come from database
     if (initialFormbuilderSnapshot) {
       initialFormbuilderSnapshot.fieldTypes = [];
+      initialFormbuilderSnapshot.categories = [];
     }
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
@@ -3698,7 +3682,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return sanitized;
     }
-    const categories = window.categories = initialFormbuilderSnapshot.categories;
+    // Don't use cached categories - only use database snapshot when it loads
+    const categories = window.categories = [];
     const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
@@ -11289,25 +11274,8 @@ function makePosts(){
             return editor;
           };
 
-          const ensureDefaultFieldSet = (fieldList)=>{
-            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
-            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-              fieldList.push({
-                name: typeof defaultField.name === 'string' ? defaultField.name : '',
-                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
-                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
-                required: !!defaultField.required,
-                options: []
-              });
-            });
-            return fieldList.length > 0;
-          };
-
+          // Don't add default fields - only use what's in the database
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          if(ensureDefaultFieldSet(fields)){
-            notifyFormbuilderChange();
-          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -13006,7 +12974,8 @@ function makePosts(){
           : []
       };
     }
-    let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
+    // Don't capture snapshot until database loads - start with empty
+    let savedFormbuilderSnapshot = null;
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
       const normalized = normalizeFormbuilderSnapshot(snapshot);
@@ -21029,10 +20998,8 @@ document.addEventListener('pointerdown', (e) => {
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-      if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
-      }
+      // Don't use default fields - only use what's in the database
+      const fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
       return fields.map(sanitizeCreateField);
     }
 
