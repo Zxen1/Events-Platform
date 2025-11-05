@@ -3270,39 +3270,79 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
+    let persistedFormbuilderSnapshotFetchPromise = null;
+    if(typeof window !== 'undefined'){
+      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
+    }
 
-    // Direct fetch from database - no snapshots
-    async function fetchFormData(){
+    function getSavedFormbuilderSnapshot(){
+      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
+        try{
+          const snapshot = window.formbuilderStateManager.getSaved();
+          if(snapshot && typeof snapshot === 'object'){
+            return snapshot;
+          }
+        }catch(err){
+          console.warn('Failed to read saved formbuilder snapshot', err);
+        }
+      }
+      return null;
+    }
+
+    async function fetchSavedFormbuilderSnapshot(){
+      if(persistedFormbuilderSnapshotFetchPromise){
+        return persistedFormbuilderSnapshotFetchPromise;
+      }
+
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timeoutId = controller ? window.setTimeout(() => {
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
 
-      try{
-        const response = await fetch('/gateway.php?action=get-form', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller ? controller.signal : undefined
-        });
-        const text = await response.text();
-        let data;
+      const fetchPromise = (async () => {
         try{
-          data = JSON.parse(text);
-        }catch(parseErr){
-          throw new Error('The server returned an unexpected response.');
+          const response = await fetch('/gateway.php?action=get-form', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: controller ? controller.signal : undefined
+          });
+          const text = await response.text();
+          let data;
+          try{
+            data = JSON.parse(text);
+          }catch(parseErr){
+            throw new Error('The server returned an unexpected response.');
+          }
+          if(!response.ok || !data || data.success !== true || !data.snapshot){
+            const message = data && typeof data.message === 'string' && data.message.trim()
+              ? data.message.trim()
+              : 'Unable to load form definitions.';
+            throw new Error(message);
+          }
+          return data.snapshot;
+        } finally {
+          if(timeoutId){
+            clearTimeout(timeoutId);
+          }
         }
-        if(!response.ok || !data || data.success !== true || !data.snapshot){
-          const message = data && typeof data.message === 'string' && data.message.trim()
-            ? data.message.trim()
-            : 'Unable to load form definitions.';
-          throw new Error(message);
+      })();
+
+      persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
+        persistedFormbuilderSnapshotFetchPromise = null;
+        if(typeof window !== 'undefined'){
+          window.persistedFormbuilderSnapshotPromise = null;
         }
-        return data.snapshot;
-      } finally {
-        if(timeoutId){
-          clearTimeout(timeoutId);
-        }
+      });
+
+      if(typeof window !== 'undefined'){
+        window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
       }
+
+      return persistedFormbuilderSnapshotFetchPromise;
+    }
+
+    if(typeof window !== 'undefined'){
+      window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
     }
 
     function cloneFieldValue(value){
@@ -3318,6 +3358,15 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       }
       return value;
     }
+
+    const DEFAULT_FORMBUILDER_SNAPSHOT = {
+      categories: [],
+      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
+      categoryIconPaths: {},
+      subcategoryIconPaths: {},
+      iconLibrary: [],
+      fieldTypes: []
+    };
 
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)
@@ -3435,27 +3484,26 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
-        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
-        const subFieldTypes = {};
-        subs.forEach(sub => {
-          const fieldTypeIds = Array.isArray(rawSubFieldTypes[sub]) ? rawSubFieldTypes[sub].map(id => {
-            if (typeof id === 'number' && Number.isInteger(id)) return id;
-            if (typeof id === 'string' && /^\d+$/.test(id)) return parseInt(id, 10);
-            return null;
-          }).filter(id => id !== null) : [];
-          subFieldTypes[sub] = fieldTypeIds;
-        });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
-      // Use normalized categories from database - don't fall back to empty default
-      const base = normalized;
+      const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
+        id: null,
+        name: cat.name,
+        subs: cat.subs.slice(),
+        subIds: cat.subs.reduce((acc, sub) => {
+          acc[sub] = null;
+          return acc;
+        }, {}),
+        subFields: cat.subs.reduce((acc, sub) => {
+          acc[sub] = [];
+          return acc;
+        }, {}),
+        sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
+      }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
-        }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3463,9 +3511,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
-          }
-          if(!Array.isArray(cat.subFieldTypes[sub])){
-            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -3476,71 +3521,151 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return base;
     }
 
-    // Function to load form data directly from database
-    async function loadFormData(){
-      try {
-        const snapshot = await fetchFormData();
-        if(!snapshot) return;
-        
-        // Load field types directly
-        const fieldTypes = snapshot.fieldTypes || snapshot.field_types || [];
-        const sanitizedFieldTypes = sanitizeFieldTypeOptions(fieldTypes);
-        FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...sanitizedFieldTypes.map(option => ({ ...option })));
-        
-        // Load categories directly
-        const normalizedCategories = normalizeCategoriesSnapshot(snapshot.categories || []);
-        categories.splice(0, categories.length, ...normalizedCategories);
-        
-        // Initialize category structure
-        categories.forEach(cat => {
-          if(!cat || typeof cat !== 'object') return;
-          if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-            cat.subFields = {};
-          }
-          if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-            cat.subFieldTypes = {};
-          }
-          (cat.subs || []).forEach(subName => {
-            if(!Array.isArray(cat.subFields[subName])){
-              cat.subFields[subName] = [];
-            }
-            if(!Array.isArray(cat.subFieldTypes[subName])){
-              cat.subFieldTypes[subName] = [];
-            }
-          });
-        });
-        
-        // Load icons and other data
-        if(snapshot.categoryIcons) assignMapLike(categoryIcons, snapshot.categoryIcons);
-        if(snapshot.subcategoryIcons) assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
-        if(snapshot.categoryIconPaths) assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
-        if(snapshot.subcategoryIconPaths) assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
-        if(Array.isArray(snapshot.versionPriceCurrencies)){
-          VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...snapshot.versionPriceCurrencies);
-        }
-        
-        // Render UI
-        renderFilterCategories();
-        renderFormbuilderCats();
-        refreshFormbuilderSubcategoryLogos();
-        if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
-          try{
-            document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
-          }catch(err){}
-        }
-        if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
-          try{ addPostSource(); }catch(err){ console.error('addPostSource failed after form data load', err); }
-        }
-      } catch(err) {
-        console.error('Failed to load form data from database', err);
+    function normalizeFormbuilderSnapshot(snapshot){
+      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
+      const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
+      const normalizedCurrencies = Array.from(new Set(rawCurrencies
+        .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
+        .filter(Boolean)));
+      const normalizedFieldTypes = normalizeFieldTypeOptions(
+        snapshot && (snapshot.fieldTypes || snapshot.field_types)
+      );
+      if(!normalizedCurrencies.length){
+        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
       }
+      const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
+      const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
+      const normalizedIconPathsFromMaps = [
+        ...Object.values(normalizedCategoryIconPaths || {}),
+        ...Object.values(normalizedSubcategoryIconPaths || {})
+      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
+        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
+      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
+        ? snapshot.iconLibrary
+        : [];
+      const mergedIconSet = new Set();
+      const mergedIconLibrary = [];
+      const addIconToLibrary = (icon)=>{
+        if(typeof icon !== 'string'){
+          return;
+        }
+        const normalized = normalizeIconAssetPath(icon);
+        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
+          return;
+        }
+        const key = normalized.toLowerCase();
+        if(mergedIconSet.has(key)){
+          return;
+        }
+        mergedIconSet.add(key);
+        mergedIconLibrary.push(normalized);
+      };
+      iconLibrarySource.forEach(addIconToLibrary);
+      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
+      const iconLibrary = mergedIconLibrary;
+      return {
+        categories: normalizedCategories,
+        versionPriceCurrencies: normalizedCurrencies,
+        categoryIconPaths: normalizedCategoryIconPaths,
+        subcategoryIconPaths: normalizedSubcategoryIconPaths,
+        iconLibrary,
+        fieldTypes: normalizedFieldTypes
+      };
     }
+
+    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
+    window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
+
+    function getPersistedFormbuilderSnapshotFromGlobals(){
+      if(typeof window === 'undefined'){
+        return null;
+      }
+      const candidates = [
+        window.__persistedFormbuilderSnapshot,
+        window.__PERSISTED_FORMBUILDER_SNAPSHOT__,
+        window.__FORMBUILDER_SNAPSHOT__,
+        window.persistedFormbuilderSnapshot,
+        window.formbuilderSnapshot,
+        window.formBuilderSnapshot,
+        window.initialFormbuilderSnapshot,
+        window.__initialFormbuilderSnapshot
+      ];
+      for(const candidate of candidates){
+        if(candidate && typeof candidate === 'object'){
+          return candidate;
+        }
+      }
+      return null;
+    }
+
+    const persistedFormbuilderSnapshotPromise = (()=>{
+      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
+        return window.__persistedFormbuilderSnapshotPromise;
+      }
+      const promise = (async ()=>{
+        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
+        if(inlineSnapshot){
+          return inlineSnapshot;
+        }
+        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
+          return await fetchSavedFormbuilderSnapshot();
+        }
+        return null;
+      })();
+      if(typeof window !== 'undefined'){
+        window.__persistedFormbuilderSnapshotPromise = promise;
+      }
+      return promise;
+    })();
 
     const ICON_LIBRARY = Array.isArray(window.iconLibrary)
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    // Initialize empty - will be populated from direct database fetch
+    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
+      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
+    );
+    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
+      ? initialFormbuilderSnapshot.iconLibrary
+      : [];
+    const existingWindowIcons = Array.isArray(window.iconLibrary)
+      ? window.iconLibrary.slice()
+      : [];
+    const mapIconValues = [
+      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
+      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
+    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
+      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
+    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
+    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
+    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
+    const mergedIconSet = new Set();
+    const mergedIconLibrary = [];
+    const mergeIcons = icons => {
+      if(!Array.isArray(icons)){
+        return;
+      }
+      icons.forEach(icon => {
+        if(typeof icon !== 'string' || !icon){
+          return;
+        }
+        const key = icon.toLowerCase();
+        if(mergedIconSet.has(key)){
+          return;
+        }
+        mergedIconSet.add(key);
+        mergedIconLibrary.push(icon);
+      });
+    };
+    mergeIcons(sanitizedSnapshotIcons);
+    mergeIcons(sanitizedMapIcons);
+    mergeIcons(sanitizedWindowIcons);
+    ICON_LIBRARY.length = 0;
+    if(mergedIconLibrary.length){
+      ICON_LIBRARY.push(...mergedIconLibrary);
+    }
+    window.iconLibrary = ICON_LIBRARY;
+    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
     function sanitizeFieldTypeOptions(options){
       const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
       const sanitized = [];
@@ -3565,14 +3690,20 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return sanitized;
     }
-    // Initialize empty arrays/objects - will be populated from direct database fetch
-    const categories = window.categories = [];
-    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.slice();
+    const categories = window.categories = initialFormbuilderSnapshot.categories;
+    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [];
+    assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
+    assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
+    const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
+      ? initialFormbuilderSnapshot.fieldTypes
+      : [];
+    const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
+    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';
@@ -11150,8 +11281,25 @@ function makePosts(){
             return editor;
           };
 
-          // Don't add default fields - only use what's in the database
+          const ensureDefaultFieldSet = (fieldList)=>{
+            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
+            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
+              fieldList.push({
+                name: typeof defaultField.name === 'string' ? defaultField.name : '',
+                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
+                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
+                required: !!defaultField.required,
+                options: []
+              });
+            });
+            return fieldList.length > 0;
+          };
+
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+
+          if(ensureDefaultFieldSet(fields)){
+            notifyFormbuilderChange();
+          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -12797,18 +12945,11 @@ function makePosts(){
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
-        const subFieldTypes = item && item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes) ? item.subFieldTypes : {};
-        const clonedSubFieldTypes = {};
-        Object.keys(subFieldTypes).forEach(key => {
-          const value = subFieldTypes[key];
-          clonedSubFieldTypes[key] = Array.isArray(value) ? value.slice() : [];
-        });
         return {
           id: item && Number.isInteger(item.id) ? item.id : (typeof item.id === 'string' && /^\d+$/.test(item.id) ? parseInt(item.id, 10) : null),
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
-          subFieldTypes: clonedSubFieldTypes,
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -12832,11 +12973,141 @@ function makePosts(){
         });
       }
     }
-    // Expose loadFormData globally
-    window.loadFormData = loadFormData;
-    
-    // Load form data directly from database on page load
-    loadFormData();
+    function captureFormbuilderSnapshot(){
+      return {
+        categories: cloneCategoryList(categories),
+        categoryIcons: cloneMapLike(categoryIcons),
+        subcategoryIcons: cloneMapLike(subcategoryIcons),
+        categoryIconPaths: cloneMapLike(categoryIconPaths),
+        subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
+        subcategoryMarkers: cloneMapLike(subcategoryMarkers),
+        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
+        categoryShapes: cloneMapLike(categoryShapes),
+        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
+          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+          : [],
+        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
+          ? VERSION_PRICE_CURRENCIES.slice()
+          : []
+      };
+    }
+    let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
+    function restoreFormbuilderSnapshot(snapshot){
+      if(!snapshot) return;
+      const existingFieldTypes = (() => {
+        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
+          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+        }
+        if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
+          return FORM_FIELD_TYPES.map(option => ({ ...option }));
+        }
+        return [];
+      })();
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
+      if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
+        sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
+      }
+      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
+      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      const nextCategories = cloneCategoryList(normalized.categories);
+      if(Array.isArray(nextCategories)){
+        categories.splice(0, categories.length, ...nextCategories);
+      }
+      categories.forEach(cat => {
+        if(!cat || typeof cat !== 'object') return;
+        if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
+          cat.subFields = {};
+        }
+        (cat.subs || []).forEach(subName => {
+          if(!Array.isArray(cat.subFields[subName])){
+            cat.subFields[subName] = [];
+          }
+        });
+      });
+      assignMapLike(categoryIcons, snapshot.categoryIcons);
+      assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
+      assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
+      assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
+      const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
+      Object.keys(subcategoryMarkers).forEach(key => {
+        if(key !== MULTI_POST_MARKER_ICON_ID){
+          delete subcategoryMarkers[key];
+        }
+      });
+      if(multiIconSrc){
+        subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
+      }
+      const markerOverrides = snapshot && snapshot.subcategoryMarkers;
+      if(markerOverrides && typeof markerOverrides === 'object'){
+        Object.keys(markerOverrides).forEach(name => {
+          const url = markerOverrides[name];
+          if(typeof url !== 'string'){
+            return;
+          }
+          const trimmedUrl = url.trim();
+          if(!trimmedUrl){
+            return;
+          }
+          const slugKey = slugify(typeof name === 'string' ? name : '');
+          if(slugKey){
+            subcategoryMarkers[slugKey] = trimmedUrl;
+          }
+          if(typeof name === 'string' && name){
+            subcategoryMarkers[name] = trimmedUrl;
+          }
+        });
+      }
+      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
+      assignMapLike(categoryShapes, snapshot.categoryShapes);
+      if(Array.isArray(normalized.versionPriceCurrencies)){
+        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
+      }
+      renderFilterCategories();
+      renderFormbuilderCats();
+      refreshFormbuilderSubcategoryLogos();
+      if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
+        try{
+          document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
+        }catch(err){}
+      }
+      if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
+        try{ addPostSource(); }catch(err){ console.error('addPostSource failed after snapshot restore', err); }
+      }
+      updateFormbuilderSnapshot();
+    }
+    function updateFormbuilderSnapshot(){
+      savedFormbuilderSnapshot = captureFormbuilderSnapshot();
+    }
+    window.formbuilderStateManager = {
+      capture: captureFormbuilderSnapshot,
+      restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
+      save(){ updateFormbuilderSnapshot(); },
+      getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
+      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
+    };
+    persistedFormbuilderSnapshotPromise.then(snapshot => {
+      if(!snapshot) return;
+      const manager = window.formbuilderStateManager;
+      if(!manager || typeof manager.restore !== 'function'){
+        return;
+      }
+      try{
+        manager.restore(snapshot);
+      }catch(err){
+        console.error('Failed to restore persisted formbuilder snapshot', err);
+        return;
+      }
+      if(typeof manager.save === 'function'){
+        try{
+          manager.save();
+        }catch(err){
+          console.error('Failed to update saved formbuilder snapshot after hydration', err);
+        }
+      }
+    }).catch(err => {
+      console.error('Failed to load persisted formbuilder snapshot from backend', err);
+    });
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -13061,7 +13332,7 @@ function makePosts(){
     if(catsEl){
       renderFilterCategories();
       renderFormbuilderCats();
-      // No snapshot updating needed - data is saved directly to database
+      updateFormbuilderSnapshot();
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
         refreshFormbuilderSubcategoryLogos();
@@ -19204,16 +19475,6 @@ form.addEventListener('input', formChanged, true);
   };
 })();
 
-// Default formbuilder snapshot - must be global for access across IIFEs
-const DEFAULT_FORMBUILDER_SNAPSHOT = {
-  categories: [],
-  versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
-  categoryIconPaths: {},
-  subcategoryIconPaths: {},
-  iconLibrary: [],
-  fieldTypes: []
-};
-
 // Extracted from <script>
 (function(){
   const SAVE_ENDPOINT = '/gateway.php?action=save-form';
@@ -19242,18 +19503,17 @@ const DEFAULT_FORMBUILDER_SNAPSHOT = {
   }
 
   async function saveAdminChanges(){
-    // Build payload directly from categories array - no snapshots
-    const payload = {
-      categories: (window.categories || []).map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        subs: cat.subs || [],
-        subFields: cat.subFields || {},
-        subFieldTypes: cat.subFieldTypes || {},
-        subIds: cat.subIds || {},
-        sort_order: cat.sort_order
-      }))
-    };
+    let payload = null;
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+      try {
+        payload = window.formbuilderStateManager.capture();
+      } catch (err) {
+        console.error('formbuilderStateManager.capture failed', err);
+      }
+    }
+    if(!payload || typeof payload !== 'object'){
+      payload = {};
+    }
 
     let response;
     try {
@@ -19449,7 +19709,9 @@ const adminPanelChangeManager = (()=>{
   function refreshSavedState({ skipManagerSave } = {}){
     if(!form) return;
     savedState = serializeState();
-    // No snapshot saving needed - data is saved directly to database
+    if(!skipManagerSave && window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
+      window.formbuilderStateManager.save();
+    }
     setDirty(false);
   }
 
@@ -19464,15 +19726,40 @@ const adminPanelChangeManager = (()=>{
       if(typeof window === 'undefined') return;
       ensureElements();
       formWasFound = !!form;
-      // Load form data directly from database
-      if(typeof window.loadFormData === 'function'){
+      const manager = window.formbuilderStateManager;
+      let snapshot = null;
+      const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
+        ? window.fetchSavedFormbuilderSnapshot
+        : null;
+      if(fetchSnapshot){
         try{
-          await window.loadFormData();
+          snapshot = await fetchSnapshot();
         }catch(err){
-          console.warn('Failed to load form data from database', err);
+          console.warn('Failed to fetch admin formbuilder snapshot from server', err);
+        }
+      }
+      if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
+        try{
+          snapshot = await Promise.resolve(window.getSavedFormbuilderSnapshot());
+        }catch(err){
+          console.warn('Failed to load saved admin formbuilder snapshot', err);
+        }
+      }
+      if(manager && typeof manager.restore === 'function' && snapshot){
+        try{
+          manager.restore(snapshot);
+        }catch(err){
+          console.warn('Failed to hydrate admin formbuilder snapshot', err);
         }
       }
       refreshSavedState({ skipManagerSave: true });
+      if(manager && typeof manager.save === 'function'){
+        try{
+          manager.save();
+        }catch(err){
+          console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
+        }
+      }
     })()
     .catch(err => {
       console.warn('Failed to initialize admin saved state', err);
@@ -19637,7 +19924,9 @@ const adminPanelChangeManager = (()=>{
         applying = false;
       }
     }
-    // No snapshot restoration needed - data is loaded directly from database
+    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
+      window.formbuilderStateManager.restoreSaved();
+    }
     if(savedState) applyState(savedState);
     setDirty(false);
     showStatus('Changes Discarded');
@@ -20561,8 +20850,10 @@ document.addEventListener('pointerdown', (e) => {
     const loadingMessage = 'Loading form fields…';
     const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
 
-    let memberCategories = [];
-    let currencyCodes = new Set(DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies);
+    const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
+    let memberSnapshot = defaultMemberSnapshot;
+    let memberCategories = memberSnapshot.categories;
+    let currencyCodes = collectCurrencyCodes(memberSnapshot);
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
 
@@ -20576,15 +20867,10 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function applyMemberSnapshot(snapshot, options = {}){
-      if(!snapshot) return;
-      // Load categories directly from snapshot
-      const normalizedCategories = normalizeCategoriesSnapshot(snapshot.categories || []);
-      memberCategories = normalizedCategories;
-      // Collect currency codes from snapshot
-      const snapshotCurrencies = Array.isArray(snapshot.versionPriceCurrencies) 
-        ? snapshot.versionPriceCurrencies 
-        : DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies;
-      currencyCodes = new Set(snapshotCurrencies);
+      const normalized = normalizeFormbuilderSnapshot(snapshot);
+      memberSnapshot = normalized;
+      memberCategories = memberSnapshot.categories;
+      currencyCodes = collectCurrencyCodes(memberSnapshot);
       ensureCurrencyOptions(listingCurrency);
       ensureCurrencyOptions(adminListingCurrency);
       if(options.populate !== false){
@@ -20615,18 +20901,20 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function refreshMemberSnapshotFromManager(){
-      // Direct fetch from database - no snapshots
-      fetchFormData().then(snapshot => {
-        if(snapshot){
+      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
+        try{
+          const snapshot = window.formbuilderStateManager.capture();
           memberSnapshotErrorMessage = '';
           applyMemberSnapshot(snapshot, { preserveSelection: true });
+          return;
+        }catch(err){
+          console.warn('Failed to capture latest formbuilder snapshot', err);
         }
-      }).catch(err => {
-        console.warn('Failed to fetch latest form data', err);
-        // Use current memberCategories as fallback
-        applyMemberSnapshot({ categories: memberCategories, versionPriceCurrencies: Array.from(currencyCodes) }, { preserveSelection: true });
-      });
+      }
+      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
     }
+
+    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
 
     function formatPriceValue(value){
       const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
@@ -20731,8 +21019,10 @@ document.addEventListener('pointerdown', (e) => {
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      // Don't use default fields - only use what's in the database
-      const fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        fields = sharedDefaultSubcategoryFields;
+      }
       return fields.map(sanitizeCreateField);
     }
 
@@ -21194,10 +21484,10 @@ document.addEventListener('pointerdown', (e) => {
       }
       renderEmptyState(loadingMessage);
       try{
-        // Direct fetch from database - no snapshots
-        const snapshot = await fetchFormData();
-        if(!snapshot){
-          throw new Error('No data returned from database');
+        const backendSnapshot = await persistedFormbuilderSnapshotPromise;
+        const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
+        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
+          window.formbuilderStateManager.restore(snapshot);
         }
         applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
@@ -21205,14 +21495,13 @@ document.addEventListener('pointerdown', (e) => {
       }catch(error){
         const message = error && typeof error.message === 'string' ? error.message : '';
         if(message && message.toLowerCase().includes('database connection not configured')){
-          console.warn('Formbuilder service unavailable; using defaults.');
+          console.warn('Formbuilder snapshot service unavailable; using defaults.');
         } else {
-          console.error('Failed to load form data for members', error);
+          console.error('Failed to load formbuilder snapshot for members', error);
         }
         memberSnapshotErrorMessage = fetchErrorMessage;
         setEmptyStateMessage(fetchErrorMessage);
-        // Use empty categories as fallback
-        applyMemberSnapshot({ categories: [], versionPriceCurrencies: DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies }, { preserveSelection: false, populate: false });
+        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
       } finally {
         if(categorySelect){
           categorySelect.disabled = false;
