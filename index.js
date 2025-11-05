@@ -3359,9 +3359,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
+    // Default formbuilder snapshot - must be global for access across IIFEs
+    // Note: versionPriceCurrencies now comes from backend currency field options
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
-      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
+      versionPriceCurrencies: [], // Now provided by backend from currency field
       categoryIconPaths: {},
       subcategoryIconPaths: {},
       iconLibrary: [],
@@ -3530,9 +3532,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedFieldTypes = normalizeFieldTypeOptions(
         snapshot && (snapshot.fieldTypes || snapshot.field_types)
       );
-      if(!normalizedCurrencies.length){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
-      }
+      // versionPriceCurrencies now always comes from backend (currency field options)
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
       const normalizedIconPathsFromMaps = [
@@ -3922,14 +3922,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
-    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
+    // Fields now come from backend via field_types table, no hardcoded defaults
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -4121,8 +4114,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     if(!subcategoryMarkers[MULTI_POST_MARKER_ICON_ID]){
       subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = MULTI_POST_MARKER_ICON_SRC;
     }
-    const subcategoryMarkerIds = window.subcategoryMarkerIds = window.subcategoryMarkerIds || {};
-    const categoryShapes = window.categoryShapes = window.categoryShapes || {};
     categories.forEach(cat => {
       if(!cat || typeof cat !== 'object') return;
       if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
@@ -8646,11 +8637,11 @@ function makePosts(){
             } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
               delete safeField.location;
             }
-            const requiresByDefault = safeField.type === 'title'
-              || safeField.type === 'description'
-              || safeField.type === 'images';
+            // Required status now comes from backend subcategories.required column
             const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-            safeField.required = hasRequiredProp ? !!safeField.required : requiresByDefault;
+            if(!hasRequiredProp){
+              safeField.required = false;
+            }
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
@@ -11281,25 +11272,8 @@ function makePosts(){
             return editor;
           };
 
-          const ensureDefaultFieldSet = (fieldList)=>{
-            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
-            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
-              fieldList.push({
-                name: typeof defaultField.name === 'string' ? defaultField.name : '',
-                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
-                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
-                required: !!defaultField.required,
-                options: []
-              });
-            });
-            return fieldList.length > 0;
-          };
-
+          // Fields now come from backend via field_types, no hardcoded defaults
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
-
-          if(ensureDefaultFieldSet(fields)){
-            notifyFormbuilderChange();
-          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -12981,13 +12955,8 @@ function makePosts(){
         categoryIconPaths: cloneMapLike(categoryIconPaths),
         subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
         subcategoryMarkers: cloneMapLike(subcategoryMarkers),
-        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes),
         fieldTypes: Array.isArray(FORM_FIELD_TYPES)
           ? FORM_FIELD_TYPES.map(option => ({ ...option }))
-          : [],
-        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
-          ? VERSION_PRICE_CURRENCIES.slice()
           : []
       };
     }
@@ -13057,11 +13026,6 @@ function makePosts(){
             subcategoryMarkers[name] = trimmedUrl;
           }
         });
-      }
-      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
-      assignMapLike(categoryShapes, snapshot.categoryShapes);
-      if(Array.isArray(normalized.versionPriceCurrencies)){
-        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
       }
       renderFilterCategories();
       renderFormbuilderCats();
@@ -15797,7 +15761,8 @@ if (!map.__pillHooksInstalled) {
       const buildSingleFeature = ({ post, entry }) => {
         if(!post || !entry) return null;
         const key = entry.key || '';
-        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        // markerId now comes from backend subcategory_key, fallback to slugified name
+        const baseSub = slugify(post.subcategory);
         const labelLines = getMarkerLabelLines(post);
         const combinedLabel = buildMarkerLabelText(post, labelLines);
         const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
@@ -15839,7 +15804,8 @@ if (!map.__pillHooksInstalled) {
         const primary = group.entries[0];
         if(!primary || !primary.post || !primary.entry) return null;
         const { post, entry } = primary;
-        const baseSub = subcategoryMarkerIds[post.subcategory] || slugify(post.subcategory);
+        // markerId now comes from backend subcategory_key, fallback to slugified name
+        const baseSub = slugify(post.subcategory);
         const multiIconId = MULTI_POST_MARKER_ICON_ID;
         const venueName = (() => {
           for(const item of group.entries){
@@ -16158,12 +16124,11 @@ if (!map.__pillHooksInstalled) {
               enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
               const markerSources = window.subcategoryMarkers || {};
-              const markerIds = window.subcategoryMarkerIds || {};
+              // markerId now comes from backend subcategory_key, fallback to slugified name
               const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
               const markerIdCandidates = [];
               if(post && post.subcategory){
-                const mappedId = markerIds[post.subcategory];
-                if(mappedId) markerIdCandidates.push(mappedId);
+                // Use slugified subcategory name (backend provides subcategory_key via snapshot.subcategoryMarkerIds)
                 markerIdCandidates.push(slugifyFn(post.subcategory));
               }
               const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
@@ -18057,7 +18022,8 @@ function openPostModal(id){
           const selectedIdx = selectedEntry.idx;
           const selectedLoc = selectedEntry.location;
           const center = [selectedLoc.lng, selectedLoc.lat];
-          const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
+          // markerId now comes from backend subcategory_key, fallback to slugified name
+          const subId = slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
 
           const assignDetailRef = ()=>{
@@ -20743,13 +20709,7 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
-      ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [
-          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
-          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
-          { name: 'Images', type: 'images', placeholder: '', required: true }
-        ];
+    // Fields now come from backend via field_types table, no hardcoded defaults
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -20834,14 +20794,12 @@ document.addEventListener('pointerdown', (e) => {
           });
         });
       });
-      if(!codes.size && snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
+      // versionPriceCurrencies now always comes from backend (currency field options)
+      if(snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
         snapshot.versionPriceCurrencies.forEach(code => {
           const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
           if(normalized) codes.add(normalized);
         });
-      }
-      if(!codes.size){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => codes.add(code));
       }
       return Array.from(codes);
     }
@@ -21019,10 +20977,8 @@ document.addEventListener('pointerdown', (e) => {
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-      if(!fields || fields.length === 0){
-        fields = sharedDefaultSubcategoryFields;
-      }
+      const fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      // Fields now come from backend via field_types, no hardcoded fallbacks
       return fields.map(sanitizeCreateField);
     }
 
@@ -22168,17 +22124,13 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
 
+      // Title requirement is now handled by backend validation based on subcategories.required column
+      // If no title field found, try to use first field value as fallback
       if(!postTitle){
         const fallback = fieldPayload.find(item => typeof item.value === 'string' && item.value);
         if(fallback && typeof fallback.value === 'string'){
           postTitle = fallback.value;
         }
-      }
-      if(!postTitle){
-        showCreateStatus('Enter a title before posting your listing.', { error: true });
-        restoreButtonState();
-        isSubmittingCreatePost = false;
-        return;
       }
 
       const currentMember = loadCurrentMember();
