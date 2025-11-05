@@ -3922,10 +3922,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    // Default subcategory fields come from backend; no hardcoded client defaults
     const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
       ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [];
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
     window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
@@ -7532,9 +7535,7 @@ function makePosts(){
         }
       }
       rows.forEach((row, index)=>{
-        if(row && row.dataset){
-          row.dataset.fieldIndex = String(index);
-        }
+        row.dataset.fieldIndex = String(index);
       });
     }
 
@@ -8645,8 +8646,11 @@ function makePosts(){
             } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
               delete safeField.location;
             }
+            const requiresByDefault = safeField.type === 'title'
+              || safeField.type === 'description'
+              || safeField.type === 'images';
             const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-            safeField.required = hasRequiredProp ? !!safeField.required : false;
+            safeField.required = hasRequiredProp ? !!safeField.required : requiresByDefault;
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
@@ -12570,23 +12574,19 @@ function makePosts(){
 
           fields.forEach((existingField, fieldIndex) => {
             const fieldRow = createFieldRow(existingField);
-            if(fieldRow && fieldRow.row && fieldRow.row.dataset){
-              fieldRow.row.dataset.fieldIndex = String(fieldIndex);
-              fieldsList.appendChild(fieldRow.row);
-              enableFieldDrag(fieldRow.row, fieldsList, fields);
-            }
+            fieldRow.row.dataset.fieldIndex = String(fieldIndex);
+            fieldsList.appendChild(fieldRow.row);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
           });
 
           addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
-            if(fieldRow && fieldRow.row && fieldRow.row.dataset){
-              fieldsList.appendChild(fieldRow.row);
-              fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
-              enableFieldDrag(fieldRow.row, fieldsList, fields);
-              notifyFormbuilderChange();
-            }
+            fieldsList.appendChild(fieldRow.row);
+            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+            enableFieldDrag(fieldRow.row, fieldsList, fields);
+            notifyFormbuilderChange();
             requestAnimationFrame(()=>{
               if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
                 fieldRow.focusTypePicker();
@@ -20743,10 +20743,13 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    // Shared default fields removed; rely on backend-provided field types
     const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
       ? window.DEFAULT_SUBCATEGORY_FIELDS
-      : [];
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -21017,6 +21020,9 @@ document.addEventListener('pointerdown', (e) => {
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
       let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        fields = sharedDefaultSubcategoryFields;
+      }
       return fields.map(sanitizeCreateField);
     }
 
