@@ -274,10 +274,12 @@ try {
         if (!is_array($subFieldsMap)) {
             $subFieldsMap = [];
         }
+        $hasSubFieldsInPayload = !empty($subFieldsMap);
         $subFieldTypesMap = $categoryPayload['subFieldTypes'] ?? [];
         if (!is_array($subFieldTypesMap)) {
             $subFieldTypesMap = [];
         }
+        $hasSubFieldTypesInPayload = !empty($subFieldTypesMap);
         $subIdMap = [];
         if (isset($categoryPayload['subIds']) && is_array($categoryPayload['subIds'])) {
             foreach ($categoryPayload['subIds'] as $key => $value) {
@@ -394,28 +396,44 @@ try {
             }
 
             $fieldsPayload = [];
+            $hasFieldsForThisSub = false;
             if ($subKey !== '' && isset($subFieldsMap[$subKey])) {
                 $fieldsPayload = $subFieldsMap[$subKey];
+                $hasFieldsForThisSub = true;
             } elseif ($subName !== '' && isset($subFieldsMap[$subName])) {
                 $fieldsPayload = $subFieldsMap[$subName];
+                $hasFieldsForThisSub = true;
             }
             if (!is_array($fieldsPayload)) {
                 $fieldsPayload = [];
             }
             $sanitizedFields = [];
-            foreach ($fieldsPayload as $fieldPayload) {
-                if (!is_array($fieldPayload)) {
-                    continue;
+            if ($hasFieldsForThisSub) {
+                foreach ($fieldsPayload as $fieldPayload) {
+                    if (!is_array($fieldPayload)) {
+                        continue;
+                    }
+                    $sanitizedFields[] = sanitizeField($fieldPayload);
                 }
-                $sanitizedFields[] = sanitizeField($fieldPayload);
+            } else {
+                // Preserve existing fields from database if not in payload
+                if (isset($subcategoryRow['metadata_json']) && is_string($subcategoryRow['metadata_json'])) {
+                    $existingMeta = json_decode($subcategoryRow['metadata_json'], true);
+                    if (is_array($existingMeta) && isset($existingMeta['fields']) && is_array($existingMeta['fields'])) {
+                        $sanitizedFields = $existingMeta['fields'];
+                    }
+                }
             }
 
+            $hasFieldTypesForThisSub = false;
             if (!$fieldTypeIds) {
                 $fieldTypeSource = null;
                 if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
                     $fieldTypeSource = $subFieldTypesMap[$subKey];
+                    $hasFieldTypesForThisSub = true;
                 } elseif ($subName !== '' && isset($subFieldTypesMap[$subName])) {
                     $fieldTypeSource = $subFieldTypesMap[$subName];
+                    $hasFieldTypesForThisSub = true;
                 }
                 if (is_array($fieldTypeSource)) {
                     foreach ($fieldTypeSource as $typeId) {
@@ -423,6 +441,24 @@ try {
                             $fieldTypeIds[] = $typeId;
                         } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
                             $fieldTypeIds[] = (int) $typeId;
+                        }
+                    }
+                }
+            } else {
+                $hasFieldTypesForThisSub = true;
+            }
+            
+            // If field types not in payload, preserve existing from database
+            if (!$hasFieldTypesForThisSub && isset($subcategoryRow['field_type_id']) && is_string($subcategoryRow['field_type_id']) && $subcategoryRow['field_type_id'] !== '') {
+                $trimmed = trim($subcategoryRow['field_type_id']);
+                if ($trimmed !== '') {
+                    $parts = preg_split('/\s*,\s*/', $trimmed);
+                    if (is_array($parts)) {
+                        foreach ($parts as $part) {
+                            $id = filterPositiveInt($part);
+                            if ($id !== null) {
+                                $fieldTypeIds[] = $id;
+                            }
                         }
                     }
                 }
@@ -444,11 +480,27 @@ try {
 
             $fieldNames = [];
             $fieldIds = [];
-            foreach ($sanitizedFields as $field) {
-                $fieldNames[] = $field['name'] !== '' ? $field['name'] : $field['type'];
-                $matchedId = matchFieldId($fieldCatalog, $field);
-                if ($matchedId !== null) {
-                    $fieldIds[] = $matchedId;
+            if ($hasFieldsForThisSub) {
+                foreach ($sanitizedFields as $field) {
+                    $fieldNames[] = $field['name'] !== '' ? $field['name'] : $field['type'];
+                    $matchedId = matchFieldId($fieldCatalog, $field);
+                    if ($matchedId !== null) {
+                        $fieldIds[] = $matchedId;
+                    }
+                }
+            } else {
+                // Preserve existing field_names and field_ids from database if not in payload
+                if (isset($subcategoryRow['field_names']) && is_string($subcategoryRow['field_names']) && $subcategoryRow['field_names'] !== '') {
+                    $decoded = json_decode($subcategoryRow['field_names'], true);
+                    if (is_array($decoded)) {
+                        $fieldNames = $decoded;
+                    }
+                }
+                if (isset($subcategoryRow['field_ids']) && is_string($subcategoryRow['field_ids']) && $subcategoryRow['field_ids'] !== '') {
+                    $decoded = json_decode($subcategoryRow['field_ids'], true);
+                    if (is_array($decoded)) {
+                        $fieldIds = $decoded;
+                    }
                 }
             }
 
@@ -522,19 +574,23 @@ try {
                 $updateParts[] = 'subcategory_key = :subcategory_key';
                 $params[':subcategory_key'] = $subKey;
             }
-            if (in_array('field_names', $subcategoryColumns, true)) {
-                $updateParts[] = 'field_names = :field_names';
-                $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
+            // Only update field_names and field_ids if fields were provided in payload
+            if ($hasFieldsForThisSub) {
+                if (in_array('field_names', $subcategoryColumns, true)) {
+                    $updateParts[] = 'field_names = :field_names';
+                    $params[':field_names'] = json_encode($fieldNames, JSON_UNESCAPED_UNICODE);
+                }
+                if (in_array('field_ids', $subcategoryColumns, true)) {
+                    $updateParts[] = 'field_ids = :field_ids';
+                    $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
+                }
             }
-            if (in_array('field_ids', $subcategoryColumns, true)) {
-                $updateParts[] = 'field_ids = :field_ids';
-                $params[':field_ids'] = json_encode($fieldIds, JSON_UNESCAPED_UNICODE);
-            }
-            if (in_array('field_type_id', $subcategoryColumns, true)) {
+            // Always update field_type_id and field_type_name when field types are provided or exist
+            if (in_array('field_type_id', $subcategoryColumns, true) && ($hasFieldTypesForThisSub || !empty($fieldTypeIds))) {
                 $updateParts[] = 'field_type_id = :field_type_id';
                 $params[':field_type_id'] = $fieldTypeIdCsv;
             }
-            if (in_array('field_type_name', $subcategoryColumns, true)) {
+            if (in_array('field_type_name', $subcategoryColumns, true) && ($hasFieldTypesForThisSub || !empty($fieldTypeNameCsv))) {
                 $updateParts[] = 'field_type_name = :field_type_name';
                 $params[':field_type_name'] = $fieldTypeNameCsv;
             }
@@ -542,17 +598,24 @@ try {
                 $updateParts[] = 'sort_order = :sort_order';
                 $params[':sort_order'] = $index + 1;
             }
-            if (in_array('icon_path', $subcategoryColumns, true)) {
-                $updateParts[] = 'icon_path = :icon_path';
-                $params[':icon_path'] = $subIconVariants['icon'];
+            // Only update icon_path and mapmarker_path if icon data was provided in payload
+            $hasIconInPayload = !empty($subcategoryIconPaths) || !empty($subcategoryIcons);
+            if ($hasIconInPayload) {
+                if (in_array('icon_path', $subcategoryColumns, true)) {
+                    $updateParts[] = 'icon_path = :icon_path';
+                    $params[':icon_path'] = $subIconVariants['icon'];
+                }
+                if (in_array('mapmarker_path', $subcategoryColumns, true)) {
+                    $updateParts[] = 'mapmarker_path = :mapmarker_path';
+                    $params[':mapmarker_path'] = $subIconVariants['marker'];
+                }
             }
-            if (in_array('mapmarker_path', $subcategoryColumns, true)) {
-                $updateParts[] = 'mapmarker_path = :mapmarker_path';
-                $params[':mapmarker_path'] = $subIconVariants['marker'];
-            }
-            if (in_array('metadata_json', $subcategoryColumns, true)) {
-                $updateParts[] = 'metadata_json = :metadata_json';
-                $params[':metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
+            // Only update metadata_json if fields or other metadata was provided in payload
+            if ($hasFieldsForThisSub || $hasFieldTypesForThisSub || $hasIconInPayload || !empty($categoryShapes) || !empty($subcategoryMarkers) || !empty($subcategoryMarkerIds)) {
+                if (in_array('metadata_json', $subcategoryColumns, true)) {
+                    $updateParts[] = 'metadata_json = :metadata_json';
+                    $params[':metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
+                }
             }
 
             if (!$updateParts) {
