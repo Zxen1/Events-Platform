@@ -3319,15 +3319,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
-    const DEFAULT_FORMBUILDER_SNAPSHOT = {
-      categories: [],
-      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
-      categoryIconPaths: {},
-      subcategoryIconPaths: {},
-      iconLibrary: [],
-      fieldTypes: []
-    };
-
     function normalizeFieldTypeOptions(options){
       const list = Array.isArray(options)
         ? options
@@ -19212,6 +19203,16 @@ form.addEventListener('input', formChanged, true);
     }
   };
 })();
+
+// Default formbuilder snapshot - must be global for access across IIFEs
+const DEFAULT_FORMBUILDER_SNAPSHOT = {
+  categories: [],
+  versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
+  categoryIconPaths: {},
+  subcategoryIconPaths: {},
+  iconLibrary: [],
+  fieldTypes: []
+};
 
 // Extracted from <script>
 (function(){
