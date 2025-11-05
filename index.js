@@ -3626,9 +3626,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(
-      getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot()
-    );
+    // Don't use cached field types - only use database snapshot
+    const initialSnapshotSource = getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot();
+    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(initialSnapshotSource);
+    // Clear field types from initial snapshot - they'll come from database
+    if (initialFormbuilderSnapshot) {
+      initialFormbuilderSnapshot.fieldTypes = [];
+    }
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
       ? initialFormbuilderSnapshot.iconLibrary
       : [];
@@ -13005,20 +13009,9 @@ function makePosts(){
     let savedFormbuilderSnapshot = captureFormbuilderSnapshot();
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
-      const existingFieldTypes = (() => {
-        if(Array.isArray(initialFormbuilderSnapshot.fieldTypes) && initialFormbuilderSnapshot.fieldTypes.length){
-          return initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
-        }
-        if(Array.isArray(FORM_FIELD_TYPES) && FORM_FIELD_TYPES.length){
-          return FORM_FIELD_TYPES.map(option => ({ ...option }));
-        }
-        return [];
-      })();
       const normalized = normalizeFormbuilderSnapshot(snapshot);
       let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
-      if(sanitizedFieldTypes.length === 0 && existingFieldTypes.length){
-        sanitizedFieldTypes = sanitizeFieldTypeOptions(existingFieldTypes);
-      }
+      // Don't fall back to cached field types - use only what's in the database snapshot
       initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
       FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
       const nextCategories = cloneCategoryList(normalized.categories);
