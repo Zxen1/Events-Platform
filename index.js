@@ -7532,7 +7532,9 @@ function makePosts(){
         }
       }
       rows.forEach((row, index)=>{
-        row.dataset.fieldIndex = String(index);
+        if(row && row.dataset){
+          row.dataset.fieldIndex = String(index);
+        }
       });
     }
 
@@ -12568,19 +12570,23 @@ function makePosts(){
 
           fields.forEach((existingField, fieldIndex) => {
             const fieldRow = createFieldRow(existingField);
-            fieldRow.row.dataset.fieldIndex = String(fieldIndex);
-            fieldsList.appendChild(fieldRow.row);
-            enableFieldDrag(fieldRow.row, fieldsList, fields);
+            if(fieldRow && fieldRow.row && fieldRow.row.dataset){
+              fieldRow.row.dataset.fieldIndex = String(fieldIndex);
+              fieldsList.appendChild(fieldRow.row);
+              enableFieldDrag(fieldRow.row, fieldsList, fields);
+            }
           });
 
           addFieldBtn.addEventListener('click', ()=>{
             const newField = ensureFieldDefaults({});
             fields.push(newField);
             const fieldRow = createFieldRow(newField);
-            fieldsList.appendChild(fieldRow.row);
-            fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
-            enableFieldDrag(fieldRow.row, fieldsList, fields);
-            notifyFormbuilderChange();
+            if(fieldRow && fieldRow.row && fieldRow.row.dataset){
+              fieldsList.appendChild(fieldRow.row);
+              fieldRow.row.dataset.fieldIndex = String(fields.length - 1);
+              enableFieldDrag(fieldRow.row, fieldsList, fields);
+              notifyFormbuilderChange();
+            }
             requestAnimationFrame(()=>{
               if(fieldRow && typeof fieldRow.focusTypePicker === 'function'){
                 fieldRow.focusTypePicker();
