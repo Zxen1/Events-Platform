@@ -448,7 +448,24 @@ try {
                 $hasFieldTypesForThisSub = true;
             }
             
-            // If field types not in payload, preserve existing from database
+            // If field types not in payload, try to extract from existing metadata_json
+            if (!$hasFieldTypesForThisSub && isset($subcategoryRow['metadata_json']) && is_string($subcategoryRow['metadata_json']) && $subcategoryRow['metadata_json'] !== '') {
+                $existingMeta = json_decode($subcategoryRow['metadata_json'], true);
+                if (is_array($existingMeta) && isset($existingMeta['fieldTypeIds']) && is_array($existingMeta['fieldTypeIds'])) {
+                    foreach ($existingMeta['fieldTypeIds'] as $typeId) {
+                        if (is_int($typeId)) {
+                            $fieldTypeIds[] = $typeId;
+                        } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
+                            $fieldTypeIds[] = (int) $typeId;
+                        }
+                    }
+                    if (!empty($fieldTypeIds)) {
+                        $hasFieldTypesForThisSub = true;
+                    }
+                }
+            }
+            
+            // If still no field types, preserve existing from database columns
             if (!$hasFieldTypesForThisSub && isset($subcategoryRow['field_type_id']) && is_string($subcategoryRow['field_type_id']) && $subcategoryRow['field_type_id'] !== '') {
                 $trimmed = trim($subcategoryRow['field_type_id']);
                 if ($trimmed !== '') {
@@ -610,12 +627,11 @@ try {
                     $params[':mapmarker_path'] = $subIconVariants['marker'];
                 }
             }
-            // Only update metadata_json if fields or other metadata was provided in payload
-            if ($hasFieldsForThisSub || $hasFieldTypesForThisSub || $hasIconInPayload || !empty($categoryShapes) || !empty($subcategoryMarkers) || !empty($subcategoryMarkerIds)) {
-                if (in_array('metadata_json', $subcategoryColumns, true)) {
-                    $updateParts[] = 'metadata_json = :metadata_json';
-                    $params[':metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
-                }
+            // Always update metadata_json if we have any data to preserve (including field types)
+            // This ensures field types are always saved in metadata_json even if not in dedicated columns
+            if (in_array('metadata_json', $subcategoryColumns, true)) {
+                $updateParts[] = 'metadata_json = :metadata_json';
+                $params[':metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
             }
 
             if (!$updateParts) {
