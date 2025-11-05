@@ -3346,9 +3346,8 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     }
 
     function cloneFieldValue(value){
-      if(value === null || value === undefined) return null; // Return null for undefined/null
       if(Array.isArray(value)){
-        return value.map(cloneFieldValue).filter(v => v !== null && v !== undefined);
+        return value.map(cloneFieldValue);
       }
       if(value && typeof value === 'object'){
         try{
@@ -3360,11 +3359,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return value;
     }
 
-    // Default formbuilder snapshot - must be global for access across IIFEs
-    // Note: versionPriceCurrencies now comes from backend currency field options
     const DEFAULT_FORMBUILDER_SNAPSHOT = {
       categories: [],
-      versionPriceCurrencies: [], // Now provided by backend from currency field
+      versionPriceCurrencies: ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD'],
       categoryIconPaths: {},
       subcategoryIconPaths: {},
       iconLibrary: [],
@@ -3484,9 +3481,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         const rawSubFields = (item.subFields && typeof item.subFields === 'object' && !Array.isArray(item.subFields)) ? item.subFields : {};
         const subFields = {};
         subs.forEach(sub => {
-          const fields = Array.isArray(rawSubFields[sub]) 
-            ? rawSubFields[sub].map(cloneFieldValue).filter(f => f !== null && f !== undefined) 
-            : [];
+          const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
@@ -3535,7 +3530,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       const normalizedFieldTypes = normalizeFieldTypeOptions(
         snapshot && (snapshot.fieldTypes || snapshot.field_types)
       );
-      // versionPriceCurrencies now always comes from backend (currency field options)
+      if(!normalizedCurrencies.length){
+        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
+      }
       const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
       const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
       const normalizedIconPathsFromMaps = [
@@ -3925,7 +3922,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       VENUE_TIME_AUTOFILL_STATE.delete(field);
     }
 
-    // Fields now come from backend via field_types table, no hardcoded defaults
+    const DEFAULT_SUBCATEGORY_FIELDS = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
+    window.DEFAULT_SUBCATEGORY_FIELDS = DEFAULT_SUBCATEGORY_FIELDS;
     const OPEN_ICON_PICKERS = window.__openIconPickers || new Set();
     window.__openIconPickers = OPEN_ICON_PICKERS;
 
@@ -7531,7 +7535,6 @@ function makePosts(){
         }
       }
       rows.forEach((row, index)=>{
-        if(!row || !row.dataset) return; // Skip undefined/null entries
         row.dataset.fieldIndex = String(index);
       });
     }
@@ -8643,11 +8646,11 @@ function makePosts(){
             } else if(Object.prototype.hasOwnProperty.call(safeField, 'location')){
               delete safeField.location;
             }
-            // Required status now comes from backend subcategories.required column
+            const requiresByDefault = safeField.type === 'title'
+              || safeField.type === 'description'
+              || safeField.type === 'images';
             const hasRequiredProp = Object.prototype.hasOwnProperty.call(safeField, 'required');
-            if(!hasRequiredProp){
-              safeField.required = false;
-            }
+            safeField.required = hasRequiredProp ? !!safeField.required : requiresByDefault;
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
@@ -11278,8 +11281,25 @@ function makePosts(){
             return editor;
           };
 
-          // Fields now come from backend via field_types, no hardcoded defaults
+          const ensureDefaultFieldSet = (fieldList)=>{
+            if(!Array.isArray(fieldList) || fieldList.length > 0) return false;
+            DEFAULT_SUBCATEGORY_FIELDS.forEach(defaultField => {
+              fieldList.push({
+                name: typeof defaultField.name === 'string' ? defaultField.name : '',
+                type: typeof defaultField.type === 'string' ? defaultField.type : 'text-box',
+                placeholder: typeof defaultField.placeholder === 'string' ? defaultField.placeholder : '',
+                required: !!defaultField.required,
+                options: []
+              });
+            });
+            return fieldList.length > 0;
+          };
+
           const fields = Array.isArray(subFieldsMap[sub]) ? subFieldsMap[sub] : (subFieldsMap[sub] = []);
+
+          if(ensureDefaultFieldSet(fields)){
+            notifyFormbuilderChange();
+          }
 
           const fieldsContainerState = setupFieldContainer(fieldsList, fields);
 
@@ -11328,7 +11348,6 @@ function makePosts(){
               return;
             }
             fields.forEach((fieldData, previewIndex)=>{
-              if(!fieldData) return; // Skip undefined/null entries
               const previewField = ensureFieldDefaults(fieldData);
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-preview-field';
@@ -12554,9 +12573,7 @@ function makePosts(){
           };
 
           fields.forEach((existingField, fieldIndex) => {
-            if(!existingField) return; // Skip undefined/null entries
             const fieldRow = createFieldRow(existingField);
-            if(!fieldRow || !fieldRow.row) return; // Skip if createFieldRow failed
             fieldRow.row.dataset.fieldIndex = String(fieldIndex);
             fieldsList.appendChild(fieldRow.row);
             enableFieldDrag(fieldRow.row, fieldsList, fields);
@@ -12968,6 +12985,9 @@ function makePosts(){
         categoryShapes: cloneMapLike(categoryShapes),
         fieldTypes: Array.isArray(FORM_FIELD_TYPES)
           ? FORM_FIELD_TYPES.map(option => ({ ...option }))
+          : [],
+        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
+          ? VERSION_PRICE_CURRENCIES.slice()
           : []
       };
     }
@@ -13040,7 +13060,9 @@ function makePosts(){
       }
       assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
       assignMapLike(categoryShapes, snapshot.categoryShapes);
-      // versionPriceCurrencies now always comes from backend (currency field options)
+      if(Array.isArray(normalized.versionPriceCurrencies)){
+        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
+      }
       renderFilterCategories();
       renderFormbuilderCats();
       refreshFormbuilderSubcategoryLogos();
@@ -20721,7 +20743,13 @@ document.addEventListener('pointerdown', (e) => {
       return result;
     }
 
-    // Fields now come from backend via field_types table, no hardcoded defaults
+    const sharedDefaultSubcategoryFields = Array.isArray(window.DEFAULT_SUBCATEGORY_FIELDS)
+      ? window.DEFAULT_SUBCATEGORY_FIELDS
+      : [
+          { name: 'Title', type: 'title', placeholder: 'ie. Elvis Presley - Live on Stage', required: true },
+          { name: 'Description', type: 'description', placeholder: 'ie. Come and enjoy the music!', required: true },
+          { name: 'Images', type: 'images', placeholder: '', required: true }
+        ];
 
     const normalizeVenueSessionOptionsFromWindow = typeof window.normalizeVenueSessionOptions === 'function'
       ? window.normalizeVenueSessionOptions
@@ -20806,12 +20834,14 @@ document.addEventListener('pointerdown', (e) => {
           });
         });
       });
-      // versionPriceCurrencies now always comes from backend (currency field options)
-      if(snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
+      if(!codes.size && snapshot && Array.isArray(snapshot.versionPriceCurrencies)){
         snapshot.versionPriceCurrencies.forEach(code => {
           const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
           if(normalized) codes.add(normalized);
         });
+      }
+      if(!codes.size){
+        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => codes.add(code));
       }
       return Array.from(codes);
     }
@@ -20989,8 +21019,10 @@ document.addEventListener('pointerdown', (e) => {
       const category = memberCategories.find(cat => cat && typeof cat.name === 'string' && cat.name === categoryName);
       if(!category) return [];
       const subFieldsMap = category.subFields && typeof category.subFields === 'object' ? category.subFields : {};
-      const fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
-      // Fields now come from backend via field_types, no hardcoded fallbacks
+      let fields = Array.isArray(subFieldsMap && subFieldsMap[subcategoryName]) ? subFieldsMap[subcategoryName] : [];
+      if(!fields || fields.length === 0){
+        fields = sharedDefaultSubcategoryFields;
+      }
       return fields.map(sanitizeCreateField);
     }
 
@@ -21867,7 +21899,6 @@ document.addEventListener('pointerdown', (e) => {
       } else {
         memberSnapshotErrorMessage = '';
         fields.forEach((field, index)=>{
-          if(!field) return; // Skip undefined/null entries
           const fieldEl = buildMemberCreateField(field, index);
           if(fieldEl){
             formFields.appendChild(fieldEl);
@@ -22137,13 +22168,17 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
 
-      // Title requirement is now handled by backend validation based on subcategories.required column
-      // If no title field found, try to use first field value as fallback
       if(!postTitle){
         const fallback = fieldPayload.find(item => typeof item.value === 'string' && item.value);
         if(fallback && typeof fallback.value === 'string'){
           postTitle = fallback.value;
         }
+      }
+      if(!postTitle){
+        showCreateStatus('Enter a title before posting your listing.', { error: true });
+        restoreButtonState();
+        isSubmittingCreatePost = false;
+        return;
       }
 
       const currentMember = loadCurrentMember();
