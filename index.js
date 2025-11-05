@@ -12979,10 +12979,14 @@ function makePosts(){
     function restoreFormbuilderSnapshot(snapshot){
       if(!snapshot) return;
       const normalized = normalizeFormbuilderSnapshot(snapshot);
-      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes);
+      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes || normalized.field_types || []);
       // Don't fall back to cached field types - use only what's in the database snapshot
       initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
       FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
+      // Debug: log field types count
+      if (FORM_FIELD_TYPES.length === 0) {
+        console.warn('FORM_FIELD_TYPES is empty after restore. Snapshot fieldTypes:', normalized.fieldTypes || normalized.field_types);
+      }
       const nextCategories = cloneCategoryList(normalized.categories);
       if(Array.isArray(nextCategories)){
         categories.splice(0, categories.length, ...nextCategories);
