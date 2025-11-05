@@ -415,15 +415,8 @@ try {
                     }
                     $sanitizedFields[] = sanitizeField($fieldPayload);
                 }
-            } else {
-                // Preserve existing fields from database if not in payload
-                if (isset($subcategoryRow['metadata_json']) && is_string($subcategoryRow['metadata_json'])) {
-                    $existingMeta = json_decode($subcategoryRow['metadata_json'], true);
-                    if (is_array($existingMeta) && isset($existingMeta['fields']) && is_array($existingMeta['fields'])) {
-                        $sanitizedFields = $existingMeta['fields'];
-                    }
-                }
             }
+            // Fields come from field types, not from metadata_json
 
             $hasFieldTypesForThisSub = false;
             if (!$fieldTypeIds) {
@@ -446,23 +439,6 @@ try {
                 }
             } else {
                 $hasFieldTypesForThisSub = true;
-            }
-            
-            // If field types not in payload, try to extract from existing metadata_json
-            if (!$hasFieldTypesForThisSub && isset($subcategoryRow['metadata_json']) && is_string($subcategoryRow['metadata_json']) && $subcategoryRow['metadata_json'] !== '') {
-                $existingMeta = json_decode($subcategoryRow['metadata_json'], true);
-                if (is_array($existingMeta) && isset($existingMeta['fieldTypeIds']) && is_array($existingMeta['fieldTypeIds'])) {
-                    foreach ($existingMeta['fieldTypeIds'] as $typeId) {
-                        if (is_int($typeId)) {
-                            $fieldTypeIds[] = $typeId;
-                        } elseif (is_string($typeId) && preg_match('/^\d+$/', $typeId)) {
-                            $fieldTypeIds[] = (int) $typeId;
-                        }
-                    }
-                    if (!empty($fieldTypeIds)) {
-                        $hasFieldTypesForThisSub = true;
-                    }
-                }
             }
             
             // If still no field types, preserve existing from database columns
@@ -543,32 +519,32 @@ try {
                 $metaIcon = sanitizeIcon($iconSource);
             }
 
-            $categoryShapeValue = null;
-            if ($categoryKey !== '' && isset($categoryShapes[$categoryKey])) {
-                $categoryShapeValue = $categoryShapes[$categoryKey];
-            } elseif ($categoryName !== '' && isset($categoryShapes[$categoryName])) {
-                $categoryShapeValue = $categoryShapes[$categoryName];
-            } elseif ($originalCategoryKey !== '' && isset($categoryShapes[$originalCategoryKey])) {
-                $categoryShapeValue = $categoryShapes[$originalCategoryKey];
-            } elseif ($originalCategoryName !== '' && isset($categoryShapes[$originalCategoryName])) {
-                $categoryShapeValue = $categoryShapes[$originalCategoryName];
+            // Get required field type IDs from payload or existing data
+            $requiredFieldTypeIds = [];
+            if (isset($subEntry['required']) && is_string($subEntry['required']) && $subEntry['required'] !== '') {
+                // Parse required CSV
+                $requiredParts = preg_split('/\s*,\s*/', trim($subEntry['required']));
+                if (is_array($requiredParts)) {
+                    foreach ($requiredParts as $part) {
+                        $id = filterPositiveInt(trim($part));
+                        if ($id !== null && in_array($id, $fieldTypeIds, true)) {
+                            $requiredFieldTypeIds[] = $id;
+                        }
+                    }
+                }
+            } elseif (isset($subcategoryRow['required']) && is_string($subcategoryRow['required']) && $subcategoryRow['required'] !== '') {
+                // Preserve existing required
+                $requiredParts = preg_split('/\s*,\s*/', trim($subcategoryRow['required']));
+                if (is_array($requiredParts)) {
+                    foreach ($requiredParts as $part) {
+                        $id = filterPositiveInt(trim($part));
+                        if ($id !== null) {
+                            $requiredFieldTypeIds[] = $id;
+                        }
+                    }
+                }
             }
-
-            $meta = [
-                'category' => $categoryName,
-                'subcategory' => $subName,
-                'categoryKey' => $categoryKey,
-                'subcategoryKey' => $subKey,
-                'fields' => $sanitizedFields,
-                'versionPriceCurrencies' => $versionCurrencies,
-                'fieldTypeIds' => $fieldTypeIds,
-                'fieldTypeNames' => $fieldTypeNameList,
-                'icon' => $metaIcon,
-                'marker' => sanitizeString($subKey !== '' && isset($subcategoryMarkers[$subKey]) ? $subcategoryMarkers[$subKey] : ($subcategoryMarkers[$subName] ?? ''), 512),
-                'markerId' => sanitizeString($subKey !== '' && isset($subcategoryMarkerIds[$subKey]) ? $subcategoryMarkerIds[$subKey] : ($subcategoryMarkerIds[$subName] ?? ''), 128),
-                'categoryShape' => sanitizeMixed($categoryShapeValue),
-                'updatedAt' => gmdate('c'),
-            ];
+            $requiredCsv = !empty($requiredFieldTypeIds) ? implode(',', array_unique($requiredFieldTypeIds)) : null;
 
             $updateParts = [];
             $params = [':id' => $subId];
@@ -611,6 +587,10 @@ try {
                 $updateParts[] = 'field_type_name = :field_type_name';
                 $params[':field_type_name'] = $fieldTypeNameCsv;
             }
+            if (in_array('required', $subcategoryColumns, true)) {
+                $updateParts[] = 'required = :required';
+                $params[':required'] = $requiredCsv;
+            }
             if (in_array('sort_order', $subcategoryColumns, true)) {
                 $updateParts[] = 'sort_order = :sort_order';
                 $params[':sort_order'] = $index + 1;
@@ -626,12 +606,6 @@ try {
                     $updateParts[] = 'mapmarker_path = :mapmarker_path';
                     $params[':mapmarker_path'] = $subIconVariants['marker'];
                 }
-            }
-            // Always update metadata_json if we have any data to preserve (including field types)
-            // This ensures field types are always saved in metadata_json even if not in dedicated columns
-            if (in_array('metadata_json', $subcategoryColumns, true)) {
-                $updateParts[] = 'metadata_json = :metadata_json';
-                $params[':metadata_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE);
             }
 
             if (!$updateParts) {

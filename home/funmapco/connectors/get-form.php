@@ -90,7 +90,27 @@ try {
         $fieldTypes = fetchFieldTypes($pdo, $fieldTypeColumns);
     }
 
-    $snapshot = buildSnapshot($categories, $subcategories);
+    // Get currency field options for versionPriceCurrencies
+    $currencyOptions = [];
+    try {
+        $fieldColumns = fetchTableColumns($pdo, 'fields');
+        if ($fieldColumns && in_array('options', $fieldColumns, true)) {
+            $stmt = $pdo->query("SELECT `options` FROM `fields` WHERE `field_key` = 'currency' AND `id` = 13 LIMIT 1");
+            $currencyRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($currencyRow && isset($currencyRow['options']) && is_string($currencyRow['options']) && $currencyRow['options'] !== '') {
+                $currencyOptions = array_map('trim', explode(',', $currencyRow['options']));
+                $currencyOptions = array_filter($currencyOptions, function($code) {
+                    return $code !== '';
+                });
+                $currencyOptions = array_map('strtoupper', $currencyOptions);
+                $currencyOptions = array_values(array_unique($currencyOptions));
+            }
+        }
+    } catch (PDOException $e) {
+        // Ignore if currency field doesn't exist
+    }
+
+    $snapshot = buildSnapshot($categories, $subcategories, $currencyOptions);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
 
@@ -128,7 +148,6 @@ function fetchCategories(PDO $pdo, array $columns): array
     $orderBy = '';
 
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
     $hasFieldTypeId = in_array('field_type_id', $columns, true);
@@ -149,9 +168,6 @@ function fetchCategories(PDO $pdo, array $columns): array
     }
     if ($hasMapmarkerPath) {
         $selectColumns[] = '`mapmarker_path`';
-    }
-    if ($hasMetadata) {
-        $selectColumns[] = '`metadata_json`';
     }
     if ($hasFieldTypeId) {
         $selectColumns[] = '`field_type_id`';
@@ -182,57 +198,11 @@ function fetchCategories(PDO $pdo, array $columns): array
             $fieldTypeNames = parseFieldTypeNameCsv($row['field_type_name']);
         }
 
-        $metadata = [];
-        if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
-            $decoded = json_decode($row['metadata_json'], true);
-            if (is_array($decoded)) {
-                $metadata = $decoded;
-            }
-        }
-
-        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
-            $metadataFieldTypeIds = [];
-            foreach ($metadata['fieldTypeIds'] as $value) {
-                if (is_int($value)) {
-                    $metadataFieldTypeIds[] = $value;
-                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
-                    $metadataFieldTypeIds[] = (int) $value;
-                }
-            }
-            $metadataFieldTypeIds = array_values(array_unique($metadataFieldTypeIds));
-            if ($metadataFieldTypeIds) {
-                $fieldTypeIds = $metadataFieldTypeIds;
-            }
-            $metadata['fieldTypeIds'] = $metadataFieldTypeIds;
-        } else {
-            $metadata['fieldTypeIds'] = $fieldTypeIds;
-        }
-
-        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
-            $metadataFieldTypeNames = [];
-            foreach ($metadata['fieldTypeNames'] as $value) {
-                if (is_string($value)) {
-                    $trimmed = trim($value);
-                    if ($trimmed !== '') {
-                        $metadataFieldTypeNames[] = $trimmed;
-                    }
-                }
-            }
-            $metadataFieldTypeNames = array_values(array_unique($metadataFieldTypeNames));
-            if ($metadataFieldTypeNames) {
-                $fieldTypeNames = $metadataFieldTypeNames;
-            }
-            $metadata['fieldTypeNames'] = $metadataFieldTypeNames;
-        } else {
-            $metadata['fieldTypeNames'] = $fieldTypeNames;
-        }
-
         $categories[] = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
             'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
             'subs' => [],
-            'metadata' => $metadata,
             'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
                 ? trim($row['icon_path'])
                 : null,
@@ -273,9 +243,10 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasCategoryName = in_array('category_name', $columns, true);
     $hasCategoryId = in_array('category_id', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    $hasMetadata = in_array('metadata_json', $columns, true);
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasMapmarkerPath = in_array('mapmarker_path', $columns, true);
+    $hasSubcategoryKey = in_array('subcategory_key', $columns, true);
+    $hasRequired = in_array('required', $columns, true);
 
     $hasFieldTypeId = in_array('field_type_id', $columns, true);
     $hasFieldTypeName = in_array('field_type_name', $columns, true);
@@ -289,14 +260,17 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if ($hasSortOrder) {
         $select[] = 's.`sort_order`';
     }
-    if ($hasMetadata) {
-        $select[] = 's.`metadata_json`';
-    }
     if ($hasIconPath) {
         $select[] = 's.`icon_path`';
     }
     if ($hasMapmarkerPath) {
         $select[] = 's.`mapmarker_path`';
+    }
+    if ($hasSubcategoryKey) {
+        $select[] = 's.`subcategory_key`';
+    }
+    if ($hasRequired) {
+        $select[] = 's.`required`';
     }
 
     if ($hasFieldTypeId) {
@@ -356,49 +330,14 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $fieldTypeNames = parseFieldTypeNameCsv($row['field_type_name']);
         }
 
-        $metadata = [];
-        if ($hasMetadata && isset($row['metadata_json']) && is_string($row['metadata_json']) && $row['metadata_json'] !== '') {
-            $decoded = json_decode($row['metadata_json'], true);
-            if (is_array($decoded)) {
-                $metadata = $decoded;
-            }
+        $subcategoryKey = '';
+        if ($hasSubcategoryKey && isset($row['subcategory_key']) && is_string($row['subcategory_key'])) {
+            $subcategoryKey = trim($row['subcategory_key']);
         }
 
-        if (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
-            $metadataFieldTypeIds = [];
-            foreach ($metadata['fieldTypeIds'] as $value) {
-                if (is_int($value)) {
-                    $metadataFieldTypeIds[] = $value;
-                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
-                    $metadataFieldTypeIds[] = (int) $value;
-                }
-            }
-            $metadataFieldTypeIds = array_values(array_unique($metadataFieldTypeIds));
-            if ($metadataFieldTypeIds) {
-                $fieldTypeIds = $metadataFieldTypeIds;
-            }
-            $metadata['fieldTypeIds'] = $metadataFieldTypeIds;
-        } else {
-            $metadata['fieldTypeIds'] = $fieldTypeIds;
-        }
-
-        if (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
-            $metadataFieldTypeNames = [];
-            foreach ($metadata['fieldTypeNames'] as $value) {
-                if (is_string($value)) {
-                    $trimmed = trim($value);
-                    if ($trimmed !== '') {
-                        $metadataFieldTypeNames[] = $trimmed;
-                    }
-                }
-            }
-            $metadataFieldTypeNames = array_values(array_unique($metadataFieldTypeNames));
-            if ($metadataFieldTypeNames) {
-                $fieldTypeNames = $metadataFieldTypeNames;
-            }
-            $metadata['fieldTypeNames'] = $metadataFieldTypeNames;
-        } else {
-            $metadata['fieldTypeNames'] = $fieldTypeNames;
+        $required = null;
+        if ($hasRequired && isset($row['required']) && is_string($row['required']) && $row['required'] !== '') {
+            $required = trim($row['required']);
         }
 
         $results[] = [
@@ -406,13 +345,14 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'name' => (string) $row['name'],
             'category' => $categoryName,
             'sort_order' => $hasSortOrder && isset($row['sort_order']) ? (int) $row['sort_order'] : null,
-            'metadata' => $metadata,
             'icon_path' => $hasIconPath && isset($row['icon_path']) && is_string($row['icon_path'])
                 ? trim($row['icon_path'])
                 : null,
             'mapmarker_path' => $hasMapmarkerPath && isset($row['mapmarker_path']) && is_string($row['mapmarker_path'])
                 ? trim($row['mapmarker_path'])
                 : null,
+            'subcategory_key' => $subcategoryKey,
+            'required' => $required,
             'field_type_ids' => $fieldTypeIds,
             'field_type_names' => $fieldTypeNames,
         ];
@@ -430,6 +370,7 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasKey = in_array('field_type_key', $columns, true);
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
+    $hasPlaceholder = in_array('placeholder', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
@@ -439,6 +380,9 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     }
     if ($hasName) {
         $selectColumns[] = '`field_type_name`';
+    }
+    if ($hasPlaceholder) {
+        $selectColumns[] = '`placeholder`';
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
@@ -522,6 +466,9 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         } else {
             $entry['name'] = $rawName;
         }
+        if ($hasPlaceholder && isset($row['placeholder']) && is_string($row['placeholder'])) {
+            $entry['placeholder'] = trim($row['placeholder']);
+        }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
                 ? (int) $row['sort_order']
@@ -535,7 +482,7 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     return $fieldTypes;
 }
 
-function buildSnapshot(array $categories, array $subcategories): array
+function buildSnapshot(array $categories, array $subcategories, array $currencyOptions = []): array
 {
     $categoriesMap = [];
     $categoryIcons = [];
@@ -554,11 +501,6 @@ function buildSnapshot(array $categories, array $subcategories): array
             'subIds' => [],
         ];
 
-        $metadata = [];
-        if (isset($category['metadata']) && is_array($category['metadata'])) {
-            $metadata = $category['metadata'];
-        }
-
         $iconHtml = '';
         $iconPath = '';
         if (isset($category['icon_path']) && is_string($category['icon_path'])) {
@@ -568,14 +510,8 @@ function buildSnapshot(array $categories, array $subcategories): array
                 $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
             }
         }
-        if ($iconHtml === '' && isset($metadata['icon']) && is_string($metadata['icon'])) {
-            $iconHtml = trim($metadata['icon']);
-        }
         if ($iconHtml !== '') {
             $categoryIcons[$categoryName] = $iconHtml;
-        }
-        if ($iconPath === '' && $iconHtml !== '') {
-            $iconPath = extract_icon_src($iconHtml);
         }
         if ($iconPath !== '') {
             $categoryIconPaths[$categoryName] = $iconPath;
@@ -588,21 +524,16 @@ function buildSnapshot(array $categories, array $subcategories): array
                 $markerPath = $candidate;
             }
         }
-        if ($markerPath === '' && isset($metadata['marker']) && is_string($metadata['marker'])) {
-            $markerPath = trim($metadata['marker']);
-        }
         if ($markerPath !== '') {
             $categoryMarkers[$categoryName] = $markerPath;
         }
     }
 
-    $categoryShapes = [];
     $subcategoryIcons = [];
     $subcategoryMarkers = [];
     $subcategoryMarkerIds = [];
     $subcategoryFieldTypeIds = [];
     $subcategoryFieldTypeNames = [];
-    $currencySet = [];
 
     foreach ($subcategories as $sub) {
         $categoryName = $sub['category'];
@@ -623,27 +554,9 @@ function buildSnapshot(array $categories, array $subcategories): array
         ];
         $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
 
-        $metadata = $sub['metadata'];
-        if (!is_array($metadata)) {
-            $metadata = [];
-        }
-
-        $fields = [];
-        if (isset($metadata['fields']) && is_array($metadata['fields'])) {
-            $fields = $metadata['fields'];
-        }
-
         $fieldTypeIds = [];
         if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
             foreach ($sub['field_type_ids'] as $value) {
-                if (is_int($value)) {
-                    $fieldTypeIds[] = $value;
-                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
-                    $fieldTypeIds[] = (int) $value;
-                }
-            }
-        } elseif (isset($metadata['fieldTypeIds']) && is_array($metadata['fieldTypeIds'])) {
-            foreach ($metadata['fieldTypeIds'] as $value) {
                 if (is_int($value)) {
                     $fieldTypeIds[] = $value;
                 } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
@@ -663,22 +576,10 @@ function buildSnapshot(array $categories, array $subcategories): array
                     }
                 }
             }
-        } elseif (isset($metadata['fieldTypeNames']) && is_array($metadata['fieldTypeNames'])) {
-            foreach ($metadata['fieldTypeNames'] as $value) {
-                if (is_string($value)) {
-                    $trimmed = trim($value);
-                    if ($trimmed !== '') {
-                        $fieldTypeNames[] = $trimmed;
-                    }
-                }
-            }
         }
         $fieldTypeNames = array_values(array_unique($fieldTypeNames));
 
-        $metadata['fieldTypeIds'] = $fieldTypeIds;
-        $metadata['fieldTypeNames'] = $fieldTypeNames;
-
-        $categoriesMap[$categoryName]['subFields'][$sub['name']] = $fields;
+        $categoriesMap[$categoryName]['subFields'][$sub['name']] = [];
         $categoriesMap[$categoryName]['subFieldTypes'][$sub['name']] = $fieldTypeIds;
 
         $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;
@@ -693,14 +594,8 @@ function buildSnapshot(array $categories, array $subcategories): array
                 $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
             }
         }
-        if ($iconHtml === '' && isset($metadata['icon']) && is_string($metadata['icon'])) {
-            $iconHtml = trim($metadata['icon']);
-        }
         if ($iconHtml !== '') {
             $subcategoryIcons[$sub['name']] = $iconHtml;
-        }
-        if ($iconPath === '' && $iconHtml !== '') {
-            $iconPath = extract_icon_src($iconHtml);
         }
         if ($iconPath !== '') {
             $subcategoryIconPaths[$sub['name']] = $iconPath;
@@ -713,32 +608,19 @@ function buildSnapshot(array $categories, array $subcategories): array
                 $markerPath = $candidate;
             }
         }
-        if ($markerPath === '' && isset($metadata['marker']) && is_string($metadata['marker'])) {
-            $markerPath = trim($metadata['marker']);
-        }
         if ($markerPath !== '') {
             $subcategoryMarkers[$sub['name']] = $markerPath;
         }
 
-        if (isset($metadata['markerId']) && is_string($metadata['markerId']) && $metadata['markerId'] !== '') {
-            $subcategoryMarkerIds[$sub['name']] = $metadata['markerId'];
+        // markerId comes from subcategory_key
+        $markerId = '';
+        if (isset($sub['subcategory_key']) && is_string($sub['subcategory_key']) && $sub['subcategory_key'] !== '') {
+            $markerId = trim($sub['subcategory_key']);
         } else {
-            $slugForId = slugify_key($sub['name']);
-            if ($slugForId !== '') {
-                $subcategoryMarkerIds[$sub['name']] = $slugForId;
-            }
+            $markerId = slugify_key($sub['name']);
         }
-
-        if (isset($metadata['categoryShape']) && $metadata['categoryShape'] !== null) {
-            $categoryShapes[$categoryName] = $metadata['categoryShape'];
-        }
-        if (isset($metadata['versionPriceCurrencies']) && is_array($metadata['versionPriceCurrencies'])) {
-            foreach ($metadata['versionPriceCurrencies'] as $code) {
-                $normalized = strtoupper(trim((string) $code));
-                if ($normalized !== '') {
-                    $currencySet[$normalized] = true;
-                }
-            }
+        if ($markerId !== '') {
+            $subcategoryMarkerIds[$sub['name']] = $markerId;
         }
     }
 
@@ -798,7 +680,8 @@ function buildSnapshot(array $categories, array $subcategories): array
         return strcasecmp($a['name'], $b['name']);
     });
 
-    $versionPriceCurrencies = array_keys($currencySet);
+    // Use currency options from currency field (or provided currencyOptions)
+    $versionPriceCurrencies = $currencyOptions;
     sort($versionPriceCurrencies);
 
     $sanitizedCategoryMarkers = sanitizeSubcategoryMarkers($categoryMarkers);
@@ -826,7 +709,6 @@ function buildSnapshot(array $categories, array $subcategories): array
         'subcategoryMarkerIds' => $subcategoryMarkerIds,
         'subcategoryFieldTypeIds' => $subcategoryFieldTypeIds,
         'subcategoryFieldTypeNames' => $subcategoryFieldTypeNames,
-        'categoryShapes' => $categoryShapes,
         'versionPriceCurrencies' => $versionPriceCurrencies,
         'iconLibrary' => array_values($iconLibrary),
     ];
