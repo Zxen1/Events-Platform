@@ -3612,9 +3612,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
     // Don't use cached data - only use database snapshot
     const initialSnapshotSource = getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot();
     const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(initialSnapshotSource);
-    // Clear all data from initial snapshot - it will come from database
+    // Don't clear field types here - they'll be populated from database when snapshot loads
+    // Only clear categories to prevent cached data from being used
     if (initialFormbuilderSnapshot) {
-      initialFormbuilderSnapshot.fieldTypes = [];
       initialFormbuilderSnapshot.categories = [];
     }
     const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
