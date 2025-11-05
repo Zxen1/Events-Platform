@@ -3270,79 +3270,39 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       {n:"Mumbai, India", c:[72.8777,19.0760]}
     ];
 
-    let persistedFormbuilderSnapshotFetchPromise = null;
-    if(typeof window !== 'undefined'){
-      window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
-    }
 
-    function getSavedFormbuilderSnapshot(){
-      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.getSaved === 'function'){
-        try{
-          const snapshot = window.formbuilderStateManager.getSaved();
-          if(snapshot && typeof snapshot === 'object'){
-            return snapshot;
-          }
-        }catch(err){
-          console.warn('Failed to read saved formbuilder snapshot', err);
-        }
-      }
-      return null;
-    }
-
-    async function fetchSavedFormbuilderSnapshot(){
-      if(persistedFormbuilderSnapshotFetchPromise){
-        return persistedFormbuilderSnapshotFetchPromise;
-      }
-
+    // Direct fetch from database - no snapshots
+    async function fetchFormData(){
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timeoutId = controller ? window.setTimeout(() => {
         try{ controller.abort(); }catch(err){}
       }, 15000) : 0;
 
-      const fetchPromise = (async () => {
+      try{
+        const response = await fetch('/gateway.php?action=get-form', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          signal: controller ? controller.signal : undefined
+        });
+        const text = await response.text();
+        let data;
         try{
-          const response = await fetch('/gateway.php?action=get-form', {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: controller ? controller.signal : undefined
-          });
-          const text = await response.text();
-          let data;
-          try{
-            data = JSON.parse(text);
-          }catch(parseErr){
-            throw new Error('The server returned an unexpected response.');
-          }
-          if(!response.ok || !data || data.success !== true || !data.snapshot){
-            const message = data && typeof data.message === 'string' && data.message.trim()
-              ? data.message.trim()
-              : 'Unable to load form definitions.';
-            throw new Error(message);
-          }
-          return data.snapshot;
-        } finally {
-          if(timeoutId){
-            clearTimeout(timeoutId);
-          }
+          data = JSON.parse(text);
+        }catch(parseErr){
+          throw new Error('The server returned an unexpected response.');
         }
-      })();
-
-      persistedFormbuilderSnapshotFetchPromise = fetchPromise.finally(() => {
-        persistedFormbuilderSnapshotFetchPromise = null;
-        if(typeof window !== 'undefined'){
-          window.persistedFormbuilderSnapshotPromise = null;
+        if(!response.ok || !data || data.success !== true || !data.snapshot){
+          const message = data && typeof data.message === 'string' && data.message.trim()
+            ? data.message.trim()
+            : 'Unable to load form definitions.';
+          throw new Error(message);
         }
-      });
-
-      if(typeof window !== 'undefined'){
-        window.persistedFormbuilderSnapshotPromise = persistedFormbuilderSnapshotFetchPromise;
+        return data.snapshot;
+      } finally {
+        if(timeoutId){
+          clearTimeout(timeoutId);
+        }
       }
-
-      return persistedFormbuilderSnapshotFetchPromise;
-    }
-
-    if(typeof window !== 'undefined'){
-      window.fetchSavedFormbuilderSnapshot = fetchSavedFormbuilderSnapshot;
     }
 
     function cloneFieldValue(value){
@@ -3525,139 +3485,71 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       return base;
     }
 
-    function normalizeFormbuilderSnapshot(snapshot){
-      const normalizedCategories = normalizeCategoriesSnapshot(snapshot && snapshot.categories);
-      const rawCurrencies = (snapshot && Array.isArray(snapshot.versionPriceCurrencies)) ? snapshot.versionPriceCurrencies : [];
-      const normalizedCurrencies = Array.from(new Set(rawCurrencies
-        .map(code => typeof code === 'string' ? code.trim().toUpperCase() : '')
-        .filter(Boolean)));
-      const normalizedFieldTypes = normalizeFieldTypeOptions(
-        snapshot && (snapshot.fieldTypes || snapshot.field_types)
-      );
-      if(!normalizedCurrencies.length){
-        DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.forEach(code => normalizedCurrencies.push(code));
+    // Function to load form data directly from database
+    async function loadFormData(){
+      try {
+        const snapshot = await fetchFormData();
+        if(!snapshot) return;
+        
+        // Load field types directly
+        const fieldTypes = snapshot.fieldTypes || snapshot.field_types || [];
+        const sanitizedFieldTypes = sanitizeFieldTypeOptions(fieldTypes);
+        FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...sanitizedFieldTypes.map(option => ({ ...option })));
+        
+        // Load categories directly
+        const normalizedCategories = normalizeCategoriesSnapshot(snapshot.categories || []);
+        categories.splice(0, categories.length, ...normalizedCategories);
+        
+        // Initialize category structure
+        categories.forEach(cat => {
+          if(!cat || typeof cat !== 'object') return;
+          if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
+            cat.subFields = {};
+          }
+          if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+            cat.subFieldTypes = {};
+          }
+          (cat.subs || []).forEach(subName => {
+            if(!Array.isArray(cat.subFields[subName])){
+              cat.subFields[subName] = [];
+            }
+            if(!Array.isArray(cat.subFieldTypes[subName])){
+              cat.subFieldTypes[subName] = [];
+            }
+          });
+        });
+        
+        // Load icons and other data
+        if(snapshot.categoryIcons) assignMapLike(categoryIcons, snapshot.categoryIcons);
+        if(snapshot.subcategoryIcons) assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
+        if(snapshot.categoryIconPaths) assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
+        if(snapshot.subcategoryIconPaths) assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
+        if(Array.isArray(snapshot.versionPriceCurrencies)){
+          VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...snapshot.versionPriceCurrencies);
+        }
+        
+        // Render UI
+        renderFilterCategories();
+        renderFormbuilderCats();
+        refreshFormbuilderSubcategoryLogos();
+        if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
+          try{
+            document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
+          }catch(err){}
+        }
+        if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
+          try{ addPostSource(); }catch(err){ console.error('addPostSource failed after form data load', err); }
+        }
+      } catch(err) {
+        console.error('Failed to load form data from database', err);
       }
-      const normalizedCategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.categoryIconPaths);
-      const normalizedSubcategoryIconPaths = normalizeIconPathMap(snapshot && snapshot.subcategoryIconPaths);
-      const normalizedIconPathsFromMaps = [
-        ...Object.values(normalizedCategoryIconPaths || {}),
-        ...Object.values(normalizedSubcategoryIconPaths || {})
-      ].map(path => (typeof path === 'string' ? normalizeIconAssetPath(path) : ''))
-        .filter(path => path && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(path));
-      const iconLibrarySource = Array.isArray(snapshot && snapshot.iconLibrary)
-        ? snapshot.iconLibrary
-        : [];
-      const mergedIconSet = new Set();
-      const mergedIconLibrary = [];
-      const addIconToLibrary = (icon)=>{
-        if(typeof icon !== 'string'){
-          return;
-        }
-        const normalized = normalizeIconAssetPath(icon);
-        if(!normalized || !ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(normalized)){
-          return;
-        }
-        const key = normalized.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(normalized);
-      };
-      iconLibrarySource.forEach(addIconToLibrary);
-      normalizedIconPathsFromMaps.forEach(addIconToLibrary);
-      const iconLibrary = mergedIconLibrary;
-      return {
-        categories: normalizedCategories,
-        versionPriceCurrencies: normalizedCurrencies,
-        categoryIconPaths: normalizedCategoryIconPaths,
-        subcategoryIconPaths: normalizedSubcategoryIconPaths,
-        iconLibrary,
-        fieldTypes: normalizedFieldTypes
-      };
     }
-
-    window.getSavedFormbuilderSnapshot = getSavedFormbuilderSnapshot;
-    window.normalizeFormbuilderSnapshot = normalizeFormbuilderSnapshot;
-
-    function getPersistedFormbuilderSnapshotFromGlobals(){
-      // Don't use hardcoded window variables - only use database
-      return null;
-    }
-
-    const persistedFormbuilderSnapshotPromise = (()=>{
-      if(typeof window !== 'undefined' && window.__persistedFormbuilderSnapshotPromise){
-        return window.__persistedFormbuilderSnapshotPromise;
-      }
-      const promise = (async ()=>{
-        const inlineSnapshot = getPersistedFormbuilderSnapshotFromGlobals();
-        if(inlineSnapshot){
-          return inlineSnapshot;
-        }
-        if(typeof fetchSavedFormbuilderSnapshot === 'function'){
-          return await fetchSavedFormbuilderSnapshot();
-        }
-        return null;
-      })();
-      if(typeof window !== 'undefined'){
-        window.__persistedFormbuilderSnapshotPromise = promise;
-      }
-      return promise;
-    })();
 
     const ICON_LIBRARY = Array.isArray(window.iconLibrary)
       ? window.iconLibrary
       : (window.iconLibrary = []);
 
-    // Don't use cached data - only use database snapshot
-    const initialSnapshotSource = getPersistedFormbuilderSnapshotFromGlobals() || getSavedFormbuilderSnapshot();
-    const initialFormbuilderSnapshot = normalizeFormbuilderSnapshot(initialSnapshotSource);
-    // Don't clear field types here - they'll be populated from database when snapshot loads
-    // Only clear categories to prevent cached data from being used
-    if (initialFormbuilderSnapshot) {
-      initialFormbuilderSnapshot.categories = [];
-    }
-    const snapshotIconLibrary = Array.isArray(initialFormbuilderSnapshot.iconLibrary)
-      ? initialFormbuilderSnapshot.iconLibrary
-      : [];
-    const existingWindowIcons = Array.isArray(window.iconLibrary)
-      ? window.iconLibrary.slice()
-      : [];
-    const mapIconValues = [
-      ...Object.values(initialFormbuilderSnapshot.categoryIconPaths || {}),
-      ...Object.values(initialFormbuilderSnapshot.subcategoryIconPaths || {})
-    ].map(value => (typeof value === 'string' ? normalizeIconAssetPath(value) : ''))
-      .filter(value => value && ICON_LIBRARY_ALLOWED_EXTENSION_RE.test(value));
-    const sanitizedSnapshotIcons = normalizeIconLibraryEntries(snapshotIconLibrary);
-    const sanitizedWindowIcons = normalizeIconLibraryEntries(existingWindowIcons);
-    const sanitizedMapIcons = normalizeIconLibraryEntries(mapIconValues);
-    const mergedIconSet = new Set();
-    const mergedIconLibrary = [];
-    const mergeIcons = icons => {
-      if(!Array.isArray(icons)){
-        return;
-      }
-      icons.forEach(icon => {
-        if(typeof icon !== 'string' || !icon){
-          return;
-        }
-        const key = icon.toLowerCase();
-        if(mergedIconSet.has(key)){
-          return;
-        }
-        mergedIconSet.add(key);
-        mergedIconLibrary.push(icon);
-      });
-    };
-    mergeIcons(sanitizedSnapshotIcons);
-    mergeIcons(sanitizedMapIcons);
-    mergeIcons(sanitizedWindowIcons);
-    ICON_LIBRARY.length = 0;
-    if(mergedIconLibrary.length){
-      ICON_LIBRARY.push(...mergedIconLibrary);
-    }
-    window.iconLibrary = ICON_LIBRARY;
-    initialFormbuilderSnapshot.iconLibrary = ICON_LIBRARY.slice();
+    // Initialize empty - will be populated from direct database fetch
     function sanitizeFieldTypeOptions(options){
       const list = Array.isArray(options) ? options : normalizeFieldTypeOptions(options);
       const sanitized = [];
@@ -3682,21 +3574,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
       });
       return sanitized;
     }
-    // Don't use cached categories - only use database snapshot when it loads
+    // Initialize empty arrays/objects - will be populated from direct database fetch
     const categories = window.categories = [];
-    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = initialFormbuilderSnapshot.versionPriceCurrencies.slice();
+    const VERSION_PRICE_CURRENCIES = window.VERSION_PRICE_CURRENCIES = DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies.slice();
     const categoryIcons = window.categoryIcons = window.categoryIcons || {};
     const subcategoryIcons = window.subcategoryIcons = window.subcategoryIcons || {};
     const categoryIconPaths = window.categoryIconPaths = window.categoryIconPaths || {};
     const subcategoryIconPaths = window.subcategoryIconPaths = window.subcategoryIconPaths || {};
-    assignMapLike(categoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.categoryIconPaths));
-    assignMapLike(subcategoryIconPaths, normalizeIconPathMap(initialFormbuilderSnapshot.subcategoryIconPaths));
-    const snapshotFieldTypeOptions = Array.isArray(initialFormbuilderSnapshot.fieldTypes)
-      ? initialFormbuilderSnapshot.fieldTypes
-      : [];
-    const finalFieldTypeOptions = sanitizeFieldTypeOptions(snapshotFieldTypeOptions);
-    initialFormbuilderSnapshot.fieldTypes = finalFieldTypeOptions.map(option => ({ ...option }));
-    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option }));
+    const FORM_FIELD_TYPES = window.FORM_FIELD_TYPES = [];
     const getFormFieldTypeLabel = (value)=>{
       const match = FORM_FIELD_TYPES.find(opt => opt.value === value);
       return match ? match.label : '';
@@ -12956,141 +12841,11 @@ function makePosts(){
         });
       }
     }
-    function captureFormbuilderSnapshot(){
-      return {
-        categories: cloneCategoryList(categories),
-        categoryIcons: cloneMapLike(categoryIcons),
-        subcategoryIcons: cloneMapLike(subcategoryIcons),
-        categoryIconPaths: cloneMapLike(categoryIconPaths),
-        subcategoryIconPaths: cloneMapLike(subcategoryIconPaths),
-        subcategoryMarkers: cloneMapLike(subcategoryMarkers),
-        subcategoryMarkerIds: cloneMapLike(subcategoryMarkerIds),
-        categoryShapes: cloneMapLike(categoryShapes),
-        fieldTypes: Array.isArray(FORM_FIELD_TYPES)
-          ? FORM_FIELD_TYPES.map(option => ({ ...option }))
-          : [],
-        versionPriceCurrencies: Array.isArray(VERSION_PRICE_CURRENCIES)
-          ? VERSION_PRICE_CURRENCIES.slice()
-          : []
-      };
-    }
-    // Don't capture snapshot until database loads - start with empty
-    let savedFormbuilderSnapshot = null;
-    function restoreFormbuilderSnapshot(snapshot){
-      if(!snapshot) return;
-      const normalized = normalizeFormbuilderSnapshot(snapshot);
-      let sanitizedFieldTypes = sanitizeFieldTypeOptions(normalized.fieldTypes || normalized.field_types || []);
-      // Don't fall back to cached field types - use only what's in the database snapshot
-      initialFormbuilderSnapshot.fieldTypes = sanitizedFieldTypes.map(option => ({ ...option }));
-      FORM_FIELD_TYPES.splice(0, FORM_FIELD_TYPES.length, ...initialFormbuilderSnapshot.fieldTypes.map(option => ({ ...option })));
-      // Debug: log field types count
-      if (FORM_FIELD_TYPES.length === 0) {
-        console.warn('FORM_FIELD_TYPES is empty after restore. Snapshot fieldTypes:', normalized.fieldTypes || normalized.field_types);
-      }
-      const nextCategories = cloneCategoryList(normalized.categories);
-      if(Array.isArray(nextCategories)){
-        categories.splice(0, categories.length, ...nextCategories);
-      }
-      categories.forEach(cat => {
-        if(!cat || typeof cat !== 'object') return;
-        if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
-          cat.subFields = {};
-        }
-        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
-          cat.subFieldTypes = {};
-        }
-        (cat.subs || []).forEach(subName => {
-          if(!Array.isArray(cat.subFields[subName])){
-            cat.subFields[subName] = [];
-          }
-          if(!Array.isArray(cat.subFieldTypes[subName])){
-            cat.subFieldTypes[subName] = [];
-          }
-        });
-      });
-      assignMapLike(categoryIcons, snapshot.categoryIcons);
-      assignMapLike(subcategoryIcons, snapshot.subcategoryIcons);
-      assignMapLike(categoryIconPaths, normalizeIconPathMap(snapshot.categoryIconPaths));
-      assignMapLike(subcategoryIconPaths, normalizeIconPathMap(snapshot.subcategoryIconPaths));
-      const multiIconSrc = subcategoryMarkers[MULTI_POST_MARKER_ICON_ID];
-      Object.keys(subcategoryMarkers).forEach(key => {
-        if(key !== MULTI_POST_MARKER_ICON_ID){
-          delete subcategoryMarkers[key];
-        }
-      });
-      if(multiIconSrc){
-        subcategoryMarkers[MULTI_POST_MARKER_ICON_ID] = multiIconSrc;
-      }
-      const markerOverrides = snapshot && snapshot.subcategoryMarkers;
-      if(markerOverrides && typeof markerOverrides === 'object'){
-        Object.keys(markerOverrides).forEach(name => {
-          const url = markerOverrides[name];
-          if(typeof url !== 'string'){
-            return;
-          }
-          const trimmedUrl = url.trim();
-          if(!trimmedUrl){
-            return;
-          }
-          const slugKey = slugify(typeof name === 'string' ? name : '');
-          if(slugKey){
-            subcategoryMarkers[slugKey] = trimmedUrl;
-          }
-          if(typeof name === 'string' && name){
-            subcategoryMarkers[name] = trimmedUrl;
-          }
-        });
-      }
-      assignMapLike(subcategoryMarkerIds, snapshot.subcategoryMarkerIds);
-      assignMapLike(categoryShapes, snapshot.categoryShapes);
-      if(Array.isArray(normalized.versionPriceCurrencies)){
-        VERSION_PRICE_CURRENCIES.splice(0, VERSION_PRICE_CURRENCIES.length, ...normalized.versionPriceCurrencies);
-      }
-      renderFilterCategories();
-      renderFormbuilderCats();
-      refreshFormbuilderSubcategoryLogos();
-      if(typeof document !== 'undefined' && typeof document.dispatchEvent === 'function'){
-        try{
-          document.dispatchEvent(new CustomEvent('subcategory-icons-ready'));
-        }catch(err){}
-      }
-      if(window.postsLoaded && window.__markersLoaded && typeof addPostSource === 'function'){
-        try{ addPostSource(); }catch(err){ console.error('addPostSource failed after snapshot restore', err); }
-      }
-      updateFormbuilderSnapshot();
-    }
-    function updateFormbuilderSnapshot(){
-      savedFormbuilderSnapshot = captureFormbuilderSnapshot();
-    }
-    window.formbuilderStateManager = {
-      capture: captureFormbuilderSnapshot,
-      restoreSaved(){ restoreFormbuilderSnapshot(savedFormbuilderSnapshot); },
-      save(){ updateFormbuilderSnapshot(); },
-      getSaved(){ return savedFormbuilderSnapshot ? JSON.parse(JSON.stringify(savedFormbuilderSnapshot)) : null; },
-      restore(snapshot){ restoreFormbuilderSnapshot(snapshot); }
-    };
-    persistedFormbuilderSnapshotPromise.then(snapshot => {
-      if(!snapshot) return;
-      const manager = window.formbuilderStateManager;
-      if(!manager || typeof manager.restore !== 'function'){
-        return;
-      }
-      try{
-        manager.restore(snapshot);
-      }catch(err){
-        console.error('Failed to restore persisted formbuilder snapshot', err);
-        return;
-      }
-      if(typeof manager.save === 'function'){
-        try{
-          manager.save();
-        }catch(err){
-          console.error('Failed to update saved formbuilder snapshot after hydration', err);
-        }
-      }
-    }).catch(err => {
-      console.error('Failed to load persisted formbuilder snapshot from backend', err);
-    });
+    // Expose loadFormData globally
+    window.loadFormData = loadFormData;
+    
+    // Load form data directly from database on page load
+    loadFormData();
     function updateCategoryResetBtn(){
       if(!resetCategoriesBtn) return;
       const anyCategoryOff = Object.values(categoryControllers).some(ctrl=>ctrl && typeof ctrl.isActive === 'function' && !ctrl.isActive());
@@ -13315,7 +13070,7 @@ function makePosts(){
     if(catsEl){
       renderFilterCategories();
       renderFormbuilderCats();
-      updateFormbuilderSnapshot();
+      // No snapshot updating needed - data is saved directly to database
       const handleIconsReady = ()=>{
         refreshSubcategoryLogos();
         refreshFormbuilderSubcategoryLogos();
@@ -19486,17 +19241,18 @@ form.addEventListener('input', formChanged, true);
   }
 
   async function saveAdminChanges(){
-    let payload = null;
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
-      try {
-        payload = window.formbuilderStateManager.capture();
-      } catch (err) {
-        console.error('formbuilderStateManager.capture failed', err);
-      }
-    }
-    if(!payload || typeof payload !== 'object'){
-      payload = {};
-    }
+    // Build payload directly from categories array - no snapshots
+    const payload = {
+      categories: (window.categories || []).map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        subs: cat.subs || [],
+        subFields: cat.subFields || {},
+        subFieldTypes: cat.subFieldTypes || {},
+        subIds: cat.subIds || {},
+        sort_order: cat.sort_order
+      }))
+    };
 
     let response;
     try {
@@ -19692,9 +19448,7 @@ const adminPanelChangeManager = (()=>{
   function refreshSavedState({ skipManagerSave } = {}){
     if(!form) return;
     savedState = serializeState();
-    if(!skipManagerSave && window.formbuilderStateManager && typeof window.formbuilderStateManager.save === 'function'){
-      window.formbuilderStateManager.save();
-    }
+    // No snapshot saving needed - data is saved directly to database
     setDirty(false);
   }
 
@@ -19709,40 +19463,15 @@ const adminPanelChangeManager = (()=>{
       if(typeof window === 'undefined') return;
       ensureElements();
       formWasFound = !!form;
-      const manager = window.formbuilderStateManager;
-      let snapshot = null;
-      const fetchSnapshot = typeof window.fetchSavedFormbuilderSnapshot === 'function'
-        ? window.fetchSavedFormbuilderSnapshot
-        : null;
-      if(fetchSnapshot){
+      // Load form data directly from database
+      if(typeof window.loadFormData === 'function'){
         try{
-          snapshot = await fetchSnapshot();
+          await window.loadFormData();
         }catch(err){
-          console.warn('Failed to fetch admin formbuilder snapshot from server', err);
-        }
-      }
-      if(!snapshot && typeof window.getSavedFormbuilderSnapshot === 'function'){
-        try{
-          snapshot = await Promise.resolve(window.getSavedFormbuilderSnapshot());
-        }catch(err){
-          console.warn('Failed to load saved admin formbuilder snapshot', err);
-        }
-      }
-      if(manager && typeof manager.restore === 'function' && snapshot){
-        try{
-          manager.restore(snapshot);
-        }catch(err){
-          console.warn('Failed to hydrate admin formbuilder snapshot', err);
+          console.warn('Failed to load form data from database', err);
         }
       }
       refreshSavedState({ skipManagerSave: true });
-      if(manager && typeof manager.save === 'function'){
-        try{
-          manager.save();
-        }catch(err){
-          console.warn('Failed to persist hydrated admin formbuilder snapshot', err);
-        }
-      }
     })()
     .catch(err => {
       console.warn('Failed to initialize admin saved state', err);
@@ -19907,9 +19636,7 @@ const adminPanelChangeManager = (()=>{
         applying = false;
       }
     }
-    if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restoreSaved === 'function'){
-      window.formbuilderStateManager.restoreSaved();
-    }
+    // No snapshot restoration needed - data is loaded directly from database
     if(savedState) applyState(savedState);
     setDirty(false);
     showStatus('Changes Discarded');
@@ -20833,10 +20560,8 @@ document.addEventListener('pointerdown', (e) => {
     const loadingMessage = 'Loading form fields…';
     const fetchErrorMessage = 'We couldn’t load the latest form fields. You can continue with the defaults for now.';
 
-    const defaultMemberSnapshot = normalizeFormbuilderSnapshot(null);
-    let memberSnapshot = defaultMemberSnapshot;
-    let memberCategories = memberSnapshot.categories;
-    let currencyCodes = collectCurrencyCodes(memberSnapshot);
+    let memberCategories = [];
+    let currencyCodes = new Set(DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies);
     let fieldIdCounter = 0;
     let memberSnapshotErrorMessage = '';
 
@@ -20850,10 +20575,15 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function applyMemberSnapshot(snapshot, options = {}){
-      const normalized = normalizeFormbuilderSnapshot(snapshot);
-      memberSnapshot = normalized;
-      memberCategories = memberSnapshot.categories;
-      currencyCodes = collectCurrencyCodes(memberSnapshot);
+      if(!snapshot) return;
+      // Load categories directly from snapshot
+      const normalizedCategories = normalizeCategoriesSnapshot(snapshot.categories || []);
+      memberCategories = normalizedCategories;
+      // Collect currency codes from snapshot
+      const snapshotCurrencies = Array.isArray(snapshot.versionPriceCurrencies) 
+        ? snapshot.versionPriceCurrencies 
+        : DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies;
+      currencyCodes = new Set(snapshotCurrencies);
       ensureCurrencyOptions(listingCurrency);
       ensureCurrencyOptions(adminListingCurrency);
       if(options.populate !== false){
@@ -20884,20 +20614,18 @@ document.addEventListener('pointerdown', (e) => {
     }
 
     function refreshMemberSnapshotFromManager(){
-      if(window.formbuilderStateManager && typeof window.formbuilderStateManager.capture === 'function'){
-        try{
-          const snapshot = window.formbuilderStateManager.capture();
+      // Direct fetch from database - no snapshots
+      fetchFormData().then(snapshot => {
+        if(snapshot){
           memberSnapshotErrorMessage = '';
           applyMemberSnapshot(snapshot, { preserveSelection: true });
-          return;
-        }catch(err){
-          console.warn('Failed to capture latest formbuilder snapshot', err);
         }
-      }
-      applyMemberSnapshot(memberSnapshot, { preserveSelection: true });
+      }).catch(err => {
+        console.warn('Failed to fetch latest form data', err);
+        // Use current memberCategories as fallback
+        applyMemberSnapshot({ categories: memberCategories, versionPriceCurrencies: Array.from(currencyCodes) }, { preserveSelection: true });
+      });
     }
-
-    applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false });
 
     function formatPriceValue(value){
       const raw = (value || '').replace(/[^0-9.,]/g, '').replace(/,/g, '.');
@@ -21465,10 +21193,10 @@ document.addEventListener('pointerdown', (e) => {
       }
       renderEmptyState(loadingMessage);
       try{
-        const backendSnapshot = await persistedFormbuilderSnapshotPromise;
-        const snapshot = backendSnapshot || getSavedFormbuilderSnapshot() || memberSnapshot;
-        if(window.formbuilderStateManager && typeof window.formbuilderStateManager.restore === 'function'){
-          window.formbuilderStateManager.restore(snapshot);
+        // Direct fetch from database - no snapshots
+        const snapshot = await fetchFormData();
+        if(!snapshot){
+          throw new Error('No data returned from database');
         }
         applyMemberSnapshot(snapshot, { preserveSelection: false, populate: false });
         memberSnapshotErrorMessage = '';
@@ -21476,13 +21204,14 @@ document.addEventListener('pointerdown', (e) => {
       }catch(error){
         const message = error && typeof error.message === 'string' ? error.message : '';
         if(message && message.toLowerCase().includes('database connection not configured')){
-          console.warn('Formbuilder snapshot service unavailable; using defaults.');
+          console.warn('Formbuilder service unavailable; using defaults.');
         } else {
-          console.error('Failed to load formbuilder snapshot for members', error);
+          console.error('Failed to load form data for members', error);
         }
         memberSnapshotErrorMessage = fetchErrorMessage;
         setEmptyStateMessage(fetchErrorMessage);
-        applyMemberSnapshot(defaultMemberSnapshot, { preserveSelection: false, populate: false });
+        // Use empty categories as fallback
+        applyMemberSnapshot({ categories: [], versionPriceCurrencies: DEFAULT_FORMBUILDER_SNAPSHOT.versionPriceCurrencies }, { preserveSelection: false, populate: false });
       } finally {
         if(categorySelect){
           categorySelect.disabled = false;
