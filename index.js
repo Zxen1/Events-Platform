@@ -3484,8 +3484,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           const fields = Array.isArray(rawSubFields[sub]) ? rawSubFields[sub].map(cloneFieldValue) : [];
           subFields[sub] = fields;
         });
+        const rawSubFieldTypes = (item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes)) ? item.subFieldTypes : {};
+        const subFieldTypes = {};
+        subs.forEach(sub => {
+          const fieldTypeIds = Array.isArray(rawSubFieldTypes[sub]) ? rawSubFieldTypes[sub].map(id => {
+            if (typeof id === 'number' && Number.isInteger(id)) return id;
+            if (typeof id === 'string' && /^\d+$/.test(id)) return parseInt(id, 10);
+            return null;
+          }).filter(id => id !== null) : [];
+          subFieldTypes[sub] = fieldTypeIds;
+        });
         const sortOrder = normalizeCategorySortOrderValue(item.sort_order ?? item.sortOrder);
-        return { id: parseId(item.id), name, subs, subFields, subIds: subIdMap, sort_order: sortOrder };
+        return { id: parseId(item.id), name, subs, subFields, subFieldTypes, subIds: subIdMap, sort_order: sortOrder };
       }).filter(Boolean);
       const base = normalized.length ? normalized : DEFAULT_FORMBUILDER_SNAPSHOT.categories.map(cat => ({
         id: null,
@@ -3499,11 +3509,18 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           acc[sub] = [];
           return acc;
         }, {}),
+        subFieldTypes: cat.subs.reduce((acc, sub) => {
+          acc[sub] = [];
+          return acc;
+        }, {}),
         sort_order: normalizeCategorySortOrderValue(cat && (cat.sort_order ?? cat.sortOrder))
       }));
       base.forEach(cat => {
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
+        }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
         }
         if(!cat.subIds || typeof cat.subIds !== 'object' || Array.isArray(cat.subIds)){
           cat.subIds = {};
@@ -3511,6 +3528,9 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         cat.subs.forEach(sub => {
           if(!Array.isArray(cat.subFields[sub])){
             cat.subFields[sub] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[sub])){
+            cat.subFieldTypes[sub] = [];
           }
           if(!Object.prototype.hasOwnProperty.call(cat.subIds, sub)){
             cat.subIds[sub] = null;
@@ -12945,11 +12965,18 @@ function makePosts(){
     function cloneCategoryList(list){
       return Array.isArray(list) ? list.map(item => {
         const sortOrder = normalizeCategorySortOrderValue(item ? (item.sort_order ?? item.sortOrder) : null);
+        const subFieldTypes = item && item.subFieldTypes && typeof item.subFieldTypes === 'object' && !Array.isArray(item.subFieldTypes) ? item.subFieldTypes : {};
+        const clonedSubFieldTypes = {};
+        Object.keys(subFieldTypes).forEach(key => {
+          const value = subFieldTypes[key];
+          clonedSubFieldTypes[key] = Array.isArray(value) ? value.slice() : [];
+        });
         return {
           id: item && Number.isInteger(item.id) ? item.id : (typeof item.id === 'string' && /^\d+$/.test(item.id) ? parseInt(item.id, 10) : null),
           name: item && typeof item.name === 'string' ? item.name : '',
           subs: Array.isArray(item && item.subs) ? item.subs.slice() : [],
           subFields: cloneFieldsMap(item && item.subFields),
+          subFieldTypes: clonedSubFieldTypes,
           subIds: cloneMapLike(item && item.subIds),
           sort_order: sortOrder
         };
@@ -13019,9 +13046,15 @@ function makePosts(){
         if(!cat.subFields || typeof cat.subFields !== 'object' || Array.isArray(cat.subFields)){
           cat.subFields = {};
         }
+        if(!cat.subFieldTypes || typeof cat.subFieldTypes !== 'object' || Array.isArray(cat.subFieldTypes)){
+          cat.subFieldTypes = {};
+        }
         (cat.subs || []).forEach(subName => {
           if(!Array.isArray(cat.subFields[subName])){
             cat.subFields[subName] = [];
+          }
+          if(!Array.isArray(cat.subFieldTypes[subName])){
+            cat.subFieldTypes[subName] = [];
           }
         });
       });
