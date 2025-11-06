@@ -765,14 +765,15 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                 }
             }
             
-            // If field_type has only ONE item and it's a field → use field's properties
+            // If field_type has only ONE item and it's a field → use field_type properties
             if (count($itemIds) === 1 && $itemIds[0]['type'] === 'field' && isset($fieldsById[$itemIds[0]['id']])) {
                 $field = $fieldsById[$itemIds[0]['id']];
                 $builtField = [
-                    'id' => $field['id'],
-                    'key' => $field['field_key'],
+                    'id' => $matchingFieldType['id'],
+                    'key' => $matchingFieldType['field_type_key'],
                     'type' => $field['type'],
-                    'label' => ucwords(str_replace(['_', '-'], ' ', $field['field_key'])),
+                    'label' => $matchingFieldType['field_type_name'],
+                    'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => false,
                 ];
                 
