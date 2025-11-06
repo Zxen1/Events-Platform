@@ -775,15 +775,11 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'label' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => false,
+                    'fieldTypeKey' => $matchingFieldType['field_type_key'],
                 ];
                 
                 if ($field['options'] !== null && $field['options'] !== '') {
                     $builtField['options'] = $field['options'];
-                }
-                
-                // DEBUG: Log for Live Gigs
-                if ($sub['name'] === 'Live Gigs') {
-                    error_log("DEBUG Live Gigs field_type #{$matchingFieldType['id']}: field_type_name='{$matchingFieldType['field_type_name']}', label='{$builtField['label']}', type='{$builtField['type']}', key='{$builtField['key']}'");
                 }
                 
                 $builtFields[] = $builtField;
@@ -797,6 +793,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'label' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => false,
+                    'fieldTypeKey' => $matchingFieldType['field_type_key'],
                     'fields' => [],
                 ];
                 

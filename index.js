@@ -8616,17 +8616,23 @@ function makePosts(){
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           }
-          if(!FORM_FIELD_TYPES.some(opt => opt.value === safeField.type)){
-            safeField.type = 'text-box';
+          // Ensure fieldTypeKey exists (prefer it over key for matching)
+          if(!safeField.fieldTypeKey && safeField.key){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          // Set default fieldTypeKey for new fields
+          if(!safeField.fieldTypeKey || !FORM_FIELD_TYPES.some(opt => opt.value === safeField.fieldTypeKey)){
+            safeField.fieldTypeKey = 'text-box';
           }
             if(!safeField.name){
-              const typeLabel = getFormFieldTypeLabel(safeField.type).trim();
+              const typeLabel = getFormFieldTypeLabel(safeField.fieldTypeKey || safeField.key).trim();
               if(typeLabel){
                 safeField.name = typeLabel;
               }
             }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
-            if(safeField.type === 'location'){
+            const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
+            if(fieldTypeKey === 'location'){
               if(!safeField.placeholder || !safeField.placeholder.trim()){
                 safeField.placeholder = 'Search for a location';
               }
@@ -8643,9 +8649,9 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(safeField.type === 'venue-ticketing'){
+            if(fieldTypeKey === 'venue-ticketing'){
               safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(safeField.type === 'variant-pricing'){
+            } else if(fieldTypeKey === 'variant-pricing'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
                   return {
@@ -12111,7 +12117,9 @@ function makePosts(){
               const option = document.createElement('option');
               option.value = optionDef.value;
               option.textContent = optionDef.label;
-              if(optionDef.value === safeField.type){
+              // Match based on fieldTypeKey (or key) instead of HTML type
+              const matchKey = safeField.fieldTypeKey || safeField.key;
+              if(optionDef.value === matchKey){
                 option.selected = true;
               }
               fieldTypeSelect.appendChild(option);
