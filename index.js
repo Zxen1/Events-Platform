@@ -8682,6 +8682,14 @@ function makePosts(){
             if(safeField.type !== 'venue-ticketing'){
               resetVenueAutofillState(safeField);
             }
+            if(safeField.name === 'Title') {
+              console.log('ensureFieldDefaults RETURNING Title field:', {
+                name: safeField.name,
+                key: safeField.key,
+                fieldTypeKey: safeField.fieldTypeKey,
+                type: safeField.type
+              });
+            }
             return safeField;
           };
 
