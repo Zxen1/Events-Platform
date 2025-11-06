@@ -737,16 +737,6 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
 
         // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
         $builtFields = [];
-        
-        // DEBUG: Log for Live Gigs only
-        if ($sub['name'] === 'Live Gigs') {
-            error_log("=== LIVE GIGS DEBUG ===");
-            error_log("fieldTypeIds: " . json_encode($fieldTypeIds));
-            error_log("Available fieldTypes count: " . count($fieldTypes));
-            error_log("Available fieldsById count: " . count($fieldsById));
-            error_log("Available fieldsetsById count: " . count($fieldsetsById));
-        }
-        
         foreach ($fieldTypeIds as $fieldTypeId) {
             // Find the field_type by ID
             $matchingFieldType = null;
@@ -758,14 +748,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
             }
             
             if (!$matchingFieldType) {
-                if ($sub['name'] === 'Live Gigs') {
-                    error_log("No matching field_type found for ID: $fieldTypeId");
-                }
                 continue;
-            }
-            
-            if ($sub['name'] === 'Live Gigs') {
-                error_log("Found field_type $fieldTypeId: " . ($matchingFieldType['field_type_name'] ?? 'unknown'));
             }
             
             // Extract all field/fieldset IDs from field_type_item_* columns
@@ -778,16 +761,8 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                         $itemType = $matches[1]; // 'field' or 'fieldset'
                         $itemId = (int) $matches[2];
                         $itemIds[] = ['type' => $itemType, 'id' => $itemId];
-                        
-                        if ($sub['name'] === 'Live Gigs') {
-                            error_log("  Extracted $itemType=$itemId from $itemKey: " . $matchingFieldType[$itemKey]);
-                        }
                     }
                 }
-            }
-            
-            if ($sub['name'] === 'Live Gigs') {
-                error_log("  Total items extracted: " . count($itemIds));
             }
             
             // Build field objects from the extracted IDs
@@ -807,17 +782,15 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     }
                     
                     $builtFields[] = $builtField;
-                    
-                    if ($sub['name'] === 'Live Gigs') {
-                        error_log("  Built field: " . $builtField['key']);
-                    }
                 } elseif ($item['type'] === 'fieldset' && isset($fieldsetsById[$item['id']])) {
                     $fieldset = $fieldsetsById[$item['id']];
                     $builtField = [
-                        'id' => $fieldset['id'],
-                        'key' => $fieldset['fieldset_key'],
-                        'type' => 'fieldset',
-                        'label' => ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
+                        'id' => $matchingFieldType['id'] ?? $fieldset['id'],
+                        'key' => $matchingFieldType['field_type_key'] ?? $fieldset['fieldset_key'],
+                        'type' => $matchingFieldType['field_type_key'] ?? $fieldset['fieldset_key'],
+                        'label' => $matchingFieldType['field_type_name'] ?? ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
+                        'placeholder' => $matchingFieldType['placeholder'] ?? '',
+                        'required' => false,
                         'fields' => [],
                     ];
                     
@@ -835,21 +808,8 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     }
                     
                     $builtFields[] = $builtField;
-                    
-                    if ($sub['name'] === 'Live Gigs') {
-                        error_log("  Built fieldset: " . $builtField['key'] . " with " . count($builtField['fields']) . " child fields");
-                    }
-                } else {
-                    if ($sub['name'] === 'Live Gigs') {
-                        error_log("  SKIPPED: " . $item['type'] . "=" . $item['id'] . " (not found in lookup)");
-                    }
                 }
             }
-        }
-        
-        if ($sub['name'] === 'Live Gigs') {
-            error_log("Total builtFields: " . count($builtFields));
-            error_log("=== END LIVE GIGS DEBUG ===");
         }
         
         $categoriesMap[$categoryName]['subFields'][$sub['name']] = $builtFields;

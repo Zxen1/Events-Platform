@@ -967,7 +967,7 @@ function sanitizeField(array $field): array
         'tickets-url',
         'images',
         'coupon',
-        'variant_pricing',
+        'variant-pricing',
         'checkout',
         'venue-session-version-tier-price',
     ];
@@ -994,7 +994,7 @@ function sanitizeField(array $field): array
     }
 
     switch ($safe['type']) {
-        case 'variant_pricing':
+        case 'variant-pricing':
             $safe['options'] = sanitizeVariantPricingOptions($options);
             break;
         case 'dropdown':

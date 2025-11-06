@@ -8643,9 +8643,9 @@ function makePosts(){
             if(!Array.isArray(safeField.options)){
               safeField.options = [];
             }
-            if(safeField.type === 'venues_sessions_pricing'){
+            if(safeField.type === 'venue-ticketing'){
               safeField.options = normalizeVenueSessionOptions(safeField.options);
-            } else if(safeField.type === 'variant_pricing'){
+            } else if(safeField.type === 'variant-pricing'){
               safeField.options = safeField.options.map(opt => {
                 if(opt && typeof opt === 'object'){
                   return {
@@ -8672,7 +8672,7 @@ function makePosts(){
                 safeField.options.push('', '', '');
               }
             }
-            if(safeField.type !== 'venues_sessions_pricing'){
+            if(safeField.type !== 'venue-ticketing'){
               resetVenueAutofillState(safeField);
             }
             return safeField;
@@ -11410,10 +11410,10 @@ function makePosts(){
                   radioGroup.appendChild(placeholderOption);
                 }
                 control = radioGroup;
-              } else if(previewField.type === 'venues_sessions_pricing'){
+              } else if(previewField.type === 'venue-ticketing'){
                 wrapper.classList.add('form-preview-field--venues-sessions-pricing');
                 control = buildVenueSessionPreview(previewField, baseId);
-              } else if(previewField.type === 'variant_pricing'){
+              } else if(previewField.type === 'variant-pricing'){
                 wrapper.classList.add('form-preview-field--variant-pricing');
                 const editor = document.createElement('div');
                 editor.className = 'form-preview-variant-pricing variant-pricing-options-editor';
@@ -12431,8 +12431,8 @@ function makePosts(){
             const updateFieldEditorsByType = ()=>{
               const type = safeField.type;
               const isOptionsType = type === 'dropdown' || type === 'radio-toggle';
-              const showVariantPricing = type === 'variant_pricing';
-              const showVenueSession = type === 'venues_sessions_pricing';
+              const showVariantPricing = type === 'variant-pricing';
+              const showVenueSession = type === 'venue-ticketing';
               const hidePlaceholder = isOptionsType || type === 'images' || showVariantPricing || showVenueSession;
               fieldPlaceholderWrapper.hidden = hidePlaceholder;
               if(type === 'images'){
@@ -12892,7 +12892,7 @@ function makePosts(){
               required: !!(field && field.required),
               options: Array.isArray(field && field.options)
                 ? field.options.map(opt => {
-                    if(field && field.type === 'variant_pricing'){
+                    if(field && field.type === 'variant-pricing'){
                       if(opt && typeof opt === 'object'){
                         return {
                           version: typeof opt.version === 'string' ? opt.version : '',
@@ -12903,7 +12903,7 @@ function makePosts(){
                       const str = typeof opt === 'string' ? opt : String(opt ?? '');
                       return { version: str, currency: '', price: '' };
                     }
-                    if(field && field.type === 'venues_sessions_pricing'){
+                    if(field && field.type === 'venue-ticketing'){
                       return cloneVenueSessionVenue(opt);
                     }
                     if(typeof opt === 'string') return opt;
@@ -20783,13 +20783,13 @@ document.addEventListener('pointerdown', (e) => {
           if(!Array.isArray(fields)) return;
           fields.forEach(field => {
             if(!field || typeof field !== 'object') return;
-            if(field.type === 'variant_pricing'){
+            if(field.type === 'variant-pricing'){
               const options = Array.isArray(field.options) ? field.options : [];
               options.forEach(opt => {
                 const code = opt && typeof opt.currency === 'string' ? opt.currency.trim().toUpperCase() : '';
                 if(code) codes.add(code);
               });
-            } else if(field.type === 'venues_sessions_pricing'){
+            } else if(field.type === 'venue-ticketing'){
               const venues = Array.isArray(field.options) ? field.options : [];
               venues.forEach(venue => {
                 const sessions = Array.isArray(venue && venue.sessions) ? venue.sessions : [];
@@ -20933,7 +20933,7 @@ document.addEventListener('pointerdown', (e) => {
           safe.placeholder = field.placeholder;
         }
         safe.required = !!field.required;
-        if(type === 'variant_pricing'){
+        if(type === 'variant-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           safe.options = options.map(opt => ({
             version: opt && typeof opt.version === 'string' ? opt.version : '',
@@ -20953,7 +20953,7 @@ document.addEventListener('pointerdown', (e) => {
           if(safe.options.length === 0){
             safe.options.push('');
           }
-        } else if(type === 'venues_sessions_pricing'){
+        } else if(type === 'venue-ticketing'){
           const normalized = normalizeVenueSessionOptionsFromWindow(field.options);
           safe.options = normalized.map(cloneVenueSessionVenueFromWindow);
         } else if(type === 'location'){
@@ -21587,11 +21587,11 @@ document.addEventListener('pointerdown', (e) => {
         fileInput.dataset.imagePreviewTarget = previewId;
         imageWrapper.append(fileInput, hint, message, previewGrid);
         control = imageWrapper;
-      } else if(field.type === 'variant_pricing'){
+      } else if(field.type === 'variant-pricing'){
         wrapper.classList.add('form-preview-field--variant-pricing');
         label.removeAttribute('for');
         control = buildVersionPriceEditor(field, labelId);
-      } else if(field.type === 'venues_sessions_pricing'){
+      } else if(field.type === 'venue-ticketing'){
         wrapper.classList.add('form-preview-field--venues-sessions-pricing');
         label.removeAttribute('for');
         control = buildVenueSessionEditor(field, labelId);
@@ -22026,7 +22026,7 @@ document.addEventListener('pointerdown', (e) => {
             };
             break;
           }
-        } else if(type === 'variant_pricing'){
+        } else if(type === 'variant-pricing'){
           const options = Array.isArray(field.options) ? field.options : [];
           value = options.map(opt => ({
             version: typeof opt.version === 'string' ? opt.version.trim() : '',
@@ -22043,7 +22043,7 @@ document.addEventListener('pointerdown', (e) => {
               break;
             }
           }
-        } else if(type === 'venues_sessions_pricing'){
+        } else if(type === 'venue-ticketing'){
           const venues = Array.isArray(field.options) ? field.options : [];
           value = venues.map(cloneVenueSessionVenueFromWindow);
           if(field.required){
