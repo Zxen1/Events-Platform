@@ -8611,6 +8611,14 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
+            if(safeField.name === 'Title') {
+              console.log('ensureFieldDefaults RECEIVED Title field AT START:', {
+                hasKey: 'key' in safeField,
+                keyValue: safeField.key,
+                hasFieldTypeKey: 'fieldTypeKey' in safeField,
+                fieldTypeKeyValue: safeField.fieldTypeKey
+              });
+            }
             if(typeof safeField.name !== 'string'){
               safeField.name = '';
             } else if(!safeField.name.trim()){
