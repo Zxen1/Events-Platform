@@ -224,7 +224,7 @@ foreach ($fieldsRaw as $index => $fieldEntry) {
     abort_with_error($mysqli, 400, 'Missing field identifier at position ' . ($index + 1) . '.', $transactionActive);
   }
 
-  $fieldLabelRaw = $fieldEntry['label'] ?? $fieldEntry['field_label'] ?? $fieldEntry['name'] ?? '';
+  $fieldLabelRaw = $fieldEntry['name'] ?? $fieldEntry['field_label'] ?? '';
   if (is_string($fieldLabelRaw) || is_numeric($fieldLabelRaw)) {
     $fieldLabel = trim((string) $fieldLabelRaw);
   } else {

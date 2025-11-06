@@ -1026,7 +1026,7 @@ function sanitizeOptionList(array $options): array
         if (is_string($option) || is_numeric($option)) {
             $value = sanitizeString($option);
         } elseif (is_array($option)) {
-            $value = sanitizeString($option['value'] ?? $option['label'] ?? $option['version'] ?? '', 255);
+            $value = sanitizeString($option['value'] ?? $option['name'] ?? $option['version'] ?? '', 255);
         } else {
             $value = '';
         }

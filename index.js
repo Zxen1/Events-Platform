@@ -3410,15 +3410,13 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!value){
             return;
           }
-          const label = typeof item.label === 'string' && item.label.trim()
-            ? item.label.trim()
-            : typeof item.name === 'string' && item.name.trim()
-              ? item.name.trim()
-              : typeof item.field_type_name === 'string' && item.field_type_name.trim()
-                ? item.field_type_name.trim()
-                : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
-                  ? item.fieldTypeName.trim()
-                  : '';
+          const label = typeof item.name === 'string' && item.name.trim()
+            ? item.name.trim()
+            : typeof item.field_type_name === 'string' && item.field_type_name.trim()
+              ? item.field_type_name.trim()
+              : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
+                ? item.fieldTypeName.trim()
+                : '';
           pushOption(value, label);
           return;
         }
