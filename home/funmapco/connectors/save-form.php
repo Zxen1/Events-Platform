@@ -616,6 +616,34 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $updated[] = $subId;
+            
+            // Update junction table: subcategory_field_types
+            if ($hasFieldTypesForThisSub && !empty($fieldTypeIds)) {
+                // Delete existing entries for this subcategory
+                $deleteStmt = $pdo->prepare('DELETE FROM subcategory_field_types WHERE subcategory_id = :subcategory_id');
+                $deleteStmt->execute([':subcategory_id' => $subId]);
+                
+                // Insert new entries with sort order and required values
+                $insertStmt = $pdo->prepare('
+                    INSERT INTO subcategory_field_types 
+                    (subcategory_id, subcategory_key, field_type_id, field_type_key, sort_order, required) 
+                    VALUES (:subcategory_id, :subcategory_key, :field_type_id, :field_type_key, :sort_order, :required)
+                ');
+                
+                foreach ($fieldTypeIds as $sortIndex => $fieldTypeId) {
+                    $isRequired = in_array($fieldTypeId, $requiredFieldTypeIds, true);
+                    $fieldTypeKey = $fieldTypeDefinitions[$fieldTypeId]['key'] ?? null;
+                    
+                    $insertStmt->execute([
+                        ':subcategory_id' => $subId,
+                        ':subcategory_key' => $subKey,
+                        ':field_type_id' => $fieldTypeId,
+                        ':field_type_key' => $fieldTypeKey,
+                        ':sort_order' => $sortIndex + 1,
+                        ':required' => $isRequired ? 1 : 0,
+                    ]);
+                }
+            }
 
             $subcategoriesById[$subId]['name'] = $subName;
             $subcategoriesById[$subId]['subcategory_name'] = $subName;
