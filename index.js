@@ -12590,6 +12590,14 @@ function makePosts(){
             };
           };
 
+          if(fields[0]?.name === 'Title') {
+            console.log('BEFORE createFieldRow - Title field from fields array:', {
+              hasKey: 'key' in fields[0],
+              keyValue: fields[0].key,
+              hasFieldTypeKey: 'fieldTypeKey' in fields[0],
+              fieldTypeKeyValue: fields[0].fieldTypeKey
+            });
+          }
           fields.forEach((existingField, fieldIndex) => {
             if(!existingField) return;
             const fieldRow = createFieldRow(existingField);
