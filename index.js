@@ -3434,6 +3434,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
+      // DEBUG: Check if backend data has key/fieldTypeKey
+      const liveGigs = list.find(cat => cat?.subFields?.['Live Gigs']);
+      if (liveGigs?.subFields?.['Live Gigs']?.[0]) {
+        console.log('SNAPSHOT DATA - Live Gigs first field:', liveGigs.subFields['Live Gigs'][0]);
+      }
       const parseId = value => {
         if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
           return value;
@@ -8606,11 +8611,6 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
-            console.log('ensureFieldDefaults received:', {
-              name: safeField.name,
-              key: safeField.key,
-              fieldTypeKey: safeField.fieldTypeKey
-            });
             if(typeof safeField.name !== 'string'){
               safeField.name = '';
             } else if(!safeField.name.trim()){
@@ -12098,11 +12098,6 @@ function makePosts(){
           }
 
           const createFieldRow = (field)=>{
-            console.log('createFieldRow received field:', {
-              name: field?.name,
-              key: field?.key,
-              fieldTypeKey: field?.fieldTypeKey
-            });
             const safeField = ensureFieldDefaults(field);
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
@@ -12119,23 +12114,14 @@ function makePosts(){
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
-            // Fallback: use type if key/fieldTypeKey are missing
+            // Match based on fieldTypeKey, key, or type as fallback
             const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
-            console.log('Field dropdown matching:', {
-              name: safeField.name,
-              type: safeField.type,
-              key: safeField.key,
-              fieldTypeKey: safeField.fieldTypeKey,
-              matchKey: matchKey
-            });
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
               option.textContent = optionDef.label;
-              // Match based on fieldTypeKey, key, or type as fallback
               if(optionDef.value === matchKey){
                 option.selected = true;
-                console.log('  Matched:', optionDef.value, '=', matchKey);
               }
               fieldTypeSelect.appendChild(option);
             });
