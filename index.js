@@ -8621,7 +8621,15 @@ function makePosts(){
           if(!safeField.fieldTypeKey && safeField.key){
             safeField.fieldTypeKey = safeField.key;
           }
-          // DON'T infer or force defaults - let them be missing if they're missing
+          // For brand new fields, default to first field type in list
+          if(!safeField.key && !safeField.fieldTypeKey && FORM_FIELD_TYPES.length > 0){
+            const firstFieldType = FORM_FIELD_TYPES[0];
+            safeField.key = firstFieldType.value;
+            safeField.fieldTypeKey = firstFieldType.value;
+            if(!safeField.type && firstFieldType.type){
+              safeField.type = firstFieldType.type;
+            }
+          }
           // Only auto-name truly new fields
           if(!safeField.name){
             safeField.name = '';
@@ -12399,9 +12407,9 @@ function makePosts(){
                   safeField.placeholder = matchingFieldType.placeholder;
                   fieldPlaceholderInput.value = matchingFieldType.placeholder;
                 }
+                // Update type to match the field type (for complex types like images, venue-ticketing, etc.)
+                safeField.type = nextValidType;
               }
-              
-              // Type stays as-is (HTML input type like 'text', 'textarea', etc.)
               
               if(shouldAutofillName && nextLabel){
                 safeField.name = nextLabel;
