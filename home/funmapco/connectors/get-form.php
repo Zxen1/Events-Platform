@@ -90,27 +90,46 @@ try {
         $fieldTypes = fetchFieldTypes($pdo, $fieldTypeColumns);
     }
 
-    // Get currency field options for versionPriceCurrencies
+    // Fetch all fields and fieldsets from database
+    $allFields = [];
+    $allFieldsets = [];
     $currencyOptions = [];
+    
     try {
         $fieldColumns = fetchTableColumns($pdo, 'fields');
-        if ($fieldColumns && in_array('options', $fieldColumns, true)) {
-            $stmt = $pdo->query("SELECT `options` FROM `fields` WHERE `field_key` = 'currency' AND `id` = 13 LIMIT 1");
-            $currencyRow = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($currencyRow && isset($currencyRow['options']) && is_string($currencyRow['options']) && $currencyRow['options'] !== '') {
-                $currencyOptions = array_map('trim', explode(',', $currencyRow['options']));
-                $currencyOptions = array_filter($currencyOptions, function($code) {
-                    return $code !== '';
-                });
-                $currencyOptions = array_map('strtoupper', $currencyOptions);
-                $currencyOptions = array_values(array_unique($currencyOptions));
+        if ($fieldColumns) {
+            $allFields = fetchAllFields($pdo, $fieldColumns);
+            
+            // Get currency options from currency field
+            $currencyField = array_filter($allFields, function($f) {
+                return isset($f['field_key']) && $f['field_key'] === 'currency' && $f['id'] === 13;
+            });
+            if (!empty($currencyField)) {
+                $currencyField = reset($currencyField);
+                if (isset($currencyField['options']) && is_string($currencyField['options']) && $currencyField['options'] !== '') {
+                    $currencyOptions = array_map('trim', explode(',', $currencyField['options']));
+                    $currencyOptions = array_filter($currencyOptions, function($code) {
+                        return $code !== '';
+                    });
+                    $currencyOptions = array_map('strtoupper', $currencyOptions);
+                    $currencyOptions = array_values(array_unique($currencyOptions));
+                }
             }
         }
     } catch (PDOException $e) {
-        // Ignore if currency field doesn't exist
+        // Continue without fields
+    }
+    
+    try {
+        $fieldsetColumns = fetchTableColumns($pdo, 'fieldsets');
+        if ($fieldsetColumns) {
+            $allFieldsets = fetchAllFieldsets($pdo, $fieldsetColumns);
+        }
+    } catch (PDOException $e) {
+        // Continue without fieldsets
     }
 
-    $snapshot = buildSnapshot($categories, $subcategories, $currencyOptions);
+    $snapshot = buildSnapshot($categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
 
@@ -371,6 +390,13 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     $hasName = in_array('field_type_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasPlaceholder = in_array('placeholder', $columns, true);
+    
+    // Check for field_type_item columns
+    $hasItem1 = in_array('field_type_item_1', $columns, true);
+    $hasItem2 = in_array('field_type_item_2', $columns, true);
+    $hasItem3 = in_array('field_type_item_3', $columns, true);
+    $hasItem4 = in_array('field_type_item_4', $columns, true);
+    $hasItem5 = in_array('field_type_item_5', $columns, true);
 
     if ($hasId) {
         $selectColumns[] = '`id`';
@@ -391,6 +417,23 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
         $orderBy = ' ORDER BY `field_type_name` ASC';
     } elseif ($hasId) {
         $orderBy = ' ORDER BY `id` ASC';
+    }
+    
+    // Add field_type_item columns if they exist
+    if ($hasItem1) {
+        $selectColumns[] = '`field_type_item_1`';
+    }
+    if ($hasItem2) {
+        $selectColumns[] = '`field_type_item_2`';
+    }
+    if ($hasItem3) {
+        $selectColumns[] = '`field_type_item_3`';
+    }
+    if ($hasItem4) {
+        $selectColumns[] = '`field_type_item_4`';
+    }
+    if ($hasItem5) {
+        $selectColumns[] = '`field_type_item_5`';
     }
 
     if (!$selectColumns) {
@@ -474,6 +517,23 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
                 ? (int) $row['sort_order']
                 : $row['sort_order'];
         }
+        
+        // Include field_type_item columns
+        if ($hasItem1 && isset($row['field_type_item_1'])) {
+            $entry['field_type_item_1'] = (string) $row['field_type_item_1'];
+        }
+        if ($hasItem2 && isset($row['field_type_item_2'])) {
+            $entry['field_type_item_2'] = (string) $row['field_type_item_2'];
+        }
+        if ($hasItem3 && isset($row['field_type_item_3'])) {
+            $entry['field_type_item_3'] = (string) $row['field_type_item_3'];
+        }
+        if ($hasItem4 && isset($row['field_type_item_4'])) {
+            $entry['field_type_item_4'] = (string) $row['field_type_item_4'];
+        }
+        if ($hasItem5 && isset($row['field_type_item_5'])) {
+            $entry['field_type_item_5'] = (string) $row['field_type_item_5'];
+        }
 
         $fieldTypes[] = $entry;
         $seen[$dedupeKey] = true;
@@ -482,8 +542,104 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     return $fieldTypes;
 }
 
-function buildSnapshot(array $categories, array $subcategories, array $currencyOptions = []): array
+function fetchAllFields(PDO $pdo, array $columns): array
 {
+    $selectColumns = [];
+    foreach (['id', 'field_key', 'type', 'options'] as $col) {
+        if (in_array($col, $columns, true)) {
+            $selectColumns[] = "`$col`";
+        }
+    }
+    
+    if (empty($selectColumns)) {
+        $selectColumns[] = '*';
+    }
+    
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM `fields` ORDER BY `id` ASC';
+    $stmt = $pdo->query($sql);
+    
+    $fields = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!isset($row['id'])) continue;
+        
+        $field = [
+            'id' => (int) $row['id'],
+            'field_key' => isset($row['field_key']) ? trim((string) $row['field_key']) : '',
+            'type' => isset($row['type']) ? trim((string) $row['type']) : 'text',
+            'options' => isset($row['options']) && is_string($row['options']) ? trim($row['options']) : null,
+        ];
+        
+        $fields[] = $field;
+    }
+    
+    return $fields;
+}
+
+function fetchAllFieldsets(PDO $pdo, array $columns): array
+{
+    $selectColumns = [];
+    foreach (['id', 'fieldset_key', 'description', 'field_id', 'field_key'] as $col) {
+        if (in_array($col, $columns, true)) {
+            $selectColumns[] = "`$col`";
+        }
+    }
+    
+    if (empty($selectColumns)) {
+        $selectColumns[] = '*';
+    }
+    
+    $sql = 'SELECT ' . implode(', ', $selectColumns) . ' FROM `fieldsets` ORDER BY `id` ASC';
+    $stmt = $pdo->query($sql);
+    
+    $fieldsets = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        if (!isset($row['id'])) continue;
+        
+        $fieldIds = [];
+        if (isset($row['field_id']) && is_string($row['field_id'])) {
+            $fieldIds = array_filter(array_map('trim', explode(',', $row['field_id'])), function($id) {
+                return $id !== '';
+            });
+        }
+        
+        $fieldKeys = [];
+        if (isset($row['field_key']) && is_string($row['field_key'])) {
+            $fieldKeys = array_filter(array_map('trim', explode(',', $row['field_key'])), function($key) {
+                return $key !== '';
+            });
+        }
+        
+        $fieldset = [
+            'id' => (int) $row['id'],
+            'fieldset_key' => isset($row['fieldset_key']) ? trim((string) $row['fieldset_key']) : '',
+            'description' => isset($row['description']) ? trim((string) $row['description']) : '',
+            'field_ids' => $fieldIds,
+            'field_keys' => $fieldKeys,
+        ];
+        
+        $fieldsets[] = $fieldset;
+    }
+    
+    return $fieldsets;
+}
+
+function buildSnapshot(array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = []): array
+{
+    // Index fields and fieldsets by ID for quick lookup
+    $fieldsById = [];
+    foreach ($allFields as $field) {
+        if (isset($field['id'])) {
+            $fieldsById[$field['id']] = $field;
+        }
+    }
+    
+    $fieldsetsById = [];
+    foreach ($allFieldsets as $fieldset) {
+        if (isset($fieldset['id'])) {
+            $fieldsetsById[$fieldset['id']] = $fieldset;
+        }
+    }
+    
     $categoriesMap = [];
     $categoryIcons = [];
     $categoryIconPaths = [];
@@ -579,7 +735,82 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
         }
         $fieldTypeNames = array_values(array_unique($fieldTypeNames));
 
-        $categoriesMap[$categoryName]['subFields'][$sub['name']] = [];
+        // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
+        $builtFields = [];
+        foreach ($fieldTypeIds as $fieldTypeId) {
+            // Find the field_type by ID
+            $matchingFieldType = null;
+            foreach ($fieldTypes as $ft) {
+                if (isset($ft['id']) && $ft['id'] === $fieldTypeId) {
+                    $matchingFieldType = $ft;
+                    break;
+                }
+            }
+            
+            if (!$matchingFieldType) {
+                continue;
+            }
+            
+            // Extract all field/fieldset IDs from field_type_item_* columns
+            $itemIds = [];
+            for ($i = 1; $i <= 5; $i++) {
+                $itemKey = "field_type_item_$i";
+                if (isset($matchingFieldType[$itemKey]) && is_string($matchingFieldType[$itemKey]) && $matchingFieldType[$itemKey] !== '') {
+                    // Parse "title [field=1]" or "venues [fieldset=1]"
+                    if (preg_match('/\[(field|fieldset)=(\d+)\]/', $matchingFieldType[$itemKey], $matches)) {
+                        $itemType = $matches[1]; // 'field' or 'fieldset'
+                        $itemId = (int) $matches[2];
+                        $itemIds[] = ['type' => $itemType, 'id' => $itemId];
+                    }
+                }
+            }
+            
+            // Build field objects from the extracted IDs
+            foreach ($itemIds as $item) {
+                if ($item['type'] === 'field' && isset($fieldsById[$item['id']])) {
+                    $field = $fieldsById[$item['id']];
+                    $builtField = [
+                        'id' => $field['id'],
+                        'key' => $field['field_key'],
+                        'type' => $field['type'],
+                        'label' => ucwords(str_replace(['_', '-'], ' ', $field['field_key'])),
+                        'required' => false,
+                    ];
+                    
+                    if ($field['options'] !== null && $field['options'] !== '') {
+                        $builtField['options'] = $field['options'];
+                    }
+                    
+                    $builtFields[] = $builtField;
+                } elseif ($item['type'] === 'fieldset' && isset($fieldsetsById[$item['id']])) {
+                    $fieldset = $fieldsetsById[$item['id']];
+                    $builtField = [
+                        'id' => $fieldset['id'],
+                        'key' => $fieldset['fieldset_key'],
+                        'type' => 'fieldset',
+                        'label' => ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
+                        'fields' => [],
+                    ];
+                    
+                    // Add child fields from the fieldset
+                    foreach ($fieldset['field_ids'] as $childId) {
+                        if (isset($fieldsById[(int)$childId])) {
+                            $childField = $fieldsById[(int)$childId];
+                            $builtField['fields'][] = [
+                                'id' => $childField['id'],
+                                'key' => $childField['field_key'],
+                                'type' => $childField['type'],
+                                'label' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
+                            ];
+                        }
+                    }
+                    
+                    $builtFields[] = $builtField;
+                }
+            }
+        }
+        
+        $categoriesMap[$categoryName]['subFields'][$sub['name']] = $builtFields;
         $categoriesMap[$categoryName]['subFieldTypes'][$sub['name']] = $fieldTypeIds;
 
         $subcategoryFieldTypeIds[$sub['name']] = $fieldTypeIds;
