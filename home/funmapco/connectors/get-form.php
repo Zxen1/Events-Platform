@@ -129,7 +129,7 @@ try {
         // Continue without fieldsets
     }
 
-    $snapshot = buildSnapshot($categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes);
+    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $allFieldsets, $fieldTypes);
     $snapshot['fieldTypes'] = $fieldTypes;
     $snapshot['field_types'] = $fieldTypes;
 
@@ -648,7 +648,7 @@ function fetchAllFieldsets(PDO $pdo, array $columns): array
     return $fieldsets;
 }
 
-function buildSnapshot(array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = []): array
+function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $allFieldsets = [], array $fieldTypes = []): array
 {
     // Index fields and fieldsets by ID for quick lookup
     $fieldsById = [];
