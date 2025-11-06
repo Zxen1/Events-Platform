@@ -8614,23 +8614,14 @@ function makePosts(){
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           }
-          // Reconstruct key and fieldTypeKey from type and name
-          if(!safeField.key || !safeField.fieldTypeKey){
-            let inferredKey = safeField.type;
-            
-            // Special cases where type doesn't match the field type key
-            if(safeField.name === 'Title' && safeField.type === 'text'){
-              inferredKey = 'title';
-            } else if(safeField.name === 'Description' && safeField.type === 'textarea'){
-              inferredKey = 'description';
-            } else if(safeField.type === 'text' || safeField.type === 'textarea'){
-              // Generic text fields default to text-box
-              inferredKey = 'text-box';
-            }
-            
-            if(!safeField.key) safeField.key = inferredKey;
-            if(!safeField.fieldTypeKey) safeField.fieldTypeKey = inferredKey;
+          // Ensure key and fieldTypeKey sync with each other if one is missing
+          if(!safeField.key && safeField.fieldTypeKey){
+            safeField.key = safeField.fieldTypeKey;
           }
+          if(!safeField.fieldTypeKey && safeField.key){
+            safeField.fieldTypeKey = safeField.key;
+          }
+          // DON'T infer or force defaults - let them be missing if they're missing
           // Only auto-name truly new fields
           if(!safeField.name){
             safeField.name = '';
