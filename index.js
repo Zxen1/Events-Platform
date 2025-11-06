@@ -12903,14 +12903,16 @@ function makePosts(){
         Object.keys(source).forEach(key => {
           const value = source[key];
           if(Array.isArray(value)){
-            out[key] = value.map(field => ({
-              name: field && typeof field.name === 'string' ? field.name : '',
-              type: field && typeof field.type === 'string' && FORM_FIELD_TYPES.some(opt => opt.value === field.type)
-                ? field.type
-                : 'text-box',
-              placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
-              required: !!(field && field.required),
-              options: Array.isArray(field && field.options)
+            out[key] = value.map(field => {
+              const cloned = {
+                id: field && field.id,
+                key: field && typeof field.key === 'string' ? field.key : undefined,
+                fieldTypeKey: field && typeof field.fieldTypeKey === 'string' ? field.fieldTypeKey : undefined,
+                name: field && typeof field.name === 'string' ? field.name : '',
+                type: field && typeof field.type === 'string' ? field.type : '',
+                placeholder: field && typeof field.placeholder === 'string' ? field.placeholder : '',
+                required: !!(field && field.required),
+                options: Array.isArray(field && field.options)
                 ? field.options.map(opt => {
                     if(field && field.type === 'variant-pricing'){
                       if(opt && typeof opt === 'object'){
@@ -12933,7 +12935,13 @@ function makePosts(){
                     return String(opt ?? '');
                   })
                 : []
-            }));
+              };
+              // Preserve nested fields for complex field types
+              if(Array.isArray(field && field.fields)){
+                cloned.fields = field.fields;
+              }
+              return cloned;
+            });
           } else {
             out[key] = [];
           }
