@@ -618,7 +618,9 @@ try {
             $updated[] = $subId;
             
             // Update junction table: subcategory_field_types
+            error_log("DEBUG save-form: subId=$subId, subKey=$subKey, hasFieldTypesForThisSub=" . ($hasFieldTypesForThisSub ? 'true' : 'false') . ", fieldTypeIds=" . json_encode($fieldTypeIds) . ", requiredFieldTypeIds=" . json_encode($requiredFieldTypeIds));
             if ($hasFieldTypesForThisSub && !empty($fieldTypeIds)) {
+                error_log("DEBUG save-form: Updating junction table for subcategory $subId");
                 // Delete existing entries for this subcategory
                 $deleteStmt = $pdo->prepare('DELETE FROM subcategory_field_types WHERE subcategory_id = :subcategory_id');
                 $deleteStmt->execute([':subcategory_id' => $subId]);
@@ -633,6 +635,8 @@ try {
                 foreach ($fieldTypeIds as $sortIndex => $fieldTypeId) {
                     $isRequired = in_array($fieldTypeId, $requiredFieldTypeIds, true);
                     $fieldTypeKey = $fieldTypeDefinitions[$fieldTypeId]['key'] ?? null;
+                    
+                    error_log("DEBUG save-form: Inserting field_type_id=$fieldTypeId, sort_order=" . ($sortIndex + 1) . ", required=" . ($isRequired ? '1' : '0') . ", key=$fieldTypeKey");
                     
                     $insertStmt->execute([
                         ':subcategory_id' => $subId,
