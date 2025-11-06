@@ -424,11 +424,13 @@ try {
             $requiredFieldTypeIdsFromPayload = [];
             
             if ($hasFieldsForThisSub && !empty($fieldsPayload)) {
+                error_log("DEBUG: Processing " . count($fieldsPayload) . " fields for subcategory $subKey");
                 foreach ($fieldsPayload as $fieldIndex => $fieldData) {
                     if (!is_array($fieldData)) continue;
                     
                     // Get field_type_id from the field's key or fieldTypeKey
                     $fieldTypeKey = $fieldData['fieldTypeKey'] ?? $fieldData['key'] ?? null;
+                    error_log("DEBUG: Field $fieldIndex - key=$fieldTypeKey, type=" . ($fieldData['type'] ?? 'null') . ", name=" . ($fieldData['name'] ?? 'null') . ", required=" . json_encode($fieldData['required'] ?? null));
                     
                     if ($fieldTypeKey && is_string($fieldTypeKey)) {
                         // Look up field_type_id by key

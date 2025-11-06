@@ -11302,15 +11302,15 @@ function makePosts(){
 
           const formPreviewContainer = document.createElement('div');
           formPreviewContainer.className = 'form-preview-container';
-          formPreviewContainer.hidden = true;
+          formPreviewContainer.hidden = false; // Always visible now
           const formPreviewFields = document.createElement('div');
           formPreviewFields.className = 'form-preview-fields';
           formPreviewContainer.appendChild(formPreviewFields);
           const formPreviewId = `${subContentId}Preview`;
           formPreviewContainer.id = formPreviewId;
-          formPreviewBtn.setAttribute('aria-controls', formPreviewId);
 
-          fieldsSection.append(formPreviewBtn, formPreviewContainer, addFieldBtn);
+          // Only append preview and add button (no more field row editor, no more toggle button)
+          fieldsSection.append(formPreviewContainer, addFieldBtn);
 
           formPreviewBtn.addEventListener('click', ()=>{
             const expanded = formPreviewBtn.getAttribute('aria-expanded') === 'true';
@@ -11323,6 +11323,122 @@ function makePosts(){
           });
 
           let formPreviewFieldIdCounter = 0;
+          
+          function openFieldEditModal(field, fieldIndex, fieldName){
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'field-edit-modal-overlay';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-labelledby', 'field-edit-modal-title');
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'field-edit-modal-content';
+            
+            const modalTitle = document.createElement('h3');
+            modalTitle.id = 'field-edit-modal-title';
+            modalTitle.className = 'field-edit-modal-title';
+            modalTitle.textContent = `Edit ${fieldName}`;
+            
+            const modalBody = document.createElement('div');
+            modalBody.className = 'field-edit-modal-body';
+            
+            // Field Type Dropdown
+            const fieldTypeGroup = document.createElement('div');
+            fieldTypeGroup.className = 'field-edit-group';
+            const fieldTypeLabel = document.createElement('label');
+            fieldTypeLabel.textContent = 'Field Type';
+            fieldTypeLabel.className = 'field-edit-label';
+            const fieldTypeSelect = document.createElement('select');
+            fieldTypeSelect.className = 'field-edit-select';
+            const currentKey = field.fieldTypeKey || field.key || field.type;
+            FORM_FIELD_TYPES.forEach(opt => {
+              const option = document.createElement('option');
+              option.value = opt.value;
+              option.textContent = opt.label;
+              if(opt.value === currentKey){
+                option.selected = true;
+              }
+              fieldTypeSelect.appendChild(option);
+            });
+            fieldTypeGroup.append(fieldTypeLabel, fieldTypeSelect);
+            
+            // Required Toggle
+            const requiredGroup = document.createElement('div');
+            requiredGroup.className = 'field-edit-group';
+            const requiredLabel = document.createElement('label');
+            requiredLabel.textContent = 'Required Field';
+            requiredLabel.className = 'field-edit-label';
+            const requiredToggle = document.createElement('div');
+            requiredToggle.className = 'field-edit-toggle';
+            const requiredInput = document.createElement('input');
+            requiredInput.type = 'checkbox';
+            requiredInput.id = 'field-edit-required-toggle';
+            requiredInput.className = 'field-edit-checkbox';
+            requiredInput.checked = !!field.required;
+            const requiredCheckLabel = document.createElement('label');
+            requiredCheckLabel.htmlFor = 'field-edit-required-toggle';
+            requiredCheckLabel.className = 'field-edit-checkbox-label';
+            requiredCheckLabel.textContent = 'Required';
+            requiredToggle.append(requiredInput, requiredCheckLabel);
+            requiredGroup.append(requiredLabel, requiredToggle);
+            
+            modalBody.append(fieldTypeGroup, requiredGroup);
+            
+            // Modal Actions
+            const modalActions = document.createElement('div');
+            modalActions.className = 'field-edit-modal-actions';
+            const saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'field-edit-save-btn';
+            saveBtn.textContent = 'Save';
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'field-edit-cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            modalActions.append(cancelBtn, saveBtn);
+            
+            modalContent.append(modalTitle, modalBody, modalActions);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            const closeModal = ()=>{
+              modal.remove();
+            };
+            
+            saveBtn.addEventListener('click', ()=>{
+              const newFieldTypeKey = fieldTypeSelect.value;
+              const newRequired = requiredInput.checked;
+              
+              // Update field properties
+              field.fieldTypeKey = newFieldTypeKey;
+              field.key = newFieldTypeKey;
+              field.type = newFieldTypeKey;
+              field.required = newRequired;
+              
+              // Update name and placeholder from field type
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === newFieldTypeKey);
+              if(matchingFieldType){
+                field.name = matchingFieldType.label || matchingFieldType.name || field.name;
+                field.placeholder = matchingFieldType.placeholder || field.placeholder || '';
+              }
+              
+              notifyFormbuilderChange();
+              renderFormPreview();
+              closeModal();
+            });
+            
+            cancelBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e)=>{
+              if(e.target === modal){
+                closeModal();
+              }
+            });
+            
+            // Focus first input
+            requestAnimationFrame(()=> fieldTypeSelect.focus());
+          }
+          
           function renderFormPreview(){
             formPreviewFields.innerHTML = '';
             if(!fields.length){
@@ -11336,16 +11452,41 @@ function makePosts(){
               const previewField = ensureFieldDefaults(fieldData);
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-preview-field';
+              wrapper.dataset.fieldIndex = String(previewIndex);
               const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
               const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const labelButton = document.createElement('button');
-              labelButton.type = 'button';
-              labelButton.className = 'subcategory-form-button';
-              labelButton.textContent = labelText;
-              labelButton.setAttribute('aria-haspopup', 'dialog');
-              labelButton.dataset.previewIndex = String(previewIndex);
+              
+              // Create header with label, edit, and delete buttons
+              const fieldHeader = document.createElement('div');
+              fieldHeader.className = 'form-preview-field-header';
+              fieldHeader.dataset.dragHandle = 'true';
+              
+              const labelSpan = document.createElement('span');
+              labelSpan.className = 'form-preview-field-label';
+              labelSpan.textContent = labelText;
               const labelId = `${baseId}-label`;
-              labelButton.id = labelId;
+              labelSpan.id = labelId;
+              
+              const headerActions = document.createElement('div');
+              headerActions.className = 'form-preview-field-actions';
+              
+              const editBtn = document.createElement('button');
+              editBtn.type = 'button';
+              editBtn.className = 'form-preview-edit-btn';
+              editBtn.textContent = 'Edit';
+              editBtn.setAttribute('aria-label', `Edit ${labelText} field`);
+              editBtn.dataset.fieldIndex = String(previewIndex);
+              
+              const deleteBtn = document.createElement('button');
+              deleteBtn.type = 'button';
+              deleteBtn.className = 'form-preview-delete-btn';
+              deleteBtn.textContent = '×';
+              deleteBtn.setAttribute('aria-label', `Delete ${labelText} field`);
+              deleteBtn.dataset.fieldIndex = String(previewIndex);
+              
+              headerActions.append(editBtn, deleteBtn);
+              fieldHeader.append(labelSpan, headerActions);
+              wrapper.appendChild(fieldHeader);
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
                 const textarea = document.createElement('textarea');
@@ -12072,25 +12213,68 @@ function makePosts(){
                     control.setAttribute('aria-labelledby', labelId);
                   }
                 }
-                labelButton.addEventListener('click', event=>{
-                  event.preventDefault();
-                  let targetRow = previewField && previewField.__rowEl;
-                  if(!targetRow || !targetRow.isConnected){
-                    targetRow = Array.from(fieldsList.querySelectorAll('.subcategory-field-row')).find(row => row.__fieldRef === previewField) || targetRow;
-                  }
-                  if(targetRow && typeof openSubcategoryFieldOverlay === 'function'){
-                    openSubcategoryFieldOverlay(targetRow, labelText, event.currentTarget || event.target);
-                  }
-                });
+                // Add required asterisk to label if needed
                 if(previewField.required){
                   wrapper.classList.add('form-preview-field--required');
-                  labelButton.appendChild(document.createTextNode(' '));
+                  labelSpan.appendChild(document.createTextNode(' '));
                   const asterisk = document.createElement('span');
                   asterisk.className = 'required-asterisk';
                   asterisk.textContent = '*';
-                  labelButton.appendChild(asterisk);
+                  labelSpan.appendChild(asterisk);
                 }
-                wrapper.append(labelButton, control);
+                
+                // Edit button handler - opens simple modal with field type and required only
+                editBtn.addEventListener('click', ()=>{
+                  openFieldEditModal(previewField, previewIndex, labelText);
+                });
+                
+                // Delete button handler
+                deleteBtn.addEventListener('click', async ()=>{
+                  const confirmed = await confirmFormbuilderDeletion(`Delete the "${labelText}" field?`, 'Delete Field');
+                  if(!confirmed) return;
+                  fields.splice(previewIndex, 1);
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+                
+                // Drag-and-drop functionality
+                let draggedIndex = null;
+                fieldHeader.setAttribute('draggable', 'true');
+                fieldHeader.style.cursor = 'move';
+                
+                fieldHeader.addEventListener('dragstart', (e)=>{
+                  draggedIndex = previewIndex;
+                  wrapper.classList.add('dragging');
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', previewIndex);
+                });
+                
+                fieldHeader.addEventListener('dragend', ()=>{
+                  wrapper.classList.remove('dragging');
+                  draggedIndex = null;
+                });
+                
+                wrapper.addEventListener('dragover', (e)=>{
+                  if(draggedIndex === null) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                });
+                
+                wrapper.addEventListener('drop', (e)=>{
+                  e.preventDefault();
+                  if(draggedIndex === null || draggedIndex === previewIndex) return;
+                  
+                  // Reorder fields array
+                  const draggedField = fields[draggedIndex];
+                  fields.splice(draggedIndex, 1);
+                  const newIndex = draggedIndex < previewIndex ? previewIndex - 1 : previewIndex;
+                  fields.splice(newIndex, 0, draggedField);
+                  
+                  notifyFormbuilderChange();
+                  renderFormPreview();
+                });
+                
+                wrapper.appendChild(control);
                 formPreviewFields.appendChild(wrapper);
               }
             });
