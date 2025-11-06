@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 05, 2025 at 02:28 PM
+-- Generation Time: Nov 06, 2025 at 11:51 AM
 -- Server version: 10.6.23-MariaDB
 -- PHP Version: 8.4.13
 
@@ -21,53 +21,12 @@ SET time_zone = "+00:00";
 -- Database: `funmapco_db`
 --
 
-DELIMITER $$
---
--- Procedures
---
-DROP PROCEDURE IF EXISTS `rebuild_field_type_enum`$$
-CREATE DEFINER=`funmapco`@`localhost` PROCEDURE `rebuild_field_type_enum` ()   BEGIN
-  DECLARE done INT DEFAULT 0;
-  DECLARE field_name VARCHAR(255);
-  DECLARE cur CURSOR FOR SELECT field_key FROM fields;
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-  OPEN cur;
-  UPDATE field_types 
-    SET field_type_item_1 = NULL,
-        field_type_item_2 = NULL,
-        field_type_item_3 = NULL,
-        field_type_item_4 = NULL,
-        field_type_item_5 = NULL;
-
-  read_loop: LOOP
-    FETCH cur INTO field_name;
-    IF done THEN
-      LEAVE read_loop;
-    END IF;
-
-    UPDATE field_types
-    SET field_type_item_1 = IF(field_type_item_1 IS NULL, CONCAT(field_name, ' [field=', id, ']'), field_type_item_1),
-        field_type_item_2 = IF(field_type_item_2 IS NULL, CONCAT(field_name, ' [field=', id, ']'), field_type_item_2),
-        field_type_item_3 = IF(field_type_item_3 IS NULL, CONCAT(field_name, ' [field=', id, ']'), field_type_item_3),
-        field_type_item_4 = IF(field_type_item_4 IS NULL, CONCAT(field_name, ' [field=', id, ']'), field_type_item_4),
-        field_type_item_5 = IF(field_type_item_5 IS NULL, CONCAT(field_name, ' [field=', id, ']'), field_type_item_5)
-    WHERE field_type_item_1 IS NULL OR field_type_item_2 IS NULL 
-       OR field_type_item_3 IS NULL OR field_type_item_4 IS NULL OR field_type_item_5 IS NULL;
-  END LOOP;
-
-  CLOSE cur;
-END$$
-
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `addons`
 --
 
-DROP TABLE IF EXISTS `addons`;
 CREATE TABLE `addons` (
   `id` int(11) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
@@ -86,7 +45,6 @@ CREATE TABLE `addons` (
 -- Table structure for table `admins`
 --
 
-DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
@@ -110,7 +68,6 @@ INSERT INTO `admins` (`id`, `email`, `password_hash`, `display_name`, `created_a
 -- Table structure for table `banned_words`
 --
 
-DROP TABLE IF EXISTS `banned_words`;
 CREATE TABLE `banned_words` (
   `id` int(11) NOT NULL,
   `word` varchar(255) DEFAULT NULL,
@@ -125,7 +82,6 @@ CREATE TABLE `banned_words` (
 -- Table structure for table `categories`
 --
 
-DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
   `category_name` varchar(255) NOT NULL,
@@ -155,7 +111,6 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 -- Table structure for table `commissions`
 --
 
-DROP TABLE IF EXISTS `commissions`;
 CREATE TABLE `commissions` (
   `id` int(11) NOT NULL,
   `transaction_id` int(11) DEFAULT NULL,
@@ -176,7 +131,6 @@ CREATE TABLE `commissions` (
 -- Table structure for table `coupons`
 --
 
-DROP TABLE IF EXISTS `coupons`;
 CREATE TABLE `coupons` (
   `id` int(11) NOT NULL,
   `code` varchar(50) NOT NULL,
@@ -198,7 +152,6 @@ CREATE TABLE `coupons` (
 -- Table structure for table `fields`
 --
 
-DROP TABLE IF EXISTS `fields`;
 CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
@@ -242,17 +195,14 @@ INSERT INTO `fields` (`id`, `field_key`, `type`, `options`, `created_at`, `updat
 --
 -- Triggers `fields`
 --
-DROP TRIGGER IF EXISTS `after_fields_delete`;
 DELIMITER $$
 CREATE TRIGGER `after_fields_delete` AFTER DELETE ON `fields` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
 DELIMITER ;
-DROP TRIGGER IF EXISTS `after_fields_insert`;
 DELIMITER $$
 CREATE TRIGGER `after_fields_insert` AFTER INSERT ON `fields` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
 DELIMITER ;
-DROP TRIGGER IF EXISTS `after_fields_update`;
 DELIMITER $$
 CREATE TRIGGER `after_fields_update` AFTER UPDATE ON `fields` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
@@ -264,7 +214,6 @@ DELIMITER ;
 -- Table structure for table `fieldsets`
 --
 
-DROP TABLE IF EXISTS `fieldsets`;
 CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL,
   `fieldset_key` varchar(255) DEFAULT NULL,
@@ -290,17 +239,14 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `description`, `field_id`, `field
 --
 -- Triggers `fieldsets`
 --
-DROP TRIGGER IF EXISTS `after_fieldsets_delete`;
 DELIMITER $$
 CREATE TRIGGER `after_fieldsets_delete` AFTER DELETE ON `fieldsets` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
 DELIMITER ;
-DROP TRIGGER IF EXISTS `after_fieldsets_insert`;
 DELIMITER $$
 CREATE TRIGGER `after_fieldsets_insert` AFTER INSERT ON `fieldsets` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
 DELIMITER ;
-DROP TRIGGER IF EXISTS `after_fieldsets_update`;
 DELIMITER $$
 CREATE TRIGGER `after_fieldsets_update` AFTER UPDATE ON `fieldsets` FOR EACH ROW BEGIN CALL rebuild_field_type_enum(); END
 $$
@@ -312,7 +258,6 @@ DELIMITER ;
 -- Table structure for table `field_types`
 --
 
-DROP TABLE IF EXISTS `field_types`;
 CREATE TABLE `field_types` (
   `id` int(11) NOT NULL,
   `field_type_name` varchar(255) NOT NULL,
@@ -347,7 +292,7 @@ INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placehold
 (12, 'Images', 'images', 'images', 'images [field=3]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:01:51', 12),
 (13, 'Coupon', 'coupon', 'eg. FreeStuff', 'text_box [field=14]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:03:06', 13),
 (14, 'Variant Pricing', 'variant_pricing', 'prices', 'variant_pricing [fieldset=5]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:03:14', 14),
-(15, 'Checkout', 'checkout', 'payme', 'checkout_table [fieldset=8]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:03:20', 15),
+(15, 'Checkout', 'checkout', 'pay me', 'checkout_table [fieldset=8]', NULL, NULL, NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 08:54:09', 15),
 (16, 'Venues Sessions and Pricing', 'venues_sessions_pricing', 'eg.VenueSessionPricing', 'venues [fieldset=1]', 'sessions [fieldset=2]', 'ticket_pricing [fieldset=3]', NULL, NULL, '2025-10-29 19:03:05', '2025-11-05 03:03:46', 16);
 
 -- --------------------------------------------------------
@@ -356,7 +301,6 @@ INSERT INTO `field_types` (`id`, `field_type_name`, `field_type_key`, `placehold
 -- Table structure for table `field_values`
 --
 
-DROP TABLE IF EXISTS `field_values`;
 CREATE TABLE `field_values` (
   `id` int(11) NOT NULL,
   `post_id` int(11) DEFAULT NULL,
@@ -374,7 +318,6 @@ CREATE TABLE `field_values` (
 -- Table structure for table `logs`
 --
 
-DROP TABLE IF EXISTS `logs`;
 CREATE TABLE `logs` (
   `id` int(11) NOT NULL,
   `actor_type` enum('admin','member','codex','system') DEFAULT 'codex',
@@ -391,7 +334,6 @@ CREATE TABLE `logs` (
 -- Table structure for table `media`
 --
 
-DROP TABLE IF EXISTS `media`;
 CREATE TABLE `media` (
   `id` int(11) NOT NULL,
   `member_id` int(11) DEFAULT NULL,
@@ -411,7 +353,6 @@ CREATE TABLE `media` (
 -- Table structure for table `members`
 --
 
-DROP TABLE IF EXISTS `members`;
 CREATE TABLE `members` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
@@ -434,7 +375,8 @@ CREATE TABLE `members` (
 INSERT INTO `members` (`id`, `email`, `password_hash`, `display_name`, `member_key`, `avatar_url`, `theme`, `language`, `currency`, `created_at`, `backup_json`, `updated_at`) VALUES
 (1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', 'testuser', NULL, NULL, NULL, NULL, '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
 (2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'wikidata_/_wikipedia_(cc_by-sa_4.0)', 'assets/avatars/wikipedia.png', NULL, NULL, NULL, '2025-10-25 19:00:27', NULL, '2025-10-30 05:10:15'),
-(3, 'admin@funmap.com', '$2y$10$rQ6.P/Jwy9RN5HWCZt6Z7uiJSllbDKxNdNGKpOHHTYohai9HSd3N2', 'sun 26 oct 0327', 'sun_26_oct_0327', '', NULL, NULL, NULL, '2025-10-26 03:28:31', NULL, '2025-10-30 05:10:15');
+(3, 'admin@funmap.com', '$2y$10$rQ6.P/Jwy9RN5HWCZt6Z7uiJSllbDKxNdNGKpOHHTYohai9HSd3N2', 'sun 26 oct 0327', 'sun_26_oct_0327', '', NULL, NULL, NULL, '2025-10-26 03:28:31', NULL, '2025-10-30 05:10:15'),
+(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', NULL, '', NULL, NULL, NULL, '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
 
 -- --------------------------------------------------------
 
@@ -442,7 +384,6 @@ INSERT INTO `members` (`id`, `email`, `password_hash`, `display_name`, `member_k
 -- Table structure for table `moderation_log`
 --
 
-DROP TABLE IF EXISTS `moderation_log`;
 CREATE TABLE `moderation_log` (
   `id` int(11) NOT NULL,
   `post_id` int(11) DEFAULT NULL,
@@ -461,7 +402,6 @@ CREATE TABLE `moderation_log` (
 -- Table structure for table `posts`
 --
 
-DROP TABLE IF EXISTS `posts`;
 CREATE TABLE `posts` (
   `id` int(11) NOT NULL,
   `subcategory_id` int(11) DEFAULT NULL,
@@ -491,7 +431,6 @@ INSERT INTO `posts` (`id`, `subcategory_id`, `subcategory_name`, `member_id`, `m
 -- Table structure for table `post_revisions`
 --
 
-DROP TABLE IF EXISTS `post_revisions`;
 CREATE TABLE `post_revisions` (
   `id` int(11) NOT NULL,
   `post_id` int(11) DEFAULT NULL,
@@ -512,7 +451,6 @@ CREATE TABLE `post_revisions` (
 -- Table structure for table `subcategories`
 --
 
-DROP TABLE IF EXISTS `subcategories`;
 CREATE TABLE `subcategories` (
   `id` int(11) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
@@ -571,7 +509,6 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 -- Table structure for table `transactions`
 --
 
-DROP TABLE IF EXISTS `transactions`;
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL,
   `member_id` int(11) DEFAULT NULL,
@@ -799,7 +736,7 @@ ALTER TABLE `media`
 -- AUTO_INCREMENT for table `members`
 --
 ALTER TABLE `members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `moderation_log`
