@@ -772,7 +772,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
                     'type' => $field['type'],
-                    'label' => $matchingFieldType['field_type_name'],
+                    'name' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => false,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
@@ -790,7 +790,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'id' => $matchingFieldType['id'],
                     'key' => $matchingFieldType['field_type_key'],
                     'type' => $matchingFieldType['field_type_key'],
-                    'label' => $matchingFieldType['field_type_name'],
+                    'name' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
                     'required' => false,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
@@ -805,7 +805,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                             'id' => $fieldset['id'],
                             'key' => $fieldset['fieldset_key'],
                             'type' => 'fieldset',
-                            'label' => ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
+                            'name' => ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
                             'fields' => [],
                         ];
                         
@@ -817,7 +817,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                                     'id' => $childField['id'],
                                     'key' => $childField['field_key'],
                                     'type' => $childField['type'],
-                                    'label' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
+                                    'name' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
                                 ];
                             }
                         }

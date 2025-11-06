@@ -8624,12 +8624,10 @@ function makePosts(){
               safeField.fieldTypeKey = 'text-box';
             }
           }
-            if(!safeField.name){
-              const typeLabel = getFormFieldTypeLabel(safeField.fieldTypeKey || safeField.key).trim();
-              if(typeLabel){
-                safeField.name = typeLabel;
-              }
-            }
+          // Only auto-name truly new fields
+          if(!safeField.name){
+            safeField.name = '';
+          }
             if(typeof safeField.placeholder !== 'string') safeField.placeholder = '';
             const fieldTypeKey = safeField.fieldTypeKey || safeField.key;
             if(fieldTypeKey === 'location'){
