@@ -418,8 +418,40 @@ try {
             }
             // Fields come from field types, not from metadata_json
 
+            // Extract field types, order, and required from fieldsPayload
             $hasFieldTypesForThisSub = false;
-            if (!$fieldTypeIds) {
+            $fieldTypeIdsFromPayload = [];
+            $requiredFieldTypeIdsFromPayload = [];
+            
+            if ($hasFieldsForThisSub && !empty($fieldsPayload)) {
+                foreach ($fieldsPayload as $fieldIndex => $fieldData) {
+                    if (!is_array($fieldData)) continue;
+                    
+                    // Get field_type_id from the field's key or fieldTypeKey
+                    $fieldTypeKey = $fieldData['fieldTypeKey'] ?? $fieldData['key'] ?? null;
+                    if ($fieldTypeKey && is_string($fieldTypeKey)) {
+                        // Look up field_type_id by key
+                        foreach ($fieldTypeDefinitions as $ftId => $ftDef) {
+                            if (isset($ftDef['key']) && $ftDef['key'] === $fieldTypeKey) {
+                                $fieldTypeIdsFromPayload[] = $ftId;
+                                // Check if required
+                                if (!empty($fieldData['required'])) {
+                                    $requiredFieldTypeIdsFromPayload[] = $ftId;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (!empty($fieldTypeIdsFromPayload)) {
+                    $fieldTypeIds = $fieldTypeIdsFromPayload;
+                    $requiredFieldTypeIds = $requiredFieldTypeIdsFromPayload;
+                    $hasFieldTypesForThisSub = true;
+                }
+            }
+            
+            if (!$hasFieldTypesForThisSub) {
                 $fieldTypeSource = null;
                 if ($subKey !== '' && isset($subFieldTypesMap[$subKey])) {
                     $fieldTypeSource = $subFieldTypesMap[$subKey];
@@ -437,8 +469,6 @@ try {
                         }
                     }
                 }
-            } else {
-                $hasFieldTypesForThisSub = true;
             }
             
             // If still no field types, preserve existing from database columns
@@ -453,6 +483,10 @@ try {
                                 $fieldTypeIds[] = $id;
                             }
                         }
+                    }
+                    // Also mark as having field types so junction table gets updated
+                    if (!empty($fieldTypeIds)) {
+                        $hasFieldTypesForThisSub = true;
                     }
                 }
             }
