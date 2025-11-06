@@ -12109,14 +12109,22 @@ function makePosts(){
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
+            const matchKey = safeField.fieldTypeKey || safeField.key;
+            console.log('Field dropdown matching:', {
+              name: safeField.name,
+              type: safeField.type,
+              key: safeField.key,
+              fieldTypeKey: safeField.fieldTypeKey,
+              matchKey: matchKey
+            });
             FORM_FIELD_TYPES.forEach(optionDef => {
               const option = document.createElement('option');
               option.value = optionDef.value;
               option.textContent = optionDef.label;
               // Match based on fieldTypeKey (or key) instead of HTML type
-              const matchKey = safeField.fieldTypeKey || safeField.key;
               if(optionDef.value === matchKey){
                 option.selected = true;
+                console.log('  Matched:', optionDef.value, '=', matchKey);
               }
               fieldTypeSelect.appendChild(option);
             });
@@ -12386,7 +12394,23 @@ function makePosts(){
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
               const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
-              safeField.type = nextValidType;
+              
+              // Update fieldTypeKey to match dropdown selection
+              safeField.fieldTypeKey = nextValidType;
+              safeField.key = nextValidType;
+              
+              // Find matching field type to get its properties
+              const matchingFieldType = FORM_FIELD_TYPES.find(opt => opt.value === nextValidType);
+              if(matchingFieldType){
+                // Update placeholder from field type
+                if(matchingFieldType.placeholder){
+                  safeField.placeholder = matchingFieldType.placeholder;
+                  fieldPlaceholderInput.value = matchingFieldType.placeholder;
+                }
+              }
+              
+              // Type stays as-is (HTML input type like 'text', 'textarea', etc.)
+              
               if(shouldAutofillName && nextLabel){
                 safeField.name = nextLabel;
                 fieldNameInput.value = nextLabel;
