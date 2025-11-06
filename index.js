@@ -8616,13 +8616,13 @@ function makePosts(){
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           }
-          // Ensure fieldTypeKey exists (prefer it over key for matching)
-          if(!safeField.fieldTypeKey && safeField.key){
-            safeField.fieldTypeKey = safeField.key;
-          }
-          // Set default fieldTypeKey for new fields
-          if(!safeField.fieldTypeKey || !FORM_FIELD_TYPES.some(opt => opt.value === safeField.fieldTypeKey)){
-            safeField.fieldTypeKey = 'text-box';
+          // Ensure fieldTypeKey exists - use key as fallback, or 'text-box' for new fields
+          if(!safeField.fieldTypeKey){
+            if(safeField.key){
+              safeField.fieldTypeKey = safeField.key;
+            } else if(!safeField.type){
+              safeField.fieldTypeKey = 'text-box';
+            }
           }
             if(!safeField.name){
               const typeLabel = getFormFieldTypeLabel(safeField.fieldTypeKey || safeField.key).trim();
