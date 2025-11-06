@@ -781,6 +781,11 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     $builtField['options'] = $field['options'];
                 }
                 
+                // DEBUG: Log for Live Gigs
+                if ($sub['name'] === 'Live Gigs') {
+                    error_log("DEBUG Live Gigs field_type #{$matchingFieldType['id']}: field_type_name='{$matchingFieldType['field_type_name']}', label='{$builtField['label']}'");
+                }
+                
                 $builtFields[] = $builtField;
             }
             // Otherwise → create ONE field object using field_type properties, with all items as children
