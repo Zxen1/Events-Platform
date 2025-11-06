@@ -8606,6 +8606,11 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
+            console.log('ensureFieldDefaults received:', {
+              name: safeField.name,
+              key: safeField.key,
+              fieldTypeKey: safeField.fieldTypeKey
+            });
             if(typeof safeField.name !== 'string'){
               safeField.name = '';
             } else if(!safeField.name.trim()){
@@ -12093,6 +12098,11 @@ function makePosts(){
           }
 
           const createFieldRow = (field)=>{
+            console.log('createFieldRow received field:', {
+              name: field?.name,
+              key: field?.key,
+              fieldTypeKey: field?.fieldTypeKey
+            });
             const safeField = ensureFieldDefaults(field);
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
@@ -12109,7 +12119,8 @@ function makePosts(){
 
             const fieldTypeSelect = document.createElement('select');
             fieldTypeSelect.className = 'field-type-select';
-            const matchKey = safeField.fieldTypeKey || safeField.key;
+            // Fallback: use type if key/fieldTypeKey are missing
+            const matchKey = safeField.fieldTypeKey || safeField.key || safeField.type;
             console.log('Field dropdown matching:', {
               name: safeField.name,
               type: safeField.type,
@@ -12121,7 +12132,7 @@ function makePosts(){
               const option = document.createElement('option');
               option.value = optionDef.value;
               option.textContent = optionDef.label;
-              // Match based on fieldTypeKey (or key) instead of HTML type
+              // Match based on fieldTypeKey, key, or type as fallback
               if(optionDef.value === matchKey){
                 option.selected = true;
                 console.log('  Matched:', optionDef.value, '=', matchKey);
