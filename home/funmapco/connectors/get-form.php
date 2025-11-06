@@ -542,6 +542,31 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     return $fieldTypes;
 }
 
+function fetchSubcategoryFieldTypes(PDO $pdo, int $subcategoryId): array
+{
+    $sql = 'SELECT field_type_id, sort_order, required 
+            FROM subcategory_field_types 
+            WHERE subcategory_id = :subcategory_id 
+            ORDER BY sort_order ASC';
+    
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['subcategory_id' => $subcategoryId]);
+        
+        $results = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $results[] = [
+                'field_type_id' => (int) $row['field_type_id'],
+                'sort_order' => (int) $row['sort_order'],
+                'required' => (bool) $row['required'],
+            ];
+        }
+        return $results;
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
@@ -710,17 +735,16 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
         ];
         $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
 
+        // Fetch field types from junction table
+        $subcategoryId = $sub['id'] ?? null;
+        $junctionData = [];
         $fieldTypeIds = [];
-        if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
-            foreach ($sub['field_type_ids'] as $value) {
-                if (is_int($value)) {
-                    $fieldTypeIds[] = $value;
-                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
-                    $fieldTypeIds[] = (int) $value;
-                }
+        if ($subcategoryId !== null) {
+            $junctionData = fetchSubcategoryFieldTypes($pdo, (int) $subcategoryId);
+            foreach ($junctionData as $item) {
+                $fieldTypeIds[] = $item['field_type_id'];
             }
         }
-        $fieldTypeIds = array_values(array_unique($fieldTypeIds));
 
         $fieldTypeNames = [];
         if (isset($sub['field_type_names']) && is_array($sub['field_type_names'])) {
@@ -737,7 +761,10 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
 
         // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
         $builtFields = [];
-        foreach ($fieldTypeIds as $fieldTypeId) {
+        foreach ($junctionData as $junctionItem) {
+            $fieldTypeId = $junctionItem['field_type_id'];
+            $requiredValue = $junctionItem['required'];
+            
             // Find the field_type by ID
             $matchingFieldType = null;
             foreach ($fieldTypes as $ft) {
@@ -774,7 +801,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'type' => $field['type'],
                     'name' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
-                    'required' => false,
+                    'required' => $requiredValue,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
                 ];
                 
@@ -792,7 +819,7 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                     'type' => $matchingFieldType['field_type_key'],
                     'name' => $matchingFieldType['field_type_name'],
                     'placeholder' => $matchingFieldType['placeholder'] ?? '',
-                    'required' => false,
+                    'required' => $requiredValue,
                     'fieldTypeKey' => $matchingFieldType['field_type_key'],
                     'fields' => [],
                 ];
