@@ -429,6 +429,7 @@ try {
                     
                     // Get field_type_id from the field's key or fieldTypeKey
                     $fieldTypeKey = $fieldData['fieldTypeKey'] ?? $fieldData['key'] ?? null;
+                    
                     if ($fieldTypeKey && is_string($fieldTypeKey)) {
                         // Look up field_type_id by key
                         foreach ($fieldTypeDefinitions as $ftId => $ftDef) {
@@ -553,32 +554,13 @@ try {
                 $metaIcon = sanitizeIcon($iconSource);
             }
 
-            // Get required field type IDs from payload or existing data
-            $requiredFieldTypeIds = [];
-            if (isset($subEntry['required']) && is_string($subEntry['required']) && $subEntry['required'] !== '') {
-                // Parse required CSV
-                $requiredParts = preg_split('/\s*,\s*/', trim($subEntry['required']));
-                if (is_array($requiredParts)) {
-                    foreach ($requiredParts as $part) {
-                        $id = filterPositiveInt(trim($part));
-                        if ($id !== null && in_array($id, $fieldTypeIds, true)) {
-                            $requiredFieldTypeIds[] = $id;
-                        }
-                    }
-                }
-            } elseif (isset($subcategoryRow['required']) && is_string($subcategoryRow['required']) && $subcategoryRow['required'] !== '') {
-                // Preserve existing required
-                $requiredParts = preg_split('/\s*,\s*/', trim($subcategoryRow['required']));
-                if (is_array($requiredParts)) {
-                    foreach ($requiredParts as $part) {
-                        $id = filterPositiveInt(trim($part));
-                        if ($id !== null) {
-                            $requiredFieldTypeIds[] = $id;
-                        }
-                    }
-                }
+            // Build required CSV in boolean format (1,0,1,0,0) aligned with field_type_id order
+            $requiredBooleans = [];
+            foreach ($fieldTypeIds as $fieldTypeId) {
+                $isRequired = in_array($fieldTypeId, $requiredFieldTypeIds, true);
+                $requiredBooleans[] = $isRequired ? '1' : '0';
             }
-            $requiredCsv = !empty($requiredFieldTypeIds) ? implode(',', array_unique($requiredFieldTypeIds)) : null;
+            $requiredCsv = !empty($requiredBooleans) ? implode(',', $requiredBooleans) : null;
 
             $updateParts = [];
             $params = [':id' => $subId];
@@ -650,38 +632,6 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $updated[] = $subId;
-            
-            // Update junction table: subcategory_field_types
-            error_log("DEBUG save-form: subId=$subId, subKey=$subKey, hasFieldTypesForThisSub=" . ($hasFieldTypesForThisSub ? 'true' : 'false') . ", fieldTypeIds=" . json_encode($fieldTypeIds) . ", requiredFieldTypeIds=" . json_encode($requiredFieldTypeIds));
-            if ($hasFieldTypesForThisSub && !empty($fieldTypeIds)) {
-                error_log("DEBUG save-form: Updating junction table for subcategory $subId");
-                // Delete existing entries for this subcategory
-                $deleteStmt = $pdo->prepare('DELETE FROM subcategory_field_types WHERE subcategory_id = :subcategory_id');
-                $deleteStmt->execute([':subcategory_id' => $subId]);
-                
-                // Insert new entries with sort order and required values
-                $insertStmt = $pdo->prepare('
-                    INSERT INTO subcategory_field_types 
-                    (subcategory_id, subcategory_key, field_type_id, field_type_key, sort_order, required) 
-                    VALUES (:subcategory_id, :subcategory_key, :field_type_id, :field_type_key, :sort_order, :required)
-                ');
-                
-                foreach ($fieldTypeIds as $sortIndex => $fieldTypeId) {
-                    $isRequired = in_array($fieldTypeId, $requiredFieldTypeIds, true);
-                    $fieldTypeKey = $fieldTypeDefinitions[$fieldTypeId]['key'] ?? null;
-                    
-                    error_log("DEBUG save-form: Inserting field_type_id=$fieldTypeId, sort_order=" . ($sortIndex + 1) . ", required=" . ($isRequired ? '1' : '0') . ", key=$fieldTypeKey");
-                    
-                    $insertStmt->execute([
-                        ':subcategory_id' => $subId,
-                        ':subcategory_key' => $subKey,
-                        ':field_type_id' => $fieldTypeId,
-                        ':field_type_key' => $fieldTypeKey,
-                        ':sort_order' => $sortIndex + 1,
-                        ':required' => $isRequired ? 1 : 0,
-                    ]);
-                }
-            }
 
             $subcategoriesById[$subId]['name'] = $subName;
             $subcategoriesById[$subId]['subcategory_name'] = $subName;

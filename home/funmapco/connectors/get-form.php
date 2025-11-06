@@ -542,31 +542,6 @@ function fetchFieldTypes(PDO $pdo, array $columns): array
     return $fieldTypes;
 }
 
-function fetchSubcategoryFieldTypes(PDO $pdo, int $subcategoryId): array
-{
-    $sql = 'SELECT field_type_id, sort_order, required 
-            FROM subcategory_field_types 
-            WHERE subcategory_id = :subcategory_id 
-            ORDER BY sort_order ASC';
-    
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['subcategory_id' => $subcategoryId]);
-        
-        $results = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $results[] = [
-                'field_type_id' => (int) $row['field_type_id'],
-                'sort_order' => (int) $row['sort_order'],
-                'required' => (bool) $row['required'],
-            ];
-        }
-        return $results;
-    } catch (PDOException $e) {
-        return [];
-    }
-}
-
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
@@ -735,14 +710,25 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         ];
         $categoriesMap[$categoryName]['subIds'][$sub['name']] = $sub['id'] ?? null;
 
-        // Fetch field types from junction table
-        $subcategoryId = $sub['id'] ?? null;
-        $junctionData = [];
+        // Get field_type_ids and required flags from CSV columns
         $fieldTypeIds = [];
-        if ($subcategoryId !== null) {
-            $junctionData = fetchSubcategoryFieldTypes($pdo, (int) $subcategoryId);
-            foreach ($junctionData as $item) {
-                $fieldTypeIds[] = $item['field_type_id'];
+        if (isset($sub['field_type_ids']) && is_array($sub['field_type_ids'])) {
+            foreach ($sub['field_type_ids'] as $value) {
+                if (is_int($value)) {
+                    $fieldTypeIds[] = $value;
+                } elseif (is_string($value) && preg_match('/^\d+$/', $value)) {
+                    $fieldTypeIds[] = (int) $value;
+                }
+            }
+        }
+        $fieldTypeIds = array_values(array_unique($fieldTypeIds));
+        
+        // Parse required CSV (format: "1,0,1,0,0" aligned with field_type_id positions)
+        $requiredFlags = [];
+        if (isset($sub['required']) && is_string($sub['required']) && $sub['required'] !== '') {
+            $requiredParts = preg_split('/\s*,\s*/', trim($sub['required']));
+            foreach ($requiredParts as $part) {
+                $requiredFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
             }
         }
 
@@ -761,9 +747,9 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
 
         // Build field objects by looking up field_types and extracting field/fieldset IDs from ENUMs
         $builtFields = [];
-        foreach ($junctionData as $junctionItem) {
-            $fieldTypeId = $junctionItem['field_type_id'];
-            $requiredValue = $junctionItem['required'];
+        foreach ($fieldTypeIds as $index => $fieldTypeId) {
+            // Get required flag for this field (default to false if not set)
+            $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
             
             // Find the field_type by ID
             $matchingFieldType = null;

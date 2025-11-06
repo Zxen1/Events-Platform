@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 07, 2025 at 08:15 AM
+-- Generation Time: Nov 07, 2025 at 09:11 AM
 -- Server version: 10.6.23-MariaDB
 -- PHP Version: 8.4.14
 
@@ -446,7 +446,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `field_type_id`, `field_type_name`, `required`, `sort_order`, `listing_type`, `listing_duration_days`, `allow_renewal`, `renewal_fee`, `auto_expire`, `icon_path`, `mapmarker_path`, `color_hex`, `created_at`, `updated_at`) VALUES
-(27, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', NULL, '1', 'session', 30, 1, 0.00, 1, 'assets/icons-20/whats-on-category-icon-blue-20.webp', 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-07 07:52:39'),
+(27, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '2,1,12,16,15', 'Description, Title, Images, Venue Ticketing, Checkout', NULL, '1', 'session', 30, 1, 0.00, 1, 'assets/icons-20/whats-on-category-icon-blue-20.webp', 'assets/icons-30/whats-on-category-icon-blue-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-07 08:48:37'),
 (28, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', NULL, '3', 'session', 30, 1, 0.00, 1, 'assets/icons-20/whats-on-category-icon-dark-yellow-20.webp', 'assets/icons-30/whats-on-category-icon-dark-yellow-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-06 13:49:47'),
 (29, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', NULL, '2', 'session', 30, 1, 0.00, 1, 'assets/icons-20/whats-on-category-icon-green-20.webp', 'assets/icons-30/whats-on-category-icon-green-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-07 07:52:39'),
 (30, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,16,15', 'Title, Description, Images, Venue Ticketing, Checkout', NULL, '4', 'session', 30, 1, 0.00, 1, 'assets/icons-20/whats-on-category-icon-indigo-20.webp', 'assets/icons-30/whats-on-category-icon-indigo-30.webp', '#E74C3C', '2025-10-29 23:32:47', '2025-11-06 13:49:54'),
@@ -470,126 +470,6 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (49, 5, 'For Hire', 'Performers', 'performers', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', NULL, '2', 'standard', 30, 1, 0.00, 1, 'assets/icons-20/For-hire-category-icon-blue-20.webp', 'assets/icons-30/For-hire-category-icon-blue-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-10-30 23:15:33'),
 (50, 5, 'For Hire', 'Staff', 'staff', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', NULL, '3', 'standard', 30, 1, 0.00, 1, 'assets/icons-20/For-hire-category-icon-dark-yellow-20.webp', 'assets/icons-30/For-hire-category-icon-dark-yellow-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-10-30 23:15:33'),
 (51, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,9,15', 'Title, Description, Images, Location, Checkout', NULL, '1', 'standard', 30, 1, 0.00, 1, 'assets/icons-20/For-hire-category-icon-green-20.webp', 'assets/icons-30/For-hire-category-icon-green-30.webp', '#9B59B6', '2025-10-29 23:32:47', '2025-11-06 12:26:37');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `subcategory_field_types`
---
-
-CREATE TABLE `subcategory_field_types` (
-  `id` int(11) NOT NULL,
-  `subcategory_id` int(11) NOT NULL,
-  `subcategory_key` varchar(100) DEFAULT NULL,
-  `field_type_id` int(11) NOT NULL,
-  `field_type_key` varchar(100) DEFAULT NULL,
-  `sort_order` int(11) NOT NULL DEFAULT 0,
-  `required` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `subcategory_field_types`
---
-
-INSERT INTO `subcategory_field_types` (`id`, `subcategory_id`, `subcategory_key`, `field_type_id`, `field_type_key`, `sort_order`, `required`, `created_at`, `updated_at`) VALUES
-(1, 27, 'live-gigs', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(2, 27, 'live-gigs', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(3, 27, 'live-gigs', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(4, 27, 'live-gigs', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(5, 27, 'live-gigs', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(6, 28, 'live-theatre', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(7, 28, 'live-theatre', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(8, 28, 'live-theatre', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(9, 28, 'live-theatre', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(10, 28, 'live-theatre', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(11, 29, 'screenings', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(12, 29, 'screenings', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(13, 29, 'screenings', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(14, 29, 'screenings', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(15, 29, 'screenings', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(16, 30, 'artwork', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(17, 30, 'artwork', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(18, 30, 'artwork', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(19, 30, 'artwork', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(20, 30, 'artwork', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(21, 31, 'live-sport', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(22, 31, 'live-sport', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(23, 31, 'live-sport', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(24, 31, 'live-sport', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(25, 31, 'live-sport', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(26, 32, 'venues', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(27, 32, 'venues', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(28, 32, 'venues', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(29, 32, 'venues', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(30, 32, 'venues', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(31, 33, 'other-events', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(32, 33, 'other-events', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(33, 33, 'other-events', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(34, 33, 'other-events', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(35, 33, 'other-events', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(36, 34, 'stage-auditions', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(37, 34, 'stage-auditions', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(38, 34, 'stage-auditions', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(39, 34, 'stage-auditions', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(40, 34, 'stage-auditions', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(41, 35, 'screen-auditions', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(42, 35, 'screen-auditions', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(43, 35, 'screen-auditions', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(44, 35, 'screen-auditions', 16, 'venue-ticketing', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(45, 35, 'screen-auditions', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(46, 41, 'tutors', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(47, 41, 'tutors', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(48, 41, 'tutors', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(49, 41, 'tutors', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(50, 41, 'tutors', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(51, 42, 'education-centres', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(52, 42, 'education-centres', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(53, 42, 'education-centres', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(54, 42, 'education-centres', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(55, 42, 'education-centres', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(56, 43, 'courses', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(57, 43, 'courses', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(58, 43, 'courses', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(59, 43, 'courses', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(60, 43, 'courses', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(61, 44, 'other-learning', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(62, 44, 'other-learning', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(63, 44, 'other-learning', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(64, 44, 'other-learning', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(65, 44, 'other-learning', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(66, 45, 'wanted', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(67, 45, 'wanted', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(68, 45, 'wanted', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(69, 45, 'wanted', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(70, 45, 'wanted', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(71, 46, 'for-sale', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(72, 46, 'for-sale', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(73, 46, 'for-sale', 14, 'variant-pricing', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(74, 46, 'for-sale', 12, 'images', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(75, 46, 'for-sale', 9, 'location', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(76, 46, 'for-sale', 15, 'checkout', 6, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(77, 47, 'freebies', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(78, 47, 'freebies', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(79, 47, 'freebies', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(80, 47, 'freebies', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(81, 47, 'freebies', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(82, 49, 'performers', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(83, 49, 'performers', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(84, 49, 'performers', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(85, 49, 'performers', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(86, 49, 'performers', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(87, 50, 'staff', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(88, 50, 'staff', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(89, 50, 'staff', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(90, 50, 'staff', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(91, 50, 'staff', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(92, 51, 'goods-and-services', 1, 'title', 1, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(93, 51, 'goods-and-services', 2, 'description', 2, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(94, 51, 'goods-and-services', 12, 'images', 3, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(95, 51, 'goods-and-services', 9, 'location', 4, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02'),
-(96, 51, 'goods-and-services', 15, 'checkout', 5, 0, '2025-11-06 20:40:17', '2025-11-06 21:12:02');
 
 -- --------------------------------------------------------
 
@@ -737,16 +617,6 @@ ALTER TABLE `subcategories`
   ADD KEY `category_id` (`category_id`);
 
 --
--- Indexes for table `subcategory_field_types`
---
-ALTER TABLE `subcategory_field_types`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_sub_field` (`subcategory_id`,`field_type_id`),
-  ADD KEY `idx_subcategory` (`subcategory_id`),
-  ADD KEY `idx_sort` (`subcategory_id`,`sort_order`),
-  ADD KEY `fk_sft_field_type` (`field_type_id`);
-
---
 -- Indexes for table `transactions`
 --
 ALTER TABLE `transactions`
@@ -861,27 +731,10 @@ ALTER TABLE `subcategories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
--- AUTO_INCREMENT for table `subcategory_field_types`
---
-ALTER TABLE `subcategory_field_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
-
---
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `subcategory_field_types`
---
-ALTER TABLE `subcategory_field_types`
-  ADD CONSTRAINT `fk_sft_field_type` FOREIGN KEY (`field_type_id`) REFERENCES `field_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_sft_subcategory` FOREIGN KEY (`subcategory_id`) REFERENCES `subcategories` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
