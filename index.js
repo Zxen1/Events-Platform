@@ -16144,12 +16144,9 @@ if (!map.__pillHooksInstalled) {
               enforceSmallMultiMapCardIcon(markerIcon, overlayRoot);
             } else {
               const markerSources = window.subcategoryMarkers || {};
-              const markerIds = window.subcategoryMarkerIds || {};
               const slugifyFn = typeof slugify === 'function' ? slugify : (window.slugify || (str => (str || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')));
               const markerIdCandidates = [];
               if(post && post.subcategory){
-                const mappedId = markerIds[post.subcategory];
-                if(mappedId) markerIdCandidates.push(mappedId);
                 markerIdCandidates.push(slugifyFn(post.subcategory));
               }
               const markerIconUrl = markerIdCandidates.map(id => (id && markerSources[id]) || null).find(Boolean) || '';
@@ -18043,7 +18040,7 @@ function openPostModal(id){
           const selectedIdx = selectedEntry.idx;
           const selectedLoc = selectedEntry.location;
           const center = [selectedLoc.lng, selectedLoc.lat];
-          const subId = subcategoryMarkerIds[p.subcategory] || slugify(p.subcategory);
+          const subId = slugify(p.subcategory);
           const markerUrl = subcategoryMarkers[subId];
 
           const assignDetailRef = ()=>{
