@@ -3434,11 +3434,6 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
 
     function normalizeCategoriesSnapshot(sourceCategories){
       const list = Array.isArray(sourceCategories) ? sourceCategories : [];
-      // DEBUG: Check if backend data has key/fieldTypeKey
-      const liveGigs = list.find(cat => cat?.subFields?.['Live Gigs']);
-      if (liveGigs?.subFields?.['Live Gigs']?.[0]) {
-        console.log('SNAPSHOT DATA - Live Gigs first field:', liveGigs.subFields['Live Gigs'][0]);
-      }
       const parseId = value => {
         if(typeof value === 'number' && Number.isInteger(value) && value >= 0){
           return value;
@@ -8611,14 +8606,6 @@ function makePosts(){
 
           const ensureFieldDefaults = (field)=>{
             const safeField = field && typeof field === 'object' ? field : {};
-            if(safeField.name === 'Title') {
-              console.log('ensureFieldDefaults RECEIVED Title field AT START:', {
-                hasKey: 'key' in safeField,
-                keyValue: safeField.key,
-                hasFieldTypeKey: 'fieldTypeKey' in safeField,
-                fieldTypeKeyValue: safeField.fieldTypeKey
-              });
-            }
             if(typeof safeField.name !== 'string'){
               safeField.name = '';
             } else if(!safeField.name.trim()){
@@ -8627,13 +8614,22 @@ function makePosts(){
           if(typeof safeField.type !== 'string'){
             safeField.type = '';
           }
-          // Ensure fieldTypeKey exists - use key as fallback, or 'text-box' for new fields
-          if(!safeField.fieldTypeKey){
-            if(safeField.key){
-              safeField.fieldTypeKey = safeField.key;
-            } else if(!safeField.type){
-              safeField.fieldTypeKey = 'text-box';
+          // Reconstruct key and fieldTypeKey from type and name
+          if(!safeField.key || !safeField.fieldTypeKey){
+            let inferredKey = safeField.type;
+            
+            // Special cases where type doesn't match the field type key
+            if(safeField.name === 'Title' && safeField.type === 'text'){
+              inferredKey = 'title';
+            } else if(safeField.name === 'Description' && safeField.type === 'textarea'){
+              inferredKey = 'description';
+            } else if(safeField.type === 'text' || safeField.type === 'textarea'){
+              // Generic text fields default to text-box
+              inferredKey = 'text-box';
             }
+            
+            if(!safeField.key) safeField.key = inferredKey;
+            if(!safeField.fieldTypeKey) safeField.fieldTypeKey = inferredKey;
           }
           // Only auto-name truly new fields
           if(!safeField.name){
@@ -8689,14 +8685,6 @@ function makePosts(){
             }
             if(safeField.type !== 'venue-ticketing'){
               resetVenueAutofillState(safeField);
-            }
-            if(safeField.name === 'Title') {
-              console.log('ensureFieldDefaults RETURNING Title field:', {
-                name: safeField.name,
-                key: safeField.key,
-                fieldTypeKey: safeField.fieldTypeKey,
-                type: safeField.type
-              });
             }
             return safeField;
           };
@@ -12590,14 +12578,6 @@ function makePosts(){
             };
           };
 
-          if(fields[0]?.name === 'Title') {
-            console.log('BEFORE createFieldRow - Title field from fields array:', {
-              hasKey: 'key' in fields[0],
-              keyValue: fields[0].key,
-              hasFieldTypeKey: 'fieldTypeKey' in fields[0],
-              fieldTypeKeyValue: fields[0].fieldTypeKey
-            });
-          }
           fields.forEach((existingField, fieldIndex) => {
             if(!existingField) return;
             const fieldRow = createFieldRow(existingField);
