@@ -765,50 +765,65 @@ function buildSnapshot(array $categories, array $subcategories, array $currencyO
                 }
             }
             
-            // Build field objects from the extracted IDs
-            foreach ($itemIds as $item) {
-                if ($item['type'] === 'field' && isset($fieldsById[$item['id']])) {
-                    $field = $fieldsById[$item['id']];
-                    $builtField = [
-                        'id' => $field['id'],
-                        'key' => $field['field_key'],
-                        'type' => $field['type'],
-                        'label' => ucwords(str_replace(['_', '-'], ' ', $field['field_key'])),
-                        'required' => false,
-                    ];
-                    
-                    if ($field['options'] !== null && $field['options'] !== '') {
-                        $builtField['options'] = $field['options'];
-                    }
-                    
-                    $builtFields[] = $builtField;
-                } elseif ($item['type'] === 'fieldset' && isset($fieldsetsById[$item['id']])) {
-                    $fieldset = $fieldsetsById[$item['id']];
-                    $builtField = [
-                        'id' => $matchingFieldType['id'] ?? $fieldset['id'],
-                        'key' => $matchingFieldType['field_type_key'] ?? $fieldset['fieldset_key'],
-                        'type' => $matchingFieldType['field_type_key'] ?? $fieldset['fieldset_key'],
-                        'label' => $matchingFieldType['field_type_name'] ?? ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
-                        'placeholder' => $matchingFieldType['placeholder'] ?? '',
-                        'required' => false,
-                        'fields' => [],
-                    ];
-                    
-                    // Add child fields from the fieldset
-                    foreach ($fieldset['field_ids'] as $childId) {
-                        if (isset($fieldsById[(int)$childId])) {
-                            $childField = $fieldsById[(int)$childId];
-                            $builtField['fields'][] = [
-                                'id' => $childField['id'],
-                                'key' => $childField['field_key'],
-                                'type' => $childField['type'],
-                                'label' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
-                            ];
-                        }
-                    }
-                    
-                    $builtFields[] = $builtField;
+            // If field_type has only ONE item and it's a field → use field's properties
+            if (count($itemIds) === 1 && $itemIds[0]['type'] === 'field' && isset($fieldsById[$itemIds[0]['id']])) {
+                $field = $fieldsById[$itemIds[0]['id']];
+                $builtField = [
+                    'id' => $field['id'],
+                    'key' => $field['field_key'],
+                    'type' => $field['type'],
+                    'label' => ucwords(str_replace(['_', '-'], ' ', $field['field_key'])),
+                    'required' => false,
+                ];
+                
+                if ($field['options'] !== null && $field['options'] !== '') {
+                    $builtField['options'] = $field['options'];
                 }
+                
+                $builtFields[] = $builtField;
+            }
+            // Otherwise → create ONE field object using field_type properties, with all items as children
+            else {
+                $builtField = [
+                    'id' => $matchingFieldType['id'],
+                    'key' => $matchingFieldType['field_type_key'],
+                    'type' => $matchingFieldType['field_type_key'],
+                    'label' => $matchingFieldType['field_type_name'],
+                    'placeholder' => $matchingFieldType['placeholder'] ?? '',
+                    'required' => false,
+                    'fields' => [],
+                ];
+                
+                // Add all fieldsets/fields as children
+                foreach ($itemIds as $item) {
+                    if ($item['type'] === 'fieldset' && isset($fieldsetsById[$item['id']])) {
+                        $fieldset = $fieldsetsById[$item['id']];
+                        $childFieldset = [
+                            'id' => $fieldset['id'],
+                            'key' => $fieldset['fieldset_key'],
+                            'type' => 'fieldset',
+                            'label' => ucwords(str_replace(['_', '-'], ' ', $fieldset['fieldset_key'])),
+                            'fields' => [],
+                        ];
+                        
+                        // Add fields within this fieldset
+                        foreach ($fieldset['field_ids'] as $childId) {
+                            if (isset($fieldsById[(int)$childId])) {
+                                $childField = $fieldsById[(int)$childId];
+                                $childFieldset['fields'][] = [
+                                    'id' => $childField['id'],
+                                    'key' => $childField['field_key'],
+                                    'type' => $childField['type'],
+                                    'label' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
+                                ];
+                            }
+                        }
+                        
+                        $builtField['fields'][] = $childFieldset;
+                    }
+                }
+                
+                $builtFields[] = $builtField;
             }
         }
         
