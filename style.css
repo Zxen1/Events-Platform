@@ -5667,9 +5667,9 @@ html, body { cursor: auto !important; }
             #tab-forms .category-form-menu{
               position: relative;
               margin-bottom:12px;
-              border:1px solid var(--border);
-              border-radius:12px;
-              background:rgba(0,0,0,0.35);
+              border:none;
+              border-radius:0;
+              background:transparent;
               overflow:visible;
               transition:border-color .2s,background .2s,opacity .2s;
             }
@@ -5749,12 +5749,12 @@ html, body { cursor: auto !important; }
               opacity:1;
             }
             #tab-forms .category-form-content{
-              border-top:1px solid var(--border);
-              padding:16px;
+              border-top:none;
+              padding:16px 0;
               display:flex;
               flex-direction:column;
               gap:16px;
-              background:rgba(0,0,0,0.25);
+              background:transparent;
             }
             #tab-forms .category-form-content[hidden]{
               display:none;
