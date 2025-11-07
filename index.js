@@ -8383,7 +8383,7 @@ function makePosts(){
         editPanel.style.right = '0';
         editPanel.style.top = 'calc(100% + 10px)';
         editPanel.style.zIndex = '100';
-        editMenu.append(editPanel);
+        header.append(editPanel);
         
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
