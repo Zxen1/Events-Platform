@@ -2544,6 +2544,8 @@ button[aria-expanded="true"] .results-arrow{
 }
 #tab-forms .formbuilder-container{
   position:relative;
+  background:none;
+  padding:0;
 }
 #filterPanel .filter-basics-container{
   position:relative;
