@@ -7809,6 +7809,8 @@ function makePosts(){
       content.style.top = '';
       content.style.left = '';
       content.style.width = '';
+      content.style.maxWidth = '';
+      content.style.maxHeight = '';
       overlay.classList.remove('visible');
       overlay.removeAttribute('data-active-label');
       content.removeAttribute('aria-label');
@@ -7881,8 +7883,8 @@ function makePosts(){
       subcategoryFieldOverlayTrigger = triggerButton || (triggerEl instanceof Element ? triggerEl : null);
       overlay.classList.add('visible');
       const alignOverlay = ()=>{
-        const buffer = 10;
-        const triggerNode = subcategoryFieldOverlayTrigger;
+        if(!overlay.classList.contains('visible')) return;
+        const buffer = 24;
         const scrollY = (typeof window !== 'undefined' && typeof window.pageYOffset === 'number')
           ? window.pageYOffset
           : (document.documentElement?.scrollTop || document.body?.scrollTop || 0);
@@ -7898,37 +7900,58 @@ function makePosts(){
         const contentRect = content.getBoundingClientRect();
         const contentHeight = contentRect?.height || 0;
         const contentWidth = contentRect?.width || 0;
-        let top = scrollY + buffer;
-        let left = scrollX + buffer;
-        if(triggerNode && typeof triggerNode.getBoundingClientRect === 'function'){
-          const triggerRect = triggerNode.getBoundingClientRect();
-          const minTop = scrollY + buffer;
-          let maxTop = scrollY + viewportHeight - contentHeight - buffer;
-          if(!Number.isFinite(maxTop) || maxTop < minTop){
-            maxTop = minTop;
+        const clamp = (value, min, max)=>{
+          const safeMin = Number.isFinite(min) ? min : value;
+          let safeMax = Number.isFinite(max) ? max : value;
+          if(safeMax < safeMin){
+            safeMax = safeMin;
           }
-          let preferredTop = scrollY + triggerRect.top - buffer - contentHeight;
-          if(preferredTop < minTop){
-            preferredTop = scrollY + triggerRect.bottom + buffer;
+          if(value < safeMin) return safeMin;
+          if(value > safeMax) return safeMax;
+          return value;
+        };
+        let referenceRect = null;
+        if(placeholder && typeof placeholder.getBoundingClientRect === 'function'){
+          const previewFields = placeholder.closest('.form-preview-fields');
+          if(previewFields && typeof previewFields.getBoundingClientRect === 'function'){
+            const previewRect = previewFields.getBoundingClientRect();
+            if(previewRect && (previewRect.width || previewRect.height)){
+              referenceRect = previewRect;
+            }
           }
-          if(preferredTop > maxTop){
-            preferredTop = Math.max(minTop, Math.min(preferredTop, maxTop));
+          if(!referenceRect){
+            const placeholderRect = placeholder.getBoundingClientRect();
+            if(placeholderRect && (placeholderRect.width || placeholderRect.height)){
+              referenceRect = placeholderRect;
+            }
           }
-          top = preferredTop;
-          const minLeft = scrollX + buffer;
-          let maxLeft = scrollX + viewportWidth - contentWidth - buffer;
-          if(!Number.isFinite(maxLeft) || maxLeft < minLeft){
-            maxLeft = minLeft;
-          }
-          let preferredLeft = scrollX + triggerRect.left;
-          if(preferredLeft > maxLeft){
-            preferredLeft = maxLeft;
-          }
-          if(preferredLeft < minLeft){
-            preferredLeft = minLeft;
-          }
-          left = preferredLeft;
         }
+        let top = scrollY + (viewportHeight - contentHeight) / 2;
+        let left = scrollX + (viewportWidth - contentWidth) / 2;
+        if(referenceRect){
+          top = scrollY + referenceRect.top + (referenceRect.height - contentHeight) / 2;
+          left = scrollX + referenceRect.left + (referenceRect.width - contentWidth) / 2;
+        }
+        const minTop = scrollY + buffer;
+        let maxTop = scrollY + viewportHeight - contentHeight - buffer;
+        if(!Number.isFinite(maxTop) || maxTop < minTop){
+          maxTop = minTop;
+        }
+        const minLeft = scrollX + buffer;
+        let maxLeft = scrollX + viewportWidth - contentWidth - buffer;
+        if(!Number.isFinite(maxLeft) || maxLeft < minLeft){
+          maxLeft = minLeft;
+        }
+        const maxContentWidth = viewportWidth > buffer * 2 ? (viewportWidth - buffer * 2) : viewportWidth;
+        const maxContentHeight = viewportHeight > buffer * 2 ? (viewportHeight - buffer * 2) : viewportHeight;
+        if(Number.isFinite(maxContentWidth) && maxContentWidth > 0){
+          content.style.maxWidth = Math.round(maxContentWidth) + 'px';
+        }
+        if(Number.isFinite(maxContentHeight) && maxContentHeight > 0){
+          content.style.maxHeight = Math.round(maxContentHeight) + 'px';
+        }
+        top = clamp(top, minTop, maxTop);
+        left = clamp(left, minLeft, maxLeft);
         content.style.top = Math.round(top) + 'px';
         content.style.left = Math.round(left) + 'px';
       };
