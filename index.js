@@ -1445,7 +1445,7 @@ async function ensureMapboxCssFor(container) {
     const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
     const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
     const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
-    const categoryNameLines = [];
+    const labelLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
     const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
     if(line1){
@@ -3673,11 +3673,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         let value = typeof option.value === 'string' ? option.value.trim() : '';
-        let label = typeof option.label === 'string' ? option.categoryName.trim() : '';
+        let label = typeof option.label === 'string' ? option.label.trim() : '';
         if(!value){
           return;
         }
-        if(!categoryName){
+        if(!label){
           label = value;
         }
         if(seenValues.has(value)){
@@ -6434,8 +6434,8 @@ function makePosts(){
         }
         const existing = markerLabelCompositeStore.get(spriteId) || {};
         const iconId = props.sub || props.baseSub || '';
-        const categoryNameLine1 = props.labelLine1 || '';
-        const categoryNameLine2 = props.labelLine2 || '';
+        const labelLine1 = props.labelLine1 || '';
+        const labelLine2 = props.labelLine2 || '';
         const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
         const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
         const isHighlighted = (() => {
@@ -6924,7 +6924,7 @@ function makePosts(){
       }
       try{
         const venueName = getPrimaryVenueName(p) || p.city;
-        const categoryNameLines = getMarkerLabelLines(p);
+        const labelLines = getMarkerLabelLines(p);
         const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
           ? labelLines.cardTitleLines.slice(0, 2)
           : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
@@ -6937,11 +6937,11 @@ function makePosts(){
           .join('');
         const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
         const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
-        const categoryNameClasses = ['map-card-label'];
+        const labelClasses = ['map-card-label'];
         if(!hasSecondTitleLine){
           labelClasses.push('map-card-label--single-line');
         }
-        const categoryNameHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
+        const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
         const classes = ['big-map-card'];
         const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
         const variant = opts.variant || 'popup';
@@ -8025,7 +8025,7 @@ function makePosts(){
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
         const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : (()=>{});
-        const categoryName = typeof opts.label === 'string' && opts.categoryName.trim() ? opts.categoryName.trim() : 'Choose Icon';
+        const label = typeof opts.label === 'string' && opts.label.trim() ? opts.label.trim() : 'Choose Icon';
         const parentMenu = opts.parentMenu || null;
         const parentCategoryMenu = opts.parentCategoryMenu || null;
         let popup = null;
@@ -15821,10 +15821,10 @@ if (!map.__pillHooksInstalled) {
         if(!post || !entry) return null;
         const key = entry.key || '';
         const baseSub = slugify(post.subcategory);
-        const categoryNameLines = getMarkerLabelLines(post);
+        const labelLines = getMarkerLabelLines(post);
         const combinedLabel = buildMarkerLabelText(post, labelLines);
         const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
-        const categoryNameSpriteId = hashString(spriteSource);
+        const labelSpriteId = hashString(spriteSource);
         const featureId = key
           ? `post:${post.id}::${key}::${entry.index}`
           : `post:${post.id}::${entry.index}`;
@@ -15877,7 +15877,7 @@ if (!map.__pillHooksInstalled) {
         const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
         const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
-        const categoryNameSpriteId = hashString(spriteSource);
+        const labelSpriteId = hashString(spriteSource);
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
@@ -16217,7 +16217,7 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const categoryNameLines = isMultiVenue ? null : getMarkerLabelLines(post);
+            const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
             const venueDisplayName = (()=>{
               if(resolvedVenueKey){
                 const candidates = uniqueVenuePosts.length ? uniqueVenuePosts : (post ? [post] : []);
@@ -16259,7 +16259,7 @@ if (!map.__pillHooksInstalled) {
               }
             }
 
-            markerContainer.append(markerPill, markerIcon, markercategoryName);
+            markerContainer.append(markerPill, markerIcon, markerLabel);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
