@@ -3379,7 +3379,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, categoryName)=>{
+      const pushOption = (value, label)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3388,7 +3388,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         if(seen.has(dedupeKey)){
           return;
         }
-        const trimmedLabel = typeof label === 'string' ? categoryName.trim() : '';
+        const trimmedLabel = typeof label === 'string' ? label.trim() : '';
         normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
         seen.add(dedupeKey);
       };
@@ -3410,14 +3410,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!value){
             return;
           }
-          const categoryName = typeof item.name === 'string' && item.name.trim()
+          const label = typeof item.name === 'string' && item.name.trim()
               ? item.name.trim()
               : typeof item.field_type_name === 'string' && item.field_type_name.trim()
                 ? item.field_type_name.trim()
                 : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                   ? item.fieldTypeName.trim()
                   : '';
-          pushOption(value, categoryName);
+          pushOption(value, label);
           return;
         }
         if(typeof item === 'string'){
@@ -6041,8 +6041,8 @@ function makePosts(){
 
     const deterministicOffset = (label, axis)=>{
       let hash = 0;
-      for(let i = 0; i < categoryName.length; i++){
-        const charCode = categoryName.charCodeAt(i);
+      for(let i = 0; i < label.length; i++){
+        const charCode = label.charCodeAt(i);
         hash = (hash * 33 + charCode + (axis + 1) * 131) & 0xffffffff;
       }
       const normalized = ((hash % 2001) / 2000) - 0.5;
@@ -6058,7 +6058,7 @@ function makePosts(){
         if(!cityName) return;
         const base = cityLookup[cityName];
         if(!base) return;
-        const categoryName = `${spec.region}:${cityName}`;
+        const label = `${spec.region}:${cityName}`;
         let lng = normalizeLongitude(base.lng + deterministicOffset(label, 0));
         let lat = clampLatitude(base.lat + deterministicOffset(label, 1));
         let key = toVenueCoordKey(lng, lat);
@@ -7990,7 +7990,7 @@ function makePosts(){
     const refreshFormbuilderSubcategoryLogos = ()=>{
       if(!formbuilderCats) return;
       formbuilderCats.querySelectorAll('.subcategory-form-menu').forEach(menu=>{
-        const logoSpan = menu.querySelector('.subcategory-icon');
+        const logoSpan = menu.querySelector('.subcategory-logo');
         if(!logoSpan) return;
         const subName = menu.dataset.subcategory || '';
         const iconLookup = lookupIconPath(subcategoryIconPaths, null, subName);
@@ -8126,7 +8126,7 @@ function makePosts(){
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
           popup.setAttribute('role', 'dialog');
-          popup.setAttribute('aria-label', categoryName);
+          popup.setAttribute('aria-label', label);
           popup.tabIndex = -1;
           popup.style.position = 'absolute';
           const grid = document.createElement('div');
@@ -8228,8 +8228,8 @@ function makePosts(){
         menuBtn.setAttribute('aria-expanded','false');
         menuBtn.setAttribute('aria-controls', contentId);
 
-        const categoryIcon = document.createElement('span');
-        categoryIcon.className = 'category-icon';
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className = 'category-logo';
         const categoryIconHtml = categoryIcons[c.name] || '';
         const categoryIconLookup = lookupIconPath(categoryIconPaths, c.id, c.name);
         const initialCategoryIconSrc = categoryIconLookup.found
@@ -8248,18 +8248,18 @@ function makePosts(){
           img.width = 20;
           img.height = 20;
           img.alt = '';
-          categoryIcon.appendChild(img);
-          categoryIcon.classList.add('has-icon');
+          categoryLogo.appendChild(img);
+          categoryLogo.classList.add('has-icon');
         } else if(categoryIconHtml){
-          categoryIcon.innerHTML = categoryIconHtml;
-          categoryIcon.classList.add('has-icon');
+          categoryLogo.innerHTML = categoryIconHtml;
+          categoryLogo.classList.add('has-icon');
         } else {
-          categoryIcon.textContent = c.name.charAt(0) || '';
+          categoryLogo.textContent = c.name.charAt(0) || '';
         }
 
-        const categoryName = document.createElement('span');
-        categoryName.className = 'category-name';
-        categoryName.textContent = c.name;
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = c.name;
 
         const arrow = document.createElement('span');
         arrow.className = 'dropdown-arrow';
@@ -8368,7 +8368,7 @@ function makePosts(){
         const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
         const updateCategoryIconDisplay = (src)=>{
           const displayName = getCategoryDisplayName();
-          categoryIcon.innerHTML = '';
+          categoryLogo.innerHTML = '';
           const normalizedSrc = applyNormalizeIconPath(src);
           if(normalizedSrc){
             const img = document.createElement('img');
@@ -8376,13 +8376,13 @@ function makePosts(){
             img.width = 20;
             img.height = 20;
             img.alt = '';
-            categoryIcon.appendChild(img);
-            categoryIcon.classList.add('has-icon');
+            categoryLogo.appendChild(img);
+            categoryLogo.classList.add('has-icon');
             categoryIcons[currentCategoryName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, normalizedSrc);
           } else {
-            categoryIcon.textContent = displayName.charAt(0) || '';
-            categoryIcon.classList.remove('has-icon');
+            categoryLogo.textContent = displayName.charAt(0) || '';
+            categoryLogo.classList.remove('has-icon');
             delete categoryIcons[currentCategoryName];
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, '');
           }
@@ -8421,7 +8421,7 @@ function makePosts(){
             categories[sourceIndex].name = datasetValue;
           }
           menu.dataset.category = datasetValue;
-          categoryName.textContent = displayName;
+          label.textContent = displayName;
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
           iconPickerButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
           previewImg.alt = `${displayName} icon preview`;
@@ -8430,8 +8430,8 @@ function makePosts(){
           subMenusContainer.querySelectorAll('.subcategory-form-menu').forEach(subEl=>{
             subEl.dataset.category = datasetValue;
           });
-          if(categoryIcon.querySelector('img')){
-            categoryIcon.classList.add('has-icon');
+          if(categoryLogo.querySelector('img')){
+            categoryLogo.classList.add('has-icon');
           } else {
             updateCategoryIconDisplay('');
           }
@@ -8483,11 +8483,11 @@ function makePosts(){
           subBtn.setAttribute('aria-expanded','false');
           subBtn.setAttribute('aria-controls', subContentId);
 
-          const subNameWrap = document.createElement('span');
+          const subLabelWrap = document.createElement('span');
           subLabelWrap.className = 'subcategory-label-wrap';
 
-          const subIcon = document.createElement('span');
-          subIcon.className = 'subcategory-icon';
+          const subLogo = document.createElement('span');
+          subLogo.className = 'subcategory-logo';
           const subIconHtml = subcategoryIcons[sub] || '';
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
@@ -8503,23 +8503,23 @@ function makePosts(){
             img.width = 20;
             img.height = 20;
             img.alt = '';
-            subIcon.appendChild(img);
-            subIcon.classList.add('has-icon');
+            subLogo.appendChild(img);
+            subLogo.classList.add('has-icon');
             if(!subIconLookup.found){
               writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, applyNormalizeIconPath(initialSubIconPath));
             }
           } else if(subIconHtml){
-            subIcon.innerHTML = subIconHtml;
-            subIcon.classList.add('has-icon');
+            subLogo.innerHTML = subIconHtml;
+            subLogo.classList.add('has-icon');
           } else {
-            subIcon.textContent = sub.charAt(0) || '';
+            subLogo.textContent = sub.charAt(0) || '';
           }
 
-          const subName = document.createElement('span');
-          subName.className = 'subcategory-name';
-          subName.textContent = sub;
+          const subLabel = document.createElement('span');
+          subLabel.className = 'subcategory-label';
+          subLabel.textContent = sub;
 
-          subLabelWrap.append(subLogo, subcategoryName);
+          subLabelWrap.append(subLogo, subLabel);
 
           const subArrow = document.createElement('span');
           subArrow.className = 'dropdown-arrow';
@@ -8956,7 +8956,7 @@ function makePosts(){
               const dateLabel = formatSessionDate(session && session.date);
               const override = typeof overrideTime === 'string' ? overrideTime.trim() : '';
               const timeLabel = override || getSessionPrimaryTime(session);
-              if(dateLabel && timecategoryName){
+              if(dateLabel && timeLabel){
                 return `${dateLabel} ${timeLabel}`;
               }
               return dateLabel || timeLabel;
@@ -9648,7 +9648,7 @@ function makePosts(){
               btn.type = 'button';
               btn.className = 'tiny';
               btn.textContent = symbol;
-              btn.setAttribute('aria-label', ariacategoryName);
+              btn.setAttribute('aria-label', ariaLabel);
               btn.addEventListener('click', event => {
                 event.preventDefault();
                 onClick();
@@ -10258,7 +10258,7 @@ function makePosts(){
                     if(optionLabel && optionLabel !== option.value){
                       option.label = optionLabel;
                       option.textContent = optionLabel;
-                    } else if(optioncategoryName){
+                    } else if(optionLabel){
                       option.textContent = optionLabel;
                     }
                     option.dataset.featureKey = key;
@@ -10858,7 +10858,7 @@ function makePosts(){
                           }
                           notifyFormbuilderChange();
                         });
-                        versionCard.appendChild(seatingcategoryName);
+                        versionCard.appendChild(seatingLabel);
                         versionCard.appendChild(versionInput);
 
                         const versionActions = document.createElement('div');
@@ -10900,7 +10900,7 @@ function makePosts(){
                           tierInput.dataset.timeIndex = String(timeIndex);
                           tierInput.dataset.versionIndex = String(versionIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
-                          tierRow.appendChild(tiercategoryName);
+                          tierRow.appendChild(tierLabel);
                           tierInput.addEventListener('input', ()=>{
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
@@ -11221,7 +11221,7 @@ function makePosts(){
                       const samePricingLabel = document.createElement('span');
                       samePricingLabel.className = 'same-pricing-label';
                       samePricingLabel.textContent = 'Same Pricing as Above';
-                      samePricingRow.appendChild(samePricingcategoryName);
+                      samePricingRow.appendChild(samePricingLabel);
 
                       const samePricingOptions = document.createElement('div');
                       samePricingOptions.className = 'same-pricing-options';
@@ -11241,7 +11241,7 @@ function makePosts(){
                           handleSamePricingSelection(true);
                         }
                       });
-                      samePricingOptions.appendChild(yescategoryName);
+                      samePricingOptions.appendChild(yesLabel);
 
                       const noLabel = document.createElement('label');
                       samePricingNoInput = document.createElement('input');
@@ -11257,7 +11257,7 @@ function makePosts(){
                           handleSamePricingSelection(false);
                         }
                       });
-                      samePricingOptions.appendChild(nocategoryName);
+                      samePricingOptions.appendChild(noLabel);
 
                       samePricingRow.appendChild(samePricingOptions);
                       timeRow.appendChild(samePricingRow);
@@ -11338,14 +11338,14 @@ function makePosts(){
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-preview-field';
               const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
-              const categoryNameText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const categoryNameButton = document.createElement('button');
+              const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              const labelButton = document.createElement('button');
               labelButton.type = 'button';
               labelButton.className = 'subcategory-form-button';
               labelButton.textContent = labelText;
               labelButton.setAttribute('aria-haspopup', 'dialog');
               labelButton.dataset.previewIndex = String(previewIndex);
-              const categoryNameId = `${baseId}-label`;
+              const labelId = `${baseId}-label`;
               labelButton.id = labelId;
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
@@ -11408,7 +11408,7 @@ function makePosts(){
                     const radioText = document.createElement('span');
                     radioText.textContent = displayValue;
                     radioLabel.append(radio, radioText);
-                    radioGroup.appendChild(radiocategoryName);
+                    radioGroup.appendChild(radioLabel);
                   });
                 } else {
                   const placeholderOption = document.createElement('label');
@@ -12199,7 +12199,7 @@ function makePosts(){
               }
             });
 
-            fieldRequiredOptions.append(requiredYesLabel, requiredNocategoryName);
+            fieldRequiredOptions.append(requiredYesLabel, requiredNoLabel);
             fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredOptions);
 
             const dropdownOptionsContainer = document.createElement('div');
@@ -12394,7 +12394,7 @@ function makePosts(){
               const nextType = fieldTypeSelect.value;
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
-              const shouldAutofillName = !currentName || (previousLabel && currentName === previouscategoryName);
+              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
               
               // Update fieldTypeKey to match dropdown selection
               safeField.fieldTypeKey = nextValidType;
@@ -12412,7 +12412,7 @@ function makePosts(){
               safeField.type = nextValidType;
               }
               
-              if(shouldAutofillName && nextcategoryName){
+              if(shouldAutofillName && nextLabel){
                 safeField.name = nextLabel;
                 fieldNameInput.value = nextLabel;
                 updateDeleteFieldAria();
@@ -12615,7 +12615,7 @@ function makePosts(){
           const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
             const updateSubIconDisplay = (src)=>{
               const displayName = getSubDisplayName();
-              subIcon.innerHTML = '';
+              subLogo.innerHTML = '';
               const normalizedSrc = applyNormalizeIconPath(src);
               if(normalizedSrc){
                 const img = document.createElement('img');
@@ -12623,13 +12623,13 @@ function makePosts(){
                 img.width = 20;
                 img.height = 20;
                 img.alt = '';
-                subIcon.appendChild(img);
-                subIcon.classList.add('has-icon');
+                subLogo.appendChild(img);
+                subLogo.classList.add('has-icon');
                 subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
               } else {
-                subIcon.textContent = displayName.charAt(0) || '';
-                subIcon.classList.remove('has-icon');
+                subLogo.textContent = displayName.charAt(0) || '';
+                subLogo.classList.remove('has-icon');
                 delete subcategoryIcons[currentSubName];
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
               }
@@ -12654,7 +12654,7 @@ function makePosts(){
             const previousSubId = currentSubId;
             const displayName = getSubDisplayName();
             const datasetValue = displayName;
-            subName.textContent = displayName;
+            subLabel.textContent = displayName;
             subMenu.dataset.subcategory = datasetValue;
             subBtn.dataset.subcategory = datasetValue;
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
@@ -12665,11 +12665,11 @@ function makePosts(){
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
             formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
-            if(!subIcon.querySelector('img')){
-              subIcon.textContent = displayName.charAt(0) || '';
-              subIcon.classList.remove('has-icon');
+            if(!subLogo.querySelector('img')){
+              subLogo.textContent = displayName.charAt(0) || '';
+              subLogo.classList.remove('has-icon');
             } else {
-              subIcon.classList.add('has-icon');
+              subLogo.classList.add('has-icon');
             }
             if(previousSubName !== datasetValue){
               const updateSubNameInList = (list, primaryIndex)=>{
@@ -13159,19 +13159,19 @@ function makePosts(){
         const menuId = `filter-category-menu-${slugify(c.name)}`;
         menuBtn.setAttribute('aria-controls', menuId);
 
-        const categoryIcon = document.createElement('span');
-        categoryIcon.className='category-logo';
+        const categoryLogo = document.createElement('span');
+        categoryLogo.className='category-logo';
         const categoryIconHtml = categoryIcons[c.name] || '';
         if(categoryIconHtml){
-          categoryIcon.innerHTML = categoryIconHtml;
-          categoryIcon.classList.add('has-icon');
+          categoryLogo.innerHTML = categoryIconHtml;
+          categoryLogo.classList.add('has-icon');
         } else {
-          categoryIcon.textContent = c.name.charAt(0) || '';
+          categoryLogo.textContent = c.name.charAt(0) || '';
         }
 
-        const categoryName = document.createElement('span');
-        categoryName.className='label';
-        categoryName.textContent=c.name;
+        const label = document.createElement('span');
+        label.className='label';
+        label.textContent=c.name;
 
         const arrow = document.createElement('span');
         arrow.className='dropdown-arrow';
@@ -13215,9 +13215,9 @@ function makePosts(){
             subBtn.classList.add('on');
           }
           subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
-          const subName = subBtn.querySelector('.subcategory-label');
-          if(subcategoryName){
-            subName.textContent = s;
+          const subLabel = subBtn.querySelector('.subcategory-label');
+          if(subLabel){
+            subLabel.textContent = s;
           }
           subBtn.addEventListener('click',()=>{
             if(!input.checked) return;
@@ -13301,26 +13301,26 @@ function makePosts(){
             });
           },
           refreshLogos: ()=>{
-            if(categoryIcon){
+            if(categoryLogo){
               const catIconHtml = categoryIcons[c.name] || '';
               if(catIconHtml){
-                categoryIcon.innerHTML = catIconHtml;
-                categoryIcon.classList.add('has-icon');
+                categoryLogo.innerHTML = catIconHtml;
+                categoryLogo.classList.add('has-icon');
               } else {
-                categoryIcon.textContent = c.name.charAt(0) || '';
-                categoryIcon.classList.remove('has-icon');
+                categoryLogo.textContent = c.name.charAt(0) || '';
+                categoryLogo.classList.remove('has-icon');
               }
             }
             subButtons.forEach(btn=>{
-              const logoSpan = btn.querySelector('.subcategory-icon');
+              const logoSpan = btn.querySelector('.subcategory-logo');
               if(!logoSpan) return;
               const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
               if(iconHtml){
                 logoSpan.innerHTML = iconHtml;
                 logoSpan.classList.add('has-icon');
               } else {
-                const categoryName = btn.dataset.subcategory || '';
-                logoSpan.textContent = categoryName.charAt(0) || '';
+                const label = btn.dataset.subcategory || '';
+                logoSpan.textContent = label.charAt(0) || '';
                 logoSpan.classList.remove('has-icon');
               }
             });
@@ -16001,7 +16001,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      const categoryNameLayersConfig = [
+      const labelLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
@@ -16303,7 +16303,7 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const categoryNameEl = document.createElement('div');
+            const labelEl = document.createElement('div');
             labelEl.className = 'map-card-label';
             const titleWrap = document.createElement('div');
             titleWrap.className = 'map-card-title';
@@ -16910,7 +16910,7 @@ if (!map.__pillHooksInstalled) {
         const p = getPostByIdAnywhere(v.id);
         if(!p) continue;
         if(!v.lastOpened) v.lastOpened = Date.now();
-        const categoryNameEl = document.createElement('div');
+        const labelEl = document.createElement('div');
         labelEl.className = 'last-opened-label';
         labelEl.textContent = formatLastOpened(v.lastOpened);
         recentsBoard.appendChild(labelEl);
