@@ -1107,17 +1107,23 @@ button[aria-expanded="true"] .results-arrow{
 .panel-body::-webkit-scrollbar-corner{
   background: transparent;
 }
+#adminPanel .panel-body{
+  overflow-y: scroll !important;
+}
 #adminPanel .panel-body::-webkit-scrollbar{
-  width: 12px;
+  width: 14px !important;
+}
+#adminPanel .panel-body::-webkit-scrollbar-track{
+  background: rgba(0,0,0,0.3) !important;
 }
 #adminPanel .panel-body::-webkit-scrollbar-thumb{
-  background-color: rgba(180,180,180,1);
-  border-radius: 6px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background-color: rgba(180,180,180,1) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(0,0,0,0.2) !important;
+  background-clip: padding-box !important;
 }
 #adminPanel .panel-body::-webkit-scrollbar-thumb:hover{
-  background-color: rgba(200,200,200,1);
+  background-color: rgba(220,220,220,1) !important;
 }
 .panel-body > *{
   width:100%;
