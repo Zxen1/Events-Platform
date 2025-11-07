@@ -21901,9 +21901,10 @@ document.addEventListener('pointerdown', (e) => {
         return;
       }
       
-      // Find the formbuilder's rendered preview for this subcategory and clone it
+      // Find the formbuilder's rendered preview for this subcategory and clone it EXACTLY
       const formbuilderPreview = document.querySelector(`[data-subcategory="${subcategoryName}"] .form-preview-fields`);
       
+      if(!formFields) return;
       formFields.innerHTML = '';
       currentCreateFields = [];
       
@@ -21914,26 +21915,37 @@ document.addEventListener('pointerdown', (e) => {
         formFields.appendChild(placeholder);
       } else {
         memberSnapshotErrorMessage = '';
-        // Clone each field from formbuilder preview
-        Array.from(formbuilderPreview.children).forEach((fieldEl, index) => {
+        // Clone ENTIRE formbuilder preview (pixel-perfect)
+        Array.from(formbuilderPreview.children).forEach((fieldEl) => {
           const clonedField = fieldEl.cloneNode(true);
           
-          // Make inputs editable
-          clonedField.querySelectorAll('[readonly]').forEach(el => el.readOnly = false);
-          clonedField.querySelectorAll('[tabindex="-1"]').forEach(el => el.removeAttribute('tabindex'));
-          clonedField.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
-          clonedField.querySelectorAll('button').forEach(btn => btn.remove()); // Remove formbuilder buttons
+          // Make ALL inputs/selects/textareas editable
+          clonedField.querySelectorAll('input, textarea, select').forEach(el => {
+            el.readOnly = false;
+            el.removeAttribute('tabindex');
+            el.disabled = false;
+          });
+          
+          // Remove the label button click handler (keep it as plain label)
+          clonedField.querySelectorAll('.subcategory-form-button').forEach(btn => {
+            const span = document.createElement('label');
+            span.className = 'subcategory-form-label';
+            span.textContent = btn.textContent;
+            if(btn.id) span.id = btn.id;
+            btn.parentNode.replaceChild(span, btn);
+          });
           
           formFields.appendChild(clonedField);
           currentCreateFields.push({ field: {}, element: clonedField });
         });
       }
       
+      // Show form, hide everything else
       if(emptyState) emptyState.hidden = true;
       if(formWrapper) formWrapper.hidden = false;
-      if(checkoutContainer) checkoutContainer.hidden = false;
+      // Hide checkout/PayPal garbage
+      if(checkoutContainer) checkoutContainer.hidden = true;
       if(postButton) postButton.disabled = false;
-      updatePaypalContainer(false);
     }
 
     async function handleMemberCreatePost(event){
