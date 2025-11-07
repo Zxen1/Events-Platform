@@ -8387,11 +8387,15 @@ function makePosts(){
         
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
+          document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+            if(panel !== editPanel) panel.hidden = true;
+          });
           editPanel.hidden = !editPanel.hidden;
         });
         
         document.addEventListener('click', (e)=>{
-          if(!editPanel.hidden && !editPanel.contains(e.target) && !editBtn.contains(e.target)){
+          const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
+          if(!editPanel.hidden && !editPanel.contains(e.target) && !clickedEditBtn){
             editPanel.hidden = true;
           }
         });
@@ -12779,11 +12783,15 @@ function makePosts(){
           
           subEditBtn.addEventListener('click', (e)=>{
             e.stopPropagation();
+            document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
+              if(panel !== subEditPanel) panel.hidden = true;
+            });
             subEditPanel.hidden = !subEditPanel.hidden;
           });
           
           document.addEventListener('click', (e)=>{
-            if(!subEditPanel.hidden && !subEditPanel.contains(e.target) && !subEditBtn.contains(e.target)){
+            const clickedEditBtn = e.target.closest('.category-edit-btn, .subcategory-edit-btn');
+            if(!subEditPanel.hidden && !subEditPanel.contains(e.target) && !clickedEditBtn){
               subEditPanel.hidden = true;
             }
           });
