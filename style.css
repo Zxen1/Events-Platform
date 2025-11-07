@@ -2089,10 +2089,6 @@ button[aria-expanded="true"] .results-arrow{
   min-width:140px;
 }
 #tab-forms .panel-field{max-width:none;}
-#adminPanel #tab-forms{
-  padding-right:10px;
-  margin-right:0;
-}
 .history-group,
 .color-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .option-label{
