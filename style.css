@@ -1068,7 +1068,6 @@ button[aria-expanded="true"] .results-arrow{
   flex:1 1 auto;
   min-height:0;
   overflow-y:auto;
-  overflow-y:overlay;
   overflow-x:hidden;
   padding:20px 10px;
   --panel-scrollbar-overlay: 0px;
