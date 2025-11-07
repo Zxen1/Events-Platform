@@ -8271,7 +8271,7 @@ function makePosts(){
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.className = 'category-edit-btn';
-        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+        editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
         editBtn.setAttribute('aria-label', `Edit ${c.name} category`);
         
         const toggle = document.createElement('label');
@@ -8580,7 +8580,7 @@ function makePosts(){
           const subEditBtn = document.createElement('button');
           subEditBtn.type = 'button';
           subEditBtn.className = 'subcategory-edit-btn';
-          subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.5 1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 13a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></svg>';
+          subEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
           subEditBtn.setAttribute('aria-label', `Edit ${sub} subcategory`);
           
           const subToggle = document.createElement('label');
@@ -12187,6 +12187,46 @@ function makePosts(){
             const row = document.createElement('div');
             row.className = 'subcategory-field-row';
 
+            const header = document.createElement('div');
+            header.className = 'field-row-header';
+            header.style.position = 'relative';
+
+            const summary = document.createElement('div');
+            summary.className = 'field-row-summary';
+
+            const summaryLabel = document.createElement('span');
+            summaryLabel.className = 'field-summary-label';
+
+            const summaryRequired = document.createElement('span');
+            summaryRequired.className = 'field-summary-required';
+
+            summary.append(summaryLabel, summaryRequired);
+            header.append(summary);
+
+            const fieldEditBtn = document.createElement('button');
+            fieldEditBtn.type = 'button';
+            fieldEditBtn.className = 'field-edit-btn';
+            fieldEditBtn.setAttribute('aria-haspopup', 'true');
+            fieldEditBtn.setAttribute('aria-expanded', 'false');
+            fieldEditBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/><path d="M2.5 12.5V14h1.5l9-9-1.5-1.5-9 9z"/></svg>';
+            header.append(fieldEditBtn);
+
+            const editPanel = document.createElement('div');
+            editPanel.className = 'field-edit-panel';
+            editPanel.hidden = true;
+            editPanel.style.position = 'absolute';
+            editPanel.style.right = '0';
+            editPanel.style.top = 'calc(100% + 10px)';
+            editPanel.style.zIndex = '100';
+
+            const editMenu = document.createElement('div');
+            editMenu.className = 'field-edit-menu';
+            editPanel.append(editMenu);
+            header.append(editPanel);
+
+            row.append(header);
+            row._header = header;
+
             const inlineControls = document.createElement('div');
             inlineControls.className = 'field-inline-controls';
 
@@ -12214,7 +12254,7 @@ function makePosts(){
 
             const fieldRequiredLabel = document.createElement('span');
             fieldRequiredLabel.className = 'field-required-label';
-            fieldRequiredLabel.textContent = 'Required:';
+            fieldRequiredLabel.textContent = 'Required';
 
             const fieldRequiredToggle = document.createElement('label');
             fieldRequiredToggle.className = 'switch field-required-switch';
@@ -12226,19 +12266,91 @@ function makePosts(){
             fieldRequiredSlider.className = 'slider';
             fieldRequiredToggle.append(fieldRequiredInput, fieldRequiredSlider);
 
+            const fieldRequiredRow = document.createElement('div');
+            fieldRequiredRow.className = 'field-required-row';
+            fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredToggle);
+
+            inlineControls.append(fieldTypeWrapper, fieldRequiredRow);
+            editMenu.append(inlineControls);
+
+            const updateFieldSummary = ()=>{
+              const typeKey = safeField.fieldTypeKey || safeField.key || safeField.type || '';
+              const typeLabelRaw = getFormFieldTypeLabel(typeKey).trim();
+              const typeLabel = typeLabelRaw || (typeof typeKey === 'string' && typeKey.trim() ? typeKey.trim() : 'Field');
+              summaryLabel.textContent = typeLabel || 'Field';
+              const isRequired = !!safeField.required;
+              summaryRequired.textContent = isRequired ? 'Required' : 'Optional';
+              summaryRequired.classList.toggle('is-required', isRequired);
+              fieldEditBtn.setAttribute('aria-label', `Edit ${typeLabel || 'field'} settings`);
+            };
+
+            const closeEditPanel = ()=>{
+              if(editPanel.hidden) return;
+              editPanel.hidden = true;
+              fieldEditBtn.setAttribute('aria-expanded', 'false');
+              row.classList.remove('field-edit-open');
+            };
+
+            const handleDocumentClick = event => {
+              if(!row.isConnected){
+                document.removeEventListener('click', handleDocumentClick);
+                return;
+              }
+              const clickedEditBtn = event.target.closest('.category-edit-btn, .subcategory-edit-btn, .field-edit-btn');
+              if(clickedEditBtn === fieldEditBtn) return;
+              if(!editPanel.hidden && !editPanel.contains(event.target)){
+                closeEditPanel();
+              }
+            };
+
+            document.addEventListener('click', handleDocumentClick);
+
             const updateRequiredState = (nextRequired)=>{
               const next = !!nextRequired;
               if(next === safeField.required) return;
               safeField.required = next;
               notifyFormbuilderChange();
               renderFormPreview();
+              updateFieldSummary();
             };
 
             fieldRequiredInput.addEventListener('change', ()=>{
               updateRequiredState(fieldRequiredInput.checked);
             });
 
-            inlineControls.append(fieldTypeWrapper, fieldRequiredLabel, fieldRequiredToggle);
+            fieldEditBtn.addEventListener('click', event=>{
+              event.stopPropagation();
+              document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel, .field-edit-panel').forEach(panel => {
+                if(panel !== editPanel){
+                  panel.hidden = true;
+                  if(panel.classList && panel.classList.contains('field-edit-panel')){
+                    const panelRow = panel.closest('.subcategory-field-row');
+                    if(panelRow){
+                      panelRow.classList.remove('field-edit-open');
+                    }
+                  }
+                }
+              });
+              document.querySelectorAll('.field-edit-btn[aria-expanded="true"]').forEach(btn => {
+                if(btn !== fieldEditBtn){
+                  btn.setAttribute('aria-expanded', 'false');
+                }
+              });
+              if(editPanel.hidden){
+                editPanel.hidden = false;
+                fieldEditBtn.setAttribute('aria-expanded', 'true');
+                row.classList.add('field-edit-open');
+                requestAnimationFrame(()=>{
+                  try{
+                    fieldTypeSelect.focus({ preventScroll: true });
+                  }catch(err){
+                    try{ fieldTypeSelect.focus(); }catch(e){}
+                  }
+                });
+              } else {
+                closeEditPanel();
+              }
+            });
 
             const dropdownOptionsContainer = document.createElement('div');
             dropdownOptionsContainer.className = 'dropdown-options-editor';
@@ -12437,12 +12549,15 @@ function makePosts(){
               notifyFormbuilderChange();
               updateFieldEditorsByType();
               renderFormPreview();
+              updateFieldSummary();
             });
 
             const handleDeleteField = async ()=>{
               const fieldDisplayName = (typeof safeField.name === 'string' && safeField.name.trim()) ? safeField.name.trim() : 'field';
               const confirmed = await confirmFormbuilderDeletion(`Delete the "${fieldDisplayName}" field?`, 'Delete Field');
               if(!confirmed) return;
+              closeEditPanel();
+              document.removeEventListener('click', handleDocumentClick);
               const idx = fields.indexOf(safeField);
               if(idx !== -1){
                 fields.splice(idx, 1);
@@ -12532,13 +12647,14 @@ function makePosts(){
                 } else {
                   if(typeof safeField.location.address !== 'string') safeField.location.address = '';
                   if(typeof safeField.location.latitude !== 'string') safeField.location.latitude = '';
-                  if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
+                if(typeof safeField.location.longitude !== 'string') safeField.location.longitude = '';
                 }
               }
+              updateFieldSummary();
             };
 
             updateFieldEditorsByType();
-            row.append(inlineControls, dropdownOptionsContainer);
+            row.append(dropdownOptionsContainer);
             row.__fieldRef = safeField;
             safeField.__rowEl = row;
             return {
