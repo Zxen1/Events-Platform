@@ -19672,6 +19672,35 @@ const adminPanelChangeManager = (()=>{
     }
   }
 
+  function stateEquals(a, b){
+    const keys = new Set([
+      ...Object.keys(a || {}),
+      ...Object.keys(b || {})
+    ]);
+    for(const key of keys){
+      const aVal = a[key];
+      const bVal = b[key];
+      // Handle arrays (for multi-select)
+      if(Array.isArray(aVal) && Array.isArray(bVal)){
+        if(aVal.length !== bVal.length) return false;
+        for(let i = 0; i < aVal.length; i++){
+          if(aVal[i] !== bVal[i]) return false;
+        }
+        continue;
+      }
+      if(Array.isArray(aVal) || Array.isArray(bVal)) return false;
+      if(aVal !== bVal) return false;
+    }
+    return true;
+  }
+
+  function updateDirty(){
+    if(applying) return;
+    ensureElements();
+    const current = serializeState();
+    setDirty(!stateEquals(current, savedState));
+  }
+
   function refreshSavedState({ skipManagerSave } = {}){
     if(!form) return;
     savedState = serializeState();
@@ -19905,7 +19934,7 @@ const adminPanelChangeManager = (()=>{
 
   function formChanged(){
     if(applying) return;
-    setDirty(true);
+    updateDirty();
   }
 
   function attachListeners(){
