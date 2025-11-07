@@ -6845,13 +6845,14 @@ html, body { cursor: auto !important; }
               display:inline-flex;
               align-items:center;
               gap:4px;
-              width:fit-content;
+              width:100%;
+              justify-content:flex-start;
               cursor:pointer;
             }
             #tab-forms .form-preview-field-header{
               display:flex;
               align-items:center;
-              justify-content:space-between;
+              justify-content:flex-start;
               gap:12px;
               margin-bottom:8px;
             }
@@ -6861,6 +6862,7 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-field-header .delete-field-btn{
               flex:0 0 auto;
+              margin-left:auto;
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
