@@ -1089,17 +1089,17 @@ button[aria-expanded="true"] .results-arrow{
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 .panel-body::-webkit-scrollbar{
-  width: var(--panel-scrollbar-size);
+  width: 12px;
 }
 .panel-body::-webkit-scrollbar-track{
   background: transparent;
 }
 .panel-body::-webkit-scrollbar-thumb{
-  background: var(--panel-scrollbar-thumb);
+  background: rgba(255,255,255,0.5);
   border-radius: 6px;
 }
 .panel-body::-webkit-scrollbar-thumb:hover{
-  background: var(--panel-scrollbar-thumb-hover);
+  background: rgba(255,255,255,0.7);
 }
 .panel-body::-webkit-scrollbar-corner{
   background: transparent;
