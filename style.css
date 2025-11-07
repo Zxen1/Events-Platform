@@ -2781,7 +2781,7 @@ button[aria-expanded="true"] .results-arrow{
   margin: 0;
 }
 
-.filter-category-menu .category-logo{
+.filter-category-menu .category-icon{
   flex:0 0 24px;
   width:24px;
   height:24px;
@@ -2790,12 +2790,12 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:center;
 }
 
-.filter-category-menu .category-logo img{
+.filter-category-menu .category-icon img{
   width:24px;
   height:24px;
 }
 
-.filter-category-menu .filter-category-trigger .label{
+.filter-category-menu .filter-category-trigger .category-name{
   font-weight:700;
   letter-spacing:.2px;
   flex:1;
@@ -2877,7 +2877,7 @@ button[aria-expanded="true"] .results-arrow{
   padding:0 12px;
 }
 
-.filter-category-menu .options-menu button .subcategory-logo{
+.filter-category-menu .options-menu button .subcategory-icon{
   flex:0 0 24px;
   width:24px;
   height:24px;
@@ -2886,12 +2886,12 @@ button[aria-expanded="true"] .results-arrow{
   justify-content:center;
 }
 
-.filter-category-menu .options-menu button .subcategory-logo img{
+.filter-category-menu .options-menu button .subcategory-icon img{
   width:20px;
   height:20px;
 }
 
-.filter-category-menu .options-menu button .subcategory-label{
+.filter-category-menu .options-menu button .subcategory-name{
   flex:1;
   text-align:left;
 }
@@ -2929,13 +2929,13 @@ button[aria-expanded="true"] .results-arrow{
 .filter-category-menu .options-menu button[aria-pressed="false"]{
   color:var(--muted);
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-icon{
   opacity:0.6;
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-icon img{
   filter:grayscale(1);
 }
-.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-label{
+.filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-name{
   color:inherit;
 }
 .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .track{
@@ -6712,12 +6712,12 @@ html, body { cursor: auto !important; }
               gap:10px;
               cursor:pointer;
             }
-            #tab-forms .subcategory-label-wrap{
+            #tab-forms .subcategory-name-wrap{
               display:flex;
               align-items:center;
               gap:8px;
             }
-            #tab-forms .subcategory-logo{
+            #tab-forms .subcategory-icon{
               width:28px;
               height:28px;
               border-radius:50%;
@@ -6729,14 +6729,14 @@ html, body { cursor: auto !important; }
               text-transform:uppercase;
               font-size:12px;
             }
-            #tab-forms .subcategory-logo svg{
+            #tab-forms .subcategory-icon svg{
               width:20px;
               height:20px;
             }
-            #tab-forms .subcategory-logo.has-icon{
+            #tab-forms .subcategory-icon.has-icon{
               background:transparent;
             }
-            #tab-forms .subcategory-logo.has-icon svg{
+            #tab-forms .subcategory-icon.has-icon svg{
               width:24px;
               height:24px;
             }
@@ -6967,388 +6967,168 @@ html, body { cursor: auto !important; }
             }
             #tab-forms .form-preview-image-previews{
               display:grid;
-              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-              gap:8px;
-            }
-            #tab-forms .form-preview-image-thumb{
-              position:relative;
-              padding-top:100%;
-              border-radius:8px;
-              overflow:hidden;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.25);
-              cursor:grab;
-            }
-            #tab-forms .form-preview-image-thumb.is-dragging{
-              opacity:0.7;
-              cursor:grabbing;
-            }
-            #tab-forms .form-preview-image-remove,
-            .form-preview-image-remove{
-              position:absolute;
-              top:4px;
-              right:4px;
-              width:35px;
-              height:35px;
-              border-radius:10px;
-              border:none;
-              background:rgba(0,0,0,0.75);
-              color:#fff;
-              font-size:16px;
-              line-height:1;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              cursor:pointer;
-              transition:background-color .2s ease;
-              z-index:1;
-            }
-            #tab-forms .form-preview-image-remove:hover,
-            .form-preview-image-remove:hover{
-              background:rgba(255,77,77,0.85);
-            }
-            .form-preview-image-remove span{
-              pointer-events:none;
-            }
-            #tab-forms .form-preview-image-thumb img{
-              position:absolute;
-              inset:0;
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            }
-            #memberPanel .member-create-fields{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .form-preview-field{
-              background:rgba(0,0,0,0.25);
-              padding:12px;
-              border-radius:10px;
-              border:none;
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-preview-field label{
-              font-weight:600;
-            }
-            #memberPanel .member-create-fields .form-preview-field input,
-            #memberPanel .member-create-fields .form-preview-field select,
-            #memberPanel .member-create-fields .form-preview-field textarea{
-              border:1px solid var(--border);
-              border-radius:8px;
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              box-sizing:border-box;
-              width:100%;
-            }
-            #memberPanel .member-create-fields .form-preview-field textarea{
-              resize:vertical;
-              min-height:120px;
-              padding:8px 12px;
-            }
-            #memberPanel .member-create-fields .form-preview-field select{
-              appearance:none;
-              height:36px;
-              padding:0 12px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown{
-              position:relative;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown::after{
-              content:'';
-              position:absolute;
-              top:50%;
-              right:18px;
-              width:8px;
-              height:8px;
-              border:2px solid var(--button-text);
-              border-top:0;
-              border-left:0;
-              transform:translateY(-50%) rotate(45deg);
-              pointer-events:none;
-            }
-            #memberPanel .member-create-fields .form-preview-field--dropdown .form-preview-select{
-              padding-right:40px;
-            }
-            #memberPanel .member-create-fields .form-preview-radio-group{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-              align-items:flex-start;
-            }
-            #memberPanel .member-create-fields .form-preview-field--location .location-field-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .location-field-coordinates{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .form-preview-radio-option{
-              display:flex;
-              align-items:center;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--url .form-preview-url-wrapper{
-              display:flex;
-              flex-direction:column;
-              gap:6px;
-            }
-            #memberPanel .member-create-fields .form-preview-field--images .form-preview-images{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-preview-image-previews{
-              display:grid;
-              grid-template-columns:repeat(auto-fill, minmax(64px, 1fr));
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .form-preview-image-thumb{
-              position:relative;
-              padding-top:100%;
-              border-radius:8px;
-              overflow:hidden;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.25);
-            }
-            #memberPanel .member-create-fields .form-preview-image-thumb img{
-              position:absolute;
-              inset:0;
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            }
-            #memberPanel .member-create-fields .form-preview-variant-pricing{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-options-list{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option{
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-row--bottom{
-              flex-direction:row;
-              align-items:center;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .variant-pricing-option-actions{
-              display:flex;
-              justify-content:flex-end;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .venue-session-editor{
-              display:flex;
-              flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-session-venues{
-              display:flex;
-              flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-card{
-              border:none;
-              border-radius:10px;
-              background:rgba(0,0,0,0.2);
-              padding:16px;
-              display:flex;
-              flex-direction:column;
-              gap:16px;
-            }
-            #memberPanel .member-create-fields .venue-line{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-              gap:12px;
-              align-items:center;
-            }
-            #memberPanel .member-create-fields .venue-line-actions,
-            #memberPanel .member-create-fields .session-date-actions,
-            #memberPanel .member-create-fields .session-time-actions,
-            #memberPanel .member-create-fields .version-actions,
-            #memberPanel .member-create-fields .tier-actions{
-              display:flex;
-              justify-content:flex-end;
-              gap:8px;
-              flex-wrap:wrap;
-            }
-            #memberPanel .member-create-fields .session-pricing-card-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-pricing-card{
-              border:none;
-              border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:12px;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-time-list{
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .session-time-row{
-              border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:12px;
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-time-input-wrapper{
-              display:flex;
-              align-items:center;
-              justify-content:space-between;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .session-version-list{
-              display:flex;
-              flex-direction:column;
-              gap:12px;
-            }
-            #memberPanel .member-create-fields .version-entry-card{
-              border-radius:8px;
-              background:rgba(0,0,0,0.2);
-              padding:12px;
-              display:flex;
-              flex-direction:column;
-              gap:10px;
-            }
-            #memberPanel .member-create-fields .tier-list{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #memberPanel .member-create-fields .tier-row{
-              display:grid;
-              grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
-              gap:8px;
-              align-items:center;
-            }
-            #memberPanel .member-create-fields .tier-row input,
-            #memberPanel .member-create-fields .tier-row select{
-              width:100%;
-            }
-            #tab-forms .form-preview-field--variant-pricing .form-preview-variant-pricing{
-              display:flex;
-              flex-direction:column;
-              gap:8px;
-            }
-            #tab-forms .form-preview-variant-pricing-item{
-              border:1px solid var(--border);
-              border-radius:8px;
-              padding:10px 12px;
-              background:rgba(0,0,0,0.25);
-              display:flex;
-              flex-direction:column;
-              gap:4px;
-            }
-            #tab-forms .form-preview-variant-pricing-name{
-              font-weight:600;
-            }
-            #tab-forms .form-preview-variant-pricing-price{
-              font-size:14px;
-              color:rgba(255,255,255,0.85);
-            }
-            #tab-forms .form-preview-field .required-asterisk,
-            .required-asterisk{
-              color:#ff4d4d;
-              font-weight:700;
-            }
-            .subcategory-field-overlay{
-              position:absolute;
-              top:0;
-              left:0;
-              display:none;
-              background:transparent;
-              z-index:200000;
-              pointer-events:none;
-            }
-            .subcategory-field-overlay.visible{
-              display:block;
-            }
-            .subcategory-field-overlay-content{
-              position:absolute;
-              outline:none;
-              max-height:none;
-              overflow:visible;
-              pointer-events:auto;
-              background:#000;
-              border-radius:8px;
-              padding:10px;
-              box-sizing:border-box;
-            }
-            .subcategory-field-overlay-content > .subcategory-field-row{
-              margin:0;
-              width:100%;
-            }
-            .subcategory-field-placeholder{
-              display:none !important;
-            }
-            #tab-forms .form-preview-container .panel-field select:disabled{
-              opacity:1;
-            }
-            #tab-forms .subcategory-form-content[hidden]{
-              display:none;
-            }
-            #tab-forms .subcategory-name-input{
-              width:260px;
-              max-width:100%;
-              height:36px;
-              border-radius:8px;
-              border:1px solid var(--border);
-              background:rgba(0,0,0,0.35);
-              color:var(--button-text);
-              padding:0 12px;
-            }
-            #tab-forms .subcategory-form-placeholder{
-              margin:0;
-              font-size:14px;
-              color:var(--muted);
-            }
-            #tab-forms .add-subcategory-btn{
-              padding:0 16px;
-            }
-            #tab-forms .subcategory-drop-anchor{
-              width:100%;
-              height:0;
-              margin:0;
-              padding:0;
-              pointer-events:none;
-              visibility:hidden;
-              display:none;
-            }
- 
- 
 
 
+/* ============================================
+   FORMBUILDER 2 - Compact styling
+   ============================================ */
 
+#tab-forms2 .formbuilder-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto 0;
+  background: #444444;
+  border-radius: 8px;
+  padding: 10px;
+}
 
+#tab-forms2 .cats {
+  width: 100%;
+}
 
+#tab-forms2 .category-form-menu {
+  width: 100%;
+}
 
+#tab-forms2 .options-dropdown {
+  flex: 1;
+  width: 100%;
+}
+
+#tab-forms2 .category-trigger {
+  height: 36px;
+  border-radius: 8px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: var(--button-text);
+  font: inherit;
+  margin: 0;
+}
+
+#tab-forms2 .category-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#tab-forms2 .category-icon img {
+  width: 24px;
+  height: 24px;
+}
+
+#tab-forms2 .category-trigger .category-name {
+  font-weight: 700;
+  letter-spacing: .2px;
+  flex: 1;
+}
+
+#tab-forms2 .cat-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 38px;
+  height: 36px;
+  flex: 0 0 38px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+#tab-forms2 .cat-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+#tab-forms2 .cat-switch .slider {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 38px;
+  height: 20px;
+  border-radius: 16px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  transition: .2s;
+}
+
+#tab-forms2 .cat-switch .slider:before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 1px;
+  top: 1px;
+  border-radius: 50%;
+  background: var(--button-text);
+  transition: .2s;
+}
+
+#tab-forms2 .cat-switch input:checked + .slider {
+  background: var(--category-switch-active);
+  border-color: var(--category-switch-active);
+}
+
+#tab-forms2 .cat-switch input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+#tab-forms2 .category-form-content {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+
+#tab-forms2 .category-form-content[hidden] {
+  display: none;
+}
+
+#tab-forms2 .subcategory-form-menus {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#tab-forms2 .subcategory-form-menu {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  padding: 0 12px;
+}
+
+#tab-forms2 .subcategory-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#tab-forms2 .subcategory-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+#tab-forms2 .subcategory-name {
+  flex: 1;
+  text-align: left;
+}
 

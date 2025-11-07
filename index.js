@@ -1445,7 +1445,7 @@ async function ensureMapboxCssFor(container) {
     const scaledCanvasWidth = Math.max(1, Math.round(canvasWidth * deviceScale));
     const scaledCanvasHeight = Math.max(1, Math.round(canvasHeight * deviceScale));
     const scaledPixelRatio = (Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1) * deviceScale;
-    const labelLines = [];
+    const categoryNameLines = [];
     const line1 = (meta && meta.labelLine1 ? meta.labelLine1 : '').trim();
     const line2 = (meta && meta.labelLine2 ? meta.labelLine2 : '').trim();
     if(line1){
@@ -3379,7 +3379,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           : [];
       const normalized = [];
       const seen = new Set();
-      const pushOption = (value, label)=>{
+      const pushOption = (value, categoryName)=>{
         const trimmedValue = typeof value === 'string' ? value.trim() : '';
         if(!trimmedValue){
           return;
@@ -3388,7 +3388,7 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
         if(seen.has(dedupeKey)){
           return;
         }
-        const trimmedLabel = typeof label === 'string' ? label.trim() : '';
+        const trimmedLabel = typeof label === 'string' ? categoryName.trim() : '';
         normalized.push({ value: trimmedValue, label: trimmedLabel || trimmedValue });
         seen.add(dedupeKey);
       };
@@ -3410,14 +3410,14 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           if(!value){
             return;
           }
-          const label = typeof item.name === 'string' && item.name.trim()
+          const categoryName = typeof item.name === 'string' && item.name.trim()
               ? item.name.trim()
               : typeof item.field_type_name === 'string' && item.field_type_name.trim()
                 ? item.field_type_name.trim()
                 : typeof item.fieldTypeName === 'string' && item.fieldTypeName.trim()
                   ? item.fieldTypeName.trim()
                   : '';
-          pushOption(value, label);
+          pushOption(value, categoryName);
           return;
         }
         if(typeof item === 'string'){
@@ -3673,11 +3673,11 @@ function mulberry32(a){ return function(){var t=a+=0x6D2B79F5; t=Math.imul(t^t>>
           return;
         }
         let value = typeof option.value === 'string' ? option.value.trim() : '';
-        let label = typeof option.label === 'string' ? option.label.trim() : '';
+        let label = typeof option.label === 'string' ? option.categoryName.trim() : '';
         if(!value){
           return;
         }
-        if(!label){
+        if(!categoryName){
           label = value;
         }
         if(seenValues.has(value)){
@@ -6041,8 +6041,8 @@ function makePosts(){
 
     const deterministicOffset = (label, axis)=>{
       let hash = 0;
-      for(let i = 0; i < label.length; i++){
-        const charCode = label.charCodeAt(i);
+      for(let i = 0; i < categoryName.length; i++){
+        const charCode = categoryName.charCodeAt(i);
         hash = (hash * 33 + charCode + (axis + 1) * 131) & 0xffffffff;
       }
       const normalized = ((hash % 2001) / 2000) - 0.5;
@@ -6058,7 +6058,7 @@ function makePosts(){
         if(!cityName) return;
         const base = cityLookup[cityName];
         if(!base) return;
-        const label = `${spec.region}:${cityName}`;
+        const categoryName = `${spec.region}:${cityName}`;
         let lng = normalizeLongitude(base.lng + deterministicOffset(label, 0));
         let lat = clampLatitude(base.lat + deterministicOffset(label, 1));
         let key = toVenueCoordKey(lng, lat);
@@ -6434,8 +6434,8 @@ function makePosts(){
         }
         const existing = markerLabelCompositeStore.get(spriteId) || {};
         const iconId = props.sub || props.baseSub || '';
-        const labelLine1 = props.labelLine1 || '';
-        const labelLine2 = props.labelLine2 || '';
+        const categoryNameLine1 = props.labelLine1 || '';
+        const categoryNameLine2 = props.labelLine2 || '';
         const multiIds = Array.isArray(props.multiPostIds) ? props.multiPostIds : [];
         const isMulti = Boolean(props.isMultiVenue || (props.multiCount && Number(props.multiCount) > 1) || multiIds.length > 1);
         const isHighlighted = (() => {
@@ -6924,7 +6924,7 @@ function makePosts(){
       }
       try{
         const venueName = getPrimaryVenueName(p) || p.city;
-        const labelLines = getMarkerLabelLines(p);
+        const categoryNameLines = getMarkerLabelLines(p);
         const cardTitleLines = Array.isArray(labelLines.cardTitleLines) && labelLines.cardTitleLines.length
           ? labelLines.cardTitleLines.slice(0, 2)
           : [labelLines.line1, labelLines.line2].filter(Boolean).slice(0, 2);
@@ -6937,11 +6937,11 @@ function makePosts(){
           .join('');
         const venueLine = labelLines.venueLine || shortenMarkerLabelText(venueName, mapCardTitleWidthPx);
         const venueHtml = venueLine ? `<div class="map-card-venue">${venueLine}</div>` : '';
-        const labelClasses = ['map-card-label'];
+        const categoryNameClasses = ['map-card-label'];
         if(!hasSecondTitleLine){
           labelClasses.push('map-card-label--single-line');
         }
-        const labelHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
+        const categoryNameHtml = `<div class="${labelClasses.join(' ')}"><div class="map-card-title">${titleHtml}</div>${venueHtml}</div>`;
         const classes = ['big-map-card'];
         const extraClasses = Array.isArray(opts.extraClasses) ? opts.extraClasses : (opts.extraClass ? [opts.extraClass] : []);
         const variant = opts.variant || 'popup';
@@ -7990,7 +7990,7 @@ function makePosts(){
     const refreshFormbuilderSubcategoryLogos = ()=>{
       if(!formbuilderCats) return;
       formbuilderCats.querySelectorAll('.subcategory-form-menu').forEach(menu=>{
-        const logoSpan = menu.querySelector('.subcategory-logo');
+        const logoSpan = menu.querySelector('.subcategory-icon');
         if(!logoSpan) return;
         const subName = menu.dataset.subcategory || '';
         const iconLookup = lookupIconPath(subcategoryIconPaths, null, subName);
@@ -8025,7 +8025,7 @@ function makePosts(){
         const opts = options || {};
         const getCurrentPath = typeof opts.getCurrentPath === 'function' ? opts.getCurrentPath : (()=> '');
         const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : (()=>{});
-        const label = typeof opts.label === 'string' && opts.label.trim() ? opts.label.trim() : 'Choose Icon';
+        const categoryName = typeof opts.label === 'string' && opts.categoryName.trim() ? opts.categoryName.trim() : 'Choose Icon';
         const parentMenu = opts.parentMenu || null;
         const parentCategoryMenu = opts.parentCategoryMenu || null;
         let popup = null;
@@ -8126,7 +8126,7 @@ function makePosts(){
           popup = document.createElement('div');
           popup.className = 'icon-picker-popup';
           popup.setAttribute('role', 'dialog');
-          popup.setAttribute('aria-label', label);
+          popup.setAttribute('aria-label', categoryName);
           popup.tabIndex = -1;
           popup.style.position = 'absolute';
           const grid = document.createElement('div');
@@ -8228,8 +8228,8 @@ function makePosts(){
         menuBtn.setAttribute('aria-expanded','false');
         menuBtn.setAttribute('aria-controls', contentId);
 
-        const categoryLogo = document.createElement('span');
-        categoryLogo.className = 'category-logo';
+        const categoryIcon = document.createElement('span');
+        categoryIcon.className = 'category-icon';
         const categoryIconHtml = categoryIcons[c.name] || '';
         const categoryIconLookup = lookupIconPath(categoryIconPaths, c.id, c.name);
         const initialCategoryIconSrc = categoryIconLookup.found
@@ -8248,18 +8248,18 @@ function makePosts(){
           img.width = 20;
           img.height = 20;
           img.alt = '';
-          categoryLogo.appendChild(img);
-          categoryLogo.classList.add('has-icon');
+          categoryIcon.appendChild(img);
+          categoryIcon.classList.add('has-icon');
         } else if(categoryIconHtml){
-          categoryLogo.innerHTML = categoryIconHtml;
-          categoryLogo.classList.add('has-icon');
+          categoryIcon.innerHTML = categoryIconHtml;
+          categoryIcon.classList.add('has-icon');
         } else {
-          categoryLogo.textContent = c.name.charAt(0) || '';
+          categoryIcon.textContent = c.name.charAt(0) || '';
         }
 
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.textContent = c.name;
+        const categoryName = document.createElement('span');
+        categoryName.className = 'category-name';
+        categoryName.textContent = c.name;
 
         const arrow = document.createElement('span');
         arrow.className = 'dropdown-arrow';
@@ -8368,7 +8368,7 @@ function makePosts(){
         const getCategoryDisplayName = ()=> getCategoryNameValue() || lastCategoryName || 'Category';
         const updateCategoryIconDisplay = (src)=>{
           const displayName = getCategoryDisplayName();
-          categoryLogo.innerHTML = '';
+          categoryIcon.innerHTML = '';
           const normalizedSrc = applyNormalizeIconPath(src);
           if(normalizedSrc){
             const img = document.createElement('img');
@@ -8376,13 +8376,13 @@ function makePosts(){
             img.width = 20;
             img.height = 20;
             img.alt = '';
-            categoryLogo.appendChild(img);
-            categoryLogo.classList.add('has-icon');
+            categoryIcon.appendChild(img);
+            categoryIcon.classList.add('has-icon');
             categoryIcons[currentCategoryName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, normalizedSrc);
           } else {
-            categoryLogo.textContent = displayName.charAt(0) || '';
-            categoryLogo.classList.remove('has-icon');
+            categoryIcon.textContent = displayName.charAt(0) || '';
+            categoryIcon.classList.remove('has-icon');
             delete categoryIcons[currentCategoryName];
             writeIconPath(categoryIconPaths, c.id, currentCategoryName, '');
           }
@@ -8421,7 +8421,7 @@ function makePosts(){
             categories[sourceIndex].name = datasetValue;
           }
           menu.dataset.category = datasetValue;
-          label.textContent = displayName;
+          categoryName.textContent = displayName;
           toggleInput.setAttribute('aria-label', `Toggle ${displayName} category`);
           iconPickerButton.setAttribute('aria-label', `Choose icon for ${displayName}`);
           previewImg.alt = `${displayName} icon preview`;
@@ -8430,8 +8430,8 @@ function makePosts(){
           subMenusContainer.querySelectorAll('.subcategory-form-menu').forEach(subEl=>{
             subEl.dataset.category = datasetValue;
           });
-          if(categoryLogo.querySelector('img')){
-            categoryLogo.classList.add('has-icon');
+          if(categoryIcon.querySelector('img')){
+            categoryIcon.classList.add('has-icon');
           } else {
             updateCategoryIconDisplay('');
           }
@@ -8483,11 +8483,11 @@ function makePosts(){
           subBtn.setAttribute('aria-expanded','false');
           subBtn.setAttribute('aria-controls', subContentId);
 
-          const subLabelWrap = document.createElement('span');
+          const subNameWrap = document.createElement('span');
           subLabelWrap.className = 'subcategory-label-wrap';
 
-          const subLogo = document.createElement('span');
-          subLogo.className = 'subcategory-logo';
+          const subIcon = document.createElement('span');
+          subIcon.className = 'subcategory-icon';
           const subIconHtml = subcategoryIcons[sub] || '';
           const subIconLookup = lookupIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub);
           const initialSubIconPath = subIconLookup.found ? (subIconLookup.path || '') : extractIconSrc(subIconHtml);
@@ -8503,23 +8503,23 @@ function makePosts(){
             img.width = 20;
             img.height = 20;
             img.alt = '';
-            subLogo.appendChild(img);
-            subLogo.classList.add('has-icon');
+            subIcon.appendChild(img);
+            subIcon.classList.add('has-icon');
             if(!subIconLookup.found){
               writeIconPath(subcategoryIconPaths, c.subIds && Object.prototype.hasOwnProperty.call(c.subIds, sub) ? c.subIds[sub] : null, sub, applyNormalizeIconPath(initialSubIconPath));
             }
           } else if(subIconHtml){
-            subLogo.innerHTML = subIconHtml;
-            subLogo.classList.add('has-icon');
+            subIcon.innerHTML = subIconHtml;
+            subIcon.classList.add('has-icon');
           } else {
-            subLogo.textContent = sub.charAt(0) || '';
+            subIcon.textContent = sub.charAt(0) || '';
           }
 
-          const subLabel = document.createElement('span');
-          subLabel.className = 'subcategory-label';
-          subLabel.textContent = sub;
+          const subName = document.createElement('span');
+          subName.className = 'subcategory-name';
+          subName.textContent = sub;
 
-          subLabelWrap.append(subLogo, subLabel);
+          subLabelWrap.append(subLogo, subcategoryName);
 
           const subArrow = document.createElement('span');
           subArrow.className = 'dropdown-arrow';
@@ -8956,7 +8956,7 @@ function makePosts(){
               const dateLabel = formatSessionDate(session && session.date);
               const override = typeof overrideTime === 'string' ? overrideTime.trim() : '';
               const timeLabel = override || getSessionPrimaryTime(session);
-              if(dateLabel && timeLabel){
+              if(dateLabel && timecategoryName){
                 return `${dateLabel} ${timeLabel}`;
               }
               return dateLabel || timeLabel;
@@ -9648,7 +9648,7 @@ function makePosts(){
               btn.type = 'button';
               btn.className = 'tiny';
               btn.textContent = symbol;
-              btn.setAttribute('aria-label', ariaLabel);
+              btn.setAttribute('aria-label', ariacategoryName);
               btn.addEventListener('click', event => {
                 event.preventDefault();
                 onClick();
@@ -10258,7 +10258,7 @@ function makePosts(){
                     if(optionLabel && optionLabel !== option.value){
                       option.label = optionLabel;
                       option.textContent = optionLabel;
-                    } else if(optionLabel){
+                    } else if(optioncategoryName){
                       option.textContent = optionLabel;
                     }
                     option.dataset.featureKey = key;
@@ -10858,7 +10858,7 @@ function makePosts(){
                           }
                           notifyFormbuilderChange();
                         });
-                        versionCard.appendChild(seatingLabel);
+                        versionCard.appendChild(seatingcategoryName);
                         versionCard.appendChild(versionInput);
 
                         const versionActions = document.createElement('div');
@@ -10900,7 +10900,7 @@ function makePosts(){
                           tierInput.dataset.timeIndex = String(timeIndex);
                           tierInput.dataset.versionIndex = String(versionIndex);
                           tierInput.dataset.tierIndex = String(tierIndex);
-                          tierRow.appendChild(tierLabel);
+                          tierRow.appendChild(tiercategoryName);
                           tierInput.addEventListener('input', ()=>{
                             const previous = typeof tier.name === 'string' ? tier.name : '';
                             const nextValue = tierInput.value;
@@ -11221,7 +11221,7 @@ function makePosts(){
                       const samePricingLabel = document.createElement('span');
                       samePricingLabel.className = 'same-pricing-label';
                       samePricingLabel.textContent = 'Same Pricing as Above';
-                      samePricingRow.appendChild(samePricingLabel);
+                      samePricingRow.appendChild(samePricingcategoryName);
 
                       const samePricingOptions = document.createElement('div');
                       samePricingOptions.className = 'same-pricing-options';
@@ -11241,7 +11241,7 @@ function makePosts(){
                           handleSamePricingSelection(true);
                         }
                       });
-                      samePricingOptions.appendChild(yesLabel);
+                      samePricingOptions.appendChild(yescategoryName);
 
                       const noLabel = document.createElement('label');
                       samePricingNoInput = document.createElement('input');
@@ -11257,7 +11257,7 @@ function makePosts(){
                           handleSamePricingSelection(false);
                         }
                       });
-                      samePricingOptions.appendChild(noLabel);
+                      samePricingOptions.appendChild(nocategoryName);
 
                       samePricingRow.appendChild(samePricingOptions);
                       timeRow.appendChild(samePricingRow);
@@ -11338,14 +11338,14 @@ function makePosts(){
               const wrapper = document.createElement('div');
               wrapper.className = 'panel-field form-preview-field';
               const baseId = `${formPreviewId}-field-${++formPreviewFieldIdCounter}`;
-              const labelText = previewField.name.trim() || `Field ${previewIndex + 1}`;
-              const labelButton = document.createElement('button');
+              const categoryNameText = previewField.name.trim() || `Field ${previewIndex + 1}`;
+              const categoryNameButton = document.createElement('button');
               labelButton.type = 'button';
               labelButton.className = 'subcategory-form-button';
               labelButton.textContent = labelText;
               labelButton.setAttribute('aria-haspopup', 'dialog');
               labelButton.dataset.previewIndex = String(previewIndex);
-              const labelId = `${baseId}-label`;
+              const categoryNameId = `${baseId}-label`;
               labelButton.id = labelId;
               let control = null;
               if(previewField.type === 'text-area' || previewField.type === 'description'){
@@ -11408,7 +11408,7 @@ function makePosts(){
                     const radioText = document.createElement('span');
                     radioText.textContent = displayValue;
                     radioLabel.append(radio, radioText);
-                    radioGroup.appendChild(radioLabel);
+                    radioGroup.appendChild(radiocategoryName);
                   });
                 } else {
                   const placeholderOption = document.createElement('label');
@@ -12199,7 +12199,7 @@ function makePosts(){
               }
             });
 
-            fieldRequiredOptions.append(requiredYesLabel, requiredNoLabel);
+            fieldRequiredOptions.append(requiredYesLabel, requiredNocategoryName);
             fieldRequiredRow.append(fieldRequiredLabel, fieldRequiredOptions);
 
             const dropdownOptionsContainer = document.createElement('div');
@@ -12394,7 +12394,7 @@ function makePosts(){
               const nextType = fieldTypeSelect.value;
               const nextValidType = FORM_FIELD_TYPES.some(opt => opt.value === nextType) ? nextType : 'text-box';
               const nextLabel = getFormFieldTypeLabel(nextValidType).trim();
-              const shouldAutofillName = !currentName || (previousLabel && currentName === previousLabel);
+              const shouldAutofillName = !currentName || (previousLabel && currentName === previouscategoryName);
               
               // Update fieldTypeKey to match dropdown selection
               safeField.fieldTypeKey = nextValidType;
@@ -12412,7 +12412,7 @@ function makePosts(){
               safeField.type = nextValidType;
               }
               
-              if(shouldAutofillName && nextLabel){
+              if(shouldAutofillName && nextcategoryName){
                 safeField.name = nextLabel;
                 fieldNameInput.value = nextLabel;
                 updateDeleteFieldAria();
@@ -12615,7 +12615,7 @@ function makePosts(){
           const getSubDisplayName = ()=> getSubNameValue() || lastSubName || defaultSubName;
             const updateSubIconDisplay = (src)=>{
               const displayName = getSubDisplayName();
-              subLogo.innerHTML = '';
+              subIcon.innerHTML = '';
               const normalizedSrc = applyNormalizeIconPath(src);
               if(normalizedSrc){
                 const img = document.createElement('img');
@@ -12623,13 +12623,13 @@ function makePosts(){
                 img.width = 20;
                 img.height = 20;
                 img.alt = '';
-                subLogo.appendChild(img);
-                subLogo.classList.add('has-icon');
+                subIcon.appendChild(img);
+                subIcon.classList.add('has-icon');
                 subcategoryIcons[currentSubName] = `<img src="${normalizedSrc}" width="20" height="20" alt="">`;
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, normalizedSrc);
               } else {
-                subLogo.textContent = displayName.charAt(0) || '';
-                subLogo.classList.remove('has-icon');
+                subIcon.textContent = displayName.charAt(0) || '';
+                subIcon.classList.remove('has-icon');
                 delete subcategoryIcons[currentSubName];
                 writeIconPath(subcategoryIconPaths, currentSubId, currentSubName, '');
               }
@@ -12654,7 +12654,7 @@ function makePosts(){
             const previousSubId = currentSubId;
             const displayName = getSubDisplayName();
             const datasetValue = displayName;
-            subLabel.textContent = displayName;
+            subName.textContent = displayName;
             subMenu.dataset.subcategory = datasetValue;
             subBtn.dataset.subcategory = datasetValue;
             subInput.setAttribute('aria-label', `Toggle ${displayName} subcategory`);
@@ -12665,11 +12665,11 @@ function makePosts(){
             deleteSubBtn.setAttribute('aria-label', `Delete ${displayName} subcategory from ${categoryDisplayName}`);
             addFieldBtn.setAttribute('aria-label', `Add field to ${displayName}`);
             formPreviewBtn.setAttribute('aria-label', `Preview ${displayName} form`);
-            if(!subLogo.querySelector('img')){
-              subLogo.textContent = displayName.charAt(0) || '';
-              subLogo.classList.remove('has-icon');
+            if(!subIcon.querySelector('img')){
+              subIcon.textContent = displayName.charAt(0) || '';
+              subIcon.classList.remove('has-icon');
             } else {
-              subLogo.classList.add('has-icon');
+              subIcon.classList.add('has-icon');
             }
             if(previousSubName !== datasetValue){
               const updateSubNameInList = (list, primaryIndex)=>{
@@ -13159,19 +13159,19 @@ function makePosts(){
         const menuId = `filter-category-menu-${slugify(c.name)}`;
         menuBtn.setAttribute('aria-controls', menuId);
 
-        const categoryLogo = document.createElement('span');
-        categoryLogo.className='category-logo';
+        const categoryIcon = document.createElement('span');
+        categoryIcon.className='category-logo';
         const categoryIconHtml = categoryIcons[c.name] || '';
         if(categoryIconHtml){
-          categoryLogo.innerHTML = categoryIconHtml;
-          categoryLogo.classList.add('has-icon');
+          categoryIcon.innerHTML = categoryIconHtml;
+          categoryIcon.classList.add('has-icon');
         } else {
-          categoryLogo.textContent = c.name.charAt(0) || '';
+          categoryIcon.textContent = c.name.charAt(0) || '';
         }
 
-        const label = document.createElement('span');
-        label.className='label';
-        label.textContent=c.name;
+        const categoryName = document.createElement('span');
+        categoryName.className='label';
+        categoryName.textContent=c.name;
 
         const arrow = document.createElement('span');
         arrow.className='dropdown-arrow';
@@ -13215,9 +13215,9 @@ function makePosts(){
             subBtn.classList.add('on');
           }
           subBtn.innerHTML='<span class="subcategory-logo"></span><span class="subcategory-label"></span><span class="subcategory-switch" aria-hidden="true"><span class="track"></span><span class="thumb"></span></span>';
-          const subLabel = subBtn.querySelector('.subcategory-label');
-          if(subLabel){
-            subLabel.textContent = s;
+          const subName = subBtn.querySelector('.subcategory-label');
+          if(subcategoryName){
+            subName.textContent = s;
           }
           subBtn.addEventListener('click',()=>{
             if(!input.checked) return;
@@ -13301,26 +13301,26 @@ function makePosts(){
             });
           },
           refreshLogos: ()=>{
-            if(categoryLogo){
+            if(categoryIcon){
               const catIconHtml = categoryIcons[c.name] || '';
               if(catIconHtml){
-                categoryLogo.innerHTML = catIconHtml;
-                categoryLogo.classList.add('has-icon');
+                categoryIcon.innerHTML = catIconHtml;
+                categoryIcon.classList.add('has-icon');
               } else {
-                categoryLogo.textContent = c.name.charAt(0) || '';
-                categoryLogo.classList.remove('has-icon');
+                categoryIcon.textContent = c.name.charAt(0) || '';
+                categoryIcon.classList.remove('has-icon');
               }
             }
             subButtons.forEach(btn=>{
-              const logoSpan = btn.querySelector('.subcategory-logo');
+              const logoSpan = btn.querySelector('.subcategory-icon');
               if(!logoSpan) return;
               const iconHtml = subcategoryIcons[btn.dataset.subcategory] || '';
               if(iconHtml){
                 logoSpan.innerHTML = iconHtml;
                 logoSpan.classList.add('has-icon');
               } else {
-                const label = btn.dataset.subcategory || '';
-                logoSpan.textContent = label.charAt(0) || '';
+                const categoryName = btn.dataset.subcategory || '';
+                logoSpan.textContent = categoryName.charAt(0) || '';
                 logoSpan.classList.remove('has-icon');
               }
             });
@@ -15821,10 +15821,10 @@ if (!map.__pillHooksInstalled) {
         if(!post || !entry) return null;
         const key = entry.key || '';
         const baseSub = slugify(post.subcategory);
-        const labelLines = getMarkerLabelLines(post);
+        const categoryNameLines = getMarkerLabelLines(post);
         const combinedLabel = buildMarkerLabelText(post, labelLines);
         const spriteSource = [baseSub || '', labelLines.line1 || '', labelLines.line2 || ''].join('|');
-        const labelSpriteId = hashString(spriteSource);
+        const categoryNameSpriteId = hashString(spriteSource);
         const featureId = key
           ? `post:${post.id}::${key}::${entry.index}`
           : `post:${post.id}::${entry.index}`;
@@ -15877,7 +15877,7 @@ if (!map.__pillHooksInstalled) {
         const multiVenueText = shortenMarkerLabelText(venueName, markerLabelTextAreaWidthPx);
         const combinedLabel = multiVenueText ? `${multiCountLabel}\n${multiVenueText}` : multiCountLabel;
         const spriteSource = ['multi', multiIconId || '', baseSub || '', multiCountLabel, multiVenueText || ''].join('|');
-        const labelSpriteId = hashString(spriteSource);
+        const categoryNameSpriteId = hashString(spriteSource);
         const featureId = `venue:${group.key}::${post.id}`;
         const coordinates = [entry.lng, entry.lat];
         const multiIds = Array.from(group.postIds);
@@ -16001,7 +16001,7 @@ if (!map.__pillHooksInstalled) {
       const markerLabelBaseOpacity = ['case', highlightedStateExpression, 0, 1];
 
       const markerLabelMinZoom = MARKER_MIN_ZOOM;
-      const labelLayersConfig = [
+      const categoryNameLayersConfig = [
         { id:'marker-label', source:'posts', sortKey: 1100, filter: markerLabelFilter, iconImage: markerLabelIconImage, iconOpacity: markerLabelBaseOpacity, minZoom: markerLabelMinZoom },
         { id:'marker-label-highlight', source:'posts', sortKey: 1101, filter: markerLabelFilter, iconImage: markerLabelHighlightIconImage, iconOpacity: markerLabelHighlightOpacity, minZoom: markerLabelMinZoom }
       ];
@@ -16217,7 +16217,7 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const labelLines = isMultiVenue ? null : getMarkerLabelLines(post);
+            const categoryNameLines = isMultiVenue ? null : getMarkerLabelLines(post);
             const venueDisplayName = (()=>{
               if(resolvedVenueKey){
                 const candidates = uniqueVenuePosts.length ? uniqueVenuePosts : (post ? [post] : []);
@@ -16259,7 +16259,7 @@ if (!map.__pillHooksInstalled) {
               }
             }
 
-            markerContainer.append(markerPill, markerIcon, markerLabel);
+            markerContainer.append(markerPill, markerIcon, markercategoryName);
 
             const cardRoot = document.createElement('div');
             cardRoot.className = 'big-map-card big-map-card--popup';
@@ -16303,7 +16303,7 @@ if (!map.__pillHooksInstalled) {
               }
             });
 
-            const labelEl = document.createElement('div');
+            const categoryNameEl = document.createElement('div');
             labelEl.className = 'map-card-label';
             const titleWrap = document.createElement('div');
             titleWrap.className = 'map-card-title';
@@ -16910,7 +16910,7 @@ if (!map.__pillHooksInstalled) {
         const p = getPostByIdAnywhere(v.id);
         if(!p) continue;
         if(!v.lastOpened) v.lastOpened = Date.now();
-        const labelEl = document.createElement('div');
+        const categoryNameEl = document.createElement('div');
         labelEl.className = 'last-opened-label';
         labelEl.textContent = formatLastOpened(v.lastOpened);
         recentsBoard.appendChild(labelEl);
