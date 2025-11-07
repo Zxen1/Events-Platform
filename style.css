@@ -6669,7 +6669,8 @@ html, body { cursor: auto !important; }
               gap:6px;
               justify-content:flex-end;
             }
-            #tab-forms .subcategory-field-row .delete-field-btn{
+            #tab-forms .subcategory-field-row .delete-field-btn,
+            #tab-forms .form-preview-field-header .delete-field-btn{
               width:36px;
               height:36px;
               border-radius:8px;
@@ -6686,7 +6687,8 @@ html, body { cursor: auto !important; }
               font-size:20px;
               line-height:1;
             }
-            #tab-forms .subcategory-field-row .delete-field-btn:hover{
+            #tab-forms .subcategory-field-row .delete-field-btn:hover,
+            #tab-forms .form-preview-field-header .delete-field-btn:hover{
               background:#d13c3c;
               border-color:#d13c3c;
             }
@@ -6845,6 +6847,20 @@ html, body { cursor: auto !important; }
               gap:4px;
               width:fit-content;
               cursor:pointer;
+            }
+            #tab-forms .form-preview-field-header{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:12px;
+              margin-bottom:8px;
+            }
+            #tab-forms .form-preview-field-header .subcategory-form-button{
+              flex:1 1 auto;
+              min-width:0;
+            }
+            #tab-forms .form-preview-field-header .delete-field-btn{
+              flex:0 0 auto;
             }
             #tab-forms .form-preview-container .panel-field .subcategory-form-button:focus-visible{
               outline:2px solid var(--btn-hover, #2e3a72);
