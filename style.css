@@ -5697,6 +5697,7 @@ html, body { cursor: auto !important; }
               border-radius:4px;
               transition:background .2s;
               flex-shrink:0;
+              opacity:1;
             }
             #tab-forms .category-edit-btn:hover,
             #tab-forms .subcategory-edit-btn:hover{
@@ -5711,6 +5712,7 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               padding:16px;
               box-shadow:0 8px 24px rgba(0,0,0,0.4);
+              opacity:1;
             }
             #tab-forms .category-hide-toggle-row,
             #tab-forms .subcategory-hide-toggle-row{
@@ -5719,6 +5721,11 @@ html, body { cursor: auto !important; }
               justify-content:space-between;
               gap:12px;
               margin-top:12px;
+              opacity:1;
+            }
+            #tab-forms .category-edit-panel *,
+            #tab-forms .subcategory-edit-panel *{
+              opacity:1;
             }
             #tab-forms .category-form-menu .filter-category-trigger{
               min-width:0;
@@ -5837,6 +5844,7 @@ html, body { cursor: auto !important; }
               display:flex;
               flex-direction:column;
               gap:12px;
+              opacity:1;
             }
             #tab-forms .category-edit-panel[hidden]{
               display:none;
