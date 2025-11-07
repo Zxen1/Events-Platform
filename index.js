@@ -8379,24 +8379,17 @@ function makePosts(){
         
         editPanel.append(nameInput, iconPicker, hideToggleRow, addSubBtn);
         editPanel.hidden = true;
-        editPanel.style.position = 'fixed';
-        editPanel.style.zIndex = '10000';
+        editPanel.style.position = 'absolute';
+        editPanel.style.right = '0';
+        editPanel.style.top = 'calc(100% + 10px)';
+        editPanel.style.zIndex = '100';
         header.append(editPanel);
-        
-        const positionEditPanel = () => {
-          const rect = editBtn.getBoundingClientRect();
-          editPanel.style.right = `${window.innerWidth - rect.right}px`;
-          editPanel.style.top = `${rect.bottom + 10}px`;
-        };
         
         editBtn.addEventListener('click', (e)=>{
           e.stopPropagation();
           document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
             if(panel !== editPanel) panel.hidden = true;
           });
-          if(editPanel.hidden){
-            positionEditPanel();
-          }
           editPanel.hidden = !editPanel.hidden;
         });
         
@@ -12757,14 +12750,10 @@ function makePosts(){
           const subEditPanel = document.createElement('div');
           subEditPanel.className = 'subcategory-edit-panel';
           subEditPanel.hidden = true;
-          subEditPanel.style.position = 'fixed';
-          subEditPanel.style.zIndex = '10000';
-          
-          const positionSubEditPanel = () => {
-            const rect = subEditBtn.getBoundingClientRect();
-            subEditPanel.style.right = `${window.innerWidth - rect.right}px`;
-            subEditPanel.style.top = `${rect.bottom + 10}px`;
-          };
+          subEditPanel.style.position = 'absolute';
+          subEditPanel.style.right = '0';
+          subEditPanel.style.top = 'calc(100% + 10px)';
+          subEditPanel.style.zIndex = '100';
           
           const subHideToggleRow = document.createElement('div');
           subHideToggleRow.className = 'subcategory-hide-toggle-row';
@@ -12797,9 +12786,6 @@ function makePosts(){
             document.querySelectorAll('.category-edit-panel, .subcategory-edit-panel').forEach(panel => {
               if(panel !== subEditPanel) panel.hidden = true;
             });
-            if(subEditPanel.hidden){
-              positionSubEditPanel();
-            }
             subEditPanel.hidden = !subEditPanel.hidden;
           });
           
