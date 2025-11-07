@@ -1095,13 +1095,11 @@ button[aria-expanded="true"] .results-arrow{
   background: transparent;
 }
 .panel-body::-webkit-scrollbar-thumb{
-  background-color: var(--panel-scrollbar-thumb);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: var(--panel-scrollbar-thumb);
+  border-radius: 6px;
 }
 .panel-body::-webkit-scrollbar-thumb:hover{
-  background-color: var(--panel-scrollbar-thumb-hover);
+  background: var(--panel-scrollbar-thumb-hover);
 }
 .panel-body::-webkit-scrollbar-corner{
   background: transparent;
