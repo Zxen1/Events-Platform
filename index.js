@@ -20498,8 +20498,65 @@ document.addEventListener('pointerdown', (e) => {
   const adminListingCurrency = document.getElementById('adminListingCurrency');
   const adminListingPrice = document.getElementById('adminListingPrice');
 
-  // CREATE POST TAB - Completely empty, ready for rebuild
+  // CREATE POST TAB - Form picker with mirrored preview
+  const memberCreateCategory = document.getElementById('memberCreateCategory');
+  const memberCreateSubcategory = document.getElementById('memberCreateSubcategory');
+  const memberCreateFormPreview = document.getElementById('memberCreateFormPreview');
 
+  if (memberCreateCategory && memberCreateSubcategory && memberCreateFormPreview) {
+    function populateMemberCategories() {
+      if (!window.categories) return;
+      memberCreateCategory.innerHTML = '<option value="">Select Category</option>';
+      const sortedCategories = getSortedCategories(window.categories);
+      sortedCategories.forEach(cat => {
+        if (!cat || !cat.name) return;
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = cat.name;
+        memberCreateCategory.appendChild(option);
+      });
+    }
+
+    function populateMemberSubcategories() {
+      const categoryName = memberCreateCategory.value;
+      memberCreateSubcategory.innerHTML = '<option value="">Select Subcategory</option>';
+      memberCreateSubcategory.disabled = !categoryName;
+      memberCreateFormPreview.innerHTML = '';
+      
+      if (!categoryName) return;
+      
+      const category = window.categories.find(c => c && c.name === categoryName);
+      if (!category || !category.subs) return;
+      
+      category.subs.forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub;
+        option.textContent = sub;
+        memberCreateSubcategory.appendChild(option);
+      });
+    }
+
+    function mirrorFormPreview() {
+      const subcategoryName = memberCreateSubcategory.value;
+      memberCreateFormPreview.innerHTML = '';
+      
+      if (!subcategoryName) return;
+      
+      const formbuilderPreview = document.querySelector(`[data-subcategory="${subcategoryName}"] .form-preview-fields`);
+      if (formbuilderPreview) {
+        memberCreateFormPreview.innerHTML = formbuilderPreview.innerHTML;
+      }
+    }
+
+    memberCreateCategory.addEventListener('change', populateMemberSubcategories);
+    memberCreateSubcategory.addEventListener('change', mirrorFormPreview);
+    
+    if (window.categories) {
+      populateMemberCategories();
+    } else {
+      setTimeout(() => { if (window.categories) populateMemberCategories(); }, 500);
+    }
+  }
 
   const colorAreas = [
     {key:'header', label:'Header', selectors:{bg:['.header'], text:['.header']}},

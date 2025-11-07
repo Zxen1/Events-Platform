@@ -205,7 +205,15 @@
       </div>
       <form id="memberForm" class="panel-body" novalidate>
         <section id="memberTab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabCreate" hidden>
-          <!-- CREATE POST TAB - Empty, ready for rebuild -->
+          <div class="member-create-picker">
+            <select id="memberCreateCategory" class="member-create-select">
+              <option value="">Select Category</option>
+            </select>
+            <select id="memberCreateSubcategory" class="member-create-select" disabled>
+              <option value="">Select Subcategory</option>
+            </select>
+          </div>
+          <div id="memberCreateFormPreview" class="member-create-form-preview"></div>
         </section>
         <section id="memberTab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="memberTabMyPosts" hidden></section>
         <section id="memberTab-profile" class="member-tab-panel active" role="tabpanel" aria-labelledby="memberTabProfile">
