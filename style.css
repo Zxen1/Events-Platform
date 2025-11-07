@@ -7320,6 +7320,9 @@ html, body { cursor: auto !important; }
               border-radius:8px;
               padding:10px;
               box-sizing:border-box;
+              left:50%;
+              transform:translateX(-50%);
+              border:1px solid #fff;
             }
             .subcategory-field-overlay-content > .subcategory-field-row{
               margin:0;
